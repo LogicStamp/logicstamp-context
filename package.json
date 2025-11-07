@@ -9,7 +9,8 @@
   },
   "scripts": {
     "build": "tsc",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "echo \"Tests coming soon\" && exit 0"
   },
   "keywords": [
     "react",
@@ -18,9 +19,22 @@
     "llm",
     "context",
     "documentation",
-    "logicstamp"
+    "logicstamp",
+    "claude",
+    "chatgpt",
+    "codebase-analysis",
+    "ast",
+    "static-analysis"
   ],
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/logicstamp-context.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/logicstamp-context/issues"
+  },
+  "homepage": "https://github.com/yourusername/logicstamp-context#readme",
+  "author": "LogicStamp Contributors",
   "license": "MIT",
   "dependencies": {
     "glob": "^10.3.10",

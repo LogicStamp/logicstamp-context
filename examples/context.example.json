@@ -1,0 +1,128 @@
+[
+  {
+    "position": "1/1",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "src/components/LoginForm.tsx",
+    "depth": 1,
+    "createdAt": "2025-01-15T10:30:00.000Z",
+    "bundleHash": "uifb:b00ef30bf6cbf532bcb447ad",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "src/components/LoginForm.tsx",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "react:component",
+            "entryId": "src/components/LoginForm.tsx",
+            "description": "LoginForm - Form component with validation",
+            "version": {
+              "variables": [],
+              "hooks": [
+                "useEffect",
+                "useState"
+              ],
+              "components": [
+                "Button"
+              ],
+              "functions": [
+                "LoginForm",
+                "validateEmail"
+              ],
+              "imports": [
+                "./Button",
+                "react"
+              ]
+            },
+            "logicSignature": {
+              "props": {
+                "onSubmit": {
+                  "type": "function",
+                  "signature": "(data: { email: string; password: string; }) => Promise<void>"
+                }
+              },
+              "events": {
+                "onSubmit": {
+                  "type": "function",
+                  "signature": "(data: { email: string; password: string; }) => Promise<void>"
+                }
+              },
+              "state": {
+                "email": "string",
+                "password": "string",
+                "error": "string | null",
+                "loading": "boolean"
+              }
+            },
+            "semanticHash": "uif:a1b2c3d4e5f6g7h8i9j0k1l2",
+            "fileHash": "uif:m3n4o5p6q7r8s9t0u1v2w3x4"
+          },
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: LoginForm - Form component with validation\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: [\"useEffect\",\"useState\"]\n *   components: [\"Button\"]\n *   functions: [\"LoginForm\",\"validateEmail\"]\n *   imports: [\"./Button\",\"react\"]\n *\n * Logic Signature:\n *   props: {\"onSubmit\":{\"type\":\"function\",\"signature\":\"(data: { email: string; password: string; }) => Promise<void>\"}}\n *   events: {\"onSubmit\":{\"type\":\"function\",\"signature\":\"(data: { email: string; password: string; }) => Promise<void>\"}}\n *   state: {\"email\":\"string\",\"password\":\"string\",\"error\":\"string | null\",\"loading\":\"boolean\"}\n *\n * Hashes:\n *   semantic: uif:a1b2c3d4e5f6g7h8i9j0k1l2\n *   file: uif:m3n4o5p6q7r8s9t0u1v2w3x4\n */"
+        },
+        {
+          "entryId": "src/components/Button.tsx",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "react:component",
+            "entryId": "src/components/Button.tsx",
+            "description": "Button - Interactive button component",
+            "version": {
+              "variables": [],
+              "hooks": [
+                "useState"
+              ],
+              "components": [],
+              "functions": [
+                "Button"
+              ],
+              "imports": [
+                "react"
+              ]
+            },
+            "logicSignature": {
+              "props": {
+                "variant": {
+                  "type": "literal-union",
+                  "literals": [
+                    "primary",
+                    "secondary"
+                  ]
+                },
+                "isLoading": "boolean",
+                "onClick": {
+                  "type": "function",
+                  "signature": "() => void",
+                  "optional": true
+                }
+              },
+              "events": {
+                "onClick": {
+                  "type": "function",
+                  "signature": "() => void"
+                }
+              },
+              "state": {
+                "pressed": "boolean"
+              }
+            },
+            "semanticHash": "uif:a0dd5029ee79e6508fe9db25",
+            "fileHash": "uif:a6398c5890bcbf31603af36a"
+          },
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: Button - Interactive button component\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: [\"useState\"]\n *   components: []\n *   functions: [\"Button\"]\n *   imports: [\"react\"]\n *\n * Logic Signature:\n *   props: {\"variant\":{\"type\":\"literal-union\",\"literals\":[\"primary\",\"secondary\"]},\"isLoading\":\"boolean\",\"onClick\":{\"type\":\"function\",\"signature\":\"() => void\",\"optional\":true}}\n *   events: {\"onClick\":{\"type\":\"function\",\"signature\":\"() => void\"}}\n *   state: {\"pressed\":\"boolean\"}\n *\n * Hashes:\n *   semantic: uif:a0dd5029ee79e6508fe9db25\n *   file: uif:a6398c5890bcbf31603af36a\n */"
+        }
+      ],
+      "edges": [
+        [
+          "src/components/LoginForm.tsx",
+          "src/components/Button.tsx"
+        ]
+      ]
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp.manifest.json"
+    }
+  }
+]

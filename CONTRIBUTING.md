@@ -1,0 +1,242 @@
+# Contributing to LogicStamp Context
+
+Thank you for your interest in contributing! This document provides guidelines for contributing to logicstamp-context.
+
+## Getting Started
+
+### Prerequisites
+- Node.js >= 18.0.0
+- npm or yarn
+- Git
+
+### Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/logicstamp-context.git
+cd logicstamp-context
+
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+
+# Link locally for testing
+npm link
+
+# Test the CLI
+logicstamp-context --help
+```
+
+## Project Structure
+
+```
+logicstamp-context/
+├── src/
+│   ├── cli/           # CLI entry point
+│   │   └── index.ts   # Main CLI logic
+│   ├── core/          # Core functionality
+│   │   ├── astParser.ts      # TypeScript AST parsing
+│   │   ├── contractBuilder.ts # Contract generation
+│   │   ├── manifest.ts        # Dependency graph
+│   │   ├── pack.ts            # Context bundling
+│   │   └── signature.ts       # Logic signature extraction
+│   ├── types/         # TypeScript type definitions
+│   │   └── UIFContract.ts
+│   └── utils/         # Utility functions
+│       ├── fsx.ts     # File system operations
+│       └── hash.ts    # Hashing utilities
+├── docs/              # Documentation
+├── examples/          # Example outputs
+└── dist/              # Compiled output (generated)
+```
+
+## Development Workflow
+
+### Making Changes
+
+1. **Create a branch**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+2. **Make your changes**
+   - Write clear, documented code
+   - Follow existing code style
+   - Add JSDoc comments for public APIs
+
+3. **Build and test**
+   ```bash
+   npm run build
+
+   # Test manually
+   logicstamp-context ./test-project
+   ```
+
+4. **Commit your changes**
+   ```bash
+   git add .
+   git commit -m "feat: Add your feature description"
+   ```
+
+### Commit Message Format
+
+We follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+- `feat:` New features
+- `fix:` Bug fixes
+- `docs:` Documentation changes
+- `refactor:` Code refactoring
+- `perf:` Performance improvements
+- `test:` Adding or updating tests
+- `chore:` Maintenance tasks
+
+Examples:
+```
+feat: Add support for .jsx files
+fix: Resolve path normalization on Windows
+docs: Update USAGE guide with new examples
+refactor: Extract AST parsing logic
+```
+
+## Code Style
+
+### TypeScript Guidelines
+
+- Use TypeScript strict mode
+- Prefer explicit types over `any`
+- Use interfaces for public APIs
+- Document complex logic with comments
+
+Example:
+```typescript
+/**
+ * Generate a context bundle from a codebase
+ * @param path - Directory to scan
+ * @param options - Bundle generation options
+ * @returns Promise resolving to context bundle
+ */
+export async function generateContext(
+  path: string,
+  options: ContextOptions
+): Promise<LogicStampBundle[]> {
+  // Implementation
+}
+```
+
+### File Organization
+
+- One main export per file
+- Group related functions
+- Keep files under 500 lines
+- Use barrel exports for modules
+
+### Naming Conventions
+
+- Files: `camelCase.ts`
+- Functions: `camelCase()`
+- Types/Interfaces: `PascalCase`
+- Constants: `UPPER_SNAKE_CASE`
+
+## Testing
+
+Currently manual testing. Automated tests coming soon!
+
+### Manual Testing Checklist
+
+Before submitting a PR, test:
+
+- [ ] Basic context generation: `logicstamp-context`
+- [ ] Custom directory: `logicstamp-context ./src`
+- [ ] All profiles: `--profile llm-safe/llm-chat/ci-strict`
+- [ ] Code modes: `--include-code none/header/full`
+- [ ] Output formats: `--format json/pretty/ndjson`
+- [ ] Depth traversal: `--depth 0/1/2`
+- [ ] Help command: `--help`
+- [ ] Error cases: Empty directory, invalid paths
+
+## Documentation
+
+### Updating Documentation
+
+When adding features, update:
+
+1. **README.md** - Main documentation
+2. **docs/USAGE.md** - Detailed usage guide
+3. **CHANGELOG.md** - Version history
+4. **CLI help text** - In `src/cli/index.ts`
+
+### Documentation Style
+
+- Use clear, concise language
+- Provide examples for all features
+- Include both simple and advanced use cases
+- Add troubleshooting sections
+
+## Pull Request Process
+
+1. **Before submitting:**
+   - Ensure code builds successfully: `npm run build`
+   - Test thoroughly (see checklist above)
+   - Update relevant documentation
+   - Update CHANGELOG.md
+
+2. **PR Description should include:**
+   - What problem does this solve?
+   - What changes were made?
+   - How to test the changes?
+   - Any breaking changes?
+
+3. **PR Review:**
+   - Maintainers will review your PR
+   - Address feedback promptly
+   - Keep PR focused on one feature/fix
+
+## Feature Requests
+
+Have an idea? We'd love to hear it!
+
+1. Check existing issues first
+2. Open a new issue with:
+   - Clear description of the feature
+   - Use cases and benefits
+   - Potential implementation approach
+
+## Bug Reports
+
+Found a bug? Help us fix it!
+
+1. Check if it's already reported
+2. Open an issue with:
+   - Clear description of the problem
+   - Steps to reproduce
+   - Expected vs actual behavior
+   - Environment details (OS, Node version)
+   - Sample code or project if possible
+
+## Release Process
+
+(For maintainers)
+
+1. Update version in `package.json`
+2. Update `CHANGELOG.md`
+3. Build: `npm run build`
+4. Commit: `git commit -am "Release v0.x.0"`
+5. Tag: `git tag v0.x.0`
+6. Push: `git push && git push --tags`
+7. Publish: `npm publish`
+
+## Questions?
+
+- Open an issue for questions
+- Check existing documentation
+- Review closed issues
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the MIT License.
+
+## Thank You!
+
+Your contributions make this project better for everyone. Thank you for taking the time to contribute!
