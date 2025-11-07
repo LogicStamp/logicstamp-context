@@ -1,0 +1,36 @@
+{
+  "name": "logicstamp-context",
+  "version": "0.1.0",
+  "description": "Generate AI-friendly context bundles from React codebases with LogicStamp contracts",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "logicstamp-context": "./dist/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "react",
+    "typescript",
+    "ai",
+    "llm",
+    "context",
+    "documentation",
+    "logicstamp"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "glob": "^10.3.10",
+    "ts-morph": "^21.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
