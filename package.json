@@ -10,7 +10,10 @@
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "npm run build",
-    "test": "echo \"Tests coming soon\" && exit 0"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [
     "react",
@@ -42,7 +45,9 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.5",
-    "typescript": "^5.3.3"
+    "@vitest/ui": "^4.0.8",
+    "typescript": "^5.3.3",
+    "vitest": "^4.0.8"
   },
   "engines": {
     "node": ">=18.0.0"

@@ -5,8 +5,8 @@
  * Scans React/TypeScript files and generates AI-friendly context bundles
  */
 
-import { writeFile } from 'node:fs/promises';
-import { resolve, join } from 'node:path';
+import { writeFile, mkdir } from 'node:fs/promises';
+import { resolve, join, dirname } from 'node:path';
 import { globFiles, readFileWithText, getRelativePath } from '../utils/fsx.js';
 import { buildContract, type ContractBuildResult } from '../core/contractBuilder.js';
 import { extractFromFile } from '../core/astParser.js';
@@ -243,6 +243,8 @@ async function generateContext(options: ContextOptions): Promise<void> {
 
   // Write output
   const outPath = resolve(options.out);
+  // Ensure output directory exists
+  await mkdir(dirname(outPath), { recursive: true });
   await writeFile(outPath, output, 'utf8');
   console.log(`✅ Context written to ${outPath}`);
 
