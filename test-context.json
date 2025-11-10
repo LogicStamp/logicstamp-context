@@ -1,0 +1,800 @@
+[
+  {
+    "$schema": "./logicstamp.context.schema.json",
+    "position": "1/14",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "c:/Users/River/Desktop/logicstamp-context/src/cli/commands/context.ts",
+    "depth": 1,
+    "createdAt": "2025-11-10T19:44:05.423Z",
+    "bundleHash": "uifb:4c5cb4aaf19810357222cd52",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "c:/Users/River/Desktop/logicstamp-context/src/cli/commands/context.ts",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "node:cli",
+            "entryId": "c:/Users/River/Desktop/logicstamp-context/src/cli/commands/context.ts",
+            "description": "context - CLI entry point",
+            "version": {
+              "variables": [],
+              "hooks": [],
+              "components": [],
+              "functions": [
+                "contextCommand"
+              ],
+              "imports": [
+                "../../core/astParser.js",
+                "../../core/contractBuilder.js",
+                "../../core/manifest.js",
+                "../../core/pack.js",
+                "../../types/UIFContract.js",
+                "../../utils/fsx.js",
+                "node:fs/promises",
+                "node:path"
+              ]
+            },
+            "logicSignature": {
+              "props": {},
+              "events": {}
+            },
+            "semanticHash": "uif:e4bdffe04a84c2dc647fcf6c",
+            "fileHash": "uif:e494a8164233fb1c8b2c5a77"
+          },
+          "codeHeader": null
+        }
+      ],
+      "edges": []
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp.manifest.json"
+    }
+  },
+  {
+    "$schema": "./logicstamp.context.schema.json",
+    "position": "2/14",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "c:/Users/River/Desktop/logicstamp-context/src/cli/commands/validate.ts",
+    "depth": 1,
+    "createdAt": "2025-11-10T19:44:05.424Z",
+    "bundleHash": "uifb:26a12ee28a222ca69dbc63ec",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "c:/Users/River/Desktop/logicstamp-context/src/cli/commands/validate.ts",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "node:cli",
+            "entryId": "c:/Users/River/Desktop/logicstamp-context/src/cli/commands/validate.ts",
+            "description": "validate - CLI entry point",
+            "version": {
+              "variables": [],
+              "hooks": [],
+              "components": [],
+              "functions": [
+                "validateCommand"
+              ],
+              "imports": [
+                "../../core/pack.js",
+                "node:fs/promises",
+                "node:path"
+              ]
+            },
+            "logicSignature": {
+              "props": {},
+              "events": {}
+            },
+            "semanticHash": "uif:75b54d0be3f010cd6f75b0cb",
+            "fileHash": "uif:05f87ce8645d1d7ab705c8a0"
+          },
+          "codeHeader": null
+        }
+      ],
+      "edges": []
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp.manifest.json"
+    }
+  },
+  {
+    "$schema": "./logicstamp.context.schema.json",
+    "position": "3/14",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "c:/Users/River/Desktop/logicstamp-context/src/cli/index.ts",
+    "depth": 1,
+    "createdAt": "2025-11-10T19:44:05.425Z",
+    "bundleHash": "uifb:0bbc5a51a9ff56e0e2e9c2db",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "c:/Users/River/Desktop/logicstamp-context/src/cli/index.ts",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "ts:module",
+            "entryId": "c:/Users/River/Desktop/logicstamp-context/src/cli/index.ts",
+            "description": "index - TypeScript module",
+            "version": {
+              "variables": [],
+              "hooks": [],
+              "components": [],
+              "functions": [
+                "main",
+                "printHelp"
+              ],
+              "imports": [
+                "./commands/context.js",
+                "./commands/validate.js"
+              ]
+            },
+            "logicSignature": {
+              "props": {},
+              "events": {}
+            },
+            "semanticHash": "uif:956d5a01a0b8d4b7ddda9681",
+            "fileHash": "uif:4d2331a30fa9faa2df7d12ad"
+          },
+          "codeHeader": null
+        }
+      ],
+      "edges": []
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp.manifest.json"
+    }
+  },
+  {
+    "$schema": "./logicstamp.context.schema.json",
+    "position": "4/14",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "c:/Users/River/Desktop/logicstamp-context/src/core/astParser.ts",
+    "depth": 1,
+    "createdAt": "2025-11-10T19:44:05.425Z",
+    "bundleHash": "uifb:f172f58ed38fc05ecc0e2ed0",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "c:/Users/River/Desktop/logicstamp-context/src/core/astParser.ts",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "ts:module",
+            "entryId": "c:/Users/River/Desktop/logicstamp-context/src/core/astParser.ts",
+            "description": "astParser - TypeScript module",
+            "version": {
+              "variables": [],
+              "hooks": [],
+              "components": [],
+              "functions": [
+                "buildLogicSignatureFromAst",
+                "detectKind",
+                "extractComponents",
+                "extractEvents",
+                "extractFromFile",
+                "extractFunctions",
+                "extractHooks",
+                "extractImports",
+                "extractJsxRoutes",
+                "extractProps",
+                "extractState",
+                "extractVariables",
+                "normalizePropType"
+              ],
+              "imports": [
+                "../types/UIFContract.js",
+                "ts-morph"
+              ]
+            },
+            "logicSignature": {
+              "props": {},
+              "events": {}
+            },
+            "semanticHash": "uif:7152990a34f9eda63e745359",
+            "fileHash": "uif:6f1d9f1b17f4dbaf3c78e6d9"
+          },
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: astParser - Presentational component\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: []\n *   components: []\n *   functions: [\"buildLogicSignatureFromAst\",\"detectKind\",\"extractComponents\",\"extractEvents\",\"extractFromFile\",\"extractFunctions\",\"extractHooks\",\"extractImports\",\"extractJsxRoutes\",\"extractProps\",\"extractState\",\"extractVariables\",\"normalizePropType\"]\n *   imports: [\"../types/UIFContract.js\",\"ts-morph\"]\n *\n * Logic Signature:\n *   props: {}\n *   events: {}\n *   state: {}\n *\n * Predictions:\n *   (none)\n *\n * Hashes (informational only - authoritative values in .uif.json):\n *   semantic: uif:7152990a34f9eda63e745359 (informational)\n *   file: uif:d25bdbc8e21386b1a5e907d7\n */"
+        }
+      ],
+      "edges": []
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp.manifest.json"
+    }
+  },
+  {
+    "$schema": "./logicstamp.context.schema.json",
+    "position": "5/14",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "c:/Users/River/Desktop/logicstamp-context/src/core/contractBuilder.ts",
+    "depth": 1,
+    "createdAt": "2025-11-10T19:44:05.426Z",
+    "bundleHash": "uifb:b36e6642018417d633cec157",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "c:/Users/River/Desktop/logicstamp-context/src/core/contractBuilder.ts",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "ts:module",
+            "entryId": "c:/Users/River/Desktop/logicstamp-context/src/core/contractBuilder.ts",
+            "description": "contractBuilder - TypeScript module",
+            "version": {
+              "variables": [],
+              "hooks": [],
+              "components": [],
+              "functions": [
+                "buildContract",
+                "mergeContractUpdate"
+              ],
+              "imports": [
+                "../types/UIFContract.js",
+                "../utils/fsx.js",
+                "../utils/hash.js",
+                "./astParser.js",
+                "./signature.js"
+              ]
+            },
+            "logicSignature": {
+              "props": {},
+              "events": {}
+            },
+            "semanticHash": "uif:9e7343c07744633f5dfe4cd9",
+            "fileHash": "uif:f2b51ac08f00f101506acbc3"
+          },
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: contractBuilder - Presentational component\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: []\n *   components: []\n *   functions: [\"buildContract\",\"mergeContractUpdate\"]\n *   imports: [\"../types/UIFContract.js\",\"../utils/fsx.js\",\"../utils/hash.js\",\"./astParser.js\",\"./signature.js\"]\n *\n * Logic Signature:\n *   props: {}\n *   events: {}\n *   state: {}\n *\n * Predictions:\n *   (none)\n *\n * Hashes (informational only - authoritative values in .uif.json):\n *   semantic: uif:9e7343c07744633f5dfe4cd9 (informational)\n *   file: uif:6885bc3a8a6e6f3a4c0056fb\n */"
+        }
+      ],
+      "edges": []
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp.manifest.json"
+    }
+  },
+  {
+    "$schema": "./logicstamp.context.schema.json",
+    "position": "6/14",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "c:/Users/River/Desktop/logicstamp-context/src/core/manifest.ts",
+    "depth": 1,
+    "createdAt": "2025-11-10T19:44:05.427Z",
+    "bundleHash": "uifb:ca2501ef23ec5532bdc22e71",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "c:/Users/River/Desktop/logicstamp-context/src/core/manifest.ts",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "node:cli",
+            "entryId": "c:/Users/River/Desktop/logicstamp-context/src/core/manifest.ts",
+            "description": "manifest - CLI entry point",
+            "version": {
+              "variables": [],
+              "hooks": [],
+              "components": [],
+              "functions": [
+                "buildDependencyGraph",
+                "buildHashIndices",
+                "findComponentByName",
+                "generateStats",
+                "writeManifest"
+              ],
+              "imports": [
+                "../types/UIFContract.js",
+                "../utils/hash.js",
+                "node:fs/promises",
+                "node:path"
+              ]
+            },
+            "logicSignature": {
+              "props": {},
+              "events": {}
+            },
+            "semanticHash": "uif:1ddfb5c70a09a2614d47690e",
+            "fileHash": "uif:179d1c0bb533920680e6417f"
+          },
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: manifest - Presentational component\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: []\n *   components: []\n *   functions: [\"buildDependencyGraph\",\"buildHashIndices\",\"findComponentByName\",\"generateStats\",\"writeManifest\"]\n *   imports: [\"../types/UIFContract.js\",\"../utils/hash.js\",\"node:fs/promises\",\"node:path\"]\n *\n * Logic Signature:\n *   props: {}\n *   events: {}\n *   state: {}\n *\n * Predictions:\n *   (none)\n *\n * Hashes (informational only - authoritative values in .uif.json):\n *   semantic: uif:1ddfb5c70a09a2614d47690e (informational)\n *   file: uif:179d1c0bb533920680e6417f\n */"
+        }
+      ],
+      "edges": []
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp.manifest.json"
+    }
+  },
+  {
+    "$schema": "./logicstamp.context.schema.json",
+    "position": "7/14",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "c:/Users/River/Desktop/logicstamp-context/src/core/pack.ts",
+    "depth": 1,
+    "createdAt": "2025-11-10T19:44:05.428Z",
+    "bundleHash": "uifb:cf53904f846e51150a197c74",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "c:/Users/River/Desktop/logicstamp-context/src/core/pack.ts",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "node:cli",
+            "entryId": "c:/Users/River/Desktop/logicstamp-context/src/core/pack.ts",
+            "description": "pack - CLI entry point",
+            "version": {
+              "variables": [],
+              "hooks": [],
+              "components": [],
+              "functions": [
+                "buildEdges",
+                "collectDependencies",
+                "computeBundleHash",
+                "extractCodeHeader",
+                "findComponentByName",
+                "formatBundle",
+                "loadContract",
+                "loadManifest",
+                "pack",
+                "readSourceCode",
+                "resolveDependency",
+                "resolveKey",
+                "stableSort",
+                "validateHashLock"
+              ],
+              "imports": [
+                "../types/UIFContract.js",
+                "../utils/fsx.js",
+                "../utils/hash.js",
+                "./manifest.js",
+                "node:fs/promises",
+                "node:path"
+              ]
+            },
+            "logicSignature": {
+              "props": {},
+              "events": {}
+            },
+            "semanticHash": "uif:70da3ed90cc7516abcbbf13b",
+            "fileHash": "uif:4985e70c4f81b3480096b652"
+          },
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: pack - Presentational component\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: []\n *   components: []\n *   functions: [\"buildEdges\",\"collectDependencies\",\"computeBundleHash\",\"extractCodeHeader\",\"findComponentByName\",\"formatBundle\",\"loadContract\",\"loadManifest\",\"pack\",\"readSourceCode\",\"resolveDependency\",\"resolveKey\",\"stableSort\",\"validateHashLock\"]\n *   imports: [\"../types/UIFContract.js\",\"../utils/fsx.js\",\"../utils/hash.js\",\"./manifest.js\",\"node:fs/promises\",\"node:path\"]\n *\n * Logic Signature:\n *   props: {}\n *   events: {}\n *   state: {}\n *\n * Predictions:\n *   Includes form validation logic, Fetches or mutates external data\n *\n * Hashes (informational only - authoritative values in .uif.json):\n *   semantic: uif:70da3ed90cc7516abcbbf13b (informational)\n *   file: uif:a70a7b698f5520bf49d74a91\n */"
+        }
+      ],
+      "edges": []
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp.manifest.json"
+    }
+  },
+  {
+    "$schema": "./logicstamp.context.schema.json",
+    "position": "8/14",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "c:/Users/River/Desktop/logicstamp-context/src/core/signature.ts",
+    "depth": 1,
+    "createdAt": "2025-11-10T19:44:05.429Z",
+    "bundleHash": "uifb:1e0558a9075ecb4014fe8830",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "c:/Users/River/Desktop/logicstamp-context/src/core/signature.ts",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "ts:module",
+            "entryId": "c:/Users/River/Desktop/logicstamp-context/src/core/signature.ts",
+            "description": "signature - TypeScript module",
+            "version": {
+              "variables": [],
+              "hooks": [],
+              "components": [],
+              "functions": [
+                "applyDisplayOnlyPreset",
+                "applyNavOnlyPreset",
+                "applySubmitOnlyPreset",
+                "buildLogicSignature",
+                "generateBehavioralPredictions",
+                "inferDescription"
+              ],
+              "imports": [
+                "../types/UIFContract.js",
+                "./astParser.js"
+              ]
+            },
+            "logicSignature": {
+              "props": {},
+              "events": {}
+            },
+            "semanticHash": "uif:9a5a412d07f6985e03fda241",
+            "fileHash": "uif:c2beba96f241be306a253e42"
+          },
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: signature - Presentational component\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: []\n *   components: []\n *   functions: [\"applyDisplayOnlyPreset\",\"applyNavOnlyPreset\",\"applySubmitOnlyPreset\",\"buildLogicSignature\",\"generateBehavioralPredictions\",\"inferDescription\"]\n *   imports: [\"../types/UIFContract.js\",\"./astParser.js\"]\n *\n * Logic Signature:\n *   props: {}\n *   events: {}\n *   state: {}\n *\n * Predictions:\n *   (none)\n *\n * Hashes (informational only - authoritative values in .uif.json):\n *   semantic: uif:9a5a412d07f6985e03fda241 (informational)\n *   file: uif:64d7d3b1474878658358e5a8\n */"
+        }
+      ],
+      "edges": []
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp.manifest.json"
+    }
+  },
+  {
+    "$schema": "./logicstamp.context.schema.json",
+    "position": "9/14",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "c:/Users/River/Desktop/logicstamp-context/src/types/UIFContract.ts",
+    "depth": 1,
+    "createdAt": "2025-11-10T19:44:05.430Z",
+    "bundleHash": "uifb:42a39eefaaa96fc7134b8277",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "c:/Users/River/Desktop/logicstamp-context/src/types/UIFContract.ts",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "ts:module",
+            "entryId": "c:/Users/River/Desktop/logicstamp-context/src/types/UIFContract.ts",
+            "description": "UIFContract - TypeScript module",
+            "version": {
+              "variables": [],
+              "hooks": [],
+              "components": [],
+              "functions": [
+                "isUIFContract"
+              ],
+              "imports": []
+            },
+            "logicSignature": {
+              "props": {},
+              "events": {}
+            },
+            "semanticHash": "uif:84f4985dd25893f9bb7e43f6",
+            "fileHash": "uif:f1297e88a770031270331b9b"
+          },
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: UIFContract - Presentational component\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: []\n *   components: []\n *   functions: [\"isUIFContract\"]\n *   imports: []\n *\n * Logic Signature:\n *   props: {}\n *   events: {}\n *   state: {}\n *\n * Predictions:\n *   (none)\n *\n * Hashes (informational only - authoritative values in .uif.json):\n *   semantic: uif:84f4985dd25893f9bb7e43f6 (informational)\n *   file: uif:f1297e88a770031270331b9b\n */"
+        }
+      ],
+      "edges": []
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp.manifest.json"
+    }
+  },
+  {
+    "$schema": "./logicstamp.context.schema.json",
+    "position": "10/14",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "c:/Users/River/Desktop/logicstamp-context/src/utils/fsx.ts",
+    "depth": 1,
+    "createdAt": "2025-11-10T19:44:05.430Z",
+    "bundleHash": "uifb:80b12d942075cb98e059f6c5",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "c:/Users/River/Desktop/logicstamp-context/src/utils/fsx.ts",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "node:cli",
+            "entryId": "c:/Users/River/Desktop/logicstamp-context/src/utils/fsx.ts",
+            "description": "fsx - CLI entry point",
+            "version": {
+              "variables": [],
+              "hooks": [],
+              "components": [],
+              "functions": [
+                "deleteSidecar",
+                "fileExists",
+                "findSidecarFiles",
+                "getRelativePath",
+                "getSidecarPath",
+                "globFiles",
+                "normalizeEntryId",
+                "readFileWithText",
+                "resolvePath"
+              ],
+              "imports": [
+                "glob",
+                "node:fs/promises",
+                "node:path"
+              ]
+            },
+            "logicSignature": {
+              "props": {},
+              "events": {}
+            },
+            "semanticHash": "uif:80b91273520265259cc8e40e",
+            "fileHash": "uif:f6ee3958ee861ee956f6b5c9"
+          },
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: fsx - Presentational component\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: []\n *   components: []\n *   functions: [\"deleteSidecar\",\"fileExists\",\"findSidecarFiles\",\"getRelativePath\",\"getSidecarPath\",\"globFiles\",\"normalizeEntryId\",\"readFileWithText\",\"resolvePath\"]\n *   imports: [\"glob\",\"node:fs/promises\",\"node:path\"]\n *\n * Logic Signature:\n *   props: {}\n *   events: {}\n *   state: {}\n *\n * Predictions:\n *   (none)\n *\n * Hashes (informational only - authoritative values in .uif.json):\n *   semantic: uif:80b91273520265259cc8e40e (informational)\n *   file: uif:f6ee3958ee861ee956f6b5c9\n */"
+        }
+      ],
+      "edges": []
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp.manifest.json"
+    }
+  },
+  {
+    "$schema": "./logicstamp.context.schema.json",
+    "position": "11/14",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "c:/Users/River/Desktop/logicstamp-context/src/utils/hash.ts",
+    "depth": 1,
+    "createdAt": "2025-11-10T19:44:05.431Z",
+    "bundleHash": "uifb:e9e17ce838088aec2b684b6c",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "c:/Users/River/Desktop/logicstamp-context/src/utils/hash.ts",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "node:cli",
+            "entryId": "c:/Users/River/Desktop/logicstamp-context/src/utils/hash.ts",
+            "description": "hash - CLI entry point",
+            "version": {
+              "variables": [
+                "SCHEMA_VERSION"
+              ],
+              "hooks": [],
+              "components": [],
+              "functions": [
+                "bundleHash",
+                "fileHash",
+                "hashesEqual",
+                "isValidHash",
+                "semanticHashFromAst",
+                "sha256Hex",
+                "signatureHash",
+                "sortObject",
+                "stableStringify",
+                "structureHash"
+              ],
+              "imports": [
+                "../core/astParser.js",
+                "../types/UIFContract.js",
+                "node:crypto"
+              ]
+            },
+            "logicSignature": {
+              "props": {},
+              "events": {}
+            },
+            "semanticHash": "uif:9c632ee89c97f0b44ce6ae5c",
+            "fileHash": "uif:1f0fa0e2c8958d7fc1696036"
+          },
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: hash - Presentational component\n *\n * Version (Component Composition):\n *   variables: [\"SCHEMA_VERSION\"]\n *   hooks: []\n *   components: []\n *   functions: [\"bundleHash\",\"fileHash\",\"hashesEqual\",\"isValidHash\",\"semanticHashFromAst\",\"sha256Hex\",\"signatureHash\",\"sortObject\",\"stableStringify\",\"structureHash\"]\n *   imports: [\"../core/astParser.js\",\"../types/UIFContract.js\",\"node:crypto\"]\n *\n * Logic Signature:\n *   props: {}\n *   events: {}\n *   state: {}\n *\n * Predictions:\n *   (none)\n *\n * Hashes (informational only - authoritative values in .uif.json):\n *   semantic: uif:9c632ee89c97f0b44ce6ae5c (informational)\n *   file: uif:1f0fa0e2c8958d7fc1696036\n */"
+        }
+      ],
+      "edges": []
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp.manifest.json"
+    }
+  },
+  {
+    "$schema": "./logicstamp.context.schema.json",
+    "position": "12/14",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/App.tsx",
+    "depth": 1,
+    "createdAt": "2025-11-10T19:44:05.432Z",
+    "bundleHash": "uifb:c4f6ec5bb31bfdb3cd5cc2fb",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/App.tsx",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "react:component",
+            "entryId": "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/App.tsx",
+            "description": "App - Interactive component",
+            "version": {
+              "variables": [],
+              "hooks": [],
+              "components": [
+                "Card"
+              ],
+              "functions": [
+                "App"
+              ],
+              "imports": [
+                "./components/Card",
+                "react"
+              ]
+            },
+            "logicSignature": {
+              "props": {},
+              "events": {
+                "onAction": {
+                  "type": "function",
+                  "signature": "() => void"
+                }
+              }
+            },
+            "semanticHash": "uif:c3aeb12cc244c564dab38808",
+            "fileHash": "uif:b6d9f19e64ee0a86ab8873ef"
+          },
+          "codeHeader": null
+        },
+        {
+          "entryId": "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/components/Card.tsx",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "react:component",
+            "entryId": "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/components/Card.tsx",
+            "description": "Card - Card display component",
+            "version": {
+              "variables": [],
+              "hooks": [
+                "useState"
+              ],
+              "components": [
+                "Button"
+              ],
+              "functions": [
+                "Card"
+              ],
+              "imports": [
+                "./Button",
+                "react"
+              ]
+            },
+            "logicSignature": {
+              "props": {
+                "title": "string",
+                "description": "string",
+                "onAction": {
+                  "type": "function",
+                  "signature": "() => void",
+                  "optional": true
+                }
+              },
+              "events": {
+                "onClick": {
+                  "type": "function",
+                  "signature": "() => void"
+                }
+              },
+              "state": {
+                "expanded": "boolean"
+              }
+            },
+            "semanticHash": "uif:620f7cc53ad0c431bc602c90",
+            "fileHash": "uif:2bea4f44084e0ce1d58029e5"
+          },
+          "codeHeader": null
+        }
+      ],
+      "edges": [
+        [
+          "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/App.tsx",
+          "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/components/Card.tsx"
+        ]
+      ]
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp.manifest.json"
+    }
+  },
+  {
+    "$schema": "./logicstamp.context.schema.json",
+    "position": "13/14",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/utils/helpers.ts",
+    "depth": 1,
+    "createdAt": "2025-11-10T19:44:05.433Z",
+    "bundleHash": "uifb:4dcbfc15a938bc858bc4662a",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/utils/helpers.ts",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "ts:module",
+            "entryId": "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/utils/helpers.ts",
+            "description": "helpers - Utility module",
+            "version": {
+              "variables": [],
+              "hooks": [],
+              "components": [],
+              "functions": [
+                "capitalizeFirst",
+                "formatDate"
+              ],
+              "imports": []
+            },
+            "logicSignature": {
+              "props": {},
+              "events": {}
+            },
+            "semanticHash": "uif:7505b26f0c530e8ba5aea36e",
+            "fileHash": "uif:e709b1f3405a8f96c01e4b83"
+          },
+          "codeHeader": null
+        }
+      ],
+      "edges": []
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp.manifest.json"
+    }
+  },
+  {
+    "$schema": "./logicstamp.context.schema.json",
+    "position": "14/14",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "c:/Users/River/Desktop/logicstamp-context/vitest.config.ts",
+    "depth": 1,
+    "createdAt": "2025-11-10T19:44:05.433Z",
+    "bundleHash": "uifb:e2f54ced3deb5a50f4ccb1ed",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "c:/Users/River/Desktop/logicstamp-context/vitest.config.ts",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "ts:module",
+            "entryId": "c:/Users/River/Desktop/logicstamp-context/vitest.config.ts",
+            "description": "vitest.config - Configuration module",
+            "version": {
+              "variables": [],
+              "hooks": [],
+              "components": [],
+              "functions": [],
+              "imports": [
+                "vitest/config"
+              ]
+            },
+            "logicSignature": {
+              "props": {},
+              "events": {}
+            },
+            "semanticHash": "uif:9270949f1ffeda28dad67072",
+            "fileHash": "uif:f425116d44c22d5e24a9039b"
+          },
+          "codeHeader": null
+        }
+      ],
+      "edges": []
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp.manifest.json"
+    }
+  }
+]

@@ -41,6 +41,7 @@ export interface ContractBuildParams {
   description?: string;
   preset: ContractPreset;
   sourceText: string;
+  enablePredictions?: boolean;
 }
 
 export interface ContractBuildResult {
@@ -62,8 +63,10 @@ export function buildContract(
     params.preset
   );
 
-  // Generate additional behavioral predictions
-  const behavioralPredictions = generateBehavioralPredictions(ast);
+  // Generate additional behavioral predictions (only if enabled)
+  const behavioralPredictions = params.enablePredictions
+    ? generateBehavioralPredictions(ast)
+    : [];
 
   // Combine all predictions
   const allPredictions = [...presetPredictions, ...behavioralPredictions];

@@ -16,17 +16,20 @@ logicstamp-context
 
 ```bash
 logicstamp-context [path] [options]
+logicstamp-validate [file]
 ```
 
-## Arguments
+## Commands
 
-- `[path]` - Directory to scan (default: current directory)
-  - Can be a specific directory: `./src`
-  - Or a full path: `/Users/you/project/src`
+### `context` (default)
 
-## Options
+Generates LogicStamp bundles from a directory.
 
-### Core Options
+**Arguments**
+
+- `[path]` – Directory to scan (defaults to current working directory)
+
+**Key options**
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
@@ -37,7 +40,36 @@ logicstamp-context [path] [options]
 | `--max-nodes <n>` | `-m` | `100` | Maximum nodes to include (prevents huge bundles) |
 | `--profile <name>` | | `llm-chat` | Apply preset profile (see below) |
 | `--strict` | `-s` | `false` | Fail if any dependency is missing |
+| `--predict-behavior` | | `false` | Include experimental behavioral predictions |
+| `--dry-run` | | `false` | Skip writing the output file; prints summary instead |
+| `--stats` | | `false` | Emit one-line JSON stats (helpful for CI pipelines) |
 | `--help` | `-h` | | Show help message |
+
+**CI / automation tips**
+
+- Use `--dry-run` to inspect totals without producing files.
+- Use `--stats` to emit machine-readable summary lines (combine with shell redirection).
+
+### `logicstamp-validate`
+
+Checks that a generated bundle file matches the expected schema and structure.
+
+```bash
+logicstamp-validate             # validates ./context.json by default
+logicstamp-validate review.json # validate a custom bundle
+```
+
+**What it checks**
+
+- File exists (defaults to `./context.json`) and parses as JSON.
+- Top-level shape matches `LogicStampBundle[]`.
+- Each bundle has the correct types, graph metadata, and contract versions.
+- Warns on unexpected schema versions or hash formats.
+
+**Exit codes**
+
+- `0` – File is valid (warnings may still print).
+- `1` – Critical issues (missing fields, invalid JSON, file not found).
 
 ## Profiles
 
@@ -138,6 +170,9 @@ logicstamp-context ./src
 
 # Custom output file
 logicstamp-context --out my-context.json
+
+# Skip file write, but review summary locally
+logicstamp-context ./src --dry-run
 ```
 
 ### AI-Optimized Contexts
@@ -171,6 +206,16 @@ logicstamp-context --profile ci-strict
 
 # Custom strict configuration
 logicstamp-context --strict --include-code none
+```
+
+### Validation & QA
+
+```bash
+# Validate a generated bundle before committing
+logicstamp-validate          # defaults to ./context.json
+
+# Capture stats for monitoring without writing a file
+logicstamp-context --stats >> .ci/context-stats.jsonl
 ```
 
 ## Bundle Structure

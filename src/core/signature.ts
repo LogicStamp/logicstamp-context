@@ -219,7 +219,25 @@ export function generateBehavioralPredictions(ast: AstExtract): string[] {
 export function inferDescription(filePath: string, ast: AstExtract): string {
   const fileName = filePath.split(/[/\\]/).pop()?.replace(/\.(tsx?|jsx?)$/, '') || 'Component';
 
-  // Try to infer from common patterns
+  // Check kind first - non-React files should get appropriate labels
+  if (ast.kind === 'node:cli') {
+    return `${fileName} - CLI entry point`;
+  }
+  if (ast.kind === 'ts:module') {
+    // Check for common utility patterns
+    if (fileName.toLowerCase().includes('util') || fileName.toLowerCase().includes('helper')) {
+      return `${fileName} - Utility module`;
+    }
+    if (fileName.toLowerCase().includes('config')) {
+      return `${fileName} - Configuration module`;
+    }
+    if (fileName.toLowerCase().includes('type') || fileName.toLowerCase().includes('interface')) {
+      return `${fileName} - Type definitions`;
+    }
+    return `${fileName} - TypeScript module`;
+  }
+
+  // React component patterns (kind === 'react:component')
   if (fileName.toLowerCase().includes('button')) {
     return `${fileName} - Interactive button component`;
   }
@@ -239,7 +257,7 @@ export function inferDescription(filePath: string, ast: AstExtract): string {
     return `${fileName} - Navigation component`;
   }
 
-  // Default description
+  // Default description based on state and events
   const hasState = Object.keys(ast.state).length > 0;
   const hasEvents = Object.keys(ast.events).length > 0;
 

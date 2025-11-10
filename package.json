@@ -5,7 +5,8 @@
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
-    "logicstamp-context": "./dist/cli/index.js"
+    "logicstamp-context": "./dist/cli/index.js",
+    "logicstamp-validate": "./dist/cli/validate-index.js"
   },
   "scripts": {
     "build": "tsc",

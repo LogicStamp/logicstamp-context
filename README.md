@@ -46,13 +46,19 @@ This output is designed to be easily understood by AI assistants, helping them p
 
 ```bash
 logicstamp-context [path] [options]
+logicstamp-validate [file]
 ```
 
-### Arguments
+### Commands
+
+- `logicstamp-context` scans a directory and writes an AI-ready bundle file.
+- `logicstamp-validate [file]` checks an existing bundle for schema and structural issues before sharing it with an AI or committing it to a repo. When no file is specified it looks for `context.json` in the current directory.
+
+### Arguments (`context` command)
 
 - `[path]` - Directory to scan (default: current directory)
 
-### Options
+### Options (`context` command)
 
 | Option | Alias | Description | Default |
 |--------|-------|-------------|---------|
@@ -63,7 +69,16 @@ logicstamp-context [path] [options]
 | `--max-nodes <n>` | `-m` | Maximum nodes per bundle | `100` |
 | `--profile <profile>` | | Profile preset (see below) | `llm-chat` |
 | `--strict` | `-s` | Fail on missing dependencies | `false` |
+| `--predict-behavior` | | Include experimental behavior predictions in contracts | `false` |
+| `--dry-run` | | Skip writing output; show on-screen summary only | `false` |
+| `--stats` | | Emit single-line JSON stats (intended for CI) | `false` |
 | `--help` | `-h` | Show help message | |
+
+### Options (`logicstamp-validate`)
+
+- `[file]` – Optional path to the generated `context.json` (or alternative output) to validate. Defaults to `./context.json`.
+- Exits with code `0` on success, `1` on invalid structure or read/parse errors.
+- Prints bundle counts, node totals, and highlights schema mismatches.
 
 ### Profiles
 
@@ -122,6 +137,15 @@ logicstamp-context --include-code full
 ```bash
 # Use llm-safe profile for smaller output
 logicstamp-context --profile llm-safe --out safe-context.json
+
+# Dry-run context generation and capture stats in CI
+logicstamp-context ./src --stats > stats.jsonl
+
+# Validate the default context.json in the current directory
+logicstamp-validate
+
+# Validate a custom-named bundle
+logicstamp-validate context-review.json
 ```
 
 ## Output Format
