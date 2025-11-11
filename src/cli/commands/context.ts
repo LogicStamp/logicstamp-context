@@ -50,6 +50,13 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
 
   // Step 1: Find all React/TS files
   const files = await globFiles(projectRoot);
+
+  if (files.length === 0) {
+    console.error(`❌ No React/TypeScript modules found under ${displayPath(projectRoot)}`);
+    console.error(`   Try: logicstamp-context ./src or --depth 0 to scan all directories`);
+    process.exit(1);
+  }
+
   console.log(`   Found ${files.length} files`);
 
   // Step 2: Build contracts for all files
@@ -84,6 +91,8 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
 
   if (contracts.length === 0) {
     console.error('❌ No components found to analyze');
+    console.error(`   Files were found but could not be analyzed as React/TypeScript components`);
+    console.error(`   Ensure your files contain valid React components or TypeScript modules`);
     process.exit(1);
   }
 
@@ -155,20 +164,36 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     process.exit(1);
   }
 
+  // Sort bundles by entryId for deterministic output
+  bundles.sort((a, b) => a.entryId.localeCompare(b.entryId));
+
   // Combine all bundles into output
   if (options.format === 'ndjson') {
-    output = bundles.map(b => formatBundle(b, 'json')).join('\n');
+    output = bundles.map((b, idx) => {
+      const bundleWithSchema = {
+        $schema: './schema/logicstamp.context.schema.json',
+        position: `${idx + 1}/${bundles.length}`,
+        ...b,
+      };
+      return JSON.stringify(bundleWithSchema);
+    }).join('\n');
   } else if (options.format === 'json') {
     const bundlesWithPosition = bundles.map((b, idx) => ({
-      $schema: './logicstamp.context.schema.json',
+      $schema: './schema/logicstamp.context.schema.json',
       position: `${idx + 1}/${bundles.length}`,
       ...b,
     }));
     output = JSON.stringify(bundlesWithPosition, null, 2);
   } else {
+    // pretty format
     output = bundles.map((b, idx) => {
+      const bundleWithSchema = {
+        $schema: './schema/logicstamp.context.schema.json',
+        position: `${idx + 1}/${bundles.length}`,
+        ...b,
+      };
       const header = `\n# Bundle ${idx + 1}/${bundles.length}: ${b.entryId}`;
-      return header + '\n' + formatBundle(b, 'pretty');
+      return header + '\n' + JSON.stringify(bundleWithSchema, null, 2);
     }).join('\n\n');
   }
 
@@ -180,6 +205,17 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   const totalMissing = bundles.reduce((sum, b) => sum + b.meta.missing.length, 0);
 
   // If --stats flag is set, output one-line JSON and exit
+  // Stats Output Contract (for CI parsing):
+  // {
+  //   totalComponents: number,      // Total .ts/.tsx files analyzed
+  //   rootComponents: number,        // Components with no dependencies (entry points)
+  //   leafComponents: number,        // Components that are only dependencies (no imports)
+  //   bundlesGenerated: number,      // Number of bundles created (one per root)
+  //   totalNodes: number,            // Sum of all nodes across all bundles
+  //   totalEdges: number,            // Sum of all edges across all bundles
+  //   missingDependencies: number,   // Count of unresolved dependencies (third-party/external)
+  //   elapsedMs: number              // Time taken in milliseconds
+  // }
   if (options.stats) {
     const stats = {
       totalComponents: contracts.length,

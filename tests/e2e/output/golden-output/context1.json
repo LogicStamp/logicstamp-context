@@ -1,0 +1,157 @@
+[
+  {
+    "$schema": "./schema/logicstamp.context.schema.json",
+    "position": "1/2",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/App.tsx",
+    "depth": 1,
+    "createdAt": "2025-11-11T13:53:53.132Z",
+    "bundleHash": "uifb:c4f6ec5bb31bfdb3cd5cc2fb",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/App.tsx",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "react:component",
+            "entryId": "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/App.tsx",
+            "description": "App - Interactive component",
+            "version": {
+              "variables": [],
+              "hooks": [],
+              "components": [
+                "Card"
+              ],
+              "functions": [
+                "App"
+              ],
+              "imports": [
+                "./components/Card",
+                "react"
+              ]
+            },
+            "logicSignature": {
+              "props": {},
+              "events": {
+                "onAction": {
+                  "type": "function",
+                  "signature": "() => void"
+                }
+              }
+            },
+            "semanticHash": "uif:c3aeb12cc244c564dab38808",
+            "fileHash": "uif:b6d9f19e64ee0a86ab8873ef"
+          },
+          "codeHeader": null
+        },
+        {
+          "entryId": "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/components/Card.tsx",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "react:component",
+            "entryId": "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/components/Card.tsx",
+            "description": "Card - Card display component",
+            "version": {
+              "variables": [],
+              "hooks": [
+                "useState"
+              ],
+              "components": [
+                "Button"
+              ],
+              "functions": [
+                "Card"
+              ],
+              "imports": [
+                "./Button",
+                "react"
+              ]
+            },
+            "logicSignature": {
+              "props": {
+                "title": "string",
+                "description": "string",
+                "onAction": {
+                  "type": "function",
+                  "signature": "() => void",
+                  "optional": true
+                }
+              },
+              "events": {
+                "onClick": {
+                  "type": "function",
+                  "signature": "() => void"
+                }
+              },
+              "state": {
+                "expanded": "boolean"
+              }
+            },
+            "semanticHash": "uif:620f7cc53ad0c431bc602c90",
+            "fileHash": "uif:2bea4f44084e0ce1d58029e5"
+          },
+          "codeHeader": null
+        }
+      ],
+      "edges": [
+        [
+          "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/App.tsx",
+          "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/components/Card.tsx"
+        ]
+      ]
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp.manifest.json"
+    }
+  },
+  {
+    "$schema": "./schema/logicstamp.context.schema.json",
+    "position": "2/2",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/utils/helpers.ts",
+    "depth": 1,
+    "createdAt": "2025-11-11T13:53:53.132Z",
+    "bundleHash": "uifb:4dcbfc15a938bc858bc4662a",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/utils/helpers.ts",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "ts:module",
+            "entryId": "c:/Users/River/Desktop/logicstamp-context/tests/fixtures/simple-app/src/utils/helpers.ts",
+            "description": "helpers - Utility module",
+            "version": {
+              "variables": [],
+              "hooks": [],
+              "components": [],
+              "functions": [
+                "capitalizeFirst",
+                "formatDate"
+              ],
+              "imports": []
+            },
+            "logicSignature": {
+              "props": {},
+              "events": {}
+            },
+            "semanticHash": "uif:7505b26f0c530e8ba5aea36e",
+            "fileHash": "uif:e709b1f3405a8f96c01e4b83"
+          },
+          "codeHeader": null
+        }
+      ],
+      "edges": []
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp.manifest.json"
+    }
+  }
+]

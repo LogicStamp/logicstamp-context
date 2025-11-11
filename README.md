@@ -1,6 +1,6 @@
 # LogicStamp Context
 
-Generate AI-friendly context bundles from React codebases in seconds.
+**A tiny CLI that compiles your React/TypeScript codebase into machine-readable context bundles for AI and CI. Fast, deterministic, zero-config.**
 
 ## What is this?
 
@@ -17,18 +17,23 @@ npm install -g logicstamp-context
 ## Quick Start
 
 ```bash
-# Generate context for your entire project
+# Install globally
+npm i -g logicstamp-context
+
+# Generate context.json (llm-chat profile)
 logicstamp-context
 
-# Generate context for a specific directory
-logicstamp-context ./src
+# Preview stats without writing files
+logicstamp-context --dry-run --stats
 
-# Use a conservative profile optimized for AI safety
-logicstamp-context --profile llm-safe
+# Generate minimal API documentation
+logicstamp-context --include-code none --format pretty --out docs/api.json
 
-# Include full source code (not just headers)
-logicstamp-context --include-code full --out full-context.json
+# Validate generated context
+logicstamp-validate context.json
 ```
+
+**Why?** Generate AI-ready context from your React/TS codebase in seconds.
 
 ## What does it generate?
 

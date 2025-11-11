@@ -532,6 +532,12 @@ export async function pack(
   // Sort nodes for deterministic output
   const sortedNodes = stableSort(nodes);
 
+  // Sort edges for deterministic output
+  const sortedEdges = edges.sort((a, b) => {
+    const fromCompare = a[0].localeCompare(b[0]);
+    return fromCompare !== 0 ? fromCompare : a[1].localeCompare(b[1]);
+  });
+
   // Compute bundle hash
   const bundleHash = computeBundleHash(sortedNodes, options.depth);
 
@@ -545,7 +551,7 @@ export async function pack(
     bundleHash,
     graph: {
       nodes: sortedNodes,
-      edges,
+      edges: sortedEdges,
     },
     meta: {
       missing,

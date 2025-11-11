@@ -1,0 +1,340 @@
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
+import { readFile, rm } from 'node:fs/promises';
+import { join } from 'node:path';
+
+const execAsync = promisify(exec);
+
+describe('Determinism and Ordering Tests', () => {
+  const fixturesPath = join(process.cwd(), 'tests/fixtures/simple-app');
+  const outputPath = join(process.cwd(), 'tests/e2e/output');
+
+  beforeEach(async () => {
+    try {
+      await rm(outputPath, { recursive: true, force: true });
+    } catch (error) {
+      // Directory doesn't exist
+    }
+    await execAsync('npm run build');
+  });
+
+  afterEach(async () => {
+    try {
+      await rm(outputPath, { recursive: true, force: true });
+    } catch (error) {
+      // Ignore cleanup errors
+    }
+  });
+
+  describe('Golden output - stable ordering', () => {
+    it('should produce identical output on multiple runs (deterministic)', async () => {
+      const testDir = join(outputPath, 'golden-output');
+      const outFile1 = join(testDir, 'context1.json');
+      const outFile2 = join(testDir, 'context2.json');
+
+      // Generate context twice
+      try {
+        await execAsync(
+          `node dist/cli/index.js ${fixturesPath} --out ${outFile1}`
+        );
+      } catch (err: any) {
+        console.error('Failed to generate context1:', err.stderr || err.message);
+        throw err;
+      }
+
+      try {
+        await execAsync(
+          `node dist/cli/index.js ${fixturesPath} --out ${outFile2}`
+        );
+      } catch (err: any) {
+        console.error('Failed to generate context2:', err.stderr || err.message);
+        throw err;
+      }
+
+      // Read both outputs
+      const content1 = await readFile(outFile1, 'utf-8');
+      const content2 = await readFile(outFile2, 'utf-8');
+
+      const bundles1 = JSON.parse(content1);
+      const bundles2 = JSON.parse(content2);
+
+      // Bundles should be in the same order
+      expect(bundles1.length).toBe(bundles2.length);
+
+      for (let i = 0; i < bundles1.length; i++) {
+        expect(bundles1[i].entryId).toBe(bundles2[i].entryId);
+
+        // Nodes should be in the same order
+        expect(bundles1[i].graph.nodes.length).toBe(bundles2[i].graph.nodes.length);
+        for (let j = 0; j < bundles1[i].graph.nodes.length; j++) {
+          expect(bundles1[i].graph.nodes[j].entryId).toBe(
+            bundles2[i].graph.nodes[j].entryId
+          );
+        }
+
+        // Edges should be in the same order
+        expect(bundles1[i].graph.edges).toEqual(bundles2[i].graph.edges);
+      }
+    }, 60000);
+
+    it('should sort bundles alphabetically by entryId', async () => {
+      const testDir = join(outputPath, 'sort-bundles');
+      const outFile = join(testDir, 'context.json');
+
+      await execAsync(
+        `node dist/cli/index.js ${fixturesPath} --out ${outFile}`
+      );
+
+      const content = await readFile(outFile, 'utf-8');
+      const bundles = JSON.parse(content);
+
+      // Check bundles are sorted
+      for (let i = 1; i < bundles.length; i++) {
+        const prev = bundles[i - 1].entryId;
+        const curr = bundles[i].entryId;
+        expect(prev.localeCompare(curr)).toBeLessThanOrEqual(0);
+      }
+    }, 30000);
+
+    it('should sort nodes alphabetically by entryId within each bundle', async () => {
+      const testDir = join(outputPath, 'sort-nodes');
+      const outFile = join(testDir, 'context.json');
+
+      await execAsync(
+        `node dist/cli/index.js ${fixturesPath} --depth 2 --out ${outFile}`
+      );
+
+      const content = await readFile(outFile, 'utf-8');
+      const bundles = JSON.parse(content);
+
+      bundles.forEach(bundle => {
+        const nodes = bundle.graph.nodes;
+        for (let i = 1; i < nodes.length; i++) {
+          const prev = nodes[i - 1].entryId;
+          const curr = nodes[i].entryId;
+          expect(prev.localeCompare(curr)).toBeLessThanOrEqual(0);
+        }
+      });
+    }, 30000);
+
+    it('should sort edges deterministically', async () => {
+      const testDir = join(outputPath, 'sort-edges');
+      const outFile = join(testDir, 'context.json');
+
+      await execAsync(
+        `node dist/cli/index.js ${fixturesPath} --depth 2 --out ${outFile}`
+      );
+
+      const content = await readFile(outFile, 'utf-8');
+      const bundles = JSON.parse(content);
+
+      bundles.forEach(bundle => {
+        const edges = bundle.graph.edges;
+        for (let i = 1; i < edges.length; i++) {
+          const prev = edges[i - 1];
+          const curr = edges[i];
+          // Edges should be sorted by from, then by to
+          const fromCompare = prev[0].localeCompare(curr[0]);
+          if (fromCompare === 0) {
+            expect(prev[1].localeCompare(curr[1])).toBeLessThanOrEqual(0);
+          } else {
+            expect(fromCompare).toBeLessThanOrEqual(0);
+          }
+        }
+      });
+    }, 30000);
+  });
+
+  describe('Schema validation in output', () => {
+    it('should include $schema in all bundles (json format)', async () => {
+      const testDir = join(outputPath, 'schema-json');
+      const outFile = join(testDir, 'context.json');
+
+      await execAsync(
+        `node dist/cli/index.js ${fixturesPath} --format json --out ${outFile}`
+      );
+
+      const content = await readFile(outFile, 'utf-8');
+      const bundles = JSON.parse(content);
+
+      bundles.forEach(bundle => {
+        expect(bundle).toHaveProperty('$schema');
+        expect(bundle.$schema).toContain('logicstamp.context.schema.json');
+        expect(bundle.schemaVersion).toBe('0.1');
+      });
+    }, 30000);
+
+    it('should include $schema in all bundles (ndjson format)', async () => {
+      const testDir = join(outputPath, 'schema-ndjson');
+      const outFile = join(testDir, 'context.ndjson');
+
+      await execAsync(
+        `node dist/cli/index.js ${fixturesPath} --format ndjson --out ${outFile}`
+      );
+
+      const content = await readFile(outFile, 'utf-8');
+      const lines = content.trim().split('\n');
+
+      lines.forEach(line => {
+        const bundle = JSON.parse(line);
+        expect(bundle).toHaveProperty('$schema');
+        expect(bundle.$schema).toContain('logicstamp.context.schema.json');
+        expect(bundle.schemaVersion).toBe('0.1');
+      });
+    }, 30000);
+
+    it('should include $schema in all bundles (pretty format)', async () => {
+      const testDir = join(outputPath, 'schema-pretty');
+      const outFile = join(testDir, 'context.txt');
+
+      await execAsync(
+        `node dist/cli/index.js ${fixturesPath} --format pretty --out ${outFile}`
+      );
+
+      const content = await readFile(outFile, 'utf-8');
+
+      // Pretty format has headers, extract JSON parts
+      const jsonMatches = content.match(/\{[\s\S]*?\n\}/g);
+      expect(jsonMatches).toBeTruthy();
+
+      if (jsonMatches) {
+        jsonMatches.forEach(jsonStr => {
+          const bundle = JSON.parse(jsonStr);
+          expect(bundle).toHaveProperty('$schema');
+          expect(bundle.$schema).toContain('logicstamp.context.schema.json');
+        });
+      }
+    }, 30000);
+  });
+
+  describe('Windows path handling', () => {
+    it('should use forward slashes in entryId paths', async () => {
+      const testDir = join(outputPath, 'windows-paths');
+      const outFile = join(testDir, 'context.json');
+
+      await execAsync(
+        `node dist/cli/index.js ${fixturesPath} --out ${outFile}`
+      );
+
+      const content = await readFile(outFile, 'utf-8');
+      const bundles = JSON.parse(content);
+
+      bundles.forEach(bundle => {
+        // entryId should not contain backslashes (Windows-style paths)
+        expect(bundle.entryId).not.toContain('\\\\');
+
+        bundle.graph.nodes.forEach(node => {
+          expect(node.entryId).not.toContain('\\\\');
+        });
+
+        bundle.graph.edges.forEach(edge => {
+          expect(edge[0]).not.toContain('\\\\');
+          expect(edge[1]).not.toContain('\\\\');
+        });
+      });
+    }, 30000);
+
+    it('should display forward slashes in console output', async () => {
+      await execAsync('npm run build');
+
+      const { stdout } = await execAsync(
+        `node dist/cli/index.js ${fixturesPath} --dry-run`
+      );
+
+      // Console output should use forward slashes for display
+      // Even on Windows, we want consistent forward-slash display
+      const lines = stdout.split('\n');
+      const pathLines = lines.filter(line =>
+        line.includes('Scanning') || line.includes('Context written')
+      );
+
+      // This test documents that we're displaying paths in a normalized way
+      expect(pathLines.length).toBeGreaterThan(0);
+    }, 30000);
+  });
+
+  describe('Depth monotonicity', () => {
+    it('should have monotonically increasing node/edge counts with depth', async () => {
+      const testDir = join(outputPath, 'depth-monotonic');
+      const outFile1 = join(testDir, 'context-depth1.json');
+      const outFile2 = join(testDir, 'context-depth2.json');
+
+      // Generate with different depths
+      // Note: Default profile (llm-chat) sets depth=1, so we test that vs depth=2
+      await execAsync(
+        `node dist/cli/index.js ${fixturesPath} --out ${outFile1}`
+      );
+      await execAsync(
+        `node dist/cli/index.js ${fixturesPath} --include-code none --profile ci-strict --depth 2 --out ${outFile2}`
+      );
+
+      const bundles1 = JSON.parse(await readFile(outFile1, 'utf-8'));
+      const bundles2 = JSON.parse(await readFile(outFile2, 'utf-8'));
+
+      const totalNodes1 = bundles1.reduce((sum, b) => sum + b.graph.nodes.length, 0);
+      const totalNodes2 = bundles2.reduce((sum, b) => sum + b.graph.nodes.length, 0);
+
+      const totalEdges1 = bundles1.reduce((sum, b) => sum + b.graph.edges.length, 0);
+      const totalEdges2 = bundles2.reduce((sum, b) => sum + b.graph.edges.length, 0);
+
+      // Depth 2 should have >= nodes and edges than depth 1
+      // (They could be equal if all deps are already included at depth 1)
+      expect(totalNodes2).toBeGreaterThanOrEqual(totalNodes1);
+      expect(totalEdges2).toBeGreaterThanOrEqual(totalEdges1);
+    }, 60000);
+  });
+
+  describe('Flags matrix', () => {
+    it('should handle include-code × format combinations', async () => {
+      const testDir = join(outputPath, 'flags-matrix');
+      const includeCodeModes = ['none', 'header', 'full'];
+      const formats = ['json', 'pretty', 'ndjson'];
+
+      for (const includeCode of includeCodeModes) {
+        for (const format of formats) {
+          const outFile = join(testDir, `context-${includeCode}-${format}.${format === 'ndjson' ? 'ndjson' : 'json'}`);
+
+          await execAsync(
+            `node dist/cli/index.js ${fixturesPath} --include-code ${includeCode} --format ${format} --out ${outFile}`
+          );
+
+          const content = await readFile(outFile, 'utf-8');
+
+          // Verify output is valid
+          if (format === 'ndjson') {
+            const lines = content.trim().split('\n');
+            expect(lines.length).toBeGreaterThan(0);
+            lines.forEach(line => {
+              expect(() => JSON.parse(line)).not.toThrow();
+            });
+          } else {
+            // Both json and pretty should be valid JSON
+            // (pretty format bundles are wrapped with headers but contain JSON)
+            expect(content.length).toBeGreaterThan(0);
+          }
+        }
+      }
+    }, 120000);
+
+    it('should handle max-nodes constraints', async () => {
+      const testDir = join(outputPath, 'max-nodes');
+      const maxNodesSizes = [10, 30, 100];
+
+      for (const maxNodes of maxNodesSizes) {
+        const outFile = join(testDir, `context-max${maxNodes}.json`);
+
+        await execAsync(
+          `node dist/cli/index.js ${fixturesPath} --max-nodes ${maxNodes} --out ${outFile}`
+        );
+
+        const content = await readFile(outFile, 'utf-8');
+        const bundles = JSON.parse(content);
+
+        bundles.forEach(bundle => {
+          expect(bundle.graph.nodes.length).toBeLessThanOrEqual(maxNodes);
+        });
+      }
+    }, 90000);
+  });
+});

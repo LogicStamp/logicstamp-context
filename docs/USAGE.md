@@ -218,6 +218,48 @@ logicstamp-validate          # defaults to ./context.json
 logicstamp-context --stats >> .ci/context-stats.jsonl
 ```
 
+### Stats Output Format
+
+The `--stats` flag outputs a single line of JSON with the following structure (stable contract for CI parsing):
+
+```json
+{
+  "totalComponents": 42,
+  "rootComponents": 5,
+  "leafComponents": 8,
+  "bundlesGenerated": 5,
+  "totalNodes": 37,
+  "totalEdges": 32,
+  "missingDependencies": 15,
+  "elapsedMs": 234
+}
+```
+
+**Field descriptions:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `totalComponents` | number | Total .ts/.tsx files successfully analyzed |
+| `rootComponents` | number | Components with no dependencies (entry points) |
+| `leafComponents` | number | Components that are only dependencies (no imports) |
+| `bundlesGenerated` | number | Number of bundles created (one per root) |
+| `totalNodes` | number | Sum of all nodes across all bundles |
+| `totalEdges` | number | Sum of all edges across all bundles |
+| `missingDependencies` | number | Count of unresolved dependencies (third-party/external) |
+| `elapsedMs` | number | Time taken in milliseconds |
+
+**Example CI usage:**
+
+```bash
+# Generate stats and parse in CI
+STATS=$(logicstamp-context --stats)
+COMPONENTS=$(echo $STATS | jq '.totalComponents')
+echo "Analyzed $COMPONENTS components"
+
+# Append to monitoring log
+logicstamp-context --stats | jq -c '. + {timestamp: now}' >> .ci/stats.jsonl
+```
+
 ## Bundle Structure
 
 The generated context.json contains an array of bundles:
