@@ -12,7 +12,7 @@
  *
  * Logic Signature:
  *   props: {}
- *   events: {}
+ *   emits: {}
  *   state: {}
  *
  * Predictions:
@@ -66,7 +66,7 @@ export type EventType =
 
 export interface LogicSignature {
   props: Record<string, PropType>;
-  events: Record<string, EventType>;
+  emits: Record<string, EventType>;
   state?: Record<string, string>;
 }
 
@@ -96,15 +96,24 @@ export interface ContractLinks {
   spec?: string;
 }
 
+export type ExportMetadata =
+  | 'default'
+  | 'named'
+  | { named: string[] };
+
 export interface UIFContract {
   type: 'UIFContract';
   schemaVersion: '0.3';
   kind: ContractKind;
   entryId: string;
+  entryPathAbs?: string;  // Absolute native path (e.g., C:\\Users\\...\\App.tsx)
+  entryPathRel?: string;  // Relative POSIX path (e.g., src/App.tsx)
+  os?: 'win32' | 'posix';  // OS where contract was generated
   description: string;
   usedIn?: string[];  // Optional: only persisted when non-empty
   version: ComponentVersion;
   logicSignature: LogicSignature;
+  exports?: ExportMetadata;  // Export type: default, named, or list of named exports
   prediction?: string[];
   metrics?: ContractMetrics;
   links?: ContractLinks;

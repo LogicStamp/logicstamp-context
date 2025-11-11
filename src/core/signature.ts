@@ -12,7 +12,7 @@
  *
  * Logic Signature:
  *   props: {}
- *   events: {}
+ *   emits: {}
  *   state: {}
  *
  * Predictions:
@@ -45,7 +45,7 @@ export function buildLogicSignature(
 ): SignatureResult {
   const signature: LogicSignature = {
     props: ast.props,
-    events: ast.events,
+    emits: ast.emits,
     state: Object.keys(ast.state).length > 0 ? ast.state : undefined,
   };
 
@@ -82,7 +82,7 @@ function applySubmitOnlyPreset(
   prediction.push('Contract preset: submit-only');
 
   const allowedEvents = ['onSubmit'];
-  const eventKeys = Object.keys(ast.events);
+  const eventKeys = Object.keys(ast.emits);
   const forbidden = eventKeys.filter((key) => !allowedEvents.includes(key));
 
   if (forbidden.length > 0) {
@@ -111,7 +111,7 @@ function applyNavOnlyPreset(
   prediction.push('Contract preset: nav-only');
 
   const allowedEvents = ['onClick'];
-  const eventKeys = Object.keys(ast.events);
+  const eventKeys = Object.keys(ast.emits);
   const forbidden = eventKeys.filter((key) => !allowedEvents.includes(key));
 
   if (forbidden.length > 0) {
@@ -140,7 +140,7 @@ function applyDisplayOnlyPreset(
 ): void {
   prediction.push('Contract preset: display-only');
 
-  const eventKeys = Object.keys(ast.events);
+  const eventKeys = Object.keys(ast.emits);
 
   if (eventKeys.length > 0) {
     violations.push(
@@ -257,15 +257,15 @@ export function inferDescription(filePath: string, ast: AstExtract): string {
     return `${fileName} - Navigation component`;
   }
 
-  // Default description based on state and events
+  // Default description based on state and emits
   const hasState = Object.keys(ast.state).length > 0;
-  const hasEvents = Object.keys(ast.events).length > 0;
+  const hasEmits = Object.keys(ast.emits).length > 0;
 
-  if (hasState && hasEvents) {
+  if (hasState && hasEmits) {
     return `${fileName} - Interactive component with internal state`;
   } else if (hasState) {
     return `${fileName} - Stateful component`;
-  } else if (hasEvents) {
+  } else if (hasEmits) {
     return `${fileName} - Interactive component`;
   } else {
     return `${fileName} - Presentational component`;

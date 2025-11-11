@@ -5,6 +5,9 @@ export default defineConfig({
     // Test environment
     environment: 'node',
 
+    // Run test files sequentially to avoid CLI conflicts
+    fileParallelism: false,
+
     // Include patterns
     include: ['tests/**/*.test.ts'],
 

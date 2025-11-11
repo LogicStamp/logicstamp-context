@@ -72,7 +72,7 @@ export function structureHash(astOrVersion: AstExtract | ComponentVersion): stri
 export function signatureHash(signature: LogicSignature): string {
   const payload = {
     props: sortObject(signature.props),
-    events: sortObject(signature.events),
+    emits: sortObject(signature.emits),
     state: signature.state ? sortObject(signature.state) : undefined,
   };
 
@@ -98,7 +98,7 @@ export function semanticHashFromAst(ast: AstExtract, signature: LogicSignature):
     },
     signature: {
       props: sortObject(signature.props),
-      events: sortObject(signature.events),
+      emits: sortObject(signature.emits),
       state: signature.state ? sortObject(signature.state) : undefined,
     },
   };

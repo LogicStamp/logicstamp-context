@@ -12,7 +12,7 @@
  *
  * Logic Signature:
  *   props: {}
- *   events: {}
+ *   emits: {}
  *   state: {}
  *
  * Predictions:
@@ -27,7 +27,7 @@
  * Contract Builder - Assembles UIFContract objects from AST data
  */
 
-import type { UIFContract, ContractPreset } from '../types/UIFContract.js';
+import type { UIFContract, ContractPreset, ExportMetadata } from '../types/UIFContract.js';
 import type { AstExtract } from './astParser.js';
 import {
   buildLogicSignature,
@@ -36,6 +36,8 @@ import {
 } from './signature.js';
 import { semanticHashFromAst, fileHash } from '../utils/hash.js';
 import { normalizeEntryId } from '../utils/fsx.js';
+import { resolve, relative } from 'node:path';
+import { platform } from 'node:os';
 
 export interface ContractBuildParams {
   description?: string;
@@ -47,6 +49,34 @@ export interface ContractBuildParams {
 export interface ContractBuildResult {
   contract: UIFContract;
   violations: string[];
+}
+
+/**
+ * Extract export metadata from AST
+ */
+function extractExportsMetadata(ast: AstExtract): ExportMetadata | undefined {
+  // Check if we have any exports at all
+  if (!ast.functions || ast.functions.length === 0) {
+    return undefined;
+  }
+
+  // Check for default export in the component name
+  const hasDefaultExport = ast.functions.some(fn => fn.toLowerCase() === 'default');
+
+  // If we have only one function and it matches the file name, assume default export
+  const isLikelyDefault = ast.functions.length === 1 && !hasDefaultExport;
+
+  if (hasDefaultExport || isLikelyDefault) {
+    return 'default';
+  }
+
+  // If multiple exports or clear named exports
+  if (ast.functions.length > 1) {
+    return { named: ast.functions };
+  }
+
+  // Single named export
+  return { named: ast.functions };
 }
 
 /**
@@ -71,12 +101,24 @@ export function buildContract(
   // Combine all predictions
   const allPredictions = [...presetPredictions, ...behavioralPredictions];
 
+  // Compute path fields
+  const entryPathAbs = resolve(entryId);
+  const cwd = process.cwd();
+  const entryPathRel = relative(cwd, entryId).replace(/\\/g, '/'); // Always use POSIX separators
+  const os = platform() === 'win32' ? 'win32' : 'posix';
+
+  // Extract exports
+  const exports = extractExportsMetadata(ast);
+
   // Build the contract (usedIn omitted - computed at manifest time, not persisted)
   const contract: UIFContract = {
     type: 'UIFContract',
     schemaVersion: '0.3',
     kind: ast.kind,
     entryId: normalizeEntryId(entryId),
+    entryPathAbs,
+    entryPathRel,
+    os,
     description: params.description || inferDescription(entryId, ast),
     version: {
       variables: ast.variables,
@@ -86,6 +128,7 @@ export function buildContract(
       imports: ast.imports,
     },
     logicSignature: signature,
+    exports,
     prediction: allPredictions.length > 0 ? allPredictions : undefined,
     metrics: undefined,
     links: undefined,

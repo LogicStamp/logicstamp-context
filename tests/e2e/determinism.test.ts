@@ -1,12 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
-import { readFile, rm } from 'node:fs/promises';
+import { readFile, rm, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const execAsync = promisify(exec);
 
-describe('Determinism and Ordering Tests', () => {
+// Run these tests sequentially to avoid parallel execution issues
+describe.sequential('Determinism and Ordering Tests', () => {
   const fixturesPath = join(process.cwd(), 'tests/fixtures/simple-app');
   const outputPath = join(process.cwd(), 'tests/e2e/output');
 
@@ -30,25 +31,35 @@ describe('Determinism and Ordering Tests', () => {
   describe('Golden output - stable ordering', () => {
     it('should produce identical output on multiple runs (deterministic)', async () => {
       const testDir = join(outputPath, 'golden-output');
+      await mkdir(testDir, { recursive: true });
+
       const outFile1 = join(testDir, 'context1.json');
       const outFile2 = join(testDir, 'context2.json');
 
       // Generate context twice
       try {
-        await execAsync(
+        const result1 = await execAsync(
           `node dist/cli/index.js ${fixturesPath} --out ${outFile1}`
         );
+        if (!result1.stdout.includes('Context written')) {
+          console.error('CLI output 1:', result1.stdout);
+        }
       } catch (err: any) {
-        console.error('Failed to generate context1:', err.stderr || err.message);
+        console.error('Failed to generate context1:', err.message);
+        console.error('stderr:', err.stderr);
         throw err;
       }
 
       try {
-        await execAsync(
+        const result2 = await execAsync(
           `node dist/cli/index.js ${fixturesPath} --out ${outFile2}`
         );
+        if (!result2.stdout.includes('Context written')) {
+          console.error('CLI output 2:', result2.stdout);
+        }
       } catch (err: any) {
-        console.error('Failed to generate context2:', err.stderr || err.message);
+        console.error('Failed to generate context2:', err.message);
+        console.error('stderr:', err.stderr);
         throw err;
       }
 
@@ -80,6 +91,8 @@ describe('Determinism and Ordering Tests', () => {
 
     it('should sort bundles alphabetically by entryId', async () => {
       const testDir = join(outputPath, 'sort-bundles');
+      await mkdir(testDir, { recursive: true });
+
       const outFile = join(testDir, 'context.json');
 
       await execAsync(
@@ -99,6 +112,8 @@ describe('Determinism and Ordering Tests', () => {
 
     it('should sort nodes alphabetically by entryId within each bundle', async () => {
       const testDir = join(outputPath, 'sort-nodes');
+      await mkdir(testDir, { recursive: true });
+
       const outFile = join(testDir, 'context.json');
 
       await execAsync(
@@ -120,6 +135,8 @@ describe('Determinism and Ordering Tests', () => {
 
     it('should sort edges deterministically', async () => {
       const testDir = join(outputPath, 'sort-edges');
+      await mkdir(testDir, { recursive: true });
+
       const outFile = join(testDir, 'context.json');
 
       await execAsync(
@@ -149,6 +166,8 @@ describe('Determinism and Ordering Tests', () => {
   describe('Schema validation in output', () => {
     it('should include $schema in all bundles (json format)', async () => {
       const testDir = join(outputPath, 'schema-json');
+      await mkdir(testDir, { recursive: true });
+
       const outFile = join(testDir, 'context.json');
 
       await execAsync(
@@ -167,6 +186,8 @@ describe('Determinism and Ordering Tests', () => {
 
     it('should include $schema in all bundles (ndjson format)', async () => {
       const testDir = join(outputPath, 'schema-ndjson');
+      await mkdir(testDir, { recursive: true });
+
       const outFile = join(testDir, 'context.ndjson');
 
       await execAsync(
@@ -186,6 +207,8 @@ describe('Determinism and Ordering Tests', () => {
 
     it('should include $schema in all bundles (pretty format)', async () => {
       const testDir = join(outputPath, 'schema-pretty');
+      await mkdir(testDir, { recursive: true });
+
       const outFile = join(testDir, 'context.txt');
 
       await execAsync(
@@ -211,6 +234,8 @@ describe('Determinism and Ordering Tests', () => {
   describe('Windows path handling', () => {
     it('should use forward slashes in entryId paths', async () => {
       const testDir = join(outputPath, 'windows-paths');
+      await mkdir(testDir, { recursive: true });
+
       const outFile = join(testDir, 'context.json');
 
       await execAsync(
@@ -257,17 +282,38 @@ describe('Determinism and Ordering Tests', () => {
   describe('Depth monotonicity', () => {
     it('should have monotonically increasing node/edge counts with depth', async () => {
       const testDir = join(outputPath, 'depth-monotonic');
+      await mkdir(testDir, { recursive: true });
+
       const outFile1 = join(testDir, 'context-depth1.json');
       const outFile2 = join(testDir, 'context-depth2.json');
 
       // Generate with different depths
       // Note: Default profile (llm-chat) sets depth=1, so we test that vs depth=2
-      await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --out ${outFile1}`
-      );
-      await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --include-code none --profile ci-strict --depth 2 --out ${outFile2}`
-      );
+      try {
+        const result1 = await execAsync(
+          `node dist/cli/index.js ${fixturesPath} --out ${outFile1}`
+        );
+        if (!result1.stdout.includes('Context written')) {
+          console.error('CLI output 1:', result1.stdout);
+        }
+      } catch (err: any) {
+        console.error('Failed command 1:', err.message);
+        console.error('stderr:', err.stderr);
+        throw err;
+      }
+
+      try {
+        const result2 = await execAsync(
+          `node dist/cli/index.js ${fixturesPath} --include-code none --profile ci-strict --depth 2 --out ${outFile2}`
+        );
+        if (!result2.stdout.includes('Context written')) {
+          console.error('CLI output 2:', result2.stdout);
+        }
+      } catch (err: any) {
+        console.error('Failed command 2:', err.message);
+        console.error('stderr:', err.stderr);
+        throw err;
+      }
 
       const bundles1 = JSON.parse(await readFile(outFile1, 'utf-8'));
       const bundles2 = JSON.parse(await readFile(outFile2, 'utf-8'));
@@ -288,6 +334,8 @@ describe('Determinism and Ordering Tests', () => {
   describe('Flags matrix', () => {
     it('should handle include-code × format combinations', async () => {
       const testDir = join(outputPath, 'flags-matrix');
+      await mkdir(testDir, { recursive: true });
+
       const includeCodeModes = ['none', 'header', 'full'];
       const formats = ['json', 'pretty', 'ndjson'];
 
@@ -319,6 +367,8 @@ describe('Determinism and Ordering Tests', () => {
 
     it('should handle max-nodes constraints', async () => {
       const testDir = join(outputPath, 'max-nodes');
+      await mkdir(testDir, { recursive: true });
+
       const maxNodesSizes = [10, 30, 100];
 
       for (const maxNodes of maxNodesSizes) {

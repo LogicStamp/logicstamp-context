@@ -12,7 +12,7 @@
  *
  * Logic Signature:
  *   props: {}
- *   events: {}
+ *   emits: {}
  *   state: {}
  *
  * Predictions:
@@ -39,7 +39,7 @@ export interface AstExtract {
   functions: string[];
   props: Record<string, PropType>;
   state: Record<string, string>;
-  events: Record<string, EventType>;
+  emits: Record<string, EventType>;
   imports: string[];
   jsxRoutes: string[];
 }
@@ -71,7 +71,7 @@ export async function extractFromFile(filePath: string): Promise<AstExtract> {
     functions: extractFunctions(source),
     props: extractProps(source),
     state: extractState(source),
-    events: extractEvents(source),
+    emits: extractEvents(source),
     imports,
     jsxRoutes: extractJsxRoutes(source),
   };
@@ -398,7 +398,7 @@ function extractJsxRoutes(source: SourceFile): string[] {
 export function buildLogicSignatureFromAst(ast: AstExtract): LogicSignature {
   return {
     props: ast.props,
-    events: ast.events,
+    emits: ast.emits,
     state: Object.keys(ast.state).length > 0 ? ast.state : undefined,
   };
 }
