@@ -56,8 +56,8 @@ logicstamp-validate [file]
 
 ### Commands
 
-- `logicstamp-context` scans a directory and writes an AI-ready bundle file.
-- `logicstamp-validate [file]` checks an existing bundle for schema and structural issues before sharing it with an AI or committing it to a repo. When no file is specified it looks for `context.json` in the current directory.
+- `logicstamp-context` scans a directory and writes an AI-ready context file containing a collection of bundles (one bundle per entry point).
+- `logicstamp-validate [file]` checks an existing context file for schema and structural issues before sharing it with an AI or committing it to a repo. When no file is specified it looks for `context.json` in the current directory.
 
 ### Arguments (`context` command)
 
@@ -140,7 +140,18 @@ logicstamp-context --profile llm-safe --predict-behavior
 # Generate context for entire project
 logicstamp-context
 
-# Output: context.json created with dependency graph and component structure
+# CLI output:
+# 🔍 Scanning /path/to/project...
+# ⚙️  Analyzing components...
+# 🔗 Building dependency graph...
+# 📦 Generating context...
+# 📝 Writing to: /path/to/project/context.json
+# ✅ Context written successfully
+#
+# 📊 Summary:
+#    Total components: 15
+#    Root components: 3
+#    ...
 ```
 
 ### Focused analysis
@@ -181,11 +192,12 @@ logicstamp-validate context-review.json
 
 ## Output Format
 
-The generated `context.json` contains an array of bundles:
+The generated `context.json` contains an array of bundles (one bundle per entry point):
 
 ```json
 [
   {
+    "$schema": "https://logicstamp.dev/schemas/context/v0.1.json",
     "position": "1/5",
     "type": "LogicStampBundle",
     "schemaVersion": "0.1",
@@ -201,7 +213,7 @@ The generated `context.json` contains an array of bundles:
             "type": "UIFContract",
             "schemaVersion": "0.3",
             "kind": "react:component",
-            "description": "Button - Presentational component",
+            "description": "Button - Interactive component",
             "version": {
               "variables": ["variant", "size"],
               "hooks": ["useState"],
@@ -223,7 +235,7 @@ The generated `context.json` contains an array of bundles:
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp.manifest.json"
+      "source": "logicstamp-context@0.1.0"
     }
   }
 ]

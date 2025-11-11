@@ -1,5 +1,6 @@
 [
   {
+    "$schema": "https://logicstamp.dev/schemas/context/v0.1.json",
     "position": "1/1",
     "type": "LogicStampBundle",
     "schemaVersion": "0.1",
@@ -122,7 +123,7 @@
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp.manifest.json"
+      "source": "logicstamp-context@0.1.0"
     }
   }
 ]

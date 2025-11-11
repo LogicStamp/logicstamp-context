@@ -164,7 +164,8 @@ const { stdout, stderr } = await execAsync(
   `node dist/cli/index.js ${fixturesPath} --out ${outFile}`
 );
 
-expect(stdout).toContain('Context written to');
+expect(stdout).toContain('Context written successfully');
+expect(stdout).toContain('📝 Writing to:');
 ```
 
 ### Testing generated bundles

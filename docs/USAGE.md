@@ -267,6 +267,7 @@ The generated context.json contains an array of bundles:
 ```json
 [
   {
+    "$schema": "https://logicstamp.dev/schemas/context/v0.1.json",
     "position": "1/5",
     "type": "LogicStampBundle",
     "schemaVersion": "0.1",
@@ -309,7 +310,7 @@ The generated context.json contains an array of bundles:
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp.manifest.json"
+      "source": "logicstamp-context@0.1.0"
     }
   }
 ]
