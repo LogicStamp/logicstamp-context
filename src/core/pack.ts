@@ -34,6 +34,12 @@ import { normalizeEntryId } from '../utils/fsx.js';
 import type { UIFContract } from '../types/UIFContract.js';
 import type { ProjectManifest, ComponentNode } from './manifest.js';
 import { bundleHash as computeBundleHashStable } from '../utils/hash.js';
+import { createRequire } from 'node:module';
+
+// Load package.json to get version
+const require = createRequire(import.meta.url);
+const pkg = require('../../package.json');
+const PACKAGE_VERSION = `${pkg.name}@${pkg.version}`;
 
 /**
  * Code inclusion mode for bundles
@@ -555,7 +561,7 @@ export async function pack(
     },
     meta: {
       missing,
-      source: 'logicstamp.manifest.json',
+      source: PACKAGE_VERSION,
     },
   };
 

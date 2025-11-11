@@ -94,17 +94,43 @@ Balanced mode for AI chat interfaces
 - Depth: 1
 - Code: headers only
 - Max nodes: 100
+- Behavioral predictions: disabled by default (enable with `--predict-behavior`)
 
 #### `llm-safe`
 Conservative mode for token-limited contexts
 - Depth: 1
 - Code: headers only
 - Max nodes: 30
+- Behavioral predictions: disabled by default (enable with `--predict-behavior`)
 
 #### `ci-strict`
 Strict validation mode for CI/CD
 - Code: none
 - Strict dependencies enabled
+- Behavioral predictions: not applicable (metadata-only mode)
+
+### Behavioral Predictions
+
+The `--predict-behavior` flag enables experimental behavioral analysis that adds predicted component behaviors to the contract output. These predictions include:
+
+- Form validation patterns
+- Side effect management (useEffect)
+- Data fetching/mutation patterns
+- Memoization usage
+- Context consumption
+- Ref usage for DOM access
+- Loading/error state handling
+
+**Note:** Behavioral predictions are **disabled by default** in all profiles to minimize token usage. Enable them explicitly when you need richer semantic information about component behavior.
+
+**Example:**
+```bash
+# Enable predictions with the default profile
+logicstamp-context --predict-behavior
+
+# Enable predictions with a specific profile
+logicstamp-context --profile llm-safe --predict-behavior
+```
 
 ## Examples
 

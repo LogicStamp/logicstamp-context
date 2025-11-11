@@ -45,7 +45,7 @@ describe('CLI End-to-End Tests', () => {
       expect(stdout).toContain('Analyzing components');
       expect(stdout).toContain('Building dependency graph');
       expect(stdout).toContain('Generating context');
-      expect(stdout).toContain('Context written to');
+      expect(stdout).toContain('Context written successfully');
 
       // Verify file was created
       await access(outFile);
@@ -219,7 +219,7 @@ describe('CLI End-to-End Tests', () => {
       );
 
       // Verify the command completed successfully
-      expect(stdout).toContain('Context written to');
+      expect(stdout).toContain('Context written successfully');
 
       const content = await readFile(outFile, 'utf-8');
       const bundles = JSON.parse(content);
@@ -239,7 +239,7 @@ describe('CLI End-to-End Tests', () => {
       );
 
       // Verify the command completed successfully
-      expect(stdout).toContain('Context written to');
+      expect(stdout).toContain('Context written successfully');
 
       const content = await readFile(outFile, 'utf-8');
       const bundles = JSON.parse(content);
@@ -272,6 +272,83 @@ describe('CLI End-to-End Tests', () => {
       } catch (error: any) {
         expect(error.code).toBe(1);
       }
+    }, 30000);
+  });
+
+  describe('CLI output smoke tests', () => {
+    it('should produce well-formed CLI output with all expected sections', async () => {
+      const outFile = join(outputPath, 'smoke-test.json');
+
+      await execAsync('npm run build');
+
+      const { stdout } = await execAsync(
+        `node dist/cli/index.js ${fixturesPath} --out ${outFile}`
+      );
+
+      // Verify all expected output sections are present
+      expect(stdout).toContain('🔍 Scanning');
+      expect(stdout).toContain('Analyzing components');
+      expect(stdout).toContain('Building dependency graph');
+      expect(stdout).toContain('Generating context');
+      expect(stdout).toContain('📝 Writing to:');
+      expect(stdout).toContain('✅ Context written successfully');
+      expect(stdout).toContain('📊 Summary:');
+      expect(stdout).toContain('Total components:');
+      expect(stdout).toContain('Root components:');
+      expect(stdout).toContain('Leaf components:');
+      expect(stdout).toContain('Bundles generated:');
+      expect(stdout).toContain('Total nodes in context:');
+      expect(stdout).toContain('Total edges:');
+      expect(stdout).toContain('⏱  Completed in');
+
+      // Verify no error messages
+      expect(stdout).not.toContain('❌');
+      expect(stdout).not.toContain('Error:');
+    }, 30000);
+
+    it('should produce valid JSON output that matches schema expectations', async () => {
+      const outFile = join(outputPath, 'schema-check.json');
+
+      await execAsync('npm run build');
+
+      await execAsync(
+        `node dist/cli/index.js ${fixturesPath} --out ${outFile}`
+      );
+
+      const content = await readFile(outFile, 'utf-8');
+      const bundles = JSON.parse(content);
+
+      // Schema validation
+      expect(Array.isArray(bundles)).toBe(true);
+      expect(bundles.length).toBeGreaterThan(0);
+
+      bundles.forEach((bundle, idx) => {
+        // Required bundle fields
+        expect(bundle).toHaveProperty('$schema');
+        expect(bundle.$schema).toContain('logicstamp.dev/schemas/context');
+        expect(bundle).toHaveProperty('position');
+        expect(bundle.position).toMatch(/^\d+\/\d+$/);
+        expect(bundle).toHaveProperty('type', 'LogicStampBundle');
+        expect(bundle).toHaveProperty('schemaVersion', '0.1');
+        expect(bundle).toHaveProperty('entryId');
+        expect(bundle).toHaveProperty('depth');
+        expect(bundle).toHaveProperty('createdAt');
+        expect(bundle).toHaveProperty('bundleHash');
+        expect(bundle.bundleHash).toMatch(/^uifb:[a-f0-9]{24}$/);
+
+        // Graph structure
+        expect(bundle).toHaveProperty('graph');
+        expect(bundle.graph).toHaveProperty('nodes');
+        expect(bundle.graph).toHaveProperty('edges');
+        expect(Array.isArray(bundle.graph.nodes)).toBe(true);
+        expect(Array.isArray(bundle.graph.edges)).toBe(true);
+
+        // Meta information
+        expect(bundle).toHaveProperty('meta');
+        expect(bundle.meta).toHaveProperty('source');
+        expect(bundle.meta.source).toMatch(/^logicstamp-context@/);
+        expect(bundle.meta).toHaveProperty('missing');
+      });
     }, 30000);
   });
 
@@ -314,6 +391,30 @@ describe('CLI End-to-End Tests', () => {
       expect(stdout).toContain('Root components:');
       expect(stdout).toContain('Bundles generated:');
       expect(stdout).toContain('Completed in');
+    }, 30000);
+
+    it('should not duplicate summary output (single-run logging)', async () => {
+      const outFile = join(outputPath, 'context-no-dupe.json');
+
+      await execAsync('npm run build');
+
+      const { stdout } = await execAsync(
+        `node dist/cli/index.js ${fixturesPath} --out ${outFile}`
+      );
+
+      // Count occurrences of key summary lines
+      const summaryCount = (stdout.match(/📊 Summary:/g) || []).length;
+      const totalComponentsCount = (stdout.match(/Total components:/g) || []).length;
+      const completedCount = (stdout.match(/Completed in/g) || []).length;
+
+      // Each of these should appear exactly once
+      expect(summaryCount).toBe(1);
+      expect(totalComponentsCount).toBe(1);
+      expect(completedCount).toBe(1);
+
+      // No duplicate "Context written" messages
+      const writtenCount = (stdout.match(/Context written/g) || []).length;
+      expect(writtenCount).toBeLessThanOrEqual(1);
     }, 30000);
   });
 });

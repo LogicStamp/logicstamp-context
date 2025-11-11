@@ -179,7 +179,7 @@ describe.sequential('Determinism and Ordering Tests', () => {
 
       bundles.forEach(bundle => {
         expect(bundle).toHaveProperty('$schema');
-        expect(bundle.$schema).toContain('logicstamp.context.schema.json');
+        expect(bundle.$schema).toContain('logicstamp.dev/schemas/context');
         expect(bundle.schemaVersion).toBe('0.1');
       });
     }, 30000);
@@ -200,7 +200,7 @@ describe.sequential('Determinism and Ordering Tests', () => {
       lines.forEach(line => {
         const bundle = JSON.parse(line);
         expect(bundle).toHaveProperty('$schema');
-        expect(bundle.$schema).toContain('logicstamp.context.schema.json');
+        expect(bundle.$schema).toContain('logicstamp.dev/schemas/context');
         expect(bundle.schemaVersion).toBe('0.1');
       });
     }, 30000);
@@ -225,7 +225,7 @@ describe.sequential('Determinism and Ordering Tests', () => {
         jsonMatches.forEach(jsonStr => {
           const bundle = JSON.parse(jsonStr);
           expect(bundle).toHaveProperty('$schema');
-          expect(bundle.$schema).toContain('logicstamp.context.schema.json');
+          expect(bundle.$schema).toContain('logicstamp.dev/schemas/context');
         });
       }
     }, 30000);

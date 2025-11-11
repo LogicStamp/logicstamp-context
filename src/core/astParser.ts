@@ -64,7 +64,7 @@ export async function extractFromFile(filePath: string): Promise<AstExtract> {
   const imports = extractImports(source);
 
   return {
-    kind: detectKind(hooks, components, imports),
+    kind: detectKind(hooks, components, imports, filePath, source),
     variables: extractVariables(source),
     hooks,
     components,
@@ -357,20 +357,27 @@ function extractImports(source: SourceFile): string[] {
 function detectKind(
   hooks: string[],
   components: string[],
-  imports: string[]
+  imports: string[],
+  filePath: string,
+  source: SourceFile
 ): ContractKind {
   // React component: has hooks or JSX components
   if (hooks.length > 0 || components.length > 0) {
     return 'react:component';
   }
 
-  // Node CLI: imports from node: namespace
-  const hasNodeImports = imports.some(imp => imp.startsWith('node:'));
-  if (hasNodeImports) {
+  // Node CLI: check for CLI-specific patterns
+  // 1. File is in a /cli/ directory, OR
+  // 2. File uses process.argv (CLI argument parsing)
+  const isInCliDir = /[/\\]cli[/\\]/.test(filePath);
+  const sourceText = source.getFullText();
+  const usesProcessArgv = /process\.argv/.test(sourceText);
+
+  if (isInCliDir || usesProcessArgv) {
     return 'node:cli';
   }
 
-  // Default: TypeScript module
+  // Default: TypeScript module (even if it imports from node:)
   return 'ts:module';
 }
 

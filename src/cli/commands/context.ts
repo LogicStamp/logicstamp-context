@@ -171,7 +171,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   if (options.format === 'ndjson') {
     output = bundles.map((b, idx) => {
       const bundleWithSchema = {
-        $schema: './schema/logicstamp.context.schema.json',
+        $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
         position: `${idx + 1}/${bundles.length}`,
         ...b,
       };
@@ -179,7 +179,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     }).join('\n');
   } else if (options.format === 'json') {
     const bundlesWithPosition = bundles.map((b, idx) => ({
-      $schema: './schema/logicstamp.context.schema.json',
+      $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
       position: `${idx + 1}/${bundles.length}`,
       ...b,
     }));
@@ -188,7 +188,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     // pretty format
     output = bundles.map((b, idx) => {
       const bundleWithSchema = {
-        $schema: './schema/logicstamp.context.schema.json',
+        $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
         position: `${idx + 1}/${bundles.length}`,
         ...b,
       };
@@ -234,10 +234,11 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   // Write output unless --dry-run
   if (!options.dryRun) {
     const outPath = resolve(options.out);
+    console.log(`📝 Writing to: ${displayPath(outPath)}`);
     // Ensure output directory exists
     await mkdir(dirname(outPath), { recursive: true });
     await writeFile(outPath, output, 'utf8');
-    console.log(`✅ Context written to "${displayPath(outPath)}"`);
+    console.log(`✅ Context written successfully`);
   } else {
     console.log('🔍 Dry run - no file written');
   }
