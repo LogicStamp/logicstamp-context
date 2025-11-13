@@ -202,6 +202,7 @@ export function findComponentByName(
 /**
  * Resolve a dependency name to a manifest key
  * Uses the canonical resolveKey() function for consistent resolution
+ * Prioritizes relative paths to avoid cross-directory conflicts
  */
 export function resolveDependency(
   manifest: ProjectManifest,
@@ -209,13 +210,9 @@ export function resolveDependency(
   parentId: string
 ): string | null {
   // parentId is a manifest key (canonical identifier)
-  // Try to find component by name first using canonical resolution
-  const key = resolveKey(manifest, depName);
-  if (key) {
-    return key; // Return manifest key (canonical identifier)
-  }
 
-  // Try relative path resolution based on parent
+  // First, try relative path resolution based on parent directory
+  // This ensures we resolve to components in the same directory tree first
   // parentId is a manifest key (normalized path), extract directory
   const parentDir = parentId.substring(0, parentId.lastIndexOf('/'));
   const possiblePaths = [
@@ -228,8 +225,15 @@ export function resolveDependency(
   for (const path of possiblePaths) {
     const key = resolveKey(manifest, path);
     if (key) {
-      return key; // Return manifest key
+      return key; // Return manifest key (canonical identifier)
     }
+  }
+
+  // Only fall back to global name search if relative paths didn't work
+  // This prevents cross-directory conflicts (e.g., tests/fixtures vs examples)
+  const key = resolveKey(manifest, depName);
+  if (key) {
+    return key; // Return manifest key (canonical identifier)
   }
 
   return null;

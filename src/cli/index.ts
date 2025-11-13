@@ -6,9 +6,33 @@
  */
 
 import { contextCommand, type ContextOptions } from './commands/context.js';
+import { compareCommand, type CompareOptions } from './commands/compare.js';
 
 async function main() {
   const args = process.argv.slice(2);
+
+  // Check for compare subcommand
+  if (args[0] === 'compare') {
+    // Handle compare command
+    if (args.length < 3 || args[1] === '--help' || args[1] === '-h') {
+      printCompareHelp();
+      process.exit(args[1] === '--help' || args[1] === '-h' ? 0 : 1);
+    }
+
+    const compareOptions: CompareOptions = {
+      oldFile: args[1],
+      newFile: args[2],
+      stats: args.includes('--stats'),
+    };
+
+    try {
+      await compareCommand(compareOptions);
+    } catch (error) {
+      console.error('❌ Compare failed:', (error as Error).message);
+      process.exit(1);
+    }
+    return;
+  }
 
   // Parse arguments for context command
   const options: ContextOptions = {
@@ -24,6 +48,8 @@ async function main() {
     predictBehavior: false,
     dryRun: false,
     stats: false,
+    strictMissing: false,
+    compareModes: false,
   };
 
   // Parse command line arguments
@@ -83,6 +109,12 @@ async function main() {
         case 'stats':
           options.stats = true;
           break;
+        case 'strict-missing':
+          options.strictMissing = true;
+          break;
+        case 'compare-modes':
+          options.compareModes = true;
+          break;
       }
     } else if (!arg.startsWith('-') && !options.entry) {
       options.entry = arg;
@@ -107,6 +139,7 @@ function printHelp() {
 
 USAGE:
   logicstamp-context [path] [options]
+  logicstamp-context compare <old.json> <new.json> [--stats]
 
 ARGUMENTS:
   [path]               Directory to scan (default: current directory)
@@ -122,6 +155,8 @@ OPTIONS:
   --predict-behavior        Enable behavioral predictions
   --dry-run                 Show stats without writing file
   --stats                   Output one-line JSON stats for CI
+  --strict-missing          Exit with error if missing dependencies found
+  --compare-modes           Show detailed token comparison table
   -h, --help                Show this help
 
 PROFILES:
@@ -150,6 +185,41 @@ NOTES:
   • Scans for .ts/.tsx files automatically
   • Generates context on-the-fly (no pre-compilation needed)
   • Output is ready for Claude, ChatGPT, or other AI tools
+  `);
+}
+
+function printCompareHelp() {
+  console.log(`
+╭─────────────────────────────────────────────────╮
+│  LogicStamp Context Compare                     │
+│  Diff two context.json files                    │
+╰─────────────────────────────────────────────────╯
+
+USAGE:
+  logicstamp-context compare <old.json> <new.json> [options]
+
+ARGUMENTS:
+  <old.json>           Path to old context file
+  <new.json>           Path to new context file
+
+OPTIONS:
+  --stats              Show token count statistics
+  -h, --help           Show this help
+
+OUTPUT:
+  PASS                 No changes detected
+  DRIFT                Components added/removed/changed
+
+EXIT CODES:
+  0                    No drift (PASS)
+  1                    Drift detected or error
+
+EXAMPLES:
+  logicstamp-context compare old.json new.json
+    Compare two context files
+
+  logicstamp-context compare old.json new.json --stats
+    Compare with token statistics
   `);
 }
 

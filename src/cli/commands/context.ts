@@ -15,6 +15,7 @@ import {
   type PackOptions,
   type LogicStampBundle,
 } from '../../core/pack.js';
+import { estimateGPT4Tokens, estimateClaudeTokens, formatTokenCount } from '../../utils/tokens.js';
 
 /**
  * Normalize path for display (convert backslashes to forward slashes)
@@ -37,6 +38,8 @@ export interface ContextOptions {
   predictBehavior: boolean;
   dryRun: boolean;
   stats: boolean;
+  strictMissing: boolean;
+  compareModes: boolean;
 }
 
 export async function contextCommand(options: ContextOptions): Promise<void> {
@@ -63,6 +66,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   console.log(`🔨 Analyzing components...`);
   const contracts: UIFContract[] = [];
   let analyzed = 0;
+  let totalSourceSize = 0; // Track total source code size for savings calculation
 
   for (const file of files) {
     try {
@@ -71,6 +75,8 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
 
       // Build contract from AST
       const { text } = await readFileWithText(file);
+      totalSourceSize += text.length; // Accumulate source size
+
       const result = buildContract(file, ast, {
         preset: 'none',
         sourceText: text,
@@ -204,6 +210,68 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   const totalEdges = bundles.reduce((sum, b) => sum + b.graph.edges.length, 0);
   const totalMissing = bundles.reduce((sum, b) => sum + b.meta.missing.length, 0);
 
+  // Calculate token counts for actual output (current mode)
+  const currentGPT4 = estimateGPT4Tokens(output);
+  const currentClaude = estimateClaudeTokens(output);
+
+  // Estimate tokens for all three modes
+  // Mode comparison helps users understand cost tradeoffs
+  const sourceTokensGPT4 = Math.ceil(totalSourceSize / 4);
+  const sourceTokensClaude = Math.ceil(totalSourceSize / 4.5);
+
+  // Estimate based on typical ratios observed in practice:
+  // - none mode: ~60% of header mode (contracts only, no code snippets)
+  // - header mode: baseline (contracts + JSDoc headers)
+  // - full mode: header mode + all source code
+  const modeEstimates = {
+    none: {
+      gpt4: Math.ceil(currentGPT4 * 0.6),
+      claude: Math.ceil(currentClaude * 0.6),
+    },
+    header: {
+      gpt4: currentGPT4,
+      claude: currentClaude,
+    },
+    full: {
+      gpt4: currentGPT4 + sourceTokensGPT4,
+      claude: currentClaude + sourceTokensClaude,
+    },
+  };
+
+  // Calculate savings percentage for current mode vs full
+  const savingsGPT4 = modeEstimates.full.gpt4 > 0
+    ? ((modeEstimates.full.gpt4 - currentGPT4) / modeEstimates.full.gpt4 * 100).toFixed(0)
+    : '0';
+  const savingsClaude = modeEstimates.full.claude > 0
+    ? ((modeEstimates.full.claude - currentClaude) / modeEstimates.full.claude * 100).toFixed(0)
+    : '0';
+
+  // If --compare-modes flag is set, output detailed mode comparison and exit
+  if (options.compareModes) {
+    console.log('\n📊 Mode Comparison\n');
+    console.log('Mode     | Tokens GPT-4o | Tokens Claude | Savings vs Full');
+    console.log('---------|---------------|---------------|------------------');
+
+    const modes: Array<{ name: string; gpt4: number; claude: number }> = [
+      { name: 'none', gpt4: modeEstimates.none.gpt4, claude: modeEstimates.none.claude },
+      { name: 'header', gpt4: modeEstimates.header.gpt4, claude: modeEstimates.header.claude },
+      { name: 'full', gpt4: modeEstimates.full.gpt4, claude: modeEstimates.full.claude },
+    ];
+
+    modes.forEach(mode => {
+      const savings = modeEstimates.full.gpt4 > 0
+        ? ((modeEstimates.full.gpt4 - mode.gpt4) / modeEstimates.full.gpt4 * 100).toFixed(0)
+        : '0';
+
+      console.log(
+        `${mode.name.padEnd(8)} | ${formatTokenCount(mode.gpt4).padStart(13)} | ${formatTokenCount(mode.claude).padStart(13)} | ${savings}%`
+      );
+    });
+
+    console.log(`\n⏱  Completed in ${elapsed}ms`);
+    return;
+  }
+
   // If --stats flag is set, output one-line JSON and exit
   // Stats Output Contract (for CI parsing):
   // {
@@ -214,6 +282,11 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   //   totalNodes: number,            // Sum of all nodes across all bundles
   //   totalEdges: number,            // Sum of all edges across all bundles
   //   missingDependencies: number,   // Count of unresolved dependencies (third-party/external)
+  //   tokensGPT4: number,            // Estimated GPT-4 tokens (current mode)
+  //   tokensClaude: number,          // Estimated Claude tokens (current mode)
+  //   modeEstimates: object,         // Token estimates for all modes (none/header/full)
+  //   savingsGPT4: string,           // Savings percentage for GPT-4 (current vs full)
+  //   savingsClaude: string,         // Savings percentage for Claude (current vs full)
   //   elapsedMs: number              // Time taken in milliseconds
   // }
   if (options.stats) {
@@ -225,6 +298,15 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
       totalNodes,
       totalEdges,
       missingDependencies: totalMissing,
+      tokensGPT4: currentGPT4,
+      tokensClaude: currentClaude,
+      modeEstimates: {
+        none: { gpt4: modeEstimates.none.gpt4, claude: modeEstimates.none.claude },
+        header: { gpt4: modeEstimates.header.gpt4, claude: modeEstimates.header.claude },
+        full: { gpt4: modeEstimates.full.gpt4, claude: modeEstimates.full.claude },
+      },
+      savingsGPT4,
+      savingsClaude,
       elapsedMs: elapsed,
     };
     console.log(JSON.stringify(stats));
@@ -252,6 +334,14 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   console.log(`   Total nodes in context: ${totalNodes}`);
   console.log(`   Total edges: ${totalEdges}`);
   console.log(`   Missing dependencies: ${totalMissing}`);
+  console.log(`\n📏 Token Estimates (${options.includeCode} mode):`);
+  console.log(`   GPT-4o-mini: ${formatTokenCount(currentGPT4)} | Full code: ~${formatTokenCount(modeEstimates.full.gpt4)} (~${savingsGPT4}% savings)`);
+  console.log(`   Claude:      ${formatTokenCount(currentClaude)} | Full code: ~${formatTokenCount(modeEstimates.full.claude)} (~${savingsClaude}% savings)`);
+
+  console.log(`\n📊 Mode Comparison:`);
+  console.log(`   none:       ~${formatTokenCount(modeEstimates.none.gpt4)} tokens`);
+  console.log(`   header:     ~${formatTokenCount(modeEstimates.header.gpt4)} tokens`);
+  console.log(`   full:       ~${formatTokenCount(modeEstimates.full.gpt4)} tokens`);
 
   if (totalMissing > 0) {
     console.log('\n⚠️  Missing dependencies (external/third-party):');
@@ -266,4 +356,10 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   }
 
   console.log(`\n⏱  Completed in ${elapsed}ms`);
+
+  // Exit with non-zero code if --strict-missing is enabled and there are missing dependencies
+  if (options.strictMissing && totalMissing > 0) {
+    console.error(`\n❌ Strict missing mode: ${totalMissing} missing dependencies found`);
+    process.exit(1);
+  }
 }

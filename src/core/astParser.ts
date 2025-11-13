@@ -366,6 +366,33 @@ function detectKind(
     return 'react:component';
   }
 
+  // Check for React imports
+  const hasReactImport = imports.some(imp => imp === 'react' || imp.startsWith('react/'));
+
+  if (hasReactImport) {
+    const sourceText = source.getFullText();
+
+    // Check for any JSX usage (including lowercase HTML elements)
+    const hasJsxElements = source.getDescendantsOfKind(SyntaxKind.JsxElement).length > 0 ||
+                          source.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement).length > 0 ||
+                          source.getDescendantsOfKind(SyntaxKind.JsxFragment).length > 0;
+
+    if (hasJsxElements) {
+      return 'react:component';
+    }
+
+    // Check for React.createElement usage
+    if (/React\.createElement/.test(sourceText)) {
+      return 'react:component';
+    }
+
+    // Check for React component type annotations
+    // Look for React.FC, React.FunctionComponent, or return type JSX.Element
+    if (/React\.(FC|FunctionComponent|ReactElement)|:\s*JSX\.Element/.test(sourceText)) {
+      return 'react:component';
+    }
+  }
+
   // Node CLI: check for CLI-specific patterns
   // 1. File is in a /cli/ directory, OR
   // 2. File uses process.argv (CLI argument parsing)
