@@ -13,6 +13,102 @@ function displayPath(path: string): string {
   return path.replace(/\\/g, '/');
 }
 
+export interface ValidationResult {
+  valid: boolean;
+  errors: number;
+  warnings: number;
+  bundles: number;
+  nodes: number;
+  edges: number;
+  messages: string[];
+}
+
+/**
+ * Validate bundles in memory (for auto-validation during generation)
+ */
+export function validateBundles(bundles: LogicStampBundle[]): ValidationResult {
+  const result: ValidationResult = {
+    valid: true,
+    errors: 0,
+    warnings: 0,
+    bundles: bundles.length,
+    nodes: 0,
+    edges: 0,
+    messages: [],
+  };
+
+  if (!Array.isArray(bundles)) {
+    result.valid = false;
+    result.errors++;
+    result.messages.push('Invalid format: expected array of bundles');
+    return result;
+  }
+
+  for (let i = 0; i < bundles.length; i++) {
+    const bundle = bundles[i];
+    const bundleLabel = `Bundle ${i + 1}`;
+
+    // Count nodes and edges
+    result.nodes += bundle.graph?.nodes?.length || 0;
+    result.edges += bundle.graph?.edges?.length || 0;
+
+    // Check required fields
+    if (bundle.type !== 'LogicStampBundle') {
+      result.valid = false;
+      result.errors++;
+      result.messages.push(`${bundleLabel}: Invalid type (expected 'LogicStampBundle', got '${bundle.type}')`);
+    }
+
+    if (bundle.schemaVersion !== '0.1') {
+      result.valid = false;
+      result.errors++;
+      result.messages.push(`${bundleLabel}: Invalid schemaVersion (expected '0.1', got '${bundle.schemaVersion}')`);
+    }
+
+    if (!bundle.entryId) {
+      result.valid = false;
+      result.errors++;
+      result.messages.push(`${bundleLabel}: Missing entryId`);
+    }
+
+    if (!bundle.graph || !Array.isArray(bundle.graph.nodes) || !Array.isArray(bundle.graph.edges)) {
+      result.valid = false;
+      result.errors++;
+      result.messages.push(`${bundleLabel}: Invalid graph structure`);
+    }
+
+    if (!bundle.meta || !Array.isArray(bundle.meta.missing)) {
+      result.valid = false;
+      result.errors++;
+      result.messages.push(`${bundleLabel}: Invalid meta structure`);
+    }
+
+    // Validate contracts
+    if (bundle.graph && bundle.graph.nodes) {
+      for (const node of bundle.graph.nodes) {
+        const contract = node.contract;
+        if (contract?.type !== 'UIFContract') {
+          result.valid = false;
+          result.errors++;
+          result.messages.push(`${bundleLabel}: Node ${node.entryId} has invalid contract type`);
+        }
+        if (contract?.schemaVersion !== '0.3') {
+          result.warnings++;
+          result.messages.push(`${bundleLabel}: Node ${node.entryId} has unexpected contract version ${contract?.schemaVersion}`);
+        }
+      }
+    }
+
+    // Check hash format (bundle hashes use uifb: prefix)
+    if (bundle.bundleHash && !bundle.bundleHash.match(/^uifb:[a-f0-9]{24}$/)) {
+      result.warnings++;
+      result.messages.push(`${bundleLabel}: bundleHash has unexpected format`);
+    }
+  }
+
+  return result;
+}
+
 /**
  * Validate a context.json file for basic structural validity
  */

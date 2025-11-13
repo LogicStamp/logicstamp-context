@@ -1,9 +1,11 @@
-# Session Summary: LogicStamp Context v0.1.1 Improvements
+# Session Summary: LogicStamp Context v0.1.1 → v0.1.2
 
 **Date**: January 13, 2025
-**Version**: 0.1.0 → 0.1.1
+**Version**: 0.1.0 → 0.1.1 → 0.1.2
 
-## 🎯 Overview
+> **Note**: This document covers two releases. v0.1.1 added major features (token optimization, drift detection). v0.1.2 introduced breaking CLI changes (renamed to `stamp` command). See the end of this document for v0.1.2 changes.
+
+## 🎯 Overview (v0.1.1)
 
 This session transformed LogicStamp Context from a basic context generator into a **production-grade AI context cost profiler** with comprehensive drift detection and token optimization features.
 
@@ -395,6 +397,58 @@ LogicStamp Context v0.1.1 is now a **production-grade AI context cost profiler**
 - Professional developer UX
 
 The tool now provides the same level of polish and utility as established developer tools like TypeScript's extended diagnostics or ESLint's stats output.
+
+---
+
+## 🔄 v0.1.2 Changes: CLI Restructure
+
+**Date**: January 13, 2025 (same session, continued)
+
+### Breaking Changes
+
+Renamed all commands to use unified `stamp` CLI structure:
+
+#### Command Migration
+| Old Command | New Command |
+|-------------|-------------|
+| `logicstamp-context [path]` | `stamp context [path]` |
+| `logicstamp-validate [file]` | `stamp context validate [file]` |
+| `logicstamp-context compare old new` | `stamp context compare old new` |
+
+### New Features
+- **Automatic validation** on every context generation
+- **Unified CLI structure** prepares for future expansion
+- **Better help system** with improved documentation
+
+### Why This Change?
+
+1. **Future-proof**: Prepares for full LogicStamp CLI with more commands
+2. **Cleaner structure**: Follows modern CLI patterns (`docker`, `git`, `npm`)
+3. **Single binary**: Easier to manage and extend
+4. **Better UX**: Grouped commands under logical namespaces
+
+### Files Changed
+- `package.json` - Changed `bin` to single `stamp` entry
+- `src/cli/stamp.ts` - New main CLI entry point
+- `src/cli/commands/validate.ts` - Added `validateBundles()` for in-memory validation
+- `src/cli/commands/context.ts` - Added automatic validation step
+
+### Example New Flow
+```bash
+$ stamp context
+🔍 Scanning...
+⚙️  Analyzing...
+📦 Generating...
+🔍 Validating generated context...
+✅ Validation passed
+📝 Writing to: context.json
+✅ Context written successfully
+```
+
+### Testing
+- All 17 e2e tests passing
+- CLI commands tested manually
+- Validation working correctly
 
 ---
 

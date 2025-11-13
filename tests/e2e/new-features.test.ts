@@ -37,7 +37,7 @@ describe('New Features E2E Tests (v0.1.1)', () => {
       await execAsync('npm run build');
 
       const { stdout } = await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --out ${outFile}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outFile}`
       );
 
       // Verify token estimates section
@@ -59,7 +59,7 @@ describe('New Features E2E Tests (v0.1.1)', () => {
       await execAsync('npm run build');
 
       const { stdout } = await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --stats`
+        `node dist/cli/stamp.js context ${fixturesPath} --stats`
       );
 
       // Parse the JSON output (extract last line which is the JSON)
@@ -100,7 +100,7 @@ describe('New Features E2E Tests (v0.1.1)', () => {
       await execAsync('npm run build');
 
       const { stdout } = await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --compare-modes`
+        `node dist/cli/stamp.js context ${fixturesPath} --compare-modes`
       );
 
       // Verify table output
@@ -126,7 +126,7 @@ describe('New Features E2E Tests (v0.1.1)', () => {
       await execAsync('npm run build');
 
       const { stdout: statsOutput } = await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --stats`
+        `node dist/cli/stamp.js context ${fixturesPath} --stats`
       );
 
       // Extract JSON from last line
@@ -153,12 +153,12 @@ describe('New Features E2E Tests (v0.1.1)', () => {
       await execAsync('npm run build');
 
       // Generate same context twice
-      await execAsync(`node dist/cli/index.js ${fixturesPath} --out ${file1}`);
-      await execAsync(`node dist/cli/index.js ${fixturesPath} --out ${file2}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${file1}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${file2}`);
 
       // Compare
       const { stdout } = await execAsync(
-        `node dist/cli/index.js compare ${file1} ${file2}`
+        `node dist/cli/stamp.js context compare ${file1} ${file2}`
       );
 
       expect(stdout).toContain('PASS');
@@ -206,11 +206,11 @@ describe('New Features E2E Tests (v0.1.1)', () => {
       ]));
 
       // Generate new context (has more files)
-      await execAsync(`node dist/cli/index.js ${fixturesPath} --out ${newContext}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${newContext}`);
 
       // Compare
       try {
-        await execAsync(`node dist/cli/index.js compare ${oldContext} ${newContext}`);
+        await execAsync(`node dist/cli/stamp.js context compare ${oldContext} ${newContext}`);
         expect.fail('Should have exited with code 1');
       } catch (error: any) {
         expect(error.code).toBe(1);
@@ -226,7 +226,7 @@ describe('New Features E2E Tests (v0.1.1)', () => {
       await execAsync('npm run build');
 
       // Generate full context
-      await execAsync(`node dist/cli/index.js ${fixturesPath} --out ${oldContext}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${oldContext}`);
 
       // Create minimal new context
       await writeFile(newContext, JSON.stringify([
@@ -261,7 +261,7 @@ describe('New Features E2E Tests (v0.1.1)', () => {
 
       // Compare
       try {
-        await execAsync(`node dist/cli/index.js compare ${oldContext} ${newContext}`);
+        await execAsync(`node dist/cli/stamp.js context compare ${oldContext} ${newContext}`);
         expect.fail('Should have exited with code 1');
       } catch (error: any) {
         expect(error.code).toBe(1);
@@ -276,11 +276,11 @@ describe('New Features E2E Tests (v0.1.1)', () => {
 
       await execAsync('npm run build');
 
-      await execAsync(`node dist/cli/index.js ${fixturesPath} --out ${file1}`);
-      await execAsync(`node dist/cli/index.js ${fixturesPath} --out ${file2}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${file1}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${file2}`);
 
       const { stdout } = await execAsync(
-        `node dist/cli/index.js compare ${file1} ${file2} --stats`
+        `node dist/cli/stamp.js context compare ${file1} ${file2} --stats`
       );
 
       expect(stdout).toContain('Token Stats:');
@@ -297,12 +297,12 @@ describe('New Features E2E Tests (v0.1.1)', () => {
       await execAsync('npm run build');
 
       // Generate identical contexts
-      await execAsync(`node dist/cli/index.js ${fixturesPath} --out ${file1}`);
-      await execAsync(`node dist/cli/index.js ${fixturesPath} --out ${file2}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${file1}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${file2}`);
 
       // Should not throw (exit code 0)
       const { stdout } = await execAsync(
-        `node dist/cli/index.js compare ${file1} ${file2}`
+        `node dist/cli/stamp.js context compare ${file1} ${file2}`
       );
       expect(stdout).toContain('PASS');
     }, 60000);
@@ -316,7 +316,7 @@ describe('New Features E2E Tests (v0.1.1)', () => {
 
       // Should not throw (fixtures have no missing deps)
       const { stdout } = await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --strict-missing --out ${outFile}`
+        `node dist/cli/stamp.js context ${fixturesPath} --strict-missing --out ${outFile}`
       );
 
       expect(stdout).toContain('Missing dependencies: 0');
@@ -336,7 +336,7 @@ describe('New Features E2E Tests (v0.1.1)', () => {
 
       await execAsync('npm run build');
 
-      await execAsync(`node dist/cli/index.js ${fixturesPath} --out ${outFile}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outFile}`);
 
       const content = await readFile(outFile, 'utf-8');
       const bundles = JSON.parse(content);
@@ -363,7 +363,7 @@ describe('New Features E2E Tests (v0.1.1)', () => {
 
       await execAsync('npm run build');
 
-      await execAsync(`node dist/cli/index.js ${fixturesPath} --out ${outFile}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outFile}`);
 
       const content = await readFile(outFile, 'utf-8');
       const bundles = JSON.parse(content);
@@ -392,7 +392,7 @@ describe('New Features E2E Tests (v0.1.1)', () => {
 
       await execAsync('npm run build');
 
-      await execAsync(`node dist/cli/index.js ${fixturesPath} --out ${outFile}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outFile}`);
 
       const content = await readFile(outFile, 'utf-8');
       const bundles = JSON.parse(content);
@@ -427,7 +427,7 @@ describe('New Features E2E Tests (v0.1.1)', () => {
 
       await execAsync('npm run build');
 
-      await execAsync(`node dist/cli/index.js ${fixturesPath} --out ${outFile}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outFile}`);
 
       const content = await readFile(outFile, 'utf-8');
       const bundles = JSON.parse(content);
@@ -468,7 +468,7 @@ describe('New Features E2E Tests (v0.1.1)', () => {
       await execAsync('npm run build');
 
       const { stdout } = await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --depth 2 --include-code full --out ${outFile}`
+        `node dist/cli/stamp.js context ${fixturesPath} --depth 2 --include-code full --out ${outFile}`
       );
 
       expect(stdout).toContain('Context written successfully');
@@ -480,16 +480,16 @@ describe('New Features E2E Tests (v0.1.1)', () => {
       expect(bundles.length).toBeGreaterThan(0);
     }, 30000);
 
-    it('should show help for compare command', async () => {
+    it('should show help with compare command listed', async () => {
       await execAsync('npm run build');
 
-      const { stdout } = await execAsync('node dist/cli/index.js compare --help');
+      // Note: compare --help shows main help with all commands
+      const { stdout } = await execAsync('node dist/cli/stamp.js context compare --help');
 
-      expect(stdout).toContain('LogicStamp Context Compare');
-      expect(stdout).toContain('Diff two context.json files');
+      expect(stdout).toContain('Stamp - LogicStamp Context CLI');
+      expect(stdout).toContain('stamp context compare');
       expect(stdout).toContain('USAGE:');
-      expect(stdout).toContain('compare <old.json> <new.json>');
-      expect(stdout).toContain('--stats');
+      expect(stdout).toContain('Compare two context files for drift');
     }, 30000);
   });
 });

@@ -16,6 +16,7 @@ import {
   type LogicStampBundle,
 } from '../../core/pack.js';
 import { estimateGPT4Tokens, estimateClaudeTokens, formatTokenCount } from '../../utils/tokens.js';
+import { validateBundles } from './validate.js';
 
 /**
  * Normalize path for display (convert backslashes to forward slashes)
@@ -311,6 +312,28 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     };
     console.log(JSON.stringify(stats));
     return;
+  }
+
+  // Validate bundles before writing
+  console.log(`🔍 Validating generated context...`);
+  const bundlesWithSchema = bundles.map((b, idx) => ({
+    $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
+    position: `${idx + 1}/${bundles.length}`,
+    ...b,
+  }));
+  const validation = validateBundles(bundlesWithSchema as LogicStampBundle[]);
+
+  if (!validation.valid) {
+    console.error(`\n❌ Validation failed: ${validation.errors} error(s)`);
+    validation.messages.forEach(msg => console.error(`   ${msg}`));
+    process.exit(1);
+  }
+
+  if (validation.warnings > 0) {
+    console.log(`⚠️  ${validation.warnings} warning(s) during validation`);
+    validation.messages.filter(msg => !msg.includes('error')).forEach(msg => console.log(`   ${msg}`));
+  } else {
+    console.log(`✅ Validation passed`);
   }
 
   // Write output unless --dry-run

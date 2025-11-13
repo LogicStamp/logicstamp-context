@@ -8,8 +8,7 @@
     ".": "./dist/index.js"
   },
   "bin": {
-    "logicstamp-context": "./dist/cli/index.js",
-    "logicstamp-validate": "./dist/cli/validate-index.js"
+    "stamp": "./dist/cli/stamp.js"
   },
   "files": [
     "dist",

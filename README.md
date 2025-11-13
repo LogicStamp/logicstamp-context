@@ -14,6 +14,8 @@ No setup, no configuration, no pre-compilation required. Just point it at your c
 npm install -g logicstamp-context
 ```
 
+After installation, the `stamp` command will be available globally.
+
 ## What's New in v0.1.0
 
 🎉 **Token Cost Optimization**
@@ -43,22 +45,22 @@ npm install -g logicstamp-context
 npm i -g logicstamp-context
 
 # Generate context.json (llm-chat profile)
-logicstamp-context
+stamp context
 
 # Preview stats without writing files
-logicstamp-context --dry-run --stats
+stamp context --dry-run --stats
 
 # Compare token costs across modes
-logicstamp-context --compare-modes
+stamp context --compare-modes
 
 # Generate minimal API documentation
-logicstamp-context --include-code none --format pretty --out docs/api.json
+stamp context --include-code none --format pretty --out docs/api.json
 
 # Compare two context files for drift detection
-logicstamp-context compare old.json new.json --stats
+stamp context compare old.json new.json --stats
 
 # Validate generated context
-logicstamp-validate context.json
+stamp context validate context.json
 ```
 
 **Why?** Generate AI-ready context from your React/TS codebase in seconds with built-in token cost optimization.
@@ -78,18 +80,18 @@ This output is designed to be easily understood by AI assistants, helping them p
 ## Usage
 
 ```bash
-logicstamp-context [path] [options]
-logicstamp-context compare <old.json> <new.json> [options]
-logicstamp-validate [file]
+stamp context [path] [options]
+stamp context compare <old.json> <new.json> [options]
+stamp context validate [file]
 ```
 
 ### Commands
 
-- **`logicstamp-context [path]`** - Scans a directory and writes an AI-ready context file containing a collection of bundles (one bundle per entry point). Shows token estimates and mode comparison in output.
+- **`stamp context [path]`** - Scans a directory and writes an AI-ready context file containing a collection of bundles (one bundle per entry point). Shows token estimates and mode comparison in output. Automatically validates the generated context before writing.
 
-- **`logicstamp-context compare <old.json> <new.json>`** - Compares two context files and reports drift. Detects added/removed components, changed imports, hooks, exports, and semantic hashes. Exits with code 1 if drift is detected (CI-friendly).
+- **`stamp context compare <old.json> <new.json>`** - Compares two context files and reports drift. Detects added/removed components, changed imports, hooks, exports, and semantic hashes. Exits with code 1 if drift is detected (CI-friendly).
 
-- **`logicstamp-validate [file]`** - Checks an existing context file for schema and structural issues before sharing it with an AI or committing it to a repo. When no file is specified it looks for `context.json` in the current directory.
+- **`stamp context validate [file]`** - Checks an existing context file for schema and structural issues before sharing it with an AI or committing it to a repo. When no file is specified it looks for `context.json` in the current directory.
 
 ### Arguments (`context` command)
 
@@ -120,7 +122,7 @@ logicstamp-validate [file]
 | `--stats` | Show token count statistics and delta | `false` |
 | `--help`, `-h` | Show help message | |
 
-### Options (`logicstamp-validate`)
+### Options (`validate` command)
 
 - `[file]` – Optional path to the generated `context.json` (or alternative output) to validate. Defaults to `./context.json`.
 - Exits with code `0` on success, `1` on invalid structure or read/parse errors.
@@ -167,10 +169,10 @@ The `--predict-behavior` flag enables experimental behavioral analysis that adds
 **Example:**
 ```bash
 # Enable predictions with the default profile
-logicstamp-context --predict-behavior
+stamp context --predict-behavior
 
 # Enable predictions with a specific profile
-logicstamp-context --profile llm-safe --predict-behavior
+stamp context --profile llm-safe --predict-behavior
 ```
 
 ## Token Optimization
@@ -202,7 +204,7 @@ This helps you:
 Use `--compare-modes` for a detailed comparison:
 
 ```bash
-logicstamp-context --compare-modes
+stamp context --compare-modes
 ```
 
 Output:
@@ -226,7 +228,7 @@ full     |        39,141 |        34,792 | 0%
 Use `--stats` to get machine-readable token data:
 
 ```bash
-logicstamp-context --stats
+stamp context --stats
 ```
 
 Output JSON includes:
@@ -251,7 +253,7 @@ The `compare` command helps you track changes between context versions:
 ### Basic Comparison
 
 ```bash
-logicstamp-context compare old.json new.json
+stamp context compare old.json new.json
 ```
 
 Output:
@@ -279,7 +281,7 @@ Changed components: 3
 ### With Token Stats
 
 ```bash
-logicstamp-context compare old.json new.json --stats
+stamp context compare old.json new.json --stats
 ```
 
 Shows token cost changes:
@@ -298,7 +300,7 @@ Token Stats:
 Perfect for CI/CD validation:
 ```bash
 # In your CI pipeline
-logicstamp-context compare base.json pr.json || echo "Context drift detected!"
+stamp context compare base.json pr.json || echo "Context drift detected!"
 ```
 
 ## Examples
@@ -307,13 +309,15 @@ logicstamp-context compare base.json pr.json || echo "Context drift detected!"
 
 ```bash
 # Generate context for entire project
-logicstamp-context
+stamp context
 
 # CLI output:
 # 🔍 Scanning /path/to/project...
 # ⚙️  Analyzing components...
 # 🔗 Building dependency graph...
 # 📦 Generating context...
+# 🔍 Validating generated context...
+# ✅ Validation passed
 # 📝 Writing to: /path/to/project/context.json
 # ✅ Context written successfully
 #
@@ -327,63 +331,63 @@ logicstamp-context
 
 ```bash
 # Analyze only the src directory
-logicstamp-context ./src
+stamp context ./src
 
 # Analyze with custom output file
-logicstamp-context --out my-context.json
+stamp context --out my-context.json
 ```
 
 ### Deep traversal
 
 ```bash
 # Include 2 levels of dependencies
-logicstamp-context --depth 2
+stamp context --depth 2
 
 # Include full source code
-logicstamp-context --include-code full
+stamp context --include-code full
 ```
 
 ### Token cost analysis
 
 ```bash
 # Show detailed mode comparison
-logicstamp-context --compare-modes
+stamp context --compare-modes
 
 # Get JSON stats for CI
-logicstamp-context --stats
+stamp context --stats
 
 # See token costs for specific mode
-logicstamp-context --include-code none
-logicstamp-context --include-code full
+stamp context --include-code none
+stamp context --include-code full
 ```
 
 ### Context comparison
 
 ```bash
 # Basic drift detection
-logicstamp-context compare old.json new.json
+stamp context compare old.json new.json
 
 # With token delta stats
-logicstamp-context compare base.json pr.json --stats
+stamp context compare base.json pr.json --stats
 
 # In CI pipeline
-logicstamp-context compare base.json pr.json || exit 1
+stamp context compare base.json pr.json || exit 1
 ```
 
 ### CI/CD validation
 
 ```bash
 # Use llm-safe profile for smaller output
-logicstamp-context --profile llm-safe --out safe-context.json
+stamp context --profile llm-safe --out safe-context.json
 
 # Strict mode: fail if any dependencies missing
-logicstamp-context --strict-missing
+stamp context --strict-missing
 
 # Generate stats for CI monitoring
-logicstamp-context --stats > stats.json
+stamp context --stats > stats.json
 
 # Validate generated context
-logicstamp-validate context.json
+stamp context validate context.json
 ```
 
 ## Output Format
@@ -482,7 +486,7 @@ All in one command, no pre-compilation needed!
 | Watch mode | ❌ No | ✅ Yes |
 | Size | 🪶 Light | 📦 Full-featured |
 
-**TL;DR**: Use `logicstamp-context` for quick AI context generation. Use `@logicstamp/cli` for full contract management and verification.
+**TL;DR**: Use `stamp context` for quick AI context generation. Use `@logicstamp/cli` for full contract management and verification.
 
 ## Requirements
 

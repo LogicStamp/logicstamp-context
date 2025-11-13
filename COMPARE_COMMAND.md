@@ -5,8 +5,8 @@ The `compare` command is a powerful tool for detecting drift between two context
 ## Quick Start
 
 ```bash
-logicstamp-context compare old.json new.json
-logicstamp-context compare old.json new.json --stats
+stamp context compare old.json new.json
+stamp context compare old.json new.json --stats
 ```
 
 ---
@@ -30,7 +30,7 @@ The compare command creates a lightweight signature for each component and detec
 ### PASS (No Drift)
 
 ```bash
-$ logicstamp-context compare old.json new.json
+$ stamp context compare old.json new.json
 
 ✅ PASS
 ```
@@ -40,7 +40,7 @@ Exit code: `0`
 ### DRIFT Detected
 
 ```bash
-$ logicstamp-context compare old.json new.json
+$ stamp context compare old.json new.json
 
 ⚠️  DRIFT
 
@@ -69,7 +69,7 @@ Exit code: `1`
 Add `--stats` to see token cost impact:
 
 ```bash
-$ logicstamp-context compare old.json new.json --stats
+$ stamp context compare old.json new.json --stats
 
 ⚠️  DRIFT
 
@@ -124,17 +124,17 @@ jobs:
         run: npm install -g logicstamp-context
 
       - name: Generate PR context
-        run: logicstamp-context --out pr-context.json
+        run: stamp context --out pr-context.json
 
       - name: Checkout base branch
         run: git checkout ${{ github.base_ref }}
 
       - name: Generate base context
-        run: logicstamp-context --out base-context.json
+        run: stamp context --out base-context.json
 
       - name: Compare contexts
         run: |
-          logicstamp-context compare base-context.json pr-context.json --stats
+          stamp context compare base-context.json pr-context.json --stats
 
       - name: Comment on PR if drift detected
         if: failure()
@@ -156,12 +156,12 @@ compare-context:
   stage: test
   script:
     - npm install -g logicstamp-context
-    - logicstamp-context --out new-context.json
+    - stamp context --out new-context.json
     - git fetch origin $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
     - git checkout origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME
-    - logicstamp-context --out base-context.json
+    - stamp context --out base-context.json
     - git checkout $CI_COMMIT_SHA
-    - logicstamp-context compare base-context.json new-context.json --stats
+    - stamp context compare base-context.json new-context.json --stats
   allow_failure: false
   only:
     - merge_requests
@@ -176,17 +176,17 @@ compare-context:
 set -e
 
 # Generate current context
-logicstamp-context --out current.json
+stamp context --out current.json
 
 # Generate previous context (from main branch)
 git stash
 git checkout main
-logicstamp-context --out previous.json
+stamp context --out previous.json
 git checkout -
 git stash pop || true
 
 # Compare
-if logicstamp-context compare previous.json current.json --stats; then
+if stamp context compare previous.json current.json --stats; then
   echo "✅ No context drift detected"
   exit 0
 else
@@ -280,7 +280,7 @@ Ensure context changes are intentional before merging:
 
 ```bash
 # In CI
-logicstamp-context compare base.json pr.json || exit 1
+stamp context compare base.json pr.json || exit 1
 ```
 
 ### 2. Cost Impact Analysis
@@ -288,7 +288,7 @@ logicstamp-context compare base.json pr.json || exit 1
 See how changes affect token costs:
 
 ```bash
-logicstamp-context compare base.json pr.json --stats
+stamp context compare base.json pr.json --stats
 ```
 
 If the delta is significant, consider if changes are necessary.
@@ -308,7 +308,7 @@ Detect when component signatures change:
 Trigger doc updates when context drifts:
 
 ```bash
-if ! logicstamp-context compare base.json new.json; then
+if ! stamp context compare base.json new.json; then
   echo "Context changed - updating docs..."
   npm run generate-docs
 fi
@@ -348,25 +348,25 @@ git commit -m "feat: add new components"
 
 ```bash
 # Generate on each PR
-logicstamp-context --out pr-context.json
+stamp context --out pr-context.json
 
 # Compare against main
-logicstamp-context compare base-context.json pr-context.json
+stamp context compare base-context.json pr-context.json
 ```
 
 ### 3. Monitor Token Growth
 
 ```bash
 # Track token costs over time
-logicstamp-context compare old.json new.json --stats | tee cost-report.txt
+stamp context compare old.json new.json --stats | tee cost-report.txt
 ```
 
 ### 4. Combine with Strict Mode
 
 ```bash
 # Ensure no drift AND no missing deps
-logicstamp-context --strict-missing --out new.json
-logicstamp-context compare base.json new.json
+stamp context --strict-missing --out new.json
+stamp context compare base.json new.json
 ```
 
 ---
@@ -399,9 +399,9 @@ logicstamp-context compare base.json new.json
 
 ```bash
 # Compare none mode vs header mode
-logicstamp-context --include-code none --out none.json
-logicstamp-context --include-code header --out header.json
-logicstamp-context compare none.json header.json --stats
+stamp context --include-code none --out none.json
+stamp context --include-code header --out header.json
+stamp context compare none.json header.json --stats
 ```
 
 ### Batch Comparison
@@ -410,11 +410,11 @@ logicstamp-context compare none.json header.json --stats
 # Compare multiple versions
 for version in v1 v2 v3; do
   git checkout $version
-  logicstamp-context --out $version-context.json
+  stamp context --out $version-context.json
 done
 
-logicstamp-context compare v1-context.json v2-context.json
-logicstamp-context compare v2-context.json v3-context.json
+stamp context compare v1-context.json v2-context.json
+stamp context compare v2-context.json v3-context.json
 ```
 
 ### Integration with Package Scripts
@@ -422,8 +422,8 @@ logicstamp-context compare v2-context.json v3-context.json
 ```json
 {
   "scripts": {
-    "context": "logicstamp-context",
-    "context:compare": "logicstamp-context compare base-context.json context.json --stats",
+    "context": "stamp context",
+    "context:compare": "stamp context compare base-context.json context.json --stats",
     "pretest": "npm run context:compare"
   }
 }
@@ -433,17 +433,17 @@ logicstamp-context compare v2-context.json v3-context.json
 
 ## Related Commands
 
-- `logicstamp-context` - Generate context
-- `logicstamp-context --compare-modes` - Compare token costs across modes
-- `logicstamp-context --stats` - Get JSON stats
-- `logicstamp-validate` - Validate context schema
+- `stamp context` - Generate context
+- `stamp context --compare-modes` - Compare token costs across modes
+- `stamp context --stats` - Get JSON stats
+- `stamp context validate` - Validate context schema
 
 ---
 
 ## Help
 
 ```bash
-$ logicstamp-context compare --help
+$ stamp context compare --help
 
 ╭─────────────────────────────────────────────────╮
 │  LogicStamp Context Compare                     │
@@ -451,7 +451,7 @@ $ logicstamp-context compare --help
 ╰─────────────────────────────────────────────────╯
 
 USAGE:
-  logicstamp-context compare <old.json> <new.json> [options]
+  stamp context compare <old.json> <new.json> [options]
 
 OPTIONS:
   --stats              Show token count statistics

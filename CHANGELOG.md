@@ -5,6 +5,64 @@ All notable changes to logicstamp-context will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2025-01-13
+
+### 🚨 Breaking Changes
+
+**New CLI structure** - Unified command interface for better usability:
+
+#### Old Commands (Deprecated)
+```bash
+logicstamp-context [path]              # Generate context
+logicstamp-validate [file]             # Validate context
+logicstamp-context compare old new     # Compare contexts
+```
+
+#### New Commands
+```bash
+stamp context [path]                   # Generate context
+stamp context validate [file]          # Validate context
+stamp context compare old new          # Compare contexts
+```
+
+**Migration:** Simply replace `logicstamp-context` with `stamp context` and `logicstamp-validate` with `stamp context validate`.
+
+### Added
+- **Automatic validation** on context generation - Every generated context is now validated before writing to ensure schema compliance
+- **Unified CLI** - Single `stamp` binary with `context` subcommand structure
+- **Better help system** - Improved help messages for all commands
+
+### Changed
+- Package now installs as `stamp` command instead of `logicstamp-context` and `logicstamp-validate`
+- Context generation now includes validation step (visible in CLI output)
+- All command references updated in documentation
+
+### Technical Details
+
+#### Files Modified
+- `package.json` - Changed bin from `logicstamp-context` and `logicstamp-validate` to single `stamp` entry
+- `src/cli/stamp.ts` - **New file** - Main CLI entry point with subcommand routing
+- `src/cli/commands/context.ts` - Added automatic validation before writing
+- `src/cli/commands/validate.ts` - Added `validateBundles()` function for in-memory validation
+
+#### Example Output (New)
+```
+🔍 Scanning /path/to/project...
+⚙️  Analyzing components...
+🔗 Building dependency graph...
+📦 Generating context...
+🔍 Validating generated context...
+✅ Validation passed
+📝 Writing to: context.json
+✅ Context written successfully
+```
+
+**Why this change?**
+- Prepares for future full CLI package (`@logicstamp/cli`) with broader functionality
+- Cleaner command structure: `stamp context`, `stamp validate`, `stamp compare`, etc.
+- Single binary is easier to manage and extends better
+- Matches modern CLI patterns (like `docker`, `git`, `npm`)
+
 ## [0.1.1] - 2025-01-13
 
 ### Added
