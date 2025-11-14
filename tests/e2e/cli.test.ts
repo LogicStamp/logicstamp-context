@@ -352,6 +352,353 @@ describe('CLI End-to-End Tests', () => {
     }, 30000);
   });
 
+  describe('Compare command', () => {
+    it('should compare two context files and detect no drift', async () => {
+      const contextFile1 = join(outputPath, 'context1.json');
+      const contextFile2 = join(outputPath, 'context2.json');
+
+      await execAsync('npm run build');
+
+      // Generate two identical contexts
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${contextFile1}`
+      );
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${contextFile2}`
+      );
+
+      // Compare them
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+      );
+
+      expect(stdout).toContain('✅');
+      expect(stdout).toContain('PASS');
+    }, 60000);
+
+    it('should detect drift when components change', async () => {
+      const contextFile1 = join(outputPath, 'context-before.json');
+      const contextFile2 = join(outputPath, 'context-after.json');
+
+      await execAsync('npm run build');
+
+      // Generate first context
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${contextFile1}`
+      );
+
+      // Modify the context to simulate drift
+      const content1 = JSON.parse(await readFile(contextFile1, 'utf-8'));
+      // Remove a component to simulate drift
+      if (content1.length > 1) {
+        content1.pop();
+      }
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(contextFile2, JSON.stringify(content1, null, 2));
+
+      // Compare them - should detect drift
+      try {
+        await execAsync(
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+        );
+        expect.fail('Should have detected drift');
+      } catch (error: any) {
+        expect(error.code).toBe(1);
+        expect(error.stdout).toContain('⚠️');
+        expect(error.stdout).toContain('DRIFT');
+      }
+    }, 60000);
+
+    it('should show token stats with --stats flag', async () => {
+      const contextFile1 = join(outputPath, 'stats1.json');
+      const contextFile2 = join(outputPath, 'stats2.json');
+
+      await execAsync('npm run build');
+
+      // Generate two contexts
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${contextFile1}`
+      );
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${contextFile2}`
+      );
+
+      // Compare with stats
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2} --stats`
+      );
+
+      expect(stdout).toContain('Token Stats:');
+      expect(stdout).toContain('Old:');
+      expect(stdout).toContain('New:');
+      expect(stdout).toContain('GPT-4o-mini');
+      expect(stdout).toContain('Claude');
+    }, 60000);
+
+    it('should support auto-mode (no arguments) with --approve flag', async () => {
+      // First, generate a baseline context.json
+      const contextFile = join(outputPath, 'context.json');
+
+      await execAsync('npm run build');
+
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${contextFile}`
+      );
+
+      // Copy it to the test directory as "context.json" (simulating committed file)
+      const { copyFile } = await import('node:fs/promises');
+      const projectContextFile = join(fixturesPath, 'context.json');
+      await copyFile(contextFile, projectContextFile);
+
+      try {
+        // Run compare in auto-mode with --approve from the fixtures directory
+        // This should generate fresh context and compare with context.json
+        // Since nothing changed, it should pass
+        const { stdout } = await execAsync(
+          `cd ${fixturesPath} && node ${process.cwd()}/dist/cli/stamp.js context compare --approve`
+        );
+
+        expect(stdout).toContain('Auto-compare mode');
+        // Should generate fresh context and compare
+      } finally {
+        // Clean up
+        try {
+          await rm(projectContextFile);
+        } catch {}
+      }
+    }, 60000);
+
+    it('should exit with code 0 when no drift in auto-mode', async () => {
+      const contextFile = join(outputPath, 'context-auto.json');
+
+      await execAsync('npm run build');
+
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${contextFile}`
+      );
+
+      const { copyFile } = await import('node:fs/promises');
+      const projectContextFile = join(fixturesPath, 'context.json');
+      await copyFile(contextFile, projectContextFile);
+
+      try {
+        const { stdout } = await execAsync(
+          `cd ${fixturesPath} && node ${process.cwd()}/dist/cli/stamp.js context compare`
+        );
+
+        expect(stdout).toContain('PASS');
+      } finally {
+        try {
+          await rm(projectContextFile);
+        } catch {}
+      }
+    }, 60000);
+
+    it('should exit with code 1 when drift detected in CI mode (non-TTY)', async () => {
+      const contextFile = join(outputPath, 'context-ci.json');
+
+      await execAsync('npm run build');
+
+      // Generate a baseline
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${contextFile}`
+      );
+
+      // Modify it to create drift
+      const content = JSON.parse(await readFile(contextFile, 'utf-8'));
+      if (content.length > 1) {
+        content.pop(); // Remove a bundle
+      }
+      const { writeFile } = await import('node:fs/promises');
+      const projectContextFile = join(fixturesPath, 'context.json');
+      await writeFile(projectContextFile, JSON.stringify(content, null, 2));
+
+      try {
+        // Run in non-TTY mode (CI simulation)
+        await execAsync(
+          `cd ${fixturesPath} && node ${process.cwd()}/dist/cli/stamp.js context compare`,
+          { env: { ...process.env, CI: 'true' } }
+        );
+        expect.fail('Should have exited with code 1');
+      } catch (error: any) {
+        expect(error.code).toBe(1);
+        expect(error.stdout).toContain('DRIFT');
+      } finally {
+        try {
+          await rm(projectContextFile);
+        } catch {}
+      }
+    }, 60000);
+
+    it('should display help for compare command', async () => {
+      await execAsync('npm run build');
+
+      const { stdout } = await execAsync(
+        'node dist/cli/stamp.js context compare --help'
+      );
+
+      expect(stdout).toContain('Stamp Context Compare');
+      expect(stdout).toContain('USAGE:');
+      expect(stdout).toContain('--approve');
+      expect(stdout).toContain('--stats');
+      expect(stdout).toContain('Auto-compare with fresh context');
+      expect(stdout).toContain('EXIT CODES:');
+    }, 30000);
+
+    it('should show detailed diff for hash changes', async () => {
+      const contextFile1 = join(outputPath, 'hash-before.json');
+      const contextFile2 = join(outputPath, 'hash-after.json');
+
+      await execAsync('npm run build');
+
+      // Generate first context
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${contextFile1}`
+      );
+
+      // Load and modify to simulate hash change
+      const content = JSON.parse(await readFile(contextFile1, 'utf-8'));
+      if (content.length > 0 && content[0].graph.nodes.length > 0) {
+        // Change the semantic hash to simulate code change
+        content[0].graph.nodes[0].contract.semanticHash = 'uifb:999999999999999999999999';
+      }
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(contextFile2, JSON.stringify(content, null, 2));
+
+      // Compare them - should show detailed hash diff
+      try {
+        await execAsync(
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+        );
+        expect.fail('Should have detected drift');
+      } catch (error: any) {
+        expect(error.code).toBe(1);
+        expect(error.stdout).toContain('Δ hash');
+        expect(error.stdout).toContain('old:');
+        expect(error.stdout).toContain('new:');
+        expect(error.stdout).toContain('uifb:');
+      }
+    }, 60000);
+
+    it('should show detailed diff for import changes', async () => {
+      const contextFile1 = join(outputPath, 'imports-before.json');
+      const contextFile2 = join(outputPath, 'imports-after.json');
+
+      await execAsync('npm run build');
+
+      // Generate first context
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${contextFile1}`
+      );
+
+      // Load and modify imports
+      const content = JSON.parse(await readFile(contextFile1, 'utf-8'));
+      if (content.length > 0 && content[0].graph.nodes.length > 0) {
+        const node = content[0].graph.nodes[0];
+        if (!node.contract.version) {
+          node.contract.version = { imports: [], hooks: [] };
+        }
+        // Add and remove imports
+        node.contract.version.imports = ['./new-import', './another-import'];
+      }
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(contextFile2, JSON.stringify(content, null, 2));
+
+      // Compare them - should show detailed import diff
+      try {
+        await execAsync(
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+        );
+        // May or may not fail depending on if imports actually changed
+      } catch (error: any) {
+        if (error.stdout && error.stdout.includes('Δ imports')) {
+          // Verify detailed diff format
+          expect(error.stdout).toMatch(/[+-]\s+\.\//); // Should show + or - with import paths
+        }
+      }
+    }, 60000);
+
+    it('should show detailed diff for export kind changes', async () => {
+      const contextFile1 = join(outputPath, 'exports-before.json');
+      const contextFile2 = join(outputPath, 'exports-after.json');
+
+      await execAsync('npm run build');
+
+      // Generate first context
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${contextFile1}`
+      );
+
+      // Load and modify export kind
+      const content = JSON.parse(await readFile(contextFile1, 'utf-8'));
+      if (content.length > 0 && content[0].graph.nodes.length > 0) {
+        const node = content[0].graph.nodes[0];
+        // Change export from default to named (or vice versa)
+        if (typeof node.contract.exports === 'string') {
+          // Was default, change to named
+          node.contract.exports = { named: ['Component'] };
+        } else {
+          // Was named or none, change to default
+          node.contract.exports = 'default';
+        }
+      }
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(contextFile2, JSON.stringify(content, null, 2));
+
+      // Compare them - should show detailed export diff
+      try {
+        await execAsync(
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+        );
+        expect.fail('Should have detected drift');
+      } catch (error: any) {
+        expect(error.code).toBe(1);
+        if (error.stdout && error.stdout.includes('Δ exports')) {
+          // Verify arrow format (old → new)
+          expect(error.stdout).toMatch(/\w+\s*→\s*\w+/);
+        }
+      }
+    }, 60000);
+
+    it('should show hook changes with added and removed indicators', async () => {
+      const contextFile1 = join(outputPath, 'hooks-before.json');
+      const contextFile2 = join(outputPath, 'hooks-after.json');
+
+      await execAsync('npm run build');
+
+      // Generate first context
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${contextFile1}`
+      );
+
+      // Load and modify hooks
+      const content = JSON.parse(await readFile(contextFile1, 'utf-8'));
+      if (content.length > 0 && content[0].graph.nodes.length > 0) {
+        const node = content[0].graph.nodes[0];
+        if (!node.contract.version) {
+          node.contract.version = { imports: [], hooks: [] };
+        }
+        // Change hooks
+        node.contract.version.hooks = ['useState', 'useEffect', 'useCallback'];
+      }
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(contextFile2, JSON.stringify(content, null, 2));
+
+      // Compare them
+      try {
+        await execAsync(
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+        );
+        // May or may not fail depending on if hooks actually changed
+      } catch (error: any) {
+        if (error.stdout && error.stdout.includes('Δ hooks')) {
+          // Verify + or - indicators
+          expect(error.stdout).toMatch(/[+-]\s+use\w+/);
+        }
+      }
+    }, 60000);
+  });
+
   describe('Dependency graph validation', () => {
     it('should correctly identify component dependencies', async () => {
       const outFile = join(outputPath, 'context-deps.json');

@@ -14,17 +14,25 @@ interface LiteSig {
   exportKind: 'default' | 'named' | 'none';
 }
 
-interface CompareResult {
+export interface CompareResult {
   status: 'PASS' | 'DRIFT';
   added: string[];
   removed: string[];
-  changed: Array<{ id: string; deltas: string[] }>;
+  changed: Array<{
+    id: string;
+    deltas: Array<{
+      type: 'hash' | 'imports' | 'hooks' | 'exports';
+      old: any;
+      new: any;
+    }>;
+  }>;
 }
 
 export interface CompareOptions {
   oldFile: string;
   newFile: string;
   stats?: boolean;
+  approve?: boolean;
 }
 
 /**
@@ -48,12 +56,12 @@ function index(bundles: LogicStampBundle[]): Map<string, LiteSig> {
 }
 
 /**
- * Diff two indexed bundles
+ * Diff two indexed bundles with detailed change information
  */
 function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>): CompareResult {
   const added: string[] = [];
   const removed: string[] = [];
-  const changed: Array<{ id: string; deltas: string[] }> = [];
+  const changed: CompareResult['changed'] = [];
 
   // Find added components
   for (const id of newIdx.keys()) {
@@ -69,17 +77,28 @@ function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>): Compa
     }
   }
 
-  // Find changed components
+  // Find changed components with detailed deltas
   for (const id of newIdx.keys()) {
     if (oldIdx.has(id)) {
       const a = oldIdx.get(id)!;
       const b = newIdx.get(id)!;
-      const deltas: string[] = [];
+      const deltas: CompareResult['changed'][number]['deltas'] = [];
 
-      if (a.semanticHash !== b.semanticHash) deltas.push('hash');
-      if (JSON.stringify(a.imports) !== JSON.stringify(b.imports)) deltas.push('imports');
-      if (JSON.stringify(a.hooks) !== JSON.stringify(b.hooks)) deltas.push('hooks');
-      if (a.exportKind !== b.exportKind) deltas.push('exports');
+      if (a.semanticHash !== b.semanticHash) {
+        deltas.push({ type: 'hash', old: a.semanticHash, new: b.semanticHash });
+      }
+
+      if (JSON.stringify(a.imports) !== JSON.stringify(b.imports)) {
+        deltas.push({ type: 'imports', old: a.imports, new: b.imports });
+      }
+
+      if (JSON.stringify(a.hooks) !== JSON.stringify(b.hooks)) {
+        deltas.push({ type: 'hooks', old: a.hooks, new: b.hooks });
+      }
+
+      if (a.exportKind !== b.exportKind) {
+        deltas.push({ type: 'exports', old: a.exportKind, new: b.exportKind });
+      }
 
       if (deltas.length > 0) {
         changed.push({ id, deltas });
@@ -107,8 +126,9 @@ function calculateTokens(bundles: LogicStampBundle[]): { gpt4: number; claude: n
 
 /**
  * Main compare command
+ * Returns the comparison result instead of exiting, allowing caller to handle approval logic
  */
-export async function compareCommand(options: CompareOptions): Promise<void> {
+export async function compareCommand(options: CompareOptions): Promise<CompareResult> {
   // Load both files
   const oldContent = await readFile(options.oldFile, 'utf8');
   const newContent = await readFile(options.newFile, 'utf8');
@@ -143,7 +163,35 @@ export async function compareCommand(options: CompareOptions): Promise<void> {
       console.log(`Changed components: ${result.changed.length}`);
       result.changed.forEach(({ id, deltas }) => {
         console.log(`  ~ ${id}`);
-        console.log(`    Δ ${deltas.join(', ')}`);
+        deltas.forEach(delta => {
+          console.log(`    Δ ${delta.type}`);
+
+          if (delta.type === 'hash') {
+            console.log(`      old: ${delta.old}`);
+            console.log(`      new: ${delta.new}`);
+          } else if (delta.type === 'imports' || delta.type === 'hooks') {
+            const oldSet = new Set(delta.old);
+            const newSet = new Set(delta.new);
+
+            // Find removed items
+            const removed = delta.old.filter((item: string) => !newSet.has(item));
+            // Find added items
+            const added = delta.new.filter((item: string) => !oldSet.has(item));
+
+            if (removed.length > 0) {
+              removed.forEach((item: string) => console.log(`      - ${item}`));
+            }
+            if (added.length > 0) {
+              added.forEach((item: string) => console.log(`      + ${item}`));
+            }
+            if (removed.length === 0 && added.length === 0) {
+              // Order changed but items are the same
+              console.log(`      (order changed)`);
+            }
+          } else if (delta.type === 'exports') {
+            console.log(`      ${delta.old} → ${delta.new}`);
+          }
+        });
       });
       console.log();
     }
@@ -162,8 +210,5 @@ export async function compareCommand(options: CompareOptions): Promise<void> {
     console.log(`  Δ ${deltaStat > 0 ? '+' : ''}${formatTokenCount(deltaStat)} (${deltaPercent > '0' ? '+' : ''}${deltaPercent}%)\n`);
   }
 
-  // Exit with error if drift detected
-  if (result.status === 'DRIFT') {
-    process.exit(1);
-  }
+  return result;
 }

@@ -483,13 +483,15 @@ describe('New Features E2E Tests (v0.1.1)', () => {
     it('should show help with compare command listed', async () => {
       await execAsync('npm run build');
 
-      // Note: compare --help shows main help with all commands
+      // Note: compare --help shows compare-specific help
       const { stdout } = await execAsync('node dist/cli/stamp.js context compare --help');
 
-      expect(stdout).toContain('Stamp - LogicStamp Context CLI');
-      expect(stdout).toContain('stamp context compare');
+      expect(stdout).toContain('Stamp Context Compare');
       expect(stdout).toContain('USAGE:');
-      expect(stdout).toContain('Compare two context files for drift');
+      expect(stdout).toContain('stamp context compare');
+      expect(stdout).toContain('--approve');
+      expect(stdout).toContain('Auto-compare with fresh context');
+      expect(stdout).toContain('EXIT CODES');
     }, 30000);
   });
 });
