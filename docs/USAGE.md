@@ -330,26 +330,68 @@ Each component contract includes:
 - **edges**: Dependencies between components `["Parent", "Child"]`
 
 ### Missing Dependencies
-External or third-party dependencies that couldn't be analyzed:
 
+The `meta.missing` array tracks dependencies that couldn't be resolved. An empty array `[]` means complete dependency resolution.
+
+**Structure of each missing dependency:**
+```json
+{
+  "name": "import specifier",
+  "reason": "why it failed",
+  "referencedBy": "component that imports it"
+}
+```
+
+**Complete example with multiple missing types:**
 ```json
 {
   "meta": {
     "missing": [
       {
-        "name": "Input",
-        "reason": "No contract found (third-party or not scanned)",
-        "referencedBy": "src/components/LoginForm.tsx"
+        "name": "@mui/material",
+        "reason": "external package",
+        "referencedBy": "src/components/Button.tsx"
+      },
+      {
+        "name": "./DeletedComponent",
+        "reason": "file not found",
+        "referencedBy": "src/App.tsx"
+      },
+      {
+        "name": "../../shared/utils",
+        "reason": "outside scan path",
+        "referencedBy": "src/helpers.ts"
       }
-    ]
+    ],
+    "source": "logicstamp-context@0.1.0"
   }
 }
 ```
 
-Common reasons:
-- Third-party libraries (React, Material-UI, etc.)
-- Node modules
-- Files outside scan directory
+**Common reasons and what they mean:**
+
+| Reason | Meaning | Action Required |
+|--------|---------|-----------------|
+| `external package` | Third-party npm module (React, lodash, etc.) | ✅ Normal - safe to ignore |
+| `file not found` | Referenced file doesn't exist | ⚠️ Fix broken import or remove reference |
+| `outside scan path` | File exists but not in scanned directory | 💡 Expand scan path or ignore |
+| `max depth exceeded` | Dependency beyond `--depth` limit | 💡 Increase depth if needed |
+| `circular dependency` | Circular import detected | ⚠️ Refactor to break the cycle |
+
+**Using `--strict-missing` for CI validation:**
+```bash
+# Exit with error if ANY missing dependencies found
+logicstamp-context --strict-missing
+
+# In CI pipeline
+logicstamp-context --strict-missing || exit 1
+```
+
+**Best practices:**
+- ✅ External packages in `missing` are expected and normal
+- ⚠️ "file not found" entries indicate real issues that need fixing
+- 💡 Review missing deps before sharing context with AI
+- 🔍 Use `--strict-missing` in CI to catch regressions
 
 ## Integration with AI Tools
 
@@ -460,9 +502,25 @@ Typical performance metrics:
 - Focus on specific subdirectories
 
 ### Missing dependencies
-- These are usually external libraries (React, Material-UI, etc.)
-- They're tracked in `meta.missing` but don't cause errors
-- Use `--strict` to fail on missing deps if needed
+Missing dependencies appear in `meta.missing` and usually fall into two categories:
+
+**Expected (safe to ignore):**
+- External packages: `@mui/material`, `react`, `lodash`
+- Node modules that LogicStamp doesn't analyze
+
+**Unexpected (need attention):**
+- `file not found` - Broken imports, component was deleted/moved
+- Fix: Update import paths or remove references
+- CI Tip: Use `--strict-missing` to catch these automatically
+
+**Diagnosis:**
+```bash
+# Check what's missing
+cat context.json | jq '.[] | .meta.missing'
+
+# Run with strict validation
+logicstamp-context --strict-missing
+```
 
 ### Slow analysis
 - Large projects take longer to analyze

@@ -25,7 +25,9 @@
 - Top-level fields: `position`, `type`, `schemaVersion`, `entryId`, `depth`, `createdAt`, `bundleHash`, `graph`, `meta`.
 - `graph.nodes` holds UIF contracts describing functions, props, events, imports, and semantic/file hashes. Optional `codeHeader` stores contract headers or code snippets when requested.
 - `graph.edges` lists dependency relationships between nodes (empty when analysis depth is 1).
-- `meta` tracks missing references and manifest provenance.
+- `meta` section contains two critical fields:
+  - `missing`: Array of unresolved dependencies. Each entry includes `name` (import path), `reason` (why it failed), and `referencedBy` (source component). Empty array indicates complete dependency resolution.
+  - `source`: Generator version string (e.g., `"logicstamp-context@0.1.0"`) for compatibility tracking.
 - Example bundle skeleton:
 
 ```
@@ -49,10 +51,27 @@
 
 - Bundles may include behavioral `prediction` hints when heuristics detect notable logic (e.g., form handling, data access).
 
+## Interpreting Missing Dependencies
+When `meta.missing` is non-empty, it signals incomplete dependency resolution:
+
+**Common scenarios:**
+1. **External packages** (`reason: "external package"`) - Expected. LogicStamp only analyzes project source, not node_modules.
+2. **File not found** (`reason: "file not found"`) - Component references a deleted/moved file. May indicate refactoring in progress or broken imports.
+3. **Outside scan path** (`reason: "outside scan path"`) - Dependency exists but wasn't included in the scan directory. Consider widening scan scope.
+4. **Max depth exceeded** (`reason: "max depth exceeded"`) - Dependency chain deeper than `--depth` setting. Increase depth for fuller analysis.
+5. **Circular dependency** (`reason: "circular dependency"`) - Import cycle detected. LogicStamp breaks the cycle to prevent infinite loops.
+
+**Best practices for LLMs:**
+- Check `meta.missing` before making assumptions about complete component coverage
+- When missing deps exist, inform the user that analysis may be partial
+- Suggest running with `--depth 2` or higher if many "max depth exceeded" entries appear
+- Flag "file not found" entries as potential bugs in the codebase
+
 ## Suggestions for LLM Consumers
 - Load `context.json` and filter by `entryId` to focus on relevant modules.
 - Use `version.functions` and `logicSignature` to reason about available APIs without scanning full source.
 - Combine multiple bundles when a task spans related modules; respect `max-nodes` constraints to stay within token budgets.
 - For deeper understanding, rerun the CLI with `--include-code full` or higher `--depth` before querying the assistant.
+- **Always inspect `meta.missing`** to understand analysis completeness before providing architectural guidance.
 
 

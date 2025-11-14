@@ -392,7 +392,9 @@ stamp context validate context.json
 
 ## Output Format
 
-The generated `context.json` contains an array of bundles (one bundle per entry point):
+The generated `context.json` contains an array of bundles (one bundle per entry point).
+
+**📋 Full Schema Reference:** See [`schema/logicstamp.context.schema.json`](schema/logicstamp.context.schema.json) for the complete JSON Schema definition.
 
 ```json
 [
@@ -441,6 +443,63 @@ The generated `context.json` contains an array of bundles (one bundle per entry 
 ]
 ```
 
+### Understanding the Meta Field
+
+The `meta` section provides metadata about bundle generation and dependency resolution:
+
+#### `missing` Array
+
+Tracks dependencies that couldn't be resolved during analysis. An empty array `[]` means all dependencies were successfully found.
+
+When dependencies are missing, each entry contains:
+- `name` - The import specifier that couldn't be resolved (e.g., `"./MissingComponent"`)
+- `reason` - Why it couldn't be found (e.g., `"file not found"`, `"external package"`)
+- `referencedBy` - The component that tried to import it
+
+**Example with missing dependencies:**
+```json
+{
+  "meta": {
+    "missing": [
+      {
+        "name": "./components/DeletedComponent",
+        "reason": "file not found",
+        "referencedBy": "src/App.tsx"
+      },
+      {
+        "name": "@external/ui-lib",
+        "reason": "external package",
+        "referencedBy": "src/components/Button.tsx"
+      }
+    ],
+    "source": "logicstamp-context@0.1.0"
+  }
+}
+```
+
+**Common reasons for missing dependencies:**
+- `file not found` - Referenced file doesn't exist (deleted or moved)
+- `external package` - Third-party npm package (intentionally excluded)
+- `outside scan path` - File exists but outside the specified scan directory
+- `circular dependency` - Circular import detected and skipped
+- `max depth exceeded` - Dependency beyond `--depth` limit
+
+**Using `--strict-missing` for CI/CD:**
+```bash
+# Exit with error code 1 if ANY missing dependencies found
+stamp context --strict-missing
+
+# Perfect for CI validation
+stamp context --strict-missing || exit 1
+```
+
+#### `source` Field
+
+Identifies the generator and version (e.g., `"logicstamp-context@0.1.0"`). Useful for:
+- Debugging context generation issues
+- Ensuring compatibility with consuming tools
+- Tracking which version generated historical contexts
+
 ## Use Cases
 
 ### AI-Assisted Development
@@ -463,6 +522,89 @@ Quickly understand component structure and dependencies:
 - Identify circular dependencies
 - Find unused components
 - Track component complexity
+
+## Troubleshooting
+
+### Handling Missing Dependencies
+
+If your generated context shows missing dependencies in the `meta.missing` array:
+
+#### 1. External Packages (Expected)
+```json
+{
+  "name": "@mui/material",
+  "reason": "external package"
+}
+```
+**Solution:** This is normal. LogicStamp only analyzes your source code, not node_modules. External packages are intentionally excluded.
+
+#### 2. File Not Found (Action Required)
+```json
+{
+  "name": "./components/OldButton",
+  "reason": "file not found",
+  "referencedBy": "src/App.tsx"
+}
+```
+**Solutions:**
+- Check if the file was deleted or moved
+- Update the import path in the referencing component
+- Use `--strict-missing` in CI to catch these issues early
+
+#### 3. Outside Scan Path
+```json
+{
+  "name": "../../shared/utils",
+  "reason": "outside scan path"
+}
+```
+**Solutions:**
+- Expand your scan path: `stamp context ../` (parent directory)
+- Or scan from project root: `stamp context .` (from root)
+
+#### 4. Max Depth Exceeded
+```json
+{
+  "name": "./deeply/nested/component",
+  "reason": "max depth exceeded"
+}
+```
+**Solutions:**
+- Increase depth: `stamp context --depth 2` or `--depth 3`
+- Note: Higher depth = more tokens consumed
+
+#### 5. Circular Dependencies
+```json
+{
+  "name": "./ComponentA",
+  "reason": "circular dependency"
+}
+```
+**Solutions:**
+- Refactor to break the circular import
+- Extract shared logic to a separate module
+- This is a code smell that should be addressed
+
+### Common Issues
+
+**Q: Why is my context.json huge?**
+- Use `--include-code none` to exclude all source code (smallest)
+- Use `--include-code header` (default) for balanced output
+- Use `--profile llm-safe` for token-constrained scenarios
+- Check `--compare-modes` to see token savings
+
+**Q: Validation failed - what went wrong?**
+```bash
+stamp context validate context.json
+```
+- Check for schema mismatches (outdated schema version)
+- Verify JSON is well-formed (no trailing commas, proper escaping)
+- Ensure all required fields are present
+
+**Q: How do I ignore certain directories?**
+- LogicStamp respects `.gitignore` automatically
+- `node_modules/` and common build directories are excluded by default
+- Scan specific directories: `stamp context ./src`
 
 ## How it Works
 

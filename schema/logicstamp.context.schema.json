@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://logicstamp.dev/schemas/context/v0.1.json",
   "title": "LogicStamp Context Bundle",
-  "description": "Schema for LogicStamp Context bundles - AI-ready documentation of React/TypeScript codebases",
+  "description": "JSON Schema for LogicStamp Context bundles - AI-ready documentation of React/TypeScript codebases. Each bundle represents component contracts, dependency graphs, and metadata. For detailed documentation on the meta.missing field and dependency resolution, see README.md 'Understanding the Meta Field' section.",
   "type": "array",
   "items": {
     "$ref": "#/definitions/LogicStampBundle"
@@ -112,11 +112,12 @@
           "items": {
             "$ref": "#/definitions/MissingDependency"
           },
-          "description": "External or unresolved dependencies"
+          "description": "Array of unresolved dependencies. Empty array [] indicates complete dependency resolution. Non-empty indicates external packages, missing files, or dependencies outside scan scope."
         },
         "source": {
           "type": "string",
-          "description": "Generator identifier (e.g., 'logicstamp-context@0.1.0')"
+          "pattern": "^logicstamp-context@\\d+\\.\\d+\\.\\d+$",
+          "description": "Generator identifier with version (e.g., 'logicstamp-context@0.1.0'). Used for compatibility tracking and debugging."
         }
       },
       "additionalProperties": false
@@ -127,15 +128,16 @@
       "properties": {
         "name": {
           "type": "string",
-          "description": "Name of the missing dependency"
+          "description": "Import specifier that could not be resolved (e.g., './Component', '@mui/material')"
         },
         "reason": {
           "type": "string",
-          "description": "Reason why the dependency is missing"
+          "enum": ["file not found", "external package", "outside scan path", "max depth exceeded", "circular dependency"],
+          "description": "Reason for missing dependency: 'file not found' (deleted/moved), 'external package' (npm module), 'outside scan path' (not in scan dir), 'max depth exceeded' (beyond depth limit), 'circular dependency' (import cycle)"
         },
         "referencedBy": {
           "type": "string",
-          "description": "Component that references this dependency"
+          "description": "File path of the component that attempted to import this dependency"
         }
       },
       "additionalProperties": false

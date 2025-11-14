@@ -1,0 +1,88 @@
+[
+  {
+    "$schema": "https://logicstamp.dev/schemas/context/v0.1.json",
+    "position": "1/1",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "src/components/Dashboard.tsx",
+    "depth": 1,
+    "createdAt": "2025-01-15T10:30:00.000Z",
+    "bundleHash": "uifb:c4d5e6f7g8h9i0j1k2l3m4n5",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "src/components/Dashboard.tsx",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "react:component",
+            "entryId": "src/components/Dashboard.tsx",
+            "description": "Dashboard - Main dashboard component",
+            "version": {
+              "variables": [],
+              "hooks": [
+                "useEffect",
+                "useState"
+              ],
+              "components": [
+                "Card",
+                "Button"
+              ],
+              "functions": [
+                "Dashboard",
+                "fetchData"
+              ],
+              "imports": [
+                "./Card",
+                "@mui/material",
+                "../../shared/utils",
+                "./DeletedComponent",
+                "react"
+              ]
+            },
+            "logicSignature": {
+              "props": {
+                "userId": "string"
+              },
+              "events": {},
+              "state": {
+                "data": "any[]",
+                "loading": "boolean",
+                "error": "string | null"
+              }
+            },
+            "semanticHash": "uif:p1q2r3s4t5u6v7w8x9y0z1a2",
+            "fileHash": "uif:b3c4d5e6f7g8h9i0j1k2l3m4"
+          },
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: Dashboard - Main dashboard component\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: [\"useEffect\",\"useState\"]\n *   components: [\"Card\",\"Button\"]\n *   functions: [\"Dashboard\",\"fetchData\"]\n *   imports: [\"./Card\",\"@mui/material\",\"../../shared/utils\",\"./DeletedComponent\",\"react\"]\n *\n * Logic Signature:\n *   props: {\"userId\":\"string\"}\n *   events: {}\n *   state: {\"data\":\"any[]\",\"loading\":\"boolean\",\"error\":\"string | null\"}\n *\n * Hashes:\n *   semantic: uif:p1q2r3s4t5u6v7w8x9y0z1a2\n *   file: uif:b3c4d5e6f7g8h9i0j1k2l3m4\n */"
+        }
+      ],
+      "edges": []
+    },
+    "meta": {
+      "missing": [
+        {
+          "name": "@mui/material",
+          "reason": "external package",
+          "referencedBy": "src/components/Dashboard.tsx"
+        },
+        {
+          "name": "react",
+          "reason": "external package",
+          "referencedBy": "src/components/Dashboard.tsx"
+        },
+        {
+          "name": "./DeletedComponent",
+          "reason": "file not found",
+          "referencedBy": "src/components/Dashboard.tsx"
+        },
+        {
+          "name": "../../shared/utils",
+          "reason": "outside scan path",
+          "referencedBy": "src/components/Dashboard.tsx"
+        }
+      ],
+      "source": "logicstamp-context@0.1.0"
+    }
+  }
+]

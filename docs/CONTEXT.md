@@ -55,7 +55,29 @@ logicstamp-context ./packages/ui --dry-run
 - Bundles follow the `LogicStampBundle` schema (`schemaVersion: "0.1"`).
 - Contracts embed `UIFContract` data (`schemaVersion: "0.3"`).
 - A dependency graph lists `nodes` and `edges` for each bundle.
-- `meta.missing` captures unresolved dependencies (third-party modules).
+- `meta.missing` captures unresolved dependencies with detailed reasons:
+  - `file not found` - Component was deleted or moved
+  - `external package` - Third-party npm module (expected)
+  - `outside scan path` - File exists but not in scanned directory
+  - `max depth exceeded` - Dependency chain deeper than `--depth` setting
+  - `circular dependency` - Circular import detected and broken
+
+## Understanding meta.missing
+
+An empty `missing` array (`[]`) confirms all dependencies were successfully resolved. Non-empty indicates:
+
+**Expected missing deps:**
+- External packages (React, lodash, etc.) - these are normal and safe to ignore
+
+**Actionable missing deps:**
+- "file not found" entries - indicate broken imports requiring fixes
+- "outside scan path" - consider expanding scan directory
+- "max depth exceeded" - increase `--depth` for fuller analysis
+
+Use `--strict-missing` in CI to catch unexpected missing dependencies:
+```bash
+logicstamp-context --strict-missing || exit 1
+```
 
 ## Tips
 
