@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
-import { readFile, rm, access } from 'node:fs/promises';
+import { readFile, rm, access, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const execAsync = promisify(exec);
@@ -17,6 +17,8 @@ describe('CLI End-to-End Tests', () => {
     } catch (error) {
       // Directory doesn't exist, which is fine
     }
+    // Recreate the output directory for tests
+    await mkdir(outputPath, { recursive: true });
   });
 
   afterEach(async () => {

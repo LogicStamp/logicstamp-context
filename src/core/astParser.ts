@@ -29,7 +29,7 @@
  */
 
 import { Project, SyntaxKind, SourceFile, Node } from 'ts-morph';
-import type { LogicSignature, ContractKind, PropType, EventType } from '../types/UIFContract.js';
+import type { LogicSignature, ContractKind, PropType, EventType, NextJSMetadata } from '../types/UIFContract.js';
 
 export interface AstExtract {
   kind: ContractKind;
@@ -42,6 +42,76 @@ export interface AstExtract {
   emits: Record<string, EventType>;
   imports: string[];
   jsxRoutes: string[];
+  nextjs?: NextJSMetadata;
+}
+
+/**
+ * Detect Next.js 'use client' or 'use server' directives
+ * These directives must appear at the top of the file (before any imports)
+ */
+function detectNextJsDirective(source: SourceFile): 'client' | 'server' | undefined {
+  const fullText = source.getFullText();
+
+  // Get the first few lines (directives must be at the top)
+  const firstLines = fullText.split('\n').slice(0, 5);
+
+  // Check each line - directive must be at start of line (ignoring whitespace)
+  for (const line of firstLines) {
+    const trimmed = line.trim();
+
+    // Skip empty lines and comments
+    if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('/*')) {
+      continue;
+    }
+
+    // Check for 'use client' directive at start of statement
+    if (/^['"]use client['"];?$/.test(trimmed)) {
+      return 'client';
+    }
+
+    // Check for 'use server' directive at start of statement
+    if (/^['"]use server['"];?$/.test(trimmed)) {
+      return 'server';
+    }
+
+    // If we hit a non-comment, non-directive line, stop looking
+    if (trimmed) {
+      break;
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Detect if file is in Next.js App Router directory
+ * Checks if the file path contains /app/ or \app\ directory
+ */
+function isInNextAppDir(filePath: string): boolean {
+  // Normalize path separators and check for /app/ directory
+  const normalizedPath = filePath.replace(/\\/g, '/');
+
+  // Match /app/ directory (not just any path containing 'app')
+  // Must be a directory boundary, not part of another word
+  return /\/app\//.test(normalizedPath) || /^app\//.test(normalizedPath);
+}
+
+/**
+ * Extract Next.js metadata from the file
+ */
+function extractNextJsMetadata(source: SourceFile, filePath: string): NextJSMetadata | undefined {
+  const directive = detectNextJsDirective(source);
+  const isInApp = isInNextAppDir(filePath);
+
+  // Only return metadata if we have something to report
+  if (directive || isInApp) {
+    return {
+      ...(isInApp && { isInAppDir: true }),
+      ...(directive && { directive })
+    };
+  }
+
+  return undefined;
 }
 
 /**
@@ -62,6 +132,7 @@ export async function extractFromFile(filePath: string): Promise<AstExtract> {
   const hooks = extractHooks(source);
   const components = extractComponents(source);
   const imports = extractImports(source);
+  const nextjs = extractNextJsMetadata(source, filePath);
 
   return {
     kind: detectKind(hooks, components, imports, filePath, source),
@@ -74,6 +145,7 @@ export async function extractFromFile(filePath: string): Promise<AstExtract> {
     emits: extractEvents(source),
     imports,
     jsxRoutes: extractJsxRoutes(source),
+    ...(nextjs && { nextjs }),
   };
 }
 

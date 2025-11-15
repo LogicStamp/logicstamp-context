@@ -132,6 +132,7 @@ export function buildContract(
     prediction: allPredictions.length > 0 ? allPredictions : undefined,
     metrics: undefined,
     links: undefined,
+    nextjs: ast.nextjs,
     semanticHash: semanticHashFromAst(ast, signature),
     fileHash: fileHash(params.sourceText),
   };
@@ -154,6 +155,11 @@ export function mergeContractUpdate(
     description: existing.description || updated.description,
     metrics: existing.metrics || updated.metrics,
     links: existing.links || updated.links,
+    // nextjs metadata should be auto-updated with shallow merge for future extensibility
+    nextjs: updated.nextjs ? {
+      ...(existing.nextjs ?? {}),
+      ...updated.nextjs
+    } : existing.nextjs,
     // usedIn is never persisted (computed at manifest time)
     usedIn: undefined,
   };

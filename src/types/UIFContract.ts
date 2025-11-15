@@ -96,6 +96,11 @@ export interface ContractLinks {
   spec?: string;
 }
 
+export interface NextJSMetadata {
+  isInAppDir?: boolean;
+  directive?: 'client' | 'server';
+}
+
 export type ExportMetadata =
   | 'default'
   | 'named'
@@ -117,6 +122,7 @@ export interface UIFContract {
   prediction?: string[];
   metrics?: ContractMetrics;
   links?: ContractLinks;
+  nextjs?: NextJSMetadata;  // Next.js App Router metadata
   semanticHash: string;
   fileHash: string;
 }

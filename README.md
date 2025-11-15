@@ -28,6 +28,11 @@ After installation, the `stamp` command will be available globally.
 - Detects added/removed/changed components
 - CI-friendly exit codes and token delta stats
 
+⚛️ **Next.js App Router Support**
+- Detects `'use client'` and `'use server'` directives
+- Identifies files in Next.js App Router (`/app` directory)
+- Adds metadata to contracts for framework-aware analysis
+
 ✅ **Enhanced Component Detection**
 - Fixed React component detection for HTML-only JSX
 - Improved dependency resolution (relative paths prioritized)
@@ -74,8 +79,48 @@ LogicStamp Context analyzes your React components and outputs a structured JSON 
 - **Dependency graph**: how components relate to each other
 - **Code snippets**: headers or full source (configurable)
 - **Semantic hashes**: for tracking changes
+- **Next.js metadata**: App Router directives and file location (when applicable)
 
 This output is designed to be easily understood by AI assistants, helping them provide better suggestions and understand your codebase architecture.
+
+## Next.js App Router Support
+
+LogicStamp Context automatically detects and annotates Next.js App Router components:
+
+### Detected Features
+
+- **`'use client'` directive** - Marks Client Components
+- **`'use server'` directive** - Marks Server Actions
+- **App Router location** - Identifies files in `/app` directory
+
+### Example Contract Output
+
+```json
+{
+  "type": "UIFContract",
+  "kind": "react:component",
+  "entryId": "app/dashboard/page.tsx",
+  "nextjs": {
+    "directive": "client",
+    "isInAppDir": true
+  }
+}
+```
+
+### Benefits for AI Analysis
+
+- **Framework-aware suggestions** - AI knows which APIs are available (client vs server)
+- **Better refactoring** - AI understands boundaries between client/server code
+- **Accurate recommendations** - AI won't suggest client-only hooks in Server Components
+
+### Supported Scenarios
+
+✅ Client Components with `'use client'`
+✅ Server Actions with `'use server'`
+✅ Server Components in `/app` directory (no directive)
+✅ Regular components outside `/app` (no metadata)
+
+**Note:** The `nextjs` field is only added when relevant, keeping contracts clean for non-Next.js projects.
 
 ## Usage
 
@@ -429,6 +474,10 @@ The generated `context.json` contains an array of bundles (one bundle per entry 
               },
               "events": {},
               "state": {}
+            },
+            "nextjs": {
+              "directive": "client",
+              "isInAppDir": true
             }
           }
         }
@@ -629,6 +678,51 @@ All in one command, no pre-compilation needed!
 | Size | 🪶 Light | 📦 Full-featured |
 
 **TL;DR**: Use `stamp context` for quick AI context generation. Use `@logicstamp/cli` for full contract management and verification.
+
+## Future Roadmap
+
+### Next.js Enhancements (Planned)
+
+The current Next.js support (v0.1) provides foundational directive and App Router detection. Future versions may include:
+
+**App Router Advanced Features**
+- `role` detection - Identify `page`, `layout`, `route`, `loading`, `error` files
+- `segmentPath` extraction - Capture dynamic route segments (e.g., `[id]`, `[...slug]`)
+- Route dependency graph - Map App Router file relationships
+- Metadata exports - Detect `generateMetadata`, `generateStaticParams`
+
+**Server Actions & RPC**
+- Server Action signature extraction from `'use server'` blocks
+- Form action detection and validation
+- RPC call graph (client → server action relationships)
+
+**Streaming & Suspense**
+- Suspense boundary detection
+- Streaming component identification
+- Loading states and error boundaries
+
+**Example Future Contract**
+```json
+{
+  "nextjs": {
+    "directive": "client",
+    "isInAppDir": true,
+    "role": "page",
+    "segmentPath": "dashboard/[userId]",
+    "hasMetadata": true
+  }
+}
+```
+
+**Note:** These features will be added incrementally based on community feedback and real-world usage patterns. The current implementation prioritizes the 80/20 rule - maximum value with minimal complexity.
+
+### Other Planned Features
+
+- **Vue.js Support** - Extend to Vue 3 Composition API components
+- **Svelte Support** - Component analysis for Svelte files
+- **Incremental Analysis** - Only re-analyze changed files (watch mode)
+- **Custom Contract Fields** - User-defined metadata via config
+- **Performance Metrics** - Bundle size and render performance estimates
 
 ## Requirements
 
