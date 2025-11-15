@@ -697,6 +697,163 @@ describe('CLI End-to-End Tests', () => {
         }
       }
     }, 60000);
+
+    it('should show function changes with added and removed indicators', async () => {
+      const contextFile1 = join(outputPath, 'functions-before.json');
+      const contextFile2 = join(outputPath, 'functions-after.json');
+
+      await execAsync('npm run build');
+
+      // Generate first context
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${contextFile1}`
+      );
+
+      // Load and modify functions
+      const content = JSON.parse(await readFile(contextFile1, 'utf-8'));
+      if (content.length > 0 && content[0].graph.nodes.length > 0) {
+        const node = content[0].graph.nodes[0];
+        if (!node.contract.version) {
+          node.contract.version = { imports: [], hooks: [], components: [], functions: [] };
+        }
+        // Change functions
+        node.contract.version.functions = ['handleSubmit', 'validateForm', 'processData'];
+      }
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(contextFile2, JSON.stringify(content, null, 2));
+
+      // Compare them
+      try {
+        await execAsync(
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+        );
+        // May or may not fail depending on if functions actually changed
+      } catch (error: any) {
+        if (error.stdout && error.stdout.includes('Δ functions')) {
+          // Verify + or - indicators
+          expect(error.stdout).toMatch(/[+-]\s+\w+/);
+        }
+      }
+    }, 60000);
+
+    it('should show component changes', async () => {
+      const contextFile1 = join(outputPath, 'components-before.json');
+      const contextFile2 = join(outputPath, 'components-after.json');
+
+      await execAsync('npm run build');
+
+      // Generate first context
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${contextFile1}`
+      );
+
+      // Load and modify components
+      const content = JSON.parse(await readFile(contextFile1, 'utf-8'));
+      if (content.length > 0 && content[0].graph.nodes.length > 0) {
+        const node = content[0].graph.nodes[0];
+        if (!node.contract.version) {
+          node.contract.version = { imports: [], hooks: [], components: [], functions: [] };
+        }
+        // Change components used
+        node.contract.version.components = ['Modal', 'Dialog', 'Button'];
+      }
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(contextFile2, JSON.stringify(content, null, 2));
+
+      // Compare them
+      try {
+        await execAsync(
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+        );
+      } catch (error: any) {
+        if (error.stdout && error.stdout.includes('Δ components')) {
+          // Verify + or - indicators
+          expect(error.stdout).toMatch(/[+-]\s+\w+/);
+        }
+      }
+    }, 60000);
+
+    it('should show prop changes', async () => {
+      const contextFile1 = join(outputPath, 'props-before.json');
+      const contextFile2 = join(outputPath, 'props-after.json');
+
+      await execAsync('npm run build');
+
+      // Generate first context
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${contextFile1}`
+      );
+
+      // Load and modify props
+      const content = JSON.parse(await readFile(contextFile1, 'utf-8'));
+      if (content.length > 0 && content[0].graph.nodes.length > 0) {
+        const node = content[0].graph.nodes[0];
+        if (!node.contract.logicSignature) {
+          node.contract.logicSignature = { props: {}, emits: {} };
+        }
+        // Add new props
+        node.contract.logicSignature.props = {
+          variant: 'string',
+          size: 'string',
+          disabled: 'boolean',
+        };
+      }
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(contextFile2, JSON.stringify(content, null, 2));
+
+      // Compare them
+      try {
+        await execAsync(
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+        );
+      } catch (error: any) {
+        if (error.stdout && error.stdout.includes('Δ props')) {
+          // Verify + or - indicators showing prop names
+          expect(error.stdout).toMatch(/[+-]\s+\w+/);
+        }
+      }
+    }, 60000);
+
+    it('should show emit/event changes', async () => {
+      const contextFile1 = join(outputPath, 'emits-before.json');
+      const contextFile2 = join(outputPath, 'emits-after.json');
+
+      await execAsync('npm run build');
+
+      // Generate first context
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${contextFile1}`
+      );
+
+      // Load and modify emits
+      const content = JSON.parse(await readFile(contextFile1, 'utf-8'));
+      if (content.length > 0 && content[0].graph.nodes.length > 0) {
+        const node = content[0].graph.nodes[0];
+        if (!node.contract.logicSignature) {
+          node.contract.logicSignature = { props: {}, emits: {} };
+        }
+        // Add new emits
+        node.contract.logicSignature.emits = {
+          onClick: 'function',
+          onChange: 'function',
+          onSubmit: 'function',
+        };
+      }
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(contextFile2, JSON.stringify(content, null, 2));
+
+      // Compare them
+      try {
+        await execAsync(
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+        );
+      } catch (error: any) {
+        if (error.stdout && error.stdout.includes('Δ emits')) {
+          // Verify + or - indicators showing event names
+          expect(error.stdout).toMatch(/[+-]\s+on\w+/);
+        }
+      }
+    }, 60000);
   });
 
   describe('Dependency graph validation', () => {

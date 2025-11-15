@@ -12,6 +12,10 @@ interface LiteSig {
   imports: string[];
   hooks: string[];
   exportKind: 'default' | 'named' | 'none';
+  functions: string[];
+  components: string[];
+  props: string[];
+  emits: string[];
 }
 
 export interface CompareResult {
@@ -21,7 +25,7 @@ export interface CompareResult {
   changed: Array<{
     id: string;
     deltas: Array<{
-      type: 'hash' | 'imports' | 'hooks' | 'exports';
+      type: 'hash' | 'imports' | 'hooks' | 'exports' | 'functions' | 'components' | 'props' | 'emits';
       old: any;
       new: any;
     }>;
@@ -47,6 +51,10 @@ function index(bundles: LogicStampBundle[]): Map<string, LiteSig> {
         semanticHash: c.semanticHash,
         imports: c.version?.imports ?? [],
         hooks: c.version?.hooks ?? [],
+        functions: c.version?.functions ?? [],
+        components: c.version?.components ?? [],
+        props: Object.keys(c.logicSignature?.props ?? {}),
+        emits: Object.keys(c.logicSignature?.emits ?? {}),
         exportKind: typeof c.exports === 'string' ? 'default'
                    : c.exports?.named?.length ? 'named' : 'none',
       });
@@ -94,6 +102,22 @@ function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>): Compa
 
       if (JSON.stringify(a.hooks) !== JSON.stringify(b.hooks)) {
         deltas.push({ type: 'hooks', old: a.hooks, new: b.hooks });
+      }
+
+      if (JSON.stringify(a.functions) !== JSON.stringify(b.functions)) {
+        deltas.push({ type: 'functions', old: a.functions, new: b.functions });
+      }
+
+      if (JSON.stringify(a.components) !== JSON.stringify(b.components)) {
+        deltas.push({ type: 'components', old: a.components, new: b.components });
+      }
+
+      if (JSON.stringify(a.props) !== JSON.stringify(b.props)) {
+        deltas.push({ type: 'props', old: a.props, new: b.props });
+      }
+
+      if (JSON.stringify(a.emits) !== JSON.stringify(b.emits)) {
+        deltas.push({ type: 'emits', old: a.emits, new: b.emits });
       }
 
       if (a.exportKind !== b.exportKind) {
@@ -169,7 +193,8 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
           if (delta.type === 'hash') {
             console.log(`      old: ${delta.old}`);
             console.log(`      new: ${delta.new}`);
-          } else if (delta.type === 'imports' || delta.type === 'hooks') {
+          } else if (delta.type === 'imports' || delta.type === 'hooks' || delta.type === 'functions' ||
+                     delta.type === 'components' || delta.type === 'props' || delta.type === 'emits') {
             const oldSet = new Set(delta.old);
             const newSet = new Set(delta.new);
 

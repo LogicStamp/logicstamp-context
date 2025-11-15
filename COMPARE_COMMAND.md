@@ -164,22 +164,37 @@ Changed components: 3
     Δ hooks
       + useState
       + useEffect
+    Δ components
+      + Modal
+      - Tooltip
+    Δ props
+      + variant
+      + size
   ~ src/App.tsx
     Δ hash
       old: uifb:abc123456789012345678901
       new: uifb:def456789012345678901234
+    Δ functions
+      + handleSubmit
+      - handleClick
   ~ src/utils/helpers.ts
     Δ exports
       named → default
+    Δ emits
+      + onChange
 ```
 
 Exit code: `1`
 
 **Detailed Diff Breakdown:**
 
-- **hash**: Shows old and new semantic hash values
-- **imports**: Shows removed (`-`) and added (`+`) imports
+- **hash**: Shows old and new semantic hash values (indicates structure/logic changed)
+- **imports**: Shows removed (`-`) and added (`+`) import dependencies
 - **hooks**: Shows removed (`-`) and added (`+`) React hooks
+- **functions**: Shows removed (`-`) and added (`+`) functions in the module
+- **components**: Shows removed (`-`) and added (`+`) React components used
+- **props**: Shows removed (`-`) and added (`+`) component props
+- **emits**: Shows removed (`-`) and added (`+`) events/callbacks
 - **exports**: Shows export kind change (e.g., `named → default`)
 
 ---
@@ -561,6 +576,60 @@ Shows added (`+`) and removed (`-`) React hooks:
 ```
 
 **Meaning**: React hooks usage changed (state management modified)
+
+### Function Changes
+
+Shows added (`+`) and removed (`-`) functions:
+
+```
+Δ functions
+  - oldFunction
+  - helperFn
+  + newFunction
+  + handleSubmit
+```
+
+**Meaning**: Functions declared in the module were added or removed
+
+### Component Changes
+
+Shows added (`+`) and removed (`-`) React components used:
+
+```
+Δ components
+  - OldModal
+  + NewDialog
+  + Tooltip
+```
+
+**Meaning**: React components referenced in the file changed (child components used)
+
+### Prop Changes
+
+Shows added (`+`) and removed (`-`) component props:
+
+```
+Δ props
+  - deprecated
+  + variant
+  + size
+  + disabled
+```
+
+**Meaning**: Component's prop interface changed (API surface changed)
+
+### Event/Emit Changes
+
+Shows added (`+`) and removed (`-`) events/callbacks:
+
+```
+Δ emits
+  - onLegacyClick
+  + onClick
+  + onChange
+```
+
+**Meaning**: Component's event/callback interface changed
 
 ### Export Changes
 
