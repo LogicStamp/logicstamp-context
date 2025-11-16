@@ -7,7 +7,7 @@
 npm install -g logicstamp-context
 
 # Generate context for your project
-logicstamp-context
+stamp context
 
 # Output: context.json with full component analysis
 ```
@@ -15,13 +15,13 @@ logicstamp-context
 ## Command Syntax
 
 ```bash
-logicstamp-context [path] [options]
-logicstamp-validate [file]
+stamp context [path] [options]
+stamp context validate [file]
 ```
 
 ## Commands
 
-### `context` (default)
+### `stamp context`
 
 Generates LogicStamp bundles from a directory.
 
@@ -50,13 +50,13 @@ Generates LogicStamp bundles from a directory.
 - Use `--dry-run` to inspect totals without producing files.
 - Use `--stats` to emit machine-readable summary lines (combine with shell redirection).
 
-### `logicstamp-validate`
+### `stamp context validate`
 
 Checks that a generated bundle file matches the expected schema and structure.
 
 ```bash
-logicstamp-validate             # validates ./context.json by default
-logicstamp-validate review.json # validate a custom bundle
+stamp context validate             # validates ./context.json by default
+stamp context validate review.json # validate a custom bundle
 ```
 
 **What it checks**
@@ -82,7 +82,7 @@ Balanced mode optimized for AI chat:
 - Max nodes: 100
 
 ```bash
-logicstamp-context --profile llm-chat
+stamp context --profile llm-chat
 ```
 
 ### `llm-safe`
@@ -92,7 +92,7 @@ Conservative mode for token-limited contexts:
 - Max nodes: 30
 
 ```bash
-logicstamp-context --profile llm-safe
+stamp context --profile llm-safe
 ```
 
 ### `ci-strict`
@@ -102,7 +102,7 @@ Strict validation mode for CI/CD:
 - Fails on missing deps
 
 ```bash
-logicstamp-context --profile ci-strict
+stamp context --profile ci-strict
 ```
 
 ## Code Inclusion Modes
@@ -111,7 +111,7 @@ logicstamp-context --profile ci-strict
 Only contract metadata. Smallest size, fastest to process.
 
 ```bash
-logicstamp-context --include-code none
+stamp context --include-code none
 ```
 
 **Use when:** You only need structure, props, and logic signatures.
@@ -120,7 +120,7 @@ logicstamp-context --include-code none
 Includes JSDoc `@uif` header blocks. Good balance of context and size.
 
 ```bash
-logicstamp-context --include-code header
+stamp context --include-code header
 ```
 
 **Use when:** You want contract reference without full implementation.
@@ -129,7 +129,7 @@ logicstamp-context --include-code header
 Includes entire source files. Largest bundles but complete context.
 
 ```bash
-logicstamp-context --include-code full --max-nodes 20
+stamp context --include-code full --max-nodes 20
 ```
 
 **Use when:** AI needs to see or modify implementation details.
@@ -140,21 +140,21 @@ logicstamp-context --include-code full --max-nodes 20
 One-line JSON, ideal for programmatic use.
 
 ```bash
-logicstamp-context --format json
+stamp context --format json
 ```
 
 ### `pretty` - Human-Readable
 Formatted JSON with indentation.
 
 ```bash
-logicstamp-context --format pretty
+stamp context --format pretty
 ```
 
 ### `ndjson` - Streaming
 Newline-delimited JSON (one bundle per line).
 
 ```bash
-logicstamp-context --format ndjson
+stamp context --format ndjson
 ```
 
 ## Examples
@@ -163,59 +163,59 @@ logicstamp-context --format ndjson
 
 ```bash
 # Scan current directory
-logicstamp-context
+stamp context
 
 # Scan specific directory
-logicstamp-context ./src
+stamp context ./src
 
 # Custom output file
-logicstamp-context --out my-context.json
+stamp context --out my-context.json
 
 # Skip file write, but review summary locally
-logicstamp-context ./src --dry-run
+stamp context ./src --dry-run
 ```
 
 ### AI-Optimized Contexts
 
 ```bash
 # For Claude/ChatGPT (balanced)
-logicstamp-context --profile llm-chat
+stamp context --profile llm-chat
 
 # For token-limited models (conservative)
-logicstamp-context --profile llm-safe --out safe-context.json
+stamp context --profile llm-safe --out safe-context.json
 
 # Include full source for deep analysis
-logicstamp-context --include-code full --max-nodes 10
+stamp context --include-code full --max-nodes 10
 ```
 
 ### Deep Dependency Analysis
 
 ```bash
 # Two levels of dependencies
-logicstamp-context --depth 2
+stamp context --depth 2
 
 # Three levels with full code
-logicstamp-context --depth 3 --include-code full --max-nodes 50
+stamp context --depth 3 --include-code full --max-nodes 50
 ```
 
 ### CI/CD Integration
 
 ```bash
 # Strict mode - fails on missing dependencies
-logicstamp-context --profile ci-strict
+stamp context --profile ci-strict
 
 # Custom strict configuration
-logicstamp-context --strict --include-code none
+stamp context --strict --include-code none
 ```
 
 ### Validation & QA
 
 ```bash
 # Validate a generated bundle before committing
-logicstamp-validate          # defaults to ./context.json
+stamp context validate       # defaults to ./context.json
 
 # Capture stats for monitoring without writing a file
-logicstamp-context --stats >> .ci/context-stats.jsonl
+stamp context --stats >> .ci/context-stats.jsonl
 ```
 
 ### Stats Output Format
@@ -252,12 +252,12 @@ The `--stats` flag outputs a single line of JSON with the following structure (s
 
 ```bash
 # Generate stats and parse in CI
-STATS=$(logicstamp-context --stats)
+STATS=$(stamp context --stats)
 COMPONENTS=$(echo $STATS | jq '.totalComponents')
 echo "Analyzed $COMPONENTS components"
 
 # Append to monitoring log
-logicstamp-context --stats | jq -c '. + {timestamp: now}' >> .ci/stats.jsonl
+stamp context --stats | jq -c '. + {timestamp: now}' >> .ci/stats.jsonl
 ```
 
 ## Bundle Structure
@@ -381,10 +381,10 @@ The `meta.missing` array tracks dependencies that couldn't be resolved. An empty
 **Using `--strict-missing` for CI validation:**
 ```bash
 # Exit with error if ANY missing dependencies found
-logicstamp-context --strict-missing
+stamp context --strict-missing
 
 # In CI pipeline
-logicstamp-context --strict-missing || exit 1
+stamp context --strict-missing || exit 1
 ```
 
 **Best practices:**
@@ -399,7 +399,7 @@ logicstamp-context --strict-missing || exit 1
 
 ```bash
 # Generate context
-logicstamp-context --profile llm-chat
+stamp context --profile llm-chat
 
 # Share with AI
 # "Here's my codebase context: [paste context.json]"
@@ -424,7 +424,7 @@ Generate context and reference in prompts:
 
 ```bash
 # Generate fresh context
-logicstamp-context --out .vscode/context.json
+stamp context --out .vscode/context.json
 
 # Reference in AI prompts
 ```
@@ -435,7 +435,7 @@ logicstamp-context --out .vscode/context.json
 
 ```bash
 # Generate comprehensive context
-logicstamp-context --depth 1 --include-code header
+stamp context --depth 1 --include-code header
 
 # Result: context.json with all components and dependencies
 ```
@@ -447,17 +447,17 @@ Share with AI:
 
 ```bash
 # Focus on src directory only
-logicstamp-context ./src/components --out components-context.json
+stamp context ./src/components --out components-context.json
 
 # Deep dive with full source
-logicstamp-context ./src/components --depth 2 --include-code full
+stamp context ./src/components --depth 2 --include-code full
 ```
 
 ### 3. Documentation Generation
 
 ```bash
 # Generate minimal context for docs
-logicstamp-context --include-code none --format pretty --out docs/api.json
+stamp context --include-code none --format pretty --out docs/api.json
 ```
 
 Use the output to auto-generate API documentation.
@@ -466,7 +466,7 @@ Use the output to auto-generate API documentation.
 
 ```bash
 # Balanced context for review
-logicstamp-context --profile llm-chat --out review-context.json
+stamp context --profile llm-chat --out review-context.json
 ```
 
 Share with reviewer or AI:
@@ -493,7 +493,7 @@ Typical performance metrics:
 ### "No components found to analyze"
 - Ensure directory contains `.ts` or `.tsx` files
 - Check that files contain React components or TypeScript modules
-- Try specifying a different directory: `logicstamp-context ./src`
+- Try specifying a different directory: `stamp context ./src`
 
 ### Bundle too large
 - Reduce `--depth` (try `--depth 0` or `--depth 1`)
@@ -519,7 +519,7 @@ Missing dependencies appear in `meta.missing` and usually fall into two categori
 cat context.json | jq '.[] | .meta.missing'
 
 # Run with strict validation
-logicstamp-context --strict-missing
+stamp context --strict-missing
 ```
 
 ### Slow analysis

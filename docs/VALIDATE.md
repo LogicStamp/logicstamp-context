@@ -1,13 +1,13 @@
-# `logicstamp-validate` Command
+# `stamp context validate` Command
 
 Verify that a generated LogicStamp context file matches the expected schema and
 structure.
 
 ```bash
-logicstamp-validate [file]
+stamp context validate [file]
 ```
 
-- `[file]` – Optional path to the bundle file created by the `context` command.
+- `[file]` – Optional path to the bundle file created by the `stamp context` command.
   Defaults to `context.json` in the current working directory.
 
 ## What it checks
@@ -31,10 +31,10 @@ logicstamp-validate [file]
 
 ```bash
 # Validate the default output file in the current directory
-logicstamp-validate
+stamp context validate
 
 # Validate custom named bundle
-logicstamp-validate artifacts/review-context.json
+stamp context validate artifacts/review-context.json
 ```
 
 Sample successful run:
@@ -56,7 +56,7 @@ Warnings example (still exits 0):
 
 ## CI/CD usage
 
-- Pair with the `context` command to block merges when bundles become invalid.
+- Pair with the `stamp context` command to block merges when bundles become invalid.
 - Combine with `npm run` scripts or Git hooks for automated checks.
 - Use the exit code to fail pipelines and prompt regeneration of context files.
 

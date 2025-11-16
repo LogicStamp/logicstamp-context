@@ -1,9 +1,9 @@
-# `context` Command
+# `stamp context` Command
 
 Generate AI-ready bundles that describe your React/TypeScript codebase.
 
 ```bash
-logicstamp-context [path] [options]
+stamp context [path] [options]
 ```
 
 - `[path]` (optional) – Directory to scan. Defaults to the current working
@@ -35,19 +35,19 @@ logicstamp-context [path] [options]
 
 ```bash
 # Scan entire repo and write context.json (defaults)
-logicstamp-context
+stamp context
 
 # Generate context for ./src with pretty-printed output
-logicstamp-context ./src --format pretty
+stamp context ./src --format pretty
 
 # Include full source for deep AI reviews (limit nodes for safety)
-logicstamp-context --include-code full --max-nodes 20
+stamp context --include-code full --max-nodes 20
 
 # Gather metrics without writing a file (e.g., CI dashboards)
-logicstamp-context --stats >> .ci/context-stats.jsonl
+stamp context --stats >> .ci/context-stats.jsonl
 
 # Dry run to confirm counts before overwriting an existing file
-logicstamp-context ./packages/ui --dry-run
+stamp context ./packages/ui --dry-run
 ```
 
 ## Output highlights
@@ -76,7 +76,7 @@ An empty `missing` array (`[]`) confirms all dependencies were successfully reso
 
 Use `--strict-missing` in CI to catch unexpected missing dependencies:
 ```bash
-logicstamp-context --strict-missing || exit 1
+stamp context --strict-missing || exit 1
 ```
 
 ## Tips
@@ -84,5 +84,5 @@ logicstamp-context --strict-missing || exit 1
 - Combine `--profile` presets with manual flags for tailored runs (e.g.,
   `--profile llm-safe --format pretty`).
 - Use `--max-nodes` to keep bundle size manageable before sharing with LLMs.
-- Run `logicstamp-validate` after generation to catch schema drift early.
+- Run `stamp context validate` after generation to catch schema drift early.
 
