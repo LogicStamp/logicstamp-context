@@ -2,7 +2,7 @@
 
 ## Overview
 - Generates AI-friendly context bundles from React/TypeScript projects without build steps.
-- Ships as a global CLI (`logicstamp-context`) that scans `.ts`/`.tsx`, extracts component contracts, and emits structured JSON.
+- Ships as a global CLI (`stamp`) with a `context` subcommand that scans `.ts`/`.tsx`, extracts component contracts, and emits structured JSON.
 - Optimizes output for consumption by assistants such as Claude or ChatGPT to improve code understanding and guidance.
 - Works on Node.js ≥ 18 and requires access to the project's source tree.
 
@@ -15,7 +15,7 @@
 
 ## CLI Usage Cheatsheet
 - Install globally: `npm install -g logicstamp-context`.
-- Default command `logicstamp-context [target]` scans the current directory (or supplied path) and emits `context.json`.
+- Default command `stamp context [target]` scans the current directory (or supplied path) and emits `context.json`.
 - Key flags: `--depth` (dependency traversal), `--include-code none|header|full`, `--profile llm-chat|llm-safe|ci-strict`, `--out <file>`, `--max-nodes <n>`.
 - Profiles tune defaults: `llm-chat` (balanced), `llm-safe` (token-conservative), `ci-strict` (validation-first).
 - Supports pretty and NDJSON formats via `--format`.
