@@ -12,6 +12,10 @@ stamp context
 # Output: context.json with full component analysis
 ```
 
+**Note**: "Global CLI" means the tool is installed globally on your system (via `npm install -g`), making the `stamp` command available from any directory in your terminal, not just within a specific project folder.
+- **Local install**: `npm install logicstamp-context` → only available in that project
+- **Global install**: `npm install -g logicstamp-context` → available everywhere via `stamp` command
+
 ## Command Syntax
 
 ```bash
@@ -262,7 +266,27 @@ stamp context --stats | jq -c '. + {timestamp: now}' >> .ci/stats.jsonl
 
 ## Bundle Structure
 
-The generated context.json contains an array of bundles:
+The generated context.json contains an array of bundles (one bundle per root component/entry point). Each bundle represents a complete dependency graph, with all related components and their contracts included within that bundle.
+
+### Design: Per-Root Bundles vs Per-Component Files
+
+LogicStamp Context generates **per-root component bundles** rather than individual files per component. This design choice is intentional and optimized for how developers and LLMs actually work:
+
+**✅ Why per-root bundles?**
+- **Developer workflow**: Developers think in features/pages/screens (root components), not individual atoms. When asking an LLM for help with "DashboardPage", you want the root bundle containing DashboardPage + its full dependency graph in one shot.
+- **Dependency context**: Having the full dependency graph inside each root bundle means the AI sees all related components and their relationships together, improving understanding and suggestions.
+- **Self-contained units**: Each bundle is completely self-contained—you can share a single bundle with an LLM and it has everything needed to understand that feature.
+- **Future-proof for splitting**: The current structure naturally supports a future `--split` mode that would write each root bundle to its own file (`/logicstamp/bundles/<entryId>.json`) plus an index, without any breaking changes.
+
+**❓ Why not per-component files?**
+True per-component splitting (where each component is its own file) would be useful for advanced use cases like:
+- Super granular Git diff/cache behavior per component
+- Component-level analytics across repositories  
+- Platform-level component indexing/search
+
+These are advanced concerns for future LogicStamp platform features, not v1 "context generation for AI chat" use cases.
+
+**Current structure:**
 
 ```json
 [

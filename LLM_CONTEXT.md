@@ -2,9 +2,11 @@
 
 ## Overview
 - Generates AI-friendly context bundles from React/TypeScript projects without build steps.
-- Ships as a global CLI (`stamp`) with a `context` subcommand that scans `.ts`/`.tsx`, extracts component contracts, and emits structured JSON.
+- Ships as a global CLI (install with `npm install -g logicstamp-context`, then use `stamp context` command) that scans `.ts`/`.tsx`, extracts component contracts, and emits structured JSON.
 - Optimizes output for consumption by assistants such as Claude or ChatGPT to improve code understanding and guidance.
 - Works on Node.js ≥ 18 and requires access to the project's source tree.
+
+**Note**: "Global CLI" means the tool is installed globally on your system (via `npm install -g`), making the `stamp` command available from any directory in your terminal, not just within a specific project folder.
 
 ## Core Workflow
 - `src/cli/index.ts` orchestrates CLI execution: reads CLI flags, calls the analyzer pipeline, writes bundles to disk.
@@ -22,6 +24,7 @@
 
 ## What `context.json` Contains
 - Output is an array of LogicStamp bundles. Each bundle represents one entry point (component/module) plus its immediate dependency graph.
+- **Design note**: LogicStamp Context uses per-root bundles (one bundle per entry point) rather than per-component files. This means each bundle contains the root component plus its complete dependency graph—all related components and their relationships in one self-contained unit. This design is optimized for AI consumption: when you need help with a specific page or feature, share that root bundle and the AI has complete context.
 - Top-level fields: `position`, `type`, `schemaVersion`, `entryId`, `depth`, `createdAt`, `bundleHash`, `graph`, `meta`.
 - `graph.nodes` holds UIF contracts describing functions, props, events, imports, and semantic/file hashes. Optional `codeHeader` stores contract headers or code snippets when requested.
 - `graph.edges` lists dependency relationships between nodes (empty when analysis depth is 1).
