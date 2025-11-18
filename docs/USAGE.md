@@ -9,7 +9,7 @@ npm install -g logicstamp-context
 # Generate context for your project
 stamp context
 
-# Output: context.json with full component analysis
+# Output: Multiple context.json files (one per folder) plus context_main.json index
 ```
 
 **Note**: "Global CLI" means the tool is installed globally on your system (via `npm install -g`), making the `stamp` command available from any directory in your terminal, not just within a specific project folder.
@@ -40,7 +40,7 @@ Generates LogicStamp bundles from a directory.
 | `--depth <n>` | `-d` | `1` | Dependency traversal depth (0=self only, 1=direct deps, etc.) |
 | `--include-code <mode>` | `-c` | `header` | Code inclusion: `none`, `header`, or `full` |
 | `--format <fmt>` | `-f` | `json` | Output format: `json`, `pretty`, or `ndjson` |
-| `--out <file>` | `-o` | `context.json` | Output file path |
+| `--out <file>` | `-o` | `context.json` | Output directory or file path. If a `.json` file is specified, its directory is used as the output directory. Otherwise, the path is used as the output directory. Context files will be written maintaining folder structure within this directory. |
 | `--max-nodes <n>` | `-m` | `100` | Maximum nodes to include (prevents huge bundles) |
 | `--profile <name>` | | `llm-chat` | Apply preset profile (see below) |
 | `--strict` | `-s` | `false` | Fail if any dependency is missing |
@@ -66,7 +66,8 @@ stamp context validate review.json # validate a custom bundle
 **What it checks**
 
 - File exists (defaults to `./context.json`) and parses as JSON.
-- Top-level shape matches `LogicStampBundle[]`.
+- For folder context files: Top-level shape matches `LogicStampBundle[]`.
+- For main index: Structure matches `LogicStampIndex` with folder metadata.
 - Each bundle has the correct types, graph metadata, and contract versions.
 - Warns on unexpected schema versions or hash formats.
 
@@ -172,8 +173,11 @@ stamp context
 # Scan specific directory
 stamp context ./src
 
-# Custom output file
-stamp context --out my-context.json
+# Custom output directory
+stamp context --out ./output
+
+# Or specify a file to use its directory
+stamp context --out ./output/context.json
 
 # Skip file write, but review summary locally
 stamp context ./src --dry-run
@@ -217,6 +221,12 @@ stamp context --strict --include-code none
 ```bash
 # Validate a generated bundle before committing
 stamp context validate       # defaults to ./context.json
+
+# Validate the main index
+stamp context validate context_main.json
+
+# Validate a specific folder's context
+stamp context validate src/components/context.json
 
 # Capture stats for monitoring without writing a file
 stamp context --stats >> .ci/context-stats.jsonl
@@ -264,9 +274,34 @@ echo "Analyzed $COMPONENTS components"
 stamp context --stats | jq -c '. + {timestamp: now}' >> .ci/stats.jsonl
 ```
 
-## Bundle Structure
+## Output Structure
 
-The generated context.json contains an array of bundles (one bundle per root component/entry point). Each bundle represents a complete dependency graph, with all related components and their contracts included within that bundle.
+LogicStamp Context generates **folder-organized, multi-file output**:
+
+### File Organization
+
+```
+output/
+├── context_main.json          # Main index with folder metadata
+├── context.json               # Root folder bundles (if any)
+├── src/
+│   └── context.json          # Bundles from src/ folder
+└── src/components/
+    └── context.json          # Bundles from src/components/
+```
+
+Each folder containing components gets its own `context.json` file. The directory structure mirrors your project layout.
+
+### Main Index (`context_main.json`)
+
+The `context_main.json` file serves as a directory index with:
+- Summary statistics (total components, bundles, folders, tokens)
+- List of all folders with their context file paths
+- Folder metadata including component lists, root detection, and token estimates
+
+### Folder Context Files
+
+Each folder's `context.json` contains an array of bundles (one bundle per root component/entry point). Each bundle represents a complete dependency graph, with all related components and their contracts included within that bundle.
 
 ### Design: Per-Root Bundles vs Per-Component Files
 
@@ -286,7 +321,7 @@ True per-component splitting (where each component is its own file) would be use
 
 These are advanced concerns for future LogicStamp platform features, not v1 "context generation for AI chat" use cases.
 
-**Current structure:**
+**Example: `src/components/context.json`**
 
 ```json
 [
@@ -338,6 +373,37 @@ These are advanced concerns for future LogicStamp platform features, not v1 "con
     }
   }
 ]
+```
+
+**Example: `context_main.json` (Main Index)**
+
+```json
+{
+  "type": "LogicStampIndex",
+  "schemaVersion": "0.1",
+  "projectRoot": ".",
+  "projectRootResolved": "/absolute/path/to/project",
+  "createdAt": "2025-01-15T10:30:00.000Z",
+  "summary": {
+    "totalComponents": 42,
+    "totalBundles": 15,
+    "totalFolders": 5,
+    "totalTokenEstimate": 13895
+  },
+  "folders": [
+    {
+      "path": "src/components",
+      "contextFile": "src/components/context.json",
+      "bundles": 3,
+      "components": ["Button.tsx", "Card.tsx"],
+      "isRoot": false,
+      "tokenEstimate": 5234
+    }
+  ],
+  "meta": {
+    "source": "logicstamp-context@0.1.0"
+  }
+}
 ```
 
 ## Understanding the Output

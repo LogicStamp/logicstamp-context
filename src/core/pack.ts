@@ -105,6 +105,40 @@ export interface LogicStampBundle {
 }
 
 /**
+ * Folder information in the index
+ */
+export interface FolderInfo {
+  path: string;
+  contextFile: string;
+  bundles: number;
+  components: string[];
+  isRoot: boolean;
+  rootLabel?: string;
+  tokenEstimate: number;
+}
+
+/**
+ * Main index structure - serves as a directory to all context files
+ */
+export interface LogicStampIndex {
+  type: 'LogicStampIndex';
+  schemaVersion: '0.1';
+  projectRoot: string;
+  projectRootResolved?: string;
+  createdAt: string;
+  summary: {
+    totalComponents: number;
+    totalBundles: number;
+    totalFolders: number;
+    totalTokenEstimate: number;
+  };
+  folders: FolderInfo[];
+  meta: {
+    source: string;
+  };
+}
+
+/**
  * Load manifest from file
  */
 export async function loadManifest(basePath: string): Promise<ProjectManifest> {

@@ -1,11 +1,11 @@
 ## Compare Command Documentation
 
-The `compare` command is a powerful tool for detecting drift between `context.json` files. It works like **Jest snapshots** – automatically comparing your current code against a baseline context.
+The `compare` command is a powerful tool for detecting drift between context files (individual folder `context.json` files). It works like **Jest snapshots** – automatically comparing your current code against a baseline context.
 
 ### Quick Start
 
 ```bash
-# Auto-mode: Generate fresh context and compare with existing context.json
+# Auto-mode: Generate fresh context and compare with existing context.json files
 stamp context compare
 
 # Auto-approve updates (like jest -u)
@@ -43,11 +43,13 @@ stamp context compare
 ```
 
 **What happens:**
-1. Generates a fresh context based on your current code
-2. Compares it with existing `context.json`
+1. Generates fresh context files based on your current code (organized by folder)
+2. Compares with existing `context.json` files (folder context files)
 3. Shows you what changed
 4. **Prompts you to update** if drift detected (in terminal)
 5. **Exits with error** if drift detected (in CI)
+
+**Note:** The compare command works with individual folder `context.json` files, not the `context_main.json` index file. It compares bundle content between corresponding folder context files.
 
 This is perfect for local development – just run it after making changes!
 
@@ -58,12 +60,12 @@ stamp context compare old.json new.json
 ```
 
 **What happens:**
-1. Compares two specific context files
+1. Compares two specific context files (typically folder `context.json` files)
 2. Shows differences
 3. **Prompts to update old.json** with new.json (in terminal)
 4. **Exits with error** if drift detected (in CI)
 
-Use this when you want to compare specific snapshots or versions.
+Use this when you want to compare specific snapshots or versions of folder context files.
 
 ---
 

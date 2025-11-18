@@ -129,6 +129,7 @@ LogicStamp Context automatically detects and annotates Next.js App Router compon
 ## Usage
 
 ```bash
+stamp init [path] [options]
 stamp context [path] [options]
 stamp context compare <old.json> <new.json> [options]
 stamp context validate [file]
@@ -136,11 +137,21 @@ stamp context validate [file]
 
 ### Commands
 
-- **`stamp context [path]`** - Scans a directory and writes an AI-ready context file containing a collection of bundles (one bundle per entry point). Shows token estimates and mode comparison in output. Automatically validates the generated context before writing.
+- **`stamp init [path]`** - Initialize LogicStamp in a project by creating or updating `.gitignore` with patterns for context files (`context.json`, `context_*.json`, `.logicstamp/`, etc.) and saving the preference to `.logicstamp/config.json`. Optional - the `stamp context` command includes smart detection and will prompt you interactively on first run.
+
+- **`stamp context [path]`** - Scans a directory and writes AI-ready context files organized by folder. Generates multiple `context.json` files (one per folder containing components) plus a `context_main.json` index file at the output root. Shows token estimates and mode comparison in output. Automatically validates the generated context before writing. On first run (interactive mode), prompts to add `.gitignore` patterns and saves your preference - subsequent runs respect your choice.
 
 - **`stamp context compare <old.json> <new.json>`** - Compares two context files and reports drift. Detects added/removed components, changed imports, hooks, exports, and semantic hashes. Exits with code 1 if drift is detected (CI-friendly).
 
 - **`stamp context validate [file]`** - Checks an existing context file for schema and structural issues before sharing it with an AI or committing it to a repo. When no file is specified it looks for `context.json` in the current directory.
+
+### Arguments & Options (`init` command)
+
+- `[path]` - Target directory to initialize (default: current directory)
+- `--skip-gitignore` - Skip `.gitignore` setup
+- `--help`, `-h` - Show help message
+
+See [docs/INIT.md](docs/INIT.md) for detailed documentation.
 
 ### Arguments (`context` command)
 
@@ -153,7 +164,7 @@ stamp context validate [file]
 | `--depth <n>` | `-d` | Dependency traversal depth | `1` |
 | `--include-code <mode>` | `-c` | Code inclusion: `none\|header\|full` | `header` |
 | `--format <format>` | `-f` | Output format: `json\|pretty\|ndjson` | `json` |
-| `--out <file>` | `-o` | Output file | `context.json` |
+| `--out <file>` | `-o` | Output directory or file path. If a `.json` file is specified, its directory is used as the output directory. Otherwise, the path is used as the output directory. | `context.json` (creates output directory) |
 | `--max-nodes <n>` | `-m` | Maximum nodes per bundle | `100` |
 | `--profile <profile>` | | Profile preset (see below) | `llm-chat` |
 | `--strict` | `-s` | Fail on missing dependencies | `false` |
@@ -162,6 +173,7 @@ stamp context validate [file]
 | `--dry-run` | | Skip writing output; show on-screen summary only | `false` |
 | `--stats` | | Emit single-line JSON stats with token estimates (intended for CI) | `false` |
 | `--compare-modes` | | Show detailed token comparison table across modes (none/header/full) | `false` |
+| `--skip-gitignore` | | Skip `.gitignore` setup (never prompt or modify) | `false` |
 | `--help` | `-h` | Show help message | |
 
 ### Options (`compare` command)
@@ -173,7 +185,7 @@ stamp context validate [file]
 
 ### Options (`validate` command)
 
-- `[file]` – Optional path to the generated `context.json` (or alternative output) to validate. Defaults to `./context.json`.
+- `[file]` – Optional path to a generated `context.json` file to validate. Defaults to `./context.json`. You can validate individual folder context files or the main index file.
 - Exits with code `0` on success, `1` on invalid structure or read/parse errors.
 - Prints bundle counts, node totals, and highlights schema mismatches.
 
@@ -367,8 +379,15 @@ stamp context
 # 📦 Generating context...
 # 🔍 Validating generated context...
 # ✅ Validation passed
-# 📝 Writing to: /path/to/project/context.json
-# ✅ Context written successfully
+# 📝 Writing context files for 5 folders...
+#    ✓ context.json (2 bundles)
+#    ✓ src/context.json (3 bundles)
+#    ✓ src/components/context.json (5 bundles)
+#    ✓ src/utils/context.json (2 bundles)
+#    ✓ app/context.json (3 bundles)
+# 📝 Writing main context index...
+#    ✓ context_main.json (index of 5 folders)
+# ✅ 6 context files written successfully
 #
 # 📊 Summary:
 #    Total components: 15
@@ -382,8 +401,11 @@ stamp context
 # Analyze only the src directory
 stamp context ./src
 
-# Analyze with custom output file
-stamp context --out my-context.json
+# Analyze with custom output directory
+stamp context --out ./output
+
+# Or specify a .json file to use its directory
+stamp context --out ./output/context.json  # Uses ./output as directory
 ```
 
 ### Deep traversal
@@ -441,17 +463,96 @@ stamp context validate context.json
 
 ## Output Format
 
-The generated `context.json` contains an array of bundles (one bundle per entry point). Each bundle represents a root component plus its complete dependency graph, with all related components and their contracts included within that bundle. This per-root bundle design is optimized for how developers and LLMs work—when you need help with a specific page or feature, the root bundle contains everything related to that feature in one self-contained unit.
+LogicStamp Context generates a **folder-organized, multi-file output structure** that maintains your project's directory hierarchy:
 
-**Design note:** LogicStamp Context intentionally uses per-root bundles rather than per-component files because developers think in features/pages (roots), not individual atoms. Having the full dependency graph inside each root bundle means AI assistants see all related components together, improving understanding and suggestions. The structure naturally supports a future `--split` mode that would write each root bundle to its own file without breaking changes.
+### File Structure
+
+The tool writes multiple `context.json` files, one per folder containing components, plus a `context_main.json` index file at the output root:
+
+```
+output/
+├── context_main.json          # Main index with folder metadata
+├── context.json               # Root folder bundles (if any)
+├── src/
+│   └── context.json          # Bundles from src/ folder
+├── src/components/
+│   └── context.json          # Bundles from src/components/
+└── src/utils/
+    └── context.json          # Bundles from src/utils/
+```
+
+### Folder-Based Organization
+
+Each folder's `context.json` contains bundles for components in that folder. This organization:
+- **Matches your project structure** - Easy to locate context for specific directories
+- **Enables incremental updates** - Only regenerate context for changed folders
+- **Improves AI context loading** - Load only relevant folder contexts
+- **Maintains relative paths** - Folder structure mirrors your project layout
+
+### Main Index File (`context_main.json`)
+
+The `context_main.json` file serves as a directory index with:
+
+```json
+{
+  "type": "LogicStampIndex",
+  "schemaVersion": "0.1",
+  "projectRoot": ".",
+  "projectRootResolved": "/absolute/path/to/project",
+  "createdAt": "2025-01-15T10:30:00.000Z",
+  "summary": {
+    "totalComponents": 42,
+    "totalBundles": 15,
+    "totalFolders": 5,
+    "totalTokenEstimate": 13895
+  },
+  "folders": [
+    {
+      "path": "src/components",
+      "contextFile": "src/components/context.json",
+      "bundles": 3,
+      "components": ["Button.tsx", "Card.tsx", "Modal.tsx"],
+      "isRoot": false,
+      "tokenEstimate": 5234
+    },
+    {
+      "path": ".",
+      "contextFile": "context.json",
+      "bundles": 2,
+      "components": ["App.tsx"],
+      "isRoot": true,
+      "rootLabel": "Project Root",
+      "tokenEstimate": 2134
+    }
+  ],
+  "meta": {
+    "source": "logicstamp-context@0.1.0"
+  }
+}
+```
+
+**Key fields in folder entries:**
+- `path` - Relative path from project root
+- `contextFile` - Path to the folder's context.json file
+- `bundles` - Number of bundles in this folder
+- `components` - List of component files in this folder
+- `isRoot` - Whether this folder is an application entry point
+- `rootLabel` - Human-readable label for root folders (e.g., "Next.js App", "Project Root")
+- `tokenEstimate` - Estimated token count for this folder's context
+
+### Bundle Structure
+
+Each folder's `context.json` contains an array of bundles (one bundle per entry point). Each bundle represents a root component plus its complete dependency graph, with all related components and their contracts included within that bundle. This per-root bundle design is optimized for how developers and LLMs work—when you need help with a specific page or feature, the root bundle contains everything related to that feature in one self-contained unit.
 
 **📋 Full Schema Reference:** See [`schema/logicstamp.context.schema.json`](schema/logicstamp.context.schema.json) for the complete JSON Schema definition.
+
+**Example: `src/components/context.json`**
 
 ```json
 [
   {
     "$schema": "https://logicstamp.dev/schemas/context/v0.1.json",
-    "position": "1/5",
+    "position": "1/3",
     "type": "LogicStampBundle",
     "schemaVersion": "0.1",
     "entryId": "src/components/Button.tsx",
@@ -497,6 +598,8 @@ The generated `context.json` contains an array of bundles (one bundle per entry 
   }
 ]
 ```
+
+**📋 Full Schema Reference:** See [`schema/logicstamp.context.schema.json`](schema/logicstamp.context.schema.json) for the complete JSON Schema definition.
 
 ### Understanding the Meta Field
 
@@ -651,10 +754,14 @@ If your generated context shows missing dependencies in the `meta.missing` array
 **Q: Validation failed - what went wrong?**
 ```bash
 stamp context validate context.json
+# Or validate the main index
+stamp context validate context_main.json
 ```
 - Check for schema mismatches (outdated schema version)
 - Verify JSON is well-formed (no trailing commas, proper escaping)
 - Ensure all required fields are present
+- Each folder's context.json should be a valid bundle array
+- The context_main.json should have the LogicStampIndex structure
 
 **Q: How do I ignore certain directories?**
 - LogicStamp respects `.gitignore` automatically
@@ -668,6 +775,8 @@ stamp context validate context.json
 3. **Extract**: Builds component contracts with structure and signatures
 4. **Graph**: Creates dependency graph showing relationships
 5. **Bundle**: Packages context bundles optimized for AI consumption
+6. **Organize**: Groups bundles by folder and writes `context.json` files maintaining directory structure
+7. **Index**: Creates `context_main.json` index with folder metadata and summary statistics
 
 All in one command, no pre-compilation needed!
 

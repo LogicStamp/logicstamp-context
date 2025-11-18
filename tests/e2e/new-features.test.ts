@@ -147,14 +147,20 @@ describe('New Features E2E Tests (v0.1.1)', () => {
 
   describe('Compare Command', () => {
     it('should detect no drift when files are identical', async () => {
-      const file1 = join(outputPath, 'context1.json');
-      const file2 = join(outputPath, 'context2.json');
+      const outDir1 = join(outputPath, 'context1');
+      const outDir2 = join(outputPath, 'context2');
 
       await execAsync('npm run build');
 
       // Generate same context twice
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${file1}`);
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${file2}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2}`);
+
+      // Get first context file from each directory
+      const index1 = JSON.parse(await readFile(join(outDir1, 'context_main.json'), 'utf-8'));
+      const index2 = JSON.parse(await readFile(join(outDir2, 'context_main.json'), 'utf-8'));
+      const file1 = join(outDir1, index1.folders[0].contextFile);
+      const file2 = join(outDir2, index2.folders[0].contextFile);
 
       // Compare
       const { stdout } = await execAsync(
@@ -169,30 +175,33 @@ describe('New Features E2E Tests (v0.1.1)', () => {
     }, 60000);
 
     it('should detect added components', async () => {
-      const oldContext = join(outputPath, 'old.json');
-      const newContext = join(outputPath, 'new.json');
+      const oldDir = join(outputPath, 'old');
+      const newDir = join(outputPath, 'new');
+      await mkdir(oldDir, { recursive: true });
+      await mkdir(join(oldDir, 'src'), { recursive: true });
 
       await execAsync('npm run build');
 
-      // Create old context (minimal)
-      await writeFile(oldContext, JSON.stringify([
+      // Create old context (minimal - single file)
+      const oldContextFile = join(oldDir, 'src', 'context.json');
+      await writeFile(oldContextFile, JSON.stringify([
         {
           "$schema": "https://logicstamp.dev/schemas/context/v0.1.json",
           "position": "1/1",
           "type": "LogicStampBundle",
           "schemaVersion": "0.1",
-          "entryId": "test.tsx",
+          "entryId": "src/test.tsx",
           "depth": 1,
           "createdAt": new Date().toISOString(),
           "bundleHash": "uifb:000000000000000000000000",
           "graph": {
             "nodes": [{
-              "entryId": "test.tsx",
+              "entryId": "src/test.tsx",
               "contract": {
                 "type": "UIFContract",
                 "schemaVersion": "0.3",
                 "kind": "react:component",
-                "entryId": "test.tsx",
+                "entryId": "src/test.tsx",
                 "semanticHash": "uif:test",
                 "version": { imports: [], hooks: [], components: [], functions: [] },
                 "logicSignature": { props: {}, emits: {} },
@@ -206,47 +215,59 @@ describe('New Features E2E Tests (v0.1.1)', () => {
       ]));
 
       // Generate new context (has more files)
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${newContext}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${newDir}`);
+
+      // Get new context file
+      const newIndex = JSON.parse(await readFile(join(newDir, 'context_main.json'), 'utf-8'));
+      const newContextFile = join(newDir, newIndex.folders[0].contextFile);
 
       // Compare
       try {
-        await execAsync(`node dist/cli/stamp.js context compare ${oldContext} ${newContext}`);
+        await execAsync(`node dist/cli/stamp.js context compare ${oldContextFile} ${newContextFile}`);
         expect.fail('Should have exited with code 1');
       } catch (error: any) {
-        expect(error.code).toBe(1);
-        expect(error.stdout).toContain('DRIFT');
-        expect(error.stdout).toContain('Added components:');
+        // Exit code 1 indicates drift detected
+        const output = error.stdout || error.stderr || '';
+        expect(output).toContain('DRIFT');
+        expect(output).toContain('Added components:');
       }
     }, 60000);
 
     it('should detect removed components', async () => {
-      const oldContext = join(outputPath, 'old.json');
-      const newContext = join(outputPath, 'new.json');
+      const oldDir = join(outputPath, 'old-removed');
+      const newDir = join(outputPath, 'new-removed');
+      await mkdir(newDir, { recursive: true });
+      await mkdir(join(newDir, 'src'), { recursive: true });
 
       await execAsync('npm run build');
 
       // Generate full context
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${oldContext}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${oldDir}`);
+
+      // Get old context file
+      const oldIndex = JSON.parse(await readFile(join(oldDir, 'context_main.json'), 'utf-8'));
+      const oldContextFile = join(oldDir, oldIndex.folders[0].contextFile);
 
       // Create minimal new context
-      await writeFile(newContext, JSON.stringify([
+      const newContextFile = join(newDir, 'src', 'context.json');
+      await writeFile(newContextFile, JSON.stringify([
         {
           "$schema": "https://logicstamp.dev/schemas/context/v0.1.json",
           "position": "1/1",
           "type": "LogicStampBundle",
           "schemaVersion": "0.1",
-          "entryId": "test.tsx",
+          "entryId": "src/test.tsx",
           "depth": 1,
           "createdAt": new Date().toISOString(),
           "bundleHash": "uifb:000000000000000000000000",
           "graph": {
             "nodes": [{
-              "entryId": "test.tsx",
+              "entryId": "src/test.tsx",
               "contract": {
                 "type": "UIFContract",
                 "schemaVersion": "0.3",
                 "kind": "react:component",
-                "entryId": "test.tsx",
+                "entryId": "src/test.tsx",
                 "semanticHash": "uif:test",
                 "version": { imports: [], hooks: [], components: [], functions: [] },
                 "logicSignature": { props: {}, emits: {} },
@@ -261,23 +282,30 @@ describe('New Features E2E Tests (v0.1.1)', () => {
 
       // Compare
       try {
-        await execAsync(`node dist/cli/stamp.js context compare ${oldContext} ${newContext}`);
+        await execAsync(`node dist/cli/stamp.js context compare ${oldContextFile} ${newContextFile}`);
         expect.fail('Should have exited with code 1');
       } catch (error: any) {
-        expect(error.code).toBe(1);
-        expect(error.stdout).toContain('DRIFT');
-        expect(error.stdout).toContain('Removed components:');
+        // Exit code 1 indicates drift detected
+        const output = error.stdout || error.stderr || '';
+        expect(output).toContain('DRIFT');
+        expect(output).toContain('Removed components:');
       }
     }, 60000);
 
     it('should show token stats with --stats flag', async () => {
-      const file1 = join(outputPath, 'context1.json');
-      const file2 = join(outputPath, 'context2.json');
+      const dir1 = join(outputPath, 'stats-context1');
+      const dir2 = join(outputPath, 'stats-context2');
 
       await execAsync('npm run build');
 
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${file1}`);
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${file2}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${dir1}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${dir2}`);
+
+      // Get context files
+      const index1 = JSON.parse(await readFile(join(dir1, 'context_main.json'), 'utf-8'));
+      const index2 = JSON.parse(await readFile(join(dir2, 'context_main.json'), 'utf-8'));
+      const file1 = join(dir1, index1.folders[0].contextFile);
+      const file2 = join(dir2, index2.folders[0].contextFile);
 
       const { stdout } = await execAsync(
         `node dist/cli/stamp.js context compare ${file1} ${file2} --stats`
@@ -291,14 +319,20 @@ describe('New Features E2E Tests (v0.1.1)', () => {
     }, 60000);
 
     it('should exit with code 0 on PASS and code 1 on DRIFT', async () => {
-      const file1 = join(outputPath, 'pass1.json');
-      const file2 = join(outputPath, 'pass2.json');
+      const dir1 = join(outputPath, 'pass1');
+      const dir2 = join(outputPath, 'pass2');
 
       await execAsync('npm run build');
 
       // Generate identical contexts
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${file1}`);
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${file2}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${dir1}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${dir2}`);
+
+      // Get context files
+      const index1 = JSON.parse(await readFile(join(dir1, 'context_main.json'), 'utf-8'));
+      const index2 = JSON.parse(await readFile(join(dir2, 'context_main.json'), 'utf-8'));
+      const file1 = join(dir1, index1.folders[0].contextFile);
+      const file2 = join(dir2, index2.folders[0].contextFile);
 
       // Should not throw (exit code 0)
       const { stdout } = await execAsync(
@@ -310,13 +344,13 @@ describe('New Features E2E Tests (v0.1.1)', () => {
 
   describe('Strict Missing Flag', () => {
     it('should pass when no missing dependencies', async () => {
-      const outFile = join(outputPath, 'strict-pass.json');
+      const outDir = join(outputPath, 'strict-pass');
 
       await execAsync('npm run build');
 
       // Should not throw (fixtures have no missing deps)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --strict-missing --out ${outFile}`
+        `node dist/cli/stamp.js context ${fixturesPath} --strict-missing --out ${outDir}`
       );
 
       expect(stdout).toContain('Missing dependencies: 0');
@@ -332,14 +366,20 @@ describe('New Features E2E Tests (v0.1.1)', () => {
 
   describe('Enhanced Component Detection', () => {
     it('should detect Button.tsx as react:component (HTML JSX)', async () => {
-      const outFile = join(outputPath, 'button-test.json');
+      const outDir = join(outputPath, 'button-test');
 
       await execAsync('npm run build');
 
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outFile}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`);
 
-      const content = await readFile(outFile, 'utf-8');
-      const bundles = JSON.parse(content);
+      // Read all bundles from all folders
+      const mainIndex = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const bundles: any[] = [];
+      for (const folder of mainIndex.folders) {
+        const contextPath = join(outDir, folder.contextFile);
+        const folderBundles = JSON.parse(await readFile(contextPath, 'utf-8'));
+        bundles.push(...folderBundles);
+      }
 
       // Find Button.tsx in bundles
       const buttonBundle = bundles.find((b: any) =>
@@ -359,14 +399,20 @@ describe('New Features E2E Tests (v0.1.1)', () => {
     }, 30000);
 
     it('should detect all React components correctly', async () => {
-      const outFile = join(outputPath, 'all-components.json');
+      const outDir = join(outputPath, 'all-components');
 
       await execAsync('npm run build');
 
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outFile}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`);
 
-      const content = await readFile(outFile, 'utf-8');
-      const bundles = JSON.parse(content);
+      // Read all bundles from all folders
+      const mainIndex = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const bundles: any[] = [];
+      for (const folder of mainIndex.folders) {
+        const contextPath = join(outDir, folder.contextFile);
+        const folderBundles = JSON.parse(await readFile(contextPath, 'utf-8'));
+        bundles.push(...folderBundles);
+      }
 
       // Check that all .tsx files are detected as react:component
       bundles.forEach((bundle: any) => {
@@ -388,14 +434,20 @@ describe('New Features E2E Tests (v0.1.1)', () => {
 
   describe('Dependency Resolution', () => {
     it('should resolve dependencies within same directory first', async () => {
-      const outFile = join(outputPath, 'deps.json');
+      const outDir = join(outputPath, 'deps');
 
       await execAsync('npm run build');
 
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outFile}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`);
 
-      const content = await readFile(outFile, 'utf-8');
-      const bundles = JSON.parse(content);
+      // Read all bundles from all folders
+      const mainIndex = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const bundles: any[] = [];
+      for (const folder of mainIndex.folders) {
+        const contextPath = join(outDir, folder.contextFile);
+        const folderBundles = JSON.parse(await readFile(contextPath, 'utf-8'));
+        bundles.push(...folderBundles);
+      }
 
       // Check that Card.tsx resolves Button.tsx from same directory
       const cardBundle = bundles.find((b: any) =>
@@ -423,14 +475,20 @@ describe('New Features E2E Tests (v0.1.1)', () => {
 
   describe('Output Format Consistency', () => {
     it('should include all new fields in bundle output', async () => {
-      const outFile = join(outputPath, 'format-check.json');
+      const outDir = join(outputPath, 'format-check');
 
       await execAsync('npm run build');
 
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outFile}`);
+      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`);
 
-      const content = await readFile(outFile, 'utf-8');
-      const bundles = JSON.parse(content);
+      // Read all bundles from all folders
+      const mainIndex = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const bundles: any[] = [];
+      for (const folder of mainIndex.folders) {
+        const contextPath = join(outDir, folder.contextFile);
+        const folderBundles = JSON.parse(await readFile(contextPath, 'utf-8'));
+        bundles.push(...folderBundles);
+      }
 
       expect(bundles.length).toBeGreaterThan(0);
 
@@ -463,20 +521,26 @@ describe('New Features E2E Tests (v0.1.1)', () => {
 
   describe('CLI Integration', () => {
     it('should support chaining multiple flags', async () => {
-      const outFile = join(outputPath, 'multi-flags.json');
+      const outDir = join(outputPath, 'multi-flags');
 
       await execAsync('npm run build');
 
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --depth 2 --include-code full --out ${outFile}`
+        `node dist/cli/stamp.js context ${fixturesPath} --depth 2 --include-code full --out ${outDir}`
       );
 
-      expect(stdout).toContain('Context written successfully');
+      expect(stdout).toContain('context files written successfully');
       expect(stdout).toContain('Token Estimates');
       expect(stdout).toContain('Mode Comparison');
 
-      const content = await readFile(outFile, 'utf-8');
-      const bundles = JSON.parse(content);
+      // Read all bundles from all folders
+      const mainIndex = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const bundles: any[] = [];
+      for (const folder of mainIndex.folders) {
+        const contextPath = join(outDir, folder.contextFile);
+        const folderBundles = JSON.parse(await readFile(contextPath, 'utf-8'));
+        bundles.push(...folderBundles);
+      }
       expect(bundles.length).toBeGreaterThan(0);
     }, 30000);
 

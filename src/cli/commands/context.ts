@@ -3,26 +3,71 @@
  */
 
 import { writeFile, mkdir } from 'node:fs/promises';
-import { resolve, dirname } from 'node:path';
-import { globFiles, readFileWithText } from '../../utils/fsx.js';
+import { resolve, dirname, join } from 'node:path';
+import { globFiles, readFileWithText, getFolderPath, normalizeEntryId } from '../../utils/fsx.js';
 import { buildContract } from '../../core/contractBuilder.js';
 import { extractFromFile } from '../../core/astParser.js';
 import { buildDependencyGraph } from '../../core/manifest.js';
 import type { UIFContract } from '../../types/UIFContract.js';
 import {
   pack,
-  formatBundle,
   type PackOptions,
   type LogicStampBundle,
+  type LogicStampIndex,
+  type FolderInfo,
 } from '../../core/pack.js';
 import { estimateGPT4Tokens, estimateClaudeTokens, formatTokenCount } from '../../utils/tokens.js';
 import { validateBundles } from './validate.js';
+import { smartGitignoreSetup } from '../../utils/gitignore.js';
 
 /**
  * Normalize path for display (convert backslashes to forward slashes)
  */
 function displayPath(path: string): string {
   return path.replace(/\\/g, '/');
+}
+
+/**
+ * Detect if a folder is a root (application entry point) and assign a label
+ */
+function detectRootFolder(relativePath: string, components: string[]): { isRoot: boolean; rootLabel?: string } {
+  // Project root is always a root
+  if (relativePath === '.') {
+    return { isRoot: true, rootLabel: 'Project Root' };
+  }
+
+  // Detect common application entry points
+  const pathLower = relativePath.toLowerCase();
+
+  // Next.js app router
+  if (pathLower.includes('/app') && components.some(c => c === 'page.tsx' || c === 'layout.tsx')) {
+    return { isRoot: true, rootLabel: 'Next.js App' };
+  }
+
+  // Examples folder
+  if (pathLower.startsWith('examples/') && pathLower.endsWith('/src')) {
+    const exampleName = relativePath.split('/')[1];
+    return { isRoot: true, rootLabel: `Example: ${exampleName}` };
+  }
+
+  // Test fixtures
+  if (pathLower.includes('tests/fixtures/') && pathLower.endsWith('/src')) {
+    return { isRoot: true, rootLabel: 'Test Fixture' };
+  }
+
+  // Root src folder
+  if (relativePath === 'src') {
+    return { isRoot: true, rootLabel: 'Main Source' };
+  }
+
+  // Apps folder (monorepo pattern)
+  if (pathLower.startsWith('apps/')) {
+    const appName = relativePath.split('/')[1];
+    return { isRoot: true, rootLabel: `App: ${appName}` };
+  }
+
+  // Default: not a root
+  return { isRoot: false };
 }
 
 export interface ContextOptions {
@@ -41,6 +86,7 @@ export interface ContextOptions {
   stats: boolean;
   strictMissing: boolean;
   compareModes: boolean;
+  skipGitignore?: boolean;
 }
 
 export async function contextCommand(options: ContextOptions): Promise<void> {
@@ -338,12 +384,171 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
 
   // Write output unless --dry-run
   if (!options.dryRun) {
+    // Determine output directory from --out option
+    // If --out points to a .json file, use its directory; otherwise use it as the directory
     const outPath = resolve(options.out);
-    console.log(`📝 Writing to: ${displayPath(outPath)}`);
-    // Ensure output directory exists
-    await mkdir(dirname(outPath), { recursive: true });
-    await writeFile(outPath, output, 'utf8');
-    console.log(`✅ Context written successfully`);
+    const outputDir = outPath.endsWith('.json') ? dirname(outPath) : outPath;
+
+    // Group bundles by folder
+    const bundlesByFolder = new Map<string, LogicStampBundle[]>();
+
+    for (const bundle of bundles) {
+      const folderPath = getFolderPath(bundle.entryId);
+
+      if (!bundlesByFolder.has(folderPath)) {
+        bundlesByFolder.set(folderPath, []);
+      }
+
+      bundlesByFolder.get(folderPath)!.push(bundle);
+    }
+
+    // Prepare folder metadata and write files
+    console.log(`📝 Writing context files for ${bundlesByFolder.size} folders...`);
+    let filesWritten = 0;
+    const normalizedRoot = normalizeEntryId(projectRoot);
+    const folderInfos: FolderInfo[] = [];
+    let totalTokenEstimate = 0;
+
+    for (const [folderPath, folderBundles] of bundlesByFolder) {
+      // Sort bundles for deterministic output
+      folderBundles.sort((a, b) => a.entryId.localeCompare(b.entryId));
+
+      // Calculate relative path from project root
+      let relativePath: string;
+      if (folderPath === normalizedRoot) {
+        relativePath = '.';
+      } else if (folderPath.startsWith(normalizedRoot + '/')) {
+        relativePath = folderPath.substring(normalizedRoot.length + 1);
+      } else {
+        relativePath = folderPath;
+      }
+
+      // Extract component file names from bundle entryIds
+      const components = folderBundles.map(b => {
+        const normalized = normalizeEntryId(b.entryId);
+        const lastSlash = normalized.lastIndexOf('/');
+        return lastSlash !== -1 ? normalized.substring(lastSlash + 1) : normalized;
+      });
+
+      // Detect if this is a root folder
+      const { isRoot, rootLabel } = detectRootFolder(relativePath, components);
+
+      // Format bundles for this folder
+      let folderOutput: string;
+      if (options.format === 'ndjson') {
+        folderOutput = folderBundles.map((b, idx) => {
+          const bundleWithSchema = {
+            $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
+            position: `${idx + 1}/${folderBundles.length}`,
+            ...b,
+          };
+          return JSON.stringify(bundleWithSchema);
+        }).join('\n');
+      } else if (options.format === 'json') {
+        const bundlesWithPosition = folderBundles.map((b, idx) => ({
+          $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
+          position: `${idx + 1}/${folderBundles.length}`,
+          ...b,
+        }));
+        folderOutput = JSON.stringify(bundlesWithPosition, null, 2);
+      } else {
+        // pretty format
+        folderOutput = folderBundles.map((b, idx) => {
+          const bundleWithSchema = {
+            $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
+            position: `${idx + 1}/${folderBundles.length}`,
+            ...b,
+          };
+          const header = `\n# Bundle ${idx + 1}/${folderBundles.length}: ${b.entryId}`;
+          return header + '\n' + JSON.stringify(bundleWithSchema, null, 2);
+        }).join('\n\n');
+      }
+
+      // Estimate tokens for this folder's context file
+      const folderTokenEstimate = estimateGPT4Tokens(folderOutput);
+      totalTokenEstimate += folderTokenEstimate;
+
+      // Write folder's context.json to output directory maintaining relative structure
+      const contextFileName = relativePath === '.' ? 'context.json' : join(relativePath, 'context.json');
+      const contextFilePath = relativePath === '.' ? 'context.json' : `${relativePath}/context.json`;
+      const folderContextPath = join(outputDir, contextFileName);
+      await mkdir(dirname(folderContextPath), { recursive: true });
+      await writeFile(folderContextPath, folderOutput, 'utf8');
+      filesWritten++;
+      console.log(`   ✓ ${displayPath(folderContextPath)} (${folderBundles.length} bundles)`);
+
+      // Add to folder info array
+      folderInfos.push({
+        path: relativePath === '.' ? '.' : relativePath,
+        contextFile: contextFilePath,
+        bundles: folderBundles.length,
+        components: components.sort(),
+        isRoot,
+        rootLabel,
+        tokenEstimate: folderTokenEstimate,
+      });
+    }
+
+    // Write context_main.json as metadata index
+    const mainContextPath = join(outputDir, 'context_main.json');
+    console.log(`📝 Writing main context index...`);
+
+    // Sort folders by path for deterministic output
+    folderInfos.sort((a, b) => a.path.localeCompare(b.path));
+
+    // Create index structure
+    const index: LogicStampIndex = {
+      type: 'LogicStampIndex',
+      schemaVersion: '0.1',
+      projectRoot: '.',
+      projectRootResolved: normalizedRoot,
+      createdAt: new Date().toISOString(),
+      summary: {
+        totalComponents: contracts.length,
+        totalBundles: bundles.length,
+        totalFolders: bundlesByFolder.size,
+        totalTokenEstimate,
+      },
+      folders: folderInfos,
+      meta: {
+        source: 'logicstamp-context@0.1.0',
+      },
+    };
+
+    const indexOutput = JSON.stringify(index, null, 2);
+    await writeFile(mainContextPath, indexOutput, 'utf8');
+    console.log(`   ✓ ${displayPath(mainContextPath)} (index of ${bundlesByFolder.size} folders)`);
+
+    console.log(`✅ ${filesWritten + 1} context files written successfully`);
+
+    // Smart .gitignore setup with prompt and config persistence
+    try {
+      const { added, created, prompted, skipped } = await smartGitignoreSetup(projectRoot, {
+        skipGitignore: options.skipGitignore,
+      });
+
+      if (prompted) {
+        if (added) {
+          if (created) {
+            console.log('\n✅ Created .gitignore with LogicStamp patterns');
+          } else {
+            console.log('\n✅ Added LogicStamp patterns to .gitignore');
+          }
+        } else if (skipped) {
+          console.log('\n📝 Skipping .gitignore setup (you can run `stamp init` later if needed)');
+        }
+      } else if (!prompted && added) {
+        // Auto-added based on saved preference
+        if (created) {
+          console.log('\n📝 Created .gitignore with LogicStamp patterns');
+        } else {
+          console.log('\n📝 Added LogicStamp patterns to .gitignore');
+        }
+      }
+    } catch (error) {
+      // Silently ignore gitignore errors - not critical to context generation
+      // Users can run `stamp init` manually if needed
+    }
   } else {
     console.log('🔍 Dry run - no file written');
   }

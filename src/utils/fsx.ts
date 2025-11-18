@@ -173,3 +173,35 @@ export function normalizeEntryId(entryId: string): string {
   result = result.replace(/^\.\//, '');
   return result;
 }
+
+/**
+ * Get the folder path for a given file (parent directory)
+ * Returns normalized folder path
+ */
+export function getFolderPath(filePath: string): string {
+  const normalized = normalizeEntryId(filePath);
+  const lastSlash = normalized.lastIndexOf('/');
+  if (lastSlash === -1) return '.';
+  return normalized.substring(0, lastSlash);
+}
+
+/**
+ * Group files by their containing folder
+ * Returns a Map of folderPath -> array of file paths
+ */
+export function groupFilesByFolder(files: string[], projectRoot: string): Map<string, string[]> {
+  const normalizedRoot = normalizeEntryId(projectRoot);
+  const folderMap = new Map<string, string[]>();
+
+  for (const file of files) {
+    const folderPath = getFolderPath(file);
+
+    if (!folderMap.has(folderPath)) {
+      folderMap.set(folderPath, []);
+    }
+
+    folderMap.get(folderPath)!.push(file);
+  }
+
+  return folderMap;
+}

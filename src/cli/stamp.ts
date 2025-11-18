@@ -8,6 +8,7 @@
 import { contextCommand, type ContextOptions } from './commands/context.js';
 import { compareCommand, type CompareOptions } from './commands/compare.js';
 import { validateCommand } from './commands/validate.js';
+import { init, type InitOptions } from './commands/init.js';
 
 async function main() {
   const args = process.argv.slice(2);
@@ -20,6 +21,12 @@ async function main() {
 
   // First argument should be the subcommand
   const subcommand = args[0];
+
+  // Handle init command
+  if (subcommand === 'init') {
+    await handleInit(args.slice(1));
+    return;
+  }
 
   if (subcommand !== 'context') {
     console.error(`❌ Unknown command: ${subcommand}`);
@@ -43,6 +50,45 @@ async function main() {
 
   // Default: generate context
   await handleGenerate(contextArgs);
+}
+
+async function handleInit(args: string[]) {
+  if (args.includes('--help') || args.includes('-h')) {
+    printInitHelp();
+    process.exit(0);
+  }
+
+  const options: InitOptions = {};
+
+  // Parse command line arguments
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
+    if (arg.startsWith('--')) {
+      const key = arg.replace(/^--/, '');
+
+      switch (key) {
+        case 'skip-gitignore':
+          options.skipGitignore = true;
+          break;
+        default:
+          console.error(`❌ Unknown option: ${arg}`);
+          process.exit(1);
+      }
+    } else {
+      // First non-option argument is the target directory
+      if (!options.targetDir) {
+        options.targetDir = arg;
+      }
+    }
+  }
+
+  try {
+    await init(options);
+  } catch (error) {
+    console.error('❌ Initialization failed:', (error as Error).message);
+    process.exit(1);
+  }
 }
 
 async function handleValidate(args: string[]) {
@@ -255,6 +301,7 @@ async function handleGenerate(args: string[]) {
     stats: false,
     strictMissing: false,
     compareModes: false,
+    skipGitignore: false,
   };
 
   // Parse command line arguments
@@ -314,6 +361,9 @@ async function handleGenerate(args: string[]) {
         case 'compare-modes':
           options.compareModes = true;
           break;
+        case 'skip-gitignore':
+          options.skipGitignore = true;
+          break;
         default:
           console.error(`❌ Unknown option: ${arg}`);
           process.exit(1);
@@ -343,6 +393,7 @@ function printMainHelp() {
 ╰─────────────────────────────────────────────────╯
 
 USAGE:
+  stamp init [path]                    Initialize LogicStamp in a project
   stamp context [path] [options]       Generate context
   stamp context validate [file]        Validate context file
   stamp context compare [options]      Detect drift (auto-generates fresh context)
@@ -351,6 +402,9 @@ OPTIONS:
   -h, --help                          Show this help
 
 EXAMPLES:
+  stamp init
+    Set up LogicStamp in current directory (creates/updates .gitignore)
+
   stamp context
     Generate context.json for current directory
 
@@ -361,6 +415,7 @@ EXAMPLES:
     Auto-detect drift by comparing with fresh context
 
 For detailed help on a specific command, run:
+  stamp init --help
   stamp context --help
   stamp context validate --help
   stamp context compare --help
@@ -393,6 +448,7 @@ OPTIONS:
   --dry-run                           Skip writing output
   --stats                             Emit JSON stats
   --compare-modes                     Show detailed mode comparison table
+  --skip-gitignore                    Skip .gitignore setup (never prompt or modify)
   -h, --help                          Show this help
 
 EXAMPLES:
@@ -493,6 +549,48 @@ NOTES:
     jest          → prompts to update snapshots locally
     jest -u       → updates snapshots without prompt
     CI            → fails if snapshots don't match
+  `);
+}
+
+function printInitHelp() {
+  console.log(`
+╭─────────────────────────────────────────────────╮
+│  Stamp Init - Initialize LogicStamp            │
+│  Set up LogicStamp in your project              │
+╰─────────────────────────────────────────────────╯
+
+USAGE:
+  stamp init [path] [options]
+
+ARGUMENTS:
+  [path]                              Target directory (default: current)
+
+OPTIONS:
+  --skip-gitignore                    Skip .gitignore setup
+  -h, --help                          Show this help
+
+EXAMPLES:
+  stamp init
+    Set up LogicStamp in current directory
+
+  stamp init ./my-project
+    Set up LogicStamp in a specific directory
+
+  stamp init --skip-gitignore
+    Initialize without modifying .gitignore
+
+WHAT IT DOES:
+  • Creates or updates .gitignore with LogicStamp patterns:
+    - context.json
+    - context_*.json
+    - *.uif.json
+    - logicstamp.manifest.json
+    - .logicstamp/
+
+NOTES:
+  • Safe to run multiple times (idempotent)
+  • Won't duplicate patterns if they already exist
+  • Creates .gitignore if it doesn't exist
   `);
 }
 

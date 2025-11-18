@@ -2,7 +2,15 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readFile, rm, mkdir } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
+
+// Helper to read per-folder context from output directory
+async function readFolderContext(outDir: string): Promise<any[]> {
+  const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+  if (index.folders.length === 0) return [];
+  const contextPath = join(outDir, index.folders[0].contextFile);
+  return JSON.parse(await readFile(contextPath, 'utf-8'));
+}
 
 const execAsync = promisify(exec);
 
@@ -33,15 +41,15 @@ describe.sequential('Determinism and Ordering Tests', () => {
       const testDir = join(outputPath, 'golden-output');
       await mkdir(testDir, { recursive: true });
 
-      const outFile1 = join(testDir, 'context1.json');
-      const outFile2 = join(testDir, 'context2.json');
+      const outDir1 = join(testDir, 'run1');
+      const outDir2 = join(testDir, 'run2');
 
       // Generate context twice
       try {
         const result1 = await execAsync(
-          `node dist/cli/index.js ${fixturesPath} --out ${outFile1}`
+          `node dist/cli/index.js ${fixturesPath} --out ${outDir1}`
         );
-        if (!result1.stdout.includes('Context written')) {
+        if (!result1.stdout.includes('context files written')) {
           console.error('CLI output 1:', result1.stdout);
         }
       } catch (err: any) {
@@ -52,9 +60,9 @@ describe.sequential('Determinism and Ordering Tests', () => {
 
       try {
         const result2 = await execAsync(
-          `node dist/cli/index.js ${fixturesPath} --out ${outFile2}`
+          `node dist/cli/index.js ${fixturesPath} --out ${outDir2}`
         );
-        if (!result2.stdout.includes('Context written')) {
+        if (!result2.stdout.includes('context files written')) {
           console.error('CLI output 2:', result2.stdout);
         }
       } catch (err: any) {
@@ -64,11 +72,8 @@ describe.sequential('Determinism and Ordering Tests', () => {
       }
 
       // Read both outputs
-      const content1 = await readFile(outFile1, 'utf-8');
-      const content2 = await readFile(outFile2, 'utf-8');
-
-      const bundles1 = JSON.parse(content1);
-      const bundles2 = JSON.parse(content2);
+      const bundles1 = await readFolderContext(outDir1);
+      const bundles2 = await readFolderContext(outDir2);
 
       // Bundles should be in the same order
       expect(bundles1.length).toBe(bundles2.length);
@@ -93,14 +98,13 @@ describe.sequential('Determinism and Ordering Tests', () => {
       const testDir = join(outputPath, 'sort-bundles');
       await mkdir(testDir, { recursive: true });
 
-      const outFile = join(testDir, 'context.json');
+      const outDir = join(testDir, "context-out");
 
       await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --out ${outFile}`
+        `node dist/cli/index.js ${fixturesPath} --out ${outDir}`
       );
 
-      const content = await readFile(outFile, 'utf-8');
-      const bundles = JSON.parse(content);
+      const bundles = await readFolderContext(outDir);
 
       // Check bundles are sorted
       for (let i = 1; i < bundles.length; i++) {
@@ -114,14 +118,13 @@ describe.sequential('Determinism and Ordering Tests', () => {
       const testDir = join(outputPath, 'sort-nodes');
       await mkdir(testDir, { recursive: true });
 
-      const outFile = join(testDir, 'context.json');
+      const outDir = join(testDir, "context-out");
 
       await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --depth 2 --out ${outFile}`
+        `node dist/cli/index.js ${fixturesPath} --depth 2 --out ${outDir}`
       );
 
-      const content = await readFile(outFile, 'utf-8');
-      const bundles = JSON.parse(content);
+      const bundles = await readFolderContext(outDir);
 
       bundles.forEach(bundle => {
         const nodes = bundle.graph.nodes;
@@ -137,14 +140,13 @@ describe.sequential('Determinism and Ordering Tests', () => {
       const testDir = join(outputPath, 'sort-edges');
       await mkdir(testDir, { recursive: true });
 
-      const outFile = join(testDir, 'context.json');
+      const outDir = join(testDir, "context-out");
 
       await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --depth 2 --out ${outFile}`
+        `node dist/cli/index.js ${fixturesPath} --depth 2 --out ${outDir}`
       );
 
-      const content = await readFile(outFile, 'utf-8');
-      const bundles = JSON.parse(content);
+      const bundles = await readFolderContext(outDir);
 
       bundles.forEach(bundle => {
         const edges = bundle.graph.edges;
@@ -168,14 +170,13 @@ describe.sequential('Determinism and Ordering Tests', () => {
       const testDir = join(outputPath, 'schema-json');
       await mkdir(testDir, { recursive: true });
 
-      const outFile = join(testDir, 'context.json');
+      const outDir = join(testDir, "context-out");
 
       await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --format json --out ${outFile}`
+        `node dist/cli/index.js ${fixturesPath} --format json --out ${outDir}`
       );
 
-      const content = await readFile(outFile, 'utf-8');
-      const bundles = JSON.parse(content);
+      const bundles = await readFolderContext(outDir);
 
       bundles.forEach(bundle => {
         expect(bundle).toHaveProperty('$schema');
@@ -188,13 +189,16 @@ describe.sequential('Determinism and Ordering Tests', () => {
       const testDir = join(outputPath, 'schema-ndjson');
       await mkdir(testDir, { recursive: true });
 
-      const outFile = join(testDir, 'context.ndjson');
+      const outDir = join(testDir, 'ndjson-out');
 
       await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --format ndjson --out ${outFile}`
+        `node dist/cli/index.js ${fixturesPath} --format ndjson --out ${outDir}`
       );
 
-      const content = await readFile(outFile, 'utf-8');
+      // Read ndjson file from per-folder structure
+      const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const ndjsonPath = join(outDir, index.folders[0].contextFile);
+      const content = await readFile(ndjsonPath, 'utf-8');
       const lines = content.trim().split('\n');
 
       lines.forEach(line => {
@@ -209,13 +213,16 @@ describe.sequential('Determinism and Ordering Tests', () => {
       const testDir = join(outputPath, 'schema-pretty');
       await mkdir(testDir, { recursive: true });
 
-      const outFile = join(testDir, 'context.txt');
+      const outDir = join(testDir, 'pretty-out');
 
       await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --format pretty --out ${outFile}`
+        `node dist/cli/index.js ${fixturesPath} --format pretty --out ${outDir}`
       );
 
-      const content = await readFile(outFile, 'utf-8');
+      // Read pretty file from per-folder structure
+      const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const prettyPath = join(outDir, index.folders[0].contextFile);
+      const content = await readFile(prettyPath, 'utf-8');
 
       // Pretty format has headers, extract JSON parts
       const jsonMatches = content.match(/\{[\s\S]*?\n\}/g);
@@ -236,14 +243,13 @@ describe.sequential('Determinism and Ordering Tests', () => {
       const testDir = join(outputPath, 'windows-paths');
       await mkdir(testDir, { recursive: true });
 
-      const outFile = join(testDir, 'context.json');
+      const outDir = join(testDir, "context-out");
 
       await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --out ${outFile}`
+        `node dist/cli/index.js ${fixturesPath} --out ${outDir}`
       );
 
-      const content = await readFile(outFile, 'utf-8');
-      const bundles = JSON.parse(content);
+      const bundles = await readFolderContext(outDir);
 
       bundles.forEach(bundle => {
         // entryId should not contain backslashes (Windows-style paths)
@@ -284,16 +290,16 @@ describe.sequential('Determinism and Ordering Tests', () => {
       const testDir = join(outputPath, 'depth-monotonic');
       await mkdir(testDir, { recursive: true });
 
-      const outFile1 = join(testDir, 'context-depth1.json');
-      const outFile2 = join(testDir, 'context-depth2.json');
+      const outDir1 = join(testDir, 'depth1');
+      const outDir2 = join(testDir, 'depth2');
 
       // Generate with different depths
       // Note: Default profile (llm-chat) sets depth=1, so we test that vs depth=2
       try {
         const result1 = await execAsync(
-          `node dist/cli/index.js ${fixturesPath} --out ${outFile1}`
+          `node dist/cli/index.js ${fixturesPath} --out ${outDir1}`
         );
-        if (!result1.stdout.includes('Context written')) {
+        if (!result1.stdout.includes('context files written')) {
           console.error('CLI output 1:', result1.stdout);
         }
       } catch (err: any) {
@@ -304,9 +310,9 @@ describe.sequential('Determinism and Ordering Tests', () => {
 
       try {
         const result2 = await execAsync(
-          `node dist/cli/index.js ${fixturesPath} --include-code none --profile ci-strict --depth 2 --out ${outFile2}`
+          `node dist/cli/index.js ${fixturesPath} --include-code none --profile ci-strict --depth 2 --out ${outDir2}`
         );
-        if (!result2.stdout.includes('Context written')) {
+        if (!result2.stdout.includes('context files written')) {
           console.error('CLI output 2:', result2.stdout);
         }
       } catch (err: any) {
@@ -315,8 +321,8 @@ describe.sequential('Determinism and Ordering Tests', () => {
         throw err;
       }
 
-      const bundles1 = JSON.parse(await readFile(outFile1, 'utf-8'));
-      const bundles2 = JSON.parse(await readFile(outFile2, 'utf-8'));
+      const bundles1 = await readFolderContext(outDir1);
+      const bundles2 = await readFolderContext(outDir2);
 
       const totalNodes1 = bundles1.reduce((sum, b) => sum + b.graph.nodes.length, 0);
       const totalNodes2 = bundles2.reduce((sum, b) => sum + b.graph.nodes.length, 0);
@@ -341,13 +347,16 @@ describe.sequential('Determinism and Ordering Tests', () => {
 
       for (const includeCode of includeCodeModes) {
         for (const format of formats) {
-          const outFile = join(testDir, `context-${includeCode}-${format}.${format === 'ndjson' ? 'ndjson' : 'json'}`);
+          const outDir = join(testDir, `context-${includeCode}-${format}`);
 
           await execAsync(
-            `node dist/cli/index.js ${fixturesPath} --include-code ${includeCode} --format ${format} --out ${outFile}`
+            `node dist/cli/index.js ${fixturesPath} --include-code ${includeCode} --format ${format} --out ${outDir}`
           );
 
-          const content = await readFile(outFile, 'utf-8');
+          // Read main index to get first context file
+          const mainIndex = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+          const firstContextFile = join(outDir, mainIndex.folders[0].contextFile);
+          const content = await readFile(firstContextFile, 'utf-8');
 
           // Verify output is valid
           if (format === 'ndjson') {
@@ -372,14 +381,20 @@ describe.sequential('Determinism and Ordering Tests', () => {
       const maxNodesSizes = [10, 30, 100];
 
       for (const maxNodes of maxNodesSizes) {
-        const outFile = join(testDir, `context-max${maxNodes}.json`);
+        const outDir = join(testDir, `context-max${maxNodes}`);
 
         await execAsync(
-          `node dist/cli/index.js ${fixturesPath} --max-nodes ${maxNodes} --out ${outFile}`
+          `node dist/cli/index.js ${fixturesPath} --max-nodes ${maxNodes} --out ${outDir}`
         );
 
-        const content = await readFile(outFile, 'utf-8');
-        const bundles = JSON.parse(content);
+        // Read main index to collect all bundles
+        const mainIndex = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+        const bundles: any[] = [];
+        for (const folder of mainIndex.folders) {
+          const contextPath = join(outDir, folder.contextFile);
+          const folderBundles = JSON.parse(await readFile(contextPath, 'utf-8'));
+          bundles.push(...folderBundles);
+        }
 
         bundles.forEach(bundle => {
           expect(bundle.graph.nodes.length).toBeLessThanOrEqual(maxNodes);
