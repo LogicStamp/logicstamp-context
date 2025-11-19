@@ -28,7 +28,9 @@ The `stamp init` command sets up LogicStamp in your project by:
    - `logicstamp.manifest.json` - Dependency manifest files
    - `.logicstamp/` - Configuration directory
 
-2. **Creating `.logicstamp/config.json`** to save your preferences so `stamp context` won't prompt again
+2. **Generating `LLM_CONTEXT.md`** in the project root (if it doesn't already exist) - A guide that helps AI assistants understand your project structure and how to work with LogicStamp context files
+
+3. **Creating `.logicstamp/config.json`** to save your preferences so `stamp context` won't prompt again
 
 ## Examples
 
@@ -100,14 +102,34 @@ No changes are made:
    - logicstamp.manifest.json
 ```
 
+### LLM_CONTEXT.md Generation
+
+The `stamp init` command also generates `LLM_CONTEXT.md` in your project root:
+
+```
+✅ Created LLM_CONTEXT.md
+```
+
+**If `LLM_CONTEXT.md` already exists:**
+```
+ℹ️  LLM_CONTEXT.md already exists
+```
+
+This file provides guidance for AI assistants on how to understand and work with your LogicStamp context files. It's automatically generated from the package template and includes information about:
+- Project structure and context file organization
+- How to load and use context files
+- Understanding bundle structure and metadata
+- Interpreting missing dependencies
+
 ## Smart Detection in `stamp context`
 
-The `stamp context` command includes smart `.gitignore` management with the following behavior:
+The `stamp context` command includes smart setup management for both `.gitignore` and `LLM_CONTEXT.md` with the following behavior:
 
 ### First Time (No Config)
 
-When you run `stamp context` for the first time in a project (in interactive mode):
+When you run `stamp context` for the first time in a project (in interactive mode), you'll be prompted for two things:
 
+**1. `.gitignore` setup:**
 ```
 💡 LogicStamp generates large context files that are usually not committed.
 
@@ -123,6 +145,23 @@ Add recommended patterns to .gitignore? [Y/n]
 - `.gitignore` is not modified
 - Preference saved as `"skipped"` in `.logicstamp/config.json`
 - Future runs won't prompt - `.gitignore` will never be touched
+
+**2. `LLM_CONTEXT.md` generation:**
+```
+💡 LogicStamp can generate LLM_CONTEXT.md to help AI assistants understand your project structure.
+
+Generate LLM_CONTEXT.md in project root? [Y/n]
+```
+
+**If you choose "Y" (or just press Enter):**
+- `LLM_CONTEXT.md` is created in the project root
+- Preference saved as `"added"` in `.logicstamp/config.json`
+- Future runs won't prompt - file will be maintained automatically
+
+**If you choose "n":**
+- `LLM_CONTEXT.md` is not created
+- Preference saved as `"skipped"` in `.logicstamp/config.json`
+- Future runs won't prompt - file will never be created
 
 ### Subsequent Runs
 

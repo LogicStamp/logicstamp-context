@@ -11,6 +11,12 @@ stamp context [path] [options]
 
 **Output Structure:** The command generates multiple `context.json` files (one per folder containing components) plus a `context_main.json` index file at the output root, maintaining your project's directory hierarchy.
 
+**First Run:** On first run in interactive mode, `stamp context` will prompt you to:
+- Add LogicStamp patterns to `.gitignore` (to exclude context files from version control)
+- Generate `LLM_CONTEXT.md` in the project root (to help AI assistants understand your project structure)
+
+Your preferences are saved in `.logicstamp/config.json` and respected on subsequent runs. See [`stamp init`](INIT.md) for explicit setup or to skip these prompts.
+
 ## Options
 
 | Option | Alias | Default | Description |

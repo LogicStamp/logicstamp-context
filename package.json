@@ -14,7 +14,8 @@
     "dist",
     "schema",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "LLM_CONTEXT.md"
   ],
   "scripts": {
     "build": "tsc",

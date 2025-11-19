@@ -5,6 +5,7 @@
 import { resolve } from 'node:path';
 import { ensureGitignorePatterns } from '../../utils/gitignore.js';
 import { updateConfig } from '../../utils/config.js';
+import { readPackageLLMContext, writeLLMContext, llmContextExists } from '../../utils/llmContext.js';
 
 export interface InitOptions {
   /** Target directory to initialize (default: current directory) */
@@ -50,6 +51,25 @@ export async function init(options: InitOptions = {}): Promise<void> {
       console.error('⚠️  Failed to update .gitignore:', error instanceof Error ? error.message : String(error));
       console.log('   You can manually add the patterns to your .gitignore');
     }
+  }
+
+  // Setup LLM_CONTEXT.md
+  try {
+    if (await llmContextExists(targetDir)) {
+      console.log('\nℹ️  LLM_CONTEXT.md already exists');
+    } else {
+      const content = await readPackageLLMContext();
+      if (content) {
+        await writeLLMContext(targetDir, content);
+        console.log('\n✅ Created LLM_CONTEXT.md');
+        // Save preference so stamp context won't prompt
+        await updateConfig(targetDir, { llmContextPreference: 'added' });
+      } else {
+        console.log('\n⚠️  Could not find LLM_CONTEXT.md template in package');
+      }
+    }
+  } catch (error) {
+    console.error('\n⚠️  Failed to create LLM_CONTEXT.md:', error instanceof Error ? error.message : String(error));
   }
 
   console.log('\n✨ LogicStamp initialization complete!');

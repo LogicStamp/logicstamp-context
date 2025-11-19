@@ -19,6 +19,7 @@ import {
 import { estimateGPT4Tokens, estimateClaudeTokens, formatTokenCount } from '../../utils/tokens.js';
 import { validateBundles } from './validate.js';
 import { smartGitignoreSetup } from '../../utils/gitignore.js';
+import { smartLLMContextSetup } from '../../utils/llmContext.js';
 
 /**
  * Normalize path for display (convert backslashes to forward slashes)
@@ -548,6 +549,24 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     } catch (error) {
       // Silently ignore gitignore errors - not critical to context generation
       // Users can run `stamp init` manually if needed
+    }
+
+    // Smart LLM_CONTEXT.md setup with prompt and config persistence
+    try {
+      const { added, prompted, skipped } = await smartLLMContextSetup(projectRoot);
+
+      if (prompted) {
+        if (added) {
+          console.log('\n✅ Created LLM_CONTEXT.md');
+        } else if (skipped) {
+          console.log('\n📝 Skipping LLM_CONTEXT.md generation (you can run `stamp init` later if needed)');
+        }
+      } else if (!prompted && added) {
+        // Auto-added based on saved preference
+        console.log('\n📝 Created LLM_CONTEXT.md');
+      }
+    } catch (error) {
+      // Silently ignore LLM_CONTEXT.md errors - not critical to context generation
     }
   } else {
     console.log('🔍 Dry run - no file written');

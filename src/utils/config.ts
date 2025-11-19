@@ -8,6 +8,8 @@ import { join, dirname } from 'node:path';
 export interface LogicStampConfig {
   /** User's preference for .gitignore management: "added" | "skipped" */
   gitignorePreference?: 'added' | 'skipped';
+  /** User's preference for LLM_CONTEXT.md generation: "added" | "skipped" */
+  llmContextPreference?: 'added' | 'skipped';
 }
 
 /**
