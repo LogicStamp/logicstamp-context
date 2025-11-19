@@ -3,8 +3,9 @@
  * Detects added/removed components and changed signatures
  */
 
-import { readFile } from 'node:fs/promises';
-import type { LogicStampBundle } from '../../core/pack.js';
+import { readFile, readdir, unlink } from 'node:fs/promises';
+import { join, dirname } from 'node:path';
+import type { LogicStampBundle, LogicStampIndex } from '../../core/pack.js';
 import { estimateGPT4Tokens, estimateClaudeTokens, formatTokenCount } from '../../utils/tokens.js';
 
 interface LiteSig {
@@ -32,11 +33,49 @@ export interface CompareResult {
   }>;
 }
 
+/**
+ * Result for a single folder's context file comparison
+ */
+export interface FolderCompareResult {
+  folderPath: string;
+  contextFile: string;
+  status: 'PASS' | 'DRIFT' | 'ADDED' | 'ORPHANED';
+  componentResult?: CompareResult; // undefined for ADDED/ORPHANED
+  tokenDelta?: { gpt4: number; claude: number };
+}
+
+/**
+ * Result for multi-file comparison (compares all context files)
+ */
+export interface MultiFileCompareResult {
+  status: 'PASS' | 'DRIFT';
+  folders: FolderCompareResult[];
+  summary: {
+    totalFolders: number;
+    addedFolders: number;
+    orphanedFolders: number;
+    driftFolders: number;
+    passFolders: number;
+    totalComponentsAdded: number;
+    totalComponentsRemoved: number;
+    totalComponentsChanged: number;
+  };
+  orphanedFiles?: string[]; // Files on disk but not in new index
+}
+
 export interface CompareOptions {
   oldFile: string;
   newFile: string;
   stats?: boolean;
   approve?: boolean;
+}
+
+export interface MultiFileCompareOptions {
+  oldIndexFile: string;  // Path to old context_main.json
+  newIndexFile: string;  // Path to new context_main.json
+  stats?: boolean;
+  approve?: boolean;
+  autoCleanOrphaned?: boolean; // Auto-delete orphaned files with --approve
 }
 
 /**
@@ -236,4 +275,345 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
   }
 
   return result;
+}
+
+/**
+ * Load LogicStampIndex from file
+ */
+async function loadIndex(indexPath: string): Promise<LogicStampIndex> {
+  try {
+    const content = await readFile(indexPath, 'utf8');
+    const index = JSON.parse(content) as LogicStampIndex;
+
+    if (index.type !== 'LogicStampIndex') {
+      throw new Error(`Invalid index file: expected type 'LogicStampIndex', got '${index.type}'`);
+    }
+
+    return index;
+  } catch (error) {
+    throw new Error(`Failed to load index from ${indexPath}: ${(error as Error).message}`);
+  }
+}
+
+/**
+ * Discover orphaned context files on disk that are not in the new index
+ */
+async function findOrphanedFiles(
+  oldIndex: LogicStampIndex,
+  newIndex: LogicStampIndex,
+  baseDir: string
+): Promise<string[]> {
+  const orphaned: string[] = [];
+  const newContextFiles = new Set(newIndex.folders.map(f => f.contextFile));
+
+  // Check each old folder's context file
+  for (const folder of oldIndex.folders) {
+    if (!newContextFiles.has(folder.contextFile)) {
+      // Check if file still exists on disk
+      const contextPath = join(baseDir, folder.contextFile);
+      try {
+        await readFile(contextPath, 'utf8');
+        orphaned.push(folder.contextFile);
+      } catch {
+        // File doesn't exist, not orphaned (already deleted)
+      }
+    }
+  }
+
+  return orphaned;
+}
+
+/**
+ * Compare a single folder's context file
+ */
+async function compareFolderContext(
+  oldContextPath: string,
+  newContextPath: string,
+  stats: boolean
+): Promise<{ result: CompareResult; tokenDelta?: { gpt4: number; claude: number } }> {
+  // Load both files
+  const oldContent = await readFile(oldContextPath, 'utf8');
+  const newContent = await readFile(newContextPath, 'utf8');
+
+  const oldBundles: LogicStampBundle[] = JSON.parse(oldContent);
+  const newBundles: LogicStampBundle[] = JSON.parse(newContent);
+
+  // Index bundles
+  const oldIdx = index(oldBundles);
+  const newIdx = index(newBundles);
+
+  // Compute diff
+  const result = diff(oldIdx, newIdx);
+
+  // Calculate token delta if stats requested
+  let tokenDelta: { gpt4: number; claude: number } | undefined;
+  if (stats) {
+    const oldTokens = calculateTokens(oldBundles);
+    const newTokens = calculateTokens(newBundles);
+    tokenDelta = {
+      gpt4: newTokens.gpt4 - oldTokens.gpt4,
+      claude: newTokens.claude - oldTokens.claude,
+    };
+  }
+
+  return { result, tokenDelta };
+}
+
+/**
+ * Multi-file comparison - compares all context files using context_main.json indices
+ * This is the comprehensive comparison that handles:
+ * 1. context_main.json as root index
+ * 2. All folder context.json files
+ * 3. ADDED FILE detection (new folders)
+ * 4. ORPHANED FILE detection (deleted folders)
+ * 5. DRIFT detection (changed files)
+ * 6. PASS detection (unchanged files)
+ */
+export async function multiFileCompare(options: MultiFileCompareOptions): Promise<MultiFileCompareResult> {
+  const oldBaseDir = dirname(options.oldIndexFile);
+  const newBaseDir = dirname(options.newIndexFile);
+
+  // Load both index files
+  const oldIndex = await loadIndex(options.oldIndexFile);
+  const newIndex = await loadIndex(options.newIndexFile);
+
+  // Create maps for quick lookup
+  const oldFolderMap = new Map(oldIndex.folders.map(f => [f.contextFile, f]));
+  const newFolderMap = new Map(newIndex.folders.map(f => [f.contextFile, f]));
+
+  const folderResults: FolderCompareResult[] = [];
+  let totalComponentsAdded = 0;
+  let totalComponentsRemoved = 0;
+  let totalComponentsChanged = 0;
+
+  // Compare folders that exist in both old and new
+  const allContextFiles = new Set([
+    ...oldIndex.folders.map(f => f.contextFile),
+    ...newIndex.folders.map(f => f.contextFile),
+  ]);
+
+  for (const contextFile of allContextFiles) {
+    const oldFolder = oldFolderMap.get(contextFile);
+    const newFolder = newFolderMap.get(contextFile);
+
+    if (oldFolder && newFolder) {
+      // Folder exists in both - compare context files
+      const oldPath = join(oldBaseDir, oldFolder.contextFile);
+      const newPath = join(newBaseDir, newFolder.contextFile);
+
+      try {
+        const { result, tokenDelta } = await compareFolderContext(oldPath, newPath, options.stats || false);
+
+        folderResults.push({
+          folderPath: newFolder.path,
+          contextFile: newFolder.contextFile,
+          status: result.status,
+          componentResult: result,
+          tokenDelta,
+        });
+
+        if (result.status === 'DRIFT') {
+          totalComponentsAdded += result.added.length;
+          totalComponentsRemoved += result.removed.length;
+          totalComponentsChanged += result.changed.length;
+        }
+      } catch (error) {
+        // If comparison fails, treat as drift
+        console.error(`⚠️  Failed to compare ${contextFile}: ${(error as Error).message}`);
+        folderResults.push({
+          folderPath: newFolder.path,
+          contextFile: newFolder.contextFile,
+          status: 'DRIFT',
+        });
+      }
+    } else if (!oldFolder && newFolder) {
+      // New folder - ADDED FILE
+      folderResults.push({
+        folderPath: newFolder.path,
+        contextFile: newFolder.contextFile,
+        status: 'ADDED',
+      });
+      totalComponentsAdded += newFolder.bundles;
+    } else if (oldFolder && !newFolder) {
+      // Removed folder - ORPHANED FILE
+      folderResults.push({
+        folderPath: oldFolder.path,
+        contextFile: oldFolder.contextFile,
+        status: 'ORPHANED',
+      });
+      totalComponentsRemoved += oldFolder.bundles;
+    }
+  }
+
+  // Find orphaned files on disk
+  const orphanedFiles = await findOrphanedFiles(oldIndex, newIndex, oldBaseDir);
+
+  // Calculate summary
+  const addedFolders = folderResults.filter(f => f.status === 'ADDED').length;
+  const orphanedFolders = folderResults.filter(f => f.status === 'ORPHANED').length;
+  const driftFolders = folderResults.filter(f => f.status === 'DRIFT').length;
+  const passFolders = folderResults.filter(f => f.status === 'PASS').length;
+
+  const status = addedFolders > 0 || orphanedFolders > 0 || driftFolders > 0 ? 'DRIFT' : 'PASS';
+
+  // Sort folder results by path for consistent output
+  folderResults.sort((a, b) => a.folderPath.localeCompare(b.folderPath));
+
+  return {
+    status,
+    folders: folderResults,
+    summary: {
+      totalFolders: folderResults.length,
+      addedFolders,
+      orphanedFolders,
+      driftFolders,
+      passFolders,
+      totalComponentsAdded,
+      totalComponentsRemoved,
+      totalComponentsChanged,
+    },
+    orphanedFiles: orphanedFiles.length > 0 ? orphanedFiles : undefined,
+  };
+}
+
+/**
+ * Format and display multi-file comparison results
+ */
+export function displayMultiFileCompareResult(result: MultiFileCompareResult, stats: boolean): void {
+  console.log(`\n${result.status === 'PASS' ? '✅' : '⚠️'}  ${result.status}\n`);
+
+  // Display folder-level summary
+  console.log('📁 Folder Summary:');
+  console.log(`   Total folders: ${result.summary.totalFolders}`);
+  if (result.summary.addedFolders > 0) {
+    console.log(`   ➕ Added folders: ${result.summary.addedFolders}`);
+  }
+  if (result.summary.orphanedFolders > 0) {
+    console.log(`   🗑️  Orphaned folders: ${result.summary.orphanedFolders}`);
+  }
+  if (result.summary.driftFolders > 0) {
+    console.log(`   ~  Changed folders: ${result.summary.driftFolders}`);
+  }
+  if (result.summary.passFolders > 0) {
+    console.log(`   ✓  Unchanged folders: ${result.summary.passFolders}`);
+  }
+  console.log();
+
+  // Display component-level summary
+  if (result.status === 'DRIFT') {
+    console.log('📦 Component Summary:');
+    if (result.summary.totalComponentsAdded > 0) {
+      console.log(`   + Added: ${result.summary.totalComponentsAdded}`);
+    }
+    if (result.summary.totalComponentsRemoved > 0) {
+      console.log(`   - Removed: ${result.summary.totalComponentsRemoved}`);
+    }
+    if (result.summary.totalComponentsChanged > 0) {
+      console.log(`   ~ Changed: ${result.summary.totalComponentsChanged}`);
+    }
+    console.log();
+  }
+
+  // Display detailed folder results
+  console.log('📂 Folder Details:\n');
+
+  for (const folder of result.folders) {
+    if (folder.status === 'ADDED') {
+      console.log(`   ➕ ADDED FILE: ${folder.contextFile}`);
+      console.log(`      Path: ${folder.folderPath}`);
+      console.log();
+    } else if (folder.status === 'ORPHANED') {
+      console.log(`   🗑️  ORPHANED FILE: ${folder.contextFile}`);
+      console.log(`      Path: ${folder.folderPath}`);
+      console.log();
+    } else if (folder.status === 'DRIFT') {
+      console.log(`   ⚠️  DRIFT: ${folder.contextFile}`);
+      console.log(`      Path: ${folder.folderPath}`);
+
+      if (folder.componentResult) {
+        const cr = folder.componentResult;
+        if (cr.added.length > 0) {
+          console.log(`      + Added components (${cr.added.length}):`);
+          cr.added.forEach(id => console.log(`        + ${id}`));
+        }
+        if (cr.removed.length > 0) {
+          console.log(`      - Removed components (${cr.removed.length}):`);
+          cr.removed.forEach(id => console.log(`        - ${id}`));
+        }
+        if (cr.changed.length > 0) {
+          console.log(`      ~ Changed components (${cr.changed.length}):`);
+          cr.changed.forEach(({ id, deltas }) => {
+            console.log(`        ~ ${id}`);
+            deltas.forEach(delta => {
+              console.log(`          Δ ${delta.type}`);
+
+              if (delta.type === 'hash') {
+                console.log(`            old: ${delta.old}`);
+                console.log(`            new: ${delta.new}`);
+              } else if (delta.type === 'imports' || delta.type === 'hooks' || delta.type === 'functions' ||
+                         delta.type === 'components' || delta.type === 'props' || delta.type === 'emits') {
+                const oldSet = new Set(delta.old);
+                const newSet = new Set(delta.new);
+                const removed = delta.old.filter((item: string) => !newSet.has(item));
+                const added = delta.new.filter((item: string) => !oldSet.has(item));
+
+                if (removed.length > 0) {
+                  removed.forEach((item: string) => console.log(`            - ${item}`));
+                }
+                if (added.length > 0) {
+                  added.forEach((item: string) => console.log(`            + ${item}`));
+                }
+                if (removed.length === 0 && added.length === 0) {
+                  console.log(`            (order changed)`);
+                }
+              } else if (delta.type === 'exports') {
+                console.log(`            ${delta.old} → ${delta.new}`);
+              }
+            });
+          });
+        }
+      }
+
+      if (stats && folder.tokenDelta) {
+        const sign = folder.tokenDelta.gpt4 > 0 ? '+' : '';
+        console.log(`      Token Δ: ${sign}${formatTokenCount(folder.tokenDelta.gpt4)} (GPT-4) | ${sign}${formatTokenCount(folder.tokenDelta.claude)} (Claude)`);
+      }
+
+      console.log();
+    } else if (folder.status === 'PASS') {
+      console.log(`   ✅ PASS: ${folder.contextFile}`);
+      console.log(`      Path: ${folder.folderPath}`);
+      console.log();
+    }
+  }
+
+  // Display orphaned files on disk
+  if (result.orphanedFiles && result.orphanedFiles.length > 0) {
+    console.log('🗑️  Orphaned Files on Disk:');
+    console.log('   (These files exist on disk but are not in the new index)\n');
+    result.orphanedFiles.forEach(file => {
+      console.log(`   🗑️  ${file}`);
+    });
+    console.log();
+  }
+}
+
+/**
+ * Clean up orphaned files
+ */
+export async function cleanOrphanedFiles(orphanedFiles: string[], baseDir: string): Promise<number> {
+  let deletedCount = 0;
+
+  for (const file of orphanedFiles) {
+    const filePath = join(baseDir, file);
+    try {
+      await unlink(filePath);
+      console.log(`   🗑️  Deleted: ${file}`);
+      deletedCount++;
+    } catch (error) {
+      console.error(`   ⚠️  Failed to delete ${file}: ${(error as Error).message}`);
+    }
+  }
+
+  return deletedCount;
 }

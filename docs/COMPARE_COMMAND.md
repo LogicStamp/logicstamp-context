@@ -1,18 +1,24 @@
 ## Compare Command Documentation
 
-The `compare` command is a powerful tool for detecting drift between context files (individual folder `context.json` files). It works like **Jest snapshots** – automatically comparing your current code against a baseline context.
+The `compare` command is a powerful tool for detecting drift between context files. It works like **Jest snapshots** – automatically comparing your current code against a baseline context.
 
 ### Quick Start
 
 ```bash
-# Auto-mode: Generate fresh context and compare with existing context.json files
+# Auto-mode: Generate fresh context and compare ALL context files
 stamp context compare
 
 # Auto-approve updates (like jest -u)
 stamp context compare --approve
 
+# Clean up orphaned files automatically
+stamp context compare --approve --clean-orphaned
+
 # Manual mode: Compare two specific files
 stamp context compare old.json new.json
+
+# Multi-file mode: Compare two context_main.json indices
+stamp context compare old/context_main.json new/context_main.json
 
 # With token statistics
 stamp context compare --stats
@@ -22,50 +28,94 @@ stamp context compare --stats
 
 ### What It Does
 
-The compare command creates a lightweight signature for each component and detects:
+The compare command now supports **two comparison modes**:
 
-1. **Added components** – New components in the new context
-2. **Removed components** – Components that existed in old but not in new
-3. **Changed components** – Components that exist in both but have differences:
-   - Semantic hash changes (logic/structure changed)
-   - Import changes (dependencies changed)
-   - Hook changes (state management changed)
-   - Export changes (default ↔ named)
+#### Single-File Mode
+Creates a lightweight signature for each component in a single context file and detects:
+- **Added components** – New components in the new context
+- **Removed components** – Components that existed in old but not in new
+- **Changed components** – Components with differences in:
+  - Semantic hash (logic/structure changed)
+  - Imports (dependencies changed)
+  - Hooks (state management changed)
+  - Functions, components, props, emits, exports
+
+#### Multi-File Mode (NEW)
+Compares **all context files** across your project using `context_main.json` as the root index and detects:
+- **ADDED FILE** – New folders with context files
+- **ORPHANED FILE** – Folders removed from the project
+- **DRIFT** – Changed files with component-level changes
+- **PASS** – Unchanged files
 
 ---
 
-### Two Modes of Operation
+### Three Modes of Operation
 
-#### Auto-Mode (Recommended)
+#### 1. Auto-Mode (Recommended) - Multi-File
 
 ```bash
 stamp context compare
 ```
 
 **What happens:**
-1. Generates fresh context files based on your current code (organized by folder)
-2. Compares with existing `context.json` files (folder context files)
-3. Shows you what changed
-4. **Prompts you to update** if drift detected (in terminal)
-5. **Exits with error** if drift detected (in CI)
-
-**Note:** The compare command works with individual folder `context.json` files, not the `context_main.json` index file. It compares bundle content between corresponding folder context files.
+1. Checks if `context_main.json` exists (errors if not found)
+2. Generates fresh context files based on your current code (all folders)
+3. Compares **all context files** using the indices
+4. Shows a **three-tier output**:
+   - Folder-level summary (added/orphaned/changed/unchanged)
+   - Component-level summary (total added/removed/changed)
+   - Detailed per-folder component changes
+5. **Prompts you to update** if drift detected (in terminal)
+6. **Exits with error** if drift detected (in CI)
 
 This is perfect for local development – just run it after making changes!
 
-#### Manual Mode
+**Example output:**
+```bash
+✅  PASS
+
+📁 Folder Summary:
+   Total folders: 14
+   ✓  Unchanged folders: 14
+
+📂 Folder Details:
+
+   ✅ PASS: src/cli/context.json
+      Path: src/cli
+
+   ✅ PASS: src/core/context.json
+      Path: src/core
+   ...
+```
+
+#### 2. Manual Mode - Single File
 
 ```bash
 stamp context compare old.json new.json
 ```
 
 **What happens:**
-1. Compares two specific context files (typically folder `context.json` files)
-2. Shows differences
+1. Compares two specific context files (folder `context.json` files)
+2. Shows component-level differences
 3. **Prompts to update old.json** with new.json (in terminal)
 4. **Exits with error** if drift detected (in CI)
 
-Use this when you want to compare specific snapshots or versions of folder context files.
+Use this when you want to compare specific snapshots or versions.
+
+#### 3. Manual Mode - Multi-File
+
+```bash
+stamp context compare old/context_main.json new/context_main.json
+```
+
+**What happens:**
+1. Auto-detects that you're comparing `context_main.json` files
+2. Loads both indices and compares **all referenced context files**
+3. Shows three-tier output (folder summary + component summary + details)
+4. **Prompts to update all files** if drift detected (in terminal)
+5. **Exits with error** if drift detected (in CI)
+
+Use this when comparing different branches, commits, or environments.
 
 ---
 
@@ -84,17 +134,38 @@ Typical output:
 ```bash
 ⚠️  DRIFT
 
-Changed components: 1
-  ~ src/components/Button.tsx
-    Δ hash
+📁 Folder Summary:
+   Total folders: 14
+   ➕ Added folders: 1
+   ~  Changed folders: 2
+   ✓  Unchanged folders: 11
 
-Update context.json? (y/N) y
-✅ context.json updated successfully
+📦 Component Summary:
+   + Added: 3
+   ~ Changed: 2
+
+📂 Folder Details:
+
+   ➕ ADDED FILE: src/new-feature/context.json
+      Path: src/new-feature
+
+   ⚠️  DRIFT: src/cli/commands/context.json
+      Path: src/cli/commands
+      + Added components (1):
+        + compare.ts
+      ~ Changed components (1):
+        ~ context.ts
+          Δ hash
+            old: uif:abc123456789012345678901
+            new: uif:def456789012345678901234
+
+Update all context files? (y/N) y
+✅ 15 context files updated successfully
 ```
 
 - Only in terminals (TTY mode)
 - Prompts Y/N if drift detected
-- Updates if you type `y`
+- Updates **all affected files** if you type `y`
 - Declines if you press Enter or type anything else
 
 #### 2. Auto-Approve Mode (CI-Safe)
@@ -108,12 +179,14 @@ Typical output:
 ```bash
 ⚠️  DRIFT
 
-Changed components: 1
-  ~ src/components/Button.tsx
-    Δ hash
+📁 Folder Summary:
+   Total folders: 14
+   ~  Changed folders: 1
 
-🔄 --approve flag set, updating context.json...
-✅ context.json updated successfully
+🔄 --approve flag set, updating all context files...
+   ✓ Updated src/cli/commands/context.json
+   ✓ Updated context_main.json
+✅ 2 context files updated successfully
 ```
 
 - Non-interactive – no prompts
@@ -132,9 +205,12 @@ Typical output:
 ```bash
 ⚠️  DRIFT
 
-Changed components: 1
-  ~ src/components/Button.tsx
-    Δ hash
+📁 Folder Summary:
+   Total folders: 14
+   ~  Changed folders: 1
+
+📦 Component Summary:
+   ~ Changed: 2
 ```
 
 - Never prompts (non-TTY detected)
@@ -145,62 +221,95 @@ Changed components: 1
 
 ### Output Format
 
-#### PASS (No Drift)
+#### Multi-File PASS (No Drift)
 
 ```bash
-stamp context compare old.json new.json
+stamp context compare
 
-✅ PASS
+✅  PASS
+
+📁 Folder Summary:
+   Total folders: 14
+   ✓  Unchanged folders: 14
+
+📂 Folder Details:
+
+   ✅ PASS: context.json
+      Path: .
+
+   ✅ PASS: src/cli/context.json
+      Path: src/cli
+   ...
 ```
 
 Exit code: `0`
 
-#### DRIFT Detected
+#### Multi-File DRIFT Detected
 
 ```bash
-stamp context compare old.json new.json
+stamp context compare
 
 ⚠️  DRIFT
 
-Added components: 2
-  + src/components/NewButton.tsx
-  + src/utils/tokens.ts
+📁 Folder Summary:
+   Total folders: 15
+   ➕ Added folders: 1
+   🗑️  Orphaned folders: 1
+   ~  Changed folders: 2
+   ✓  Unchanged folders: 11
 
-Removed components: 1
-  - src/components/OldButton.tsx
+📦 Component Summary:
+   + Added: 5
+   - Removed: 2
+   ~ Changed: 3
 
-Changed components: 3
-  ~ src/components/Card.tsx
-    Δ imports
-      - ./old-dependency
-      + ./new-dependency
-    Δ hooks
-      + useState
-      + useEffect
-    Δ components
-      + Modal
-      - Tooltip
-    Δ props
-      + variant
-      + size
-  ~ src/App.tsx
-    Δ hash
-      old: uifb:abc123456789012345678901
-      new: uifb:def456789012345678901234
-    Δ functions
-      + handleSubmit
-      - handleClick
-  ~ src/utils/helpers.ts
-    Δ exports
-      named → default
-    Δ emits
-      + onChange
+📂 Folder Details:
+
+   ➕ ADDED FILE: src/new-feature/context.json
+      Path: src/new-feature
+
+   🗑️  ORPHANED FILE: src/old-feature/context.json
+      Path: src/old-feature
+
+   ⚠️  DRIFT: src/components/context.json
+      Path: src/components
+      + Added components (2):
+        + NewButton.tsx
+        + Modal.tsx
+      - Removed components (1):
+        - OldButton.tsx
+      ~ Changed components (2):
+        ~ Card.tsx
+          Δ imports
+            - ./old-dependency
+            + ./new-dependency
+          Δ hooks
+            + useState
+            + useEffect
+        ~ Button.tsx
+          Δ hash
+            old: uif:abc123456789012345678901
+            new: uif:def456789012345678901234
+      Token Δ: +641 (GPT-4) | +569 (Claude)
+
+   ✅ PASS: src/utils/context.json
+      Path: src/utils
+
+🗑️  Orphaned Files on Disk:
+   (These files exist on disk but are not in the new index)
+
+   🗑️  src/deprecated/context.json
 ```
 
 Exit code: `1`
 
-**Detailed Diff Breakdown:**
+**Folder Status Indicators:**
+- **➕ ADDED FILE** – New folder with context file
+- **🗑️ ORPHANED FILE** – Folder removed (context file still exists)
+- **⚠️ DRIFT** – Folder has component changes
+- **✅ PASS** – Folder unchanged
 
+**Detailed Diff Breakdown:**
 - **hash**: Shows old and new semantic hash values (indicates structure/logic changed)
 - **imports**: Shows removed (`-`) and added (`+`) import dependencies
 - **hooks**: Shows removed (`-`) and added (`+`) React hooks
@@ -212,12 +321,37 @@ Exit code: `1`
 
 ---
 
-### With Token Statistics
+### Orphaned File Cleanup
 
-Add `--stats` to see token cost impact:
+When folders are removed from your project, their context files may still exist on disk. Use `--clean-orphaned` to automatically delete them:
 
 ```bash
-stamp context compare old.json new.json --stats
+stamp context compare --approve --clean-orphaned
+```
+
+**What happens:**
+1. Detects orphaned files (exist on disk but not in new index)
+2. With `--approve`: Automatically deletes them
+3. Without `--approve`: Only reports them
+
+**Example:**
+```bash
+🗑️  Orphaned Files on Disk:
+   🗑️  src/old-feature/context.json
+
+🗑️  Cleaning up orphaned files...
+   🗑️  Deleted: src/old-feature/context.json
+   ✓ Deleted 1 orphaned file(s)
+```
+
+---
+
+### With Token Statistics
+
+Add `--stats` to see per-folder token cost impact:
+
+```bash
+stamp context compare --stats
 ```
 
 Typical output:
@@ -225,28 +359,36 @@ Typical output:
 ```bash
 ⚠️  DRIFT
 
-Added components: 2
-  + src/components/NewButton.tsx
-  + src/utils/tokens.ts
+📁 Folder Summary:
+   Total folders: 14
+   ~  Changed folders: 2
 
-Changed components: 2
-  ~ src/cli/commands/context.ts
-    Δ imports
-      + ../../utils/tokens.js
-      + ./validate.js
-  ~ src/cli/index.ts
-    Δ hash
-      old: uifb:1a2b3c4d5e6f7890abcdef12
-      new: uifb:9876543210fedcba09876543
-    Δ imports
-      - ./old-module
-      + ./new-module
+📦 Component Summary:
+   + Added: 3
+   ~ Changed: 2
 
-Token Stats:
-  Old: 8,484 (GPT-4o-mini) | 7,542 (Claude)
-  New: 9,125 (GPT-4o-mini) | 8,111 (Claude)
-  Δ +641 (+7.56%)
+📂 Folder Details:
+
+   ⚠️  DRIFT: src/cli/commands/context.json
+      Path: src/cli/commands
+      + Added components (1):
+        + compare.ts
+      ~ Changed components (1):
+        ~ context.ts
+          Δ imports
+            + ../../utils/tokens.js
+      Token Δ: +1,234 (GPT-4) | +1,098 (Claude)
+
+   ⚠️  DRIFT: src/core/context.json
+      Path: src/core
+      ~ Changed components (1):
+        ~ pack.ts
+          Δ functions
+            + multiFileCompare
+      Token Δ: +892 (GPT-4) | +793 (Claude)
 ```
+
+Token stats show the delta for each folder with changes.
 
 ---
 
@@ -270,7 +412,7 @@ Token Stats:
 
 ### CI/CD Integration
 
-#### GitHub Actions Example (Auto-Mode)
+#### GitHub Actions Example (Auto-Mode Multi-File)
 
 ```yaml
 name: Context Drift Check
@@ -303,7 +445,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '⚠️ Context drift detected! Run `stamp context compare --approve` locally to update context.json, then commit the changes.'
+              body: '⚠️ Context drift detected across multiple folders! Run `stamp context compare --approve` locally to update all context files, then commit the changes.'
             })
 
       - name: Fail if drift detected
@@ -311,10 +453,10 @@ jobs:
         run: exit 1
 ```
 
-#### GitHub Actions Example (Manual Comparison)
+#### GitHub Actions Example (Manual Multi-File Comparison)
 
 ```yaml
-name: Context Drift Check (Manual)
+name: Context Drift Check (Multi-File)
 
 on:
   pull_request:
@@ -332,17 +474,17 @@ jobs:
         run: npm install -g logicstamp-context
 
       - name: Generate PR context
-        run: stamp context --out pr-context.json
+        run: stamp context --out pr-context
 
       - name: Checkout base branch
         run: git checkout ${{ github.base_ref }}
 
       - name: Generate base context
-        run: stamp context --out base-context.json
+        run: stamp context --out base-context
 
-      - name: Compare contexts
+      - name: Compare all context files
         run: |
-          stamp context compare base-context.json pr-context.json --stats
+          stamp context compare base-context/context_main.json pr-context/context_main.json --stats
 
       - name: Comment on PR if drift detected
         if: failure()
@@ -353,26 +495,8 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '⚠️ Context drift detected! Please review the changes.'
+              body: '⚠️ Context drift detected! Please review the folder-level and component-level changes.'
             })
-```
-
-#### GitLab CI Example
-
-```yaml
-compare-context:
-  stage: test
-  script:
-    - npm install -g logicstamp-context
-    - stamp context --out new-context.json
-    - git fetch origin $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
-    - git checkout origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME
-    - stamp context --out base-context.json
-    - git checkout $CI_COMMIT_SHA
-    - stamp context compare base-context.json new-context.json --stats
-  allow_failure: false
-  only:
-    - merge_requests
 ```
 
 #### Shell Script (Auto-Mode)
@@ -382,40 +506,13 @@ compare-context:
 # check-drift.sh
 
 if stamp context compare --stats; then
-  echo "✅ No context drift detected"
+  echo "✅ No context drift detected across all folders"
   exit 0
 else
-  echo "⚠️  Context drift detected - see details above"
-  echo "Run 'stamp context compare --approve' to update"
+  echo "⚠️  Context drift detected - see folder details above"
+  echo "Run 'stamp context compare --approve' to update all files"
   exit 1
 fi
-```
-
-#### Shell Script (Manual Comparison)
-
-```bash
-#!/bin/bash
-# compare-contexts.sh
-
-set -e
-
-stamp context --out current.json
-
-git stash
-git checkout main
-stamp context --out previous.json
-git checkout -
-git stash pop || true
-
-if stamp context compare previous.json current.json --stats; then
-  echo "✅ No context drift detected"
-  exit 0
-else
-  echo "⚠️  Context drift detected - see details above"
-  exit 1
-fi
-
-rm previous.json current.json
 ```
 
 ---
@@ -433,17 +530,27 @@ Example:
 
 ```bash
 stamp context
-✅ Context written successfully
+✅ 15 context files written successfully
 
 stamp context compare
 ⚠️  DRIFT
 
-Changed components: 1
-  ~ src/components/Button.tsx
-    Δ hash
+📁 Folder Summary:
+   Total folders: 14
+   ~  Changed folders: 1
 
-Update context.json? (y/N) y
-✅ context.json updated successfully
+📂 Folder Details:
+
+   ⚠️  DRIFT: src/components/context.json
+      Path: src/components
+      ~ Changed components (1):
+        ~ Button.tsx
+          Δ hash
+            old: uif:abc123456789012345678901
+            new: uif:def456789012345678901234
+
+Update all context files? (y/N) y
+✅ 2 context files updated successfully
 ```
 
 #### Quick Update Workflow
@@ -452,7 +559,7 @@ Update context.json? (y/N) y
 stamp context compare --approve
 ```
 
-Like `jest -u` – perfect for rapid iteration.
+Like `jest -u` – perfect for rapid iteration across all folders.
 
 #### Pre-Commit Hook
 
@@ -461,7 +568,7 @@ Like `jest -u` – perfect for rapid iteration.
 
 if ! stamp context compare; then
   echo ""
-  echo "❌ Context drift detected!"
+  echo "❌ Context drift detected across multiple folders!"
   echo "Run 'stamp context compare --approve' to update, or commit anyway with --no-verify"
   exit 1
 fi
@@ -477,62 +584,33 @@ chmod +x .git/hooks/pre-commit
 
 ### How It Works
 
-#### 1. LiteSig Index Creation
+#### Single-File Mode
 
-For each bundle in the context file, a lightweight signature is created:
+1. **LiteSig Index Creation** – Creates lightweight signatures for each component
+2. **Index by Entry ID** – Maps normalized entryId to LiteSig
+3. **Compute Diff** – Detects added/removed/changed components
+4. **Generate Output** – Shows PASS or DRIFT with detailed deltas
 
-```typescript
-interface LiteSig {
-  semanticHash: string;
-  imports: string[];
-  hooks: string[];
-  exportKind: 'default' | 'named' | 'none';
-}
-```
+#### Multi-File Mode (NEW)
 
-#### 2. Index by Entry ID
+1. **Load Indices** – Loads both `context_main.json` files
+2. **Discover Folders** – Gets list of all context files from both indices
+3. **Compare Per-Folder** – For each folder:
+   - If in both: Compare context files (PASS or DRIFT)
+   - If only in new: ADDED FILE
+   - If only in old: ORPHANED FILE
+4. **Find Orphaned on Disk** – Checks if old files still exist on disk
+5. **Aggregate Results** – Combines into three-tier output:
+   - Folder-level summary
+   - Component-level summary
+   - Detailed per-folder changes
+6. **Handle Approval** – If approved, copies all new files and optionally cleans orphaned files
 
-```typescript
-Map<string, LiteSig>
-// Key: normalized entryId (lowercase)
-// Value: LiteSig for that component
-```
-
-#### 3. Compute Diff
-
-```typescript
-// Added: in new but not in old
-for (const id of newIdx.keys()) {
-  if (!oldIdx.has(id)) added.push(id);
-}
-
-// Removed: in old but not in new
-for (const id of oldIdx.keys()) {
-  if (!newIdx.has(id)) removed.push(id);
-}
-
-// Changed: in both but different
-for (const id of newIdx.keys()) {
-  if (oldIdx.has(id)) {
-    const a = oldIdx.get(id);
-    const b = newIdx.get(id);
-    const deltas = [];
-
-    if (a.semanticHash !== b.semanticHash) deltas.push('hash');
-    if (JSON.stringify(a.imports) !== JSON.stringify(b.imports)) deltas.push('imports');
-    if (JSON.stringify(a.hooks) !== JSON.stringify(b.hooks)) deltas.push('hooks');
-    if (a.exportKind !== b.exportKind) deltas.push('exports');
-
-    if (deltas.length) changed.push({ id, deltas });
-  }
-}
-```
-
-#### 4. Generate Output
-
-- PASS if no changes
-- DRIFT if any added/removed/changed
-- Optional token stats if `--stats` provided
+**Key Design Decisions:**
+- **Truth comes from bundles**, not metadata (summary counts can drift)
+- **Bundle→folder mapping** is checked (in `context_main.json`)
+- **Folder structure** is compared (exists/missing/orphaned)
+- **Metadata fields are NOT compared** (totalComponents, totalBundles are derived stats)
 
 ---
 
@@ -551,34 +629,38 @@ for (const id of newIdx.keys()) {
 
 ### Use Cases
 
-- **Pre-merge validation** – ensure context changes are intentional before merging.
-- **Cost impact analysis** – see how changes affect token costs with `--stats`.
-- **Breaking change detection** – detect when component signatures change.
-- **Documentation triggers** – trigger doc updates when context drifts.
+- **Multi-folder drift detection** – See which folders have changes at a glance
+- **Pre-merge validation** – Ensure context changes are intentional before merging
+- **Cost impact analysis** – See per-folder token cost impact with `--stats`
+- **Breaking change detection** – Detect when component signatures change across the project
+- **Folder reorganization** – Detect ADDED/ORPHANED files when restructuring
+- **Orphaned file cleanup** – Automatically remove stale context files with `--clean-orphaned`
 
 ---
 
 ### Performance & Limitations
 
 - **Performance**
-  - Fast: O(n) complexity with hash-based indexing.
-  - Lightweight: only essential signature data.
-  - Typical: \<100ms for most projects.
+  - Fast: O(n × m) where n = folders, m = components per folder
+  - Lightweight: only essential signature data
+  - Typical: <500ms for most projects with multi-file mode
 
 - **Limitations**
-  - Entry ID matching uses case-insensitive exact match.
-  - No fuzzy matching; renamed files show as removed + added.
-  - No deep semantic analysis; compares signatures, not behavior.
+  - Entry ID matching uses case-insensitive exact match
+  - No fuzzy matching; renamed files show as removed + added
+  - No deep semantic analysis; compares signatures, not behavior
+  - Orphaned file detection requires files to exist on disk
 
 ---
 
 ### Summary
 
-The compare command is your **context drift detector**:
+The compare command is your **context drift detector** with multi-file support:
 
-- **Local dev**: auto-detects changes and prompts to update.
-- **CI/CD**: detects drift and fails builds automatically.
-- **Jest-style**: familiar `--approve` flag workflow.
-- **Zero config**: just run `stamp context compare`.
-
+- **Local dev**: auto-detects changes across all folders and prompts to update
+- **CI/CD**: detects drift across the entire project and fails builds automatically
+- **Jest-style**: familiar `--approve` flag workflow
+- **Zero config**: just run `stamp context compare`
+- **Three-tier output**: folder summary → component summary → detailed changes
+- **Orphaned file cleanup**: automatically clean up stale files with `--clean-orphaned`
 

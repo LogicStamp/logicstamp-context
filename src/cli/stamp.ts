@@ -6,7 +6,14 @@
  */
 
 import { contextCommand, type ContextOptions } from './commands/context.js';
-import { compareCommand, type CompareOptions } from './commands/compare.js';
+import {
+  compareCommand,
+  type CompareOptions,
+  multiFileCompare,
+  type MultiFileCompareOptions,
+  displayMultiFileCompareResult,
+  cleanOrphanedFiles,
+} from './commands/compare.js';
 import { validateCommand } from './commands/validate.js';
 import { init, type InitOptions } from './commands/init.js';
 
@@ -140,26 +147,36 @@ async function handleCompare(args: string[]) {
 
   const stats = args.includes('--stats');
   const approve = args.includes('--approve');
+  const cleanOrphaned = args.includes('--clean-orphaned');
 
   // Filter out flag arguments to get positional args
   const positionalArgs = args.filter(arg => !arg.startsWith('--'));
 
-  // Auto-mode: no files specified - compare existing context.json with fresh generation
+  // Auto-mode: no files specified - use multi-file comparison with context_main.json
   if (positionalArgs.length === 0) {
     const { tmpdir } = await import('node:os');
-    const { join } = await import('node:path');
-    const { unlink, copyFile } = await import('node:fs/promises');
+    const { join, dirname } = await import('node:path');
+    const { unlink, copyFile, rm, mkdir } = await import('node:fs/promises');
+    const { existsSync } = await import('node:fs');
 
-    const tempFile = join(tmpdir(), `context-${Date.now()}.json`);
+    // Check if context_main.json exists
+    if (!existsSync('context_main.json')) {
+      console.error('❌ context_main.json not found. Run "stamp context" first to generate context files.');
+      process.exit(1);
+    }
 
-    console.log('🔄 Auto-compare mode: generating fresh context...\n');
+    // Create temp directory for new context generation
+    const tempDir = join(tmpdir(), `context-compare-${Date.now()}`);
+    await mkdir(tempDir, { recursive: true });
 
-    // Generate fresh context to temp file
+    console.log('🔄 Auto-compare mode: generating fresh context to temp directory...\n');
+
+    // Generate fresh context to temp directory
     const contextOptions: ContextOptions = {
       depth: 1,
       includeCode: 'header',
       format: 'json',
-      out: tempFile,
+      out: tempDir,
       hashLock: false,
       strict: false,
       allowMissing: true,
@@ -175,16 +192,18 @@ async function handleCompare(args: string[]) {
     try {
       await contextCommand(contextOptions);
 
-      // Compare existing context.json with fresh temp file
-      console.log('\n🔍 Comparing with existing context.json...\n');
-      const compareOptions: CompareOptions = {
-        oldFile: 'context.json',
-        newFile: tempFile,
+      // Multi-file compare using context_main.json indices
+      console.log('\n🔍 Comparing all context files...\n');
+      const multiCompareOptions: MultiFileCompareOptions = {
+        oldIndexFile: 'context_main.json',
+        newIndexFile: join(tempDir, 'context_main.json'),
         stats,
         approve,
+        autoCleanOrphaned: cleanOrphaned,
       };
 
-      const result = await compareCommand(compareOptions);
+      const result = await multiFileCompare(multiCompareOptions);
+      displayMultiFileCompareResult(result, stats);
 
       // Handle drift approval
       if (result.status === 'DRIFT') {
@@ -193,21 +212,49 @@ async function handleCompare(args: string[]) {
         if (approve) {
           // --approve flag: non-interactive, deterministic
           shouldUpdate = true;
-          console.log('🔄 --approve flag set, updating context.json...');
+          console.log('🔄 --approve flag set, updating all context files...');
         } else if (isTTY()) {
           // Interactive prompt (local dev convenience)
-          shouldUpdate = await promptYesNo('Update context.json? (y/N) ');
+          shouldUpdate = await promptYesNo('Update all context files? (y/N) ');
         }
 
         if (shouldUpdate) {
-          await copyFile(tempFile, 'context.json');
-          console.log('✅ context.json updated successfully\n');
-          // Clean up temp file
-          await unlink(tempFile);
+          // Copy all new context files to current directory
+          const { readFile } = await import('node:fs/promises');
+          const newIndexContent = await readFile(join(tempDir, 'context_main.json'), 'utf8');
+          const newIndex = JSON.parse(newIndexContent);
+
+          let copiedFiles = 0;
+          for (const folder of newIndex.folders) {
+            const srcPath = join(tempDir, folder.contextFile);
+            const destPath = folder.contextFile;
+
+            // Create parent directory if needed
+            await mkdir(dirname(destPath), { recursive: true });
+            await copyFile(srcPath, destPath);
+            copiedFiles++;
+            console.log(`   ✓ Updated ${destPath}`);
+          }
+
+          // Copy context_main.json
+          await copyFile(join(tempDir, 'context_main.json'), 'context_main.json');
+          console.log(`   ✓ Updated context_main.json`);
+
+          // Clean up orphaned files if requested
+          if (cleanOrphaned && result.orphanedFiles && result.orphanedFiles.length > 0) {
+            console.log('\n🗑️  Cleaning up orphaned files...');
+            const deletedCount = await cleanOrphanedFiles(result.orphanedFiles, '.');
+            console.log(`   ✓ Deleted ${deletedCount} orphaned file(s)`);
+          }
+
+          console.log(`\n✅ ${copiedFiles + 1} context files updated successfully`);
+
+          // Clean up temp directory
+          await rm(tempDir, { recursive: true, force: true });
           process.exit(0); // Success: drift approved and updated
         } else {
-          // Clean up temp file
-          await unlink(tempFile);
+          // Clean up temp directory
+          await rm(tempDir, { recursive: true, force: true });
           if (isTTY() && !approve) {
             console.log('❌ Update declined\n');
           }
@@ -215,13 +262,13 @@ async function handleCompare(args: string[]) {
         }
       } else {
         // No drift - clean up and exit success
-        await unlink(tempFile);
+        await rm(tempDir, { recursive: true, force: true });
         process.exit(0);
       }
     } catch (error) {
-      // Try to clean up temp file even on error
+      // Try to clean up temp directory even on error
       try {
-        await unlink(tempFile);
+        await rm(tempDir, { recursive: true, force: true });
       } catch {}
 
       console.error('❌ Compare failed:', (error as Error).message);
@@ -236,47 +283,132 @@ async function handleCompare(args: string[]) {
     process.exit(1);
   }
 
-  const compareOptions: CompareOptions = {
-    oldFile: positionalArgs[0],
-    newFile: positionalArgs[1],
-    stats,
-    approve,
-  };
+  const oldFile = positionalArgs[0];
+  const newFile = positionalArgs[1];
 
-  try {
-    const result = await compareCommand(compareOptions);
+  // Detect if we're comparing context_main.json files (multi-file mode)
+  const isMultiFileMode = oldFile.endsWith('context_main.json') || oldFile.endsWith('context_main.json');
 
-    // Handle drift approval in manual mode
-    if (result.status === 'DRIFT') {
-      let shouldUpdate = false;
+  if (isMultiFileMode) {
+    // Multi-file comparison mode
+    const multiCompareOptions: MultiFileCompareOptions = {
+      oldIndexFile: oldFile,
+      newIndexFile: newFile,
+      stats,
+      approve,
+      autoCleanOrphaned: cleanOrphaned,
+    };
 
-      if (approve) {
-        // --approve flag: non-interactive, deterministic
-        shouldUpdate = true;
-        console.log(`🔄 --approve flag set, updating ${positionalArgs[0]}...`);
-      } else if (isTTY()) {
-        // Interactive prompt (local dev convenience)
-        shouldUpdate = await promptYesNo(`Update ${positionalArgs[0]} with ${positionalArgs[1]}? (y/N) `);
-      }
+    try {
+      const result = await multiFileCompare(multiCompareOptions);
+      displayMultiFileCompareResult(result, stats);
 
-      if (shouldUpdate) {
-        const { copyFile } = await import('node:fs/promises');
-        await copyFile(positionalArgs[1], positionalArgs[0]);
-        console.log(`✅ ${positionalArgs[0]} updated successfully\n`);
-        process.exit(0); // Success: drift approved and updated
-      } else {
-        if (isTTY() && !approve) {
-          console.log('❌ Update declined\n');
+      // Handle drift approval in manual mode
+      if (result.status === 'DRIFT') {
+        let shouldUpdate = false;
+
+        if (approve) {
+          // --approve flag: non-interactive, deterministic
+          shouldUpdate = true;
+          console.log('🔄 --approve flag set, updating all context files...');
+        } else if (isTTY()) {
+          // Interactive prompt (local dev convenience)
+          shouldUpdate = await promptYesNo('Update all context files? (y/N) ');
         }
-        process.exit(1); // Drift detected but not approved
+
+        if (shouldUpdate) {
+          // Copy all new context files
+          const { readFile, copyFile, mkdir } = await import('node:fs/promises');
+          const { dirname } = await import('node:path');
+          const newIndexContent = await readFile(newFile, 'utf8');
+          const newIndex = JSON.parse(newIndexContent);
+
+          const baseDir = dirname(oldFile);
+          let copiedFiles = 0;
+
+          for (const folder of newIndex.folders) {
+            const { join } = await import('node:path');
+            const srcPath = join(dirname(newFile), folder.contextFile);
+            const destPath = join(baseDir, folder.contextFile);
+
+            // Create parent directory if needed
+            await mkdir(dirname(destPath), { recursive: true });
+            await copyFile(srcPath, destPath);
+            copiedFiles++;
+            console.log(`   ✓ Updated ${folder.contextFile}`);
+          }
+
+          // Copy context_main.json
+          await copyFile(newFile, oldFile);
+          console.log(`   ✓ Updated ${oldFile}`);
+
+          // Clean up orphaned files if requested
+          if (cleanOrphaned && result.orphanedFiles && result.orphanedFiles.length > 0) {
+            console.log('\n🗑️  Cleaning up orphaned files...');
+            const deletedCount = await cleanOrphanedFiles(result.orphanedFiles, baseDir);
+            console.log(`   ✓ Deleted ${deletedCount} orphaned file(s)`);
+          }
+
+          console.log(`\n✅ ${copiedFiles + 1} context files updated successfully`);
+          process.exit(0); // Success: drift approved and updated
+        } else {
+          if (isTTY() && !approve) {
+            console.log('❌ Update declined\n');
+          }
+          process.exit(1); // Drift detected but not approved
+        }
+      } else {
+        // No drift
+        process.exit(0);
       }
-    } else {
-      // No drift
-      process.exit(0);
+    } catch (error) {
+      console.error('❌ Compare failed:', (error as Error).message);
+      process.exit(1);
     }
-  } catch (error) {
-    console.error('❌ Compare failed:', (error as Error).message);
-    process.exit(1);
+  } else {
+    // Single-file comparison mode (backward compatible)
+    const compareOptions: CompareOptions = {
+      oldFile,
+      newFile,
+      stats,
+      approve,
+    };
+
+    try {
+      const result = await compareCommand(compareOptions);
+
+      // Handle drift approval in manual mode
+      if (result.status === 'DRIFT') {
+        let shouldUpdate = false;
+
+        if (approve) {
+          // --approve flag: non-interactive, deterministic
+          shouldUpdate = true;
+          console.log(`🔄 --approve flag set, updating ${oldFile}...`);
+        } else if (isTTY()) {
+          // Interactive prompt (local dev convenience)
+          shouldUpdate = await promptYesNo(`Update ${oldFile} with ${newFile}? (y/N) `);
+        }
+
+        if (shouldUpdate) {
+          const { copyFile } = await import('node:fs/promises');
+          await copyFile(newFile, oldFile);
+          console.log(`✅ ${oldFile} updated successfully\n`);
+          process.exit(0); // Success: drift approved and updated
+        } else {
+          if (isTTY() && !approve) {
+            console.log('❌ Update declined\n');
+          }
+          process.exit(1); // Drift detected but not approved
+        }
+      } else {
+        // No drift
+        process.exit(0);
+      }
+    } catch (error) {
+      console.error('❌ Compare failed:', (error as Error).message);
+      process.exit(1);
+    }
   }
 }
 
@@ -504,32 +636,55 @@ function printCompareHelp() {
 ╰─────────────────────────────────────────────────╯
 
 USAGE:
-  stamp context compare [options]                 Auto-compare with fresh context
-  stamp context compare <old.json> <new.json>     Compare two specific files
+  stamp context compare [options]                     Auto-compare all context files
+  stamp context compare <old.json> <new.json>         Compare two specific files
+  stamp context compare <old_main.json> <new_main.json>  Compare multi-file indices
 
 ARGUMENTS:
-  <old.json>                          Path to old context file
-  <new.json>                          Path to new context file
+  <old.json>                          Path to old context file or context_main.json
+  <new.json>                          Path to new context file or context_main.json
 
 OPTIONS:
   --approve                           Auto-approve updates (non-interactive, CI-safe)
-  --stats                             Show token count statistics
+  --clean-orphaned                    Auto-delete orphaned files with --approve
+  --stats                             Show token count statistics per folder
   -h, --help                          Show this help
+
+COMPARISON MODES:
+  Auto-Mode (Multi-File):
+    Compares ALL context files using context_main.json as index
+    → Detects ADDED, ORPHANED, DRIFT, and PASS status per folder
+    → Shows three-tier output: folder summary, component summary, details
+
+  Single-File Mode:
+    Compares two individual context.json files
+    → Detects added/removed/changed components
+
+  Multi-File Manual Mode:
+    Auto-detects when comparing context_main.json files
+    → Compares all referenced context files
 
 EXAMPLES:
   stamp context compare
-    Auto-mode: generate fresh context, compare with context.json
+    Auto-mode: generate fresh context, compare ALL files
+    → Shows folder-level and component-level changes
     → Interactive: prompts Y/N to update if drift detected
     → CI: exits with code 1 if drift detected (no prompt)
 
   stamp context compare --approve
-    Auto-approve and update context.json if drift detected (like jest -u)
+    Auto-approve and update ALL context files if drift (like jest -u)
+
+  stamp context compare --approve --clean-orphaned
+    Auto-approve updates and delete orphaned context files
 
   stamp context compare --stats
-    Show token count delta
+    Show per-folder token count deltas
 
   stamp context compare old.json new.json
-    Compare two specific files (prompts Y/N to update old.json if drift)
+    Compare two specific context files
+
+  stamp context compare old/context_main.json new/context_main.json
+    Compare all context files between two directories
 
   stamp context compare || exit 1
     CI validation: fail build if drift detected
@@ -540,9 +695,15 @@ EXIT CODES:
 
 BEHAVIOR:
   • --approve: Non-interactive, deterministic, updates immediately if drift
-  • Interactive (TTY): Prompts "Update context.json? (y/N)" if drift
+  • Interactive (TTY): Prompts "Update all context files? (y/N)" if drift
   • CI (non-TTY): Never prompts, exits 1 if drift detected
-  • Validation runs during generation (fresh context always valid)
+  • --clean-orphaned: Requires --approve, deletes orphaned files automatically
+
+DRIFT INDICATORS:
+  ➕ ADDED FILE         New folder with context file
+  🗑️  ORPHANED FILE     Folder removed (context file still exists)
+  ⚠️  DRIFT             Folder has component changes
+  ✅ PASS               Folder unchanged
 
 NOTES:
   This matches Jest snapshot workflow:

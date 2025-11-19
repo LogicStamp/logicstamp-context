@@ -27,10 +27,13 @@ After installation, the `stamp` command will be available globally.
 - Mode comparison showing savings (none/header/full)
 - `--compare-modes` flag for detailed token analysis
 
-🔍 **Context Drift Detection**
-- New `compare` command for tracking changes
-- Detects added/removed/changed components
-- CI-friendly exit codes and token delta stats
+🔍 **Multi-File Context Drift Detection**
+- New `compare` command with multi-file support
+- Compares **all context files** using `context_main.json` as index
+- Detects ADDED folders, ORPHANED folders, per-folder DRIFT, and PASS status
+- Three-tier output: folder summary → component summary → detailed changes
+- `--clean-orphaned` flag to automatically remove stale context files
+- CI-friendly exit codes and per-folder token delta stats
 
 ⚛️ **Next.js App Router Support**
 - Detects `'use client'` and `'use server'` directives
@@ -65,7 +68,16 @@ stamp context --compare-modes
 # Generate minimal API documentation
 stamp context --include-code none --format pretty --out docs/api.json
 
-# Compare two context files for drift detection
+# Compare all context files for drift (multi-file mode)
+stamp context compare
+
+# Auto-approve and update all drifted files (like jest -u)
+stamp context compare --approve
+
+# Compare with per-folder token stats
+stamp context compare --stats
+
+# Compare two specific context files
 stamp context compare old.json new.json --stats
 
 # Validate generated context
@@ -141,7 +153,7 @@ stamp context validate [file]
 
 - **`stamp context [path]`** - Scans a directory and writes AI-ready context files organized by folder. Generates multiple `context.json` files (one per folder containing components) plus a `context_main.json` index file at the output root. Shows token estimates and mode comparison in output. Automatically validates the generated context before writing. On first run (interactive mode), prompts to add `.gitignore` patterns and saves your preference - subsequent runs respect your choice.
 
-- **`stamp context compare <old.json> <new.json>`** - Compares two context files and reports drift. Detects added/removed components, changed imports, hooks, exports, and semantic hashes. Exits with code 1 if drift is detected (CI-friendly).
+- **`stamp context compare [options]`** - Compares all context files (multi-file mode) or two specific files to detect drift. In multi-file mode, uses `context_main.json` as index to compare all folder context files and detect ADDED/ORPHANED folders, per-folder DRIFT, and unchanged files (PASS). Shows three-tier output: folder summary, component summary, and detailed changes. Supports `--approve` for auto-updates (Jest-style), `--clean-orphaned` to remove stale files, and `--stats` for per-folder token deltas. Exits with code 1 if drift is detected (CI-friendly).
 
 - **`stamp context validate [file]`** - Checks an existing context file for schema and structural issues before sharing it with an AI or committing it to a repo. When no file is specified it looks for `context.json` in the current directory.
 

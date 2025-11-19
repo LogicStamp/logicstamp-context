@@ -6,7 +6,7 @@ import { join } from 'node:path';
 
 const execAsync = promisify(exec);
 
-describe('New Features E2E Tests (v0.1.1)', () => {
+describe('CLI Advanced Features Tests', () => {
   const fixturesPath = join(process.cwd(), 'tests/fixtures/simple-app');
   const outputPath = join(process.cwd(), 'tests/e2e/output');
 
@@ -554,7 +554,8 @@ describe('New Features E2E Tests (v0.1.1)', () => {
       expect(stdout).toContain('USAGE:');
       expect(stdout).toContain('stamp context compare');
       expect(stdout).toContain('--approve');
-      expect(stdout).toContain('Auto-compare with fresh context');
+      expect(stdout).toContain('--clean-orphaned');
+      expect(stdout).toContain('Auto-compare all context files');
       expect(stdout).toContain('EXIT CODES');
     }, 30000);
   });

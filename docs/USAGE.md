@@ -21,6 +21,7 @@ stamp context
 ```bash
 stamp context [path] [options]
 stamp context validate [file]
+stamp context compare [oldFile] [newFile] [options]
 ```
 
 ## Commands
@@ -75,6 +76,134 @@ stamp context validate review.json # validate a custom bundle
 
 - `0` – File is valid (warnings may still print).
 - `1` – Critical issues (missing fields, invalid JSON, file not found).
+
+### `stamp context compare`
+
+Compares context files to detect drift and changes across your project. Supports both single-file and multi-file comparison modes.
+
+```bash
+# Auto-mode: Compare all context files (multi-file mode)
+stamp context compare
+
+# Single-file: Compare two specific files
+stamp context compare old.json new.json
+
+# Multi-file: Compare two indices
+stamp context compare old/context_main.json new/context_main.json
+
+# Auto-approve updates (like jest -u)
+stamp context compare --approve
+
+# Show per-folder token statistics
+stamp context compare --stats
+
+# Clean up orphaned files automatically
+stamp context compare --approve --clean-orphaned
+```
+
+**What it does**
+
+The compare command has **two modes**:
+
+1. **Multi-File Mode** (Auto or Manual with `context_main.json`):
+   - Compares **all context files** across your project
+   - Uses `context_main.json` as the root index
+   - Detects:
+     - **ADDED FILE** – New folders with context files
+     - **ORPHANED FILE** – Folders removed from project
+     - **DRIFT** – Changed files with component-level details
+     - **PASS** – Unchanged files
+   - Shows three-tier output:
+     - Folder-level summary
+     - Component-level summary
+     - Detailed per-folder changes
+
+2. **Single-File Mode**:
+   - Compares two specific `context.json` files
+   - Detects added/removed/changed components
+   - Shows detailed component-level diffs
+
+**Key options**
+
+| Option | Description |
+|--------|-------------|
+| `--approve` | Auto-approve updates (non-interactive, CI-safe) |
+| `--clean-orphaned` | Auto-delete orphaned files with `--approve` |
+| `--stats` | Show token count statistics per folder |
+| `--help` | Show help message |
+
+**Exit codes**
+
+- `0` – PASS (no drift) OR drift approved and updated
+- `1` – DRIFT detected but not approved
+
+**Example output (Multi-File Mode)**
+
+```bash
+$ stamp context compare
+
+✅  PASS
+
+📁 Folder Summary:
+   Total folders: 14
+   ✓  Unchanged folders: 14
+
+📂 Folder Details:
+
+   ✅ PASS: src/cli/context.json
+      Path: src/cli
+
+   ✅ PASS: src/core/context.json
+      Path: src/core
+```
+
+**Example with drift**
+
+```bash
+$ stamp context compare
+
+⚠️  DRIFT
+
+📁 Folder Summary:
+   Total folders: 14
+   ➕ Added folders: 1
+   ~  Changed folders: 2
+   ✓  Unchanged folders: 11
+
+📦 Component Summary:
+   + Added: 3
+   ~ Changed: 2
+
+📂 Folder Details:
+
+   ➕ ADDED FILE: src/new-feature/context.json
+      Path: src/new-feature
+
+   ⚠️  DRIFT: src/cli/commands/context.json
+      Path: src/cli/commands
+      ~ Changed components (1):
+        ~ compare.ts
+          Δ hash
+            old: uif:abc123...
+            new: uif:def456...
+
+Update all context files? (y/N)
+```
+
+**CI Integration**
+
+```bash
+# Fail build if drift detected
+stamp context compare || exit 1
+
+# Auto-approve in CI (like jest -u)
+stamp context compare --approve
+
+# Show token impact
+stamp context compare --stats
+```
+
+**See also:** [COMPARE_COMMAND.md](./COMPARE_COMMAND.md) for comprehensive documentation.
 
 ## Profiles
 

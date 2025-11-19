@@ -9,7 +9,8 @@
 **Note**: "Global CLI" means the tool is installed globally on your system (via `npm install -g`), making the `stamp` command available from any directory in your terminal, not just within a specific project folder.
 
 ## Core Workflow
-- `src/cli/index.ts` orchestrates CLI execution: reads CLI flags, calls the analyzer pipeline, writes bundles to disk.
+- `src/cli/index.ts` and `src/cli/stamp.ts` orchestrate CLI execution: read CLI flags, call the analyzer pipeline, write bundles to disk, and handle compare/validate commands.
+- `src/cli/commands/compare.ts` implements drift detection for single-file and multi-file comparison modes, including ADDED/ORPHANED/DRIFT/PASS detection.
 - `src/core/astParser.ts` uses `ts-morph` to parse source files, derive component metadata, and normalize type information.
 - `src/core/contractBuilder.ts` converts raw AST findings into UIF contracts and merges incremental updates.
 - `src/core/manifest.ts` and `src/core/pack.ts` assemble dependency graphs, compute bundle hashes, and format final output entries.
@@ -21,6 +22,7 @@
 - Key flags: `--depth` (dependency traversal), `--include-code none|header|full`, `--profile llm-chat|llm-safe|ci-strict`, `--out <file>` (output directory or file path), `--max-nodes <n>`.
 - Profiles tune defaults: `llm-chat` (balanced), `llm-safe` (token-conservative), `ci-strict` (validation-first).
 - Supports pretty and NDJSON formats via `--format`.
+- Compare command: `stamp context compare` compares all context files (multi-file mode) to detect drift, ADDED/ORPHANED folders, and component changes. Supports `--approve` for auto-updates, `--clean-orphaned` for cleanup, and `--stats` for per-folder token deltas.
 - Output structure: Context files are organized by folder, maintaining project directory hierarchy. Each folder gets its own `context.json` with bundles for that folder's components. The `context_main.json` index file provides metadata about all folders.
 
 ## Output Structure
@@ -175,5 +177,81 @@ When `meta.missing` is non-empty, it signals incomplete dependency resolution:
 - **Project structure alignment**: Folder structure mirrors your codebase, making it easier to navigate
 - **Incremental updates**: When code changes, only affected folder context files need regeneration
 - **Root detection**: Use `isRoot` and `rootLabel` to identify application entry points and framework-specific folders
+
+## Context Drift Detection
+
+LogicStamp Context includes a `compare` command for detecting drift across all context files in a project:
+
+### Multi-File Comparison Mode
+
+The compare command operates in multi-file mode when comparing `context_main.json` indices:
+
+```bash
+stamp context compare                                    # Auto-mode: compares all files
+stamp context compare old/context_main.json new/context_main.json  # Manual mode
+```
+
+**What it detects:**
+- **ADDED FILE** - New folders with context files (new features/modules added)
+- **ORPHANED FILE** - Folders removed from project (but context files still exist on disk)
+- **DRIFT** - Changed files with detailed component-level changes
+- **PASS** - Unchanged files
+
+**Three-tier output:**
+1. **Folder-level summary** - Shows added/orphaned/changed/unchanged folder counts
+2. **Component-level summary** - Total components added/removed/changed across all folders
+3. **Detailed per-folder changes** - Component-by-component diffs for each folder with changes
+
+### Use Cases for LLMs
+
+1. **Change impact analysis**: When analyzing a codebase update, run `stamp context compare` to see exactly which folders and components changed
+2. **Architectural drift**: Identify when new modules are added (`ADDED FILE`) or old ones removed (`ORPHANED FILE`)
+3. **Per-folder token impact**: Use `--stats` to see token delta per folder, helping prioritize which changes to review
+4. **Breaking change detection**: Check if component signatures (props, exports, hooks) changed, indicating potential breaking changes
+
+### Key Features
+
+- **Jest-style workflow**: Use `--approve` to auto-update all context files (like `jest -u` for snapshots)
+- **Orphaned file cleanup**: Use `--clean-orphaned` with `--approve` to automatically delete stale context files
+- **CI integration**: Exit code 1 if drift detected, making it CI-friendly for validation
+- **Token statistics**: `--stats` shows per-folder token deltas to understand context size impact
+
+### Example Output
+
+```bash
+$ stamp context compare
+
+⚠️  DRIFT
+
+📁 Folder Summary:
+   Total folders: 14
+   ➕ Added folders: 1
+   ~  Changed folders: 2
+   ✓  Unchanged folders: 11
+
+📦 Component Summary:
+   + Added: 3
+   ~ Changed: 2
+
+📂 Folder Details:
+
+   ➕ ADDED FILE: src/new-feature/context.json
+      Path: src/new-feature
+
+   ⚠️  DRIFT: src/cli/commands/context.json
+      Path: src/cli/commands
+      ~ Changed components (1):
+        ~ compare.ts
+          Δ hash
+            old: uif:abc123...
+            new: uif:def456...
+```
+
+### Implementation Details
+
+- **Truth from bundles**: Comparison is based on actual bundle content, not metadata (summary counts)
+- **Bundle→folder mapping**: Verifies folder structure from `context_main.json`
+- **Orphaned detection**: Checks disk for files that exist but aren't in the new index
+- **Metadata ignored**: `totalComponents`, `totalBundles` counts are derived stats, not compared for drift
 
 
