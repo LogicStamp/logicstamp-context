@@ -828,4 +828,4 @@ stamp context --strict-missing
 
 - [README.md](../README.md) - Main documentation
 - [examples/context.example.json](../examples/context.example.json) - Example output
-- [LogicStamp Main Project](https://github.com/yourusername/logicstamp) - Full CLI
+- [LogicStamp Main Project](https://github.com/LogicStamp/logicstamp) - Full CLI

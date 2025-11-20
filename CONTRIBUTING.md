@@ -13,7 +13,7 @@ Thank you for your interest in contributing! This document provides guidelines f
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/logicstamp-context.git
+git clone https://github.com/LogicStamp/logicstamp-context.git
 cd logicstamp-context
 
 # Install dependencies

@@ -41,12 +41,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/logicstamp-context.git"
+    "url": "https://github.com/LogicStamp/logicstamp-context.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/logicstamp-context/issues"
+    "url": "https://github.com/LogicStamp/logicstamp-context/issues"
   },
-  "homepage": "https://github.com/yourusername/logicstamp-context#readme",
+  "homepage": "https://github.com/LogicStamp/logicstamp-context#readme",
   "author": "LogicStamp Contributors",
   "license": "MIT",
   "dependencies": {

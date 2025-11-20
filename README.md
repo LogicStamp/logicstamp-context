@@ -888,5 +888,5 @@ Issues and PRs welcome! This is an open-source project.
 
 ## Links
 
-- [LogicStamp Main Project](https://github.com/yourusername/logicstamp)
-- [Report Issues](https://github.com/yourusername/logicstamp-context/issues)
+- [LogicStamp Main Project](https://github.com/LogicStamp/logicstamp)
+- [Report Issues](https://github.com/LogicStamp/logicstamp-context/issues)
