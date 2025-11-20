@@ -56,7 +56,7 @@ describe('CLI Validate Command Tests', () => {
       expect(stdout).toContain('Total edges:');
     }, 30000);
 
-    it('should validate context.json in current directory when no file specified', async () => {
+    it('should validate context.json in current directory when no file specified (fallback mode)', async () => {
       const testDir = join(outputPath, 'validate-default');
       await mkdir(testDir, { recursive: true });
 
@@ -80,12 +80,16 @@ describe('CLI Validate Command Tests', () => {
       // Copy it to context.json in the test directory
       await writeFile(join(testDir, 'context.json'), contextContent);
 
-      // Validate without specifying file (should use context.json)
+      // Delete context_main.json to test fallback to single-file mode
+      await rm(join(testDir, 'context_main.json'));
+
+      // Validate without specifying file (should fall back to context.json)
       const { stdout } = await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context validate`,
         { cwd: testDir }
       );
 
+      expect(stdout).toContain('context_main.json not found, falling back to single-file mode');
       expect(stdout).toContain('✅ Valid context file');
     }, 30000);
 
@@ -109,6 +113,191 @@ describe('CLI Validate Command Tests', () => {
       );
 
       expect(stdout).toContain('✅ Valid context file');
+    }, 30000);
+  });
+
+  describe('Multi-file validation mode', () => {
+    it('should validate all context files when no file specified (multi-file mode)', async () => {
+      const testDir = join(outputPath, 'validate-multifile');
+      await mkdir(testDir, { recursive: true });
+
+      await execAsync('npm run build');
+
+      // Copy fixture files to test directory
+      const { cpSync } = await import('node:fs');
+      cpSync(fixturesPath, testDir, { recursive: true });
+
+      // Generate context in the test directory (creates context_main.json + folder context files)
+      await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
+        { cwd: testDir }
+      );
+
+      // Validate without specifying file (should use multi-file mode)
+      const { stdout } = await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context validate`,
+        { cwd: testDir }
+      );
+
+      expect(stdout).toContain('🔍 Validating all context files using');
+      expect(stdout).toContain('context_main.json');
+      expect(stdout).toContain('✅ All context files are valid');
+      expect(stdout).toContain('📁 Validation Summary:');
+      expect(stdout).toContain('Total folders:');
+      expect(stdout).toContain('✅ Valid:');
+      expect(stdout).toContain('Total nodes:');
+      expect(stdout).toContain('Total edges:');
+      expect(stdout).toContain('📂 Folder Details:');
+    }, 30000);
+
+    it('should detect and report invalid folder in multi-file mode', async () => {
+      const testDir = join(outputPath, 'validate-multifile-invalid');
+      await mkdir(testDir, { recursive: true });
+
+      await execAsync('npm run build');
+
+      // Copy fixture files to test directory
+      const { cpSync } = await import('node:fs');
+      cpSync(fixturesPath, testDir, { recursive: true });
+
+      // Generate context in the test directory
+      await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
+        { cwd: testDir }
+      );
+
+      // Corrupt one of the context files
+      const index = JSON.parse(await readFile(join(testDir, 'context_main.json'), 'utf-8'));
+      const contextFile = join(testDir, index.folders[0].contextFile);
+      await writeFile(contextFile, JSON.stringify([{
+        type: 'WrongType',
+        schemaVersion: '0.1',
+        entryId: 'test.tsx',
+        graph: { nodes: [], edges: [] },
+        meta: { missing: [], source: 'test' }
+      }]));
+
+      // Validate (should fail)
+      try {
+        await execAsync(
+          `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context validate`,
+          { cwd: testDir }
+        );
+        expect.fail('Should have failed validation');
+      } catch (error: any) {
+        expect(error.code).toBe(1);
+        const output = (error.stderr || error.stdout || error.message || '').toString();
+        expect(output).toContain('❌ Validation failed');
+        expect(output).toContain('❌ Invalid:');
+        expect(output).toContain('❌ INVALID:');
+      }
+    }, 30000);
+
+    it('should detect missing context files in multi-file mode', async () => {
+      const testDir = join(outputPath, 'validate-multifile-missing');
+      await mkdir(testDir, { recursive: true });
+
+      await execAsync('npm run build');
+
+      // Copy fixture files to test directory
+      const { cpSync } = await import('node:fs');
+      cpSync(fixturesPath, testDir, { recursive: true });
+
+      // Generate context in the test directory
+      await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
+        { cwd: testDir }
+      );
+
+      // Delete one of the context files (but keep it in the index)
+      const index = JSON.parse(await readFile(join(testDir, 'context_main.json'), 'utf-8'));
+      const contextFile = join(testDir, index.folders[0].contextFile);
+      await rm(contextFile);
+
+      // Validate (should fail)
+      try {
+        await execAsync(
+          `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context validate`,
+          { cwd: testDir }
+        );
+        expect.fail('Should have failed validation');
+      } catch (error: any) {
+        expect(error.code).toBe(1);
+        const output = (error.stderr || error.stdout || error.message || '').toString();
+        expect(output).toContain('❌ Validation failed');
+        expect(output).toContain('❌ Invalid:');
+      }
+    }, 30000);
+
+    it('should validate specific file when explicitly provided (single-file mode with context_main.json present)', async () => {
+      const testDir = join(outputPath, 'validate-explicit-file');
+      await mkdir(testDir, { recursive: true });
+
+      await execAsync('npm run build');
+
+      // Copy fixture files to test directory
+      const { cpSync } = await import('node:fs');
+      cpSync(fixturesPath, testDir, { recursive: true });
+
+      // Generate context in the test directory
+      await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
+        { cwd: testDir }
+      );
+
+      // Get one specific context file
+      const index = JSON.parse(await readFile(join(testDir, 'context_main.json'), 'utf-8'));
+      const contextFile = index.folders[0].contextFile;
+
+      // Validate specific file (should use single-file mode, NOT multi-file mode)
+      const { stdout } = await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context validate ${contextFile}`,
+        { cwd: testDir }
+      );
+
+      // Should NOT show multi-file mode output
+      expect(stdout).not.toContain('🔍 Validating all context files');
+      expect(stdout).not.toContain('📁 Validation Summary:');
+
+      // Should show single-file mode output
+      expect(stdout).toContain('✅ Valid context file');
+      expect(stdout).toContain('bundle(s)');
+    }, 30000);
+
+    it('should report comprehensive statistics in multi-file mode', async () => {
+      const testDir = join(outputPath, 'validate-multifile-stats');
+      await mkdir(testDir, { recursive: true });
+
+      await execAsync('npm run build');
+
+      // Copy fixture files to test directory
+      const { cpSync } = await import('node:fs');
+      cpSync(fixturesPath, testDir, { recursive: true });
+
+      // Generate context in the test directory
+      await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
+        { cwd: testDir }
+      );
+
+      // Validate
+      const { stdout } = await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context validate`,
+        { cwd: testDir }
+      );
+
+      // Check for comprehensive statistics
+      expect(stdout).toContain('Total folders:');
+      expect(stdout).toContain('✅ Valid:');
+      expect(stdout).toContain('Total errors: 0');
+      expect(stdout).toContain('Total warnings: 0');
+      expect(stdout).toContain('Total nodes:');
+      expect(stdout).toContain('Total edges:');
+
+      // Check for per-folder details
+      expect(stdout).toContain('✅ VALID:');
+      expect(stdout).toContain('Path:');
+      expect(stdout).toContain('Bundles:');
     }, 30000);
   });
 

@@ -1,10 +1,10 @@
 /**
- * Validate command - Validates context.json files
+ * Validate command - Validates context.json files (single or multi-file mode)
  */
 
 import { readFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
-import type { LogicStampBundle } from '../../core/pack.js';
+import { resolve, join, dirname } from 'node:path';
+import type { LogicStampBundle, LogicStampIndex } from '../../core/pack.js';
 
 /**
  * Normalize path for display (convert backslashes to forward slashes)
@@ -110,10 +110,206 @@ export function validateBundles(bundles: LogicStampBundle[]): ValidationResult {
 }
 
 /**
+ * Multi-file validation result for a single folder's context file
+ */
+export interface FolderValidationResult {
+  folderPath: string;
+  contextFile: string;
+  valid: boolean;
+  result: ValidationResult;
+}
+
+/**
+ * Multi-file validation result (validates all context files)
+ */
+export interface MultiFileValidationResult {
+  valid: boolean;
+  totalFolders: number;
+  validFolders: number;
+  invalidFolders: number;
+  folders: FolderValidationResult[];
+  totalErrors: number;
+  totalWarnings: number;
+  totalNodes: number;
+  totalEdges: number;
+}
+
+/**
+ * Load LogicStampIndex from file
+ */
+async function loadIndex(indexPath: string): Promise<LogicStampIndex> {
+  try {
+    const content = await readFile(indexPath, 'utf8');
+    const index = JSON.parse(content) as LogicStampIndex;
+
+    if (index.type !== 'LogicStampIndex') {
+      throw new Error(`Invalid index file: expected type 'LogicStampIndex', got '${index.type}'`);
+    }
+
+    return index;
+  } catch (error) {
+    throw new Error(`Failed to load index from ${indexPath}: ${(error as Error).message}`);
+  }
+}
+
+/**
+ * Validate a single context file and return results
+ */
+async function validateContextFile(contextPath: string): Promise<ValidationResult> {
+  const content = await readFile(contextPath, 'utf8');
+  const bundles = JSON.parse(content) as LogicStampBundle[];
+  return validateBundles(bundles);
+}
+
+/**
+ * Multi-file validation - validates all context files using context_main.json index
+ */
+export async function multiFileValidate(indexPath: string): Promise<MultiFileValidationResult> {
+  const baseDir = dirname(indexPath);
+
+  // Load index file
+  const index = await loadIndex(indexPath);
+
+  const folderResults: FolderValidationResult[] = [];
+  let totalErrors = 0;
+  let totalWarnings = 0;
+  let totalNodes = 0;
+  let totalEdges = 0;
+
+  // Validate each folder's context file
+  for (const folder of index.folders) {
+    const contextPath = join(baseDir, folder.contextFile);
+
+    try {
+      const result = await validateContextFile(contextPath);
+
+      folderResults.push({
+        folderPath: folder.path,
+        contextFile: folder.contextFile,
+        valid: result.valid,
+        result,
+      });
+
+      totalErrors += result.errors;
+      totalWarnings += result.warnings;
+      totalNodes += result.nodes;
+      totalEdges += result.edges;
+    } catch (error) {
+      // If validation fails, mark as invalid
+      folderResults.push({
+        folderPath: folder.path,
+        contextFile: folder.contextFile,
+        valid: false,
+        result: {
+          valid: false,
+          errors: 1,
+          warnings: 0,
+          bundles: 0,
+          nodes: 0,
+          edges: 0,
+          messages: [`Failed to validate: ${(error as Error).message}`],
+        },
+      });
+      totalErrors++;
+    }
+  }
+
+  const validFolders = folderResults.filter(f => f.valid).length;
+  const invalidFolders = folderResults.filter(f => !f.valid).length;
+  const valid = invalidFolders === 0 && totalErrors === 0;
+
+  return {
+    valid,
+    totalFolders: folderResults.length,
+    validFolders,
+    invalidFolders,
+    folders: folderResults,
+    totalErrors,
+    totalWarnings,
+    totalNodes,
+    totalEdges,
+  };
+}
+
+/**
+ * Display multi-file validation results
+ */
+function displayMultiFileValidationResult(result: MultiFileValidationResult): void {
+  console.log(`\n${result.valid ? '✅' : '❌'} ${result.valid ? 'All context files are valid' : 'Validation failed'}\n`);
+
+  // Display summary
+  console.log('📁 Validation Summary:');
+  console.log(`   Total folders: ${result.totalFolders}`);
+  console.log(`   ✅ Valid: ${result.validFolders}`);
+  if (result.invalidFolders > 0) {
+    console.log(`   ❌ Invalid: ${result.invalidFolders}`);
+  }
+  console.log(`   Total errors: ${result.totalErrors}`);
+  console.log(`   Total warnings: ${result.totalWarnings}`);
+  console.log(`   Total nodes: ${result.totalNodes}`);
+  console.log(`   Total edges: ${result.totalEdges}`);
+  console.log();
+
+  // Display detailed results for each folder
+  console.log('📂 Folder Details:\n');
+
+  for (const folder of result.folders) {
+    if (folder.valid) {
+      console.log(`   ✅ VALID: ${folder.contextFile}`);
+      console.log(`      Path: ${folder.folderPath}`);
+      console.log(`      Bundles: ${folder.result.bundles}, Nodes: ${folder.result.nodes}, Edges: ${folder.result.edges}`);
+      if (folder.result.warnings > 0) {
+        console.log(`      Warnings: ${folder.result.warnings}`);
+        folder.result.messages.forEach(msg => console.log(`        ⚠️  ${msg}`));
+      }
+    } else {
+      console.log(`   ❌ INVALID: ${folder.contextFile}`);
+      console.log(`      Path: ${folder.folderPath}`);
+      console.log(`      Errors: ${folder.result.errors}`);
+      folder.result.messages.forEach(msg => console.log(`        ❌ ${msg}`));
+    }
+    console.log();
+  }
+}
+
+/**
  * Validate a context.json file for basic structural validity
+ *
+ * With no arguments: Validates all context files using context_main.json (multi-file mode)
+ * With a file argument: Validates that specific file (single-file mode)
  */
 export async function validateCommand(filePath?: string): Promise<void> {
-  // Default to context.json in current directory
+  // If no file specified, check for multi-file mode (context_main.json)
+  if (!filePath) {
+    const mainIndexPath = resolve('context_main.json');
+
+    try {
+      // Try to read context_main.json
+      await readFile(mainIndexPath, 'utf8');
+
+      // Multi-file mode - validate all context files
+      console.log(`🔍 Validating all context files using "${displayPath(mainIndexPath)}"...\n`);
+
+      try {
+        const result = await multiFileValidate(mainIndexPath);
+        displayMultiFileValidationResult(result);
+
+        if (result.valid) {
+          process.exit(0);
+        } else {
+          process.exit(1);
+        }
+      } catch (error) {
+        console.error(`❌ Multi-file validation failed: ${(error as Error).message}`);
+        process.exit(1);
+      }
+    } catch {
+      // context_main.json doesn't exist, fall back to single-file mode with context.json
+      console.log('ℹ️  context_main.json not found, falling back to single-file mode\n');
+    }
+  }
+
+  // Single-file mode
   const targetFile = filePath || 'context.json';
 
   try {
