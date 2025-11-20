@@ -1,0 +1,178 @@
+{
+  "type": "LogicStampIndex",
+  "schemaVersion": "0.1",
+  "projectRoot": ".",
+  "projectRootResolved": "c:/Users/River/Desktop/logicstamp-context",
+  "createdAt": "2025-11-20T19:30:16.115Z",
+  "summary": {
+    "totalComponents": 32,
+    "totalBundles": 30,
+    "totalFolders": 14,
+    "totalTokenEstimate": 19075
+  },
+  "folders": [
+    {
+      "path": ".",
+      "contextFile": "context.json",
+      "bundles": 1,
+      "components": [
+        "vitest.config.ts"
+      ],
+      "isRoot": true,
+      "rootLabel": "Project Root",
+      "tokenEstimate": 387
+    },
+    {
+      "path": "examples/simple-app/src",
+      "contextFile": "examples/simple-app/src/context.json",
+      "bundles": 1,
+      "components": [
+        "App.tsx"
+      ],
+      "isRoot": true,
+      "rootLabel": "Example: simple-app",
+      "tokenEstimate": 983
+    },
+    {
+      "path": "examples/simple-app/src/utils",
+      "contextFile": "examples/simple-app/src/utils/context.json",
+      "bundles": 1,
+      "components": [
+        "helpers.ts"
+      ],
+      "isRoot": false,
+      "tokenEstimate": 459
+    },
+    {
+      "path": "src/cli",
+      "contextFile": "src/cli/context.json",
+      "bundles": 3,
+      "components": [
+        "index.ts",
+        "stamp.ts",
+        "validate-index.ts"
+      ],
+      "isRoot": false,
+      "tokenEstimate": 1587
+    },
+    {
+      "path": "src/cli/commands",
+      "contextFile": "src/cli/commands/context.json",
+      "bundles": 5,
+      "components": [
+        "clean.ts",
+        "compare.ts",
+        "context.ts",
+        "init.ts",
+        "validate.ts"
+      ],
+      "isRoot": false,
+      "tokenEstimate": 2748
+    },
+    {
+      "path": "src/core",
+      "contextFile": "src/core/context.json",
+      "bundles": 5,
+      "components": [
+        "astParser.ts",
+        "contractBuilder.ts",
+        "manifest.ts",
+        "pack.ts",
+        "signature.ts"
+      ],
+      "isRoot": false,
+      "tokenEstimate": 3988
+    },
+    {
+      "path": "src/types",
+      "contextFile": "src/types/context.json",
+      "bundles": 1,
+      "components": [
+        "UIFContract.ts"
+      ],
+      "isRoot": false,
+      "tokenEstimate": 535
+    },
+    {
+      "path": "src/utils",
+      "contextFile": "src/utils/context.json",
+      "bundles": 6,
+      "components": [
+        "config.ts",
+        "fsx.ts",
+        "gitignore.ts",
+        "hash.ts",
+        "llmContext.ts",
+        "tokens.ts"
+      ],
+      "isRoot": false,
+      "tokenEstimate": 3711
+    },
+    {
+      "path": "tests/fixtures/nextjs-app/app",
+      "contextFile": "tests/fixtures/nextjs-app/app/context.json",
+      "bundles": 1,
+      "components": [
+        "page.tsx"
+      ],
+      "isRoot": true,
+      "rootLabel": "Next.js App",
+      "tokenEstimate": 529
+    },
+    {
+      "path": "tests/fixtures/nextjs-app/components",
+      "contextFile": "tests/fixtures/nextjs-app/components/context.json",
+      "bundles": 1,
+      "components": [
+        "Button.tsx"
+      ],
+      "isRoot": false,
+      "tokenEstimate": 512
+    },
+    {
+      "path": "tests/fixtures/nextjs-app/lib",
+      "contextFile": "tests/fixtures/nextjs-app/lib/context.json",
+      "bundles": 1,
+      "components": [
+        "server-action.ts"
+      ],
+      "isRoot": false,
+      "tokenEstimate": 451
+    },
+    {
+      "path": "tests/fixtures/simple-app/src",
+      "contextFile": "tests/fixtures/simple-app/src/context.json",
+      "bundles": 1,
+      "components": [
+        "App.tsx"
+      ],
+      "isRoot": true,
+      "rootLabel": "Test Fixture",
+      "tokenEstimate": 992
+    },
+    {
+      "path": "tests/fixtures/simple-app/src/components",
+      "contextFile": "tests/fixtures/simple-app/src/components/context.json",
+      "bundles": 2,
+      "components": [
+        "Button.tsx",
+        "Card.tsx"
+      ],
+      "isRoot": false,
+      "tokenEstimate": 1726
+    },
+    {
+      "path": "tests/fixtures/simple-app/src/utils",
+      "contextFile": "tests/fixtures/simple-app/src/utils/context.json",
+      "bundles": 1,
+      "components": [
+        "helpers.ts"
+      ],
+      "isRoot": false,
+      "tokenEstimate": 467
+    }
+  ],
+  "meta": {
+    "source": "logicstamp-context@0.1.0"
+  }
+}

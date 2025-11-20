@@ -1,228 +1,272 @@
-# LogicStamp Context - Test Suite
+# LogicStamp Context
 
-This directory contains end-to-end (E2E) tests for the LogicStamp Context CLI tool.
+**A fast, zero-config CLI that turns your React/TypeScript codebase into AI‑ready context bundles.**
 
-## Test Structure
+Generate modular context files, detect context drift, optimize token costs, and keep your AI assistants aligned with your codebase — all with one command.
+
+<div align="center">
 
 ```
-tests/
-├── e2e/
-│   ├── cli.test.ts      # CLI integration tests
-│   └── core.test.ts     # Core module tests
-└── fixtures/
-    └── simple-app/      # Sample React application for testing
-        └── src/
-            ├── components/
-            │   ├── Button.tsx
-            │   └── Card.tsx
-            ├── utils/
-            │   └── helpers.ts
-            └── App.tsx
+npm install -g logicstamp-context
 ```
 
-## Running Tests
+</div>
+
+---
+
+# 🚀 Why LogicStamp?
+
+Modern AI tools (ChatGPT, Claude, Cursor, VS Code copilots) struggle to understand large codebases without help.
+
+LogicStamp Context gives them the **entire architecture** of your project in a structured, compressed, predictable format.
+
+### **🎯 What LogicStamp does better than everyone else**
+
+* **Modular, folder‑based output** → `context.json` per folder + `context_main.json` index
+* **Jest‑style drift detection** → added, removed, changed folders and components
+* **Token‑aware generation** → GPT‑4o & Claude token estimates + mode comparison
+* **CI‑ready lifecycle** → init → generate → validate → compare → clean
+* **Next.js App Router intelligence** → detects `"use client"`, `"use server"`, app directory
+* **Rock‑solid validation** → schema checking for every context file
+* **Incremental adoption** → no config, no build step, no special framework requirements
+
+All of this in a **5MB package** with zero external dependencies.
+
+---
+
+# 🔥 Quick Start
 
 ```bash
-# Run all tests
-npm test
+# Install globally
+npm install -g logicstamp-context
 
-# Run tests in watch mode (interactive)
-npm run test:watch
+# Generate AI-ready context for your project
+stamp context
 
-# Run tests with UI
-npm run test:ui
+# Validate everything
+stamp context validate
 
-# Run tests with coverage
-npm run test:coverage
+# Detect drift across all folders
+stamp context compare
+
+# Clean context artifacts (dry run)
+stamp context clean
 ```
 
-## Test Coverage
+---
 
-### CLI Tests (`cli.test.ts`)
+# 📦 What LogicStamp Generates
 
-Tests the complete CLI workflow including:
+LogicStamp produces a **multi-file, folder-organized** set of context bundles:
 
-- **Basic functionality**
-  - Context generation for React apps
-  - Custom depth configuration
-  - Multiple output formats (json, ndjson, pretty)
+```
+output/
+├── context_main.json
+├── context.json
+└── src/
+    └── context.json
+```
 
-- **Profile options**
-  - `llm-safe` profile (conservative, max 30 nodes)
-  - `llm-chat` profile (balanced, max 100 nodes)
-  - `ci-strict` profile (strict validation)
+### context_main.json
 
-- **Code inclusion options**
-  - `--include-code none` (no code snippets)
-  - `--include-code header` (headers only)
-  - `--include-code full` (complete source)
+A global index of your project’s structure with:
 
-- **Help and error handling**
-  - Help display
-  - Invalid path handling
+* All folder metadata
+* Component lists
+* Token estimates
+* Paths to all context files
+* Origin framework detection (e.g., Next.js App Router)
 
-- **Dependency graph validation**
-  - Component dependency tracking
-  - Summary statistics
+### context.json (per folder)
 
-### Core Module Tests (`core.test.ts`)
+Each folder gets a bundle containing:
 
-Tests individual modules in isolation:
+* Full UIFContract for each component
+* Dependency graph (nodes + edges)
+* Semantic hash for drift detection
+* Code snippets (none / header / full)
+* Behavioral predictions (optional)
 
-- **AST Parser** (`astParser.ts`)
-  - Extracting AST from React components
-  - Identifying React imports
-  - Component structure extraction
-  - Props information extraction
-  - Component dependency identification
+---
 
-- **Contract Builder** (`contractBuilder.ts`)
-  - Building contracts for components
-  - Extracting component signatures with props
-  - Identifying component version elements
-  - Working with different presets
+# ⚛️ Next.js App Router Support
 
-- **Dependency Graph Builder** (`manifest.ts`)
-  - Building dependency graphs from contracts
-  - Identifying root and leaf components
-  - Creating component relationships
+LogicStamp detects:
 
-- **Pack (Bundle Generator)** (`pack.ts`)
-  - Generating bundles for components
-  - Including dependencies based on depth
-  - Respecting maxNodes limits
+* `"use client"`
+* `"use server"`
+* Whether components are in `app/`
+* Server vs client boundaries
 
-- **Integration: Full Pipeline**
-  - End-to-end processing of React applications
+AI assistants now *understand* your Next.js project.
 
-## Test Fixtures
+---
 
-The `fixtures/simple-app` directory contains a minimal React application used for testing:
+# 🧪 Compare & Drift Detection
 
-- **Button.tsx** - A simple button component with props
-- **Card.tsx** - A card component that uses Button
-- **App.tsx** - Root component that uses Card
-- **helpers.ts** - Utility functions
-
-These fixtures represent a typical React component hierarchy and are used to verify:
-- Component extraction
-- Dependency resolution
-- Graph building
-- Bundle generation
-
-## Configuration
-
-Tests are configured using Vitest:
-
-- **Test environment**: Node.js
-- **Test timeout**: 30 seconds (for long-running E2E tests)
-- **Coverage provider**: v8
-- **Coverage reports**: text, json, html
-
-See `vitest.config.ts` for full configuration.
-
-## Continuous Integration
-
-Tests should be run as part of CI/CD pipeline:
+### **Multi-file mode (recommended)**
 
 ```bash
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-
-# Run tests
-npm test
+stamp context compare
 ```
 
-## Writing New Tests
+Detects:
 
-When adding new tests:
+* ➕ **Added folders**
+* 🗑️ **Orphaned folders**
+* ⚠️ **Drift** in components
+* ✓ **PASS** for unchanged files
 
-1. **For CLI tests**: Add to `tests/e2e/cli.test.ts`
-   - Test the complete CLI workflow
-   - Use fixtures from `tests/fixtures/simple-app`
-   - Verify output files and console output
-
-2. **For core module tests**: Add to `tests/e2e/core.test.ts`
-   - Test individual module functionality
-   - Mock or use fixtures as needed
-   - Verify data structures and contracts
-
-3. **For new fixtures**: Add to `tests/fixtures/`
-   - Create realistic React components
-   - Include TypeScript types
-   - Add component dependencies
-
-## Common Test Patterns
-
-### Testing CLI output
-
-```typescript
-const { stdout, stderr } = await execAsync(
-  `node dist/cli/index.js ${fixturesPath} --out ${outFile}`
-);
-
-expect(stdout).toContain('Context written successfully');
-expect(stdout).toContain('📝 Writing to:');
-```
-
-### Testing generated bundles
-
-```typescript
-const content = await readFile(outFile, 'utf-8');
-const bundles = JSON.parse(content);
-
-expect(bundles.length).toBeGreaterThan(0);
-expect(bundles[0].type).toBe('LogicStampBundle');
-```
-
-### Testing core modules
-
-```typescript
-const ast = await extractFromFile(filePath);
-const result = buildContract(filePath, ast, {
-  preset: 'none',
-  sourceText: text,
-});
-
-expect(result.contract).toBeDefined();
-expect(result.contract?.type).toBe('UIFContract');
-```
-
-## Troubleshooting
-
-### Tests timing out
-
-Increase the timeout for specific tests:
-
-```typescript
-it('should handle large codebases', async () => {
-  // test code
-}, 60000); // 60 second timeout
-```
-
-### Path issues on Windows
-
-Use `path.join()` for cross-platform compatibility:
-
-```typescript
-import { join } from 'node:path';
-const filePath = join(fixturesPath, 'components', 'Button.tsx');
-```
-
-### Build failures
-
-Ensure the project is built before running tests:
+### Approval workflow
 
 ```bash
-npm run build && npm test
+stamp context compare --approve
 ```
 
-## Test Results
+Updates everything automatically — like `jest -u`.
 
-Current test suite: **29 tests, all passing ✅**
+---
 
-- CLI Tests: 21 tests
-- Core Module Tests: 8 tests
+# 🧼 Clean Context Files
+
+```bash
+# Preview cleanup (dry run)
+stamp context clean
+
+# Actually delete all artifacts
+stamp context clean --all --yes
+```
+
+Safe by default.
+
+---
+
+# 🛡️ Validation
+
+```bash
+stamp context validate
+```
+
+Validates:
+
+* All folder context files
+* Schema integrity
+* Missing fields
+* Version mismatches
+
+Perfect for CI.
+
+---
+
+# 💰 Token Cost Optimization
+
+Every context run displays token estimates:
+
+```
+📏 Token Estimates (header mode):
+   GPT-4o-mini: 13,895 | Full code: ~39,141 (65% savings)
+   Claude:      12,351 | Full code: ~34,792 (65% savings)
+```
+
+### Compare modes
+
+```bash
+stamp context --compare-modes
+```
+
+Shows exact savings for:
+
+* none
+* header
+* full
+
+---
+
+# ⚙️ Command Reference
+
+## `stamp init`
+
+Initialize LogicStamp in a project:
+
+* Adds `.gitignore` patterns
+* Creates `LLM_CONTEXT.md`
+* Saves preferences
+
+## `stamp context`
+
+Generate AI-ready bundles.
+Supports:
+
+* `--depth`
+* `--include-code (none|header|full)`
+* `--profile (llm-chat|llm-safe|ci-strict)`
+* `--max-nodes`
+* `--stats`
+* `--dry-run`
+
+## `stamp context validate`
+
+Validate entire project (multi-file) or a single file.
+
+## `stamp context compare`
+
+Detect drift across all folders or between two specific files.
+
+* `--approve`
+* `--clean-orphaned`
+* `--stats`
+
+## `stamp context clean`
+
+Remove generated context artifacts.
+
+* Safe by default
+* Requires `--all --yes` to delete
+
+---
+
+# 🏗️ Profiles
+
+* **llm-chat** (default) — balanced, header-only
+* **llm-safe** — smallest output
+* **ci-strict** — no code, strict validation, CI-friendly
+
+---
+
+# 🧩 Use Cases
+
+* AI pair programming (ChatGPT, Claude, Cursor)
+* Codebase exploration & onboarding
+* Snapshot testing for code structure
+* CI/CD drift detection
+* Documentation & architecture diagrams
+* Next.js Server/Client boundary analysis
+
+---
+
+# 🛠️ Contributing
+
+PRs welcome! The tool is designed to be:
+
+* Easy to extend
+* Easy to test
+* Easy to document
+
+If you add a new feature, run:
+
+```
+stamp context
+stamp context validate
+```
+
+---
+
+# 📄 License
+
+MIT License — same freedom as Bun, React, Vercel tools.
+
+---
+
+# ⭐ If this saved you tokens, debugging time, or sanity — give it a star!
+
+It helps more developers find it and keeps the project alive.

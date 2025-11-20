@@ -141,14 +141,47 @@ export async function generateContext(
 
 ## Testing
 
-Currently manual testing. Automated tests coming soon!
+The project includes a comprehensive test suite with **153 passing tests** covering CLI commands, core modules, and edge cases.
 
-### Manual Testing Checklist
+### Running Tests
 
-Before submitting a PR, test:
+```bash
+# Run all tests
+npm test
 
-- [ ] Basic context generation: `logicstamp-context`
-- [ ] Custom directory: `logicstamp-context ./src`
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with UI
+npm run test:ui
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+### Test Coverage
+
+The test suite includes:
+- **E2E tests**: Full CLI workflow testing (context generation, validation, comparison, cleaning)
+- **Unit tests**: Core module testing (AST parsing, contract building, dependency graphs)
+- **Integration tests**: End-to-end pipeline verification
+- **Determinism tests**: Ensuring consistent output across runs
+
+See [`tests/README.md`](../tests/README.md) for detailed test documentation.
+
+### Before Submitting a PR
+
+Ensure all tests pass:
+
+```bash
+npm run build
+npm test
+```
+
+For manual verification, you can also test manually:
+
+- [ ] Basic context generation: `stamp context`
+- [ ] Custom directory: `stamp context ./src`
 - [ ] All profiles: `--profile llm-safe/llm-chat/ci-strict`
 - [ ] Code modes: `--include-code none/header/full`
 - [ ] Output formats: `--format json/pretty/ndjson`
