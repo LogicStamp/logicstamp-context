@@ -170,4 +170,5 @@ stamp context --strict-missing || exit 1
   `--profile llm-safe --format pretty`).
 - Use `--max-nodes` to keep bundle size manageable before sharing with LLMs.
 - Run `stamp context validate` after generation to catch schema drift early.
+- Use `stamp context clean` to remove all context artifacts when resetting or switching branches.
 

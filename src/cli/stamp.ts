@@ -16,6 +16,7 @@ import {
 } from './commands/compare.js';
 import { validateCommand } from './commands/validate.js';
 import { init, type InitOptions } from './commands/init.js';
+import { cleanCommand, type CleanOptions } from './commands/clean.js';
 
 async function main() {
   const args = process.argv.slice(2);
@@ -52,6 +53,11 @@ async function main() {
 
   if (contextArgs[0] === 'compare') {
     await handleCompare(contextArgs.slice(1));
+    return;
+  }
+
+  if (contextArgs[0] === 'clean') {
+    await handleClean(contextArgs.slice(1));
     return;
   }
 
@@ -110,6 +116,33 @@ async function handleValidate(args: string[]) {
     await validateCommand(filePath);
   } catch (error) {
     console.error('❌ Validation failed:', (error as Error).message);
+    process.exit(1);
+  }
+}
+
+async function handleClean(args: string[]) {
+  if (args.includes('--help') || args.includes('-h')) {
+    printCleanHelp();
+    process.exit(0);
+  }
+
+  const options: CleanOptions = {
+    all: args.includes('--all'),
+    yes: args.includes('--yes'),
+  };
+
+  // First non-option argument is the target directory
+  for (const arg of args) {
+    if (!arg.startsWith('--') && !options.projectRoot) {
+      options.projectRoot = arg;
+      break;
+    }
+  }
+
+  try {
+    await cleanCommand(options);
+  } catch (error) {
+    console.error('❌ Clean failed:', (error as Error).message);
     process.exit(1);
   }
 }
@@ -529,6 +562,7 @@ USAGE:
   stamp context [path] [options]       Generate context
   stamp context validate [file]        Validate context file
   stamp context compare [options]      Detect drift (auto-generates fresh context)
+  stamp context clean [path] [options] Remove all generated context artifacts
 
 OPTIONS:
   -h, --help                          Show this help
@@ -546,11 +580,18 @@ EXAMPLES:
   stamp context compare
     Auto-detect drift by comparing with fresh context
 
+  stamp context clean
+    Show what would be removed (dry run)
+
+  stamp context clean --all --yes
+    Actually delete all context artifacts
+
 For detailed help on a specific command, run:
   stamp init --help
   stamp context --help
   stamp context validate --help
   stamp context compare --help
+  stamp context clean --help
   `);
 }
 
@@ -710,6 +751,51 @@ NOTES:
     jest          → prompts to update snapshots locally
     jest -u       → updates snapshots without prompt
     CI            → fails if snapshots don't match
+  `);
+}
+
+function printCleanHelp() {
+  console.log(`
+╭─────────────────────────────────────────────────╮
+│  Stamp Context Clean - Remove Artifacts        │
+│  Delete all generated context files            │
+╰─────────────────────────────────────────────────╯
+
+USAGE:
+  stamp context clean [path] [options]
+
+ARGUMENTS:
+  [path]                              Directory to clean (default: current)
+
+OPTIONS:
+  --all                               Include all context files
+  --yes                               Confirm deletion (required with --all)
+  -h, --help                          Show this help
+
+BEHAVIOR:
+  • Default (dry run): Shows what would be removed
+  • --all --yes: Actually deletes the files
+  • Automatically includes .logicstamp/ directory if it exists
+
+FILES REMOVED:
+  • context_main.json                 Main index file
+  • **/context.json                   All folder context files
+  • .logicstamp/                      Cache directory (if present)
+
+EXAMPLES:
+  stamp context clean
+    Show what would be removed (dry run)
+
+  stamp context clean --all --yes
+    Actually delete all context artifacts (includes .logicstamp/ if present)
+
+  stamp context clean ./src --all --yes
+    Clean context files in specific directory
+
+NOTES:
+  • Safe by default - requires --all --yes to actually delete
+  • Ignores node_modules, dist, build, .next directories
+  • Exits with code 0 on success
   `);
 }
 

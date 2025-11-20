@@ -82,6 +82,12 @@ stamp context compare old.json new.json --stats
 
 # Validate generated context
 stamp context validate context.json
+
+# Clean all context artifacts (dry run)
+stamp context clean
+
+# Actually delete all context files
+stamp context clean --all --yes
 ```
 
 **Why?** Generate AI-ready context from your React/TS codebase in seconds with built-in token cost optimization.
@@ -145,6 +151,7 @@ stamp init [path] [options]
 stamp context [path] [options]
 stamp context compare <old.json> <new.json> [options]
 stamp context validate [file]
+stamp context clean [path] [options]
 ```
 
 ### Commands
@@ -156,6 +163,8 @@ stamp context validate [file]
 - **`stamp context compare [options]`** - Compares all context files (multi-file mode) or two specific files to detect drift. In multi-file mode, uses `context_main.json` as index to compare all folder context files and detect ADDED/ORPHANED folders, per-folder DRIFT, and unchanged files (PASS). Shows three-tier output: folder summary, component summary, and detailed changes. Supports `--approve` for auto-updates (Jest-style), `--clean-orphaned` to remove stale files, and `--stats` for per-folder token deltas. Exits with code 1 if drift is detected (CI-friendly).
 
 - **`stamp context validate [file]`** - Checks an existing context file for schema and structural issues before sharing it with an AI or committing it to a repo. When no file is specified it looks for `context.json` in the current directory.
+
+- **`stamp context clean [path]`** - Removes all generated context artifacts (`context_main.json`, all folder `context.json` files, and `.logicstamp/` directory if present). Safe by default (dry run), requires `--all --yes` to actually delete. Useful for resetting context files or cleaning before switching branches.
 
 ### Arguments & Options (`init` command)
 
@@ -455,6 +464,19 @@ stamp context compare base.json pr.json --stats
 
 # In CI pipeline
 stamp context compare base.json pr.json || exit 1
+```
+
+### Clean context files
+
+```bash
+# Show what would be removed (dry run)
+stamp context clean
+
+# Actually delete all context artifacts
+stamp context clean --all --yes
+
+# Clean specific directory
+stamp context clean ./output --all --yes
 ```
 
 ### CI/CD validation

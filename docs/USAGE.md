@@ -22,6 +22,7 @@ stamp context
 stamp context [path] [options]
 stamp context validate [file]
 stamp context compare [oldFile] [newFile] [options]
+stamp context clean [path] [options]
 ```
 
 ## Commands
@@ -204,6 +205,49 @@ stamp context compare --stats
 ```
 
 **See also:** [COMPARE_COMMAND.md](./COMPARE_COMMAND.md) for comprehensive documentation.
+
+### `stamp context clean`
+
+Removes all generated context artifacts from your project. Safe by default (dry run), requires `--all --yes` to actually delete files.
+
+```bash
+# Show what would be removed (dry run)
+stamp context clean
+
+# Actually delete all context artifacts
+stamp context clean --all --yes
+
+# Clean specific directory
+stamp context clean ./src --all --yes
+```
+
+**What it removes**
+
+- `context_main.json` – Main index file
+- `**/context.json` – All folder context files (recursively)
+- `.logicstamp/` – Cache directory (if present, automatically included)
+
+**Key options**
+
+| Option | Description |
+|--------|-------------|
+| `--all` | Include all context files in the deletion operation |
+| `--yes` | Confirm deletion (required with `--all`) |
+| `--help` | Show help message |
+
+**Safety features**
+
+- **Dry run by default** – Shows what would be removed without deleting
+- **Requires both flags** – Both `--all` and `--yes` must be specified to delete
+- **Ignores build directories** – Automatically skips `node_modules/`, `dist/`, `build/`, `.next/`
+
+**Use cases**
+
+- Reset context files before regenerating
+- Clean before switching git branches
+- Remove context artifacts from a project
+
+**See also:** [CLEAN.md](./CLEAN.md) for comprehensive documentation.
 
 ## Profiles
 
