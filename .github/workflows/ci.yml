@@ -18,6 +18,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify package-lock.json exists
+        shell: bash
+        run: |
+          if [ ! -f package-lock.json ]; then
+            echo "Error: package-lock.json not found!"
+            ls -la || dir
+            exit 1
+          fi
 
       - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -45,6 +56,17 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify package-lock.json exists
+        shell: bash
+        run: |
+          if [ ! -f package-lock.json ]; then
+            echo "Error: package-lock.json not found!"
+            ls -la || dir
+            exit 1
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
