@@ -19,7 +19,9 @@ coverage/
 .DS_Store
 Thumbs.db
 
-# Generated files
+# LogicStamp context files
 context.json
+context_*.json
 *.uif.json
 logicstamp.manifest.json
+.logicstamp/

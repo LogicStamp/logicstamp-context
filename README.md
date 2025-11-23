@@ -211,6 +211,8 @@ See [docs/INIT.md](docs/INIT.md) for detailed documentation.
 | Option | Description | Default |
 |--------|-------------|---------|
 | `--stats` | Show token count statistics and delta | `false` |
+| `--approve` | Auto-approve updates (non-interactive, CI-safe) | `false` |
+| `--clean-orphaned` | Auto-delete orphaned files with `--approve` | `false` |
 | `--help`, `-h` | Show help message | |
 
 ### Options (`validate` command)
@@ -823,19 +825,22 @@ stamp context validate context_main.json
 
 All in one command, no pre-compilation needed!
 
-## Comparison with LogicStamp CLI
+## Comparison with LogicStamp CLI (Planned)
 
-| Feature | logicstamp-context | @logicstamp/cli |
-|---------|-------------------|-----------------|
-| Standalone | ✅ Yes | ❌ No |
-| Pre-compilation required | ❌ No | ✅ Yes |
+🚧 **Roadmap / WIP**: The full `@logicstamp/cli` is planned but not yet released. `logicstamp-context` is available today for AI context generation.
+
+| Feature | logicstamp-context | LogicStamp CLI (planned) |
+|---------|-------------------|-------------------------|
+| Standalone | ✅ Yes | ❌ No (wraps underlying tools) |
+| Pre-compilation required | ❌ No | ✅ Yes (for verification) |
 | Context generation | ✅ Yes | ✅ Yes |
+| UIF contracts per file | ✅ Yes (embedded in bundles) | ✅ Yes (as `.uif.json` sidecar files) |
 | Contract compilation | ✅ Built-in | ✅ Separate command |
-| Contract verification | ❌ No | ✅ Yes |
-| Watch mode | ❌ No | ✅ Yes |
+| Contract verification | ❌ No | ✅ Yes (planned) |
+| Watch mode | ❌ No | ✅ Yes (planned) |
 | Size | 🪶 Light | 📦 Full-featured |
 
-**TL;DR**: Use `stamp context` for quick AI context generation. Use `@logicstamp/cli` for full contract management and verification.
+**TL;DR**: Use `stamp context` (logicstamp-context) for quick AI context generation today. Use the future `@logicstamp/cli` for full contracts + verification + integrations once it's released.
 
 ## Future Roadmap
 
