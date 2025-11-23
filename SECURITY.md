@@ -14,7 +14,7 @@ Please **do not** report security vulnerabilities through public GitHub issues.
 
 Instead, please report them via email to the maintainers:
 
-**Email**: [Insert your security contact email here]
+**Email**: [logicstamp.dev@gmail.com]
 
 You should receive a response within 48 hours. If for some reason you do not, please follow up via email to ensure we received your original message.
 
@@ -50,9 +50,20 @@ When using LogicStamp Context:
 
 - **Scan trusted codebases only**: The tool reads and processes your source code. Only run it on codebases you trust.
 
-- **Review generated context**: Before sharing `context.json` files, review them to ensure they don't contain sensitive information (API keys, passwords, etc.).
+- **Automatic file creation**: The tool automatically creates `context.json` files (one per folder containing components) and a `context_main.json` index file in your project directory when you run `stamp context`. Be aware of where these files are created and review them before committing.
 
-- **Use `.gitignore`**: Ensure `context.json` files are properly ignored if they contain sensitive information.
+- **Automatic `.gitignore` modifications**: Both `stamp init` and `stamp context` (on first run in interactive mode) will prompt you to add patterns to your `.gitignore` file (or create one if it doesn't exist). These patterns are only added if you answer yes. Your preference is saved for future runs. The following patterns are added:
+  - `context.json`
+  - `context_*.json` (covers `context_main.json` and other context index files)
+  - `*.uif.json`
+  - `logicstamp.manifest.json`
+  - `.logicstamp/`
+  
+  Review these changes to ensure they align with your project's needs.
+
+- **Automatic `LLM_CONTEXT.md` creation**: Both `stamp init` and `stamp context` (on first run in interactive mode) will prompt you to create an `LLM_CONTEXT.md` file in your project root. This file is only created if you answer yes. Your preference is saved for future runs. Review this file to ensure it contains appropriate information for your project.
+
+- **Review generated context**: Before sharing `context.json` files, review them to ensure they don't contain sensitive information (API keys, passwords, etc.).
 
 - **Keep dependencies updated**: Regularly update `logicstamp-context` and its dependencies to receive security patches.
 
@@ -62,9 +73,13 @@ LogicStamp Context:
 
 - **Reads source code**: The tool parses your TypeScript/React source files using AST analysis. It does not execute your code.
 
+- **Never modifies source code**: LogicStamp Context never modifies your existing source files. It only generates new output files and modifies `.gitignore` or creates `LLM_CONTEXT.md` with your explicit approval.
+
 - **No network access**: The tool operates entirely offline and does not make network requests.
 
 - **No code execution**: LogicStamp Context only analyzes code statically; it never executes your code.
+
+- **CI-safe**: LogicStamp Context is safe to run in CI environments because it does not execute user code or make network requests.
 
 - **Local file access**: The tool reads files from your local filesystem based on the scan path you provide.
 
