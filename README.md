@@ -1,5 +1,9 @@
 # LogicStamp Context
 
+<div align="center">
+  <img src="assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="120" height="120">
+</div>
+
 ![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
@@ -890,6 +894,12 @@ MIT
 ## Contributing
 
 Issues and PRs welcome! This is an open-source project.
+
+**See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines**, including:
+- Branching strategy (feature → `main`, no `develop` branch)
+- Branch naming conventions (`feature/*`, `fix/*`, `docs/*`)
+- Commit message format (Conventional Commits)
+- Development workflow and best practices
 
 ## Links
 

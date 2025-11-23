@@ -18,11 +18,21 @@ import { validateCommand } from './commands/validate.js';
 import { init, type InitOptions } from './commands/init.js';
 import { cleanCommand, type CleanOptions } from './commands/clean.js';
 
+function printFoxIcon() {
+  console.log(`
+    /\\_/\\
+   ( o.o )
+    > ^ <
+🦊 Meet the Logic Fox
+`);
+}
+
 async function main() {
   const args = process.argv.slice(2);
 
   // Check for help - only if no args or first arg is help
   if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
+    printFoxIcon();
     printMainHelp();
     process.exit(0);
   }
@@ -32,6 +42,7 @@ async function main() {
 
   // Handle init command
   if (subcommand === 'init') {
+    printFoxIcon();
     await handleInit(args.slice(1));
     return;
   }
@@ -67,6 +78,7 @@ async function main() {
 
 async function handleInit(args: string[]) {
   if (args.includes('--help') || args.includes('-h')) {
+    printFoxIcon();
     printInitHelp();
     process.exit(0);
   }

@@ -31,16 +31,9 @@ logicstamp-context --help
 
 ## Branching Strategy
 
-This repository uses a **simple feature → `main` branching model** for both:
-
-- **LogicStamp Bundle** (npm package)
-- **LogicStamp Site** (`logicstamp.dev`)
+This repository uses a **simple feature → `main` branching model**.
 
 There is **no `develop` branch**. All changes go through short‑lived feature branches into `main`.
-
----
-
-## 1. LogicStamp Bundle (npm package)
 
 ### Branches
 
@@ -91,36 +84,7 @@ npm publish
 
 ---
 
-## 2. LogicStamp Site (`logicstamp.dev`)
-
-The site uses the same **feature → `main`** model, but “releases” are deployments.
-
-### Branches
-
-- **`main`** – deployed to **production** via Vercel
-- **`feature/*`** – new sections, design tweaks, docs changes
-
-### Typical flow
-
-1. **Create a feature branch from `main`:**
-
-   ```bash
-   git checkout main
-   git pull origin main
-   git checkout -b feature/update-landing-copy
-   ```
-
-2. Make changes, commit, and push the branch.
-3. **Open a PR targeting `main`.**
-4. Vercel creates a **preview deployment** for the PR.
-5. If the preview looks good and checks pass, **merge into `main`**.
-6. `main` deploys automatically to production.
-
-No `develop` branch is needed; PR previews act as the staging environment.
-
----
-
-## 3. Branch Protection & Conventions
+## Branch Protection & Conventions
 
 ### `main` branch protection (recommended)
 
@@ -151,16 +115,15 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ---
 
-## 4. Best Practices
+## Best Practices
 
 1. **Keep branches short‑lived** – merge within days, not weeks.
 2. **One change per branch** – avoid mixing unrelated work.
 3. **Sync with `main` regularly** – `git pull --rebase origin main` on feature branches.
 4. **Always use PRs** – even for maintainers.
-5. **Use preview deploys** (site) to validate UX and docs before merging.
-6. **Tag bundle releases** on `main` so they map cleanly to npm versions.
+5. **Tag bundle releases** on `main` so they map cleanly to npm versions.
 
-This lightweight strategy keeps both repos simple while still being safe and review‑friendly.
+This lightweight strategy keeps the workflow simple while still being safe and review‑friendly.
 
 ## Project Structure
 
