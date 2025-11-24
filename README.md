@@ -167,13 +167,23 @@ stamp context clean [path] [options]
 
 - **`stamp init [path]`** - Initialize LogicStamp in a project by creating or updating `.gitignore` with patterns for context files (`context.json`, `context_*.json`, `.logicstamp/`, etc.), generating `LLM_CONTEXT.md` in the project root, and saving preferences to `.logicstamp/config.json`. Optional - the `stamp context` command includes smart detection and will prompt you interactively on first run.
 
+  See [docs/cli/INIT.md](docs/cli/INIT.md) for detailed documentation.
+
 - **`stamp context [path]`** - Scans a directory and writes AI-ready context files organized by folder. Generates multiple `context.json` files (one per folder containing components) plus a `context_main.json` index file at the output root. Shows token estimates and mode comparison in output. Automatically validates the generated context before writing. On first run (interactive mode), prompts to add `.gitignore` patterns and generate `LLM_CONTEXT.md`, saving your preferences - subsequent runs respect your choices.
+
+  See [docs/cli/CONTEXT.md](docs/cli/CONTEXT.md) for detailed documentation.
 
 - **`stamp context compare [options]`** - Compares all context files (multi-file mode) or two specific files to detect drift. In multi-file mode, uses `context_main.json` as index to compare all folder context files and detect ADDED/ORPHANED folders, per-folder DRIFT, and unchanged files (PASS). Shows three-tier output: folder summary, component summary, and detailed changes. Supports `--approve` for auto-updates (Jest-style), `--clean-orphaned` to remove stale files, and `--stats` for per-folder token deltas. Exits with code 1 if drift is detected (CI-friendly).
 
+  See [docs/cli/COMPARE.md](docs/cli/COMPARE.md) for detailed documentation.
+
 - **`stamp context validate [file]`** - Checks an existing context file for schema and structural issues before sharing it with an AI or committing it to a repo. When no file is specified it looks for `context.json` in the current directory.
 
+  See [docs/cli/VALIDATE.md](docs/cli/VALIDATE.md) for detailed documentation.
+
 - **`stamp context clean [path]`** - Removes all generated context artifacts (`context_main.json`, all folder `context.json` files, and `.logicstamp/` directory if present). Safe by default (dry run), requires `--all --yes` to actually delete. Useful for resetting context files or cleaning before switching branches.
+
+  See [docs/cli/CLEAN.md](docs/cli/CLEAN.md) for detailed documentation.
 
 ### Arguments & Options (`init` command)
 
@@ -181,7 +191,7 @@ stamp context clean [path] [options]
 - `--skip-gitignore` - Skip `.gitignore` setup
 - `--help`, `-h` - Show help message
 
-See [docs/INIT.md](docs/INIT.md) for detailed documentation.
+See [docs/cli/INIT.md](docs/cli/INIT.md) for detailed documentation.
 
 ### Arguments (`context` command)
 
