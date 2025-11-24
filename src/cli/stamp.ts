@@ -327,6 +327,7 @@ async function handleCompare(args: string[]) {
 
   // Manual mode: explicit files provided
   if (positionalArgs.length < 2) {
+    printFoxIcon();
     printCompareHelp();
     process.exit(1);
   }
