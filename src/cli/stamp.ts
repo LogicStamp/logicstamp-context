@@ -42,7 +42,6 @@ async function main() {
 
   // Handle init command
   if (subcommand === 'init') {
-    printFoxIcon();
     await handleInit(args.slice(1));
     return;
   }
@@ -77,8 +76,9 @@ async function main() {
 }
 
 async function handleInit(args: string[]) {
+  printFoxIcon();
+  
   if (args.includes('--help') || args.includes('-h')) {
-    printFoxIcon();
     printInitHelp();
     process.exit(0);
   }
@@ -118,6 +118,7 @@ async function handleInit(args: string[]) {
 
 async function handleValidate(args: string[]) {
   if (args.includes('--help') || args.includes('-h')) {
+    printFoxIcon();
     printValidateHelp();
     process.exit(0);
   }
@@ -134,6 +135,7 @@ async function handleValidate(args: string[]) {
 
 async function handleClean(args: string[]) {
   if (args.includes('--help') || args.includes('-h')) {
+    printFoxIcon();
     printCleanHelp();
     process.exit(0);
   }
@@ -186,6 +188,7 @@ function isTTY(): boolean {
 
 async function handleCompare(args: string[]) {
   if (args[0] === '--help' || args[0] === '-h') {
+    printFoxIcon();
     printCompareHelp();
     process.exit(0);
   }
@@ -459,6 +462,7 @@ async function handleCompare(args: string[]) {
 
 async function handleGenerate(args: string[]) {
   if (args.includes('--help') || args.includes('-h')) {
+    printFoxIcon();
     printGenerateHelp();
     process.exit(0);
   }
