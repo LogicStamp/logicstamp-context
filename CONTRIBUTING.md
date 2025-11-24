@@ -26,7 +26,7 @@ npm run build
 npm link
 
 # Test the CLI
-stamp-context --help
+stamp context --help
 ```
 
 ## Branching Strategy
