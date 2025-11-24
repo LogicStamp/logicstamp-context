@@ -835,12 +835,12 @@ stamp context validate context_main.json
 
 All in one command, no pre-compilation needed!
 
-## Comparison with LogicStamp CLI (Planned)
+## Planned Orchestrator (@logicstamp/cli)
 
-🚧 **Roadmap / WIP**: The full `@logicstamp/cli` is planned but not yet released. `logicstamp-context` is available today for AI context generation.
+`logicstamp-context` is the primary CLI available today. A higher-level orchestrator package `@logicstamp/cli` is planned as an optional wrapper.
 
-| Feature | logicstamp-context | LogicStamp CLI (planned) |
-|---------|-------------------|-------------------------|
+| Feature | logicstamp-context | LogicStamp Orchestrator (planned) |
+|---------|-------------------|----------------------------------|
 | Standalone | ✅ Yes | ❌ No (wraps underlying tools) |
 | Pre-compilation required | ❌ No | ✅ Yes (for verification) |
 | Context generation | ✅ Yes | ✅ Yes |
@@ -848,9 +848,9 @@ All in one command, no pre-compilation needed!
 | Contract compilation | ✅ Built-in | ✅ Separate command |
 | Contract verification | ❌ No | ✅ Yes (planned) |
 | Watch mode | ❌ No | ✅ Yes (planned) |
-| Size | 🪶 Light | 📦 Full-featured |
+| Size | Focused | Orchestrator |
 
-**TL;DR**: Use `stamp context` (logicstamp-context) for quick AI context generation today. Use the future `@logicstamp/cli` for full contracts + verification + integrations once it's released.
+**TL;DR**: Use `stamp context` (logicstamp-context) for AI context generation today. The future `@logicstamp/cli` orchestrator will provide optional higher-level workflows once it's released.
 
 ## Future Roadmap
 
