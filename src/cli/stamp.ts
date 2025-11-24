@@ -42,7 +42,6 @@ async function main() {
 
   // Handle init command
   if (subcommand === 'init') {
-    printFoxIcon();
     await handleInit(args.slice(1));
     return;
   }
