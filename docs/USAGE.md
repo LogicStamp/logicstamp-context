@@ -19,10 +19,29 @@ stamp context
 ## Command Syntax
 
 ```bash
+stamp --version                    # Show version number
+stamp --help                       # Show help
 stamp context [path] [options]
 stamp context validate [file]
 stamp context compare [oldFile] [newFile] [options]
 stamp context clean [path] [options]
+```
+
+## Global Options
+
+These options are available at the top level (before any subcommand):
+
+| Option | Alias | Description |
+|--------|-------|-------------|
+| `--version` | `-v` | Show version number and exit |
+| `--help` | `-h` | Show help message and exit |
+
+**Examples:**
+```bash
+stamp --version    # Shows: fox mascot + "Version: 0.1.0"
+stamp -v           # Same as --version
+stamp --help       # Shows main help
+stamp -h           # Same as --help
 ```
 
 ## Commands
@@ -49,6 +68,7 @@ Generates LogicStamp bundles from a directory.
 | `--predict-behavior` | | `false` | Include experimental behavioral predictions |
 | `--dry-run` | | `false` | Skip writing the output file; prints summary instead |
 | `--stats` | | `false` | Emit one-line JSON stats (helpful for CI pipelines) |
+| `--version` | `-v` | | Show version number |
 | `--help` | `-h` | | Show help message |
 
 **CI / automation tips**
