@@ -117,6 +117,7 @@ async function handleInit(args: string[]) {
 
 async function handleValidate(args: string[]) {
   if (args.includes('--help') || args.includes('-h')) {
+    printFoxIcon();
     printValidateHelp();
     process.exit(0);
   }
@@ -133,6 +134,7 @@ async function handleValidate(args: string[]) {
 
 async function handleClean(args: string[]) {
   if (args.includes('--help') || args.includes('-h')) {
+    printFoxIcon();
     printCleanHelp();
     process.exit(0);
   }
@@ -185,6 +187,7 @@ function isTTY(): boolean {
 
 async function handleCompare(args: string[]) {
   if (args[0] === '--help' || args[0] === '-h') {
+    printFoxIcon();
     printCompareHelp();
     process.exit(0);
   }
@@ -323,6 +326,7 @@ async function handleCompare(args: string[]) {
 
   // Manual mode: explicit files provided
   if (positionalArgs.length < 2) {
+    printFoxIcon();
     printCompareHelp();
     process.exit(1);
   }
@@ -458,6 +462,7 @@ async function handleCompare(args: string[]) {
 
 async function handleGenerate(args: string[]) {
   if (args.includes('--help') || args.includes('-h')) {
+    printFoxIcon();
     printGenerateHelp();
     process.exit(0);
   }
