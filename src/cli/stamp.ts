@@ -17,6 +17,9 @@ import {
 import { validateCommand } from './commands/validate.js';
 import { init, type InitOptions } from './commands/init.js';
 import { cleanCommand, type CleanOptions } from './commands/clean.js';
+import { readFile } from 'node:fs/promises';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 function printFoxIcon() {
   console.log(`
@@ -29,6 +32,23 @@ function printFoxIcon() {
 
 async function main() {
   const args = process.argv.slice(2);
+
+  // Check for version
+  if (args[0] === '--version' || args[0] === '-v') {
+    try {
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = dirname(__filename);
+      const packageJsonPath = join(__dirname, '../../package.json');
+      const packageJsonContent = await readFile(packageJsonPath, 'utf8');
+      const packageJson = JSON.parse(packageJsonContent);
+      printFoxIcon();
+      console.log(`Version: ${packageJson.version}`);
+      process.exit(0);
+    } catch (error) {
+      console.error('❌ Failed to read version:', (error as Error).message);
+      process.exit(1);
+    }
+  }
 
   // Check for help - only if no args or first arg is help
   if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
@@ -582,6 +602,7 @@ USAGE:
   stamp context clean [path] [options] Remove all generated context artifacts
 
 OPTIONS:
+  -v, --version                       Show version number
   -h, --help                          Show this help
 
 EXAMPLES:
