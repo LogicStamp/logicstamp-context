@@ -834,7 +834,6 @@ stamp context --strict-missing
 | Context generation | ✅ Built-in | ✅ Via context command |
 | Pre-compilation | ❌ Not needed | ✅ Required (compile first) |
 | Contract verification | ❌ No | ✅ Yes (verify command) |
-| Watch mode | ❌ No | ✅ Yes (observe command) |
 | File output | ❌ No sidecars | ✅ Generates .uif.json |
 | Use case | Quick AI context | Full contract management |
 
@@ -847,7 +846,6 @@ stamp context --strict-missing
 **When to use @logicstamp/cli:**
 - Contract management
 - Continuous verification
-- Watch mode for changes
 - Full feature set
 
 ## See Also
