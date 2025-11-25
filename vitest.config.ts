@@ -5,8 +5,13 @@ export default defineConfig({
     // Test environment
     environment: 'node',
 
-    // Run test files sequentially to avoid CLI conflicts
-    fileParallelism: false,
+    // Allow parallel execution for faster test runs
+    // Tests use isolated output directories, so they can run in parallel
+    fileParallelism: true,
+    // Limit concurrent test files to avoid overwhelming the system
+    maxConcurrency: 4,
+    // Use test isolation to prevent shared state issues
+    isolate: true,
 
     // Include patterns
     include: ['tests/**/*.test.ts'],
@@ -28,8 +33,8 @@ export default defineConfig({
     // Timeout for long-running E2E tests
     testTimeout: 30000,
 
-    // Setup files
-    setupFiles: [],
+    // Global setup - build once before all tests
+    globalSetup: ['./tests/setup.ts'],
 
     // Reporter
     reporter: ['verbose'],

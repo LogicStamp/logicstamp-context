@@ -3,30 +3,29 @@ import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readFile, rm, mkdir, writeFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
+import { randomUUID } from 'node:crypto';
 
 const execAsync = promisify(exec);
 
 describe('CLI Compare Command Tests', () => {
   const fixturesPath = join(process.cwd(), 'tests/fixtures/simple-app');
-  const outputPath = join(process.cwd(), 'tests/e2e/output');
+  let outputPath: string;
 
   beforeEach(async () => {
-    // Clean up any existing output files
-    try {
-      await rm(outputPath, { recursive: true, force: true });
-    } catch (error) {
-      // Directory doesn't exist, which is fine
-    }
-    // Recreate the output directory for tests
+    // Create a unique output directory for this test run
+    const uniqueId = randomUUID().substring(0, 8);
+    outputPath = join(process.cwd(), 'tests/e2e/output', `compare-${uniqueId}`);
     await mkdir(outputPath, { recursive: true });
   });
 
   afterEach(async () => {
-    // Clean up output files after tests
-    try {
-      await rm(outputPath, { recursive: true, force: true });
-    } catch (error) {
-      // Ignore cleanup errors
+    // Clean up this test's output directory
+    if (outputPath) {
+      try {
+        await rm(outputPath, { recursive: true, force: true });
+      } catch (error) {
+        // Ignore cleanup errors
+      }
     }
   });
 
@@ -35,7 +34,6 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'compare1');
       const outDir2 = join(outputPath, 'compare2');
 
-      await execAsync('npm run build');
 
       // Generate two identical contexts
       await execAsync(
@@ -64,7 +62,6 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'drift-before');
       const outDir2 = join(outputPath, 'drift-after');
 
-      await execAsync('npm run build');
 
       // Generate first context
       await execAsync(
@@ -102,7 +99,6 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'stats1');
       const outDir2 = join(outputPath, 'stats2');
 
-      await execAsync('npm run build');
 
       // Generate two contexts
       await execAsync(
@@ -134,7 +130,6 @@ describe('CLI Compare Command Tests', () => {
       const testDir = join(outputPath, 'auto-mode-test');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Copy fixture files to test directory first so both generations scan the same files
       const { cpSync } = await import('node:fs');
@@ -162,7 +157,6 @@ describe('CLI Compare Command Tests', () => {
       const testDir = join(outputPath, 'no-drift-auto');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Copy fixture files to test directory first
       const { cpSync } = await import('node:fs');
@@ -187,7 +181,6 @@ describe('CLI Compare Command Tests', () => {
       const testDir = join(outputPath, 'drift-ci-test');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Generate initial context
       await execAsync(
@@ -223,8 +216,6 @@ describe('CLI Compare Command Tests', () => {
     }, 60000);
 
     it('should display help for compare command', async () => {
-      await execAsync('npm run build');
-
       const { stdout } = await execAsync(
         'node dist/cli/stamp.js context compare --help'
       );
@@ -242,7 +233,6 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'hash-before');
       const outDir2 = join(outputPath, 'hash-after');
 
-      await execAsync('npm run build');
 
       // Generate first context
       await execAsync(
@@ -282,7 +272,6 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'imports-before');
       const outDir2 = join(outputPath, 'imports-after');
 
-      await execAsync('npm run build');
 
       // Generate first context
       await execAsync(
@@ -325,7 +314,6 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'exports-before');
       const outDir2 = join(outputPath, 'exports-after');
 
-      await execAsync('npm run build');
 
       // Generate first context
       await execAsync(
@@ -372,7 +360,6 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'hooks-before');
       const outDir2 = join(outputPath, 'hooks-after');
 
-      await execAsync('npm run build');
 
       // Generate first context
       await execAsync(
@@ -415,7 +402,6 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'functions-before');
       const outDir2 = join(outputPath, 'functions-after');
 
-      await execAsync('npm run build');
 
       // Generate first context
       await execAsync(
@@ -458,7 +444,6 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'components-before');
       const outDir2 = join(outputPath, 'components-after');
 
-      await execAsync('npm run build');
 
       // Generate first context
       await execAsync(
@@ -499,7 +484,6 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'props-before');
       const outDir2 = join(outputPath, 'props-after');
 
-      await execAsync('npm run build');
 
       // Generate first context
       await execAsync(
@@ -544,7 +528,6 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'emits-before');
       const outDir2 = join(outputPath, 'emits-after');
 
-      await execAsync('npm run build');
 
       // Generate first context
       await execAsync(
@@ -591,7 +574,6 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'multi1');
       const outDir2 = join(outputPath, 'multi2');
 
-      await execAsync('npm run build');
 
       // Generate two identical multi-file contexts
       await execAsync(
@@ -617,7 +599,6 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'added-before');
       const outDir2 = join(outputPath, 'added-after');
 
-      await execAsync('npm run build');
 
       // Generate first context
       await execAsync(
@@ -675,7 +656,6 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'orphan-before');
       const outDir2 = join(outputPath, 'orphan-after');
 
-      await execAsync('npm run build');
 
       // Generate first context
       await execAsync(
@@ -713,7 +693,6 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'drift-folder-before');
       const outDir2 = join(outputPath, 'drift-folder-after');
 
-      await execAsync('npm run build');
 
       // Generate first context
       await execAsync(
@@ -760,7 +739,6 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'stats-multi1');
       const outDir2 = join(outputPath, 'stats-multi2');
 
-      await execAsync('npm run build');
 
       // Generate two contexts
       await execAsync(
@@ -784,7 +762,6 @@ describe('CLI Compare Command Tests', () => {
       const testDir = join(outputPath, 'clean-orphaned-test');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Copy fixture files to test directory first
       const { cpSync } = await import('node:fs');
@@ -823,7 +800,6 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'grouped-before');
       const outDir2 = join(outputPath, 'grouped-after');
 
-      await execAsync('npm run build');
 
       // Generate first context
       await execAsync(
@@ -860,6 +836,164 @@ describe('CLI Compare Command Tests', () => {
         expect(output).toContain('Path:');
       }
     }, 60000);
+  });
+
+  describe('Quiet flag', () => {
+    it('should suppress verbose output with --quiet flag when comparing files', async () => {
+      const outDir1 = join(outputPath, 'quiet-compare1');
+      const outDir2 = join(outputPath, 'quiet-compare2');
+
+
+      // Generate two identical contexts
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1} --quiet`
+      );
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2} --quiet`
+      );
+
+      // Get per-folder context files
+      const index1 = JSON.parse(await readFile(join(outDir1, 'context_main.json'), 'utf-8'));
+      const index2 = JSON.parse(await readFile(join(outDir2, 'context_main.json'), 'utf-8'));
+      const contextFile1 = join(outDir1, index1.folders[0].contextFile);
+      const contextFile2 = join(outDir2, index2.folders[0].contextFile);
+
+      // Compare with --quiet flag
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2} --quiet`
+      );
+
+      // Should not contain verbose output messages
+      expect(stdout).not.toContain('Folder Summary:');
+      expect(stdout).not.toContain('Total folders:');
+      expect(stdout).not.toContain('Unchanged folders:');
+      expect(stdout).not.toContain('Token Stats:');
+      expect(stdout).not.toContain('GPT-4o-mini');
+      expect(stdout).not.toContain('Claude');
+      expect(stdout).not.toContain('✅');
+      expect(stdout).not.toContain('PASS');
+
+      // Should output just ✓ in quiet mode for PASS
+      expect(stdout.trim()).toBe('✓');
+    }, 60000);
+
+    it('should suppress verbose output with -q flag when comparing files', async () => {
+      const outDir1 = join(outputPath, 'quiet-compare-short1');
+      const outDir2 = join(outputPath, 'quiet-compare-short2');
+
+
+      // Generate two identical contexts
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1} --quiet`
+      );
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2} --quiet`
+      );
+
+      // Get per-folder context files
+      const index1 = JSON.parse(await readFile(join(outDir1, 'context_main.json'), 'utf-8'));
+      const index2 = JSON.parse(await readFile(join(outDir2, 'context_main.json'), 'utf-8'));
+      const contextFile1 = join(outDir1, index1.folders[0].contextFile);
+      const contextFile2 = join(outDir2, index2.folders[0].contextFile);
+
+      // Compare with -q flag
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2} -q`
+      );
+
+      // Should not contain verbose output messages
+      expect(stdout).not.toContain('Folder Summary:');
+      expect(stdout).not.toContain('Total folders:');
+      expect(stdout).not.toContain('Token Stats:');
+    }, 60000);
+
+    it('should still show drift information in quiet mode', async () => {
+      const outDir1 = join(outputPath, 'quiet-drift1');
+      const outDir2 = join(outputPath, 'quiet-drift2');
+
+
+      // Generate first context
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1} --quiet`
+      );
+
+      // Get the first per-folder context file
+      const index1 = JSON.parse(await readFile(join(outDir1, 'context_main.json'), 'utf-8'));
+      const contextFile1 = join(outDir1, index1.folders[0].contextFile);
+
+      // Modify the context to simulate drift
+      const content1 = JSON.parse(await readFile(contextFile1, 'utf-8'));
+      if (content1.length > 0 && content1[0].graph.nodes.length > 0) {
+        content1[0].graph.nodes[0].contract.semanticHash = 'uif:000000000000000000000000';
+      }
+      const contextFile2 = join(outDir2, 'src', 'context.json');
+      await mkdir(dirname(contextFile2), { recursive: true });
+      await writeFile(contextFile2, JSON.stringify(content1, null, 2));
+
+      // Compare with --quiet flag - should still show drift
+      try {
+        await execAsync(
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2} --quiet`
+        );
+        expect.fail('Should have detected drift');
+      } catch (error: any) {
+        const output = error.stdout || error.stderr || '';
+        // Should still show DRIFT status (essential info)
+        expect(output).toContain('DRIFT');
+        // Should not show verbose summaries
+        expect(output).not.toContain('Folder Summary:');
+        expect(output).not.toContain('Token Stats:');
+      }
+    }, 60000);
+
+    it('should suppress verbose output in auto-mode with --quiet flag', async () => {
+      const testDir = join(outputPath, 'quiet-auto-mode');
+      await mkdir(testDir, { recursive: true });
+
+
+      // Copy fixture files to test directory
+      const { cpSync } = await import('node:fs');
+      cpSync(fixturesPath, testDir, { recursive: true });
+
+      // Generate initial context in the test directory
+      await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context . --quiet`,
+        { cwd: testDir }
+      );
+
+      // Run auto-mode comparison with --quiet
+      const { stdout } = await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --quiet`,
+        { cwd: testDir }
+      );
+
+      // Should not contain verbose output
+      expect(stdout).not.toContain('Auto-compare mode');
+      expect(stdout).not.toContain('Generating fresh context');
+      expect(stdout).not.toContain('Comparing all context files');
+      expect(stdout).not.toContain('Folder Summary:');
+      expect(stdout).not.toContain('Total folders:');
+      expect(stdout).not.toContain('✅');
+      expect(stdout).not.toContain('PASS');
+
+      // Should output just ✓ in quiet mode for PASS
+      expect(stdout.trim()).toBe('✓');
+    }, 60000);
+
+    it('should still show errors in quiet mode', async () => {
+
+      // Try to compare non-existent files
+      try {
+        await execAsync(
+          'node dist/cli/stamp.js context compare /nonexistent1.json /nonexistent2.json --quiet'
+        );
+        expect.fail('Should have thrown an error');
+      } catch (error: any) {
+        // Should still show error messages even in quiet mode
+        const output = error.stdout || error.stderr || '';
+        expect(output).toContain('❌');
+      }
+    }, 30000);
   });
 });
 

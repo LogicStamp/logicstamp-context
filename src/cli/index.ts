@@ -23,6 +23,7 @@ async function main() {
       oldFile: args[1],
       newFile: args[2],
       stats: args.includes('--stats'),
+      quiet: args.includes('--quiet') || args.includes('-q'),
     };
 
     try {
@@ -50,6 +51,7 @@ async function main() {
     stats: false,
     strictMissing: false,
     compareModes: false,
+    quiet: false,
   };
 
   // Parse command line arguments
@@ -115,6 +117,10 @@ async function main() {
         case 'compare-modes':
           options.compareModes = true;
           break;
+        case 'quiet':
+        case 'q':
+          options.quiet = true;
+          break;
       }
     } else if (!arg.startsWith('-') && !options.entry) {
       options.entry = arg;
@@ -157,6 +163,7 @@ OPTIONS:
   --stats                   Output one-line JSON stats for CI
   --strict-missing          Exit with error if missing dependencies found
   --compare-modes           Show detailed token comparison table
+  --quiet, -q               Suppress verbose output (show only errors)
   -h, --help                Show this help
 
 PROFILES:
@@ -204,6 +211,7 @@ ARGUMENTS:
 
 OPTIONS:
   --stats              Show token count statistics
+  --quiet, -q          Suppress verbose output (show only errors)
   -h, --help           Show this help
 
 OUTPUT:

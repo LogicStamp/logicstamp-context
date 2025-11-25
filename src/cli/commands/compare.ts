@@ -68,6 +68,7 @@ export interface CompareOptions {
   newFile: string;
   stats?: boolean;
   approve?: boolean;
+  quiet?: boolean;
 }
 
 export interface MultiFileCompareOptions {
@@ -76,6 +77,7 @@ export interface MultiFileCompareOptions {
   stats?: boolean;
   approve?: boolean;
   autoCleanOrphaned?: boolean; // Auto-delete orphaned files with --approve
+  quiet?: boolean;
 }
 
 /**
@@ -206,24 +208,39 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
   // Compute diff
   const result = diff(oldIdx, newIdx);
 
-  // Output result
-  console.log(`\n${result.status === 'PASS' ? '✅' : '⚠️'}  ${result.status}\n`);
+  // Output result (skip PASS status in quiet mode)
+  if (options.quiet && result.status === 'PASS') {
+    // Minimal output in quiet mode for PASS
+    process.stdout.write('✓\n');
+  } else if (!options.quiet || result.status === 'DRIFT') {
+    console.log(`\n${result.status === 'PASS' ? '✅' : '⚠️'}  ${result.status}\n`);
+  }
 
   if (result.status === 'DRIFT') {
     if (result.added.length > 0) {
-      console.log(`Added components: ${result.added.length}`);
+      if (!options.quiet) {
+        console.log(`Added components: ${result.added.length}`);
+      }
       result.added.forEach(id => console.log(`  + ${id}`));
-      console.log();
+      if (!options.quiet) {
+        console.log();
+      }
     }
 
     if (result.removed.length > 0) {
-      console.log(`Removed components: ${result.removed.length}`);
+      if (!options.quiet) {
+        console.log(`Removed components: ${result.removed.length}`);
+      }
       result.removed.forEach(id => console.log(`  - ${id}`));
-      console.log();
+      if (!options.quiet) {
+        console.log();
+      }
     }
 
     if (result.changed.length > 0) {
-      console.log(`Changed components: ${result.changed.length}`);
+      if (!options.quiet) {
+        console.log(`Changed components: ${result.changed.length}`);
+      }
       result.changed.forEach(({ id, deltas }) => {
         console.log(`  ~ ${id}`);
         deltas.forEach(delta => {
@@ -257,12 +274,14 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
           }
         });
       });
-      console.log();
+      if (!options.quiet) {
+        console.log();
+      }
     }
   }
 
-  // Show token stats if requested
-  if (options.stats) {
+  // Show token stats if requested (skip in quiet mode)
+  if (options.stats && !options.quiet) {
     const oldTokens = calculateTokens(oldBundles);
     const newTokens = calculateTokens(newBundles);
     const deltaStat = newTokens.gpt4 - oldTokens.gpt4;
@@ -329,7 +348,8 @@ async function findOrphanedFiles(
 async function compareFolderContext(
   oldContextPath: string,
   newContextPath: string,
-  stats: boolean
+  stats: boolean,
+  quiet?: boolean
 ): Promise<{ result: CompareResult; tokenDelta?: { gpt4: number; claude: number } }> {
   // Load both files
   const oldContent = await readFile(oldContextPath, 'utf8');
@@ -345,9 +365,9 @@ async function compareFolderContext(
   // Compute diff
   const result = diff(oldIdx, newIdx);
 
-  // Calculate token delta if stats requested
+  // Calculate token delta if stats requested and not in quiet mode
   let tokenDelta: { gpt4: number; claude: number } | undefined;
-  if (stats) {
+  if (stats && !quiet) {
     const oldTokens = calculateTokens(oldBundles);
     const newTokens = calculateTokens(newBundles);
     tokenDelta = {
@@ -402,7 +422,7 @@ export async function multiFileCompare(options: MultiFileCompareOptions): Promis
       const newPath = join(newBaseDir, newFolder.contextFile);
 
       try {
-        const { result, tokenDelta } = await compareFolderContext(oldPath, newPath, options.stats || false);
+        const { result, tokenDelta } = await compareFolderContext(oldPath, newPath, options.stats || false, options.quiet);
 
         folderResults.push({
           folderPath: newFolder.path,
@@ -479,43 +499,52 @@ export async function multiFileCompare(options: MultiFileCompareOptions): Promis
 /**
  * Format and display multi-file comparison results
  */
-export function displayMultiFileCompareResult(result: MultiFileCompareResult, stats: boolean): void {
-  console.log(`\n${result.status === 'PASS' ? '✅' : '⚠️'}  ${result.status}\n`);
+export function displayMultiFileCompareResult(result: MultiFileCompareResult, stats: boolean, quiet?: boolean): void {
+  // Skip status header in quiet mode unless there's drift
+  if (quiet && result.status === 'PASS') {
+    // Minimal output in quiet mode for PASS
+    process.stdout.write('✓\n');
+  } else if (!quiet || result.status === 'DRIFT') {
+    console.log(`\n${result.status === 'PASS' ? '✅' : '⚠️'}  ${result.status}\n`);
+  }
 
-  // Display folder-level summary
-  console.log('📁 Folder Summary:');
-  console.log(`   Total folders: ${result.summary.totalFolders}`);
-  if (result.summary.addedFolders > 0) {
-    console.log(`   ➕ Added folders: ${result.summary.addedFolders}`);
-  }
-  if (result.summary.orphanedFolders > 0) {
-    console.log(`   🗑️  Orphaned folders: ${result.summary.orphanedFolders}`);
-  }
-  if (result.summary.driftFolders > 0) {
-    console.log(`   ~  Changed folders: ${result.summary.driftFolders}`);
-  }
-  if (result.summary.passFolders > 0) {
-    console.log(`   ✓  Unchanged folders: ${result.summary.passFolders}`);
-  }
-  console.log();
-
-  // Display component-level summary
-  if (result.status === 'DRIFT') {
-    console.log('📦 Component Summary:');
-    if (result.summary.totalComponentsAdded > 0) {
-      console.log(`   + Added: ${result.summary.totalComponentsAdded}`);
+  // Skip summaries in quiet mode
+  if (!quiet) {
+    // Display folder-level summary
+    console.log('📁 Folder Summary:');
+    console.log(`   Total folders: ${result.summary.totalFolders}`);
+    if (result.summary.addedFolders > 0) {
+      console.log(`   ➕ Added folders: ${result.summary.addedFolders}`);
     }
-    if (result.summary.totalComponentsRemoved > 0) {
-      console.log(`   - Removed: ${result.summary.totalComponentsRemoved}`);
+    if (result.summary.orphanedFolders > 0) {
+      console.log(`   🗑️  Orphaned folders: ${result.summary.orphanedFolders}`);
     }
-    if (result.summary.totalComponentsChanged > 0) {
-      console.log(`   ~ Changed: ${result.summary.totalComponentsChanged}`);
+    if (result.summary.driftFolders > 0) {
+      console.log(`   ~  Changed folders: ${result.summary.driftFolders}`);
+    }
+    if (result.summary.passFolders > 0) {
+      console.log(`   ✓  Unchanged folders: ${result.summary.passFolders}`);
     }
     console.log();
-  }
 
-  // Display detailed folder results
-  console.log('📂 Folder Details:\n');
+    // Display component-level summary
+    if (result.status === 'DRIFT') {
+      console.log('📦 Component Summary:');
+      if (result.summary.totalComponentsAdded > 0) {
+        console.log(`   + Added: ${result.summary.totalComponentsAdded}`);
+      }
+      if (result.summary.totalComponentsRemoved > 0) {
+        console.log(`   - Removed: ${result.summary.totalComponentsRemoved}`);
+      }
+      if (result.summary.totalComponentsChanged > 0) {
+        console.log(`   ~ Changed: ${result.summary.totalComponentsChanged}`);
+      }
+      console.log();
+    }
+
+    // Display detailed folder results
+    console.log('📂 Folder Details:\n');
+  }
 
   for (const folder of result.folders) {
     if (folder.status === 'ADDED') {
@@ -574,43 +603,53 @@ export function displayMultiFileCompareResult(result: MultiFileCompareResult, st
         }
       }
 
-      if (stats && folder.tokenDelta) {
+      if (stats && !quiet && folder.tokenDelta) {
         const sign = folder.tokenDelta.gpt4 > 0 ? '+' : '';
         console.log(`      Token Δ: ${sign}${formatTokenCount(folder.tokenDelta.gpt4)} (GPT-4) | ${sign}${formatTokenCount(folder.tokenDelta.claude)} (Claude)`);
       }
 
       console.log();
     } else if (folder.status === 'PASS') {
-      console.log(`   ✅ PASS: ${folder.contextFile}`);
-      console.log(`      Path: ${folder.folderPath}`);
-      console.log();
+      // Skip PASS folders in quiet mode
+      if (!quiet) {
+        console.log(`   ✅ PASS: ${folder.contextFile}`);
+        console.log(`      Path: ${folder.folderPath}`);
+        console.log();
+      }
     }
   }
 
-  // Display orphaned files on disk
+  // Display orphaned files on disk (only if not in quiet mode, or show as diff)
   if (result.orphanedFiles && result.orphanedFiles.length > 0) {
-    console.log('🗑️  Orphaned Files on Disk:');
-    console.log('   (These files exist on disk but are not in the new index)\n');
+    if (!quiet) {
+      console.log('🗑️  Orphaned Files on Disk:');
+      console.log('   (These files exist on disk but are not in the new index)\n');
+    }
     result.orphanedFiles.forEach(file => {
       console.log(`   🗑️  ${file}`);
     });
-    console.log();
+    if (!quiet) {
+      console.log();
+    }
   }
 }
 
 /**
  * Clean up orphaned files
  */
-export async function cleanOrphanedFiles(orphanedFiles: string[], baseDir: string): Promise<number> {
+export async function cleanOrphanedFiles(orphanedFiles: string[], baseDir: string, quiet?: boolean): Promise<number> {
   let deletedCount = 0;
 
   for (const file of orphanedFiles) {
     const filePath = join(baseDir, file);
     try {
       await unlink(filePath);
-      console.log(`   🗑️  Deleted: ${file}`);
+      if (!quiet) {
+        console.log(`   🗑️  Deleted: ${file}`);
+      }
       deletedCount++;
     } catch (error) {
+      // Always show errors even in quiet mode
       console.error(`   ⚠️  Failed to delete ${file}: ${(error as Error).message}`);
     }
   }

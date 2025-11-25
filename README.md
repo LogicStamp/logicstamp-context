@@ -169,10 +169,12 @@ LogicStamp Context automatically detects and annotates Next.js App Router compon
 ## Usage
 
 ```bash
+stamp --version                    # Show version number
+stamp --help                       # Show help
 stamp init [path] [options]
 stamp context [path] [options]
 stamp context compare <old.json> <new.json> [options]
-stamp context validate [file]
+stamp context validate [file] [options]
 stamp context clean [path] [options]
 ```
 
@@ -227,6 +229,7 @@ See [docs/cli/INIT.md](docs/cli/INIT.md) for detailed documentation.
 | `--stats` | | Emit single-line JSON stats with token estimates (intended for CI) | `false` |
 | `--compare-modes` | | Show detailed token comparison table across modes (none/header/full) | `false` |
 | `--skip-gitignore` | | Skip `.gitignore` setup (never prompt or modify) | `false` |
+| `--quiet` | `-q` | Suppress verbose output (show only errors) | `false` |
 | `--help` | `-h` | Show help message | |
 
 ### Options (`compare` command)
@@ -236,11 +239,13 @@ See [docs/cli/INIT.md](docs/cli/INIT.md) for detailed documentation.
 | `--stats` | Show token count statistics and delta | `false` |
 | `--approve` | Auto-approve updates (non-interactive, CI-safe) | `false` |
 | `--clean-orphaned` | Auto-delete orphaned files with `--approve` | `false` |
+| `--quiet` | `-q` | Suppress verbose output (show only diffs) | `false` |
 | `--help`, `-h` | Show help message | |
 
 ### Options (`validate` command)
 
 - `[file]` – Optional path to a generated `context.json` file to validate. Defaults to `./context.json`. You can validate individual folder context files or the main index file.
+- `--quiet` | `-q` – Suppress verbose output (show only errors)
 - Exits with code `0` on success, `1` on invalid structure or read/parse errors.
 - Prints bundle counts, node totals, and highlights schema mismatches.
 
@@ -511,6 +516,15 @@ stamp context clean --all --yes
 
 # Clean specific directory
 stamp context clean ./output --all --yes
+
+# Suppress verbose output (quiet mode)
+stamp context --quiet
+stamp context validate --quiet
+stamp context compare --quiet
+stamp context clean --all --yes --quiet
+
+# Show version number
+stamp --version
 ```
 
 ### CI/CD validation

@@ -133,6 +133,9 @@ stamp context validate context_main.json
 
 # Validate custom named bundle
 stamp context validate artifacts/review-context.json
+
+# Suppress verbose output (show only errors)
+stamp context validate --quiet
 ```
 
 Sample successful single-file run:

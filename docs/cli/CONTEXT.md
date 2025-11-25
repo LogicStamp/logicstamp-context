@@ -31,6 +31,7 @@ Your preferences are saved in `.logicstamp/config.json` and respected on subsequ
 | `--predict-behavior` | | `false` | Experimental behavioral prediction annotations. |
 | `--dry-run` | | `false` | Skip writing the output; display summary only. |
 | `--stats` | | `false` | Emit single-line JSON stats (ideal for CI). |
+| `--quiet` | `-q` | `false` | Suppress verbose output (show only errors). |
 | `--help` | `-h` | | Print usage help. |
 
 ## Profiles
@@ -57,6 +58,9 @@ stamp context --stats >> .ci/context-stats.jsonl
 
 # Dry run to confirm counts before generating files
 stamp context ./packages/ui --dry-run
+
+# Suppress verbose output (quiet mode)
+stamp context --quiet
 
 # Custom output directory
 stamp context --out ./output

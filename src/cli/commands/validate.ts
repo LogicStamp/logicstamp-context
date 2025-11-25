@@ -234,41 +234,53 @@ export async function multiFileValidate(indexPath: string): Promise<MultiFileVal
 /**
  * Display multi-file validation results
  */
-function displayMultiFileValidationResult(result: MultiFileValidationResult): void {
-  console.log(`\n${result.valid ? '✅' : '❌'} ${result.valid ? 'All context files are valid' : 'Validation failed'}\n`);
-
-  // Display summary
-  console.log('📁 Validation Summary:');
-  console.log(`   Total folders: ${result.totalFolders}`);
-  console.log(`   ✅ Valid: ${result.validFolders}`);
-  if (result.invalidFolders > 0) {
-    console.log(`   ❌ Invalid: ${result.invalidFolders}`);
+function displayMultiFileValidationResult(result: MultiFileValidationResult, quiet?: boolean): void {
+  // In quiet mode, only show status if invalid
+  if (quiet && result.valid) {
+    return;
   }
-  console.log(`   Total errors: ${result.totalErrors}`);
-  console.log(`   Total warnings: ${result.totalWarnings}`);
-  console.log(`   Total nodes: ${result.totalNodes}`);
-  console.log(`   Total edges: ${result.totalEdges}`);
-  console.log();
 
-  // Display detailed results for each folder
-  console.log('📂 Folder Details:\n');
+  if (!quiet) {
+    console.log(`\n${result.valid ? '✅' : '❌'} ${result.valid ? 'All context files are valid' : 'Validation failed'}\n`);
+
+    // Display summary
+    console.log('📁 Validation Summary:');
+    console.log(`   Total folders: ${result.totalFolders}`);
+    console.log(`   ✅ Valid: ${result.validFolders}`);
+    if (result.invalidFolders > 0) {
+      console.log(`   ❌ Invalid: ${result.invalidFolders}`);
+    }
+    console.log(`   Total errors: ${result.totalErrors}`);
+    console.log(`   Total warnings: ${result.totalWarnings}`);
+    console.log(`   Total nodes: ${result.totalNodes}`);
+    console.log(`   Total edges: ${result.totalEdges}`);
+    console.log();
+
+    // Display detailed results for each folder
+    console.log('📂 Folder Details:\n');
+  }
 
   for (const folder of result.folders) {
     if (folder.valid) {
-      console.log(`   ✅ VALID: ${folder.contextFile}`);
-      console.log(`      Path: ${folder.folderPath}`);
-      console.log(`      Bundles: ${folder.result.bundles}, Nodes: ${folder.result.nodes}, Edges: ${folder.result.edges}`);
-      if (folder.result.warnings > 0) {
-        console.log(`      Warnings: ${folder.result.warnings}`);
-        folder.result.messages.forEach(msg => console.log(`        ⚠️  ${msg}`));
+      // In quiet mode, skip valid folders
+      if (!quiet) {
+        console.log(`   ✅ VALID: ${folder.contextFile}`);
+        console.log(`      Path: ${folder.folderPath}`);
+        console.log(`      Bundles: ${folder.result.bundles}, Nodes: ${folder.result.nodes}, Edges: ${folder.result.edges}`);
+        if (folder.result.warnings > 0) {
+          console.log(`      Warnings: ${folder.result.warnings}`);
+          folder.result.messages.forEach(msg => console.log(`        ⚠️  ${msg}`));
+        }
+        console.log();
       }
     } else {
+      // Always show invalid folders (errors)
       console.log(`   ❌ INVALID: ${folder.contextFile}`);
       console.log(`      Path: ${folder.folderPath}`);
       console.log(`      Errors: ${folder.result.errors}`);
       folder.result.messages.forEach(msg => console.log(`        ❌ ${msg}`));
+      console.log();
     }
-    console.log();
   }
 }
 
@@ -278,7 +290,7 @@ function displayMultiFileValidationResult(result: MultiFileValidationResult): vo
  * With no arguments: Validates all context files using context_main.json (multi-file mode)
  * With a file argument: Validates that specific file (single-file mode)
  */
-export async function validateCommand(filePath?: string): Promise<void> {
+export async function validateCommand(filePath?: string, quiet?: boolean): Promise<void> {
   // If no file specified, check for multi-file mode (context_main.json)
   if (!filePath) {
     const mainIndexPath = resolve('context_main.json');
@@ -288,13 +300,19 @@ export async function validateCommand(filePath?: string): Promise<void> {
       await readFile(mainIndexPath, 'utf8');
 
       // Multi-file mode - validate all context files
-      console.log(`🔍 Validating all context files using "${displayPath(mainIndexPath)}"...\n`);
+      if (!quiet) {
+        console.log(`🔍 Validating all context files using "${displayPath(mainIndexPath)}"...\n`);
+      }
 
       try {
         const result = await multiFileValidate(mainIndexPath);
-        displayMultiFileValidationResult(result);
+        displayMultiFileValidationResult(result, quiet);
 
         if (result.valid) {
+          if (quiet) {
+            // Minimal output in quiet mode
+            process.stdout.write('✓\n');
+          }
           process.exit(0);
         } else {
           process.exit(1);
@@ -305,7 +323,9 @@ export async function validateCommand(filePath?: string): Promise<void> {
       }
     } catch {
       // context_main.json doesn't exist, fall back to single-file mode with context.json
-      console.log('ℹ️  context_main.json not found, falling back to single-file mode\n');
+      if (!quiet) {
+        console.log('ℹ️  context_main.json not found, falling back to single-file mode\n');
+      }
     }
   }
 
@@ -314,7 +334,9 @@ export async function validateCommand(filePath?: string): Promise<void> {
 
   try {
     const path = resolve(targetFile);
-    console.log(`🔍 Validating "${displayPath(path)}"...`);
+    if (!quiet) {
+      console.log(`🔍 Validating "${displayPath(path)}"...`);
+    }
 
     const content = await readFile(path, 'utf8');
     const bundles = JSON.parse(content) as LogicStampBundle[];
@@ -381,14 +403,25 @@ export async function validateCommand(filePath?: string): Promise<void> {
     }
 
     if (errors === 0 && warnings === 0) {
-      console.log(`✅ Valid context file with ${bundles.length} bundle(s)`);
-      console.log(`   Total nodes: ${bundles.reduce((sum, b) => sum + (b.graph?.nodes?.length || 0), 0)}`);
-      console.log(`   Total edges: ${bundles.reduce((sum, b) => sum + (b.graph?.edges?.length || 0), 0)}`);
+      if (quiet) {
+        // Minimal output in quiet mode
+        process.stdout.write('✓\n');
+      } else {
+        console.log(`✅ Valid context file with ${bundles.length} bundle(s)`);
+        console.log(`   Total nodes: ${bundles.reduce((sum, b) => sum + (b.graph?.nodes?.length || 0), 0)}`);
+        console.log(`   Total edges: ${bundles.reduce((sum, b) => sum + (b.graph?.edges?.length || 0), 0)}`);
+      }
       process.exit(0);
     } else if (errors === 0) {
-      console.log(`✅ Valid with ${warnings} warning(s)`);
+      if (quiet) {
+        // Minimal output in quiet mode
+        process.stdout.write('✓\n');
+      } else {
+        console.log(`✅ Valid with ${warnings} warning(s)`);
+      }
       process.exit(0);
     } else {
+      // Always show errors, even in quiet mode
       console.error(`\n❌ Validation failed: ${errors} error(s), ${warnings} warning(s)`);
       process.exit(1);
     }

@@ -20,6 +20,7 @@ stamp context clean [path] [options]
 |--------|-------------|
 | `--all` | Include all context files in the deletion operation |
 | `--yes` | Confirm deletion (required with `--all`) |
+| `--quiet` | `-q` | Suppress verbose output (show only errors) |
 | `--help`, `-h` | Show help message |
 
 ## Files Removed
@@ -85,6 +86,9 @@ Output:
 ```bash
 # Clean context files in a specific directory
 stamp context clean ./src --all --yes
+
+# Suppress verbose output (quiet mode)
+stamp context clean --all --yes --quiet
 ```
 
 ### Clean when no files exist

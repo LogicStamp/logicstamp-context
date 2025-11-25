@@ -3,6 +3,7 @@ import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readFile, rm, mkdir } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
+import { randomUUID } from 'node:crypto';
 
 // Helper to read per-folder context from output directory
 async function readFolderContext(outDir: string): Promise<any[]> {
@@ -17,22 +18,23 @@ const execAsync = promisify(exec);
 // Run these tests sequentially to avoid parallel execution issues
 describe.sequential('Determinism and Ordering Tests', () => {
   const fixturesPath = join(process.cwd(), 'tests/fixtures/simple-app');
-  const outputPath = join(process.cwd(), 'tests/e2e/output');
+  let outputPath: string;
 
   beforeEach(async () => {
-    try {
-      await rm(outputPath, { recursive: true, force: true });
-    } catch (error) {
-      // Directory doesn't exist
-    }
-    await execAsync('npm run build');
+    // Create a unique output directory for this test run
+    const uniqueId = randomUUID().substring(0, 8);
+    outputPath = join(process.cwd(), 'tests/e2e/output', `determinism-${uniqueId}`);
+    await mkdir(outputPath, { recursive: true });
   });
 
   afterEach(async () => {
-    try {
-      await rm(outputPath, { recursive: true, force: true });
-    } catch (error) {
-      // Ignore cleanup errors
+    // Clean up this test's output directory
+    if (outputPath) {
+      try {
+        await rm(outputPath, { recursive: true, force: true });
+      } catch (error) {
+        // Ignore cleanup errors
+      }
     }
   });
 
@@ -267,7 +269,6 @@ describe.sequential('Determinism and Ordering Tests', () => {
     }, 30000);
 
     it('should display forward slashes in console output', async () => {
-      await execAsync('npm run build');
 
       const { stdout } = await execAsync(
         `node dist/cli/index.js ${fixturesPath} --dry-run`
