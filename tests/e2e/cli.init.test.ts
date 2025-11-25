@@ -3,38 +3,34 @@ import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readFile, rm, access, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
 
 const execAsync = promisify(exec);
 
 describe('CLI Init Command Tests', () => {
   const fixturesPath = join(process.cwd(), 'tests/fixtures/simple-app');
-  const outputPath = join(process.cwd(), 'tests/e2e/output');
+  let outputPath: string;
 
   beforeEach(async () => {
-    // Clean up any existing output files
-    try {
-      await rm(outputPath, { recursive: true, force: true });
-    } catch (error) {
-      // Directory doesn't exist, which is fine
-    }
-    // Recreate the output directory for tests
+    // Create a unique output directory for this test run
+    const uniqueId = randomUUID().substring(0, 8);
+    outputPath = join(process.cwd(), 'tests/e2e/output', `init-${uniqueId}`);
     await mkdir(outputPath, { recursive: true });
   });
 
   afterEach(async () => {
-    // Clean up output files after tests
-    try {
-      await rm(outputPath, { recursive: true, force: true });
-    } catch (error) {
-      // Ignore cleanup errors
+    // Clean up this test's output directory
+    if (outputPath) {
+      try {
+        await rm(outputPath, { recursive: true, force: true });
+      } catch (error) {
+        // Ignore cleanup errors
+      }
     }
   });
 
   describe('Init command', () => {
     it('should create .gitignore with LogicStamp patterns when it does not exist', async () => {
-      // Build the project first
-      await execAsync('npm run build');
-
       // Create a test directory without .gitignore
       const testDir = join(outputPath, 'init-test-1');
       await mkdir(testDir, { recursive: true });
@@ -68,9 +64,6 @@ describe('CLI Init Command Tests', () => {
     }, 30000);
 
     it('should add patterns to existing .gitignore', async () => {
-      // Build the project first
-      await execAsync('npm run build');
-
       // Create a test directory with existing .gitignore
       const testDir = join(outputPath, 'init-test-2');
       await mkdir(testDir, { recursive: true });
@@ -107,9 +100,6 @@ describe('CLI Init Command Tests', () => {
     }, 30000);
 
     it('should not duplicate patterns if they already exist', async () => {
-      // Build the project first
-      await execAsync('npm run build');
-
       // Create a test directory with .gitignore that already has LogicStamp patterns
       const testDir = join(outputPath, 'init-test-3');
       await mkdir(testDir, { recursive: true });
@@ -132,9 +122,6 @@ describe('CLI Init Command Tests', () => {
     }, 30000);
 
     it('should respect --skip-gitignore flag', async () => {
-      // Build the project first
-      await execAsync('npm run build');
-
       // Create a test directory
       const testDir = join(outputPath, 'init-test-4');
       await mkdir(testDir, { recursive: true });

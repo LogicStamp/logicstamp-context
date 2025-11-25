@@ -3,30 +3,29 @@ import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readFile, rm, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
 
 const execAsync = promisify(exec);
 
 describe('CLI Validate Command Tests', () => {
   const fixturesPath = join(process.cwd(), 'tests/fixtures/simple-app');
-  const outputPath = join(process.cwd(), 'tests/e2e/output');
+  let outputPath: string;
 
   beforeEach(async () => {
-    // Clean up any existing output files
-    try {
-      await rm(outputPath, { recursive: true, force: true });
-    } catch (error) {
-      // Directory doesn't exist, which is fine
-    }
-    // Recreate the output directory for tests
+    // Create a unique output directory for this test run
+    const uniqueId = randomUUID().substring(0, 8);
+    outputPath = join(process.cwd(), 'tests/e2e/output', `validate-${uniqueId}`);
     await mkdir(outputPath, { recursive: true });
   });
 
   afterEach(async () => {
-    // Clean up output files after tests
-    try {
-      await rm(outputPath, { recursive: true, force: true });
-    } catch (error) {
-      // Ignore cleanup errors
+    // Clean up this test's output directory
+    if (outputPath) {
+      try {
+        await rm(outputPath, { recursive: true, force: true });
+      } catch (error) {
+        // Ignore cleanup errors
+      }
     }
   });
 
@@ -34,7 +33,6 @@ describe('CLI Validate Command Tests', () => {
     it('should validate a valid context.json file successfully', async () => {
       const outDir = join(outputPath, 'valid-context');
 
-      await execAsync('npm run build');
 
       // Generate a valid context file
       await execAsync(
@@ -60,7 +58,6 @@ describe('CLI Validate Command Tests', () => {
       const testDir = join(outputPath, 'validate-default');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Copy fixture files to test directory
       const { cpSync } = await import('node:fs');
@@ -96,7 +93,6 @@ describe('CLI Validate Command Tests', () => {
     it('should work with standalone validate command', async () => {
       const outDir = join(outputPath, 'standalone-validate');
 
-      await execAsync('npm run build');
 
       // Generate a valid context file
       await execAsync(
@@ -121,7 +117,6 @@ describe('CLI Validate Command Tests', () => {
       const testDir = join(outputPath, 'validate-multifile');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Copy fixture files to test directory
       const { cpSync } = await import('node:fs');
@@ -154,7 +149,6 @@ describe('CLI Validate Command Tests', () => {
       const testDir = join(outputPath, 'validate-multifile-invalid');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Copy fixture files to test directory
       const { cpSync } = await import('node:fs');
@@ -197,7 +191,6 @@ describe('CLI Validate Command Tests', () => {
       const testDir = join(outputPath, 'validate-multifile-missing');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Copy fixture files to test directory
       const { cpSync } = await import('node:fs');
@@ -233,7 +226,6 @@ describe('CLI Validate Command Tests', () => {
       const testDir = join(outputPath, 'validate-explicit-file');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Copy fixture files to test directory
       const { cpSync } = await import('node:fs');
@@ -268,7 +260,6 @@ describe('CLI Validate Command Tests', () => {
       const testDir = join(outputPath, 'validate-multifile-stats');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Copy fixture files to test directory
       const { cpSync } = await import('node:fs');
@@ -306,7 +297,6 @@ describe('CLI Validate Command Tests', () => {
       const invalidFile = join(outputPath, 'invalid-not-array.json');
       await writeFile(invalidFile, JSON.stringify({ type: 'not-an-array' }));
 
-      await execAsync('npm run build');
 
       try {
         await execAsync(
@@ -330,7 +320,6 @@ describe('CLI Validate Command Tests', () => {
         meta: { missing: [], source: 'test' }
       }]));
 
-      await execAsync('npm run build');
 
       try {
         await execAsync(
@@ -354,7 +343,6 @@ describe('CLI Validate Command Tests', () => {
         meta: { missing: [], source: 'test' }
       }]));
 
-      await execAsync('npm run build');
 
       try {
         await execAsync(
@@ -377,7 +365,6 @@ describe('CLI Validate Command Tests', () => {
         meta: { missing: [], source: 'test' }
       }]));
 
-      await execAsync('npm run build');
 
       try {
         await execAsync(
@@ -401,7 +388,6 @@ describe('CLI Validate Command Tests', () => {
         meta: { missing: [], source: 'test' }
       }]));
 
-      await execAsync('npm run build');
 
       try {
         await execAsync(
@@ -424,7 +410,6 @@ describe('CLI Validate Command Tests', () => {
         meta: { missing: [], source: 'test' }
       }]));
 
-      await execAsync('npm run build');
 
       try {
         await execAsync(
@@ -448,7 +433,6 @@ describe('CLI Validate Command Tests', () => {
         meta: { missing: 'not-an-array' }
       }]));
 
-      await execAsync('npm run build');
 
       try {
         await execAsync(
@@ -471,7 +455,6 @@ describe('CLI Validate Command Tests', () => {
         graph: { nodes: [], edges: [] }
       }]));
 
-      await execAsync('npm run build');
 
       try {
         await execAsync(
@@ -506,7 +489,6 @@ describe('CLI Validate Command Tests', () => {
         meta: { missing: [], source: 'test' }
       }]));
 
-      await execAsync('npm run build');
 
       try {
         await execAsync(
@@ -539,7 +521,6 @@ describe('CLI Validate Command Tests', () => {
         meta: { missing: [], source: 'test' }
       }]));
 
-      await execAsync('npm run build');
 
       const { stdout, stderr } = await execAsync(
         `node dist/cli/stamp.js context validate ${warningFile}`
@@ -565,7 +546,6 @@ describe('CLI Validate Command Tests', () => {
         meta: { missing: [], source: 'test' }
       }]));
 
-      await execAsync('npm run build');
 
       const { stdout, stderr } = await execAsync(
         `node dist/cli/stamp.js context validate ${warningFile}`
@@ -589,8 +569,6 @@ describe('CLI Validate Command Tests', () => {
         meta: { missing: [], source: 'test' }
       }]));
 
-      await execAsync('npm run build');
-
       const { stdout } = await execAsync(
         `node dist/cli/stamp.js context validate ${validFile}`
       );
@@ -602,7 +580,6 @@ describe('CLI Validate Command Tests', () => {
 
   describe('Error handling', () => {
     it('should handle file not found error', async () => {
-      await execAsync('npm run build');
 
       try {
         await execAsync(
@@ -620,7 +597,6 @@ describe('CLI Validate Command Tests', () => {
       const invalidJsonFile = join(outputPath, 'invalid-json.json');
       await writeFile(invalidJsonFile, '{ invalid json }');
 
-      await execAsync('npm run build');
 
       try {
         await execAsync(
@@ -638,7 +614,6 @@ describe('CLI Validate Command Tests', () => {
       const testDir = join(outputPath, 'no-context');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       try {
         await execAsync(
@@ -675,8 +650,6 @@ describe('CLI Validate Command Tests', () => {
         }
       ]));
 
-      await execAsync('npm run build');
-
       const { stdout } = await execAsync(
         `node dist/cli/stamp.js context validate ${multiBundleFile}`
       );
@@ -704,7 +677,6 @@ describe('CLI Validate Command Tests', () => {
         }
       ]));
 
-      await execAsync('npm run build');
 
       try {
         await execAsync(
@@ -740,8 +712,6 @@ describe('CLI Validate Command Tests', () => {
         meta: { missing: [], source: 'test' }
       }]));
 
-      await execAsync('npm run build');
-
       const { stdout } = await execAsync(
         `node dist/cli/stamp.js context validate ${statsFile}`
       );
@@ -753,8 +723,6 @@ describe('CLI Validate Command Tests', () => {
 
   describe('Help command', () => {
     it('should display help for validate command', async () => {
-      await execAsync('npm run build');
-
       const { stdout } = await execAsync(
         'node dist/cli/stamp.js context validate --help'
       );
@@ -763,6 +731,204 @@ describe('CLI Validate Command Tests', () => {
       expect(stdout).toContain('USAGE:');
       expect(stdout).toContain('stamp context validate');
       expect(stdout).toContain('EXAMPLES:');
+    }, 30000);
+  });
+
+  describe('Quiet flag', () => {
+    it('should suppress verbose output with --quiet flag for valid single file', async () => {
+      const outDir = join(outputPath, 'quiet-validate-single');
+      await mkdir(outDir, { recursive: true });
+
+
+      // Generate a valid context file
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`
+      );
+
+      // Get the first context file
+      const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const contextFile = join(outDir, index.folders[0].contextFile);
+
+      // Validate with --quiet flag
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context validate ${contextFile} --quiet`
+      );
+
+      // Should not contain verbose output messages
+      expect(stdout).not.toContain('🔍 Validating');
+      expect(stdout).not.toContain('✅ Valid context file');
+      expect(stdout).not.toContain('bundle(s)');
+      expect(stdout).not.toContain('Total nodes:');
+      expect(stdout).not.toContain('Total edges:');
+
+      // Should output just ✓
+      expect(stdout.trim()).toBe('✓');
+    }, 30000);
+
+    it('should suppress verbose output with -q flag for valid single file', async () => {
+      const outDir = join(outputPath, 'quiet-validate-single-short');
+      await mkdir(outDir, { recursive: true });
+
+
+      // Generate a valid context file
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`
+      );
+
+      // Get the first context file
+      const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const contextFile = join(outDir, index.folders[0].contextFile);
+
+      // Validate with -q flag
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context validate ${contextFile} -q`
+      );
+
+      // Should not contain verbose output messages
+      expect(stdout).not.toContain('🔍 Validating');
+      expect(stdout).not.toContain('✅ Valid context file');
+
+      // Should output just ✓
+      expect(stdout.trim()).toBe('✓');
+    }, 30000);
+
+    it('should suppress verbose output with --quiet flag in multi-file mode', async () => {
+      const testDir = join(outputPath, 'quiet-validate-multifile');
+      await mkdir(testDir, { recursive: true });
+
+
+      // Copy fixture files to test directory
+      const { cpSync } = await import('node:fs');
+      cpSync(fixturesPath, testDir, { recursive: true });
+
+      // Generate context in the test directory
+      await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
+        { cwd: testDir }
+      );
+
+      // Validate with --quiet flag (multi-file mode)
+      const { stdout } = await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context validate --quiet`,
+        { cwd: testDir }
+      );
+
+      // Should not contain verbose output messages
+      expect(stdout).not.toContain('🔍 Validating all context files');
+      expect(stdout).not.toContain('✅ All context files are valid');
+      expect(stdout).not.toContain('📁 Validation Summary:');
+      expect(stdout).not.toContain('Total folders:');
+      expect(stdout).not.toContain('✅ Valid:');
+      expect(stdout).not.toContain('Total nodes:');
+      expect(stdout).not.toContain('Total edges:');
+      expect(stdout).not.toContain('📂 Folder Details:');
+      expect(stdout).not.toContain('✅ VALID:');
+
+      // Should output just ✓ when all valid
+      expect(stdout.trim()).toBe('✓');
+    }, 30000);
+
+    it('should still show errors in quiet mode for invalid files', async () => {
+      const invalidFile = join(outputPath, 'quiet-invalid.json');
+      await writeFile(invalidFile, JSON.stringify([{
+        type: 'WrongType',
+        schemaVersion: '0.1',
+        entryId: 'test.tsx',
+        graph: { nodes: [], edges: [] },
+        meta: { missing: [], source: 'test' }
+      }]));
+
+
+      // Validate with --quiet flag
+      try {
+        await execAsync(
+          `node dist/cli/stamp.js context validate ${invalidFile} --quiet`
+        );
+        expect.fail('Should have failed validation');
+      } catch (error: any) {
+        expect(error.code).toBe(1);
+        const output = (error.stderr || error.stdout || error.message || '').toString();
+        // Should still show error messages even in quiet mode
+        expect(output).toContain('❌');
+        expect(output).toContain('Invalid type');
+      }
+    }, 30000);
+
+    it('should still show errors in quiet mode for multi-file validation', async () => {
+      const testDir = join(outputPath, 'quiet-validate-multifile-error');
+      await mkdir(testDir, { recursive: true });
+
+
+      // Copy fixture files to test directory
+      const { cpSync } = await import('node:fs');
+      cpSync(fixturesPath, testDir, { recursive: true });
+
+      // Generate context in the test directory
+      await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
+        { cwd: testDir }
+      );
+
+      // Corrupt one of the context files
+      const index = JSON.parse(await readFile(join(testDir, 'context_main.json'), 'utf-8'));
+      const contextFile = join(testDir, index.folders[0].contextFile);
+      await writeFile(contextFile, JSON.stringify([{
+        type: 'WrongType',
+        schemaVersion: '0.1',
+        entryId: 'test.tsx',
+        graph: { nodes: [], edges: [] },
+        meta: { missing: [], source: 'test' }
+      }]));
+
+      // Validate with --quiet flag (should still show errors)
+      try {
+        await execAsync(
+          `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context validate --quiet`,
+          { cwd: testDir }
+        );
+        expect.fail('Should have failed validation');
+      } catch (error: any) {
+        expect(error.code).toBe(1);
+        const output = (error.stderr || error.stdout || error.message || '').toString();
+        // Should still show error messages even in quiet mode
+        expect(output).toContain('❌');
+        expect(output).toContain('INVALID:');
+        // Should not show verbose summaries
+        expect(output).not.toContain('📁 Validation Summary:');
+        expect(output).not.toContain('Total folders:');
+      }
+    }, 30000);
+
+    it('should suppress valid folder details in quiet mode for multi-file validation', async () => {
+      const testDir = join(outputPath, 'quiet-validate-multifile-valid');
+      await mkdir(testDir, { recursive: true });
+
+
+      // Copy fixture files to test directory
+      const { cpSync } = await import('node:fs');
+      cpSync(fixturesPath, testDir, { recursive: true });
+
+      // Generate context in the test directory
+      await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
+        { cwd: testDir }
+      );
+
+      // Validate with --quiet flag
+      const { stdout } = await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context validate --quiet`,
+        { cwd: testDir }
+      );
+
+      // Should not show valid folder details
+      expect(stdout).not.toContain('✅ VALID:');
+      expect(stdout).not.toContain('Path:');
+      expect(stdout).not.toContain('Bundles:');
+      expect(stdout).not.toContain('Nodes:');
+      expect(stdout).not.toContain('Edges:');
+
+      // Should output just ✓ when all valid
+      expect(stdout.trim()).toBe('✓');
     }, 30000);
   });
 });

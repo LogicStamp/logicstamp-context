@@ -22,6 +22,9 @@ stamp context compare old/context_main.json new/context_main.json
 
 # With token statistics
 stamp context compare --stats
+
+# Suppress verbose output (show only diffs)
+stamp context compare --quiet
 ```
 
 ---

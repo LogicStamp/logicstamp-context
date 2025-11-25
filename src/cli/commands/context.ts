@@ -88,6 +88,7 @@ export interface ContextOptions {
   strictMissing: boolean;
   compareModes: boolean;
   skipGitignore?: boolean;
+  quiet?: boolean;
 }
 
 export async function contextCommand(options: ContextOptions): Promise<void> {
@@ -97,7 +98,9 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   const targetPath = options.entry || '.';
   const projectRoot = resolve(targetPath);
 
-  console.log(`🔍 Scanning ${displayPath(projectRoot)}...`);
+  if (!options.quiet) {
+    console.log(`🔍 Scanning ${displayPath(projectRoot)}...`);
+  }
 
   // Step 1: Find all React/TS files
   const files = await globFiles(projectRoot);
@@ -108,10 +111,14 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     process.exit(1);
   }
 
-  console.log(`   Found ${files.length} files`);
+  if (!options.quiet) {
+    console.log(`   Found ${files.length} files`);
+  }
 
   // Step 2: Build contracts for all files
-  console.log(`🔨 Analyzing components...`);
+  if (!options.quiet) {
+    console.log(`🔨 Analyzing components...`);
+  }
   const contracts: UIFContract[] = [];
   let analyzed = 0;
   let totalSourceSize = 0; // Track total source code size for savings calculation
@@ -135,13 +142,17 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
         contracts.push(result.contract);
         analyzed++;
       }
-    } catch (error) {
+      } catch (error) {
       // Skip files that can't be analyzed
-      console.warn(`   ⚠️  Skipped ${file}: ${(error as Error).message}`);
+      if (!options.quiet) {
+        console.warn(`   ⚠️  Skipped ${file}: ${(error as Error).message}`);
+      }
     }
   }
 
-  console.log(`   Analyzed ${analyzed} components`);
+  if (!options.quiet) {
+    console.log(`   Analyzed ${analyzed} components`);
+  }
 
   if (contracts.length === 0) {
     console.error('❌ No components found to analyze');
@@ -151,7 +162,9 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   }
 
   // Step 3: Build dependency graph (manifest)
-  console.log(`📊 Building dependency graph...`);
+  if (!options.quiet) {
+    console.log(`📊 Building dependency graph...`);
+  }
   const manifest = buildDependencyGraph(contracts);
 
   // Step 3.5: Create contracts map for pack function
@@ -172,17 +185,23 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     hashLock = false;
     options.maxNodes = 30;
     options.allowMissing = true;
-    console.log('📋 Using profile: llm-safe (depth=1, header only, max 30 nodes)');
+    if (!options.quiet) {
+      console.log('📋 Using profile: llm-safe (depth=1, header only, max 30 nodes)');
+    }
   } else if (options.profile === 'llm-chat') {
     depth = 1;
     includeCode = 'header';
     hashLock = false;
-    console.log('📋 Using profile: llm-chat (depth=1, header only, max 100 nodes)');
+    if (!options.quiet) {
+      console.log('📋 Using profile: llm-chat (depth=1, header only, max 100 nodes)');
+    }
   } else if (options.profile === 'ci-strict') {
     includeCode = 'none';
     hashLock = false;
     strict = true;
-    console.log('📋 Using profile: ci-strict (no code, strict dependencies)');
+    if (!options.quiet) {
+      console.log('📋 Using profile: ci-strict (no code, strict dependencies)');
+    }
   }
 
   // Step 4: Pack context bundles
@@ -201,7 +220,9 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   let output: string;
 
   // Generate context for all root components
-  console.log(`📦 Generating context for ${manifest.graph.roots.length} root components (depth=${depth})...`);
+  if (!options.quiet) {
+    console.log(`📦 Generating context for ${manifest.graph.roots.length} root components (depth=${depth})...`);
+  }
 
   bundles = [];
   for (const rootId of manifest.graph.roots) {
@@ -209,7 +230,9 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
       const bundle = await pack(rootId, manifest, packOptions, projectRoot);
       bundles.push(bundle);
     } catch (error) {
-      console.warn(`   ⚠️  Failed to pack ${rootId}: ${(error as Error).message}`);
+      if (!options.quiet) {
+        console.warn(`   ⚠️  Failed to pack ${rootId}: ${(error as Error).message}`);
+      }
     }
   }
 
@@ -362,7 +385,9 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   }
 
   // Validate bundles before writing
-  console.log(`🔍 Validating generated context...`);
+  if (!options.quiet) {
+    console.log(`🔍 Validating generated context...`);
+  }
   const bundlesWithSchema = bundles.map((b, idx) => ({
     $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
     position: `${idx + 1}/${bundles.length}`,
@@ -376,11 +401,13 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     process.exit(1);
   }
 
-  if (validation.warnings > 0) {
-    console.log(`⚠️  ${validation.warnings} warning(s) during validation`);
-    validation.messages.filter(msg => !msg.includes('error')).forEach(msg => console.log(`   ${msg}`));
-  } else {
-    console.log(`✅ Validation passed`);
+  if (!options.quiet) {
+    if (validation.warnings > 0) {
+      console.log(`⚠️  ${validation.warnings} warning(s) during validation`);
+      validation.messages.filter(msg => !msg.includes('error')).forEach(msg => console.log(`   ${msg}`));
+    } else {
+      console.log(`✅ Validation passed`);
+    }
   }
 
   // Write output unless --dry-run
@@ -404,7 +431,9 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     }
 
     // Prepare folder metadata and write files
-    console.log(`📝 Writing context files for ${bundlesByFolder.size} folders...`);
+    if (!options.quiet) {
+      console.log(`📝 Writing context files for ${bundlesByFolder.size} folders...`);
+    }
     let filesWritten = 0;
     const normalizedRoot = normalizeEntryId(projectRoot);
     const folderInfos: FolderInfo[] = [];
@@ -476,7 +505,9 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
       await mkdir(dirname(folderContextPath), { recursive: true });
       await writeFile(folderContextPath, folderOutput, 'utf8');
       filesWritten++;
-      console.log(`   ✓ ${displayPath(folderContextPath)} (${folderBundles.length} bundles)`);
+      if (!options.quiet) {
+        console.log(`   ✓ ${displayPath(folderContextPath)} (${folderBundles.length} bundles)`);
+      }
 
       // Add to folder info array
       folderInfos.push({
@@ -492,7 +523,9 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
 
     // Write context_main.json as metadata index
     const mainContextPath = join(outputDir, 'context_main.json');
-    console.log(`📝 Writing main context index...`);
+    if (!options.quiet) {
+      console.log(`📝 Writing main context index...`);
+    }
 
     // Sort folders by path for deterministic output
     folderInfos.sort((a, b) => a.path.localeCompare(b.path));
@@ -518,9 +551,13 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
 
     const indexOutput = JSON.stringify(index, null, 2);
     await writeFile(mainContextPath, indexOutput, 'utf8');
-    console.log(`   ✓ ${displayPath(mainContextPath)} (index of ${bundlesByFolder.size} folders)`);
-
-    console.log(`✅ ${filesWritten + 1} context files written successfully`);
+    if (options.quiet) {
+      // Minimal output in quiet mode
+      process.stdout.write('✓\n');
+    } else {
+      console.log(`   ✓ ${displayPath(mainContextPath)} (index of ${bundlesByFolder.size} folders)`);
+      console.log(`✅ ${filesWritten + 1} context files written successfully`);
+    }
 
     // Smart .gitignore setup with prompt and config persistence
     try {
@@ -528,22 +565,25 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
         skipGitignore: options.skipGitignore,
       });
 
-      if (prompted) {
-        if (added) {
-          if (created) {
-            console.log('\n✅ Created .gitignore with LogicStamp patterns');
-          } else {
-            console.log('\n✅ Added LogicStamp patterns to .gitignore');
+      // Show results if prompted (first-time config) even in quiet mode, or if not quiet
+      if (prompted || !options.quiet) {
+        if (prompted) {
+          if (added) {
+            if (created) {
+              console.log('\n✅ Created .gitignore with LogicStamp patterns');
+            } else {
+              console.log('\n✅ Added LogicStamp patterns to .gitignore');
+            }
+          } else if (skipped) {
+            console.log('\n📝 Skipping .gitignore setup (you can run `stamp init` later if needed)');
           }
-        } else if (skipped) {
-          console.log('\n📝 Skipping .gitignore setup (you can run `stamp init` later if needed)');
-        }
-      } else if (!prompted && added) {
-        // Auto-added based on saved preference
-        if (created) {
-          console.log('\n📝 Created .gitignore with LogicStamp patterns');
-        } else {
-          console.log('\n📝 Added LogicStamp patterns to .gitignore');
+        } else if (!prompted && added) {
+          // Auto-added based on saved preference
+          if (created) {
+            console.log('\n📝 Created .gitignore with LogicStamp patterns');
+          } else {
+            console.log('\n📝 Added LogicStamp patterns to .gitignore');
+          }
         }
       }
     } catch (error) {
@@ -555,54 +595,61 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     try {
       const { added, prompted, skipped } = await smartLLMContextSetup(projectRoot);
 
-      if (prompted) {
-        if (added) {
-          console.log('\n✅ Created LLM_CONTEXT.md');
-        } else if (skipped) {
-          console.log('\n📝 Skipping LLM_CONTEXT.md generation (you can run `stamp init` later if needed)');
+      // Show results if prompted (first-time config) even in quiet mode, or if not quiet
+      if (prompted || !options.quiet) {
+        if (prompted) {
+          if (added) {
+            console.log('\n✅ Created LLM_CONTEXT.md');
+          } else if (skipped) {
+            console.log('\n📝 Skipping LLM_CONTEXT.md generation (you can run `stamp init` later if needed)');
+          }
+        } else if (!prompted && added) {
+          // Auto-added based on saved preference
+          console.log('\n📝 Created LLM_CONTEXT.md');
         }
-      } else if (!prompted && added) {
-        // Auto-added based on saved preference
-        console.log('\n📝 Created LLM_CONTEXT.md');
       }
     } catch (error) {
       // Silently ignore LLM_CONTEXT.md errors - not critical to context generation
     }
   } else {
-    console.log('🔍 Dry run - no file written');
-  }
-
-  // Print summary
-  console.log('\n📊 Summary:');
-  console.log(`   Total components: ${contracts.length}`);
-  console.log(`   Root components: ${manifest.graph.roots.length}`);
-  console.log(`   Leaf components: ${manifest.graph.leaves.length}`);
-  console.log(`   Bundles generated: ${bundles.length}`);
-  console.log(`   Total nodes in context: ${totalNodes}`);
-  console.log(`   Total edges: ${totalEdges}`);
-  console.log(`   Missing dependencies: ${totalMissing}`);
-  console.log(`\n📏 Token Estimates (${options.includeCode} mode):`);
-  console.log(`   GPT-4o-mini: ${formatTokenCount(currentGPT4)} | Full code: ~${formatTokenCount(modeEstimates.full.gpt4)} (~${savingsGPT4}% savings)`);
-  console.log(`   Claude:      ${formatTokenCount(currentClaude)} | Full code: ~${formatTokenCount(modeEstimates.full.claude)} (~${savingsClaude}% savings)`);
-
-  console.log(`\n📊 Mode Comparison:`);
-  console.log(`   none:       ~${formatTokenCount(modeEstimates.none.gpt4)} tokens`);
-  console.log(`   header:     ~${formatTokenCount(modeEstimates.header.gpt4)} tokens`);
-  console.log(`   full:       ~${formatTokenCount(modeEstimates.full.gpt4)} tokens`);
-
-  if (totalMissing > 0) {
-    console.log('\n⚠️  Missing dependencies (external/third-party):');
-    const allMissing = new Set<string>();
-    bundles.forEach(b => {
-      b.meta.missing.forEach(dep => allMissing.add(dep.name));
-    });
-    Array.from(allMissing).slice(0, 10).forEach(name => console.log(`   - ${name}`));
-    if (allMissing.size > 10) {
-      console.log(`   ... and ${allMissing.size - 10} more`);
+    if (!options.quiet) {
+      console.log('🔍 Dry run - no file written');
     }
   }
 
-  console.log(`\n⏱  Completed in ${elapsed}ms`);
+  // Print summary (skip in quiet mode)
+  if (!options.quiet) {
+    console.log('\n📊 Summary:');
+    console.log(`   Total components: ${contracts.length}`);
+    console.log(`   Root components: ${manifest.graph.roots.length}`);
+    console.log(`   Leaf components: ${manifest.graph.leaves.length}`);
+    console.log(`   Bundles generated: ${bundles.length}`);
+    console.log(`   Total nodes in context: ${totalNodes}`);
+    console.log(`   Total edges: ${totalEdges}`);
+    console.log(`   Missing dependencies: ${totalMissing}`);
+    console.log(`\n📏 Token Estimates (${options.includeCode} mode):`);
+    console.log(`   GPT-4o-mini: ${formatTokenCount(currentGPT4)} | Full code: ~${formatTokenCount(modeEstimates.full.gpt4)} (~${savingsGPT4}% savings)`);
+    console.log(`   Claude:      ${formatTokenCount(currentClaude)} | Full code: ~${formatTokenCount(modeEstimates.full.claude)} (~${savingsClaude}% savings)`);
+
+    console.log(`\n📊 Mode Comparison:`);
+    console.log(`   none:       ~${formatTokenCount(modeEstimates.none.gpt4)} tokens`);
+    console.log(`   header:     ~${formatTokenCount(modeEstimates.header.gpt4)} tokens`);
+    console.log(`   full:       ~${formatTokenCount(modeEstimates.full.gpt4)} tokens`);
+
+    if (totalMissing > 0) {
+      console.log('\n⚠️  Missing dependencies (external/third-party):');
+      const allMissing = new Set<string>();
+      bundles.forEach(b => {
+        b.meta.missing.forEach(dep => allMissing.add(dep.name));
+      });
+      Array.from(allMissing).slice(0, 10).forEach(name => console.log(`   - ${name}`));
+      if (allMissing.size > 10) {
+        console.log(`   ... and ${allMissing.size - 10} more`);
+      }
+    }
+
+    console.log(`\n⏱  Completed in ${elapsed}ms`);
+  }
 
   // Exit with non-zero code if --strict-missing is enabled and there are missing dependencies
   if (options.strictMissing && totalMissing > 0) {

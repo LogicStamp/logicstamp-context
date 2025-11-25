@@ -3,37 +3,34 @@ import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readFile, rm, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
 
 const execAsync = promisify(exec);
 
 describe('CLI Output and Formatting Tests', () => {
   const fixturesPath = join(process.cwd(), 'tests/fixtures/simple-app');
-  const outputPath = join(process.cwd(), 'tests/e2e/output');
+  let outputPath: string;
 
   beforeEach(async () => {
-    // Clean up any existing output files
-    try {
-      await rm(outputPath, { recursive: true, force: true });
-    } catch (error) {
-      // Directory doesn't exist, which is fine
-    }
-    // Recreate the output directory for tests
+    // Create a unique output directory for this test run
+    const uniqueId = randomUUID().substring(0, 8);
+    outputPath = join(process.cwd(), 'tests/e2e/output', `output-${uniqueId}`);
     await mkdir(outputPath, { recursive: true });
   });
 
   afterEach(async () => {
-    // Clean up output files after tests
-    try {
-      await rm(outputPath, { recursive: true, force: true });
-    } catch (error) {
-      // Ignore cleanup errors
+    // Clean up this test's output directory
+    if (outputPath) {
+      try {
+        await rm(outputPath, { recursive: true, force: true });
+      } catch (error) {
+        // Ignore cleanup errors
+      }
     }
   });
 
   describe('Help and error handling', () => {
     it('should display help with --help flag', async () => {
-      await execAsync('npm run build');
-
       const { stdout } = await execAsync('node dist/cli/index.js --help');
 
       expect(stdout).toContain('LogicStamp Context');
@@ -44,8 +41,6 @@ describe('CLI Output and Formatting Tests', () => {
     }, 30000);
 
     it('should handle non-existent directory gracefully', async () => {
-      await execAsync('npm run build');
-
       try {
         await execAsync('node dist/cli/index.js /non/existent/path');
         expect.fail('Should have thrown an error');
@@ -58,8 +53,6 @@ describe('CLI Output and Formatting Tests', () => {
   describe('CLI output smoke tests', () => {
     it('should produce well-formed CLI output with all expected sections', async () => {
       const outFile = join(outputPath, 'smoke-test.json');
-
-      await execAsync('npm run build');
 
       const { stdout } = await execAsync(
         `node dist/cli/index.js ${fixturesPath} --out ${outFile}`
@@ -89,8 +82,6 @@ describe('CLI Output and Formatting Tests', () => {
 
     it('should produce valid JSON output that matches schema expectations', async () => {
       const outDir = join(outputPath, 'schema-check');
-
-      await execAsync('npm run build');
 
       await execAsync(
         `node dist/cli/index.js ${fixturesPath} --out ${outDir}`

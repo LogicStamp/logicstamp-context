@@ -3,39 +3,35 @@ import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readFile, rm, access, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
 
 const execAsync = promisify(exec);
 
 describe('CLI Context Generation Tests', () => {
   const fixturesPath = join(process.cwd(), 'tests/fixtures/simple-app');
-  const outputPath = join(process.cwd(), 'tests/e2e/output');
+  let outputPath: string;
 
   beforeEach(async () => {
-    // Clean up any existing output files
-    try {
-      await rm(outputPath, { recursive: true, force: true });
-    } catch (error) {
-      // Directory doesn't exist, which is fine
-    }
-    // Recreate the output directory for tests
+    // Create a unique output directory for this test run
+    const uniqueId = randomUUID().substring(0, 8);
+    outputPath = join(process.cwd(), 'tests/e2e/output', `context-${uniqueId}`);
     await mkdir(outputPath, { recursive: true });
   });
 
   afterEach(async () => {
-    // Clean up output files after tests
-    try {
-      await rm(outputPath, { recursive: true, force: true });
-    } catch (error) {
-      // Ignore cleanup errors
+    // Clean up this test's output directory
+    if (outputPath) {
+      try {
+        await rm(outputPath, { recursive: true, force: true });
+      } catch (error) {
+        // Ignore cleanup errors
+      }
     }
   });
 
   describe('Basic functionality', () => {
     it('should generate context files for a simple React app', async () => {
       const outFile = join(outputPath, 'context.json');
-
-      // Build the project first
-      await execAsync('npm run build');
 
       // Run the CLI
       const { stdout, stderr } = await execAsync(
@@ -100,8 +96,6 @@ describe('CLI Context Generation Tests', () => {
     it('should generate context with custom depth', async () => {
       const outDir = join(outputPath, 'depth-test');
 
-      await execAsync('npm run build');
-
       const { stdout } = await execAsync(
         `node dist/cli/index.js ${fixturesPath} --depth 2 --out ${outDir}`
       );
@@ -126,7 +120,6 @@ describe('CLI Context Generation Tests', () => {
     }, 30000);
 
     it('should work with different output formats', async () => {
-      await execAsync('npm run build');
 
       // Test JSON format
       const jsonDir = join(outputPath, 'json-test');
@@ -171,8 +164,6 @@ describe('CLI Context Generation Tests', () => {
     it('should apply llm-safe profile correctly', async () => {
       const outDir = join(outputPath, 'safe-test');
 
-      await execAsync('npm run build');
-
       const { stdout } = await execAsync(
         `node dist/cli/index.js ${fixturesPath} --profile llm-safe --out ${outDir}`
       );
@@ -193,8 +184,6 @@ describe('CLI Context Generation Tests', () => {
     it('should apply llm-chat profile correctly', async () => {
       const outDir = join(outputPath, 'chat-test');
 
-      await execAsync('npm run build');
-
       const { stdout } = await execAsync(
         `node dist/cli/index.js ${fixturesPath} --profile llm-chat --out ${outDir}`
       );
@@ -213,8 +202,6 @@ describe('CLI Context Generation Tests', () => {
 
     it('should apply ci-strict profile correctly', async () => {
       const outDir = join(outputPath, 'strict-test');
-
-      await execAsync('npm run build');
 
       const { stdout } = await execAsync(
         `node dist/cli/index.js ${fixturesPath} --profile ci-strict --out ${outDir}`
@@ -238,8 +225,6 @@ describe('CLI Context Generation Tests', () => {
     it('should include no code when --include-code none', async () => {
       const outDir = join(outputPath, 'no-code-test');
 
-      await execAsync('npm run build');
-
       await execAsync(
         `node dist/cli/index.js ${fixturesPath} --include-code none --out ${outDir}`
       );
@@ -256,8 +241,6 @@ describe('CLI Context Generation Tests', () => {
 
     it('should include header when --include-code header', async () => {
       const outDir = join(outputPath, 'header-test');
-
-      await execAsync('npm run build');
 
       const { stdout } = await execAsync(
         `node dist/cli/index.js ${fixturesPath} --include-code header --out ${outDir}`
@@ -276,8 +259,6 @@ describe('CLI Context Generation Tests', () => {
 
     it('should include full code when --include-code full', async () => {
       const outDir = join(outputPath, 'full-test');
-
-      await execAsync('npm run build');
 
       const { stdout } = await execAsync(
         `node dist/cli/index.js ${fixturesPath} --include-code full --out ${outDir}`
@@ -298,8 +279,6 @@ describe('CLI Context Generation Tests', () => {
   describe('Dependency graph validation', () => {
     it('should correctly identify component dependencies', async () => {
       const outDir = join(outputPath, 'context-deps');
-
-      await execAsync('npm run build');
 
       await execAsync(
         `node dist/cli/index.js ${fixturesPath} --depth 2 --out ${outDir}`
@@ -331,8 +310,6 @@ describe('CLI Context Generation Tests', () => {
     it('should report summary statistics correctly', async () => {
       const outFile = join(outputPath, 'context-summary.json');
 
-      await execAsync('npm run build');
-
       const { stdout } = await execAsync(
         `node dist/cli/index.js ${fixturesPath} --out ${outFile}`
       );
@@ -346,8 +323,6 @@ describe('CLI Context Generation Tests', () => {
 
     it('should not duplicate summary output (single-run logging)', async () => {
       const outFile = join(outputPath, 'context-no-dupe.json');
-
-      await execAsync('npm run build');
 
       const { stdout } = await execAsync(
         `node dist/cli/index.js ${fixturesPath} --out ${outFile}`
@@ -366,6 +341,93 @@ describe('CLI Context Generation Tests', () => {
       // No duplicate "Context written" messages
       const writtenCount = (stdout.match(/Context written/g) || []).length;
       expect(writtenCount).toBeLessThanOrEqual(1);
+    }, 30000);
+  });
+
+  describe('Quiet flag', () => {
+    it('should suppress verbose output with --quiet flag', async () => {
+      const outDir = join(outputPath, 'quiet-test');
+
+
+      // Run with --quiet flag
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir} --quiet`
+      );
+
+      // Should not contain verbose output messages
+      expect(stdout).not.toContain('🔍 Scanning');
+      expect(stdout).not.toContain('Found');
+      expect(stdout).not.toContain('🔨 Analyzing');
+      expect(stdout).not.toContain('📊 Building');
+      expect(stdout).not.toContain('📦 Generating');
+      expect(stdout).not.toContain('📝 Writing');
+      expect(stdout).not.toContain('context files written successfully');
+      expect(stdout).not.toContain('Summary:');
+      expect(stdout).not.toContain('Total components:');
+      expect(stdout).not.toContain('Completed in');
+
+      // Should still generate the output file
+      const { access } = await import('node:fs/promises');
+      await access(join(outDir, 'context_main.json'));
+    }, 30000);
+
+    it('should suppress verbose output with -q flag', async () => {
+      const outDir = join(outputPath, 'quiet-short-test');
+
+
+      // Run with -q flag
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir} -q`
+      );
+
+      // Should not contain verbose output messages
+      expect(stdout).not.toContain('🔍 Scanning');
+      expect(stdout).not.toContain('Found');
+      expect(stdout).not.toContain('🔨 Analyzing');
+      expect(stdout).not.toContain('📊 Building');
+      expect(stdout).not.toContain('📦 Generating');
+      expect(stdout).not.toContain('📝 Writing');
+      expect(stdout).not.toContain('context files written successfully');
+
+      // Should still generate the output file
+      const { access } = await import('node:fs/promises');
+      await access(join(outDir, 'context_main.json'));
+    }, 30000);
+
+    it('should still show errors in quiet mode', async () => {
+
+      // Try to run on a non-existent directory
+      try {
+        await execAsync(
+          'node dist/cli/stamp.js context /nonexistent/path --quiet'
+        );
+        expect.fail('Should have thrown an error');
+      } catch (error: any) {
+        // Should still show error messages even in quiet mode
+        const output = error.stdout || error.stderr || '';
+        expect(output).toContain('❌');
+      }
+    }, 30000);
+
+    it('should generate valid context files even in quiet mode', async () => {
+      const outDir = join(outputPath, 'quiet-valid-test');
+
+
+      // Run with --quiet flag
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir} --quiet`
+      );
+
+      // Verify context_main.json was created and is valid
+      const mainIndexPath = join(outDir, 'context_main.json');
+      const indexContent = await readFile(mainIndexPath, 'utf-8');
+      const index = JSON.parse(indexContent);
+
+      expect(index).toHaveProperty('type', 'LogicStampIndex');
+      expect(index).toHaveProperty('schemaVersion', '0.1');
+      expect(index).toHaveProperty('folders');
+      expect(Array.isArray(index.folders)).toBe(true);
+      expect(index.folders.length).toBeGreaterThan(0);
     }, 30000);
   });
 });

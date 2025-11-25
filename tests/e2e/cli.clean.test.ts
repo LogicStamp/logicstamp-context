@@ -3,30 +3,29 @@ import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readFile, rm, access, mkdir, writeFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
 
 const execAsync = promisify(exec);
 
 describe('CLI Clean Command Tests', () => {
   const fixturesPath = join(process.cwd(), 'tests/fixtures/simple-app');
-  const outputPath = join(process.cwd(), 'tests/e2e/output');
+  let outputPath: string;
 
   beforeEach(async () => {
-    // Clean up any existing output files
-    try {
-      await rm(outputPath, { recursive: true, force: true });
-    } catch (error) {
-      // Directory doesn't exist, which is fine
-    }
-    // Recreate the output directory for tests
+    // Create a unique output directory for this test run
+    const uniqueId = randomUUID().substring(0, 8);
+    outputPath = join(process.cwd(), 'tests/e2e/output', `clean-${uniqueId}`);
     await mkdir(outputPath, { recursive: true });
   });
 
   afterEach(async () => {
-    // Clean up output files after tests
-    try {
-      await rm(outputPath, { recursive: true, force: true });
-    } catch (error) {
-      // Ignore cleanup errors
+    // Clean up this test's output directory
+    if (outputPath) {
+      try {
+        await rm(outputPath, { recursive: true, force: true });
+      } catch (error) {
+        // Ignore cleanup errors
+      }
     }
   });
 
@@ -35,7 +34,6 @@ describe('CLI Clean Command Tests', () => {
       const testDir = join(outputPath, 'clean-dry-run');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Generate context files first
       await execAsync(
@@ -64,7 +62,6 @@ describe('CLI Clean Command Tests', () => {
       const testDir = join(outputPath, 'clean-dry-run-multiple');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Generate context files
       await execAsync(
@@ -91,7 +88,6 @@ describe('CLI Clean Command Tests', () => {
       const testDir = join(outputPath, 'clean-no-files');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Run clean on empty directory
       const { stdout } = await execAsync(
@@ -108,7 +104,6 @@ describe('CLI Clean Command Tests', () => {
       const testDir = join(outputPath, 'clean-delete');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Generate context files
       await execAsync(
@@ -162,7 +157,6 @@ describe('CLI Clean Command Tests', () => {
       const testDir = join(outputPath, 'clean-no-flags');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Generate context files
       await execAsync(
@@ -188,7 +182,6 @@ describe('CLI Clean Command Tests', () => {
       const testDir = join(outputPath, 'clean-all-only');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Generate context files
       await execAsync(
@@ -214,7 +207,6 @@ describe('CLI Clean Command Tests', () => {
       const testDir = join(outputPath, 'clean-yes-only');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Generate context files
       await execAsync(
@@ -242,7 +234,6 @@ describe('CLI Clean Command Tests', () => {
       const testDir = join(outputPath, 'clean-logicstamp');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Generate context files
       await execAsync(
@@ -290,7 +281,6 @@ describe('CLI Clean Command Tests', () => {
       const testDir = join(outputPath, 'clean-no-logicstamp');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Generate context files
       await execAsync(
@@ -318,8 +308,6 @@ describe('CLI Clean Command Tests', () => {
 
   describe('Help and error handling', () => {
     it('should show help when --help flag is used', async () => {
-      await execAsync('npm run build');
-
       const { stdout } = await execAsync(
         `node dist/cli/stamp.js context clean --help`
       );
@@ -332,7 +320,6 @@ describe('CLI Clean Command Tests', () => {
     }, 30000);
 
     it('should handle non-existent directory gracefully', async () => {
-      await execAsync('npm run build');
 
       const nonExistentDir = join(outputPath, 'non-existent-dir');
 
@@ -350,7 +337,6 @@ describe('CLI Clean Command Tests', () => {
       const testDir = join(outputPath, 'clean-specific-dir');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Generate context files
       await execAsync(
@@ -380,7 +366,6 @@ describe('CLI Clean Command Tests', () => {
       const testDir = join(outputPath, 'clean-current-dir');
       await mkdir(testDir, { recursive: true });
 
-      await execAsync('npm run build');
 
       // Generate context files
       await execAsync(
@@ -406,6 +391,118 @@ describe('CLI Clean Command Tests', () => {
         exists = false;
       }
       expect(exists).toBe(false);
+    }, 30000);
+  });
+
+  describe('Quiet flag', () => {
+    it('should suppress verbose output with --quiet flag in dry run mode', async () => {
+      const testDir = join(outputPath, 'quiet-dry-run');
+      await mkdir(testDir, { recursive: true });
+
+
+      // Generate context files first
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${testDir}`
+      );
+
+      // Run clean in dry run mode with --quiet
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context clean ${testDir} --quiet`
+      );
+
+      // Should not contain verbose output messages
+      expect(stdout).not.toContain('🧹 This will remove:');
+      expect(stdout).not.toContain('context_main.json');
+      expect(stdout).not.toContain('Run with --all --yes');
+
+      // Should be empty or minimal
+      expect(stdout.trim()).toBe('');
+    }, 30000);
+
+    it('should suppress verbose output with -q flag in dry run mode', async () => {
+      const testDir = join(outputPath, 'quiet-dry-run-short');
+      await mkdir(testDir, { recursive: true });
+
+
+      // Generate context files first
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${testDir}`
+      );
+
+      // Run clean in dry run mode with -q
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context clean ${testDir} -q`
+      );
+
+      // Should not contain verbose output messages
+      expect(stdout).not.toContain('🧹 This will remove:');
+      expect(stdout).not.toContain('context_main.json');
+    }, 30000);
+
+    it('should output ✓ when no files found in quiet mode', async () => {
+      const testDir = join(outputPath, 'quiet-no-files');
+      await mkdir(testDir, { recursive: true });
+
+
+      // Run clean on empty directory with --quiet
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context clean ${testDir} --quiet`
+      );
+
+      // Should output just ✓
+      expect(stdout.trim()).toBe('✓');
+    }, 30000);
+
+    it('should suppress verbose output with --quiet flag when deleting files', async () => {
+      const testDir = join(outputPath, 'quiet-delete');
+      await mkdir(testDir, { recursive: true });
+
+
+      // Generate context files
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${testDir}`
+      );
+
+      // Verify files exist before deletion
+      const mainContextPath = join(testDir, 'context_main.json');
+      await access(mainContextPath);
+
+      // Run clean with --all --yes --quiet
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context clean ${testDir} --all --yes --quiet`
+      );
+
+      // Should not contain verbose output messages
+      expect(stdout).not.toContain('🗑️  Removing files');
+      expect(stdout).not.toContain('Removed');
+      expect(stdout).not.toContain('Cleaned');
+
+      // Should output just ✓
+      expect(stdout.trim()).toBe('✓');
+
+      // Verify files are still deleted
+      let exists = true;
+      try {
+        await access(mainContextPath);
+      } catch {
+        exists = false;
+      }
+      expect(exists).toBe(false);
+    }, 30000);
+
+    it('should still show errors in quiet mode', async () => {
+
+      // Try to delete from a non-existent directory (should still show error)
+      const nonExistentDir = join(outputPath, 'non-existent-quiet');
+
+      // This should still work (no files found), but if there's an actual error, it should show
+      const { stdout, stderr } = await execAsync(
+        `node dist/cli/stamp.js context clean ${nonExistentDir} --quiet`
+      );
+
+      // Should output ✓ when no files found (not an error)
+      expect(stdout.trim()).toBe('✓');
+      expect(stderr).toBe('');
     }, 30000);
   });
 });
