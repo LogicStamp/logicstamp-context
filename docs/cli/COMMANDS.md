@@ -5,11 +5,12 @@ LogicStamp Context ships a single CLI entry point, `stamp`, with
 
 | Command | Summary | When to use | Key options |
 |---------|---------|-------------|-------------|
+| `stamp --version` | Show version number and exit. | Check installed version. | `-v` (alias) |
 | `stamp init [path]` | Initialize LogicStamp in a project by setting up `.gitignore` patterns. | First-time project setup or explicit `.gitignore` configuration. | `--skip-gitignore` |
-| `stamp context [path] [options]` | Generates AI-ready context files organized by folder (one `context.json` per folder plus `context_main.json` index). Includes smart detection to auto-add `.gitignore` patterns. | Produce fresh context for AI workflows, documentation, or review. | `--depth`, `--include-code`, `--format`, `--profile`, `--max-nodes`, `--dry-run`, `--stats`, `--predict-behavior`, `--compare-modes`, `--strict-missing`, `--out` |
-| `stamp context validate [file]` | Validates context files. With no arguments, auto-detects and validates all context files using `context_main.json` (multi-file mode). With a file argument, validates that specific file (single-file mode). Falls back to `context.json` if `context_main.json` doesn't exist. | Gate CI pipelines, pre-commit checks, or manual QA before sharing context files. Ensures all folder context files are valid. | (positional) `[file]` |
-| `stamp context compare [options]` | Compares all context files (multi-file mode) or two specific files to detect drift, ADDED/ORPHANED folders, and token cost changes. Auto-detects `context_main.json` for comprehensive project-wide comparison. | CI drift detection, Jest-style approval workflows, manual inspections, or detecting folder reorganizations. | `--approve`, `--clean-orphaned`, `--stats` |
-| `stamp context clean [path] [options]` | Removes all generated context artifacts (`context_main.json`, all folder `context.json` files, and `.logicstamp/` directory if present). Safe by default (dry run), requires `--all --yes` to actually delete. | Reset context files, clean before switching branches, or remove context artifacts from a project. | `--all`, `--yes` |
+| `stamp context [path] [options]` | Generates AI-ready context files organized by folder (one `context.json` per folder plus `context_main.json` index). Includes smart detection to auto-add `.gitignore` patterns. | Produce fresh context for AI workflows, documentation, or review. | `--depth`, `--include-code`, `--format`, `--profile`, `--max-nodes`, `--dry-run`, `--stats`, `--predict-behavior`, `--compare-modes`, `--strict-missing`, `--out`, `--quiet` |
+| `stamp context validate [file]` | Validates context files. With no arguments, auto-detects and validates all context files using `context_main.json` (multi-file mode). With a file argument, validates that specific file (single-file mode). Falls back to `context.json` if `context_main.json` doesn't exist. | Gate CI pipelines, pre-commit checks, or manual QA before sharing context files. Ensures all folder context files are valid. | `[file]` (positional), `--quiet` |
+| `stamp context compare [options]` | Compares all context files (multi-file mode) or two specific files to detect drift, ADDED/ORPHANED folders, and token cost changes. Auto-detects `context_main.json` for comprehensive project-wide comparison. | CI drift detection, Jest-style approval workflows, manual inspections, or detecting folder reorganizations. | `--approve`, `--clean-orphaned`, `--stats`, `--quiet` |
+| `stamp context clean [path] [options]` | Removes all generated context artifacts (`context_main.json`, all folder `context.json` files, and `.logicstamp/` directory if present). Safe by default (dry run), requires `--all --yes` to actually delete. | Reset context files, clean before switching branches, or remove context artifacts from a project. | `--all`, `--yes`, `--quiet` |
 
 ## Command interactions
 
@@ -22,6 +23,9 @@ LogicStamp Context ships a single CLI entry point, `stamp`, with
 ## Quick reference
 
 ```bash
+# Show version number
+stamp --version
+
 # Initialize LogicStamp in your project (optional - context command does this automatically)
 stamp init
 
