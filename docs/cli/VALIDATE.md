@@ -44,6 +44,13 @@ Validates a specific context file:
 - Each folder entry has valid structure with `path`, `contextFile`, `bundles`, `components`, etc.
 - Note: Validating only `context_main.json` (single-file mode) does not validate the folder context files themselves. Use multi-file mode (no arguments) to validate all files.
 
+## Options
+
+| Option | Alias | Description |
+|--------|-------|-------------|
+| `--quiet` | `-q` | Suppress verbose output (show only errors) |
+| `--help` | `-h` | Show help message |
+
 ## Exit codes
 
 | Code | Meaning |
