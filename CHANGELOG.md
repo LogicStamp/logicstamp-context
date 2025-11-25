@@ -23,6 +23,7 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - In-memory contract generation pipeline.
 - Zero configuration required.
 - Works on any React/TypeScript project.
+- Main entry point (`dist/index.js`) for programmatic use - export all core functions, types, and CLI commands.
 
 ### Features
 - Outputs ready for AI tools (Claude, ChatGPT, Cursor, VS Code assistants).
