@@ -49,6 +49,9 @@
   "homepage": "https://github.com/LogicStamp/logicstamp-context#readme",
   "author": "LogicStamp Contributors",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "glob": "^10.3.10",
     "ts-morph": "^21.0.1"
