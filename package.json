@@ -8,7 +8,7 @@
     ".": "./dist/index.js"
   },
   "bin": {
-    "stamp": "./dist/cli/stamp.js"
+    "stamp": "dist/cli/stamp.js"
   },
   "files": [
     "dist",
@@ -41,7 +41,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/LogicStamp/logicstamp-context.git"
+    "url": "git+https://github.com/LogicStamp/logicstamp-context.git"
   },
   "bugs": {
     "url": "https://github.com/LogicStamp/logicstamp-context/issues"
