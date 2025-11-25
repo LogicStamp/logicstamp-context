@@ -69,8 +69,6 @@ Generates LogicStamp bundles from a directory.
 | `--dry-run` | | `false` | Skip writing the output file; prints summary instead |
 | `--stats` | | `false` | Emit one-line JSON stats (helpful for CI pipelines) |
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors) |
-| `--version` | `-v` | | Show version number |
-| `--help` | `-h` | | Show help message |
 
 **CI / automation tips**
 
