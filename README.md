@@ -874,7 +874,6 @@ All in one command, no pre-compilation needed!
 | UIF contracts per file | ✅ Yes (embedded in bundles) | ✅ Yes (as `.uif.json` sidecar files) |
 | Contract compilation | ✅ Built-in | ✅ Separate command |
 | Contract verification | ❌ No | ✅ Yes (planned) |
-| Watch mode | ❌ No | ✅ Yes (planned) |
 | Size | Focused | Orchestrator |
 
 **TL;DR**: Use `stamp context` (logicstamp-context) for AI context generation today. The future `@logicstamp/cli` orchestrator will provide optional higher-level workflows once it's released.
@@ -920,7 +919,6 @@ The current Next.js support (v0.1) provides foundational directive and App Route
 
 - **Vue.js Support** - Extend to Vue 3 Composition API components
 - **Svelte Support** - Component analysis for Svelte files
-- **Incremental Analysis** - Only re-analyze changed files (watch mode)
 - **Custom Contract Fields** - User-defined metadata via config
 - **Performance Metrics** - Bundle size and render performance estimates
 
