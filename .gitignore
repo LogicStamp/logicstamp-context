@@ -19,10 +19,3 @@ tests/e2e/output/
 # OS
 .DS_Store
 Thumbs.db
-
-# LogicStamp context files
-context.json
-context_*.json
-*.uif.json
-logicstamp.manifest.json
-.logicstamp/
