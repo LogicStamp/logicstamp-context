@@ -17,6 +17,7 @@ import {
 import { validateCommand } from './commands/validate.js';
 import { init, type InitOptions } from './commands/init.js';
 import { cleanCommand, type CleanOptions } from './commands/clean.js';
+import { styleCommand, type StyleOptions } from './commands/style.js';
 import { readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -88,6 +89,12 @@ async function main() {
 
   if (contextArgs[0] === 'clean') {
     await handleClean(contextArgs.slice(1));
+    return;
+  }
+
+  // Check for 'style' subcommand (stamp context style)
+  if (contextArgs[0] === 'style') {
+    await handleStyle(contextArgs.slice(1));
     return;
   }
 
@@ -164,6 +171,12 @@ async function handleClean(args: string[]) {
     process.exit(0);
   }
 
+  // Explicitly reject --compare-modes (only available in stamp context, not stamp context clean)
+  if (args.includes('--compare-modes')) {
+    console.error('❌ --compare-modes is not available for "stamp context clean". Use "stamp context --compare-modes" instead.');
+    process.exit(1);
+  }
+
   const options: CleanOptions = {
     all: args.includes('--all'),
     yes: args.includes('--yes'),
@@ -219,6 +232,12 @@ async function handleCompare(args: string[]) {
     printFoxIcon();
     printCompareHelp();
     process.exit(0);
+  }
+
+  // Explicitly reject --compare-modes (only available in stamp context, not stamp context compare)
+  if (args.includes('--compare-modes')) {
+    console.error('❌ --compare-modes is not available for "stamp context compare". Use "stamp context --compare-modes" instead.');
+    process.exit(1);
   }
 
   const stats = args.includes('--stats');
@@ -531,6 +550,120 @@ async function handleCompare(args: string[]) {
   }
 }
 
+async function handleStyle(args: string[]) {
+  if (args.includes('--help') || args.includes('-h')) {
+    printFoxIcon();
+    printStyleHelp();
+    process.exit(0);
+  }
+
+  // Explicitly reject --compare-modes (only available in stamp context, not stamp context style)
+  if (args.includes('--compare-modes')) {
+    console.error('❌ --compare-modes is not available for "stamp context style". Use "stamp context --compare-modes" instead.');
+    process.exit(1);
+  }
+
+  const options: StyleOptions = {
+    depth: 1,
+    includeCode: 'header',
+    format: 'json',
+    out: 'context.json',
+    hashLock: false,
+    strict: false,
+    allowMissing: true,
+    maxNodes: 100,
+    profile: 'llm-chat',
+    predictBehavior: false,
+    dryRun: false,
+    stats: false,
+    strictMissing: false,
+    compareModes: false,
+    skipGitignore: false,
+    quiet: false,
+  };
+
+  // Parse command line arguments (same as handleGenerate)
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
+    if (arg.startsWith('--') || arg.startsWith('-')) {
+      const key = arg.replace(/^--?/, '');
+      const value = args[i + 1];
+
+      switch (key) {
+        case 'depth':
+        case 'd':
+          options.depth = parseInt(value, 10);
+          i++;
+          break;
+        case 'include-code':
+        case 'c':
+          options.includeCode = value as 'none' | 'header' | 'full';
+          i++;
+          break;
+        case 'format':
+        case 'f':
+          options.format = value as 'json' | 'pretty' | 'ndjson';
+          i++;
+          break;
+        case 'out':
+        case 'o':
+          options.out = value;
+          i++;
+          break;
+        case 'max-nodes':
+        case 'm':
+          options.maxNodes = parseInt(value, 10);
+          i++;
+          break;
+        case 'profile':
+          options.profile = value as 'llm-safe' | 'llm-chat' | 'ci-strict';
+          i++;
+          break;
+        case 'strict':
+        case 's':
+          options.strict = true;
+          break;
+        case 'predict-behavior':
+          options.predictBehavior = true;
+          break;
+        case 'dry-run':
+          options.dryRun = true;
+          break;
+        case 'stats':
+          options.stats = true;
+          break;
+        case 'strict-missing':
+          options.strictMissing = true;
+          break;
+        case 'skip-gitignore':
+          options.skipGitignore = true;
+          break;
+        case 'quiet':
+        case 'q':
+          options.quiet = true;
+          break;
+        default:
+          console.error(`❌ Unknown option: ${arg}`);
+          process.exit(1);
+      }
+    } else {
+      // First non-option argument is the entry path
+      if (!options.entry) {
+        options.entry = arg;
+      }
+    }
+  }
+
+  try {
+    await styleCommand(options);
+  } catch (error) {
+    console.error('❌ Style context generation failed:', (error as Error).message);
+    console.error((error as Error).stack);
+    process.exit(1);
+  }
+}
+
 async function handleGenerate(args: string[]) {
   if (args.includes('--help') || args.includes('-h')) {
     printFoxIcon();
@@ -555,6 +688,7 @@ async function handleGenerate(args: string[]) {
     compareModes: false,
     skipGitignore: false,
     quiet: false,
+    includeStyle: false, // Default to false
   };
 
   // Parse command line arguments
@@ -621,6 +755,9 @@ async function handleGenerate(args: string[]) {
         case 'q':
           options.quiet = true;
           break;
+        case 'include-style':
+          options.includeStyle = true;
+          break;
         default:
           console.error(`❌ Unknown option: ${arg}`);
           process.exit(1);
@@ -652,6 +789,7 @@ function printMainHelp() {
 USAGE:
   stamp init [path]                    Initialize LogicStamp in a project
   stamp context [path] [options]       Generate context
+  stamp context style [path] [options] Generate context with style metadata
   stamp context validate [file]        Validate context file
   stamp context compare [options]      Detect drift (auto-generates fresh context)
   stamp context clean [path] [options] Remove all generated context artifacts
@@ -666,6 +804,12 @@ EXAMPLES:
 
   stamp context
     Generate context.json for current directory
+
+  stamp context style
+    Generate context with style metadata (Tailwind, SCSS, animations, layout)
+
+  stamp context --include-style
+    Same as 'stamp context style' (alternative syntax)
 
   stamp context validate
     Validate context.json in current directory
@@ -682,9 +826,62 @@ EXAMPLES:
 For detailed help on a specific command, run:
   stamp init --help
   stamp context --help
+  stamp context style --help
   stamp context validate --help
   stamp context compare --help
   stamp context clean --help
+  `);
+}
+
+function printStyleHelp() {
+  console.log(`
+╭─────────────────────────────────────────────────╮
+│  Stamp Context Style - Generate with Style      │
+│  Extract Tailwind, SCSS, animations & layout    │
+╰─────────────────────────────────────────────────╯
+
+USAGE:
+  stamp context style [path] [options]
+
+ARGUMENTS:
+  [path]                              Directory to scan (default: current)
+
+OPTIONS:
+  --depth, -d <n>                     Dependency depth (default: 1)
+  --include-code, -c <mode>           Code inclusion: none|header|full (default: header)
+  --format, -f <format>               Output format: json|pretty|ndjson (default: json)
+  --out, -o <file>                    Output file (default: context.json)
+  --max-nodes, -m <n>                 Max nodes per bundle (default: 100)
+  --profile <profile>                 Preset profile: llm-safe|llm-chat|ci-strict
+  --strict, -s                        Fail on missing dependencies
+  --strict-missing                    Exit with error if any missing dependencies
+  --predict-behavior                  Include behavior predictions
+  --dry-run                           Skip writing output
+  --stats                             Emit JSON stats
+  --skip-gitignore                    Skip .gitignore setup (never prompt or modify)
+  --quiet, -q                         Suppress verbose output (show only errors)
+  -h, --help                          Show this help
+
+STYLE METADATA EXTRACTED:
+  • Styling Sources: Tailwind, SCSS modules, CSS modules, inline styles, styled-components
+  • Layout: Flex/grid patterns, hero sections, feature cards
+  • Visual: Colors, spacing, typography, border radius
+  • Animation: Framer Motion, CSS animations, scroll triggers
+
+EXAMPLES:
+  stamp context style
+    Generate context with style metadata for current directory
+
+  stamp context style ./src
+    Generate with style metadata for src directory
+
+  stamp context style --profile llm-safe
+    Use conservative profile with style metadata
+
+NOTES:
+  • This is equivalent to: stamp context --include-style
+  • Style extraction is optional and won't fail the build if errors occur
+  • Style metadata is added to the 'style' field in UIFContract
   `);
 }
 
@@ -704,6 +901,7 @@ ARGUMENTS:
 OPTIONS:
   --depth, -d <n>                     Dependency depth (default: 1)
   --include-code, -c <mode>           Code inclusion: none|header|full (default: header)
+  --include-style                     Extract style metadata (Tailwind, SCSS, animations, layout)
   --format, -f <format>               Output format: json|pretty|ndjson (default: json)
   --out, -o <file>                    Output file (default: context.json)
   --max-nodes, -m <n>                 Max nodes per bundle (default: 100)
@@ -721,6 +919,12 @@ OPTIONS:
 EXAMPLES:
   stamp context
     Generate context for current directory
+
+  stamp context style
+    Generate context with style metadata (Tailwind, SCSS, animations, layout)
+
+  stamp context --include-style
+    Alternative syntax for including style metadata
 
   stamp context ./src --depth 2
     Deep scan of src directory

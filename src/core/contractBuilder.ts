@@ -44,6 +44,7 @@ export interface ContractBuildParams {
   preset: ContractPreset;
   sourceText: string;
   enablePredictions?: boolean;
+  styleMetadata?: import('../types/UIFContract.js').StyleMetadata; // Pre-extracted style data
 }
 
 export interface ContractBuildResult {
@@ -133,6 +134,7 @@ export function buildContract(
     metrics: undefined,
     links: undefined,
     nextjs: ast.nextjs,
+    style: params.styleMetadata, // Attach pre-extracted style metadata
     semanticHash: semanticHashFromAst(ast, signature),
     fileHash: fileHash(params.sourceText),
   };

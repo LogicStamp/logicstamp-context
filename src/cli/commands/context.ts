@@ -7,6 +7,7 @@ import { resolve, dirname, join } from 'node:path';
 import { globFiles, readFileWithText, getFolderPath, normalizeEntryId } from '../../utils/fsx.js';
 import { buildContract } from '../../core/contractBuilder.js';
 import { extractFromFile } from '../../core/astParser.js';
+import { extractStyleMetadata } from '../../core/styleExtractor.js';
 import { buildDependencyGraph } from '../../core/manifest.js';
 import type { UIFContract } from '../../types/UIFContract.js';
 import {
@@ -16,11 +17,12 @@ import {
   type LogicStampIndex,
   type FolderInfo,
 } from '../../core/pack.js';
-import { estimateGPT4Tokens, estimateClaudeTokens, formatTokenCount } from '../../utils/tokens.js';
+import { estimateGPT4Tokens, estimateClaudeTokens, formatTokenCount, getTokenizerStatus } from '../../utils/tokens.js';
 import { validateBundles } from './validate.js';
 import { smartGitignoreSetup } from '../../utils/gitignore.js';
 import { readConfig, configExists, writeConfig } from '../../utils/config.js';
 import { smartLLMContextSetup } from '../../utils/llmContext.js';
+import { Project } from 'ts-morph';
 
 /**
  * Normalize path for display (convert backslashes to forward slashes)
@@ -91,6 +93,7 @@ export interface ContextOptions {
   skipGitignore?: boolean;
   quiet?: boolean;
   suppressSuccessIndicator?: boolean; // When true, don't output ✓ even in quiet mode (for internal calls)
+  includeStyle?: boolean; // Extract style metadata (Tailwind, SCSS, animations, layout)
 }
 
 export async function contextCommand(options: ContextOptions): Promise<void> {
@@ -125,6 +128,18 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   let analyzed = 0;
   let totalSourceSize = 0; // Track total source code size for savings calculation
 
+  // Create ts-morph project for style extraction if needed
+  let styleProject: Project | undefined;
+  if (options.includeStyle) {
+    styleProject = new Project({
+      skipAddingFilesFromTsConfig: true,
+      compilerOptions: {
+        jsx: 1, // React JSX
+        target: 99, // ESNext
+      },
+    });
+  }
+
   for (const file of files) {
     try {
       // Extract AST from file
@@ -134,10 +149,25 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
       const { text } = await readFileWithText(file);
       totalSourceSize += text.length; // Accumulate source size
 
+      // Extract style metadata if requested (separate layer)
+      let styleMetadata;
+      if (options.includeStyle && styleProject) {
+        try {
+          const sourceFile = styleProject.addSourceFileAtPath(file);
+          styleMetadata = await extractStyleMetadata(sourceFile, file);
+        } catch (styleError) {
+          // Style extraction is optional - don't fail if it errors
+          if (!options.quiet) {
+            console.warn(`   ⚠️  Style extraction failed for ${file}`);
+          }
+        }
+      }
+
       const result = buildContract(file, ast, {
         preset: 'none',
         sourceText: text,
         enablePredictions: options.predictBehavior,
+        styleMetadata,
       });
 
       if (result.contract) {
@@ -284,8 +314,8 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   const totalMissing = bundles.reduce((sum, b) => sum + b.meta.missing.length, 0);
 
   // Calculate token counts for actual output (current mode)
-  const currentGPT4 = estimateGPT4Tokens(output);
-  const currentClaude = estimateClaudeTokens(output);
+  const currentGPT4 = await estimateGPT4Tokens(output);
+  const currentClaude = await estimateClaudeTokens(output);
 
   // Estimate tokens for all three modes
   // Mode comparison helps users understand cost tradeoffs
@@ -321,13 +351,238 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
 
   // If --compare-modes flag is set, output detailed mode comparison and exit
   if (options.compareModes) {
+    const hasStyle = options.includeStyle === true;
+    const isHeaderMode = options.includeCode === 'header';
+    
+    // Calculate header and header+style for comparison
+    let headerNoStyleGPT4: number;
+    let headerNoStyleClaude: number;
+    let headerWithStyleGPT4: number;
+    let headerWithStyleClaude: number;
+    
+    if (isHeaderMode && hasStyle) {
+      // Current is header+style - regenerate contracts without style to get accurate count
+      headerWithStyleGPT4 = currentGPT4;
+      headerWithStyleClaude = currentClaude;
+      
+      // Rebuild contracts without style metadata to get accurate header token count
+      if (!options.quiet) {
+        console.log('   Generating without style metadata for accurate comparison...');
+      }
+      
+      const noStyleContracts: UIFContract[] = [];
+      for (const file of files) {
+        try {
+          const ast = await extractFromFile(file);
+          const { text } = await readFileWithText(file);
+          
+          const result = buildContract(file, ast, {
+            preset: 'none',
+            sourceText: text,
+            enablePredictions: options.predictBehavior,
+            styleMetadata: undefined, // Explicitly no style
+          });
+          
+          if (result.contract) {
+            noStyleContracts.push(result.contract);
+          }
+        } catch (error) {
+          // Skip files that can't be analyzed
+        }
+      }
+      
+      // Generate bundles with no-style contracts
+      const noStyleContractsMap = new Map(noStyleContracts.map(c => [c.entryId, c]));
+      const noStyleBundles = await Promise.all(
+        manifest.graph.roots.map(rootId =>
+          pack(rootId, manifest, {
+            depth: options.depth,
+            includeCode: options.includeCode,
+            maxNodes: options.maxNodes,
+            contractsMap: noStyleContractsMap,
+            format: options.format,
+            hashLock: options.hashLock || false,
+            strict: options.strict || false,
+            allowMissing: options.allowMissing !== false,
+          }, projectRoot)
+        )
+      );
+      
+      // Format no-style bundles to get token count
+      let noStyleOutput = '';
+      if (options.format === 'ndjson') {
+        noStyleOutput = noStyleBundles.map((b, idx) => {
+          const bundleWithSchema = {
+            $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
+            position: `${idx + 1}/${noStyleBundles.length}`,
+            ...b,
+          };
+          return JSON.stringify(bundleWithSchema);
+        }).join('\n');
+      } else if (options.format === 'json') {
+        const bundlesWithPosition = noStyleBundles.map((b, idx) => ({
+          $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
+          position: `${idx + 1}/${noStyleBundles.length}`,
+          ...b,
+        }));
+        noStyleOutput = JSON.stringify(bundlesWithPosition, null, 2);
+      } else {
+        noStyleOutput = noStyleBundles.map((b, idx) => {
+          const bundleWithSchema = {
+            $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
+            position: `${idx + 1}/${noStyleBundles.length}`,
+            ...b,
+          };
+          const header = `\n# Bundle ${idx + 1}/${noStyleBundles.length}: ${b.entryId}`;
+          return header + '\n' + JSON.stringify(bundleWithSchema, null, 2);
+        }).join('\n\n');
+      }
+      
+      headerNoStyleGPT4 = await estimateGPT4Tokens(noStyleOutput);
+      headerNoStyleClaude = await estimateClaudeTokens(noStyleOutput);
+    } else if (isHeaderMode && !hasStyle) {
+      // Current is header without style - regenerate contracts with style to get accurate count
+      headerNoStyleGPT4 = currentGPT4;
+      headerNoStyleClaude = currentClaude;
+      
+      // Rebuild contracts with style metadata to get accurate header+style token count
+      if (!options.quiet) {
+        console.log('   Generating with style metadata for accurate comparison...');
+      }
+      
+      const styleProject = new Project({
+        skipAddingFilesFromTsConfig: true,
+        compilerOptions: {
+          jsx: 1,
+          target: 99,
+        },
+      });
+      
+      const styleContracts: UIFContract[] = [];
+      for (const file of files) {
+        try {
+          const ast = await extractFromFile(file);
+          const { text } = await readFileWithText(file);
+          
+          let styleMetadata;
+          try {
+            const sourceFile = styleProject.addSourceFileAtPath(file);
+            styleMetadata = await extractStyleMetadata(sourceFile, file);
+          } catch (styleError) {
+            // Style extraction is optional
+          }
+          
+          const result = buildContract(file, ast, {
+            preset: 'none',
+            sourceText: text,
+            enablePredictions: options.predictBehavior,
+            styleMetadata,
+          });
+          
+          if (result.contract) {
+            styleContracts.push(result.contract);
+          }
+        } catch (error) {
+          // Skip files that can't be analyzed
+        }
+      }
+      
+      // Generate bundles with style-enabled contracts
+      const styleContractsMap = new Map(styleContracts.map(c => [c.entryId, c]));
+      const styleBundles = await Promise.all(
+        manifest.graph.roots.map(rootId =>
+          pack(rootId, manifest, {
+            depth: options.depth,
+            includeCode: options.includeCode,
+            maxNodes: options.maxNodes,
+            contractsMap: styleContractsMap,
+            format: options.format,
+            hashLock: options.hashLock || false,
+            strict: options.strict || false,
+            allowMissing: options.allowMissing !== false,
+          }, projectRoot)
+        )
+      );
+      
+      // Format style bundles to get token count
+      let styleOutput = '';
+      if (options.format === 'ndjson') {
+        styleOutput = styleBundles.map((b, idx) => {
+          const bundleWithSchema = {
+            $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
+            position: `${idx + 1}/${styleBundles.length}`,
+            ...b,
+          };
+          return JSON.stringify(bundleWithSchema);
+        }).join('\n');
+      } else if (options.format === 'json') {
+        const bundlesWithPosition = styleBundles.map((b, idx) => ({
+          $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
+          position: `${idx + 1}/${styleBundles.length}`,
+          ...b,
+        }));
+        styleOutput = JSON.stringify(bundlesWithPosition, null, 2);
+      } else {
+        styleOutput = styleBundles.map((b, idx) => {
+          const bundleWithSchema = {
+            $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
+            position: `${idx + 1}/${styleBundles.length}`,
+            ...b,
+          };
+          const header = `\n# Bundle ${idx + 1}/${styleBundles.length}: ${b.entryId}`;
+          return header + '\n' + JSON.stringify(bundleWithSchema, null, 2);
+        }).join('\n\n');
+      }
+      
+      headerWithStyleGPT4 = await estimateGPT4Tokens(styleOutput);
+      headerWithStyleClaude = await estimateClaudeTokens(styleOutput);
+    } else {
+      // Estimate for non-header modes
+      headerNoStyleGPT4 = Math.ceil(currentGPT4 * 0.75);
+      headerNoStyleClaude = Math.ceil(currentClaude * 0.75);
+      headerWithStyleGPT4 = Math.ceil(currentGPT4 * 0.85);
+      headerWithStyleClaude = Math.ceil(currentClaude * 0.85);
+    }
+    
+    // Calculate savings percentages vs raw source
+    const headerSavingsGPT4 = sourceTokensGPT4 > 0
+      ? ((sourceTokensGPT4 - headerNoStyleGPT4) / sourceTokensGPT4 * 100).toFixed(0)
+      : '0';
+    const headerStyleSavingsGPT4 = sourceTokensGPT4 > 0
+      ? ((sourceTokensGPT4 - headerWithStyleGPT4) / sourceTokensGPT4 * 100).toFixed(0)
+      : '0';
+    
+    // Check tokenizer status
+    const tokenizerStatus = await getTokenizerStatus();
+    const gpt4Method = tokenizerStatus.gpt4 ? 'tiktoken' : 'approximation';
+    const claudeMethod = tokenizerStatus.claude ? 'tokenizer' : 'approximation';
+    
     console.log('\n📊 Mode Comparison\n');
-    console.log('Mode     | Tokens GPT-4o | Tokens Claude | Savings vs Full');
-    console.log('---------|---------------|---------------|------------------');
+    console.log(`   Token estimation: GPT-4o (${gpt4Method}) | Claude (${claudeMethod})`);
+    if (!tokenizerStatus.gpt4 || !tokenizerStatus.claude) {
+      const missing: string[] = [];
+      if (!tokenizerStatus.gpt4) {
+        missing.push('@dqbd/tiktoken (GPT-4)');
+      }
+      if (!tokenizerStatus.claude) {
+        missing.push('@anthropic-ai/tokenizer (Claude)');
+      }
+      console.log(`   💡 Tip: Install ${missing.join(' and/or ')} for accurate token counts`);
+    }
+    console.log('\n   Comparison:');
+    console.log('     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Raw Source');
+    console.log('     -------------|---------------|---------------|------------------------');
+    console.log(`     Raw source   | ${formatTokenCount(sourceTokensGPT4).padStart(13)} | ${formatTokenCount(sourceTokensClaude).padStart(13)} | 0%`);
+    console.log(`     Header       | ${formatTokenCount(headerNoStyleGPT4).padStart(13)} | ${formatTokenCount(headerNoStyleClaude).padStart(13)} | ${headerSavingsGPT4}%`);
+    console.log(`     Header+style | ${formatTokenCount(headerWithStyleGPT4).padStart(13)} | ${formatTokenCount(headerWithStyleClaude).padStart(13)} | ${headerStyleSavingsGPT4}%`);
+    console.log('\n   Mode breakdown:');
+    console.log('     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Full Context');
+    console.log('     -------------|---------------|---------------|--------------------------');
 
     const modes: Array<{ name: string; gpt4: number; claude: number }> = [
       { name: 'none', gpt4: modeEstimates.none.gpt4, claude: modeEstimates.none.claude },
-      { name: 'header', gpt4: modeEstimates.header.gpt4, claude: modeEstimates.header.claude },
+      { name: 'header', gpt4: headerNoStyleGPT4, claude: headerNoStyleClaude },
+      { name: 'header+style', gpt4: headerWithStyleGPT4, claude: headerWithStyleClaude },
       { name: 'full', gpt4: modeEstimates.full.gpt4, claude: modeEstimates.full.claude },
     ];
 
@@ -337,7 +592,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
         : '0';
 
       console.log(
-        `${mode.name.padEnd(8)} | ${formatTokenCount(mode.gpt4).padStart(13)} | ${formatTokenCount(mode.claude).padStart(13)} | ${savings}%`
+        `     ${mode.name.padEnd(13)} | ${formatTokenCount(mode.gpt4).padStart(13)} | ${formatTokenCount(mode.claude).padStart(13)} | ${savings}%`
       );
     });
 
@@ -497,7 +752,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
       }
 
       // Estimate tokens for this folder's context file
-      const folderTokenEstimate = estimateGPT4Tokens(folderOutput);
+      const folderTokenEstimate = await estimateGPT4Tokens(folderOutput);
       totalTokenEstimate += folderTokenEstimate;
 
       // Write folder's context.json to output directory maintaining relative structure
@@ -632,9 +887,57 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     console.log(`   Total nodes in context: ${totalNodes}`);
     console.log(`   Total edges: ${totalEdges}`);
     console.log(`   Missing dependencies: ${totalMissing}`);
-    console.log(`\n📏 Token Estimates (${options.includeCode} mode):`);
-    console.log(`   GPT-4o-mini: ${formatTokenCount(currentGPT4)} | Full code: ~${formatTokenCount(modeEstimates.full.gpt4)} (~${savingsGPT4}% savings)`);
-    console.log(`   Claude:      ${formatTokenCount(currentClaude)} | Full code: ~${formatTokenCount(modeEstimates.full.claude)} (~${savingsClaude}% savings)`);
+    // Determine mode label and calculate header comparisons
+    const hasStyle = options.includeStyle === true;
+    const isHeaderMode = options.includeCode === 'header';
+    
+    let modeLabel: string;
+    let headerNoStyleGPT4: number;
+    let headerNoStyleClaude: number;
+    let headerWithStyleGPT4: number;
+    let headerWithStyleClaude: number;
+    
+    if (isHeaderMode && hasStyle) {
+      modeLabel = 'header+style';
+      // Current output IS header+style, estimate header without style
+      headerNoStyleGPT4 = Math.ceil(currentGPT4 * 0.88); // Style typically adds ~12%
+      headerNoStyleClaude = Math.ceil(currentClaude * 0.88);
+      headerWithStyleGPT4 = currentGPT4;
+      headerWithStyleClaude = currentClaude;
+    } else if (isHeaderMode && !hasStyle) {
+      modeLabel = 'header';
+      // Current output IS header without style, estimate header+style
+      headerNoStyleGPT4 = currentGPT4;
+      headerNoStyleClaude = currentClaude;
+      headerWithStyleGPT4 = Math.ceil(currentGPT4 * 1.14); // Style adds ~14%
+      headerWithStyleClaude = Math.ceil(currentClaude * 1.14);
+    } else {
+      modeLabel = options.includeCode === 'full' ? 'full+style' : options.includeCode;
+      // For non-header modes, estimate header values for comparison
+      headerNoStyleGPT4 = Math.ceil(currentGPT4 * 0.75); // Rough estimate
+      headerNoStyleClaude = Math.ceil(currentClaude * 0.75);
+      headerWithStyleGPT4 = Math.ceil(currentGPT4 * 0.85); // Rough estimate
+      headerWithStyleClaude = Math.ceil(currentClaude * 0.85);
+    }
+    
+    // Calculate savings percentages vs raw source
+    const headerSavingsGPT4 = sourceTokensGPT4 > 0
+      ? ((sourceTokensGPT4 - headerNoStyleGPT4) / sourceTokensGPT4 * 100).toFixed(0)
+      : '0';
+    const headerStyleSavingsGPT4 = sourceTokensGPT4 > 0
+      ? ((sourceTokensGPT4 - headerWithStyleGPT4) / sourceTokensGPT4 * 100).toFixed(0)
+      : '0';
+    
+    console.log(`\n📏 Token Estimates (${modeLabel} mode):`);
+    console.log(`   GPT-4o-mini: ${formatTokenCount(currentGPT4)} tokens`);
+    console.log(`   Claude:      ${formatTokenCount(currentClaude)} tokens`);
+    console.log(`\n   Comparison:`);
+    console.log(`     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Raw Source`);
+    console.log(`     -------------|---------------|---------------|------------------------`);
+    console.log(`     Raw source   | ${formatTokenCount(sourceTokensGPT4).padStart(13)} | ${formatTokenCount(sourceTokensClaude).padStart(13)} | 0%`);
+    console.log(`     Header       | ${formatTokenCount(headerNoStyleGPT4).padStart(13)} | ${formatTokenCount(headerNoStyleClaude).padStart(13)} | ${headerSavingsGPT4}%`);
+    console.log(`     Header+style | ${formatTokenCount(headerWithStyleGPT4).padStart(13)} | ${formatTokenCount(headerWithStyleClaude).padStart(13)} | ${headerStyleSavingsGPT4}%`);
+    console.log(`\n   Full context (code+style): ~${formatTokenCount(modeEstimates.full.gpt4)} GPT-4o-mini / ~${formatTokenCount(modeEstimates.full.claude)} Claude`);
 
     console.log(`\n📊 Mode Comparison:`);
     console.log(`   none:       ~${formatTokenCount(modeEstimates.none.gpt4)} tokens`);

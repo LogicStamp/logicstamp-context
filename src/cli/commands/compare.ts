@@ -181,11 +181,11 @@ function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>): Compa
 /**
  * Calculate token count for bundles
  */
-function calculateTokens(bundles: LogicStampBundle[]): { gpt4: number; claude: number } {
+async function calculateTokens(bundles: LogicStampBundle[]): Promise<{ gpt4: number; claude: number }> {
   const text = JSON.stringify(bundles);
   return {
-    gpt4: estimateGPT4Tokens(text),
-    claude: estimateClaudeTokens(text),
+    gpt4: await estimateGPT4Tokens(text),
+    claude: await estimateClaudeTokens(text),
   };
 }
 
@@ -282,8 +282,8 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
 
   // Show token stats if requested (skip in quiet mode)
   if (options.stats && !options.quiet) {
-    const oldTokens = calculateTokens(oldBundles);
-    const newTokens = calculateTokens(newBundles);
+    const oldTokens = await calculateTokens(oldBundles);
+    const newTokens = await calculateTokens(newBundles);
     const deltaStat = newTokens.gpt4 - oldTokens.gpt4;
     const deltaPercent = ((deltaStat / oldTokens.gpt4) * 100).toFixed(2);
 
@@ -368,8 +368,8 @@ async function compareFolderContext(
   // Calculate token delta if stats requested and not in quiet mode
   let tokenDelta: { gpt4: number; claude: number } | undefined;
   if (stats && !quiet) {
-    const oldTokens = calculateTokens(oldBundles);
-    const newTokens = calculateTokens(newBundles);
+    const oldTokens = await calculateTokens(oldBundles);
+    const newTokens = await calculateTokens(newBundles);
     tokenDelta = {
       gpt4: newTokens.gpt4 - oldTokens.gpt4,
       claude: newTokens.claude - oldTokens.claude,

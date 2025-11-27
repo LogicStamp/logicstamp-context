@@ -41,8 +41,8 @@ describe('CLI Advanced Features Tests', () => {
       expect(stdout).toContain('📏 Token Estimates');
       expect(stdout).toContain('GPT-4o-mini:');
       expect(stdout).toContain('Claude:');
-      expect(stdout).toContain('savings');
-      expect(stdout).toContain('Full code:');
+      expect(stdout).toContain('Comparison:');
+      expect(stdout).toContain('Full context (code+style):');
 
       // Verify mode comparison block
       expect(stdout).toContain('📊 Mode Comparison:');
@@ -98,12 +98,13 @@ describe('CLI Advanced Features Tests', () => {
 
       // Verify table output
       expect(stdout).toContain('📊 Mode Comparison');
-      expect(stdout).toContain('Mode     | Tokens GPT-4o | Tokens Claude | Savings vs Full');
-      expect(stdout).toContain('---------|---------------|---------------|------------------');
+      expect(stdout).toContain('Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Full Context');
+      expect(stdout).toContain('-------------|---------------|---------------|--------------------------');
 
-      // Verify all three modes are present
+      // Verify all four modes are present
       expect(stdout).toContain('none');
       expect(stdout).toContain('header');
+      expect(stdout).toContain('header+style');
       expect(stdout).toContain('full');
 
       // Verify savings percentages

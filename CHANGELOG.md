@@ -37,7 +37,7 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 - **Automatic token estimates** - GPT-4o-mini and Claude token counts
 - **Mode comparison** - `--compare-modes` flag for detailed token analysis
 - **CI-friendly stats** - `--stats` flag outputs JSON with token estimates
-- **Savings calculation** - Shows percentage savings compared to full code mode
+- **Savings calculation** - Shows percentage savings compared to full context (code+style) mode
 
 #### Next.js Support
 - **App Router detection** - Identifies files in `/app` directory
@@ -114,6 +114,39 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ---
 
 ## [Unreleased]
+
+### Added
+
+#### Style Metadata Extraction
+- **`stamp context style` command** - New subcommand to generate context with style metadata included
+- **`--include-style` flag** - Alternative syntax for enabling style metadata extraction
+- **Style source detection** - Identifies Tailwind CSS, SCSS/CSS modules, inline styles, styled-components, and framer-motion usage
+- **Layout metadata** - Extracts flex/grid patterns, hero sections, feature cards, and responsive breakpoints
+- **Visual metadata** - Captures color palettes, spacing patterns, border radius, and typography classes
+- **Animation metadata** - Detects framer-motion animations, CSS transitions, and viewport triggers
+- **SCSS/CSS module parsing** - Analyzes imported style files to extract selectors, properties, and SCSS features
+
+#### Enhanced Token Comparison
+- **Four-mode comparison** - `--compare-modes` now shows `none`, `header`, `header+style`, and `full` modes
+- **Dual comparison tables** - Shows savings vs raw source and vs full context
+- **Accurate style impact** - Automatically regenerates contracts with/without style metadata for precise token counts
+- **Style overhead visibility** - Clearly displays the token cost of including style metadata
+- **Optional tokenizer support** - Automatically uses `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) if installed for accurate token counts, with graceful fallback to character-based estimation
+
+### Changed
+
+- **`--compare-modes` output format** - Enhanced to include `header+style` mode and show two comparison tables
+- **Token estimation** - Now accounts for style metadata in token calculations when `--include-style` is used
+- **Token estimation API** - Token estimation functions are now async to support optional tokenizer libraries
+
+### Documentation
+
+- Added comprehensive `docs/cli/STYLE.md` documentation for the style command
+- Added comprehensive `docs/cli/COMPARE-MODES.md` guide for token cost analysis
+- Updated all command documentation to include style command and `--include-style` flag
+- Enhanced token optimization documentation with `--compare-modes` examples
+- Added style metadata examples and use cases throughout documentation
+- Documented optional tokenizer libraries (`@dqbd/tiktoken` and `@anthropic-ai/tokenizer`) for accurate token counts
 
 ### Planned Features
 - Custom profile configuration and overrides

@@ -22,6 +22,7 @@ stamp context
 stamp --version                    # Show version number
 stamp --help                       # Show help
 stamp context [path] [options]
+stamp context style [path] [options]  # Generate context with style metadata
 stamp context validate [file]
 stamp context compare [oldFile] [newFile] [options]
 stamp context clean [path] [options]
@@ -77,6 +78,124 @@ Generates LogicStamp bundles from a directory.
 - Use `--stats` to emit machine-readable summary lines (combine with shell redirection).
 - Use `--skip-gitignore` to prevent any `.gitignore` modifications in CI environments.
 - Use `--quiet` to suppress verbose output in CI pipelines (show only errors).
+
+### `stamp context style`
+
+Generates context with style metadata included. This command extracts visual and layout information from your React components, making context bundles design-aware for AI assistants.
+
+**Arguments**
+
+- `[path]` – Directory to scan (defaults to current working directory)
+
+**Key options**
+
+All options from `stamp context` are supported. The style command is equivalent to `stamp context --include-style`.
+
+**What it extracts**
+
+The style command analyzes components and extracts:
+
+1. **Style Sources**
+   - Tailwind CSS classes (categorized by type: layout, spacing, colors, typography, etc.)
+   - SCSS/CSS module imports and their details (selectors, properties, features)
+   - Inline styles detection
+   - styled-components/emotion usage
+   - framer-motion animation components
+
+2. **Layout Metadata**
+   - Layout type (flex, grid)
+   - Grid column patterns (e.g., "grid-cols-2 md:grid-cols-3")
+   - Hero pattern detection (large text + CTA buttons)
+   - Feature card patterns (grid with card-like elements)
+   - Responsive breakpoints used
+
+3. **Visual Metadata**
+   - Color palette (bg-*, text-*, border-* classes)
+   - Spacing patterns (padding, margin utilities)
+   - Border radius patterns
+   - Typography classes (text-*, font-*)
+
+4. **Animation Metadata**
+   - framer-motion library usage
+   - Animation types (fade-in, etc.)
+   - Viewport triggers (useInView)
+   - CSS transitions/animations
+
+**Examples**
+
+```bash
+# Generate context with style metadata
+stamp context style
+
+# Scan specific directory with style metadata
+stamp context style ./src
+
+# Use with other options
+stamp context style --profile llm-safe --out ./output
+
+# Equivalent to using the flag
+stamp context --include-style
+```
+
+**Output**
+
+Style metadata is included in the `style` field of each component's contract:
+
+```json
+{
+  "type": "UIFContract",
+  "kind": "react:component",
+  "entryId": "src/components/HeroSection.tsx",
+  "style": {
+    "styleSources": {
+      "tailwind": {
+        "categories": {
+          "layout": ["flex", "flex-col"],
+          "spacing": ["py-16", "px-8"],
+          "colors": ["bg-black", "text-white"],
+          "typography": ["text-4xl", "font-semibold"]
+        },
+        "breakpoints": ["md", "lg"],
+        "classCount": 15
+      },
+      "motion": {
+        "components": ["div"],
+        "variants": ["fadeIn"],
+        "features": {
+          "viewportAnimations": true
+        }
+      }
+    },
+    "layout": {
+      "type": "flex",
+      "hasHeroPattern": true
+    },
+    "visual": {
+      "colors": ["bg-black", "text-white"],
+      "spacing": ["py-16", "px-8"],
+      "radius": "xl",
+      "typography": ["text-4xl", "font-semibold"]
+    },
+    "animation": {
+      "library": "framer-motion",
+      "type": "fade-in",
+      "trigger": "inView"
+    }
+  }
+}
+```
+
+**Use cases**
+
+- **Design system analysis** – Understand visual patterns across components
+- **AI-assisted design** – Help AI assistants suggest visually consistent components
+- **Layout understanding** – Enable AI to understand flex/grid structures
+- **Animation detection** – Identify components with motion/animations
+- **Style consistency** – Track color palettes and spacing patterns
+
+**Note:** Style extraction adds a small token overhead to context bundles. Use `stamp context --compare-modes` to see the token impact.
+
+For detailed documentation on the style command, see [docs/cli/STYLE.md](cli/STYLE.md).
 
 ### `stamp context validate`
 
@@ -339,6 +458,52 @@ stamp context --include-code full --max-nodes 20
 ```
 
 **Use when:** AI needs to see or modify implementation details.
+
+### Token Cost Comparison
+
+Use `--compare-modes` to see detailed token estimates across all modes, including style metadata:
+
+```bash
+stamp context --compare-modes
+```
+
+This command shows two comparison tables:
+
+1. **Comparison vs Raw Source** – Shows savings compared to raw source code
+2. **Mode Breakdown** – Shows all available modes and savings vs full context
+
+**Example output:**
+
+```
+📊 Mode Comparison
+
+   Comparison:
+     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Raw Source
+     -------------|---------------|---------------|------------------------
+     Raw source   |        22,000 |        19,556 | 0%
+     Header       |        12,228 |        10,867 | 44%
+     Header+style |        13,895 |        12,351 | 37%
+
+   Mode breakdown:
+     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Full Context
+     -------------|---------------|---------------|--------------------------
+     none         |         8,337 |         7,411 | 79%
+     header       |        12,228 |        10,867 | 69%
+     header+style |        13,895 |        12,351 | 65%
+     full         |        39,141 |        34,792 | 0%
+```
+
+**Key features:**
+- **Accurate token counts** – Automatically regenerates contracts with and without style metadata for precise comparisons
+- **Four modes compared** – Shows `none`, `header`, `header+style`, and `full` modes
+- **Dual comparison** – Compares against both raw source and full context
+- **Style impact visible** – Clearly shows the token overhead of including style metadata
+- **Optional tokenizers** – For even more accurate counts, optionally install `@dqbd/tiktoken` (GPT-4) or `@anthropic-ai/tokenizer` (Claude). The tool automatically uses them if installed, falling back to character-based estimation otherwise.
+
+**When to use:**
+- Before generating context to choose the right mode for your budget
+- To understand the cost impact of including style metadata
+- To compare token savings across different inclusion modes
 
 ## Output Formats
 

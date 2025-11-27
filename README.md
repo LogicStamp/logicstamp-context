@@ -103,6 +103,12 @@ stamp init
 # Generate context.json (llm-chat profile)
 stamp context
 
+# Generate context with style metadata (Tailwind, SCSS, animations, layout)
+stamp context style
+
+# Or use the flag (equivalent)
+stamp context --include-style
+
 # Preview stats without writing files
 stamp context --dry-run --stats
 
@@ -195,6 +201,7 @@ stamp --version                    # Show version number
 stamp --help                       # Show help
 stamp init [path] [options]
 stamp context [path] [options]
+stamp context style [path] [options]  # Generate context with style metadata
 stamp context compare <old.json> <new.json> [options]
 stamp context validate [file] [options]
 stamp context clean [path] [options]
@@ -209,6 +216,10 @@ stamp context clean [path] [options]
 - **`stamp context [path]`** - Scans a directory and writes AI-ready context files organized by folder. Generates multiple `context.json` files (one per folder containing components) plus a `context_main.json` index file at the output root. Shows token estimates and mode comparison in output. Automatically validates the generated context before writing. **CI-friendly**: No interactive prompts - respects preferences saved in `.logicstamp/config.json` (created by `stamp init`). On first run without config, creates `.logicstamp/config.json` with safe defaults (skips both `.gitignore` and `LLM_CONTEXT.md` setup).
 
   See [docs/cli/CONTEXT.md](docs/cli/CONTEXT.md) for detailed documentation.
+
+- **`stamp context style [path]`** - Generates context with style metadata included. Equivalent to `stamp context --include-style`. Extracts visual and layout information from components including Tailwind classes, SCSS/CSS modules, styled-components, framer-motion animations, layout patterns (flex/grid), color palettes, spacing, typography, and animation configurations. This makes context bundles design-aware, enabling AI assistants to understand both the logic and visual presentation of your components.
+
+  See [docs/cli/STYLE.md](docs/cli/STYLE.md) for detailed documentation.
 
 - **`stamp context compare [options]`** - Compares all context files (multi-file mode) or two specific files to detect drift. In multi-file mode, uses `context_main.json` as index to compare all folder context files and detect ADDED/ORPHANED folders, per-folder DRIFT, and unchanged files (PASS). Shows three-tier output: folder summary, component summary, and detailed changes. Supports `--approve` for auto-updates (Jest-style), `--clean-orphaned` to remove stale files, and `--stats` for per-folder token deltas. Exits with code 1 if drift is detected (CI-friendly).
 
@@ -250,6 +261,7 @@ See [docs/cli/INIT.md](docs/cli/INIT.md) for detailed documentation.
 | `--dry-run` | | Skip writing output; show on-screen summary only | `false` |
 | `--stats` | | Emit single-line JSON stats with token estimates (intended for CI) | `false` |
 | `--compare-modes` | | Show detailed token comparison table across modes (none/header/full) | `false` |
+| `--include-style` | | Extract style metadata (Tailwind, SCSS, animations, layout) | `false` |
 | `--skip-gitignore` | | Skip `.gitignore` setup (never prompt or modify) | `false` |
 | `--quiet` | `-q` | Suppress verbose output (show only errors) | `false` |
 | `--help` | `-h` | Show help message | |
@@ -327,24 +339,27 @@ LogicStamp Context includes built-in token cost analysis and optimization featur
 Every context generation shows token costs for both GPT-4o-mini and Claude:
 
 ```
-📏 Token Estimates (header mode):
-   GPT-4o-mini: 13,895 | Full code: ~39,141 (~65% savings)
-   Claude:      12,351 | Full code: ~34,792 (~65% savings)
+📏 Token Estimates (header+style mode):
+   GPT-4o-mini: 13,895 tokens
+   Claude:      12,351 tokens
 
-📊 Mode Comparison:
-   none:       ~8,337 tokens
-   header:     ~13,895 tokens
-   full:       ~39,141 tokens
+   Comparison:
+     Raw source        | Header        | Header+style
+         22,000        |     12,228     |     13,895
+
+   Full context (code+style): ~39,141 GPT-4o-mini / ~34,792 Claude
 ```
 
 This helps you:
 - **Understand costs** at a glance
 - **Choose the right mode** for your budget
-- **See savings** compared to including full source code
+- **See savings** compared to full context (code+style) mode
+
+**Enhanced with `--compare-modes`:** The `--compare-modes` flag provides detailed comparisons across all modes (none/header/header+style/full) with accurate token counts. It automatically regenerates contracts with and without style metadata to show the true impact of including style information.
 
 ### Mode Comparison Table
 
-Use `--compare-modes` for a detailed comparison:
+Use `--compare-modes` for a detailed comparison across all modes:
 
 ```bash
 stamp context --compare-modes
@@ -354,17 +369,35 @@ Output:
 ```
 📊 Mode Comparison
 
-Mode     | Tokens GPT-4o | Tokens Claude | Savings vs Full
----------|---------------|---------------|------------------
-none     |         8,337 |         7,411 | 79%
-header   |        13,895 |        12,351 | 65%
-full     |        39,141 |        34,792 | 0%
+   Comparison:
+     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Raw Source
+     -------------|---------------|---------------|------------------------
+     Raw source   |        22,000 |        19,556 | 0%
+     Header       |        12,228 |        10,867 | 44%
+     Header+style |        13,895 |        12,351 | 37%
+
+   Mode breakdown:
+     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Full Context
+     -------------|---------------|---------------|--------------------------
+     none         |         8,337 |         7,411 | 79%
+     header       |        12,228 |        10,867 | 69%
+     header+style |        13,895 |        12,351 | 65%
+     full         |        39,141 |        34,792 | 0%
 ```
 
 **When to use each mode:**
-- **`none`** - API documentation, CI validation (no code snippets)
-- **`header`** - AI chat, code review (JSDoc headers + contracts)
-- **`full`** - Deep analysis, debugging (complete source code)
+- **`none`** - API documentation, CI validation (no code snippets, no style)
+- **`header`** - AI chat, code review (JSDoc headers + contracts, no style)
+- **`header+style`** - Design-aware AI chat (headers + contracts + style metadata)
+- **`full`** - Deep analysis, debugging (complete source code + contracts + style info)
+
+**Note:** The `--compare-modes` flag automatically regenerates contracts with and without style metadata to provide accurate token counts for all modes. This ensures you see the true impact of including style information.
+
+**Optional tokenizers for accurate counts:** Token estimation uses character-based approximations by default. For more accurate token counts, you can optionally install:
+- `@dqbd/tiktoken` for GPT-4 token counts
+- `@anthropic-ai/tokenizer` for Claude token counts
+
+If installed, these are automatically used for precise token counting in `--compare-modes` and throughout the tool.
 
 ### Stats for CI/CD
 
