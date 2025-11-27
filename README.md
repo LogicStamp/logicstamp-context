@@ -4,7 +4,7 @@
   <img src="assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="120" height="120">
 </div>
 
-![Version](https://img.shields.io/badge/version-0.1.1-blue.svg)
+![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)
 ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
@@ -25,7 +25,7 @@ That's it! LogicStamp Context will scan your project and generate `context.json`
 ![LogicStamp Context in action](assets/demo-screenshot.png)
 *Terminal output showing `stamp context` execution and generated context.json structure*
 
-> **Note:** This is a beta release (v0.1.1). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+> **Note:** This is a beta release (v0.2.0). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 ## What is this?
 
@@ -44,6 +44,64 @@ After installation, the `stamp` command will be available globally.
 **Note**: "Global CLI" means the tool is installed globally on your system (via `npm install -g`), making the `stamp` command available from any directory in your terminal, not just within a specific project folder.
 - **Local install**: `npm install logicstamp-context` → only available in that project
 - **Global install**: `npm install -g logicstamp-context` → available everywhere via `stamp` command
+
+## What's New in v0.2.0
+
+🎨 **Style Metadata Extraction**
+- **New `stamp context style` command** - Generate design-aware context bundles with visual and layout information
+- **`--include-style` flag** - Alternative syntax for enabling style metadata extraction
+- **Comprehensive style detection** - Identifies Tailwind CSS, SCSS/CSS modules, inline styles, styled-components, and framer-motion
+- **Layout pattern recognition** - Extracts flex/grid patterns, hero sections, feature cards, and responsive breakpoints
+- **Visual design metadata** - Captures color palettes, spacing patterns, border radius, and typography classes
+- **Animation detection** - Identifies framer-motion animations, CSS transitions, and viewport triggers
+- **SCSS/CSS module parsing** - Analyzes imported style files to extract selectors, properties, and SCSS features
+
+📊 **Enhanced Token Comparison**
+- **Four-mode comparison** - `--compare-modes` now shows `none`, `header`, `header+style`, and `full` modes
+- **Dual comparison tables** - Shows savings vs raw source and vs full context for better decision-making
+- **Accurate style impact** - Automatically regenerates contracts with/without style metadata for precise token counts
+- **Optional tokenizer support** - Automatically uses `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) if installed for accurate token counts, with graceful fallback to character-based estimation
+
+🏗️ **Architectural Improvements**
+- **Modular CLI structure** - Refactored into dedicated handlers for better maintainability and testability
+- **Extracted AST parsing** - Modularized AST extraction into focused detector and extractor modules
+- **Modularized style extraction** - Organized style extraction into dedicated modules (tailwind, scss, motion, layout, etc.)
+- **Improved code organization** - Better separation of concerns and easier contribution
+
+**Installation for Accurate Token Counts:**
+
+By default, LogicStamp Context uses a fast character-based heuristic (usually within 10–15% of real token counts). For model-accurate counts, you can optionally install tokenizer libraries in the same environment where you use `stamp`.
+
+**If you use LogicStamp Context in a project (recommended):**
+
+```bash
+# Install LogicStamp Context as a dev dependency
+npm install -D logicstamp-context
+
+# Install tokenizers in your project root
+npm install @dqbd/tiktoken @anthropic-ai/tokenizer
+
+# Run with npx
+npx stamp context
+```
+
+**If you installed LogicStamp Context globally:**
+
+```bash
+# Install LogicStamp Context globally
+npm install -g logicstamp-context
+
+# Install tokenizers globally (same environment)
+npm install -g @dqbd/tiktoken @anthropic-ai/tokenizer
+
+# Run from anywhere
+stamp context
+```
+
+**Important:**
+- Install tokenizers in your **project root** (for local installs) or **globally** (for global installs), alongside where you installed `logicstamp-context`
+- You do **not** need to (and should **not**) install anything manually inside the `logicstamp-context` package folder under `node_modules`
+- LogicStamp Context will automatically detect and use the tokenizers if available, or gracefully fall back to character-based estimation if not
 
 ## What's New in v0.1.1
 
@@ -393,11 +451,17 @@ Output:
 
 **Note:** The `--compare-modes` flag automatically regenerates contracts with and without style metadata to provide accurate token counts for all modes. This ensures you see the true impact of including style information.
 
-**Optional tokenizers for accurate counts:** Token estimation uses character-based approximations by default. For more accurate token counts, you can optionally install:
+**Optional tokenizers for accurate counts:** Token estimation uses character-based approximations by default. For more accurate token counts, you can optionally install these libraries:
+
 - `@dqbd/tiktoken` for GPT-4 token counts
 - `@anthropic-ai/tokenizer` for Claude token counts
 
-If installed, these are automatically used for precise token counting in `--compare-modes` and throughout the tool.
+**Installation location:**
+- **Local install** (recommended): Install tokenizers in your project root when using `npm install -D logicstamp-context`
+- **Global install**: Install tokenizers globally when using `npm install -g logicstamp-context`
+- **Do not** install tokenizers inside the `logicstamp-context` package folder
+
+LogicStamp Context will automatically detect and use tokenizers if available, or fall back to character-based estimation (typically within 10-15% accuracy) if not installed.
 
 ### Stats for CI/CD
 

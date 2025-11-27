@@ -113,7 +113,7 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 
 ---
 
-## [Unreleased]
+## [0.2.0] - 2025-11-28
 
 ### Added
 
@@ -133,6 +133,13 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 - **Style overhead visibility** - Clearly displays the token cost of including style metadata
 - **Optional tokenizer support** - Automatically uses `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) if installed for accurate token counts, with graceful fallback to character-based estimation
 
+#### Architectural Improvements
+- **Modular CLI structure** - Refactored CLI into dedicated handlers for better maintainability
+- **Extracted AST parsing** - Modularized AST extraction into dedicated detector and extractor modules
+- **Modularized style extraction** - Organized style extraction into focused modules (tailwind, scss, motion, layout, etc.)
+- **Modularized pack utilities** - Separated pack functionality into builder, collector, loader, and resolver modules
+- **Improved code organization** - Better separation of concerns and testability
+
 ### Changed
 
 - **`--compare-modes` output format** - Enhanced to include `header+style` mode and show two comparison tables
@@ -147,6 +154,19 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 - Enhanced token optimization documentation with `--compare-modes` examples
 - Added style metadata examples and use cases throughout documentation
 - Documented optional tokenizer libraries (`@dqbd/tiktoken` and `@anthropic-ai/tokenizer`) for accurate token counts
+- Updated schema documentation to include style metadata fields
+
+### Fixed
+
+- N/A
+
+### Security
+
+- N/A
+
+---
+
+## [Unreleased]
 
 ### Planned Features
 - Custom profile configuration and overrides
