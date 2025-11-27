@@ -89,19 +89,19 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ### Changed
 
 #### CI-Friendly Defaults
-- **`stamp context` no longer prompts** - Interactive prompts moved to `stamp init` for better CI/CD compatibility
-- **Safe defaults** - `stamp context` now defaults to skipping both `.gitignore` and `LLM_CONTEXT.md` setup unless explicitly opted in via `stamp init`
-- **Auto-config creation** - On first run, creates `.logicstamp/config.json` with safe defaults (`'skipped'` for both preferences)
+- **`stamp context` no longer prompts** — All interactive prompts were moved to `stamp init` for better CI/CD compatibility.
+- **Safe defaults** — `stamp context` now skips both `.gitignore` setup and `LLM_CONTEXT.md` generation unless these preferences are explicitly enabled via `stamp init`.
+- **Auto-config creation** — On first run, `stamp context` creates `.logicstamp/config.json` with both preferences set to "skipped" for maximum CI safety and reproducibility.
 
 #### Improved Initialization
-- **`stamp init` now prompts interactively** - Prompts for both `.gitignore` patterns and `LLM_CONTEXT.md` generation (only in interactive/TTY mode)
-- **Non-interactive defaults** - In CI/non-TTY environments, defaults to "yes" for both prompts
-- **Better user control** - Users can explicitly set preferences via `stamp init` before running `stamp context`
+- **`stamp init` now prompts interactively** — Prompts for `.gitignore` patterns and `LLM_CONTEXT.md` generation (only in interactive/TTY environments).
+- **Non-interactive defaults** — In CI/non-TTY environments, `stamp init` defaults to "yes" for both prompts.
+- **Better user control** — Users can establish `.gitignore` and `LLM_CONTEXT.md` preferences early via `stamp init` before running `stamp context`.
 
 ### Added
 
-- **`--skip-gitignore` flag for `stamp context`** - Allows skipping `.gitignore` setup on a per-run basis, useful for CI environments
-- **Config-based behavior** - `stamp context` respects preferences saved in `.logicstamp/config.json` without prompting
+- **`--skip-gitignore` flag for `stamp context`** — Temporarily skips `.gitignore` setup on a per-run basis, regardless of saved preferences.
+- **Config-based behavior** — `stamp context` now respects preferences saved in `.logicstamp/config.json` without prompting.
 
 ### Fixed
 
