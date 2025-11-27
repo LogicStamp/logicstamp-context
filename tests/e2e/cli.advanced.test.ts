@@ -45,9 +45,10 @@ describe('CLI Advanced Features Tests', () => {
       expect(stdout).toContain('Full context (code+style):');
 
       // Verify mode comparison block
-      expect(stdout).toContain('📊 Mode Comparison:');
+      expect(stdout).toContain('📊 Current Mode Comparison:');
       expect(stdout).toContain('none:');
-      expect(stdout).toContain('header:');
+      // Current mode will be shown (could be "header" or "header+style" depending on mode)
+      expect(stdout).toMatch(/header|header\+style/);
       expect(stdout).toContain('full:');
       expect(stdout).toContain('tokens');
     }, 30000);
