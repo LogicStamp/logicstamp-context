@@ -195,6 +195,10 @@
         "links": {
           "$ref": "#/definitions/ContractLinks"
         },
+        "style": {
+          "$ref": "#/definitions/StyleMetadata",
+          "description": "Optional style metadata (only when --include-style is used)"
+        },
         "semanticHash": {
           "type": "string",
           "pattern": "^uif:[a-f0-9]{24}$",
@@ -422,6 +426,290 @@
           "type": "string",
           "format": "uri",
           "description": "Link to specification"
+        }
+      },
+      "additionalProperties": false
+    },
+    "StyleMetadata": {
+      "type": "object",
+      "properties": {
+        "styleSources": {
+          "$ref": "#/definitions/StyleSources"
+        },
+        "layout": {
+          "$ref": "#/definitions/LayoutMetadata"
+        },
+        "visual": {
+          "$ref": "#/definitions/VisualMetadata"
+        },
+        "animation": {
+          "$ref": "#/definitions/AnimationMetadata"
+        },
+        "pageLayout": {
+          "$ref": "#/definitions/PageLayoutMetadata"
+        }
+      },
+      "additionalProperties": false
+    },
+    "StyleSources": {
+      "type": "object",
+      "properties": {
+        "tailwind": {
+          "type": "object",
+          "properties": {
+            "categories": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "description": "Tailwind classes categorized by type (layout, spacing, colors, typography, borders, effects)"
+            },
+            "breakpoints": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Responsive breakpoints used (sm, md, lg, xl, 2xl)"
+            },
+            "classCount": {
+              "type": "number",
+              "description": "Total number of Tailwind classes detected"
+            }
+          },
+          "additionalProperties": false
+        },
+        "scssModule": {
+          "type": "string",
+          "description": "Path to imported SCSS module file"
+        },
+        "scssDetails": {
+          "type": "object",
+          "properties": {
+            "selectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "CSS selectors found in the SCSS file"
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "CSS properties used"
+            },
+            "features": {
+              "type": "object",
+              "properties": {
+                "variables": {
+                  "type": "boolean",
+                  "description": "Uses SCSS variables"
+                },
+                "nesting": {
+                  "type": "boolean",
+                  "description": "Uses SCSS nesting"
+                },
+                "mixins": {
+                  "type": "boolean",
+                  "description": "Uses SCSS mixins"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "cssModule": {
+          "type": "string",
+          "description": "Path to imported CSS module file"
+        },
+        "cssDetails": {
+          "type": "object",
+          "properties": {
+            "selectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "properties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "inlineStyles": {
+          "type": "boolean",
+          "description": "Uses inline styles (style={{...}})"
+        },
+        "styledComponents": {
+          "type": "object",
+          "properties": {
+            "components": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Styled component names (e.g., ['div', 'Button'])"
+            },
+            "usesTheme": {
+              "type": "boolean",
+              "description": "Uses theme"
+            },
+            "usesCssProp": {
+              "type": "boolean",
+              "description": "Uses css prop"
+            }
+          },
+          "additionalProperties": false
+        },
+        "motion": {
+          "type": "object",
+          "properties": {
+            "components": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Motion components (motion.div, motion.button, etc.)"
+            },
+            "variants": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Variant names used"
+            },
+            "features": {
+              "type": "object",
+              "properties": {
+                "gestures": {
+                  "type": "boolean",
+                  "description": "Uses gesture handlers (whileHover, whileTap, etc.)"
+                },
+                "layoutAnimations": {
+                  "type": "boolean",
+                  "description": "Uses layout animations (layout prop)"
+                },
+                "viewportAnimations": {
+                  "type": "boolean",
+                  "description": "Uses viewport-triggered animations (useInView, viewport)"
+                }
+              },
+              "required": ["gestures", "layoutAnimations", "viewportAnimations"],
+              "additionalProperties": false
+            }
+          },
+          "required": ["features"],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "LayoutMetadata": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["flex", "grid", "relative", "absolute"],
+          "description": "Layout type"
+        },
+        "cols": {
+          "type": "string",
+          "description": "Grid column pattern (e.g., 'grid-cols-2 md:grid-cols-3')"
+        },
+        "hasHeroPattern": {
+          "type": "boolean",
+          "description": "Indicates hero section pattern (large text + CTA buttons)"
+        },
+        "hasFeatureCards": {
+          "type": "boolean",
+          "description": "Indicates feature card grid pattern"
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Identified page sections"
+        }
+      },
+      "additionalProperties": false
+    },
+    "VisualMetadata": {
+      "type": "object",
+      "properties": {
+        "colors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Color utility classes (sorted, limited to top 10)"
+        },
+        "spacing": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Spacing utility classes (sorted, limited to top 10)"
+        },
+        "radius": {
+          "type": "string",
+          "description": "Most common border radius pattern"
+        },
+        "typography": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Typography classes (sorted, limited to top 10)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "AnimationMetadata": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Animation type (e.g., 'fade-in', 'slide')"
+        },
+        "library": {
+          "type": "string",
+          "enum": ["framer-motion", "css"],
+          "description": "Animation library"
+        },
+        "trigger": {
+          "type": "string",
+          "description": "Trigger type (e.g., 'inView', 'hover', 'click')"
+        }
+      },
+      "additionalProperties": false
+    },
+    "PageLayoutMetadata": {
+      "type": "object",
+      "properties": {
+        "pageRole": {
+          "type": "string",
+          "description": "Page role (e.g., 'landing', 'dashboard')"
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Page sections"
+        },
+        "ctaCount": {
+          "type": "number",
+          "description": "Number of call-to-action elements"
         }
       },
       "additionalProperties": false

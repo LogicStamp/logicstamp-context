@@ -106,6 +106,93 @@ export type ExportMetadata =
   | 'named'
   | { named: string[] };
 
+/**
+ * Style metadata extracted from component
+ */
+export interface StyleSources {
+  // Tailwind with detailed class categorization
+  tailwind?: {
+    categories: Record<string, string[]>; // layout, spacing, colors, etc.
+    breakpoints?: string[]; // sm, md, lg, xl, 2xl
+    classCount: number;
+  };
+
+  // SCSS module with parsed details
+  scssModule?: string;
+  scssDetails?: {
+    selectors: string[]; // CSS selectors found in the SCSS file
+    properties: string[]; // CSS properties used
+    features: {
+      variables?: boolean; // Uses SCSS variables
+      nesting?: boolean; // Uses SCSS nesting
+      mixins?: boolean; // Uses SCSS mixins
+    };
+  };
+
+  // CSS module with parsed details
+  cssModule?: string;
+  cssDetails?: {
+    selectors: string[];
+    properties: string[];
+  };
+
+  // Inline styles
+  inlineStyles?: boolean;
+
+  // Styled-components/Emotion with component analysis
+  styledComponents?: {
+    components?: string[]; // Styled component names (e.g., ['div', 'Button'])
+    usesTheme?: boolean; // Uses theme
+    usesCssProp?: boolean; // Uses css prop
+  };
+
+  // Framer Motion with animation details
+  motion?: {
+    components?: string[]; // motion.div, motion.button, etc.
+    variants?: string[]; // Variant names used
+    features: {
+      gestures?: boolean; // whileHover, whileTap, etc.
+      layoutAnimations?: boolean; // layout prop
+      viewportAnimations?: boolean; // useInView, viewport
+    };
+  };
+}
+
+export interface LayoutMetadata {
+  type?: 'flex' | 'grid' | 'relative' | 'absolute';
+  cols?: string;
+  hasHeroPattern?: boolean;
+  hasFeatureCards?: boolean;
+  sections?: string[];
+}
+
+export interface VisualMetadata {
+  colors?: string[];
+  spacing?: string[];
+  radius?: string;
+  typography?: string[];
+}
+
+export interface AnimationMetadata {
+  type?: string;
+  library?: string;
+  trigger?: string;
+}
+
+export interface PageLayoutMetadata {
+  pageRole?: string;
+  sections?: string[];
+  ctaCount?: number;
+}
+
+export interface StyleMetadata {
+  styleSources?: StyleSources;
+  layout?: LayoutMetadata;
+  visual?: VisualMetadata;
+  animation?: AnimationMetadata;
+  pageLayout?: PageLayoutMetadata;
+}
+
 export interface UIFContract {
   type: 'UIFContract';
   schemaVersion: '0.3';
@@ -123,6 +210,7 @@ export interface UIFContract {
   metrics?: ContractMetrics;
   links?: ContractLinks;
   nextjs?: NextJSMetadata;  // Next.js App Router metadata
+  style?: StyleMetadata;  // Optional style metadata
   semanticHash: string;
   fileHash: string;
 }

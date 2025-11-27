@@ -4,7 +4,7 @@
   <img src="assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="120" height="120">
 </div>
 
-![Version](https://img.shields.io/badge/version-0.1.1-blue.svg)
+![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)
 ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
@@ -25,7 +25,7 @@ That's it! LogicStamp Context will scan your project and generate `context.json`
 ![LogicStamp Context in action](assets/demo-screenshot.png)
 *Terminal output showing `stamp context` execution and generated context.json structure*
 
-> **Note:** This is a beta release (v0.1.1). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+> **Note:** This is a beta release (v0.2.0). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 ## What is this?
 
@@ -44,6 +44,64 @@ After installation, the `stamp` command will be available globally.
 **Note**: "Global CLI" means the tool is installed globally on your system (via `npm install -g`), making the `stamp` command available from any directory in your terminal, not just within a specific project folder.
 - **Local install**: `npm install logicstamp-context` → only available in that project
 - **Global install**: `npm install -g logicstamp-context` → available everywhere via `stamp` command
+
+## What's New in v0.2.0
+
+🎨 **Style Metadata Extraction**
+- **New `stamp context style` command** - Generate design-aware context bundles with visual and layout information
+- **`--include-style` flag** - Alternative syntax for enabling style metadata extraction
+- **Comprehensive style detection** - Identifies Tailwind CSS, SCSS/CSS modules, inline styles, styled-components, and framer-motion
+- **Layout pattern recognition** - Extracts flex/grid patterns, hero sections, feature cards, and responsive breakpoints
+- **Visual design metadata** - Captures color palettes, spacing patterns, border radius, and typography classes
+- **Animation detection** - Identifies framer-motion animations, CSS transitions, and viewport triggers
+- **SCSS/CSS module parsing** - Analyzes imported style files to extract selectors, properties, and SCSS features
+
+📊 **Enhanced Token Comparison**
+- **Four-mode comparison** - `--compare-modes` now shows `none`, `header`, `header+style`, and `full` modes
+- **Dual comparison tables** - Shows savings vs raw source and vs full context for better decision-making
+- **Accurate style impact** - Automatically regenerates contracts with/without style metadata for precise token counts
+- **Optional tokenizer support** - Automatically uses `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) if installed for accurate token counts, with graceful fallback to character-based estimation
+
+🏗️ **Architectural Improvements**
+- **Modular CLI structure** - Refactored into dedicated handlers for better maintainability and testability
+- **Extracted AST parsing** - Modularized AST extraction into focused detector and extractor modules
+- **Modularized style extraction** - Organized style extraction into dedicated modules (tailwind, scss, motion, layout, etc.)
+- **Improved code organization** - Better separation of concerns and easier contribution
+
+**Installation for Accurate Token Counts:**
+
+By default, LogicStamp Context uses a fast character-based heuristic (usually within 10–15% of real token counts). For model-accurate counts, you can optionally install tokenizer libraries in the same environment where you use `stamp`.
+
+**If you use LogicStamp Context in a project (recommended):**
+
+```bash
+# Install LogicStamp Context as a dev dependency
+npm install -D logicstamp-context
+
+# Install tokenizers in your project root
+npm install @dqbd/tiktoken @anthropic-ai/tokenizer
+
+# Run with npx
+npx stamp context
+```
+
+**If you installed LogicStamp Context globally:**
+
+```bash
+# Install LogicStamp Context globally
+npm install -g logicstamp-context
+
+# Install tokenizers globally (same environment)
+npm install -g @dqbd/tiktoken @anthropic-ai/tokenizer
+
+# Run from anywhere
+stamp context
+```
+
+**Important:**
+- Install tokenizers in your **project root** (for local installs) or **globally** (for global installs), alongside where you installed `logicstamp-context`
+- You do **not** need to (and should **not**) install anything manually inside the `logicstamp-context` package folder under `node_modules`
+- LogicStamp Context will automatically detect and use the tokenizers if available, or gracefully fall back to character-based estimation if not
 
 ## What's New in v0.1.1
 
@@ -102,6 +160,12 @@ stamp init
 
 # Generate context.json (llm-chat profile)
 stamp context
+
+# Generate context with style metadata (Tailwind, SCSS, animations, layout)
+stamp context style
+
+# Or use the flag (equivalent)
+stamp context --include-style
 
 # Preview stats without writing files
 stamp context --dry-run --stats
@@ -195,6 +259,7 @@ stamp --version                    # Show version number
 stamp --help                       # Show help
 stamp init [path] [options]
 stamp context [path] [options]
+stamp context style [path] [options]  # Generate context with style metadata
 stamp context compare <old.json> <new.json> [options]
 stamp context validate [file] [options]
 stamp context clean [path] [options]
@@ -209,6 +274,10 @@ stamp context clean [path] [options]
 - **`stamp context [path]`** - Scans a directory and writes AI-ready context files organized by folder. Generates multiple `context.json` files (one per folder containing components) plus a `context_main.json` index file at the output root. Shows token estimates and mode comparison in output. Automatically validates the generated context before writing. **CI-friendly**: No interactive prompts - respects preferences saved in `.logicstamp/config.json` (created by `stamp init`). On first run without config, creates `.logicstamp/config.json` with safe defaults (skips both `.gitignore` and `LLM_CONTEXT.md` setup).
 
   See [docs/cli/CONTEXT.md](docs/cli/CONTEXT.md) for detailed documentation.
+
+- **`stamp context style [path]`** - Generates context with style metadata included. Equivalent to `stamp context --include-style`. Extracts visual and layout information from components including Tailwind classes, SCSS/CSS modules, styled-components, framer-motion animations, layout patterns (flex/grid), color palettes, spacing, typography, and animation configurations. This makes context bundles design-aware, enabling AI assistants to understand both the logic and visual presentation of your components.
+
+  See [docs/cli/STYLE.md](docs/cli/STYLE.md) for detailed documentation.
 
 - **`stamp context compare [options]`** - Compares all context files (multi-file mode) or two specific files to detect drift. In multi-file mode, uses `context_main.json` as index to compare all folder context files and detect ADDED/ORPHANED folders, per-folder DRIFT, and unchanged files (PASS). Shows three-tier output: folder summary, component summary, and detailed changes. Supports `--approve` for auto-updates (Jest-style), `--clean-orphaned` to remove stale files, and `--stats` for per-folder token deltas. Exits with code 1 if drift is detected (CI-friendly).
 
@@ -250,6 +319,7 @@ See [docs/cli/INIT.md](docs/cli/INIT.md) for detailed documentation.
 | `--dry-run` | | Skip writing output; show on-screen summary only | `false` |
 | `--stats` | | Emit single-line JSON stats with token estimates (intended for CI) | `false` |
 | `--compare-modes` | | Show detailed token comparison table across modes (none/header/full) | `false` |
+| `--include-style` | | Extract style metadata (Tailwind, SCSS, animations, layout) | `false` |
 | `--skip-gitignore` | | Skip `.gitignore` setup (never prompt or modify) | `false` |
 | `--quiet` | `-q` | Suppress verbose output (show only errors) | `false` |
 | `--help` | `-h` | Show help message | |
@@ -327,24 +397,27 @@ LogicStamp Context includes built-in token cost analysis and optimization featur
 Every context generation shows token costs for both GPT-4o-mini and Claude:
 
 ```
-📏 Token Estimates (header mode):
-   GPT-4o-mini: 13,895 | Full code: ~39,141 (~65% savings)
-   Claude:      12,351 | Full code: ~34,792 (~65% savings)
+📏 Token Estimates (header+style mode):
+   GPT-4o-mini: 13,895 tokens
+   Claude:      12,351 tokens
 
-📊 Mode Comparison:
-   none:       ~8,337 tokens
-   header:     ~13,895 tokens
-   full:       ~39,141 tokens
+   Comparison:
+     Raw source        | Header        | Header+style
+         22,000        |     12,228     |     13,895
+
+   Full context (code+style): ~39,141 GPT-4o-mini / ~34,792 Claude
 ```
 
 This helps you:
 - **Understand costs** at a glance
 - **Choose the right mode** for your budget
-- **See savings** compared to including full source code
+- **See savings** compared to full context (code+style) mode
+
+**Enhanced with `--compare-modes`:** The `--compare-modes` flag provides detailed comparisons across all modes (none/header/header+style/full) with accurate token counts. It automatically regenerates contracts with and without style metadata to show the true impact of including style information.
 
 ### Mode Comparison Table
 
-Use `--compare-modes` for a detailed comparison:
+Use `--compare-modes` for a detailed comparison across all modes:
 
 ```bash
 stamp context --compare-modes
@@ -354,17 +427,41 @@ Output:
 ```
 📊 Mode Comparison
 
-Mode     | Tokens GPT-4o | Tokens Claude | Savings vs Full
----------|---------------|---------------|------------------
-none     |         8,337 |         7,411 | 79%
-header   |        13,895 |        12,351 | 65%
-full     |        39,141 |        34,792 | 0%
+   Comparison:
+     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Raw Source
+     -------------|---------------|---------------|------------------------
+     Raw source   |        22,000 |        19,556 | 0%
+     Header       |        12,228 |        10,867 | 44%
+     Header+style |        13,895 |        12,351 | 37%
+
+   Mode breakdown:
+     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Full Context
+     -------------|---------------|---------------|--------------------------
+     none         |         8,337 |         7,411 | 79%
+     header       |        12,228 |        10,867 | 69%
+     header+style |        13,895 |        12,351 | 65%
+     full         |        39,141 |        34,792 | 0%
 ```
 
 **When to use each mode:**
-- **`none`** - API documentation, CI validation (no code snippets)
-- **`header`** - AI chat, code review (JSDoc headers + contracts)
-- **`full`** - Deep analysis, debugging (complete source code)
+- **`none`** - API documentation, CI validation (no code snippets, no style)
+- **`header`** - AI chat, code review (JSDoc headers + contracts, no style)
+- **`header+style`** - Design-aware AI chat (headers + contracts + style metadata)
+- **`full`** - Deep analysis, debugging (complete source code + contracts + style info)
+
+**Note:** The `--compare-modes` flag automatically regenerates contracts with and without style metadata to provide accurate token counts for all modes. This ensures you see the true impact of including style information.
+
+**Optional tokenizers for accurate counts:** Token estimation uses character-based approximations by default. For more accurate token counts, you can optionally install these libraries:
+
+- `@dqbd/tiktoken` for GPT-4 token counts
+- `@anthropic-ai/tokenizer` for Claude token counts
+
+**Installation location:**
+- **Local install** (recommended): Install tokenizers in your project root when using `npm install -D logicstamp-context`
+- **Global install**: Install tokenizers globally when using `npm install -g logicstamp-context`
+- **Do not** install tokenizers inside the `logicstamp-context` package folder
+
+LogicStamp Context will automatically detect and use tokenizers if available, or fall back to character-based estimation (typically within 10-15% accuracy) if not installed.
 
 ### Stats for CI/CD
 

@@ -130,13 +130,58 @@ This lightweight strategy keeps the workflow simple while still being safe and r
 ```
 logicstamp-context/
 ├── src/
-│   ├── cli/           # CLI entry point
-│   │   └── index.ts   # Main CLI logic
+│   ├── cli/           # CLI entry point and command handling
+│   │   ├── index.ts    # Main CLI entry point
+│   │   ├── stamp.ts    # Command routing
+│   │   ├── commands/  # Command implementations
+│   │   │   ├── context.ts
+│   │   │   ├── context/  # Context command modules
+│   │   │   │   ├── contractBuilder.ts
+│   │   │   │   ├── bundleFormatter.ts
+│   │   │   │   ├── tokenEstimator.ts
+│   │   │   │   ├── fileWriter.ts
+│   │   │   │   ├── statsCalculator.ts
+│   │   │   │   └── configManager.ts
+│   │   │   ├── compare.ts
+│   │   │   ├── validate.ts
+│   │   │   ├── clean.ts
+│   │   │   ├── init.ts
+│   │   │   └── style.ts
+│   │   ├── handlers/  # Command handlers
+│   │   │   ├── contextHandler.ts
+│   │   │   ├── compareHandler.ts
+│   │   │   ├── validateHandler.ts
+│   │   │   ├── cleanHandler.ts
+│   │   │   ├── initHandler.ts
+│   │   │   └── styleHandler.ts
+│   │   └── parser/    # Argument parsing and help text
+│   │       ├── argumentParser.ts
+│   │       └── helpText.ts
 │   ├── core/          # Core functionality
-│   │   ├── astParser.ts      # TypeScript AST parsing
+│   │   ├── astParser.ts      # Main AST parsing (orchestrates modules)
+│   │   ├── astParser/        # AST parsing modules
+│   │   │   ├── detectors.ts   # Component kind detection
+│   │   │   └── extractors/   # Extraction modules
+│   │   │       ├── componentExtractor.ts
+│   │   │       ├── propExtractor.ts
+│   │   │       ├── stateExtractor.ts
+│   │   │       └── eventExtractor.ts
+│   │   ├── styleExtractor.ts # Main style extraction (re-export)
+│   │   ├── styleExtractor/   # Style extraction modules
+│   │   │   ├── styleExtractor.ts  # Main coordination
+│   │   │   ├── tailwind.ts
+│   │   │   ├── scss.ts
+│   │   │   ├── styled.ts
+│   │   │   ├── motion.ts
+│   │   │   └── layout.ts
+│   │   ├── pack.ts            # Main bundling (orchestrates modules)
+│   │   ├── pack/               # Bundling modules
+│   │   │   ├── resolver.ts     # Dependency resolution
+│   │   │   ├── collector.ts    # Dependency collection
+│   │   │   ├── loader.ts       # File loading
+│   │   │   └── builder.ts      # Bundle building
 │   │   ├── contractBuilder.ts # Contract generation
 │   │   ├── manifest.ts        # Dependency graph
-│   │   ├── pack.ts            # Context bundling
 │   │   └── signature.ts       # Logic signature extraction
 │   ├── types/         # TypeScript type definitions
 │   │   └── UIFContract.ts

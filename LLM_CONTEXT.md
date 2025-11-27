@@ -9,11 +9,12 @@
 **Note**: "Global CLI" means the tool is installed globally on your system (via `npm install -g`), making the `stamp` command available from any directory in your terminal, not just within a specific project folder.
 
 ## Core Workflow
-- `src/cli/index.ts` and `src/cli/stamp.ts` orchestrate CLI execution: read CLI flags, call the analyzer pipeline, write bundles to disk, and handle compare/validate commands.
+- `src/cli/index.ts` and `src/cli/stamp.ts` orchestrate CLI execution: read CLI flags via `src/cli/parser/argumentParser.ts`, route to handlers in `src/cli/handlers/`, and coordinate command execution.
 - `src/cli/commands/compare.ts` implements drift detection for single-file and multi-file comparison modes, including ADDED/ORPHANED/DRIFT/PASS detection.
-- `src/core/astParser.ts` uses `ts-morph` to parse source files, derive component metadata, and normalize type information.
+- `src/core/astParser.ts` orchestrates AST parsing modules (`astParser/extractors/` and `astParser/detectors.ts`) that use `ts-morph` to parse source files, derive component metadata, and normalize type information.
 - `src/core/contractBuilder.ts` converts raw AST findings into UIF contracts and merges incremental updates.
-- `src/core/manifest.ts` and `src/core/pack.ts` assemble dependency graphs, compute bundle hashes, and format final output entries.
+- `src/core/manifest.ts` and `src/core/pack.ts` (with modules in `pack/`) assemble dependency graphs, compute bundle hashes, and format final output entries.
+- `src/core/styleExtractor.ts` (with modules in `styleExtractor/`) extracts style metadata from components (Tailwind, SCSS, styled-components, framer-motion, layout patterns).
 - `src/types/UIFContract.ts` defines the UIF contract schema; `src/utils/fsx.ts` and `src/utils/hash.ts` provide file and hashing utilities.
 
 ## CLI Usage Cheatsheet

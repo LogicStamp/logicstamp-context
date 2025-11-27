@@ -28,13 +28,19 @@
  * Creates compact, hash-locked bundles with dependency graphs
  */
 
-import { readFile } from 'node:fs/promises';
-import { join, resolve, isAbsolute } from 'node:path';
+import { resolve, isAbsolute } from 'node:path';
 import { normalizeEntryId } from '../utils/fsx.js';
 import type { UIFContract } from '../types/UIFContract.js';
 import type { ProjectManifest, ComponentNode } from './manifest.js';
-import { bundleHash as computeBundleHashStable } from '../utils/hash.js';
 import { createRequire } from 'node:module';
+
+// Import from extracted modules
+import { resolveKey, resolveDependency, findComponentByName } from './pack/resolver.js';
+import { collectDependencies } from './pack/collector.js';
+import type { MissingDependency } from './pack/collector.js';
+import { loadManifest, loadContract, readSourceCode, extractCodeHeader } from './pack/loader.js';
+import { buildEdges, computeBundleHash, stableSort, validateHashLock } from './pack/builder.js';
+import type { BundleNode } from './pack/builder.js';
 
 // Load package.json to get version
 const require = createRequire(import.meta.url);
@@ -68,21 +74,12 @@ export interface PackOptions {
 /**
  * A node in the bundle graph
  */
-export interface BundleNode {
-  entryId: string;
-  contract: UIFContract;
-  codeHeader?: string | null;
-  code?: string | null;
-}
+export type { BundleNode } from './pack/builder.js';
 
 /**
  * Missing dependency information
  */
-export interface MissingDependency {
-  name: string;
-  reason: string;
-  referencedBy?: string;
-}
+export type { MissingDependency } from './pack/collector.js';
 
 /**
  * Complete bundle structure
@@ -141,35 +138,13 @@ export interface LogicStampIndex {
 /**
  * Load manifest from file
  */
-export async function loadManifest(basePath: string): Promise<ProjectManifest> {
-  const manifestPath = join(basePath, 'logicstamp.manifest.json');
-  try {
-    const content = await readFile(manifestPath, 'utf8');
-    return JSON.parse(content) as ProjectManifest;
-  } catch (error) {
-    throw new Error(
-      `Failed to load manifest at ${manifestPath}: ${(error as Error).message}`
-    );
-  }
-}
+export { loadManifest } from './pack/loader.js';
 
 /**
  * Load a sidecar contract file
  * Sidecar path is computed from the manifest key (project-relative): resolved from projectRoot + key + '.uif.json'
  */
-export async function loadContract(entryId: string, projectRoot: string): Promise<UIFContract | null> {
-  // Resolve relative path from project root
-  const absolutePath = isAbsolute(entryId) ? entryId : resolve(projectRoot, entryId);
-  const sidecarPath = `${absolutePath}.uif.json`;
-
-  try {
-    const content = await readFile(sidecarPath, 'utf8');
-    return JSON.parse(content) as UIFContract;
-  } catch (error) {
-    // Sidecar file doesn't exist or can't be read
-    return null;
-  }
-}
+export { loadContract } from './pack/loader.js';
 
 /**
  * Normalize a file path for cross-platform consistency
@@ -182,256 +157,50 @@ export { normalizeEntryId } from '../utils/fsx.js';
  * Resolve input (path or name) to a manifest key
  * This is the canonical resolution used by both pack and similar commands
  */
-export function resolveKey(
-  manifest: ProjectManifest,
-  input: string
-): string | null {
-  const normalized = normalizeEntryId(input);
-
-  // Try exact match first (normalized key match)
-  if (manifest.components[normalized]) {
-    return normalized;
-  }
-
-  // Try to find by normalized key match
-  const entries = Object.entries(manifest.components);
-  for (const [key, node] of entries) {
-    if (normalizeEntryId(key) === normalized || normalizeEntryId(node.entryId) === normalized) {
-      return key; // Return the manifest key, not the node's entryId
-    }
-  }
-
-  // Look for name match (Button, LoginForm, etc.)
-  // Build name → [keys] index for ambiguous cases
-  const nameMatches: string[] = [];
-  for (const [key] of entries) {
-    const fileName = key.split(/[/\\]/).pop()?.replace(/\.(tsx?|jsx?)$/, '');
-    if (fileName === input || fileName === input.replace(/\.(tsx?|jsx?)$/, '')) {
-      nameMatches.push(key);
-    }
-  }
-
-  if (nameMatches.length === 1) {
-    return nameMatches[0];
-  } else if (nameMatches.length > 1) {
-    // Ambiguous - return first match but this should be handled by caller
-    return nameMatches[0];
-  }
-
-  return null;
-}
+export { resolveKey } from './pack/resolver.js';
 
 /**
  * Find a component node by name or path
  * Returns the component node and the manifest key it was found under
  */
-export function findComponentByName(
-  manifest: ProjectManifest,
-  nameOrPath: string
-): ComponentNode | null {
-  const key = resolveKey(manifest, nameOrPath);
-  return key ? manifest.components[key] : null;
-}
+export { findComponentByName } from './pack/resolver.js';
 
 /**
  * Resolve a dependency name to a manifest key
  * Uses the canonical resolveKey() function for consistent resolution
  * Prioritizes relative paths to avoid cross-directory conflicts
  */
-export function resolveDependency(
-  manifest: ProjectManifest,
-  depName: string,
-  parentId: string
-): string | null {
-  // parentId is a manifest key (canonical identifier)
-
-  // First, try relative path resolution based on parent directory
-  // This ensures we resolve to components in the same directory tree first
-  // parentId is a manifest key (normalized path), extract directory
-  const parentDir = parentId.substring(0, parentId.lastIndexOf('/'));
-  const possiblePaths = [
-    `${parentDir}/${depName}.tsx`,
-    `${parentDir}/${depName}.ts`,
-    `${parentDir}/${depName}/index.tsx`,
-    `${parentDir}/${depName}/index.ts`,
-  ];
-
-  for (const path of possiblePaths) {
-    const key = resolveKey(manifest, path);
-    if (key) {
-      return key; // Return manifest key (canonical identifier)
-    }
-  }
-
-  // Only fall back to global name search if relative paths didn't work
-  // This prevents cross-directory conflicts (e.g., tests/fixtures vs examples)
-  const key = resolveKey(manifest, depName);
-  if (key) {
-    return key; // Return manifest key (canonical identifier)
-  }
-
-  return null;
-}
+export { resolveDependency } from './pack/resolver.js';
 
 /**
  * Perform BFS traversal to collect dependencies
  */
-export function collectDependencies(
-  entryId: string,
-  manifest: ProjectManifest,
-  depth: number,
-  maxNodes: number
-): { visited: Set<string>; missing: MissingDependency[] } {
-  const visited = new Set<string>();
-  const missing: MissingDependency[] = [];
-  const queue: Array<{ id: string; level: number }> = [{ id: entryId, level: 0 }];
-
-  while (queue.length > 0) {
-    const current = queue.shift()!;
-
-    // Normalize the ID for lookup
-    const normalizedId = normalizeEntryId(current.id);
-    
-    // Try to find component by normalized ID
-    let node = manifest.components[normalizedId];
-    let componentKey = normalizedId;
-    
-    // If not found, try to find by matching normalized entryIds
-    if (!node) {
-      for (const [key, comp] of Object.entries(manifest.components)) {
-        if (normalizeEntryId(key) === normalizedId || normalizeEntryId(comp.entryId) === normalizedId) {
-          node = comp;
-          componentKey = key;
-          break;
-        }
-      }
-    }
-
-    // Skip if already visited or exceeded depth
-    if (visited.has(componentKey) || current.level > depth) {
-      continue;
-    }
-
-    // Check max nodes limit
-    if (visited.size >= maxNodes) {
-      break;
-    }
-    
-    if (!node) {
-      missing.push({
-        name: current.id,
-        reason: 'Component not found in manifest',
-      });
-      continue;
-    }
-
-    visited.add(componentKey);
-
-    // Only traverse deeper if we haven't reached depth limit
-    if (current.level < depth) {
-      // Add dependencies to queue
-      for (const dep of node.dependencies) {
-        const resolvedId = resolveDependency(manifest, dep, componentKey);
-
-        if (resolvedId) {
-          if (!visited.has(resolvedId)) {
-            queue.push({ id: resolvedId, level: current.level + 1 });
-          }
-        } else {
-          // Track missing dependency
-          if (!missing.some((m) => m.name === dep)) {
-            missing.push({
-              name: dep,
-              reason: 'No contract found (third-party or not scanned)',
-              referencedBy: componentKey, // Use manifest key, not current.id
-            });
-          }
-        }
-      }
-    }
-  }
-
-  return { visited, missing };
-}
+export { collectDependencies } from './pack/collector.js';
 
 /**
  * Extract code header (JSDoc @uif block) from source file
  */
-export async function extractCodeHeader(entryId: string, projectRoot: string): Promise<string | null> {
-  try {
-    const absolutePath = isAbsolute(entryId) ? entryId : resolve(projectRoot, entryId);
-    const content = await readFile(absolutePath, 'utf8');
-
-    // Look for @uif JSDoc block
-    const headerMatch = content.match(/\/\*\*[\s\S]*?@uif[\s\S]*?\*\//);
-    if (headerMatch) {
-      return headerMatch[0];
-    }
-
-    return null;
-  } catch (error) {
-    return null;
-  }
-}
+export { extractCodeHeader } from './pack/loader.js';
 
 /**
  * Read full source code
  */
-export async function readSourceCode(entryId: string, projectRoot: string): Promise<string | null> {
-  try {
-    const absolutePath = isAbsolute(entryId) ? entryId : resolve(projectRoot, entryId);
-    return await readFile(absolutePath, 'utf8');
-  } catch (error) {
-    return null;
-  }
-}
+export { readSourceCode } from './pack/loader.js';
 
 /**
  * Build edges from nodes based on dependencies
  */
-export function buildEdges(nodes: BundleNode[], manifest: ProjectManifest): [string, string][] {
-  const edges: [string, string][] = [];
-  const nodeIds = new Set(nodes.map((n) => n.entryId));
-
-  for (const node of nodes) {
-    const componentNode = manifest.components[node.entryId];
-    if (!componentNode) continue;
-
-    for (const dep of componentNode.dependencies) {
-      const resolvedId = resolveDependency(manifest, dep, node.entryId);
-
-      // Only add edge if both nodes are in the bundle
-      if (resolvedId && nodeIds.has(resolvedId)) {
-        edges.push([node.entryId, resolvedId]);
-      }
-    }
-  }
-
-  return edges;
-}
+export { buildEdges } from './pack/builder.js';
 
 /**
  * Sort nodes deterministically for stable bundle hashes
  */
-export function stableSort(nodes: BundleNode[]): BundleNode[] {
-  return [...nodes].sort((a, b) => {
-    // Sort by entryId for determinism
-    return a.entryId.localeCompare(b.entryId);
-  });
-}
+export { stableSort } from './pack/builder.js';
 
 /**
  * Compute bundle hash from nodes using stable hashing
  */
-export function computeBundleHash(nodes: BundleNode[], depth: number): string {
-  // Use the stable bundleHash function from utils/hash
-  const nodeData = nodes.map(n => ({
-    entryId: n.entryId,
-    semanticHash: n.contract.semanticHash,
-  }));
-
-  return computeBundleHashStable(nodeData, depth, '0.1');
-}
+export { computeBundleHash } from './pack/builder.js';
 
 /**
  * Validate hash-lock: ensure contract hashes match current state
@@ -440,29 +209,7 @@ export function computeBundleHash(nodes: BundleNode[], depth: number): string {
  * (authoritative, not from header). fileHash() automatically strips @uif header block
  * before hashing, so header updates won't cause hash churn.
  */
-export async function validateHashLock(contract: UIFContract, entryId: string, projectRoot: string): Promise<boolean> {
-  try {
-    // Read the actual source file
-    const absolutePath = isAbsolute(entryId) ? entryId : resolve(projectRoot, entryId);
-    const sourceContent = await readFile(absolutePath, 'utf8');
-
-    // Recompute file hash (strips @uif header block automatically)
-    const { fileHash: computedFileHash } = await import('../utils/hash.js');
-    const actualFileHash = computedFileHash(sourceContent);
-
-    // Compare to sidecar contract.fileHash (authoritative, not header)
-    if (actualFileHash !== contract.fileHash) {
-      return false;
-    }
-
-    // Semantic hash should match (derived from structure + signature)
-    // If fileHash matches, semantic hash should also match since it's derived from the AST
-    return true;
-  } catch (error) {
-    // If we can't read/parse the file, fail validation
-    return false;
-  }
-}
+export { validateHashLock } from './pack/builder.js';
 
 /**
  * Main pack function - generates a bundle for a component

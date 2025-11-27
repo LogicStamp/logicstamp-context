@@ -16,15 +16,15 @@ export function Card({ title, description, onAction }: CardProps) {
   };
 
   return (
-    <div className="card">
-      <h2>{title}</h2>
-      <p>{description}</p>
+    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+      <h2 className="text-2xl font-bold text-gray-900 mb-2">{title}</h2>
+      <p className="text-gray-600 mb-4">{description}</p>
       {expanded && (
-        <div className="card-details">
-          <p>Additional details here...</p>
+        <div className="bg-gray-50 rounded-lg p-4 mb-4">
+          <p className="text-sm text-gray-700">Additional details here...</p>
         </div>
       )}
-      <div className="card-actions">
+      <div className="flex gap-3 mt-4">
         <Button onClick={handleToggle} variant="secondary">
           {expanded ? 'Collapse' : 'Expand'}
         </Button>

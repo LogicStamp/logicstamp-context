@@ -163,9 +163,15 @@ Perfect for CI.
 Every context run displays token estimates:
 
 ```
-📏 Token Estimates (header mode):
-   GPT-4o-mini: 13,895 | Full code: ~39,141 (65% savings)
-   Claude:      12,351 | Full code: ~34,792 (65% savings)
+📏 Token Estimates (header+style mode):
+   GPT-4o-mini: 13,895 tokens
+   Claude:      12,351 tokens
+
+   Comparison:
+     Raw source        | Header        | Header+style
+         22,000        |     12,228     |     13,895
+
+   Full context (code+style): ~39,141 GPT-4o-mini / ~34,792 Claude
 ```
 
 ### Compare modes
