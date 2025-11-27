@@ -164,6 +164,9 @@ export async function generateSummary(
     }
     console.log(`   💡 Tip: Install ${missing.join(' and/or ')} for accurate token counts`);
   }
+  console.log(`   ⚠️  Current mode = tokenizer-based.`);
+  console.log(`      Other modes / raw source = heuristic.`);
+  console.log(`      For precise per-mode breakdown, use "stamp context --compare-modes".`);
   console.log(`   GPT-4o-mini: ${formatTokenCount(tokenEstimates.currentGPT4)} tokens`);
   console.log(`   Claude:      ${formatTokenCount(tokenEstimates.currentClaude)} tokens`);
   console.log(`\n   Comparison:`);
@@ -175,6 +178,9 @@ export async function generateSummary(
   console.log(`\n   Full context (code+style): ~${formatTokenCount(tokenEstimates.modeEstimates.full.gpt4)} GPT-4o-mini / ~${formatTokenCount(tokenEstimates.modeEstimates.full.claude)} Claude`);
 
   console.log(`\n📊 Current Mode Comparison:`);
+  console.log(`   ⚠️  Current mode = tokenizer-based.`);
+  console.log(`      Other modes / raw source = heuristic.`);
+  console.log(`      For precise per-mode breakdown, use "stamp context --compare-modes".`);
   console.log(`   none:       ~${formatTokenCount(tokenEstimates.modeEstimates.none.gpt4)} tokens`);
   // Show current mode with honest labeling - reflects actual mode (header or header+style)
   const currentModeLabel = modeLabel;

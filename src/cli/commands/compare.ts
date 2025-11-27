@@ -288,6 +288,9 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
     const deltaPercent = ((deltaStat / oldTokens.gpt4) * 100).toFixed(2);
 
     console.log('Token Stats:');
+    console.log(`  ⚠️  Current mode = tokenizer-based.`);
+    console.log(`      Other modes / raw source = heuristic.`);
+    console.log(`      For precise per-mode breakdown, use "stamp context --compare-modes".`);
     console.log(`  Old: ${formatTokenCount(oldTokens.gpt4)} (GPT-4o-mini) | ${formatTokenCount(oldTokens.claude)} (Claude)`);
     console.log(`  New: ${formatTokenCount(newTokens.gpt4)} (GPT-4o-mini) | ${formatTokenCount(newTokens.claude)} (Claude)`);
     console.log(`  Δ ${deltaStat > 0 ? '+' : ''}${formatTokenCount(deltaStat)} (${deltaPercent > '0' ? '+' : ''}${deltaPercent}%)\n`);
@@ -543,7 +546,13 @@ export function displayMultiFileCompareResult(result: MultiFileCompareResult, st
     }
 
     // Display detailed folder results
-    console.log('📂 Folder Details:\n');
+    console.log('📂 Folder Details:');
+    if (stats) {
+      console.log('   ⚠️  Current mode = tokenizer-based.');
+      console.log('      Other modes / raw source = heuristic.');
+      console.log('      For precise per-mode breakdown, use "stamp context --compare-modes".');
+    }
+    console.log();
   }
 
   for (const folder of result.folders) {
