@@ -22,6 +22,9 @@ stamp context
 
 That's it! LogicStamp Context will scan your project and generate `context.json` files organized by folder, plus a `context_main.json` index file. Share these files with AI assistants for instant codebase understanding.
 
+![LogicStamp Context in action](assets/demo-screenshot.png)
+*Terminal output showing `stamp context` execution and generated context.json structure*
+
 > **Note:** This is a beta release (v0.1.1). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 ## What is this?
