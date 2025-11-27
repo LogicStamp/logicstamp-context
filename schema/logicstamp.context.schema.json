@@ -1,0 +1,430 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://logicstamp.dev/schemas/context/v0.1.json",
+  "title": "LogicStamp Context Bundle",
+  "description": "JSON Schema for LogicStamp Context bundles - AI-ready documentation of React/TypeScript codebases. Each bundle represents component contracts, dependency graphs, and metadata. For detailed documentation on the meta.missing field and dependency resolution, see README.md 'Understanding the Meta Field' section.",
+  "type": "array",
+  "items": {
+    "$ref": "#/definitions/LogicStampBundle"
+  },
+  "definitions": {
+    "LogicStampBundle": {
+      "type": "object",
+      "required": ["type", "schemaVersion", "entryId", "depth", "createdAt", "bundleHash", "graph", "meta"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "LogicStampBundle",
+          "description": "Type identifier for LogicStamp bundles"
+        },
+        "schemaVersion": {
+          "type": "string",
+          "const": "0.1",
+          "description": "Schema version for the bundle format"
+        },
+        "position": {
+          "type": "string",
+          "pattern": "^\\d+/\\d+$",
+          "description": "Position of this bundle in the output (e.g., '1/10')"
+        },
+        "entryId": {
+          "type": "string",
+          "description": "Entry point identifier (file path)"
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Dependency traversal depth"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp of bundle creation"
+        },
+        "bundleHash": {
+          "type": "string",
+          "pattern": "^uifb:[a-f0-9]{24}$",
+          "description": "Content hash of the bundle"
+        },
+        "graph": {
+          "$ref": "#/definitions/BundleGraph"
+        },
+        "meta": {
+          "$ref": "#/definitions/BundleMeta"
+        }
+      },
+      "additionalProperties": false
+    },
+    "BundleGraph": {
+      "type": "object",
+      "required": ["nodes", "edges"],
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BundleNode"
+          },
+          "description": "Component nodes in the dependency graph"
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": "Dependency edges as [from, to] tuples"
+        }
+      },
+      "additionalProperties": false
+    },
+    "BundleNode": {
+      "type": "object",
+      "required": ["entryId", "contract"],
+      "properties": {
+        "entryId": {
+          "type": "string",
+          "description": "Unique identifier for this component"
+        },
+        "contract": {
+          "$ref": "#/definitions/UIFContract"
+        },
+        "codeHeader": {
+          "type": ["string", "null"],
+          "description": "Header comment from the source file (when includeCode=header)"
+        },
+        "code": {
+          "type": ["string", "null"],
+          "description": "Full source code (when includeCode=full)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "BundleMeta": {
+      "type": "object",
+      "required": ["missing", "source"],
+      "properties": {
+        "missing": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MissingDependency"
+          },
+          "description": "Array of unresolved dependencies. Empty array [] indicates complete dependency resolution. Non-empty indicates external packages, missing files, or dependencies outside scan scope."
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^logicstamp-context@\\d+\\.\\d+\\.\\d+$",
+          "description": "Generator identifier with version (e.g., 'logicstamp-context@0.1.0'). Used for compatibility tracking and debugging."
+        }
+      },
+      "additionalProperties": false
+    },
+    "MissingDependency": {
+      "type": "object",
+      "required": ["name", "reason"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Import specifier that could not be resolved (e.g., './Component', '@mui/material')"
+        },
+        "reason": {
+          "type": "string",
+          "enum": ["file not found", "external package", "outside scan path", "max depth exceeded", "circular dependency"],
+          "description": "Reason for missing dependency: 'file not found' (deleted/moved), 'external package' (npm module), 'outside scan path' (not in scan dir), 'max depth exceeded' (beyond depth limit), 'circular dependency' (import cycle)"
+        },
+        "referencedBy": {
+          "type": "string",
+          "description": "File path of the component that attempted to import this dependency"
+        }
+      },
+      "additionalProperties": false
+    },
+    "UIFContract": {
+      "type": "object",
+      "required": ["type", "schemaVersion", "kind", "entryId", "description", "version", "logicSignature", "semanticHash", "fileHash"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "UIFContract",
+          "description": "Type identifier for UIF contracts"
+        },
+        "schemaVersion": {
+          "type": "string",
+          "const": "0.3",
+          "description": "Schema version for UIF contracts"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["react:component", "ts:module", "node:cli"],
+          "description": "Type of component"
+        },
+        "entryId": {
+          "type": "string",
+          "description": "File path identifier"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of the component"
+        },
+        "usedIn": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Components that depend on this one"
+        },
+        "version": {
+          "$ref": "#/definitions/ComponentVersion"
+        },
+        "logicSignature": {
+          "$ref": "#/definitions/LogicSignature"
+        },
+        "prediction": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Behavioral predictions about the component"
+        },
+        "metrics": {
+          "$ref": "#/definitions/ContractMetrics"
+        },
+        "links": {
+          "$ref": "#/definitions/ContractLinks"
+        },
+        "semanticHash": {
+          "type": "string",
+          "pattern": "^uif:[a-f0-9]{24}$",
+          "description": "Hash of the component's semantic structure"
+        },
+        "fileHash": {
+          "type": "string",
+          "pattern": "^uif:[a-f0-9]{24}$",
+          "description": "Hash of the source file"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ComponentVersion": {
+      "type": "object",
+      "required": ["variables", "hooks", "components", "functions"],
+      "properties": {
+        "variables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Variable declarations"
+        },
+        "hooks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "React hooks used"
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "JSX components used"
+        },
+        "functions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Function declarations"
+        },
+        "imports": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Import statements"
+        }
+      },
+      "additionalProperties": false
+    },
+    "LogicSignature": {
+      "type": "object",
+      "required": ["props", "events"],
+      "properties": {
+        "props": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/PropType"
+          },
+          "description": "Component props with types"
+        },
+        "events": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/EventType"
+          },
+          "description": "Event handlers"
+        },
+        "state": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Component state variables"
+        }
+      },
+      "additionalProperties": false
+    },
+    "PropType": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Simple type (e.g., 'string', 'number', 'boolean')"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Legacy literal union format"
+        },
+        {
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Type descriptor (literal-union, function, object, array, etc.)"
+            },
+            "optional": {
+              "type": "boolean",
+              "description": "Whether the prop is optional"
+            },
+            "literals": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Literal values for literal-union types"
+            },
+            "signature": {
+              "type": "string",
+              "description": "Function signature for function types"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Rich type descriptor"
+        }
+      ]
+    },
+    "EventType": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Legacy format (e.g., 'function', 'arrow function')"
+        },
+        {
+          "type": "object",
+          "required": ["type", "signature"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "function",
+              "description": "Event handler type"
+            },
+            "signature": {
+              "type": "string",
+              "description": "Function signature (e.g., '() => void')"
+            },
+            "optional": {
+              "type": "boolean",
+              "description": "Whether the event handler is optional"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Normalized event descriptor"
+        }
+      ]
+    },
+    "ContractMetrics": {
+      "type": "object",
+      "properties": {
+        "a11y": {
+          "$ref": "#/definitions/A11yMetrics"
+        },
+        "latency": {
+          "$ref": "#/definitions/LatencyMetrics"
+        },
+        "coverage": {
+          "$ref": "#/definitions/CoverageMetrics"
+        }
+      },
+      "additionalProperties": false
+    },
+    "A11yMetrics": {
+      "type": "object",
+      "properties": {
+        "contrastMin": {
+          "type": "number",
+          "description": "Minimum color contrast ratio"
+        },
+        "role": {
+          "type": "string",
+          "description": "ARIA role"
+        }
+      },
+      "additionalProperties": false
+    },
+    "LatencyMetrics": {
+      "type": "object",
+      "properties": {
+        "clientP95Ms": {
+          "type": "number",
+          "description": "95th percentile client latency in milliseconds"
+        }
+      },
+      "additionalProperties": false
+    },
+    "CoverageMetrics": {
+      "type": "object",
+      "properties": {
+        "lines": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Line coverage percentage"
+        },
+        "branches": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Branch coverage percentage"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ContractLinks": {
+      "type": "object",
+      "properties": {
+        "tokens": {
+          "type": "string",
+          "description": "Link to design tokens"
+        },
+        "figma": {
+          "type": "string",
+          "format": "uri",
+          "description": "Link to Figma design"
+        },
+        "spec": {
+          "type": "string",
+          "format": "uri",
+          "description": "Link to specification"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "name": "logicstamp-context",
+  "version": "0.1.0",
+  "description": "Generate AI-friendly context bundles from React codebases with LogicStamp contracts",
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "bin": {
+    "stamp": "dist/cli/stamp.js"
+  },
+  "files": [
+    "dist",
+    "schema",
+    "README.md",
+    "LICENSE",
+    "LLM_CONTEXT.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [
+    "react",
+    "typescript",
+    "ai",
+    "llm",
+    "context",
+    "documentation",
+    "logicstamp",
+    "claude",
+    "chatgpt",
+    "codebase-analysis",
+    "ast",
+    "static-analysis"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LogicStamp/logicstamp-context.git"
+  },
+  "bugs": {
+    "url": "https://github.com/LogicStamp/logicstamp-context/issues"
+  },
+  "homepage": "https://github.com/LogicStamp/logicstamp-context#readme",
+  "author": "LogicStamp Contributors",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "glob": "^10.3.10",
+    "ts-morph": "^21.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "@vitest/coverage-v8": "^4.0.8",
+    "@vitest/ui": "^4.0.8",
+    "typescript": "^5.3.3",
+    "vitest": "^4.0.8"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
