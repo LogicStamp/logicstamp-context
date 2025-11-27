@@ -11,11 +11,7 @@ stamp context [path] [options]
 
 **Output Structure:** The command generates multiple `context.json` files (one per folder containing components) plus a `context_main.json` index file at the output root, maintaining your project's directory hierarchy.
 
-**First Run:** On first run in interactive mode, `stamp context` will prompt you to:
-- Add LogicStamp patterns to `.gitignore` (to exclude context files from version control)
-- Generate `LLM_CONTEXT.md` in the project root (to help AI assistants understand your project structure)
-
-Your preferences are saved in `.logicstamp/config.json` and respected on subsequent runs. See [`stamp init`](INIT.md) for explicit setup or to skip these prompts.
+**Setup:** `stamp context` respects preferences saved in `.logicstamp/config.json` and never prompts. On first run (no config), it defaults to skipping both `.gitignore` and `LLM_CONTEXT.md` setup for CI-friendly behavior. Use [`stamp init`](INIT.md) to interactively configure these options.
 
 ## Options
 
@@ -31,6 +27,7 @@ Your preferences are saved in `.logicstamp/config.json` and respected on subsequ
 | `--predict-behavior` | | `false` | Experimental behavioral prediction annotations. |
 | `--dry-run` | | `false` | Skip writing the output; display summary only. |
 | `--stats` | | `false` | Emit single-line JSON stats (ideal for CI). |
+| `--skip-gitignore` | | `false` | Skip `.gitignore` setup (never prompt or modify). |
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors). |
 | `--help` | `-h` | | Print usage help. |
 
@@ -125,7 +122,7 @@ The `context_main.json` file provides a complete directory index:
     }
   ],
   "meta": {
-    "source": "logicstamp-context@0.1.0"
+    "source": "logicstamp-context@0.1.1"
   }
 }
 ```

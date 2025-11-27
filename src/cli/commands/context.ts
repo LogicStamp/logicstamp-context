@@ -19,6 +19,7 @@ import {
 import { estimateGPT4Tokens, estimateClaudeTokens, formatTokenCount } from '../../utils/tokens.js';
 import { validateBundles } from './validate.js';
 import { smartGitignoreSetup } from '../../utils/gitignore.js';
+import { readConfig, configExists, writeConfig } from '../../utils/config.js';
 import { smartLLMContextSetup } from '../../utils/llmContext.js';
 
 /**
@@ -89,6 +90,7 @@ export interface ContextOptions {
   compareModes: boolean;
   skipGitignore?: boolean;
   quiet?: boolean;
+  suppressSuccessIndicator?: boolean; // When true, don't output ✓ even in quiet mode (for internal calls)
 }
 
 export async function contextCommand(options: ContextOptions): Promise<void> {
@@ -545,45 +547,57 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
       },
       folders: folderInfos,
       meta: {
-        source: 'logicstamp-context@0.1.0',
+        source: 'logicstamp-context@0.1.1',
       },
     };
 
     const indexOutput = JSON.stringify(index, null, 2);
     await writeFile(mainContextPath, indexOutput, 'utf8');
-    if (options.quiet) {
-      // Minimal output in quiet mode
+    if (options.quiet && !options.suppressSuccessIndicator) {
+      // Minimal output in quiet mode (unless suppressed for internal calls)
       process.stdout.write('✓\n');
-    } else {
+    } else if (!options.quiet) {
       console.log(`   ✓ ${displayPath(mainContextPath)} (index of ${bundlesByFolder.size} folders)`);
       console.log(`✅ ${filesWritten + 1} context files written successfully`);
     }
 
-    // Smart .gitignore setup with prompt and config persistence
+    // Auto-create config with safe defaults if it doesn't exist (first run)
+    let configCreated = false;
     try {
-      const { added, created, prompted, skipped } = await smartGitignoreSetup(projectRoot, {
-        skipGitignore: options.skipGitignore,
+      if (!await configExists(projectRoot)) {
+        await writeConfig(projectRoot, {
+          gitignorePreference: 'skipped',
+          llmContextPreference: 'skipped',
+        });
+        configCreated = true;
+        if (!options.quiet) {
+          console.log('\n💡 No LogicStamp config found – created .logicstamp/config.json with safe defaults (no .gitignore changes).');
+          console.log('   Run `stamp init` to customize behavior.\n');
+        }
+      }
+    } catch (error) {
+      // Ignore config creation errors - not critical
+    }
+
+    // Determine skipGitignore: CLI flag OR config says skip OR no config (default to skip)
+    const config = await readConfig(projectRoot);
+    const shouldSkipGitignore = 
+      options.skipGitignore || 
+      config.gitignorePreference === 'skipped' ||
+      !config.gitignorePreference; // default to skip if no preference
+
+    // Smart .gitignore setup (no prompting - only init prompts)
+    try {
+      const { added, created, skipped } = await smartGitignoreSetup(projectRoot, {
+        skipGitignore: shouldSkipGitignore,
       });
 
-      // Show results if prompted (first-time config) even in quiet mode, or if not quiet
-      if (prompted || !options.quiet) {
-        if (prompted) {
-          if (added) {
-            if (created) {
-              console.log('\n✅ Created .gitignore with LogicStamp patterns');
-            } else {
-              console.log('\n✅ Added LogicStamp patterns to .gitignore');
-            }
-          } else if (skipped) {
-            console.log('\n📝 Skipping .gitignore setup (you can run `stamp init` later if needed)');
-          }
-        } else if (!prompted && added) {
-          // Auto-added based on saved preference
-          if (created) {
-            console.log('\n📝 Created .gitignore with LogicStamp patterns');
-          } else {
-            console.log('\n📝 Added LogicStamp patterns to .gitignore');
-          }
+      // Only show output if patterns were actually added (config preference was 'added')
+      if (added && !options.quiet) {
+        if (created) {
+          console.log('\n📝 Created .gitignore with LogicStamp patterns');
+        } else {
+          console.log('\n📝 Added LogicStamp patterns to .gitignore');
         }
       }
     } catch (error) {
@@ -591,22 +605,13 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
       // Users can run `stamp init` manually if needed
     }
 
-    // Smart LLM_CONTEXT.md setup with prompt and config persistence
+    // Smart LLM_CONTEXT.md setup (no prompting - only init prompts)
     try {
-      const { added, prompted, skipped } = await smartLLMContextSetup(projectRoot);
+      const { added } = await smartLLMContextSetup(projectRoot);
 
-      // Show results if prompted (first-time config) even in quiet mode, or if not quiet
-      if (prompted || !options.quiet) {
-        if (prompted) {
-          if (added) {
-            console.log('\n✅ Created LLM_CONTEXT.md');
-          } else if (skipped) {
-            console.log('\n📝 Skipping LLM_CONTEXT.md generation (you can run `stamp init` later if needed)');
-          }
-        } else if (!prompted && added) {
-          // Auto-added based on saved preference
-          console.log('\n📝 Created LLM_CONTEXT.md');
-        }
+      // Only show output if file was actually created (config preference was 'added')
+      if (added && !options.quiet) {
+        console.log('\n📝 Created LLM_CONTEXT.md');
       }
     } catch (error) {
       // Silently ignore LLM_CONTEXT.md errors - not critical to context generation

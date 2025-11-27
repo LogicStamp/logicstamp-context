@@ -51,6 +51,7 @@ async function main() {
     stats: false,
     strictMissing: false,
     compareModes: false,
+    skipGitignore: false,
     quiet: false,
   };
 
@@ -117,6 +118,9 @@ async function main() {
         case 'compare-modes':
           options.compareModes = true;
           break;
+        case 'skip-gitignore':
+          options.skipGitignore = true;
+          break;
         case 'quiet':
         case 'q':
           options.quiet = true;
@@ -163,6 +167,7 @@ OPTIONS:
   --stats                   Output one-line JSON stats for CI
   --strict-missing          Exit with error if missing dependencies found
   --compare-modes           Show detailed token comparison table
+  --skip-gitignore          Skip .gitignore setup (never prompt or modify)
   --quiet, -q               Suppress verbose output (show only errors)
   -h, --help                Show this help
 

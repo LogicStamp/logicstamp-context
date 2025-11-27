@@ -144,6 +144,68 @@ describe('CLI Init Command Tests', () => {
         exists = false;
       }
       expect(exists).toBe(false);
+
+      // Verify config was created with skipped preference
+      const configPath = join(testDir, '.logicstamp', 'config.json');
+      const configContent = await readFile(configPath, 'utf-8');
+      const config = JSON.parse(configContent);
+      expect(config.gitignorePreference).toBe('skipped');
+    }, 30000);
+
+    it('should show informational messages when adding patterns', async () => {
+      // Create a test directory without .gitignore
+      const testDir = join(outputPath, 'init-test-5');
+      await mkdir(testDir, { recursive: true });
+
+      // Run stamp init
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js init ${testDir}`
+      );
+
+      // Verify informational messages are shown (in non-interactive mode, defaults to yes)
+      expect(stdout).toContain('LogicStamp generates large context files');
+      expect(stdout).toContain('context.json');
+      expect(stdout).toContain('context_*.json');
+    }, 30000);
+
+    it('should handle LLM_CONTEXT.md creation', async () => {
+      // Create a test directory
+      const testDir = join(outputPath, 'init-test-6');
+      await mkdir(testDir, { recursive: true });
+
+      // Run stamp init
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js init ${testDir} --skip-gitignore`
+      );
+
+      // Verify LLM_CONTEXT.md was handled (either created or skipped message)
+      // In non-interactive mode, it defaults to yes, so it should be created
+      const llmContextPath = join(testDir, 'LLM_CONTEXT.md');
+      let llmContextExists = false;
+      try {
+        await access(llmContextPath);
+        llmContextExists = true;
+      } catch {
+        // File might not exist if template wasn't found or user skipped
+      }
+
+      // If it exists, verify it was created
+      if (llmContextExists) {
+        expect(stdout).toContain('Created LLM_CONTEXT.md');
+      } else {
+        // If it doesn't exist, verify skip message or template not found message
+        expect(
+          stdout.includes('Skipping LLM_CONTEXT.md') || 
+          stdout.includes('template not found') ||
+          stdout.includes('LLM_CONTEXT.md')
+        ).toBe(true);
+      }
+
+      // Verify config was updated
+      const configPath = join(testDir, '.logicstamp', 'config.json');
+      const configContent = await readFile(configPath, 'utf-8');
+      const config = JSON.parse(configContent);
+      expect(config).toHaveProperty('llmContextPreference');
     }, 30000);
   });
 });

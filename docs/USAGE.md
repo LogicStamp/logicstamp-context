@@ -38,7 +38,7 @@ These options are available at the top level (before any subcommand):
 
 **Examples:**
 ```bash
-stamp --version    # Shows: fox mascot + "Version: 0.1.0"
+stamp --version    # Shows: fox mascot + "Version: 0.1.1"
 stamp -v           # Same as --version
 stamp --help       # Shows main help
 stamp -h           # Same as --help
@@ -68,12 +68,14 @@ Generates LogicStamp bundles from a directory.
 | `--predict-behavior` | | `false` | Include experimental behavioral predictions |
 | `--dry-run` | | `false` | Skip writing the output file; prints summary instead |
 | `--stats` | | `false` | Emit one-line JSON stats (helpful for CI pipelines) |
+| `--skip-gitignore` | | `false` | Skip `.gitignore` setup (never prompt or modify) |
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors) |
 
 **CI / automation tips**
 
 - Use `--dry-run` to inspect totals without producing files.
 - Use `--stats` to emit machine-readable summary lines (combine with shell redirection).
+- Use `--skip-gitignore` to prevent any `.gitignore` modifications in CI environments.
 - Use `--quiet` to suppress verbose output in CI pipelines (show only errors).
 
 ### `stamp context validate`
@@ -568,7 +570,7 @@ These are advanced concerns for future LogicStamp platform features, not v1 "con
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp-context@0.1.0"
+      "source": "logicstamp-context@0.1.1"
     }
   }
 ]
@@ -600,7 +602,7 @@ These are advanced concerns for future LogicStamp platform features, not v1 "con
     }
   ],
   "meta": {
-    "source": "logicstamp-context@0.1.0"
+    "source": "logicstamp-context@0.1.1"
   }
 }
 ```
@@ -652,7 +654,7 @@ The `meta.missing` array tracks dependencies that couldn't be resolved. An empty
         "referencedBy": "src/helpers.ts"
       }
     ],
-    "source": "logicstamp-context@0.1.0"
+    "source": "logicstamp-context@0.1.1"
   }
 }
 ```

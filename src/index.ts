@@ -25,8 +25,10 @@ export { pack, computeBundleHash, validateHashLock } from './core/pack.js';
 export { buildLogicSignature } from './core/signature.js';
 
 // CLI commands (for programmatic use)
-export { contextCommand, type ContextOptions } from './cli/commands/context.js';
-export { compareCommand, type CompareOptions } from './cli/commands/compare.js';
+export { contextCommand } from './cli/commands/context.js';
+export type { ContextOptions } from './cli/commands/context.js';
+export { compareCommand } from './cli/commands/compare.js';
+export type { CompareOptions } from './cli/commands/compare.js';
 export { validateCommand } from './cli/commands/validate.js';
 export { init } from './cli/commands/init.js';
 export { cleanCommand } from './cli/commands/clean.js';

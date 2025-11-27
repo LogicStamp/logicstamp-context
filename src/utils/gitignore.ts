@@ -121,39 +121,15 @@ export async function ensureGitignorePatterns(targetDir: string): Promise<{ adde
 }
 
 /**
- * Check if running in interactive TTY
- */
-function isTTY(): boolean {
-  return process.stdout.isTTY === true && process.stdin.isTTY === true;
-}
-
-/**
- * Prompt user for Y/N input (only in TTY mode)
- */
-async function promptYesNo(question: string): Promise<boolean> {
-  const { createInterface } = await import('node:readline');
-  const readline = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise((resolve) => {
-    readline.question(question, (answer) => {
-      readline.close();
-      resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes' || answer === '');
-    });
-  });
-}
-
-/**
- * Smart .gitignore management with user prompt and config persistence
+ * Smart .gitignore management with config-based behavior (no prompting)
  *
  * Behavior:
  * 1. If --skip-gitignore flag: do nothing
- * 2. If config has preference: respect it
- * 3. If patterns already exist: do nothing
- * 4. If TTY (interactive): prompt user once, save preference
- * 5. If non-TTY (CI): do nothing (don't auto-add)
+ * 2. If patterns already exist: do nothing (already set up)
+ * 3. If config has preference 'added': add patterns automatically
+ * 4. If config has preference 'skipped' OR no config exists: skip (safe default)
+ *
+ * Note: Prompting should only happen in `stamp init`, not in `stamp context`
  *
  * @param targetDir - Project root directory
  * @param options - Options to control behavior
@@ -177,34 +153,14 @@ export async function smartGitignoreSetup(
   // Check config for saved preference
   const config = await readConfig(targetDir);
 
-  // If user previously chose to skip, respect that
-  if (config.gitignorePreference === 'skipped') {
-    return { added: false, created: false, prompted: false, skipped: true };
-  }
-
-  // If user previously chose to add, do it without prompting
+  // Default to skip unless explicitly set to 'added' in config
+  // This means: no config = skip, config with 'skipped' = skip
   if (config.gitignorePreference === 'added') {
+    // User explicitly opted in (via stamp init) - add patterns automatically
     const result = await ensureGitignorePatterns(targetDir);
     return { ...result, prompted: false, skipped: false };
   }
 
-  // No preference saved yet - prompt if interactive
-  if (isTTY()) {
-    console.log('\n💡 LogicStamp generates large context files that are usually not committed.\n');
-    const shouldAdd = await promptYesNo('Add recommended patterns to .gitignore? [Y/n] ');
-
-    if (shouldAdd) {
-      // User said yes - add patterns and save preference
-      await updateConfig(targetDir, { gitignorePreference: 'added' });
-      const result = await ensureGitignorePatterns(targetDir);
-      return { ...result, prompted: true, skipped: false };
-    } else {
-      // User said no - save preference to never ask again
-      await updateConfig(targetDir, { gitignorePreference: 'skipped' });
-      return { added: false, created: false, prompted: true, skipped: true };
-    }
-  }
-
-  // Non-interactive (CI) - don't auto-add, don't prompt
+  // Default behavior: skip (safe, no .gitignore changes)
   return { added: false, created: false, prompted: false, skipped: true };
 }

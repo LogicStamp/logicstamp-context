@@ -214,95 +214,6 @@ function isTTY(): boolean {
 /**
  * Wrap a function call to suppress or filter console output
  */
-async function withSuppressedOutput<T>(
-  fn: () => Promise<T>,
-  quiet: boolean
-): Promise<T> {
-  if (quiet) {
-    // In quiet mode, suppress all output
-    const originalLog = console.log;
-    const originalError = console.error;
-    const originalWarn = console.warn;
-    
-    console.log = () => {};
-    console.error = () => {};
-    console.warn = () => {};
-    
-    try {
-      return await fn();
-    } finally {
-      console.log = originalLog;
-      console.error = originalError;
-      console.warn = originalWarn;
-    }
-  } else {
-    // In regular mode, filter verbose output but keep essential progress
-    const originalLog = console.log;
-    const originalError = console.error;
-    const originalWarn = console.warn;
-    
-    const keepPatterns = [
-      /^🔍 Scanning/,
-      /^🔨 Analyzing/,
-      /^📊 Building/,
-      /^📦 Generating/,
-      /^🔍 Validating/,
-      /^✅ Validation/,
-      /^📝 Writing/,
-      /^❌/,
-    ];
-    
-    const skipPatterns = [
-      /^   Found \d+ files$/,
-      /^   Analyzed \d+ components$/,
-      /^📋 Using profile:/,
-      /^   ✓ .* \(.* bundles\)$/,
-      /^📊 Summary:/,
-      /^   Total components:/,
-      /^   Root components:/,
-      /^   Leaf components:/,
-      /^   Bundles generated:/,
-      /^   Total nodes in context:/,
-      /^   Total edges:/,
-      /^   Missing dependencies:/,
-      /^📏 Token Estimates/,
-      /^   GPT-4o-mini:/,
-      /^   Claude:/,
-      /^📊 Mode Comparison:/,
-      /^   none:/,
-      /^   header:/,
-      /^   full:/,
-      /^⏱  Completed in/,
-      /^✅ \d+ context files written successfully$/,
-      /^   Writing context files for \d+ folders\.\.\.$/,
-      /^📝 Writing main context index\.\.\.$/,
-      /^   ✓ .*context_main\.json/,
-    ];
-    
-    console.log = (...args: any[]) => {
-      const message = args.join(' ');
-      // Keep essential progress, skip verbose details
-      const shouldKeep = keepPatterns.some(pattern => pattern.test(message));
-      const shouldSkip = skipPatterns.some(pattern => pattern.test(message));
-      
-      if (shouldKeep && !shouldSkip) {
-        originalLog(...args);
-      }
-    };
-    
-    console.error = originalError;
-    console.warn = originalWarn;
-    
-    try {
-      return await fn();
-    } finally {
-      console.log = originalLog;
-      console.error = originalError;
-      console.warn = originalWarn;
-    }
-  }
-}
-
 async function handleCompare(args: string[]) {
   if (args[0] === '--help' || args[0] === '-h') {
     printFoxIcon();
@@ -314,6 +225,7 @@ async function handleCompare(args: string[]) {
   const approve = args.includes('--approve');
   const cleanOrphaned = args.includes('--clean-orphaned');
   const quiet = args.includes('--quiet') || args.includes('-q');
+  const skipGitignore = args.includes('--skip-gitignore');
 
   // Filter out flag arguments to get positional args (including -q)
   const positionalArgs = args.filter(arg => !arg.startsWith('--') && arg !== '-q');
@@ -359,10 +271,13 @@ async function handleCompare(args: string[]) {
       stats: false,
       strictMissing: false,
       compareModes: false,
+      skipGitignore,
+      quiet,
+      suppressSuccessIndicator: true, // Suppress ✓ when called internally from compare
     };
 
     try {
-      await withSuppressedOutput(() => contextCommand(contextOptions), quiet);
+      await contextCommand(contextOptions);
 
       // Multi-file compare using context_main.json indices
       if (!quiet) {

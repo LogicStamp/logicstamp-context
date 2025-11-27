@@ -4,7 +4,7 @@
   <img src="assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="120" height="120">
 </div>
 
-![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.1.1-blue.svg)
 ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
@@ -22,7 +22,7 @@ stamp context
 
 That's it! LogicStamp Context will scan your project and generate `context.json` files organized by folder, plus a `context_main.json` index file. Share these files with AI assistants for instant codebase understanding.
 
-> **Note:** This is a beta release (v0.1.0). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+> **Note:** This is a beta release (v0.1.1). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 ## What is this?
 
@@ -41,6 +41,22 @@ After installation, the `stamp` command will be available globally.
 **Note**: "Global CLI" means the tool is installed globally on your system (via `npm install -g`), making the `stamp` command available from any directory in your terminal, not just within a specific project folder.
 - **Local install**: `npm install logicstamp-context` → only available in that project
 - **Global install**: `npm install -g logicstamp-context` → available everywhere via `stamp` command
+
+## What's New in v0.1.1
+
+🔧 **CI-Friendly Defaults**
+- **`stamp context` no longer prompts** - Interactive prompts moved to `stamp init` for better CI/CD compatibility
+- **Safe defaults** - `stamp context` now defaults to skipping both `.gitignore` and `LLM_CONTEXT.md` setup unless explicitly opted in via `stamp init`
+- **Auto-config creation** - On first run, creates `.logicstamp/config.json` with safe defaults (`'skipped'` for both preferences)
+- **New `--skip-gitignore` flag** - Allows skipping `.gitignore` setup on a per-run basis, useful for CI environments
+
+🎯 **Improved Initialization**
+- **`stamp init` now prompts interactively** - Prompts for both `.gitignore` patterns and `LLM_CONTEXT.md` generation (only in interactive/TTY mode)
+- **Non-interactive defaults** - In CI/non-TTY environments, defaults to "yes" for both prompts
+- **Better user control** - Users can explicitly set preferences via `stamp init` before running `stamp context`
+- **Config-based behavior** - `stamp context` respects preferences saved in `.logicstamp/config.json` without prompting
+
+**Migration Note:** If you were using `stamp context` interactively before, run `stamp init` once to set your preferences. Subsequent `stamp context` runs will respect your saved choices automatically.
 
 ## What's New in v0.1.0
 
@@ -77,6 +93,9 @@ After installation, the `stamp` command will be available globally.
 ```bash
 # Install globally
 npm i -g logicstamp-context
+
+# Optional: Initialize project (set up .gitignore and LLM_CONTEXT.md)
+stamp init
 
 # Generate context.json (llm-chat profile)
 stamp context
@@ -180,11 +199,11 @@ stamp context clean [path] [options]
 
 ### Commands
 
-- **`stamp init [path]`** - Initialize LogicStamp in a project by creating or updating `.gitignore` with patterns for context files (`context.json`, `context_*.json`, `.logicstamp/`, etc.), generating `LLM_CONTEXT.md` in the project root, and saving preferences to `.logicstamp/config.json`. Optional - the `stamp context` command includes smart detection and will prompt you interactively on first run.
+- **`stamp init [path]`** - Initialize LogicStamp in a project by creating or updating `.gitignore` with patterns for context files (`context.json`, `context_*.json`, `.logicstamp/`, etc.), generating `LLM_CONTEXT.md` in the project root, and saving preferences to `.logicstamp/config.json`. Prompts interactively (in TTY mode) for both `.gitignore` setup and `LLM_CONTEXT.md` generation. In CI/non-TTY environments, defaults to "yes" for both. Use this command to set your preferences before running `stamp context` - subsequent `stamp context` runs will respect your saved choices automatically.
 
   See [docs/cli/INIT.md](docs/cli/INIT.md) for detailed documentation.
 
-- **`stamp context [path]`** - Scans a directory and writes AI-ready context files organized by folder. Generates multiple `context.json` files (one per folder containing components) plus a `context_main.json` index file at the output root. Shows token estimates and mode comparison in output. Automatically validates the generated context before writing. On first run (interactive mode), prompts to add `.gitignore` patterns and generate `LLM_CONTEXT.md`, saving your preferences - subsequent runs respect your choices.
+- **`stamp context [path]`** - Scans a directory and writes AI-ready context files organized by folder. Generates multiple `context.json` files (one per folder containing components) plus a `context_main.json` index file at the output root. Shows token estimates and mode comparison in output. Automatically validates the generated context before writing. **CI-friendly**: No interactive prompts - respects preferences saved in `.logicstamp/config.json` (created by `stamp init`). On first run without config, creates `.logicstamp/config.json` with safe defaults (skips both `.gitignore` and `LLM_CONTEXT.md` setup).
 
   See [docs/cli/CONTEXT.md](docs/cli/CONTEXT.md) for detailed documentation.
 

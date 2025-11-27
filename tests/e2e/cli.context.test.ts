@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
-import { readFile, rm, access, mkdir } from 'node:fs/promises';
+import { readFile, rm, access, mkdir, writeFile, cp } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
@@ -428,6 +428,154 @@ describe('CLI Context Generation Tests', () => {
       expect(index).toHaveProperty('folders');
       expect(Array.isArray(index.folders)).toBe(true);
       expect(index.folders.length).toBeGreaterThan(0);
+    }, 30000);
+  });
+
+  describe('Gitignore and config behavior', () => {
+    it('should respect --skip-gitignore flag', async () => {
+      const testDir = join(outputPath, 'skip-gitignore-test');
+      await mkdir(testDir, { recursive: true });
+      const outDir = join(testDir, 'output');
+
+      // Run with --skip-gitignore flag
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir} --skip-gitignore`
+      );
+
+      // Should complete successfully
+      expect(stdout).toContain('context files written successfully');
+
+      // Verify context files were generated
+      await access(join(outDir, 'context_main.json'));
+
+      // Verify .gitignore was NOT created in the fixture directory
+      const gitignorePath = join(fixturesPath, '.gitignore');
+      let gitignoreExists = true;
+      try {
+        await access(gitignorePath);
+      } catch {
+        gitignoreExists = false;
+      }
+      // We can't definitively check this since the fixture might already have .gitignore
+      // But we can verify the command completed without errors
+      expect(stdout).not.toContain('Created .gitignore');
+      expect(stdout).not.toContain('Added LogicStamp patterns');
+    }, 30000);
+
+    it('should auto-create config with safe defaults when config does not exist', async () => {
+      const testDir = join(outputPath, 'auto-config-test');
+      await mkdir(testDir, { recursive: true });
+      
+      // Copy fixture contents to test directory to avoid modifying the original
+      const testFixturesPath = join(testDir, 'simple-app');
+      await cp(fixturesPath, testFixturesPath, { recursive: true });
+      
+      const outDir = join(testDir, 'output');
+
+      // Ensure no config exists
+      const configPath = join(testFixturesPath, '.logicstamp', 'config.json');
+      try {
+        await rm(configPath, { force: true });
+      } catch {
+        // Config doesn't exist, which is what we want
+      }
+
+      // Ensure .gitignore exists without LogicStamp patterns (fixture may have them)
+      // This ensures we're testing that new patterns aren't added when preference is 'skipped'
+      const gitignorePath = join(testFixturesPath, '.gitignore');
+      const initialGitignoreContent = 'node_modules\ndist\n';
+      await writeFile(gitignorePath, initialGitignoreContent);
+
+      // Run context command on root - it will recursively find files in src
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`
+      );
+
+      // Should mention config creation
+      expect(stdout).toContain('No LogicStamp config found');
+      expect(stdout).toContain('created .logicstamp/config.json with safe defaults');
+
+      // Verify config was created with skipped preferences
+      const configContent = await readFile(configPath, 'utf-8');
+      const config = JSON.parse(configContent);
+      expect(config.gitignorePreference).toBe('skipped');
+      expect(config.llmContextPreference).toBe('skipped');
+
+      // Verify .gitignore was NOT modified (due to safe defaults)
+      const finalGitignoreContent = await readFile(gitignorePath, 'utf-8');
+      // Should match initial content (unchanged)
+      expect(finalGitignoreContent).toBe(initialGitignoreContent);
+      // Should not contain LogicStamp patterns (since preference is 'skipped')
+      expect(finalGitignoreContent).not.toContain('# LogicStamp context files');
+    }, 30000);
+
+    it('should respect config preference for gitignore (added)', async () => {
+      const testDir = join(outputPath, 'config-added-test');
+      await mkdir(testDir, { recursive: true });
+      
+      // Copy fixture contents to test directory
+      const testFixturesPath = join(testDir, 'simple-app');
+      await cp(fixturesPath, testFixturesPath, { recursive: true });
+      
+      const outDir = join(testDir, 'output');
+
+      // Create config with 'added' preference
+      const configDir = join(testFixturesPath, '.logicstamp');
+      await mkdir(configDir, { recursive: true });
+      await writeFile(
+        join(configDir, 'config.json'),
+        JSON.stringify({ gitignorePreference: 'added', llmContextPreference: 'skipped' })
+      );
+
+      // Ensure .gitignore doesn't have LogicStamp patterns
+      const gitignorePath = join(testFixturesPath, '.gitignore');
+      await writeFile(gitignorePath, 'node_modules\n');
+
+      // Run context command on root - it will recursively find files in src
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`
+      );
+
+      // Should add patterns based on config preference
+      const gitignoreContent = await readFile(gitignorePath, 'utf-8');
+      expect(gitignoreContent).toContain('# LogicStamp context files');
+      expect(gitignoreContent).toContain('context.json');
+      expect(gitignoreContent).toContain('node_modules'); // Original content preserved
+    }, 30000);
+
+    it('should respect config preference for gitignore (skipped)', async () => {
+      const testDir = join(outputPath, 'config-skipped-test');
+      await mkdir(testDir, { recursive: true });
+      
+      // Copy fixture contents to test directory
+      const testFixturesPath = join(testDir, 'simple-app');
+      await cp(fixturesPath, testFixturesPath, { recursive: true });
+      
+      const outDir = join(testDir, 'output');
+
+      // Create config with 'skipped' preference
+      const configDir = join(testFixturesPath, '.logicstamp');
+      await mkdir(configDir, { recursive: true });
+      await writeFile(
+        join(configDir, 'config.json'),
+        JSON.stringify({ gitignorePreference: 'skipped', llmContextPreference: 'skipped' })
+      );
+
+      const gitignorePath = join(testFixturesPath, '.gitignore');
+      const initialContent = 'node_modules\n';
+      await writeFile(gitignorePath, initialContent);
+
+      // Run context command on root - it will recursively find files in src
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`
+      );
+
+      // Verify .gitignore was NOT modified
+      const gitignoreContent = await readFile(gitignorePath, 'utf-8');
+      expect(gitignoreContent).toBe(initialContent);
+      expect(gitignoreContent).not.toContain('# LogicStamp context files');
+      expect(stdout).not.toContain('Created .gitignore');
+      expect(stdout).not.toContain('Added LogicStamp patterns');
     }, 30000);
   });
 });

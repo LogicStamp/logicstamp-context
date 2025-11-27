@@ -59,41 +59,14 @@ export async function writeLLMContext(targetDir: string, content: string): Promi
 }
 
 /**
- * Check if running in interactive TTY
- */
-function isTTY(): boolean {
-  return process.stdout.isTTY === true && process.stdin.isTTY === true;
-}
-
-/**
- * Prompt user for Y/N input (only in TTY mode)
- */
-async function promptYesNo(question: string): Promise<boolean> {
-  const { createInterface } = await import('node:readline');
-  const readline = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise((resolve) => {
-    readline.question(question, (answer) => {
-      readline.close();
-      resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes' || answer === '');
-    });
-  });
-}
-
-/**
- * Smart LLM_CONTEXT.md management with user prompt and config persistence
+ * Smart LLM_CONTEXT.md setup with config-based behavior (no prompting)
  *
  * Behavior:
  * 1. If file already exists: do nothing
- * 2. If config has preference: respect it
- * 3. If TTY (interactive): prompt user once, save preference
- * 4. If non-TTY (CI): do nothing (don't auto-add)
+ * 2. If config has preference 'added': create file automatically
+ * 3. If config has preference 'skipped' OR no config exists: skip (safe default)
  *
- * @param targetDir - Project root directory
- * @returns Result of the operation
+ * Note: Prompting should only happen in `stamp init`, not in `stamp context`
  */
 export async function smartLLMContextSetup(
   targetDir: string
@@ -106,13 +79,9 @@ export async function smartLLMContextSetup(
   // Check config for saved preference
   const config = await readConfig(targetDir);
 
-  // If user previously chose to skip, respect that
-  if (config.llmContextPreference === 'skipped') {
-    return { added: false, prompted: false, skipped: true };
-  }
-
-  // If user previously chose to add, do it without prompting
+  // Default to skip unless explicitly set to 'added' in config
   if (config.llmContextPreference === 'added') {
+    // User explicitly opted in (via stamp init) - create file automatically
     const content = await readPackageLLMContext();
     if (content) {
       await writeLLMContext(targetDir, content);
@@ -121,31 +90,7 @@ export async function smartLLMContextSetup(
     return { added: false, prompted: false, skipped: true };
   }
 
-  // No preference saved yet - prompt if interactive
-  if (isTTY()) {
-    console.log('\n💡 LogicStamp can generate LLM_CONTEXT.md to help AI assistants understand your project structure.\n');
-    const shouldAdd = await promptYesNo('Generate LLM_CONTEXT.md in project root? [Y/n] ');
-
-    if (shouldAdd) {
-      // User said yes - write file and save preference
-      const content = await readPackageLLMContext();
-      if (content) {
-        await writeLLMContext(targetDir, content);
-        await updateConfig(targetDir, { llmContextPreference: 'added' });
-        return { added: true, prompted: true, skipped: false };
-      } else {
-        console.warn('⚠️  Could not find LLM_CONTEXT.md template in package');
-        await updateConfig(targetDir, { llmContextPreference: 'skipped' });
-        return { added: false, prompted: true, skipped: true };
-      }
-    } else {
-      // User said no - save preference to never ask again
-      await updateConfig(targetDir, { llmContextPreference: 'skipped' });
-      return { added: false, prompted: true, skipped: true };
-    }
-  }
-
-  // Non-interactive (CI) - don't auto-add, don't prompt
+  // Default behavior: skip (safe, no file creation)
   return { added: false, prompted: false, skipped: true };
 }
 

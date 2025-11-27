@@ -121,17 +121,23 @@ This file provides guidance for AI assistants on how to understand and work with
 - Understanding bundle structure and metadata
 - Interpreting missing dependencies
 
-## Smart Detection in `stamp context`
+## Interactive Prompts
 
-The `stamp context` command includes smart setup management for both `.gitignore` and `LLM_CONTEXT.md` with the following behavior:
+The `stamp init` command prompts you interactively (in TTY mode) for both `.gitignore` and `LLM_CONTEXT.md` setup:
 
-### First Time (No Config)
+### .gitignore Setup Prompt
 
-When you run `stamp context` for the first time in a project (in interactive mode), you'll be prompted for two things:
+When `.gitignore` doesn't already have LogicStamp patterns, you'll see:
 
-**1. `.gitignore` setup:**
 ```
 💡 LogicStamp generates large context files that are usually not committed.
+
+   The following patterns will be added to .gitignore:
+   - context.json
+   - context_*.json
+   - *.uif.json
+   - logicstamp.manifest.json
+   - .logicstamp/
 
 Add recommended patterns to .gitignore? [Y/n]
 ```
@@ -139,14 +145,17 @@ Add recommended patterns to .gitignore? [Y/n]
 **If you choose "Y" (or just press Enter):**
 - Patterns are added to `.gitignore`
 - Preference saved as `"added"` in `.logicstamp/config.json`
-- Future runs won't prompt - patterns will be maintained automatically
+- `stamp context` will automatically maintain patterns in future runs
 
 **If you choose "n":**
 - `.gitignore` is not modified
 - Preference saved as `"skipped"` in `.logicstamp/config.json`
-- Future runs won't prompt - `.gitignore` will never be touched
+- `stamp context` will never touch `.gitignore`
 
-**2. `LLM_CONTEXT.md` generation:**
+### LLM_CONTEXT.md Generation Prompt
+
+When `LLM_CONTEXT.md` doesn't exist, you'll see:
+
 ```
 💡 LogicStamp can generate LLM_CONTEXT.md to help AI assistants understand your project structure.
 
@@ -156,41 +165,33 @@ Generate LLM_CONTEXT.md in project root? [Y/n]
 **If you choose "Y" (or just press Enter):**
 - `LLM_CONTEXT.md` is created in the project root
 - Preference saved as `"added"` in `.logicstamp/config.json`
-- Future runs won't prompt - file will be maintained automatically
+- `stamp context` will automatically maintain the file in future runs
 
 **If you choose "n":**
 - `LLM_CONTEXT.md` is not created
 - Preference saved as `"skipped"` in `.logicstamp/config.json`
-- Future runs won't prompt - file will never be created
-
-### Subsequent Runs
-
-Once you've answered the prompt:
-- Your choice is remembered in `.logicstamp/config.json`
-- No more prompts
-- `stamp context` respects your preference forever
+- `stamp context` will never create this file
 
 ### Non-Interactive Mode (CI)
 
 In CI or non-TTY environments:
-- Never prompts
-- Never auto-adds patterns
-- Use `stamp init` or `--skip-gitignore` flag to control behavior explicitly
+- Prompts default to "yes" (non-interactive)
+- Both operations will be performed automatically
+- Preferences are still saved to config
 
-### Override with Flags
+### Behavior in `stamp context`
 
-You can always override the behavior per-run:
+The `stamp context` command **never prompts** - it respects the preferences you set via `stamp init`:
+
+- **If config has `"added"` preference**: Automatically performs the operation
+- **If config has `"skipped"` preference**: Skips the operation
+- **If no config exists**: Defaults to skipping (safe, CI-friendly behavior)
+
+You can override per-run with the `--skip-gitignore` flag:
 
 ```bash
 stamp context --skip-gitignore  # Never touch .gitignore this run
 ```
-
-### When to Use `stamp init`
-
-Use `stamp init` when you want to:
-- Explicitly set up `.gitignore` before generating context
-- Skip the interactive prompt (runs non-interactively)
-- Set the "added" preference upfront so `stamp context` never prompts
 
 ## Safety
 
@@ -210,9 +211,9 @@ The `stamp init` command is:
 
 ### You don't need `stamp init` if:
 
-- You're fine with automatic `.gitignore` setup when running `stamp context`
 - Your `.gitignore` already has the necessary patterns
-- You prefer to manually manage `.gitignore`
+- You prefer to manually manage `.gitignore` and `LLM_CONTEXT.md`
+- You're running `stamp context` in CI (it defaults to skipping both operations)
 
 ## Related Commands
 
