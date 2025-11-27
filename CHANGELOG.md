@@ -92,6 +92,9 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 - **`stamp context` no longer prompts** — All interactive prompts were moved to `stamp init` for better CI/CD compatibility.
 - **Safe defaults** — `stamp context` now skips both `.gitignore` setup and `LLM_CONTEXT.md` generation unless these preferences are explicitly enabled via `stamp init`.
 - **Auto-config creation** — On first run, `stamp context` creates `.logicstamp/config.json` with both preferences set to "skipped" for maximum CI safety and reproducibility.
+- **`stamp context` no longer prompts** — All interactive prompts were moved to `stamp init` for better CI/CD compatibility.
+- **Safe defaults** — `stamp context` now skips both `.gitignore` setup and `LLM_CONTEXT.md` generation unless these preferences are explicitly enabled via `stamp init`.
+- **Auto-config creation** — On first run, `stamp context` creates `.logicstamp/config.json` with both preferences set to "skipped" for maximum CI safety and reproducibility.
 
 #### Improved Initialization
 - **`stamp init` now prompts interactively** — Prompts for `.gitignore` patterns and `LLM_CONTEXT.md` generation (only in interactive/TTY environments).
@@ -114,6 +117,9 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ---
 
 ## [0.2.0] - 2025-11-28
+- **`stamp init` now prompts interactively** — Prompts for `.gitignore` patterns and `LLM_CONTEXT.md` generation (only in interactive/TTY environments).
+- **Non-interactive defaults** — In CI/non-TTY environments, `stamp init` defaults to "yes" for both prompts.
+- **Better user control** — Users can establish `.gitignore` and `LLM_CONTEXT.md` preferences early via `stamp init` before running `stamp context`.
 
 ### Added
 
@@ -155,6 +161,8 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 - Added style metadata examples and use cases throughout documentation
 - Documented optional tokenizer libraries (`@dqbd/tiktoken` and `@anthropic-ai/tokenizer`) for accurate token counts
 - Updated schema documentation to include style metadata fields
+- **`--skip-gitignore` flag for `stamp context`** — Temporarily skips `.gitignore` setup on a per-run basis, regardless of saved preferences.
+- **Config-based behavior** — `stamp context` now respects preferences saved in `.logicstamp/config.json` without prompting.
 
 ### Fixed
 
