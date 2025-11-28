@@ -45,6 +45,20 @@ After installation, the `stamp` command will be available globally.
 - **Local install**: `npm install logicstamp-context` → only available in that project
 - **Global install**: `npm install -g logicstamp-context` → available everywhere via `stamp` command
 
+## What's New in v0.2.2
+
+🔧 **Documentation Fixes**
+- **Fixed optional dependencies documentation** - Corrected all documentation to accurately reflect that `@dqbd/tiktoken` and `@anthropic-ai/tokenizer` are included as optional dependencies in package.json and are automatically installed by npm when installing `logicstamp-context`
+- **Updated user-facing messages** - Console output and source code comments now correctly explain optional dependency installation behavior
+
+## What's New in v0.2.1
+
+🔧 **Bug Fixes**
+- **Dynamic version loading** - Fixed hardcoded version string in generated context files to dynamically load from `package.json`, ensuring version consistency across all generated context files
+
+### Changed
+- Updated all version references in documentation to reflect 0.2.1 release
+
 ## What's New in v0.2.0
 
 🎨 **Style Metadata Extraction**
@@ -98,20 +112,6 @@ npm install -g @dqbd/tiktoken @anthropic-ai/tokenizer
 - If automatic installation fails, LogicStamp Context gracefully falls back to character-based estimation
 - You do **not** need to manually install tokenizers unless you specifically want accurate token counts and the automatic installation failed
 
-## What's New in v0.2.2
-
-🔧 **Documentation Fixes**
-- **Fixed optional dependencies documentation** - Corrected all documentation to accurately reflect that `@dqbd/tiktoken` and `@anthropic-ai/tokenizer` are included as optional dependencies in package.json and are automatically installed by npm when installing `logicstamp-context`
-- **Updated user-facing messages** - Console output and source code comments now correctly explain optional dependency installation behavior
-
-## What's New in v0.2.1
-
-🔧 **Bug Fixes**
-- **Dynamic version loading** - Fixed hardcoded version string in generated context files to dynamically load from `package.json`, ensuring version consistency across all generated context files
-
-### Changed
-- Updated all version references in documentation to reflect 0.2.1 release
-
 ## What's New in v0.1.1
 
 🔧 **CI-Friendly Defaults**
@@ -157,57 +157,6 @@ npm install -g @dqbd/tiktoken @anthropic-ai/tokenizer
 - `--strict-missing` flag for dependency validation
 - Enhanced `--stats` output with mode estimates
 - JSON output optimized for CI parsing
-
-## Quick Start
-
-```bash
-# Install globally
-npm i -g logicstamp-context
-
-# Optional: Initialize project (set up .gitignore and LLM_CONTEXT.md)
-stamp init
-
-# Generate context.json (llm-chat profile)
-stamp context
-
-# Generate context with style metadata (Tailwind, SCSS, animations, layout)
-stamp context style
-
-# Or use the flag (equivalent)
-stamp context --include-style
-
-# Preview stats without writing files
-stamp context --dry-run --stats
-
-# Compare token costs across modes
-stamp context --compare-modes
-
-# Generate minimal API documentation
-stamp context --include-code none --format pretty --out docs/api.json
-
-# Compare all context files for drift (multi-file mode)
-stamp context compare
-
-# Auto-approve and update all drifted files (like jest -u)
-stamp context compare --approve
-
-# Compare with per-folder token stats
-stamp context compare --stats
-
-# Compare two specific context files
-stamp context compare old.json new.json --stats
-
-# Validate generated context
-stamp context validate context.json
-
-# Clean all context artifacts (dry run)
-stamp context clean
-
-# Actually delete all context files
-stamp context clean --all --yes
-```
-
-**Why?** Generate AI-ready context from your React/TS codebase in seconds with built-in token cost optimization.
 
 ## What does it generate?
 
@@ -1063,5 +1012,3 @@ Issues and PRs welcome! This is an open-source project.
 
 - [LogicStamp Main Project](https://github.com/LogicStamp/logicstamp)
 - [Report Issues](https://github.com/LogicStamp/logicstamp-context/issues)
-
-#TEST: CI Workflow
