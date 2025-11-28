@@ -4,7 +4,7 @@
   <img src="assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="120" height="120">
 </div>
 
-![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.2.1-blue.svg)
 ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
@@ -25,7 +25,7 @@ That's it! LogicStamp Context will scan your project and generate `context.json`
 ![LogicStamp Context in action](assets/demo-screenshot.png)
 *Terminal output showing `stamp context` execution and generated context.json structure*
 
-> **Note:** This is a beta release (v0.2.0). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+> **Note:** This is a beta release (v0.2.1). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 ## What is this?
 

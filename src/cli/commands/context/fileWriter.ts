@@ -4,10 +4,16 @@
 
 import { writeFile, mkdir } from 'node:fs/promises';
 import { resolve, dirname, join } from 'node:path';
+import { createRequire } from 'module';
 import type { LogicStampBundle, LogicStampIndex, FolderInfo } from '../../../core/pack.js';
 import { getFolderPath, normalizeEntryId } from '../../../utils/fsx.js';
 import { estimateGPT4Tokens } from '../../../utils/tokens.js';
 import { formatBundlesForFolder } from './bundleFormatter.js';
+
+// Load package.json to get version
+const require = createRequire(import.meta.url);
+const pkg = require('../../../../package.json');
+const PACKAGE_VERSION = `${pkg.name}@${pkg.version}`;
 
 /**
  * Normalize path for display (convert backslashes to forward slashes)
@@ -198,7 +204,7 @@ export async function writeMainIndex(
     },
     folders: folderInfos,
     meta: {
-      source: 'logicstamp-context@0.1.1',
+      source: PACKAGE_VERSION,
     },
   };
 
