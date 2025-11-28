@@ -45,6 +45,20 @@ After installation, the `stamp` command will be available globally.
 - **Local install**: `npm install logicstamp-context` → only available in that project
 - **Global install**: `npm install -g logicstamp-context` → available everywhere via `stamp` command
 
+## What's New in v0.2.2
+
+🔧 **Documentation Fixes**
+- **Fixed optional dependencies documentation** - Corrected all documentation to accurately reflect that `@dqbd/tiktoken` and `@anthropic-ai/tokenizer` are included as optional dependencies in package.json and are automatically installed by npm when installing `logicstamp-context`
+- **Updated user-facing messages** - Console output and source code comments now correctly explain optional dependency installation behavior
+
+## What's New in v0.2.1
+
+🔧 **Bug Fixes**
+- **Dynamic version loading** - Fixed hardcoded version string in generated context files to dynamically load from `package.json`, ensuring version consistency across all generated context files
+
+### Changed
+- Updated all version references in documentation to reflect 0.2.1 release
+
 ## What's New in v0.2.0
 
 🎨 **Style Metadata Extraction**
@@ -97,20 +111,6 @@ npm install -g @dqbd/tiktoken @anthropic-ai/tokenizer
 - Tokenizers are installed as **optional dependencies** of `logicstamp-context` and will be installed automatically in most cases
 - If automatic installation fails, LogicStamp Context gracefully falls back to character-based estimation
 - You do **not** need to manually install tokenizers unless you specifically want accurate token counts and the automatic installation failed
-
-## What's New in v0.2.2
-
-🔧 **Documentation Fixes**
-- **Fixed optional dependencies documentation** - Corrected all documentation to accurately reflect that `@dqbd/tiktoken` and `@anthropic-ai/tokenizer` are included as optional dependencies in package.json and are automatically installed by npm when installing `logicstamp-context`
-- **Updated user-facing messages** - Console output and source code comments now correctly explain optional dependency installation behavior
-
-## What's New in v0.2.1
-
-🔧 **Bug Fixes**
-- **Dynamic version loading** - Fixed hardcoded version string in generated context files to dynamically load from `package.json`, ensuring version consistency across all generated context files
-
-### Changed
-- Updated all version references in documentation to reflect 0.2.1 release
 
 ## What's New in v0.1.1
 
