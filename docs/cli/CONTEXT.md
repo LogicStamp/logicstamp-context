@@ -133,7 +133,7 @@ The `context_main.json` file provides a complete directory index:
     }
   ],
   "meta": {
-    "source": "logicstamp-context@0.2.1"
+    "source": "logicstamp-context@0.2.2"
   }
 }
 ```
@@ -188,7 +188,11 @@ stamp context --strict-missing || exit 1
 
 ## Token Estimation
 
-Token counts are estimated using character-based approximations by default (~4 characters per token for GPT-4, ~4.5 for Claude). For more accurate token counts, you can optionally install tokenizer libraries:
+Token counts are estimated using character-based approximations by default (~4 characters per token for GPT-4, ~4.5 for Claude). 
+
+**Optional Tokenizers:** LogicStamp Context includes `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) as optional dependencies. npm will automatically attempt to install them when you install `logicstamp-context`. If installation succeeds, you get model-accurate token counts. If installation fails or is skipped (normal for optional dependencies), the tool gracefully falls back to character-based estimation.
+
+If you need accurate token counts and the automatic installation failed, you can manually install them:
 
 ```bash
 # For accurate GPT-4 token counts
@@ -198,5 +202,5 @@ npm install @dqbd/tiktoken
 npm install @anthropic-ai/tokenizer
 ```
 
-If these packages are installed, `--compare-modes` and token estimates throughout the tool will automatically use them for precise token counting. The tool gracefully falls back to character-based estimation if the packages are not installed.
+If these packages are installed, `--compare-modes` and token estimates throughout the tool will automatically use them for precise token counting.
 

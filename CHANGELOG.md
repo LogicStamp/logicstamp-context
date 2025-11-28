@@ -137,7 +137,7 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 - **Dual comparison tables** - Shows savings vs raw source and vs full context
 - **Accurate style impact** - Automatically regenerates contracts with/without style metadata for precise token counts
 - **Style overhead visibility** - Clearly displays the token cost of including style metadata
-- **Optional tokenizer support** - Automatically uses `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) if installed for accurate token counts, with graceful fallback to character-based estimation
+- **Optional tokenizer support** - Includes `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) as optional dependencies in package.json. npm automatically attempts to install them when installing `logicstamp-context`. If installation succeeds, the tool uses them for accurate token counts. If installation fails or is skipped (normal for optional dependencies), gracefully falls back to character-based estimation
 
 #### Architectural Improvements
 - **Modular CLI structure** - Refactored CLI into dedicated handlers for better maintainability
@@ -159,7 +159,7 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 - Updated all command documentation to include style command and `--include-style` flag
 - Enhanced token optimization documentation with `--compare-modes` examples
 - Added style metadata examples and use cases throughout documentation
-- Documented optional tokenizer libraries (`@dqbd/tiktoken` and `@anthropic-ai/tokenizer`) for accurate token counts
+- Documented optional dependencies (`@dqbd/tiktoken` and `@anthropic-ai/tokenizer`) for accurate token counts - these are included in package.json as optionalDependencies and installed automatically by npm
 - Updated schema documentation to include style metadata fields
 - **`--skip-gitignore` flag for `stamp context`** — Temporarily skips `.gitignore` setup on a per-run basis, regardless of saved preferences.
 - **Config-based behavior** — `stamp context` now respects preferences saved in `.logicstamp/config.json` without prompting.
@@ -183,6 +183,20 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ### Changed
 
 - Updated all version references in documentation to reflect 0.2.1 release
+
+---
+
+## [0.2.2] - 2025-11-28
+
+### Fixed
+
+- **Documentation accuracy** - Fixed all documentation to correctly state that `@dqbd/tiktoken` and `@anthropic-ai/tokenizer` are included as optional dependencies in package.json. npm automatically attempts to install them when installing `logicstamp-context`. Previously, documentation incorrectly suggested users needed to manually install these packages.
+
+### Changed
+
+- Updated all documentation files (README.md, all docs/cli/*.md files, CHANGELOG.md) to clarify that tokenizers are optional dependencies installed automatically by npm
+- Updated user-facing console messages to mention that tokenizers are optional dependencies
+- Updated source code comments in `src/utils/tokens.ts` to reflect optional dependency installation
 
 ---
 
