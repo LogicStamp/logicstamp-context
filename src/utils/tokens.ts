@@ -2,7 +2,10 @@
  * Token estimation utilities for GPT and Claude models
  * Uses character-based approximations by default
  *
- * For accurate token counts, optionally install:
+ * For accurate token counts: These are included as optional dependencies in package.json.
+ * npm automatically attempts to install them when installing logicstamp-context.
+ * If installation succeeds, accurate token counts are used.
+ * If installation fails or is skipped, falls back to character-based estimation.
  * - @dqbd/tiktoken for GPT models (gpt-4o encoding)
  * - @anthropic-ai/tokenizer for Claude (claude-3-5-sonnet-20241022 encoding)
  */

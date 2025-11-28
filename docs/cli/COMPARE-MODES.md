@@ -41,13 +41,13 @@ Shows which tokenizers are being used:
    Token estimation: GPT-4o (tiktoken) | Claude (tokenizer)
 ```
 
-or if tokenizers aren't installed:
+or if tokenizers aren't installed (automatic installation failed or skipped):
 
 ```
 📊 Mode Comparison
 
    Token estimation: GPT-4o (approximation) | Claude (approximation)
-   💡 Tip: Install @dqbd/tiktoken (GPT-4) and/or @anthropic-ai/tokenizer (Claude) for accurate token counts
+   💡 Tip: Tokenizers are included as optional dependencies. If installation failed, manually install @dqbd/tiktoken (GPT-4) and/or @anthropic-ai/tokenizer (Claude) for accurate token counts
 ```
 
 ### 2. Comparison vs Raw Source
@@ -100,7 +100,15 @@ These approximations are reasonably accurate for most codebases (typically withi
 
 ### Accurate: Optional Tokenizers
 
-For precise token counts, install optional tokenizer libraries:
+LogicStamp Context includes `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) as optional dependencies. npm will automatically attempt to install them when you install `logicstamp-context`. If installation succeeds, you get model-accurate token counts. If installation fails or is skipped (normal for optional dependencies), the tool gracefully falls back to character-based estimation.
+
+**Behavior:**
+- npm automatically tries to install tokenizers when installing `logicstamp-context`
+- If installed, automatically detected and used for accurate counts
+- If not installed (installation failed/skipped), gracefully falls back to approximation
+- No configuration required - works automatically
+
+**Manual installation (if automatic installation failed):**
 
 ```bash
 # For accurate GPT-4 token counts
@@ -112,11 +120,6 @@ npm install @anthropic-ai/tokenizer
 # Install both for complete accuracy
 npm install @dqbd/tiktoken @anthropic-ai/tokenizer
 ```
-
-**Behavior:**
-- If installed, automatically detected and used
-- If not installed, gracefully falls back to approximation
-- No configuration required - just install and it works
 
 **When accurate counts matter:**
 - Cost-sensitive workflows with tight token budgets

@@ -162,7 +162,7 @@ export async function generateSummary(
     if (!tokenizerStatus.claude) {
       missing.push('@anthropic-ai/tokenizer (Claude)');
     }
-    console.log(`   💡 Tip: Install ${missing.join(' and/or ')} for accurate token counts`);
+    console.log(`   💡 Tip: Tokenizers are included as optional dependencies. If installation failed, manually install ${missing.join(' and/or ')} for accurate token counts`);
   }
   console.log(`   ⚠️  Current mode = tokenizer-based.`);
   console.log(`      Other modes / raw source = heuristic.`);

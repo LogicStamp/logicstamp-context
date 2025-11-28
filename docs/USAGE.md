@@ -39,7 +39,7 @@ These options are available at the top level (before any subcommand):
 
 **Examples:**
 ```bash
-stamp --version    # Shows: fox mascot + "Version: 0.2.1"
+stamp --version    # Shows: fox mascot + "Version: 0.2.2"
 stamp -v           # Same as --version
 stamp --help       # Shows main help
 stamp -h           # Same as --help
@@ -498,7 +498,7 @@ This command shows two comparison tables:
 - **Four modes compared** – Shows `none`, `header`, `header+style`, and `full` modes
 - **Dual comparison** – Compares against both raw source and full context
 - **Style impact visible** – Clearly shows the token overhead of including style metadata
-- **Optional tokenizers** – For even more accurate counts, optionally install `@dqbd/tiktoken` (GPT-4) or `@anthropic-ai/tokenizer` (Claude). The tool automatically uses them if installed, falling back to character-based estimation otherwise.
+- **Optional tokenizers** – LogicStamp Context includes `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) as optional dependencies. npm will automatically attempt to install them when you install `logicstamp-context`. If installation succeeds, you get model-accurate token counts. If installation fails or is skipped, the tool gracefully falls back to character-based estimation.
 
 **When to use:**
 - Before generating context to choose the right mode for your budget
@@ -735,7 +735,7 @@ These are advanced concerns for future LogicStamp platform features, not v1 "con
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp-context@0.2.1"
+      "source": "logicstamp-context@0.2.2"
     }
   }
 ]

@@ -4,7 +4,7 @@
   <img src="assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="120" height="120">
 </div>
 
-![Version](https://img.shields.io/badge/version-0.2.1-blue.svg)
+![Version](https://img.shields.io/badge/version-0.2.2-blue.svg)
 ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
@@ -25,7 +25,7 @@ That's it! LogicStamp Context will scan your project and generate `context.json`
 ![LogicStamp Context in action](assets/demo-screenshot.png)
 *Terminal output showing `stamp context` execution and generated context.json structure*
 
-> **Note:** This is a beta release (v0.2.1). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+> **Note:** This is a beta release (v0.2.2). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 ## What is this?
 
@@ -60,7 +60,7 @@ After installation, the `stamp` command will be available globally.
 - **Four-mode comparison** - `--compare-modes` now shows `none`, `header`, `header+style`, and `full` modes
 - **Dual comparison tables** - Shows savings vs raw source and vs full context for better decision-making
 - **Accurate style impact** - Automatically regenerates contracts with/without style metadata for precise token counts
-- **Optional tokenizer support** - Automatically uses `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) if installed for accurate token counts, with graceful fallback to character-based estimation
+- **Optional tokenizer support** - Includes `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) as optional dependencies. npm automatically attempts to install them when installing `logicstamp-context`. If installation succeeds, the tool uses them for accurate token counts. If installation fails or is skipped, gracefully falls back to character-based estimation
 
 🏗️ **Architectural Improvements**
 - **Modular CLI structure** - Refactored into dedicated handlers for better maintainability and testability
@@ -68,40 +68,49 @@ After installation, the `stamp` command will be available globally.
 - **Modularized style extraction** - Organized style extraction into dedicated modules (tailwind, scss, motion, layout, etc.)
 - **Improved code organization** - Better separation of concerns and easier contribution
 
-**Installation for Accurate Token Counts:**
+**Optional Tokenizers for Accurate Token Counts:**
 
-By default, LogicStamp Context uses a fast character-based heuristic (usually within 10–15% of real token counts). For model-accurate counts, you can optionally install tokenizer libraries in the same environment where you use `stamp`.
+LogicStamp Context includes `@dqbd/tiktoken` and `@anthropic-ai/tokenizer` as optional dependencies. npm will automatically attempt to install them when you install `logicstamp-context`, but installation may be skipped if there are build issues (this is normal for optional dependencies).
 
-**If you use LogicStamp Context in a project (recommended):**
+**If tokenizers are installed (automatic):**
+- Token counts will be model-accurate for GPT-4 and Claude
+- No additional setup required
 
-```bash
-# Install LogicStamp Context as a dev dependency
-npm install -D logicstamp-context
+**If tokenizers are not installed (installation failed or skipped):**
+- LogicStamp Context automatically falls back to character-based estimation
+- Estimates are typically within 10–15% of real token counts
+- This is fine for most use cases
 
-# Install tokenizers in your project root
-npm install @dqbd/tiktoken @anthropic-ai/tokenizer
+**To manually install tokenizers (optional):**
 
-# Run with npx
-npx stamp context
-```
-
-**If you installed LogicStamp Context globally:**
+If the automatic installation failed and you want accurate token counts, you can install them manually:
 
 ```bash
-# Install LogicStamp Context globally
-npm install -g logicstamp-context
+# For local installs
+npm install -D @dqbd/tiktoken @anthropic-ai/tokenizer
 
-# Install tokenizers globally (same environment)
+# For global installs
 npm install -g @dqbd/tiktoken @anthropic-ai/tokenizer
-
-# Run from anywhere
-stamp context
 ```
 
 **Important:**
-- Install tokenizers in your **project root** (for local installs) or **globally** (for global installs), alongside where you installed `logicstamp-context`
-- You do **not** need to (and should **not**) install anything manually inside the `logicstamp-context` package folder under `node_modules`
-- LogicStamp Context will automatically detect and use the tokenizers if available, or gracefully fall back to character-based estimation if not
+- Tokenizers are installed as **optional dependencies** of `logicstamp-context` and will be installed automatically in most cases
+- If automatic installation fails, LogicStamp Context gracefully falls back to character-based estimation
+- You do **not** need to manually install tokenizers unless you specifically want accurate token counts and the automatic installation failed
+
+## What's New in v0.2.2
+
+🔧 **Documentation Fixes**
+- **Fixed optional dependencies documentation** - Corrected all documentation to accurately reflect that `@dqbd/tiktoken` and `@anthropic-ai/tokenizer` are included as optional dependencies in package.json and are automatically installed by npm when installing `logicstamp-context`
+- **Updated user-facing messages** - Console output and source code comments now correctly explain optional dependency installation behavior
+
+## What's New in v0.2.1
+
+🔧 **Bug Fixes**
+- **Dynamic version loading** - Fixed hardcoded version string in generated context files to dynamically load from `package.json`, ensuring version consistency across all generated context files
+
+### Changed
+- Updated all version references in documentation to reflect 0.2.1 release
 
 ## What's New in v0.1.1
 
@@ -451,17 +460,7 @@ Output:
 
 **Note:** The `--compare-modes` flag automatically regenerates contracts with and without style metadata to provide accurate token counts for all modes. This ensures you see the true impact of including style information.
 
-**Optional tokenizers for accurate counts:** Token estimation uses character-based approximations by default. For more accurate token counts, you can optionally install these libraries:
-
-- `@dqbd/tiktoken` for GPT-4 token counts
-- `@anthropic-ai/tokenizer` for Claude token counts
-
-**Installation location:**
-- **Local install** (recommended): Install tokenizers in your project root when using `npm install -D logicstamp-context`
-- **Global install**: Install tokenizers globally when using `npm install -g logicstamp-context`
-- **Do not** install tokenizers inside the `logicstamp-context` package folder
-
-LogicStamp Context will automatically detect and use tokenizers if available, or fall back to character-based estimation (typically within 10-15% accuracy) if not installed.
+**Optional tokenizers for accurate counts:** LogicStamp Context includes `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) as optional dependencies. npm will automatically attempt to install them when you install `logicstamp-context`. If installation succeeds, you get model-accurate token counts. If installation fails or is skipped (normal for optional dependencies), LogicStamp Context gracefully falls back to character-based estimation (typically within 10-15% accuracy). No manual installation is required unless you specifically want accurate counts and the automatic installation failed.
 
 ### Stats for CI/CD
 
