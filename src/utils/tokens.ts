@@ -53,20 +53,12 @@ async function loadAnthropicTokenizer(): Promise<boolean> {
   
   try {
     const tokenizer = await import('@anthropic-ai/tokenizer');
-    // Check if it's a default export or named export
-    const tokenizerModule = tokenizer.default || tokenizer;
-
-    // Try to get tokenizer for claude-3-5-sonnet-20241022 (latest stable)
-    if (typeof tokenizerModule === 'function') {
-      anthropicTokenizer = tokenizerModule;
+    // @anthropic-ai/tokenizer exports countTokens as a named export
+    if (typeof tokenizer.countTokens === 'function') {
+      anthropicTokenizer = tokenizer;
       return true;
     }
-    // Check for countTokens method directly
-    if (typeof tokenizerModule.countTokens === 'function') {
-      anthropicTokenizer = tokenizerModule;
-      return true;
-    }
-    // If no usable methods, tokenizer not usable
+    // If countTokens not available, tokenizer not usable
     return false;
   } catch (error) {
     // tokenizer not installed - use fallback
@@ -103,14 +95,9 @@ export async function estimateClaudeTokens(text: string): Promise<number> {
   
   if (hasTokenizer && anthropicTokenizer) {
     try {
-      // Try countTokens method first (most common API)
+      // @anthropic-ai/tokenizer exports countTokens as a named export
       if (typeof anthropicTokenizer.countTokens === 'function') {
         return anthropicTokenizer.countTokens(text);
-      }
-      // Try as a function that takes text and returns count
-      if (typeof anthropicTokenizer === 'function') {
-        const result = anthropicTokenizer(text);
-        return typeof result === 'number' ? result : 0;
       }
     } catch (error) {
       // Fall through to character-based estimation

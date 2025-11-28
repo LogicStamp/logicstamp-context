@@ -39,7 +39,7 @@ These options are available at the top level (before any subcommand):
 
 **Examples:**
 ```bash
-stamp --version    # Shows: fox mascot + "Version: 0.2.0"
+stamp --version    # Shows: fox mascot + "Version: 0.2.1"
 stamp -v           # Same as --version
 stamp --help       # Shows main help
 stamp -h           # Same as --help
@@ -735,7 +735,7 @@ These are advanced concerns for future LogicStamp platform features, not v1 "con
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp-context@0.2.0"
+      "source": "logicstamp-context@0.2.1"
     }
   }
 ]

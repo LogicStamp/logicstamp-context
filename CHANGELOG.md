@@ -174,6 +174,18 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 
 ---
 
+## [0.2.1] - 2025-11-28
+
+### Fixed
+
+- **Dynamic version loading** - Fixed hardcoded version string in `fileWriter.ts` to dynamically load from `package.json`, ensuring version consistency across all generated context files
+
+### Changed
+
+- Updated all version references in documentation to reflect 0.2.1 release
+
+---
+
 ## [Unreleased]
 
 ### Planned Features
