@@ -4,7 +4,7 @@
   <img src="assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="120" height="120">
 </div>
 
-![Version](https://img.shields.io/badge/version-0.2.2-blue.svg)
+![Version](https://img.shields.io/badge/version-0.2.3-blue.svg)
 ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
@@ -25,7 +25,7 @@ That's it! LogicStamp Context will scan your project and generate `context.json`
 ![LogicStamp Context in action](assets/demo-screenshot.png)
 *Terminal output showing `stamp context` execution and generated context.json structure*
 
-> **Note:** This is a beta release (v0.2.2). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+> **Note:** This is a beta release (v0.2.3). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 ## What is this?
 
@@ -45,118 +45,25 @@ After installation, the `stamp` command will be available globally.
 - **Local install**: `npm install logicstamp-context` → only available in that project
 - **Global install**: `npm install -g logicstamp-context` → available everywhere via `stamp` command
 
-## What's New in v0.2.2
+## Recent Updates
 
-🔧 **Documentation Fixes**
-- **Fixed optional dependencies documentation** - Corrected all documentation to accurately reflect that `@dqbd/tiktoken` and `@anthropic-ai/tokenizer` are included as optional dependencies in package.json and are automatically installed by npm when installing `logicstamp-context`
-- **Updated user-facing messages** - Console output and source code comments now correctly explain optional dependency installation behavior
+**v0.2.3** - README streamlined, improved token estimation accuracy, UIF Contracts documentation  
+**v0.2.2** - Documentation fixes for optional tokenizer dependencies  
+**v0.2.1** - Dynamic version loading from package.json  
+**v0.2.0** - Style metadata extraction, enhanced token comparison, modular architecture  
+**v0.1.1** - CI-friendly defaults, improved initialization workflow  
+**v0.1.0** - Initial release with token optimization, drift detection, and Next.js support
 
-## What's New in v0.2.1
+📋 **See [CHANGELOG.md](CHANGELOG.md) for complete version history**
 
-🔧 **Bug Fixes**
-- **Dynamic version loading** - Fixed hardcoded version string in generated context files to dynamically load from `package.json`, ensuring version consistency across all generated context files
+### Optional Tokenizers
 
-### Changed
-- Updated all version references in documentation to reflect 0.2.1 release
+LogicStamp Context includes `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) as **optional dependencies**. npm automatically attempts to install them when you install `logicstamp-context`.
 
-## What's New in v0.2.0
+- **If installed**: Token counts are model-accurate for GPT-4 and Claude
+- **If not installed**: Falls back to character-based estimation (typically within 10–15% accuracy)
 
-🎨 **Style Metadata Extraction**
-- **New `stamp context style` command** - Generate design-aware context bundles with visual and layout information
-- **`--include-style` flag** - Alternative syntax for enabling style metadata extraction
-- **Comprehensive style detection** - Identifies Tailwind CSS, SCSS/CSS modules, inline styles, styled-components, and framer-motion
-- **Layout pattern recognition** - Extracts flex/grid patterns, hero sections, feature cards, and responsive breakpoints
-- **Visual design metadata** - Captures color palettes, spacing patterns, border radius, and typography classes
-- **Animation detection** - Identifies framer-motion animations, CSS transitions, and viewport triggers
-- **SCSS/CSS module parsing** - Analyzes imported style files to extract selectors, properties, and SCSS features
-
-📊 **Enhanced Token Comparison**
-- **Four-mode comparison** - `--compare-modes` now shows `none`, `header`, `header+style`, and `full` modes
-- **Dual comparison tables** - Shows savings vs raw source and vs full context for better decision-making
-- **Accurate style impact** - Automatically regenerates contracts with/without style metadata for precise token counts
-- **Optional tokenizer support** - Includes `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) as optional dependencies. npm automatically attempts to install them when installing `logicstamp-context`. If installation succeeds, the tool uses them for accurate token counts. If installation fails or is skipped, gracefully falls back to character-based estimation
-
-🏗️ **Architectural Improvements**
-- **Modular CLI structure** - Refactored into dedicated handlers for better maintainability and testability
-- **Extracted AST parsing** - Modularized AST extraction into focused detector and extractor modules
-- **Modularized style extraction** - Organized style extraction into dedicated modules (tailwind, scss, motion, layout, etc.)
-- **Improved code organization** - Better separation of concerns and easier contribution
-
-**Optional Tokenizers for Accurate Token Counts:**
-
-LogicStamp Context includes `@dqbd/tiktoken` and `@anthropic-ai/tokenizer` as optional dependencies. npm will automatically attempt to install them when you install `logicstamp-context`, but installation may be skipped if there are build issues (this is normal for optional dependencies).
-
-**If tokenizers are installed (automatic):**
-- Token counts will be model-accurate for GPT-4 and Claude
-- No additional setup required
-
-**If tokenizers are not installed (installation failed or skipped):**
-- LogicStamp Context automatically falls back to character-based estimation
-- Estimates are typically within 10–15% of real token counts
-- This is fine for most use cases
-
-**To manually install tokenizers (optional):**
-
-If the automatic installation failed and you want accurate token counts, you can install them manually:
-
-```bash
-# For local installs
-npm install -D @dqbd/tiktoken @anthropic-ai/tokenizer
-
-# For global installs
-npm install -g @dqbd/tiktoken @anthropic-ai/tokenizer
-```
-
-**Important:**
-- Tokenizers are installed as **optional dependencies** of `logicstamp-context` and will be installed automatically in most cases
-- If automatic installation fails, LogicStamp Context gracefully falls back to character-based estimation
-- You do **not** need to manually install tokenizers unless you specifically want accurate token counts and the automatic installation failed
-
-## What's New in v0.1.1
-
-🔧 **CI-Friendly Defaults**
-- **`stamp context` no longer prompts** - Interactive prompts moved to `stamp init` for better CI/CD compatibility
-- **Safe defaults** - `stamp context` now defaults to skipping both `.gitignore` and `LLM_CONTEXT.md` setup unless explicitly opted in via `stamp init`
-- **Auto-config creation** - On first run, creates `.logicstamp/config.json` with safe defaults (`'skipped'` for both preferences)
-- **New `--skip-gitignore` flag** - Allows skipping `.gitignore` setup on a per-run basis, useful for CI environments
-
-🎯 **Improved Initialization**
-- **`stamp init` now prompts interactively** - Prompts for both `.gitignore` patterns and `LLM_CONTEXT.md` generation (only in interactive/TTY mode)
-- **Non-interactive defaults** - In CI/non-TTY environments, defaults to "yes" for both prompts
-- **Better user control** - Users can explicitly set preferences via `stamp init` before running `stamp context`
-- **Config-based behavior** - `stamp context` respects preferences saved in `.logicstamp/config.json` without prompting
-
-**Migration Note:** If you were using `stamp context` interactively before, run `stamp init` once to set your preferences. Subsequent `stamp context` runs will respect your saved choices automatically.
-
-## What's New in v0.1.0
-
-🎉 **Token Cost Optimization**
-- Automatic token estimates for GPT-4o-mini and Claude
-- Mode comparison showing savings (none/header/full)
-- `--compare-modes` flag for detailed token analysis
-
-🔍 **Multi-File Context Drift Detection**
-- New `compare` command with multi-file support
-- Compares **all context files** using `context_main.json` as index
-- Detects ADDED folders, ORPHANED folders, per-folder DRIFT, and PASS status
-- Three-tier output: folder summary → component summary → detailed changes
-- `--clean-orphaned` flag to automatically remove stale context files
-- CI-friendly exit codes and per-folder token delta stats
-
-⚛️ **Next.js App Router Support**
-- Detects `'use client'` and `'use server'` directives
-- Identifies files in Next.js App Router (`/app` directory)
-- Adds metadata to contracts for framework-aware analysis
-
-✅ **Enhanced Component Detection**
-- Fixed React component detection for HTML-only JSX
-- Improved dependency resolution (relative paths prioritized)
-- Better handling of cross-directory component references
-
-🛡️ **CI/CD Improvements**
-- `--strict-missing` flag for dependency validation
-- Enhanced `--stats` output with mode estimates
-- JSON output optimized for CI parsing
+You do **not** need to manually install tokenizers unless automatic installation failed and you specifically need accurate counts.
 
 ## What does it generate?
 
@@ -215,89 +122,44 @@ LogicStamp Context automatically detects and annotates Next.js App Router compon
 ```bash
 stamp --version                    # Show version number
 stamp --help                       # Show help
-stamp init [path] [options]
-stamp context [path] [options]
-stamp context style [path] [options]  # Generate context with style metadata
-stamp context compare <old.json> <new.json> [options]
-stamp context validate [file] [options]
-stamp context clean [path] [options]
+stamp init [path] [options]        # Initialize project preferences
+stamp context [path] [options]     # Generate context bundles
+stamp context style [path] [options]  # Generate with style metadata
+stamp context compare [options]    # Detect context drift
+stamp context validate [file]      # Validate context files
+stamp context clean [path] [options]  # Remove generated files
 ```
 
-### Commands
+### Quick Command Reference
 
-- **`stamp init [path]`** - Initialize LogicStamp in a project by creating or updating `.gitignore` with patterns for context files (`context.json`, `context_*.json`, `.logicstamp/`, etc.), generating `LLM_CONTEXT.md` in the project root, and saving preferences to `.logicstamp/config.json`. Prompts interactively (in TTY mode) for both `.gitignore` setup and `LLM_CONTEXT.md` generation. In CI/non-TTY environments, defaults to "yes" for both. Use this command to set your preferences before running `stamp context` - subsequent `stamp context` runs will respect your saved choices automatically.
+| Command | Description | Docs |
+|---------|-------------|------|
+| `stamp init` | Initialize project (`.gitignore`, `LLM_CONTEXT.md`, config) | [INIT.md](docs/cli/INIT.md) |
+| `stamp context` | Generate AI-ready context bundles organized by folder | [CONTEXT.md](docs/cli/CONTEXT.md) |
+| `stamp context style` | Generate context with style metadata (Tailwind, SCSS, etc.) | [STYLE.md](docs/cli/STYLE.md) |
+| `stamp context compare` | Compare context files to detect changes (CI-friendly) | [COMPARE.md](docs/cli/COMPARE.md) |
+| `stamp context validate` | Validate context file schema and structure | [VALIDATE.md](docs/cli/VALIDATE.md) |
+| `stamp context clean` | Remove all generated context artifacts | [CLEAN.md](docs/cli/CLEAN.md) |
 
-  See [docs/cli/INIT.md](docs/cli/INIT.md) for detailed documentation.
+### Common Options
 
-- **`stamp context [path]`** - Scans a directory and writes AI-ready context files organized by folder. Generates multiple `context.json` files (one per folder containing components) plus a `context_main.json` index file at the output root. Shows token estimates and mode comparison in output. Automatically validates the generated context before writing. **CI-friendly**: No interactive prompts - respects preferences saved in `.logicstamp/config.json` (created by `stamp init`). On first run without config, creates `.logicstamp/config.json` with safe defaults (skips both `.gitignore` and `LLM_CONTEXT.md` setup).
+**`stamp context` options:**
+- `--depth <n>` / `-d` - Dependency traversal depth (default: `1`)
+- `--include-code <mode>` / `-c` - Code inclusion: `none|header|full` (default: `header`)
+- `--include-style` - Extract style metadata (Tailwind, SCSS, animations, layout)
+- `--profile <profile>` - Preset: `llm-chat` (default), `llm-safe`, `ci-strict`
+- `--compare-modes` - Show detailed token comparison across all modes
+- `--stats` - Emit JSON stats with token estimates (CI-friendly)
+- `--strict-missing` - Exit with error if missing dependencies found
+- `--out <path>` / `-o` - Output directory or file path
+- `--quiet` / `-q` - Suppress verbose output
 
-  See [docs/cli/CONTEXT.md](docs/cli/CONTEXT.md) for detailed documentation.
+**Other commands:**
+- `stamp context compare` - `--stats`, `--approve`, `--clean-orphaned`
+- `stamp context validate` - Validates schema and structure (exits 0/1)
+- `stamp init` - `--skip-gitignore`
 
-- **`stamp context style [path]`** - Generates context with style metadata included. Equivalent to `stamp context --include-style`. Extracts visual and layout information from components including Tailwind classes, SCSS/CSS modules, styled-components, framer-motion animations, layout patterns (flex/grid), color palettes, spacing, typography, and animation configurations. This makes context bundles design-aware, enabling AI assistants to understand both the logic and visual presentation of your components.
-
-  See [docs/cli/STYLE.md](docs/cli/STYLE.md) for detailed documentation.
-
-- **`stamp context compare [options]`** - Compares all context files (multi-file mode) or two specific files to detect drift. In multi-file mode, uses `context_main.json` as index to compare all folder context files and detect ADDED/ORPHANED folders, per-folder DRIFT, and unchanged files (PASS). Shows three-tier output: folder summary, component summary, and detailed changes. Supports `--approve` for auto-updates (Jest-style), `--clean-orphaned` to remove stale files, and `--stats` for per-folder token deltas. Exits with code 1 if drift is detected (CI-friendly).
-
-  See [docs/cli/COMPARE.md](docs/cli/COMPARE.md) for detailed documentation.
-
-- **`stamp context validate [file]`** - Checks an existing context file for schema and structural issues before sharing it with an AI or committing it to a repo. When no file is specified it looks for `context.json` in the current directory.
-
-  See [docs/cli/VALIDATE.md](docs/cli/VALIDATE.md) for detailed documentation.
-
-- **`stamp context clean [path]`** - Removes all generated context artifacts (`context_main.json`, all folder `context.json` files, and `.logicstamp/` directory if present). Safe by default (dry run), requires `--all --yes` to actually delete. Useful for resetting context files or cleaning before switching branches.
-
-  See [docs/cli/CLEAN.md](docs/cli/CLEAN.md) for detailed documentation.
-
-### Arguments & Options (`init` command)
-
-- `[path]` - Target directory to initialize (default: current directory)
-- `--skip-gitignore` - Skip `.gitignore` setup
-- `--help`, `-h` - Show help message
-
-See [docs/cli/INIT.md](docs/cli/INIT.md) for detailed documentation.
-
-### Arguments (`context` command)
-
-- `[path]` - Directory to scan (default: current directory)
-
-### Options (`context` command)
-
-| Option | Alias | Description | Default |
-|--------|-------|-------------|---------|
-| `--depth <n>` | `-d` | Dependency traversal depth | `1` |
-| `--include-code <mode>` | `-c` | Code inclusion: `none\|header\|full` | `header` |
-| `--format <format>` | `-f` | Output format: `json\|pretty\|ndjson` | `json` |
-| `--out <file>` | `-o` | Output directory or file path. If a `.json` file is specified, its directory is used as the output directory. Otherwise, the path is used as the output directory. | `context.json` (creates output directory) |
-| `--max-nodes <n>` | `-m` | Maximum nodes per bundle | `100` |
-| `--profile <profile>` | | Profile preset (see below) | `llm-chat` |
-| `--strict` | `-s` | Fail on missing dependencies | `false` |
-| `--strict-missing` | | Exit with error code 1 if any missing dependencies found (CI-friendly) | `false` |
-| `--predict-behavior` | | Include experimental behavior predictions in contracts | `false` |
-| `--dry-run` | | Skip writing output; show on-screen summary only | `false` |
-| `--stats` | | Emit single-line JSON stats with token estimates (intended for CI) | `false` |
-| `--compare-modes` | | Show detailed token comparison table across modes (none/header/full) | `false` |
-| `--include-style` | | Extract style metadata (Tailwind, SCSS, animations, layout) | `false` |
-| `--skip-gitignore` | | Skip `.gitignore` setup (never prompt or modify) | `false` |
-| `--quiet` | `-q` | Suppress verbose output (show only errors) | `false` |
-| `--help` | `-h` | Show help message | |
-
-### Options (`compare` command)
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--stats` | Show token count statistics and delta | `false` |
-| `--approve` | Auto-approve updates (non-interactive, CI-safe) | `false` |
-| `--clean-orphaned` | Auto-delete orphaned files with `--approve` | `false` |
-| `--quiet` | `-q` | Suppress verbose output (show only diffs) | `false` |
-| `--help`, `-h` | Show help message | |
-
-### Options (`validate` command)
-
-- `[file]` – Optional path to a generated `context.json` file to validate. Defaults to `./context.json`. You can validate individual folder context files or the main index file.
-- `--quiet` | `-q` – Suppress verbose output (show only errors)
-- Exits with code `0` on success, `1` on invalid structure or read/parse errors.
-- Prints bundle counts, node totals, and highlights schema mismatches.
+📋 **See [docs/cli/COMMANDS.md](docs/cli/COMMANDS.md) for complete option reference**
 
 ### Profiles
 
@@ -614,198 +476,45 @@ stamp context validate context.json
 
 LogicStamp Context generates a **folder-organized, multi-file output structure** that maintains your project's directory hierarchy:
 
-### File Structure
-
-The tool writes multiple `context.json` files, one per folder containing components, plus a `context_main.json` index file at the output root:
-
 ```
 output/
 ├── context_main.json          # Main index with folder metadata
 ├── context.json               # Root folder bundles (if any)
 ├── src/
 │   └── context.json          # Bundles from src/ folder
-├── src/components/
-│   └── context.json          # Bundles from src/components/
-└── src/utils/
-    └── context.json          # Bundles from src/utils/
+└── src/components/
+    └── context.json          # Bundles from src/components/
 ```
 
-### Folder-Based Organization
+### Structure Overview
 
-Each folder's `context.json` contains bundles for components in that folder. This organization:
-- **Matches your project structure** - Easy to locate context for specific directories
-- **Enables incremental updates** - Only regenerate context for changed folders
-- **Improves AI context loading** - Load only relevant folder contexts
-- **Maintains relative paths** - Folder structure mirrors your project layout
+- **Folder-based organization** - Each folder containing components gets its own `context.json`
+- **Main index** - `context_main.json` indexes all folders with metadata (components, bundles, token estimates)
+- **Per-root bundles** - Each bundle contains a root component plus its complete dependency graph
+- **Self-contained units** - Each bundle includes all related components and contracts for that feature/page
 
-### Main Index File (`context_main.json`)
+### Key Fields
 
-The `context_main.json` file serves as a directory index with:
+**`context_main.json` index:**
+- `folders[]` - Array of folder metadata (path, bundles, components, token estimates)
+- `summary` - Total components, bundles, folders, token estimates
 
-```json
-{
-  "type": "LogicStampIndex",
-  "schemaVersion": "0.1",
-  "projectRoot": ".",
-  "projectRootResolved": "/absolute/path/to/project",
-  "createdAt": "2025-01-15T10:30:00.000Z",
-  "summary": {
-    "totalComponents": 42,
-    "totalBundles": 15,
-    "totalFolders": 5,
-    "totalTokenEstimate": 13895
-  },
-  "folders": [
-    {
-      "path": "src/components",
-      "contextFile": "src/components/context.json",
-      "bundles": 3,
-      "components": ["Button.tsx", "Card.tsx", "Modal.tsx"],
-      "isRoot": false,
-      "tokenEstimate": 5234
-    },
-    {
-      "path": ".",
-      "contextFile": "context.json",
-      "bundles": 2,
-      "components": ["App.tsx"],
-      "isRoot": true,
-      "rootLabel": "Project Root",
-      "tokenEstimate": 2134
-    }
-  ],
-  "meta": {
-    "source": "logicstamp-context@0.1.0"
-  }
-}
-```
+**Bundle structure (`context.json`):**
+- `entryId` - Root component file path
+- `graph.nodes[]` - Component contracts with structure, props, hooks, state
+- `graph.edges[]` - Dependency relationships
+- `meta.missing[]` - Unresolved dependencies (if any)
+- `meta.source` - Generator version
 
-**Key fields in folder entries:**
-- `path` - Relative path from project root
-- `contextFile` - Path to the folder's context.json file
-- `bundles` - Number of bundles in this folder
-- `components` - List of component files in this folder
-- `isRoot` - Whether this folder is an application entry point
-- `rootLabel` - Human-readable label for root folders (e.g., "Next.js App", "Project Root")
-- `tokenEstimate` - Estimated token count for this folder's context
-
-### Bundle Structure
-
-Each folder's `context.json` contains an array of bundles (one bundle per entry point). Each bundle represents a root component plus its complete dependency graph, with all related components and their contracts included within that bundle. This per-root bundle design is optimized for how developers and LLMs work—when you need help with a specific page or feature, the root bundle contains everything related to that feature in one self-contained unit.
-
-**📋 Full Schema Reference:** See [`schema/logicstamp.context.schema.json`](schema/logicstamp.context.schema.json) for the complete JSON Schema definition.
-
-**Example: `src/components/context.json`**
-
-```json
-[
-  {
-    "$schema": "https://logicstamp.dev/schemas/context/v0.1.json",
-    "position": "1/3",
-    "type": "LogicStampBundle",
-    "schemaVersion": "0.1",
-    "entryId": "src/components/Button.tsx",
-    "depth": 1,
-    "createdAt": "2025-01-15T10:30:00.000Z",
-    "bundleHash": "uifb:abc123...",
-    "graph": {
-      "nodes": [
-        {
-          "entryId": "src/components/Button.tsx",
-          "contract": {
-            "type": "UIFContract",
-            "schemaVersion": "0.3",
-            "kind": "react:component",
-            "description": "Button - Interactive component",
-            "version": {
-              "variables": ["variant", "size"],
-              "hooks": ["useState"],
-              "components": [],
-              "functions": ["handleClick"]
-            },
-            "logicSignature": {
-              "props": {
-                "onClick": { "type": "function", "signature": "() => void" },
-                "variant": { "type": "literal-union", "literals": ["primary", "secondary"] }
-              },
-              "events": {},
-              "state": {}
-            },
-            "nextjs": {
-              "directive": "client",
-              "isInAppDir": true
-            }
-          }
-        }
-      ],
-      "edges": []
-    },
-    "meta": {
-      "missing": [],
-      "source": "logicstamp-context@0.1.0"
-    }
-  }
-]
-```
-
-**📋 Full Schema Reference:** See [`schema/logicstamp.context.schema.json`](schema/logicstamp.context.schema.json) for the complete JSON Schema definition.
-
-### Understanding the Meta Field
-
-The `meta` section provides metadata about bundle generation and dependency resolution:
-
-#### `missing` Array
-
-Tracks dependencies that couldn't be resolved during analysis. An empty array `[]` means all dependencies were successfully found.
-
-When dependencies are missing, each entry contains:
-- `name` - The import specifier that couldn't be resolved (e.g., `"./MissingComponent"`)
-- `reason` - Why it couldn't be found (e.g., `"file not found"`, `"external package"`)
-- `referencedBy` - The component that tried to import it
-
-**Example with missing dependencies:**
-```json
-{
-  "meta": {
-    "missing": [
-      {
-        "name": "./components/DeletedComponent",
-        "reason": "file not found",
-        "referencedBy": "src/App.tsx"
-      },
-      {
-        "name": "@external/ui-lib",
-        "reason": "external package",
-        "referencedBy": "src/components/Button.tsx"
-      }
-    ],
-    "source": "logicstamp-context@0.1.0"
-  }
-}
-```
-
-**Common reasons for missing dependencies:**
-- `file not found` - Referenced file doesn't exist (deleted or moved)
+**Missing dependencies:**
+- `file not found` - Deleted or moved file
 - `external package` - Third-party npm package (intentionally excluded)
-- `outside scan path` - File exists but outside the specified scan directory
-- `circular dependency` - Circular import detected and skipped
-- `max depth exceeded` - Dependency beyond `--depth` limit
+- `outside scan path` - File exists but outside scan directory
+- `circular dependency` - Circular import detected
+- `max depth exceeded` - Beyond `--depth` limit
 
-**Using `--strict-missing` for CI/CD:**
-```bash
-# Exit with error code 1 if ANY missing dependencies found
-stamp context --strict-missing
-
-# Perfect for CI validation
-stamp context --strict-missing || exit 1
-```
-
-#### `source` Field
-
-Identifies the generator and version (e.g., `"logicstamp-context@0.1.0"`). Useful for:
-- Debugging context generation issues
-- Ensuring compatibility with consuming tools
-- Tracking which version generated historical contexts
+📋 **See [`schema/logicstamp.context.schema.json`](schema/logicstamp.context.schema.json) for complete JSON Schema**  
+📋 **See [`docs/SCHEMA.md`](docs/SCHEMA.md) for detailed field documentation**
 
 ## Use Cases
 
@@ -947,47 +656,24 @@ All in one command, no pre-compilation needed!
 
 ## Future Roadmap
 
-### Next.js Enhancements (Planned)
+### Planned Features
 
-The current Next.js support (v0.1) provides foundational directive and App Router detection. Future versions may include:
+**Next.js Enhancements:**
+- App Router role detection (`page`, `layout`, `route`, `loading`, `error`)
+- Dynamic route segment extraction (`[id]`, `[...slug]`)
+- Server Action signature extraction and RPC call graphs
+- Suspense boundary and streaming component detection
 
-**App Router Advanced Features**
-- `role` detection - Identify `page`, `layout`, `route`, `loading`, `error` files
-- `segmentPath` extraction - Capture dynamic route segments (e.g., `[id]`, `[...slug]`)
-- Route dependency graph - Map App Router file relationships
-- Metadata exports - Detect `generateMetadata`, `generateStaticParams`
+**Framework Support:**
+- Vue.js 3 Composition API components
+- Svelte component analysis
 
-**Server Actions & RPC**
-- Server Action signature extraction from `'use server'` blocks
-- Form action detection and validation
-- RPC call graph (client → server action relationships)
+**Other:**
+- Custom contract fields via config
+- Performance metrics (bundle size, render estimates)
+- Incremental bundle caching
 
-**Streaming & Suspense**
-- Suspense boundary detection
-- Streaming component identification
-- Loading states and error boundaries
-
-**Example Future Contract**
-```json
-{
-  "nextjs": {
-    "directive": "client",
-    "isInAppDir": true,
-    "role": "page",
-    "segmentPath": "dashboard/[userId]",
-    "hasMetadata": true
-  }
-}
-```
-
-**Note:** These features will be added incrementally based on community feedback and real-world usage patterns. The current implementation prioritizes the 80/20 rule - maximum value with minimal complexity.
-
-### Other Planned Features
-
-- **Vue.js Support** - Extend to Vue 3 Composition API components
-- **Svelte Support** - Component analysis for Svelte files
-- **Custom Contract Fields** - User-defined metadata via config
-- **Performance Metrics** - Bundle size and render performance estimates
+**Note:** Features are added incrementally based on community feedback. Current implementation prioritizes maximum value with minimal complexity.
 
 ## Requirements
 

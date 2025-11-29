@@ -205,7 +205,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
       }
     );
     
-    await displayModeComparison(comparison, elapsed);
+    await displayModeComparison(comparison, files, elapsed);
     return;
   }
 

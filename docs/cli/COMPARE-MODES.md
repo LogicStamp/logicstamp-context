@@ -58,15 +58,16 @@ Shows token savings compared to dumping raw source files:
    Comparison:
      Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Raw Source
      -------------|---------------|---------------|------------------------
-     Raw source   |       229,087 |       203,633 | 0%
-     Header       |        77,533 |        84,245 | 66%
-     Header+style |       158,696 |       172,061 | 31%
+     Raw source   |       273,006 |       289,573 | 0%
+     Header       |        82,917 |        90,131 | 70%
+     Header+style |       170,466 |       184,864 | 38%
 ```
 
 **Interpretation:**
-- **Raw source** - Baseline showing tokens for all source code without any processing
-- **Header** - Typical savings of 60-70% by extracting only contracts and signatures
-- **Header+style** - Moderate savings of 25-40% when including style metadata
+- **Raw source** - Baseline showing tokens for all source code without any processing. This is the token count if you simply concatenated all source files.
+- **Header** - Typical savings of 70% by extracting only contracts and signatures (no implementation code). This is the recommended default mode.
+- **Header+style** - Savings of 38% when including style metadata. Style metadata adds significant tokens but provides visual context.
+- **Note:** The "full" mode (contracts + complete source) will be larger than raw source due to contract structure overhead (~30% additional tokens).
 
 ### 3. Mode Breakdown vs Full Context
 
@@ -76,17 +77,17 @@ Shows savings compared to the maximum information mode:
    Mode breakdown:
      Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Full Context
      -------------|---------------|---------------|--------------------------
-     none         |        46,520 |        50,547 | 85%
-     header       |        77,533 |        84,245 | 75%
-     header+style |       158,696 |       172,061 | 48%
-     full         |       306,620 |       287,878 | 0%
+     none         |        49,751 |        54,079 | 86%
+     header       |        82,917 |        90,131 | 77%
+     header+style |       170,466 |       184,864 | 52%
+     full         |       355,923 |       379,704 | 0%
 ```
 
 **Interpretation:**
-- **none** - Maximum compression, 80-90% savings, contracts only
-- **header** - Balanced compression, 70-80% savings, includes function signatures
-- **header+style** - Moderate compression, 40-60% savings, adds visual context
-- **full** - No compression, includes all source code
+- **none** - Maximum compression, 86% savings, contracts only (no code or style)
+- **header** - Balanced compression, 77% savings, includes function signatures and JSDoc (recommended default)
+- **header+style** - Moderate compression, 52% savings, adds visual/styling context
+- **full** - No compression, includes complete source code plus contract overhead (~30% more than raw source)
 
 ## Token Estimation
 
@@ -142,7 +143,7 @@ npm install @dqbd/tiktoken @anthropic-ai/tokenizer
 - No visual/styling information
 - Limited context for code generation tasks
 
-**Token cost:** Typically 10-20% of raw source
+**Token cost:** Typically 18% of raw source
 
 ### header - Balanced Compression
 
@@ -158,7 +159,7 @@ npm install @dqbd/tiktoken @anthropic-ai/tokenizer
 - Function signatures and types
 - Dependency relationships
 
-**Token cost:** Typically 20-30% of raw source
+**Token cost:** Typically 30% of raw source
 
 ### header+style - Visual Context
 
@@ -176,7 +177,7 @@ npm install @dqbd/tiktoken @anthropic-ai/tokenizer
 - Layout patterns (flex/grid)
 - Color and spacing patterns
 
-**Token cost:** Typically 40-60% of raw source
+**Token cost:** Typically 62% of raw source
 
 ### full - Complete Context
 
@@ -191,7 +192,7 @@ npm install @dqbd/tiktoken @anthropic-ai/tokenizer
 - Complete source code for all components
 - Full file contents
 
-**Token cost:** Typically 80-100% of raw source (plus contract overhead)
+**Token cost:** Typically 130% of raw source (includes contract structure overhead)
 
 ## Example Workflows
 
@@ -242,20 +243,21 @@ done
 ### Savings Percentages
 
 **Savings vs Raw Source:**
-- Measures reduction compared to dumping all source files
+- Measures reduction compared to dumping all source files (simple concatenation)
 - Higher is better for token efficiency
-- Typical range: 60-70% for header mode
+- Typical range: 70% for header mode, 38% for header+style mode
+- Note: "Full" mode exceeds raw source due to contract structure overhead (~30% more)
 
 **Savings vs Full Context:**
-- Measures reduction compared to maximum information mode
+- Measures reduction compared to maximum information mode (full contracts + complete source)
 - Shows relative efficiency between modes
-- Typical range: 70-85% for header mode
+- Typical range: 77% for header mode, 52% for header+style mode
 
 ### Token Counts
 
 **GPT-4o-mini vs Claude:**
-- Claude typically uses 10-15% fewer tokens than GPT-4
-- Differences are model-specific tokenization
+- Token counts vary by model-specific tokenization (typically within 5-10% difference)
+- Differences depend on the specific content being tokenized
 - Both estimates are provided for flexibility
 
 ### Accuracy
@@ -296,13 +298,26 @@ Token counts are not the same as character counts. Tokenizers split text into se
 
 ### How much overhead do contracts add?
 
-Contracts typically add 5-15% overhead compared to raw source in `full` mode, but enable:
+In `full` mode, contracts add ~30% overhead compared to raw source due to the structured contract metadata (JSON structure, type information, dependency relationships). However, contracts enable:
 - Structured dependency graphs
 - Semantic component analysis
 - Missing dependency tracking
 - Reproducible builds
+- Better AI comprehension through structured data
 
-The overhead is well worth it for AI context generation.
+The overhead is typically worth it for AI context generation, but consider using `header` mode (which adds minimal overhead) for most use cases to maximize token efficiency.
+
+### Why do the savings percentages seem generous?
+
+The "savings vs raw source" compares LogicStamp output against a simple concatenation of all source files. However:
+
+- **Raw source** = Just the file contents concatenated (no structure, no metadata)
+- **Full mode** = Contracts + complete source = 130% of raw source (due to contract overhead)
+- **Header mode** = Contracts + signatures only = 30% of raw source
+
+So while header mode saves 70% compared to raw source, if you need complete source code, the "full" mode actually costs MORE than raw source due to the structured contract format. The real value is that header mode provides most of the semantic information at a fraction of the cost.
+
+**In practice:** Use `header` mode for most AI interactions - it provides contracts, types, and function signatures (what you need 90% of the time) at only 30% of the raw source token cost.
 
 ### Can I compare specific folders?
 
