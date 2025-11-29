@@ -12,7 +12,7 @@ Context generation supports multiple modes that balance information completeness
 
 - **none** - Contracts only (props, state, hooks, dependencies) with no source code
 - **header** - Contracts plus JSDoc headers and function signatures
-- **header+style** - Header mode plus extracted style metadata (Tailwind, SCSS, animations, layout)
+- **header+style** - Header mode plus extracted style metadata (Tailwind, SCSS, Material UI, animations, layout)
 - **full** - Everything including complete source code
 
 The `--compare-modes` flag generates a detailed comparison table showing token costs for all modes, helping you understand the tradeoffs.

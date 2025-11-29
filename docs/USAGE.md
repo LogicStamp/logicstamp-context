@@ -39,7 +39,7 @@ These options are available at the top level (before any subcommand):
 
 **Examples:**
 ```bash
-stamp --version    # Shows: fox mascot + "Version: 0.2.3"
+stamp --version    # Shows: fox mascot + "Version: 0.2.4"
 stamp -v           # Same as --version
 stamp --help       # Shows main help
 stamp -h           # Same as --help
@@ -101,6 +101,7 @@ The style command analyzes components and extracts:
    - Inline styles detection
    - styled-components/emotion usage
    - framer-motion animation components
+   - Material UI components, packages, and styling features (theme, sx prop, styled, makeStyles, system props)
 
 2. **Layout Metadata**
    - Layout type (flex, grid)
@@ -163,6 +164,14 @@ Style metadata is included in the `style` field of each component's contract:
         "variants": ["fadeIn"],
         "features": {
           "viewportAnimations": true
+        }
+      },
+      "materialUI": {
+        "components": ["Button", "TextField"],
+        "packages": ["@mui/material"],
+        "features": {
+          "usesTheme": true,
+          "usesSxProp": true
         }
       }
     },
@@ -735,7 +744,7 @@ These are advanced concerns for future LogicStamp platform features, not v1 "con
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp-context@0.2.3"
+      "source": "logicstamp-context@0.2.4"
     }
   }
 ]
@@ -767,7 +776,7 @@ These are advanced concerns for future LogicStamp platform features, not v1 "con
     }
   ],
   "meta": {
-    "source": "logicstamp-context@0.2.3"
+    "source": "logicstamp-context@0.2.4"
   }
 }
 ```
@@ -819,7 +828,7 @@ The `meta.missing` array tracks dependencies that couldn't be resolved. An empty
         "referencedBy": "src/helpers.ts"
       }
     ],
-    "source": "logicstamp-context@0.2.3"
+    "source": "logicstamp-context@0.2.4"
   }
 }
 ```

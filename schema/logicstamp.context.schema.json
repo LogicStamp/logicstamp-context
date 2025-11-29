@@ -117,7 +117,7 @@
         "source": {
           "type": "string",
           "pattern": "^logicstamp-context@\\d+\\.\\d+\\.\\d+$",
-          "description": "Generator identifier with version (e.g., 'logicstamp-context@0.2.3'). Used for compatibility tracking and debugging."
+          "description": "Generator identifier with version (e.g., 'logicstamp-context@0.2.4'). Used for compatibility tracking and debugging."
         }
       },
       "additionalProperties": false
@@ -604,6 +604,53 @@
                 }
               },
               "required": ["gestures", "layoutAnimations", "viewportAnimations"],
+              "additionalProperties": false
+            }
+          },
+          "required": ["features"],
+          "additionalProperties": false
+        },
+        "materialUI": {
+          "type": "object",
+          "properties": {
+            "components": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Material UI component names used (e.g., ['Button', 'TextField', 'Card'])"
+            },
+            "packages": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Material UI packages imported (e.g., ['@mui/material', '@mui/icons-material'])"
+            },
+            "features": {
+              "type": "object",
+              "properties": {
+                "usesTheme": {
+                  "type": "boolean",
+                  "description": "Uses theme (useTheme, ThemeProvider, createTheme)"
+                },
+                "usesSxProp": {
+                  "type": "boolean",
+                  "description": "Uses sx prop for styling"
+                },
+                "usesStyled": {
+                  "type": "boolean",
+                  "description": "Uses styled from @mui/material/styles"
+                },
+                "usesMakeStyles": {
+                  "type": "boolean",
+                  "description": "Uses makeStyles (legacy)"
+                },
+                "usesSystemProps": {
+                  "type": "boolean",
+                  "description": "Uses system props on Box/Stack components"
+                }
+              },
               "additionalProperties": false
             }
           },

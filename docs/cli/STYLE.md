@@ -58,6 +58,15 @@ Identifies which styling approaches are used in each component:
   - Layout animations
   - Viewport-triggered animations
 
+- **Material UI** – Detects:
+  - Material UI components used (Button, TextField, Card, etc.)
+  - Material UI packages imported (@mui/material, @material-ui/core, etc.)
+  - Theme usage (useTheme, ThemeProvider, createTheme)
+  - sx prop usage for styling
+  - styled from @mui/material/styles
+  - makeStyles (legacy styling)
+  - System props on Box/Stack components
+
 ### 2. Layout Metadata
 
 Extracts structural layout information:
@@ -165,6 +174,15 @@ Style metadata is included in the `style` field of each component's contract wit
           "gestures": true,
           "viewportAnimations": true
         }
+      },
+      "materialUI": {
+        "components": ["Button", "TextField", "Card"],
+        "packages": ["@mui/material", "@mui/icons-material"],
+        "features": {
+          "usesTheme": true,
+          "usesSxProp": true,
+          "usesSystemProps": true
+        }
       }
     },
     "layout": {
@@ -199,6 +217,7 @@ Object containing detected styling approaches:
 - `inlineStyles` – Boolean indicating inline style usage
 - `styledComponents` – Object with component names and theme usage
 - `motion` – Object with framer-motion components and features
+- `materialUI` – Object with Material UI components, packages, and styling features
 
 #### `layout`
 
@@ -372,7 +391,7 @@ In this example, including style metadata adds approximately **1,667 GPT-4 token
 ## Limitations
 
 - **Dynamic classes** – Classes generated dynamically (e.g., `className={clsx(...)}`) may not be fully detected
-- **CSS-in-JS** – Only styled-components and emotion are detected; other CSS-in-JS libraries may not be recognized
+- **CSS-in-JS** – Only styled-components, emotion, and Material UI styled are detected; other CSS-in-JS libraries may not be recognized
 - **External stylesheets** – Global CSS files are not analyzed; only module imports are parsed
 - **Runtime styles** – Styles applied via JavaScript at runtime are not detected
 
@@ -397,6 +416,7 @@ $ stamp context style
      - Tailwind: 10 components
      - SCSS modules: 3 components
      - framer-motion: 2 components
+     - Material UI: 5 components
 ```
 
 ### With Custom Options

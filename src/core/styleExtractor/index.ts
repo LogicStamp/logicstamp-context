@@ -9,4 +9,5 @@ export { parseStyleFile, extractScssMetadata } from './scss.js';
 export { extractStyledComponents } from './styled.js';
 export { extractMotionConfig, extractAnimationMetadata } from './motion.js';
 export { extractLayoutMetadata, extractVisualMetadata } from './layout.js';
+export { extractMaterialUI } from './material.js';
 

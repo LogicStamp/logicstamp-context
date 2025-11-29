@@ -156,6 +156,19 @@ export interface StyleSources {
       viewportAnimations?: boolean; // useInView, viewport
     };
   };
+
+  // Material UI with component and feature analysis
+  materialUI?: {
+    components?: string[]; // Button, TextField, Card, etc.
+    packages?: string[]; // @mui/material, @mui/icons-material, etc.
+    features: {
+      usesTheme?: boolean; // useTheme, ThemeProvider, createTheme
+      usesSxProp?: boolean; // sx prop for styling
+      usesStyled?: boolean; // styled from @mui/material/styles
+      usesMakeStyles?: boolean; // makeStyles (legacy)
+      usesSystemProps?: boolean; // System props on Box/Stack
+    };
+  };
 }
 
 export interface LayoutMetadata {

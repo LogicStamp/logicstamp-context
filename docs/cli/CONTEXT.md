@@ -28,7 +28,7 @@ stamp context [path] [options]
 | `--dry-run` | | `false` | Skip writing the output; display summary only. |
 | `--stats` | | `false` | Emit single-line JSON stats (ideal for CI). |
 | `--compare-modes` | | `false` | Show detailed token comparison table across all modes (none/header/header+style/full) with accurate style metadata impact. See [COMPARE-MODES.md](COMPARE-MODES.md) for comprehensive guide. |
-| `--include-style` | | `false` | Extract style metadata (Tailwind, SCSS, animations, layout). |
+| `--include-style` | | `false` | Extract style metadata (Tailwind, SCSS, Material UI, animations, layout). |
 | `--skip-gitignore` | | `false` | Skip `.gitignore` setup (never prompt or modify). |
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors). |
 | `--help` | `-h` | | Print usage help. |
@@ -133,7 +133,7 @@ The `context_main.json` file provides a complete directory index:
     }
   ],
   "meta": {
-    "source": "logicstamp-context@0.2.3"
+    "source": "logicstamp-context@0.2.4"
   }
 }
 ```

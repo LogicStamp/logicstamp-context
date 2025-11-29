@@ -143,6 +143,16 @@ Identifies which styling approaches are used in the component:
     - `layoutAnimations` – Boolean if layout animations are used
     - `viewportAnimations` – Boolean if viewport-triggered animations are used
 
+- **`materialUI`** – Material UI component library information:
+  - `components` – Array of Material UI component names used (e.g., `["Button", "TextField", "Card"]`)
+  - `packages` – Array of Material UI packages imported (e.g., `["@mui/material", "@mui/icons-material"]`)
+  - `features` – Object indicating Material UI styling features:
+    - `usesTheme` – Boolean if theme is used (useTheme, ThemeProvider, createTheme)
+    - `usesSxProp` – Boolean if sx prop is used for styling
+    - `usesStyled` – Boolean if styled from @mui/material/styles is used
+    - `usesMakeStyles` – Boolean if makeStyles (legacy) is used
+    - `usesSystemProps` – Boolean if system props are used on Box/Stack components
+
 #### `layout`
 Structural layout information:
 - `type` – Layout type: `"flex"`, `"grid"`, `"relative"`, or `"absolute"`
@@ -192,6 +202,15 @@ Page-level layout metadata:
         "features": {
           "gestures": true,
           "viewportAnimations": true
+        }
+      },
+      "materialUI": {
+        "components": ["Button", "TextField", "Card"],
+        "packages": ["@mui/material"],
+        "features": {
+          "usesTheme": true,
+          "usesSxProp": true,
+          "usesSystemProps": true
         }
       }
     },

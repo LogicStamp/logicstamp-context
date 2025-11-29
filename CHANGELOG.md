@@ -223,6 +223,36 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 
 ---
 
+## [0.2.4] - 2025-11-29
+
+### Added
+
+- **Material UI style extraction** - Added Material UI component library detection and extraction:
+  - Detects Material UI components used (Button, TextField, Card, etc.)
+  - Identifies Material UI packages imported (@mui/material, @material-ui/core, etc.)
+  - Extracts Material UI styling features: theme usage, sx prop, styled components, makeStyles, and system props
+  - Integrated into style metadata extraction when using `--include-style` or `stamp context style`
+
+### Fixed
+
+- **README clarification** - Fixed and clarified the "Global CLI" installation note to better explain the difference between local and global npm installations
+
+### Changed
+
+- **README.md significantly streamlined and optimized** - Reduced from 718 lines to 199 lines (72% reduction) while maintaining all essential information:
+  - Moved detailed documentation sections to `docs/` folder (Token Optimization, Mode Comparison, Behavioral Predictions, CI usage, Troubleshooting, Output Format schema, Next.js examples)
+  - Added "Why LogicStamp?" section highlighting token savings and key benefits
+  - Added concise "Core Features" list with bullet points
+  - Added minimal "Example Output" section with realistic JSON sample
+  - Shortened "Recent Updates" to show only 2 recent versions with link to full CHANGELOG
+  - Added "Getting Help" section with links to GitHub issues and roadmap
+  - Updated Quick Start to show both global and local installation methods
+  - Fixed npm link compatibility - converted all relative links to absolute GitHub URLs for proper rendering on npmjs.com
+  - Improved structure following best practices from top-tier dev tools (Astro, Vite, ESLint) - README focuses on marketing/onboarding, detailed docs in `/docs`
+- Updated all version references in documentation to reflect 0.2.4 release
+
+---
+
 ## [Unreleased]
 
 ### Planned Features
