@@ -142,11 +142,356 @@ stamp context clean [path] [options]  # Remove generated files
 - `--format <fmt>` / `-f` - Output format: `json|pretty|ndjson` (default: `json`)
 - `--max-nodes <n>` / `-m` - Maximum nodes per bundle (default: `100`)
 - `--profile <profile>` - Preset: `llm-chat` (default), `llm-safe`, `ci-strict`
+- `--predict-behavior` - Enable experimental behavioral predictions
+- `--compare-modes` - Show detailed token comparison across all modes
+- `--dry-run` - Show stats without writing files
 - `--stats` - Emit JSON stats with token estimates (CI-friendly)
+- `--strict-missing` - Exit with error if missing dependencies found
+- `--skip-gitignore` - Skip `.gitignore` setup (never prompt or modify)
 - `--out <path>` / `-o` - Output directory or file path
 - `--quiet` / `-q` - Suppress verbose output
 
-📋 **See [docs/cli/COMMANDS.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/COMMANDS.md) for complete option reference**
+**Other commands:**
+- `stamp context compare` - `--stats`, `--approve`, `--clean-orphaned`
+- `stamp context validate` - Validates schema and structure (exits 0/1)
+- `stamp init` - `--skip-gitignore`
+
+📋 **See [docs/cli/COMMANDS.md](docs/cli/COMMANDS.md) for complete option reference**
+
+### Profiles
+
+Profiles are preset configurations optimized for different use cases:
+
+#### `llm-chat` (default)
+Balanced mode for AI chat interfaces
+- Depth: 1
+- Code: headers only
+- Max nodes: 100
+- Behavioral predictions: disabled by default (enable with `--predict-behavior`)
+
+#### `llm-safe`
+Conservative mode for token-limited contexts
+- Depth: 1
+- Code: headers only
+- Max nodes: 30
+- Behavioral predictions: disabled by default (enable with `--predict-behavior`)
+
+#### `ci-strict`
+Strict validation mode for CI/CD
+- Code: none
+- Strict dependencies enabled
+- Behavioral predictions: not applicable (metadata-only mode)
+
+### Behavioral Predictions
+
+The `--predict-behavior` flag enables experimental behavioral analysis that adds predicted component behaviors to the contract output. These predictions include:
+
+- Form validation patterns
+- Side effect management (useEffect)
+- Data fetching/mutation patterns
+- Memoization usage
+- Context consumption
+- Ref usage for DOM access
+- Loading/error state handling
+
+**Note:** Behavioral predictions are **disabled by default** in all profiles to minimize token usage. Enable them explicitly when you need richer semantic information about component behavior.
+
+**Example:**
+```bash
+# Enable predictions with the default profile
+stamp context --predict-behavior
+
+# Enable predictions with a specific profile
+stamp context --profile llm-safe --predict-behavior
+```
+
+## Token Optimization
+
+LogicStamp Context includes built-in token cost analysis and optimization features:
+
+### Automatic Token Estimates
+
+Every context generation shows token costs for both GPT-4o-mini and Claude:
+
+```
+📏 Token Estimates (header+style mode):
+   GPT-4o-mini: 13,895 tokens
+   Claude:      12,351 tokens
+
+   Comparison:
+     Raw source        | Header        | Header+style
+         22,000        |     12,228     |     13,895
+
+   Full context (code+style): ~39,141 GPT-4o-mini / ~34,792 Claude
+```
+
+This helps you:
+- **Understand costs** at a glance
+- **Choose the right mode** for your budget
+- **See savings** compared to full context (code+style) mode
+
+**Enhanced with `--compare-modes`:** The `--compare-modes` flag provides detailed comparisons across all modes (none/header/header+style/full) with accurate token counts. It automatically regenerates contracts with and without style metadata to show the true impact of including style information.
+
+### Mode Comparison Table
+
+Use `--compare-modes` for a detailed comparison across all modes:
+
+```bash
+stamp context --compare-modes
+```
+
+Output:
+```
+📊 Mode Comparison
+
+   Comparison:
+     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Raw Source
+     -------------|---------------|---------------|------------------------
+     Raw source   |        22,000 |        19,556 | 0%
+     Header       |        12,228 |        10,867 | 44%
+     Header+style |        13,895 |        12,351 | 37%
+
+   Mode breakdown:
+     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Full Context
+     -------------|---------------|---------------|--------------------------
+     none         |         8,337 |         7,411 | 79%
+     header       |        12,228 |        10,867 | 69%
+     header+style |        13,895 |        12,351 | 65%
+     full         |        39,141 |        34,792 | 0%
+```
+
+**When to use each mode:**
+- **`none`** - API documentation, CI validation (no code snippets, no style)
+- **`header`** - AI chat, code review (JSDoc headers + contracts, no style)
+- **`header+style`** - Design-aware AI chat (headers + contracts + style metadata)
+- **`full`** - Deep analysis, debugging (complete source code + contracts + style info)
+
+**Note:** The `--compare-modes` flag automatically regenerates contracts with and without style metadata to provide accurate token counts for all modes. This ensures you see the true impact of including style information.
+
+**Optional tokenizers for accurate counts:** LogicStamp Context includes `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) as optional dependencies. npm will automatically attempt to install them when you install `logicstamp-context`. If installation succeeds, you get model-accurate token counts. If installation fails or is skipped (normal for optional dependencies), LogicStamp Context gracefully falls back to character-based estimation (typically within 10-15% accuracy). No manual installation is required unless you specifically want accurate counts and the automatic installation failed.
+
+### Stats for CI/CD
+
+Use `--stats` to get machine-readable token data:
+
+```bash
+stamp context --stats
+```
+
+Output JSON includes:
+```json
+{
+  "tokensGPT4": 13895,
+  "tokensClaude": 12351,
+  "modeEstimates": {
+    "none": {"gpt4": 8337, "claude": 7411},
+    "header": {"gpt4": 13895, "claude": 12351},
+    "full": {"gpt4": 39141, "claude": 34792}
+  },
+  "savingsGPT4": "65",
+  "savingsClaude": "65"
+}
+```
+
+## Context Drift Detection
+
+The `compare` command helps you track changes between context versions:
+
+### Basic Comparison
+
+```bash
+stamp context compare old.json new.json
+```
+
+Output:
+```
+✅ PASS
+
+# or if changes detected:
+
+⚠️  DRIFT
+
+Added components: 2
+  + src/components/NewButton.tsx
+  + src/utils/helpers.ts
+
+Removed components: 1
+  - src/components/OldButton.tsx
+
+Changed components: 3
+  ~ src/components/Card.tsx
+    Δ imports, hooks
+  ~ src/App.tsx
+    Δ hash
+```
+
+### With Token Stats
+
+```bash
+stamp context compare old.json new.json --stats
+```
+
+Shows token cost changes:
+```
+Token Stats:
+  Old: 8,484 (GPT-4o-mini) | 7,542 (Claude)
+  New: 9,125 (GPT-4o-mini) | 8,111 (Claude)
+  Δ +641 (+7.56%)
+```
+
+### Exit Codes
+
+- `0` - No drift (PASS)
+- `1` - Drift detected or error
+
+Perfect for CI/CD validation:
+```bash
+# In your CI pipeline
+stamp context compare base.json pr.json || echo "Context drift detected!"
+```
+
+## Examples
+
+### Basic usage
+
+```bash
+# Generate context for entire project
+stamp context
+
+# CLI output:
+# 🔍 Scanning /path/to/project...
+# ⚙️  Analyzing components...
+# 🔗 Building dependency graph...
+# 📦 Generating context...
+# 🔍 Validating generated context...
+# ✅ Validation passed
+# 📝 Writing context files for 5 folders...
+#    ✓ context.json (2 bundles)
+#    ✓ src/context.json (3 bundles)
+#    ✓ src/components/context.json (5 bundles)
+#    ✓ src/utils/context.json (2 bundles)
+#    ✓ app/context.json (3 bundles)
+# 📝 Writing main context index...
+#    ✓ context_main.json (index of 5 folders)
+# ✅ 6 context files written successfully
+#
+# 📊 Summary:
+#    Total components: 15
+#    Root components: 3
+#    ...
+```
+
+### Focused analysis
+
+```bash
+# Analyze only the src directory
+stamp context ./src
+
+# Analyze with custom output directory
+stamp context --out ./output
+
+# Or specify a .json file to use its directory
+stamp context --out ./output/context.json  # Uses ./output as directory
+```
+
+### Deep traversal
+
+```bash
+# Include 2 levels of dependencies
+stamp context --depth 2
+
+# Include full source code
+stamp context --include-code full
+
+# Limit bundle size with max nodes
+stamp context --max-nodes 50
+
+# Preview without writing files
+stamp context --dry-run
+```
+
+### Token cost analysis
+
+```bash
+# Show detailed mode comparison
+stamp context --compare-modes
+
+# Get JSON stats for CI
+stamp context --stats
+
+# See token costs for specific mode
+stamp context --include-code none
+stamp context --include-code full
+```
+
+### Context comparison
+
+```bash
+# Basic drift detection
+stamp context compare old.json new.json
+
+# With token delta stats
+stamp context compare base.json pr.json --stats
+
+# In CI pipeline
+stamp context compare base.json pr.json || exit 1
+```
+
+### Clean context files
+
+```bash
+# Show what would be removed (dry run)
+stamp context clean
+
+# Actually delete all context artifacts
+stamp context clean --all --yes
+
+# Clean specific directory
+stamp context clean ./output --all --yes
+
+# Suppress verbose output (quiet mode)
+stamp context --quiet
+stamp context validate --quiet
+stamp context compare --quiet
+stamp context clean --all --yes --quiet
+
+# Show version number
+stamp --version
+```
+
+### CI/CD validation
+
+```bash
+# Use llm-safe profile for smaller output
+stamp context --profile llm-safe --out safe-context.json
+
+# Strict mode: fail if any dependencies missing
+stamp context --strict-missing
+
+# Generate stats for CI monitoring
+stamp context --stats > stats.json
+
+# Output in different formats
+stamp context --format pretty    # Human-readable
+stamp context --format ndjson    # Newline-delimited JSON
+
+# Validate generated context
+stamp context validate context.json
+```
+
+## Output Format
+
+LogicStamp Context generates a **folder-organized, multi-file output structure** that maintains your project's directory hierarchy:
+
+```
+output/
+├── context_main.json          # Main index with folder metadata
+├── context.json               # Root folder bundles (if any)
+├── src/
+│   └── context.json          # Bundles from src/ folder
+└── src/components/
+    └── context.json          # Bundles from src/components/
+```
 
 ## Documentation
 
