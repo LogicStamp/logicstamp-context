@@ -1,0 +1,377 @@
+[
+  {
+    "$schema": "https://logicstamp.dev/schemas/context/v0.1.json",
+    "position": "1/1",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "src/components/HeroSection.tsx",
+    "depth": 1,
+    "createdAt": "2025-01-15T10:30:00.000Z",
+    "bundleHash": "uifb:c8f2e9a1b4d6c3f7e8a9b1c2d",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "src/components/HeroSection.tsx",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "react:component",
+            "entryId": "src/components/HeroSection.tsx",
+            "description": "HeroSection - Landing page hero with animated content",
+            "version": {
+              "variables": [],
+              "hooks": [
+                "useInView"
+              ],
+              "components": [
+                "motion.div",
+                "Button"
+              ],
+              "functions": [
+                "HeroSection"
+              ],
+              "imports": [
+                "framer-motion",
+                "./Button",
+                "react"
+              ]
+            },
+            "logicSignature": {
+              "props": {
+                "title": "string",
+                "subtitle": {
+                  "type": "string",
+                  "optional": true
+                },
+                "ctaText": "string"
+              },
+              "events": {},
+              "state": {}
+            },
+            "semanticHash": "uif:b2c3d4e5f6g7h8i9j0k1l2m3",
+            "fileHash": "uif:n4o5p6q7r8s9t0u1v2w3x4y5",
+            "style": {
+              "styleSources": {
+                "tailwind": {
+                  "categories": {
+                    "layout": [
+                      "flex",
+                      "flex-col",
+                      "items-center",
+                      "justify-center"
+                    ],
+                    "spacing": [
+                      "py-16",
+                      "px-8",
+                      "gap-6",
+                      "mb-8"
+                    ],
+                    "colors": [
+                      "bg-gradient-to-b",
+                      "from-blue-600",
+                      "to-purple-700",
+                      "text-white"
+                    ],
+                    "typography": [
+                      "text-5xl",
+                      "font-bold",
+                      "text-2xl",
+                      "font-medium"
+                    ],
+                    "sizing": [
+                      "min-h-screen",
+                      "w-full",
+                      "max-w-4xl"
+                    ]
+                  },
+                  "breakpoints": [
+                    "md",
+                    "lg"
+                  ],
+                  "classCount": 22
+                },
+                "motion": {
+                  "components": [
+                    "div"
+                  ],
+                  "variants": [
+                    "fadeIn",
+                    "slideUp"
+                  ],
+                  "features": {
+                    "gestures": false,
+                    "layoutAnimations": false,
+                    "viewportAnimations": true
+                  }
+                },
+                "inlineStyles": false
+              },
+              "layout": {
+                "type": "flex",
+                "hasHeroPattern": true,
+                "sections": [
+                  "hero"
+                ]
+              },
+              "visual": {
+                "colors": [
+                  "bg-gradient-to-b",
+                  "from-blue-600",
+                  "to-purple-700",
+                  "text-white"
+                ],
+                "spacing": [
+                  "py-16",
+                  "px-8",
+                  "gap-6",
+                  "mb-8"
+                ],
+                "radius": "rounded-lg",
+                "typography": [
+                  "text-5xl",
+                  "font-bold",
+                  "text-2xl",
+                  "font-medium"
+                ]
+              },
+              "animation": {
+                "library": "framer-motion",
+                "type": "fade-in",
+                "trigger": "inView"
+              },
+              "pageLayout": {
+                "pageRole": "hero",
+                "sections": [
+                  "hero"
+                ],
+                "ctaCount": 1
+              }
+            }
+          },
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: HeroSection - Landing page hero with animated content\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: [\"useInView\"]\n *   components: [\"motion.div\",\"Button\"]\n *   functions: [\"HeroSection\"]\n *   imports: [\"framer-motion\",\"./Button\",\"react\"]\n *\n * Logic Signature:\n *   props: {\"title\":\"string\",\"subtitle\":{\"type\":\"string\",\"optional\":true},\"ctaText\":\"string\"}\n *   events: {}\n *   state: {}\n *\n * Hashes:\n *   semantic: uif:b2c3d4e5f6g7h8i9j0k1l2m3\n *   file: uif:n4o5p6q7r8s9t0u1v2w3x4y5\n *\n * Style Metadata:\n *   - Tailwind CSS: 22 classes (layout, spacing, colors, typography)\n *   - Framer Motion: viewport animations with fadeIn/slideUp variants\n *   - Hero pattern: flex layout with centered content\n *   - Visual: blue-purple gradient, white text, responsive breakpoints\n */"
+        },
+        {
+          "entryId": "src/components/Button.tsx",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "react:component",
+            "entryId": "src/components/Button.tsx",
+            "description": "Button - Styled button component with hover effects",
+            "version": {
+              "variables": [],
+              "hooks": [
+                "useState"
+              ],
+              "components": [],
+              "functions": [
+                "Button"
+              ],
+              "imports": [
+                "./Button.module.scss",
+                "react"
+              ]
+            },
+            "logicSignature": {
+              "props": {
+                "variant": {
+                  "type": "literal-union",
+                  "literals": [
+                    "primary",
+                    "secondary",
+                    "outline"
+                  ]
+                },
+                "isLoading": {
+                  "type": "boolean",
+                  "optional": true
+                },
+                "onClick": {
+                  "type": "function",
+                  "signature": "() => void",
+                  "optional": true
+                }
+              },
+              "events": {
+                "onClick": {
+                  "type": "function",
+                  "signature": "() => void"
+                }
+              },
+              "state": {
+                "hovered": "boolean"
+              }
+            },
+            "semanticHash": "uif:a0dd5029ee79e6508fe9db25",
+            "fileHash": "uif:a6398c5890bcbf31603af36a",
+            "style": {
+              "styleSources": {
+                "scssModule": "./Button.module.scss",
+                "scssDetails": {
+                  "selectors": [
+                    ".button",
+                    ".button--primary",
+                    ".button--secondary",
+                    ".button--outline",
+                    ".button:hover",
+                    ".button:disabled"
+                  ],
+                  "properties": [
+                    "background-color",
+                    "color",
+                    "padding",
+                    "border-radius",
+                    "transition",
+                    "transform"
+                  ],
+                  "features": {
+                    "variables": true,
+                    "nesting": true,
+                    "mixins": true
+                  }
+                },
+                "inlineStyles": false
+              },
+              "layout": {
+                "type": "flex",
+                "hasHeroPattern": false
+              },
+              "visual": {
+                "colors": [
+                  "primary",
+                  "secondary"
+                ],
+                "spacing": [
+                  "padding-lg"
+                ],
+                "radius": "rounded-md",
+                "typography": []
+              },
+              "animation": {
+                "library": "css",
+                "type": "transition",
+                "trigger": "hover"
+              }
+            }
+          },
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: Button - Styled button component with hover effects\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: [\"useState\"]\n *   components: []\n *   functions: [\"Button\"]\n *   imports: [\"./Button.module.scss\",\"react\"]\n *\n * Logic Signature:\n *   props: {\"variant\":{\"type\":\"literal-union\",\"literals\":[\"primary\",\"secondary\",\"outline\"]},\"isLoading\":{\"type\":\"boolean\",\"optional\":true},\"onClick\":{\"type\":\"function\",\"signature\":\"() => void\",\"optional\":true}}\n *   events: {\"onClick\":{\"type\":\"function\",\"signature\":\"() => void\"}}\n *   state: {\"hovered\":\"boolean\"}\n *\n * Hashes:\n *   semantic: uif:a0dd5029ee79e6508fe9db25\n *   file: uif:a6398c5890bcbf31603af36a\n *\n * Style Metadata:\n *   - SCSS Module: Button.module.scss with 6 selectors\n *   - SCSS Features: variables, nesting, mixins\n *   - CSS Properties: background-color, color, padding, transitions\n *   - Animation: CSS transitions with hover trigger\n */"
+        },
+        {
+          "entryId": "src/components/FeatureCard.tsx",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "react:component",
+            "entryId": "src/components/FeatureCard.tsx",
+            "description": "FeatureCard - Grid card component with Tailwind styling",
+            "version": {
+              "variables": [],
+              "hooks": [],
+              "components": [],
+              "functions": [
+                "FeatureCard"
+              ],
+              "imports": [
+                "react"
+              ]
+            },
+            "logicSignature": {
+              "props": {
+                "icon": {
+                  "type": "ReactNode"
+                },
+                "title": "string",
+                "description": "string"
+              },
+              "events": {},
+              "state": {}
+            },
+            "semanticHash": "uif:c9e8f7a6b5c4d3e2f1a0b9c8d",
+            "fileHash": "uif:d0f1e2d3c4b5a6f7e8d9c0b1a2",
+            "style": {
+              "styleSources": {
+                "tailwind": {
+                  "categories": {
+                    "layout": [
+                      "grid",
+                      "grid-cols-1",
+                      "md:grid-cols-3",
+                      "gap-4"
+                    ],
+                    "spacing": [
+                      "p-6",
+                      "mb-4"
+                    ],
+                    "colors": [
+                      "bg-white",
+                      "text-gray-800",
+                      "border-gray-200"
+                    ],
+                    "typography": [
+                      "text-xl",
+                      "font-semibold",
+                      "text-sm"
+                    ],
+                    "effects": [
+                      "shadow-md",
+                      "hover:shadow-lg",
+                      "transition-shadow"
+                    ]
+                  },
+                  "breakpoints": [
+                    "md"
+                  ],
+                  "classCount": 16
+                },
+                "inlineStyles": false
+              },
+              "layout": {
+                "type": "grid",
+                "cols": "grid-cols-1 md:grid-cols-3",
+                "hasFeatureCards": true,
+                "sections": [
+                  "features"
+                ]
+              },
+              "visual": {
+                "colors": [
+                  "bg-white",
+                  "text-gray-800",
+                  "border-gray-200"
+                ],
+                "spacing": [
+                  "p-6",
+                  "mb-4",
+                  "gap-4"
+                ],
+                "radius": "rounded-lg",
+                "typography": [
+                  "text-xl",
+                  "font-semibold",
+                  "text-sm"
+                ]
+              },
+              "animation": {
+                "library": "css",
+                "type": "transition",
+                "trigger": "hover"
+              }
+            }
+          },
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: FeatureCard - Grid card component with Tailwind styling\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: []\n *   components: []\n *   functions: [\"FeatureCard\"]\n *   imports: [\"react\"]\n *\n * Logic Signature:\n *   props: {\"icon\":{\"type\":\"ReactNode\"},\"title\":\"string\",\"description\":\"string\"}\n *   events: {}\n *   state: {}\n *\n * Hashes:\n *   semantic: uif:c9e8f7a6b5c4d3e2f1a0b9c8d\n *   file: uif:d0f1e2d3c4b5a6f7e8d9c0b1a2\n *\n * Style Metadata:\n *   - Tailwind CSS: 16 classes (grid layout, responsive breakpoints)\n *   - Layout: Grid with 3 columns on medium+ screens\n *   - Visual: White background, gray text, shadow effects\n *   - Animation: CSS transitions with hover shadow effect\n */"
+        }
+      ],
+      "edges": [
+        [
+          "src/components/HeroSection.tsx",
+          "src/components/Button.tsx"
+        ]
+      ]
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp-context@0.2.3"
+    }
+  }
+]
+

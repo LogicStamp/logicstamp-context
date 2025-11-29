@@ -28,6 +28,26 @@ Example demonstrating missing dependencies:
 - See what different missing dependency reasons look like
 - Learn how to diagnose and fix issues
 
+### `context.with-style.example.json`
+Example demonstrating style metadata extraction:
+- 🎨 **Tailwind CSS** - Utility classes categorized by type (layout, spacing, colors, typography)
+- 📦 **SCSS Modules** - Module imports with selector and property extraction
+- ✨ **Framer Motion** - Animation metadata with variant detection
+- 🎯 **Layout patterns** - Hero sections, feature cards, grid layouts
+- 🎭 **Visual metadata** - Color palettes, spacing patterns, typography classes
+- 🎬 **Animation info** - Animation types, libraries, and triggers
+
+**Includes 3 components:**
+1. **HeroSection** - Tailwind + Framer Motion with viewport animations
+2. **Button** - SCSS module with hover transitions
+3. **FeatureCard** - Tailwind grid layout with responsive breakpoints
+
+**Use this example to:**
+- See how style metadata is structured in contracts
+- Understand different style source types (Tailwind, SCSS, motion)
+- Learn how layout and visual patterns are extracted
+- Reference when generating context with `stamp context style` or `--include-style`
+
 ## Understanding Missing Dependencies
 
 The `meta.missing` array tracks unresolved dependencies:
@@ -88,6 +108,9 @@ stamp context ./src/components --out examples/components-only.json
 
 # Include full source code
 stamp context --include-code full --out examples/with-full-code.json
+
+# Generate with style metadata (like context.with-style.example.json)
+stamp context style --out examples/my-style-example.json
 ```
 
 ## See Also

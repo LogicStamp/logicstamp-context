@@ -767,7 +767,7 @@ These are advanced concerns for future LogicStamp platform features, not v1 "con
     }
   ],
   "meta": {
-    "source": "logicstamp-context@0.2.0"
+    "source": "logicstamp-context@0.2.3"
   }
 }
 ```
@@ -819,7 +819,7 @@ The `meta.missing` array tracks dependencies that couldn't be resolved. An empty
         "referencedBy": "src/helpers.ts"
       }
     ],
-    "source": "logicstamp-context@0.2.0"
+    "source": "logicstamp-context@0.2.3"
   }
 }
 ```
