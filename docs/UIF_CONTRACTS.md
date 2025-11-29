@@ -101,6 +101,126 @@ Object mapping event names to their signatures. For React components, these are 
 #### `state`
 Object mapping state variable names to their types. Represents the component's internal state structure.
 
+### `style` (optional)
+Style metadata extracted from the component. This field is only present when style extraction is enabled (via `stamp context style` or `--include-style` flag). Contains visual, layout, and animation information to enable design-aware AI context generation.
+
+The `style` field contains four categories of metadata:
+
+#### `styleSources`
+Identifies which styling approaches are used in the component:
+
+- **`tailwind`** – Tailwind CSS utility classes:
+  - `categories` – Object mapping category names (e.g., "layout", "spacing", "colors", "typography") to arrays of class names
+  - `breakpoints` – Array of responsive breakpoints used (e.g., `["sm", "md", "lg"]`)
+  - `classCount` – Total number of Tailwind classes detected
+
+- **`scssModule`** – Path to imported SCSS module file (if any)
+- **`scssDetails`** – Parsed SCSS module information:
+  - `selectors` – Array of CSS selectors found in the SCSS file
+  - `properties` – Array of CSS properties used
+  - `features` – Object indicating SCSS features used:
+    - `variables` – Boolean if SCSS variables are used
+    - `nesting` – Boolean if SCSS nesting is used
+    - `mixins` – Boolean if SCSS mixins are used
+
+- **`cssModule`** – Path to imported CSS module file (if any)
+- **`cssDetails`** – Parsed CSS module information:
+  - `selectors` – Array of CSS selectors
+  - `properties` – Array of CSS properties
+
+- **`inlineStyles`** – Boolean indicating if inline styles (`style={{...}}`) are used
+
+- **`styledComponents`** – Styled-components/Emotion information:
+  - `components` – Array of styled component names (e.g., `["div", "Button"]`)
+  - `usesTheme` – Boolean if theme is used
+  - `usesCssProp` – Boolean if CSS prop is used
+
+- **`motion`** – Framer Motion animation information:
+  - `components` – Array of motion component names (e.g., `["div", "button"]`)
+  - `variants` – Array of variant names used
+  - `features` – Object indicating motion features:
+    - `gestures` – Boolean if gesture handlers are used (whileHover, whileTap, etc.)
+    - `layoutAnimations` – Boolean if layout animations are used
+    - `viewportAnimations` – Boolean if viewport-triggered animations are used
+
+#### `layout`
+Structural layout information:
+- `type` – Layout type: `"flex"`, `"grid"`, `"relative"`, or `"absolute"`
+- `cols` – Grid column pattern (e.g., `"grid-cols-2 md:grid-cols-3"`)
+- `hasHeroPattern` – Boolean indicating hero section pattern
+- `hasFeatureCards` – Boolean indicating feature card grid pattern
+- `sections` – Array of section identifiers (if applicable)
+
+#### `visual`
+Visual design patterns:
+- `colors` – Array of color utility classes (sorted, limited to top 10)
+- `spacing` – Array of spacing utility classes (sorted, limited to top 10)
+- `radius` – Most common border radius pattern
+- `typography` – Array of typography classes (sorted, limited to top 10)
+
+#### `animation`
+Animation and motion information:
+- `type` – Animation type (e.g., `"fade-in"`, `"slide"`)
+- `library` – Animation library: `"framer-motion"` or `"css"`
+- `trigger` – Trigger type: `"inView"`, `"hover"`, `"click"`, etc.
+
+#### `pageLayout` (optional)
+Page-level layout metadata:
+- `pageRole` – Page role identifier (if applicable)
+- `sections` – Array of page section identifiers
+- `ctaCount` – Number of call-to-action elements
+
+**Example style metadata:**
+
+```json
+{
+  "style": {
+    "styleSources": {
+      "tailwind": {
+        "categories": {
+          "layout": ["flex", "flex-col", "items-center"],
+          "spacing": ["py-16", "px-8", "gap-4"],
+          "colors": ["bg-black", "text-white"],
+          "typography": ["text-4xl", "font-semibold"]
+        },
+        "breakpoints": ["md", "lg"],
+        "classCount": 15
+      },
+      "motion": {
+        "components": ["div"],
+        "variants": ["fadeIn", "slideUp"],
+        "features": {
+          "gestures": true,
+          "viewportAnimations": true
+        }
+      }
+    },
+    "layout": {
+      "type": "flex",
+      "hasHeroPattern": true
+    },
+    "visual": {
+      "colors": ["bg-black", "text-white"],
+      "spacing": ["py-16", "px-8"],
+      "radius": "xl",
+      "typography": ["text-4xl", "font-semibold"]
+    },
+    "animation": {
+      "library": "framer-motion",
+      "type": "fade-in",
+      "trigger": "inView"
+    }
+  }
+}
+```
+
+**Note:** Style metadata is only included when:
+1. Style extraction is enabled (`stamp context style` or `--include-style`)
+2. Style information is detected in the component
+3. Components without any style usage will not have a `style` field
+
+See [STYLE.md](./cli/STYLE.md) for detailed documentation on style extraction.
+
 ### `semanticHash`
 Unique hash based on the component's logic and contract. Changes when:
 - Props are added/removed/renamed

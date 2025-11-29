@@ -119,18 +119,38 @@ export async function generateSummary(
   let headerWithStyleGPT4: number;
   let headerWithStyleClaude: number;
   
+  // Improve raw source estimation: if we're in header mode, use header tokens to estimate raw source
+  // Header mode is approximately 30% of raw source tokens, so raw ≈ header / 0.30
+  let estimatedRawSourceGPT4 = tokenEstimates.sourceTokensGPT4;
+  let estimatedRawSourceClaude = tokenEstimates.sourceTokensClaude;
+  
+  if (isHeaderMode && !hasStyle) {
+    // We're in header mode, so we can estimate raw source more accurately
+    // Header is ~30% of raw source, so raw source ≈ header / 0.30
+    estimatedRawSourceGPT4 = Math.ceil(options.currentGPT4 / 0.30);
+    estimatedRawSourceClaude = Math.ceil(options.currentClaude / 0.30);
+  } else if (isHeaderMode && hasStyle) {
+    // We're in header+style mode, estimate header without style first
+    // Style adds ~105% overhead (170k vs 83k), so header ≈ header+style / 2.05
+    const estimatedHeaderGPT4 = Math.ceil(options.currentGPT4 / 2.05);
+    const estimatedHeaderClaude = Math.ceil(options.currentClaude / 2.05);
+    // Then estimate raw source from header
+    estimatedRawSourceGPT4 = Math.ceil(estimatedHeaderGPT4 / 0.30);
+    estimatedRawSourceClaude = Math.ceil(estimatedHeaderClaude / 0.30);
+  }
+  
   if (isHeaderMode && hasStyle) {
     // Current output IS header+style, estimate header without style
-    headerNoStyleGPT4 = Math.ceil(options.currentGPT4 * 0.88); // Style typically adds ~12%
-    headerNoStyleClaude = Math.ceil(options.currentClaude * 0.88);
+    headerNoStyleGPT4 = Math.ceil(options.currentGPT4 / 2.05); // Style typically doubles the size
+    headerNoStyleClaude = Math.ceil(options.currentClaude / 2.05);
     headerWithStyleGPT4 = options.currentGPT4;
     headerWithStyleClaude = options.currentClaude;
   } else if (isHeaderMode && !hasStyle) {
     // Current output IS header without style, estimate header+style
     headerNoStyleGPT4 = options.currentGPT4;
     headerNoStyleClaude = options.currentClaude;
-    headerWithStyleGPT4 = Math.ceil(options.currentGPT4 * 1.14); // Style adds ~14%
-    headerWithStyleClaude = Math.ceil(options.currentClaude * 1.14);
+    headerWithStyleGPT4 = Math.ceil(options.currentGPT4 * 2.05); // Style adds ~105%
+    headerWithStyleClaude = Math.ceil(options.currentClaude * 2.05);
   } else {
     // For non-header modes, use estimates
     headerNoStyleGPT4 = Math.ceil(options.currentGPT4 * 0.75);
@@ -139,12 +159,12 @@ export async function generateSummary(
     headerWithStyleClaude = Math.ceil(options.currentClaude * 0.85);
   }
   
-  // Calculate savings percentages vs raw source
-  const headerSavingsGPT4 = tokenEstimates.sourceTokensGPT4 > 0
-    ? ((tokenEstimates.sourceTokensGPT4 - headerNoStyleGPT4) / tokenEstimates.sourceTokensGPT4 * 100).toFixed(0)
+  // Calculate savings percentages vs raw source (use improved estimation)
+  const headerSavingsGPT4 = estimatedRawSourceGPT4 > 0
+    ? ((estimatedRawSourceGPT4 - headerNoStyleGPT4) / estimatedRawSourceGPT4 * 100).toFixed(0)
     : '0';
-  const headerStyleSavingsGPT4 = tokenEstimates.sourceTokensGPT4 > 0
-    ? ((tokenEstimates.sourceTokensGPT4 - headerWithStyleGPT4) / tokenEstimates.sourceTokensGPT4 * 100).toFixed(0)
+  const headerStyleSavingsGPT4 = estimatedRawSourceGPT4 > 0
+    ? ((estimatedRawSourceGPT4 - headerWithStyleGPT4) / estimatedRawSourceGPT4 * 100).toFixed(0)
     : '0';
   
   // Check tokenizer status and display it
@@ -172,7 +192,7 @@ export async function generateSummary(
   console.log(`\n   Comparison:`);
   console.log(`     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Raw Source`);
   console.log(`     -------------|---------------|---------------|------------------------`);
-  console.log(`     Raw source   | ${formatTokenCount(tokenEstimates.sourceTokensGPT4).padStart(13)} | ${formatTokenCount(tokenEstimates.sourceTokensClaude).padStart(13)} | 0%`);
+  console.log(`     Raw source   | ${formatTokenCount(estimatedRawSourceGPT4).padStart(13)} | ${formatTokenCount(estimatedRawSourceClaude).padStart(13)} | 0%`);
   console.log(`     Header       | ${formatTokenCount(headerNoStyleGPT4).padStart(13)} | ${formatTokenCount(headerNoStyleClaude).padStart(13)} | ${headerSavingsGPT4}%`);
   console.log(`     Header+style | ${formatTokenCount(headerWithStyleGPT4).padStart(13)} | ${formatTokenCount(headerWithStyleClaude).padStart(13)} | ${headerStyleSavingsGPT4}%`);
   console.log(`\n   Full context (code+style): ~${formatTokenCount(tokenEstimates.modeEstimates.full.gpt4)} GPT-4o-mini / ~${formatTokenCount(tokenEstimates.modeEstimates.full.claude)} Claude`);

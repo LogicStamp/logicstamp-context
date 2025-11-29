@@ -121,9 +121,32 @@ export async function generateModeComparison(
   const hasStyle = options.includeStyle === true;
   const isHeaderMode = options.includeCode === 'header';
   
-  // Calculate actual source size tokens
-  const actualSourceTokensGPT4 = Math.ceil(totalSourceSize / 4);
-  const actualSourceTokensClaude = Math.ceil(totalSourceSize / 4.5);
+  // Calculate actual source size tokens using tokenizers when available
+  // Read all source files and concatenate to get accurate token counts
+  let actualSourceTokensGPT4: number;
+  let actualSourceTokensClaude: number;
+  
+  try {
+    // Read all source files and concatenate
+    const sourceTexts: string[] = [];
+    for (const file of files) {
+      try {
+        const { text } = await readFileWithText(file);
+        sourceTexts.push(text);
+      } catch (error) {
+        // Skip files that can't be read
+      }
+    }
+    const concatenatedSource = sourceTexts.join('\n\n');
+    
+    // Use actual tokenizers if available, otherwise fall back to approximation
+    actualSourceTokensGPT4 = await estimateGPT4Tokens(concatenatedSource);
+    actualSourceTokensClaude = await estimateClaudeTokens(concatenatedSource);
+  } catch (error) {
+    // Fallback to character-based approximation if tokenization fails
+    actualSourceTokensGPT4 = Math.ceil(totalSourceSize / 4);
+    actualSourceTokensClaude = Math.ceil(totalSourceSize / 4.5);
+  }
   
   // Calculate header and header+style for comparison
   let headerNoStyleGPT4: number;
@@ -297,9 +320,15 @@ export async function generateModeComparison(
  */
 export async function displayModeComparison(
   comparison: ModeComparisonResult,
+  files: string[],
   elapsed: number
 ): Promise<void> {
   const { headerNoStyleGPT4, headerNoStyleClaude, headerWithStyleGPT4, headerWithStyleClaude, sourceTokensGPT4, sourceTokensClaude, modeEstimates } = comparison;
+  
+  // Calculate file statistics (check .tsx first to avoid double-counting)
+  const tsxFiles = files.filter(f => f.endsWith('.tsx')).length;
+  const tsFiles = files.filter(f => f.endsWith('.ts') && !f.endsWith('.tsx')).length;
+  const totalFiles = files.length;
   
   // Calculate savings percentages vs raw source
   const headerSavingsGPT4 = sourceTokensGPT4 > 0
@@ -316,6 +345,8 @@ export async function displayModeComparison(
   
   console.log('\n📊 Mode Comparison\n');
   console.log(`   Token estimation: GPT-4o (${gpt4Method}) | Claude (${claudeMethod})`);
+  console.log(`   Files analyzed: ${totalFiles} total (${tsFiles} .ts, ${tsxFiles} .tsx)`);
+  console.log(`   Scope: TypeScript/React source files only (test files excluded)`);
   if (!tokenizerStatus.gpt4 || !tokenizerStatus.claude) {
     const missing: string[] = [];
     if (!tokenizerStatus.gpt4) {
@@ -326,13 +357,17 @@ export async function displayModeComparison(
     }
     console.log(`   💡 Tip: Tokenizers are included as optional dependencies. If installation failed, manually install ${missing.join(' and/or ')} for accurate token counts`);
   }
-  console.log('\n   Comparison:');
+  console.log('\n   Comparison vs Raw Source:');
+  console.log('');
+  console.log('     (Raw source = all .ts/.tsx files concatenated, excluding tests)');
+  console.log('');
   console.log('     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Raw Source');
   console.log('     -------------|---------------|---------------|------------------------');
   console.log(`     Raw source   | ${formatTokenCount(sourceTokensGPT4).padStart(13)} | ${formatTokenCount(sourceTokensClaude).padStart(13)} | 0%`);
   console.log(`     Header       | ${formatTokenCount(headerNoStyleGPT4).padStart(13)} | ${formatTokenCount(headerNoStyleClaude).padStart(13)} | ${headerSavingsGPT4}%`);
   console.log(`     Header+style | ${formatTokenCount(headerWithStyleGPT4).padStart(13)} | ${formatTokenCount(headerWithStyleClaude).padStart(13)} | ${headerStyleSavingsGPT4}%`);
   console.log('\n   Mode breakdown:');
+  console.log('');
   console.log('     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Full Context');
   console.log('     -------------|---------------|---------------|--------------------------');
 
