@@ -147,10 +147,15 @@ stamp context clean [path] [options]  # Remove generated files
 - `--depth <n>` / `-d` - Dependency traversal depth (default: `1`)
 - `--include-code <mode>` / `-c` - Code inclusion: `none|header|full` (default: `header`)
 - `--include-style` - Extract style metadata (Tailwind, SCSS, animations, layout)
+- `--format <fmt>` / `-f` - Output format: `json|pretty|ndjson` (default: `json`)
+- `--max-nodes <n>` / `-m` - Maximum nodes per bundle (default: `100`)
 - `--profile <profile>` - Preset: `llm-chat` (default), `llm-safe`, `ci-strict`
+- `--predict-behavior` - Enable experimental behavioral predictions
 - `--compare-modes` - Show detailed token comparison across all modes
+- `--dry-run` - Show stats without writing files
 - `--stats` - Emit JSON stats with token estimates (CI-friendly)
 - `--strict-missing` - Exit with error if missing dependencies found
+- `--skip-gitignore` - Skip `.gitignore` setup (never prompt or modify)
 - `--out <path>` / `-o` - Output directory or file path
 - `--quiet` / `-q` - Suppress verbose output
 
@@ -405,6 +410,12 @@ stamp context --depth 2
 
 # Include full source code
 stamp context --include-code full
+
+# Limit bundle size with max nodes
+stamp context --max-nodes 50
+
+# Preview without writing files
+stamp context --dry-run
 ```
 
 ### Token cost analysis
@@ -467,6 +478,10 @@ stamp context --strict-missing
 
 # Generate stats for CI monitoring
 stamp context --stats > stats.json
+
+# Output in different formats
+stamp context --format pretty    # Human-readable
+stamp context --format ndjson    # Newline-delimited JSON
 
 # Validate generated context
 stamp context validate context.json
@@ -696,5 +711,6 @@ Issues and PRs welcome! This is an open-source project.
 
 ## Links
 
-- [LogicStamp Main Project](https://github.com/LogicStamp/logicstamp)
+- [LogicStamp Main Project](https://logicstamp.dev)
+- [GitHub Repository](https://github.com/LogicStamp/logicstamp-context)
 - [Report Issues](https://github.com/LogicStamp/logicstamp-context/issues)
