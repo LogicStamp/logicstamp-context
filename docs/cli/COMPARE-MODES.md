@@ -94,7 +94,7 @@ Shows savings compared to the maximum information mode:
 ### Default: Character-Based Approximation
 
 By default, token estimation uses character-based approximations:
-- **GPT-4o-mini**: ~4 characters per token
+- **GPT-4o**: ~4 characters per token
 - **Claude**: ~4.5 characters per token
 
 These approximations are reasonably accurate for most codebases (typically within 10-15% of actual token counts).
@@ -109,7 +109,11 @@ LogicStamp Context includes `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenize
 - If not installed (installation failed/skipped), gracefully falls back to approximation
 - No configuration required - works automatically
 
-**Manual installation (if automatic installation failed):**
+**Manual installation (optional - only if you want accurate counts and automatic installation failed):**
+
+The tool works fine without tokenizers (uses approximation). Only install manually if:
+- You need accurate token counts (not approximations)
+- AND automatic installation failed or was skipped
 
 ```bash
 # For accurate GPT-4 token counts
@@ -255,7 +259,7 @@ done
 
 ### Token Counts
 
-**GPT-4o-mini vs Claude:**
+**GPT-4o vs Claude:**
 - Token counts vary by model-specific tokenization (typically within 5-10% difference)
 - Differences depend on the specific content being tokenized
 - Both estimates are provided for flexibility
