@@ -43,6 +43,8 @@ Creates a lightweight signature for each component in a single context file and 
   - Hooks (state management changed)
   - Functions, components, props, emits, exports
 
+**Note:** The compare command does **not** compare styles by design. Style changes (CSS, Tailwind classes, inline styles, etc.) are intentionally excluded from comparison as they represent visual/presentation changes rather than structural or logical changes.
+
 #### Multi-File Mode (NEW)
 Compares **all context files** across your project using `context_main.json` as the root index and detects:
 - **ADDED FILE** – New folders with context files
@@ -627,6 +629,10 @@ chmod +x .git/hooks/pre-commit
 - **Prop changes** – component API surface changed.
 - **Event/emit changes** – event/callback interface changed.
 - **Export changes** – export type changed (e.g., from `export default` to `export const`).
+
+**What is NOT compared:**
+- **Styles** – CSS classes, Tailwind utilities, inline styles, and other styling-related metadata are intentionally excluded. 
+  Compare Mode focuses strictly on structural and logical contract changes, not visual/presentation differences.
 
 ---
 

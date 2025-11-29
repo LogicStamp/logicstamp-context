@@ -104,6 +104,15 @@
                     "viewportAnimations": true
                   }
                 },
+                "materialUI": {
+                  "components": ["Button", "TextField", "Card"],
+                  "packages": ["@mui/material", "@mui/icons-material"],
+                  "features": {
+                    "usesTheme": true,
+                    "usesSxProp": true,
+                    "usesSystemProps": true
+                  }
+                },
                 "inlineStyles": false
               },
               "layout": {
@@ -370,7 +379,7 @@
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp-context@0.2.3"
+      "source": "logicstamp-context@0.2.4"
     }
   }
 ]

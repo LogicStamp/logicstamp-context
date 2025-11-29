@@ -99,6 +99,17 @@ interface StyleSources {
       viewportAnimations?: boolean;
     };
   };
+  materialUI?: {
+    components?: string[];
+    packages?: string[];
+    features: {
+      usesTheme?: boolean;
+      usesSxProp?: boolean;
+      usesStyled?: boolean;
+      usesMakeStyles?: boolean;
+      usesSystemProps?: boolean;
+    };
+  };
 }
 
 interface LayoutMetadata {
@@ -201,6 +212,7 @@ Identifies which styling approaches are used:
 - **`inlineStyles`** - Boolean indicating `style={{...}}` usage
 - **`styledComponents`** - Styled-components/Emotion usage with component names and theme information
 - **`motion`** - Framer Motion usage with components, variants, and feature flags
+- **`materialUI`** - Material UI usage with components, packages, and styling features (theme, sx prop, styled, makeStyles, system props)
 
 #### Layout Metadata (`style.layout`)
 
@@ -263,7 +275,7 @@ interface LogicStampBundle {
   };
   meta: {
     missing: MissingDependency[];
-    source: string;  // Tool version (e.g., "logicstamp-context@0.2.3")
+    source: string;  // Tool version (e.g., "logicstamp-context@0.2.4")
   };
 }
 
@@ -335,6 +347,13 @@ interface MissingDependency {
                 },
                 "breakpoints": ["md", "lg"],
                 "classCount": 8
+              },
+              "materialUI": {
+                "components": ["Button"],
+                "packages": ["@mui/material"],
+                "features": {
+                  "usesSxProp": true
+                }
               }
             },
             "layout": {
@@ -361,7 +380,7 @@ interface MissingDependency {
         "referencedBy": "src/components/Button.tsx"
       }
     ],
-    "source": "logicstamp-context@0.2.3"
+    "source": "logicstamp-context@0.2.4"
   }
 }
 ```
@@ -456,7 +475,7 @@ interface FolderEntry {
     }
   ],
   "meta": {
-    "source": "logicstamp-context@0.2.3"
+    "source": "logicstamp-context@0.2.4"
   }
 }
 ```

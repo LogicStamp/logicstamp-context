@@ -127,6 +127,34 @@ describe('Style Extractor', () => {
       expect(result?.styleSources?.motion?.features?.gestures).toBe(true);
     });
 
+    it('should extract Material UI metadata', async () => {
+      const sourceCode = `
+        import { Button, TextField, Card } from '@mui/material';
+        
+        function MyComponent() {
+          return (
+            <Card>
+              <TextField label="Name" />
+              <Button sx={{ p: 2 }}>Submit</Button>
+            </Card>
+          );
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      const result = await extractStyleMetadata(sourceFile, tempDir);
+
+      expect(result).toBeDefined();
+      expect(result?.styleSources?.materialUI).toBeDefined();
+      expect(result?.styleSources?.materialUI?.components).toContain('Button');
+      expect(result?.styleSources?.materialUI?.components).toContain('TextField');
+      expect(result?.styleSources?.materialUI?.components).toContain('Card');
+      expect(result?.styleSources?.materialUI?.packages).toContain('@mui/material');
+      expect(result?.styleSources?.materialUI?.features?.usesSxProp).toBe(true);
+    });
+
     it('should detect inline styles', async () => {
       const sourceCode = `
         function MyComponent() {
@@ -219,6 +247,7 @@ describe('Style Extractor', () => {
       const sourceCode = `
         import styled from 'styled-components';
         import { motion } from 'framer-motion';
+        import { Button } from '@mui/material';
         
         const StyledDiv = styled.div\`padding: 1rem;\`;
         
@@ -226,6 +255,7 @@ describe('Style Extractor', () => {
           return (
             <motion.div className="flex bg-blue-500" style={{ margin: '1rem' }}>
               <StyledDiv>Hello</StyledDiv>
+              <Button sx={{ p: 2 }}>Click</Button>
             </motion.div>
           );
         }
@@ -240,6 +270,7 @@ describe('Style Extractor', () => {
       expect(result?.styleSources?.tailwind).toBeDefined();
       expect(result?.styleSources?.styledComponents).toBeDefined();
       expect(result?.styleSources?.motion).toBeDefined();
+      expect(result?.styleSources?.materialUI).toBeDefined();
       expect(result?.styleSources?.inlineStyles).toBe(true);
     });
 

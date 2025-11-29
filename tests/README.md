@@ -79,6 +79,13 @@ Unit tests verify individual modules and functions in isolation:
 
 - **`astParser/`** - AST parsing and extraction
 - **`styleExtractor/`** - Style metadata extraction
+  - `styleExtractor.test.ts` - Main integration tests
+  - `tailwind.test.ts` - Tailwind CSS extraction
+  - `scss.test.ts` - SCSS/CSS module extraction
+  - `styled.test.ts` - styled-components/Emotion extraction
+  - `motion.test.ts` - framer-motion extraction
+  - `material.test.ts` - Material UI extraction
+  - `layout.test.ts` - Layout metadata extraction
 - **`pack/`** - Bundle generation
 - **`tokens.test.ts`** - Token counting utilities
 - **`gitignore.test.ts`** - Gitignore manipulation

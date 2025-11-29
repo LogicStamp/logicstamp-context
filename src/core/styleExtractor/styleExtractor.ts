@@ -10,6 +10,7 @@ import { extractScssMetadata, parseStyleFile } from './scss.js';
 import { extractStyledComponents } from './styled.js';
 import { extractMotionConfig, extractAnimationMetadata } from './motion.js';
 import { extractLayoutMetadata, extractVisualMetadata } from './layout.js';
+import { extractMaterialUI } from './material.js';
 
 /**
  * Extract style metadata from a source file
@@ -133,6 +134,21 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
         ...(motionInfo.hasLayout && { layoutAnimations: true }),
         ...(motionInfo.hasViewport && { viewportAnimations: true }),
       },
+    };
+  }
+
+  // Check for Material UI
+  const hasMaterialUI = source.getImportDeclarations().some(imp => {
+    const moduleSpecifier = imp.getModuleSpecifierValue();
+    return /^@mui\//.test(moduleSpecifier) || /^@material-ui\//.test(moduleSpecifier);
+  });
+
+  if (hasMaterialUI) {
+    const muiInfo = extractMaterialUI(source);
+    sources.materialUI = {
+      ...(muiInfo.components.length > 0 && { components: muiInfo.components }),
+      ...(muiInfo.packages.length > 0 && { packages: muiInfo.packages }),
+      features: muiInfo.features,
     };
   }
 
