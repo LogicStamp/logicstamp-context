@@ -365,7 +365,7 @@ stamp context compare --approve
 stamp context compare --stats
 ```
 
-**See also:** [COMPARE_COMMAND.md](./COMPARE_COMMAND.md) for comprehensive documentation.
+**See also:** [compare.md](./compare.md) for comprehensive documentation.
 
 ### `stamp context clean`
 

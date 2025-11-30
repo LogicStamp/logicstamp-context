@@ -376,10 +376,10 @@ Use `stamp context` (without the flag) to actually generate context bundle files
 
 ## Related Commands
 
-- [`stamp context`](CONTEXT.md) - Generate context files
-- [`stamp context style`](STYLE.md) - Generate context with style metadata
-- [`stamp context compare`](COMPARE.md) - Compare context changes over time
-- [`stamp context validate`](VALIDATE.md) - Validate schema compliance
+- [`stamp context`](context.md) - Generate context files
+- [`stamp context style`](style.md) - Generate context with style metadata
+- [`stamp context compare`](compare.md) - Compare context changes over time
+- [`stamp context validate`](validate.md) - Validate schema compliance
 
 ## Tips
 

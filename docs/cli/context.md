@@ -11,7 +11,7 @@ stamp context [path] [options]
 
 **Output Structure:** The command generates multiple `context.json` files (one per folder containing components) plus a `context_main.json` index file at the output root, maintaining your project's directory hierarchy.
 
-**Setup:** `stamp context` respects preferences saved in `.logicstamp/config.json` and never prompts. On first run (no config), it defaults to skipping both `.gitignore` and `LLM_CONTEXT.md` setup for CI-friendly behavior. Use [`stamp init`](INIT.md) to interactively configure these options.
+**Setup:** `stamp context` respects preferences saved in `.logicstamp/config.json` and never prompts. On first run (no config), it defaults to skipping both `.gitignore` and `LLM_CONTEXT.md` setup for CI-friendly behavior. Use [`stamp init`](init.md) to interactively configure these options.
 
 ## Options
 
@@ -27,7 +27,7 @@ stamp context [path] [options]
 | `--predict-behavior` | | `false` | Experimental behavioral prediction annotations. |
 | `--dry-run` | | `false` | Skip writing the output; display summary only. |
 | `--stats` | | `false` | Emit single-line JSON stats (ideal for CI). When combined with `--compare-modes`, writes `context_compare_modes.json` for MCP integration. |
-| `--compare-modes` | | `false` | Show detailed token comparison table across all modes (none/header/header+style/full) with accurate style metadata impact. When combined with `--stats`, writes `context_compare_modes.json` for MCP (Model Context Protocol) integration. See [COMPARE-MODES.md](COMPARE-MODES.md) for comprehensive guide. |
+| `--compare-modes` | | `false` | Show detailed token comparison table across all modes (none/header/header+style/full) with accurate style metadata impact. When combined with `--stats`, writes `context_compare_modes.json` for MCP (Model Context Protocol) integration. See [compare-modes.md](compare-modes.md) for comprehensive guide. |
 | `--include-style` | | `false` | Extract style metadata (Tailwind, SCSS, Material UI, animations, layout). |
 | `--skip-gitignore` | | `false` | Skip `.gitignore` setup (never prompt or modify). |
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors). |
@@ -68,7 +68,7 @@ stamp context --include-style
 
 # Compare token costs across all modes (including style)
 stamp context --compare-modes
-# See COMPARE-MODES.md for comprehensive guide
+# See compare-modes.md for comprehensive guide
 
 # Generate comparison data file for MCP integration
 stamp context --compare-modes --stats
@@ -187,7 +187,7 @@ stamp context --strict-missing || exit 1
 - Use `--max-nodes` to keep bundle size manageable before sharing with LLMs.
 - Run `stamp context validate` after generation to catch schema drift early.
 - Use `stamp context clean` to remove all context artifacts when resetting or switching branches.
-- Use `stamp context style` or `--include-style` to extract visual and layout metadata for design-aware context bundles. See [STYLE.md](STYLE.md) for detailed documentation.
+- Use `stamp context style` or `--include-style` to extract visual and layout metadata for design-aware context bundles. See [style.md](style.md) for detailed documentation.
 - Use `--compare-modes` to see accurate token estimates across all modes (none/header/header+style/full) and understand the cost impact of including style metadata.
 
 ## Token Estimation
