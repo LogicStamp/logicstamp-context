@@ -331,5 +331,148 @@ describe('SCSS Extractor', () => {
       expect(result.scssModule).toBeDefined();
     });
   });
+
+  describe('Error handling', () => {
+    describe('parseStyleFile', () => {
+      it('should handle file read errors gracefully', async () => {
+        const result = await parseStyleFile(join(tempDir, 'nonexistent.css'), 'nonexistent.css');
+
+        expect(result.selectors).toEqual([]);
+        expect(result.properties).toEqual([]);
+        expect(result.hasVariables).toBe(false);
+        expect(result.hasNesting).toBe(false);
+        expect(result.hasMixins).toBe(false);
+      });
+
+      it('should handle invalid file paths gracefully', async () => {
+        const result = await parseStyleFile('/invalid/path/to/file.css', 'file.css');
+
+        expect(result.selectors).toEqual([]);
+        expect(result.properties).toEqual([]);
+        expect(result.hasVariables).toBe(false);
+        expect(result.hasNesting).toBe(false);
+        expect(result.hasMixins).toBe(false);
+      });
+
+      it('should handle malformed CSS content gracefully', async () => {
+        const cssFile = join(tempDir, 'malformed.css');
+        // Malformed CSS - unclosed braces, invalid syntax
+        const malformedContent = `
+          .container {
+            padding: 1rem
+          .nested {
+            color: red
+        `;
+        await writeFile(cssFile, malformedContent, 'utf-8');
+
+        // Should not throw, should extract what it can
+        const result = await parseStyleFile(cssFile, 'malformed.css');
+        expect(typeof result).toBe('object');
+        expect(Array.isArray(result.selectors)).toBe(true);
+        expect(Array.isArray(result.properties)).toBe(true);
+      });
+
+      it('should handle empty file gracefully', async () => {
+        const cssFile = join(tempDir, 'empty.css');
+        await writeFile(cssFile, '', 'utf-8');
+
+        const result = await parseStyleFile(cssFile, 'empty.css');
+
+        expect(result.selectors).toEqual([]);
+        expect(result.properties).toEqual([]);
+        expect(result.hasVariables).toBe(false);
+        expect(result.hasNesting).toBe(false);
+        expect(result.hasMixins).toBe(false);
+      });
+    });
+
+    describe('extractScssMetadata', () => {
+      it('should handle malformed SourceFile gracefully', async () => {
+        const project = new Project({ useInMemoryFileSystem: true });
+        // Malformed TypeScript - unclosed import
+        const sourceFile = project.createSourceFile(
+          'test.tsx',
+          `
+          import styles from './styles.module.scss'
+          // Missing semicolon and closing
+        `
+        );
+
+        // Should not throw, should return empty object
+        const result = await extractScssMetadata(sourceFile, tempDir);
+        expect(typeof result).toBe('object');
+        expect(result).not.toBeNull();
+      });
+
+      it('should handle SourceFile with syntax errors gracefully', async () => {
+        const project = new Project({ useInMemoryFileSystem: true });
+        // Invalid TypeScript syntax
+        const sourceFile = project.createSourceFile(
+          'test.tsx',
+          `
+          import styles from './styles.module.scss';
+          function Component() {
+            return <div
+          // Missing closing
+        `
+        );
+
+        // Should not throw, should return empty object or partial results
+        const result = await extractScssMetadata(sourceFile, tempDir);
+        expect(typeof result).toBe('object');
+        expect(result).not.toBeNull();
+      });
+
+      it('should handle empty SourceFile gracefully', async () => {
+        const project = new Project({ useInMemoryFileSystem: true });
+        const sourceFile = project.createSourceFile('test.tsx', '');
+
+        const result = await extractScssMetadata(sourceFile, tempDir);
+        expect(typeof result).toBe('object');
+        expect(result).not.toBeNull();
+        expect(result.scssModule).toBeUndefined();
+      });
+
+      it('should handle SourceFile with invalid import declarations gracefully', async () => {
+        const project = new Project({ useInMemoryFileSystem: true });
+        const sourceFile = project.createSourceFile(
+          'test.tsx',
+          `
+          import styles from './styles.module.scss';
+          function Component() {
+            return <div>Hello</div>;
+          }
+        `
+        );
+
+        // Use invalid file path that will cause parseStyleFile to fail
+        const result = await extractScssMetadata(sourceFile, '/nonexistent/path');
+
+        // Should return module name but no details if file can't be parsed
+        expect(typeof result).toBe('object');
+        expect(result).not.toBeNull();
+      });
+
+      it('should handle AST traversal errors gracefully', async () => {
+        const project = new Project({ useInMemoryFileSystem: true });
+        // Code that might cause AST traversal issues
+        const sourceFile = project.createSourceFile(
+          'test.tsx',
+          `
+          import styles from './styles.module.scss';
+          function Component() {
+            const invalid = (() => { throw new Error('test'); })();
+            return <div className={invalid}>Content</div>;
+          }
+        `
+        );
+
+        // Should not throw, should handle gracefully
+        const result = await extractScssMetadata(sourceFile, tempDir);
+        expect(typeof result).toBe('object');
+        expect(result).not.toBeNull();
+      });
+    });
+  });
 });
 

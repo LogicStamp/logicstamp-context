@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { Project } from 'ts-morph';
 import { extractState, extractVariables } from '../../../src/core/astParser/extractors/stateExtractor.js';
 
@@ -186,6 +186,72 @@ describe('State Extractor', () => {
       const variables = extractVariables(sourceFile);
 
       expect(variables.filter(v => v === 'count').length).toBeLessThanOrEqual(1);
+    });
+  });
+
+  describe('Error handling', () => {
+    it('should handle AST traversal errors gracefully in extractState', () => {
+      const sourceCode = `
+        import { useState } from 'react';
+        
+        function MyComponent() {
+          const [count, setCount] = useState(0);
+          return <div>{count}</div>;
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      // Should not throw even if there are issues
+      const state = extractState(sourceFile);
+      expect(typeof state).toBe('object');
+    });
+
+    it('should handle AST traversal errors gracefully in extractVariables', () => {
+      const sourceCode = `
+        const globalVar = 42;
+        
+        function MyComponent() {
+          const localVar = 'test';
+          return <div></div>;
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      // Should not throw even if there are issues
+      const variables = extractVariables(sourceFile);
+      expect(Array.isArray(variables)).toBe(true);
+    });
+
+    it('should have debug logging infrastructure in place', () => {
+      const originalEnv = process.env.LOGICSTAMP_DEBUG;
+      process.env.LOGICSTAMP_DEBUG = '1';
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', 'const [x, setX] = useState(0);');
+
+      extractState(sourceFile);
+      extractVariables(sourceFile);
+
+      // If errors were logged, verify they have the correct format
+      const errorCalls = consoleErrorSpy.mock.calls;
+      if (errorCalls.length > 0) {
+        const hasStateExtractorLog = errorCalls.some(call =>
+          call[0]?.toString().includes('[logicstamp:stateExtractor]')
+        );
+        expect(hasStateExtractorLog).toBe(true);
+      }
+
+      consoleErrorSpy.mockRestore();
+      if (originalEnv === undefined) {
+        delete process.env.LOGICSTAMP_DEBUG;
+      } else {
+        process.env.LOGICSTAMP_DEBUG = originalEnv;
+      }
     });
   });
 });

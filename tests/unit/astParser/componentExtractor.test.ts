@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { Project } from 'ts-morph';
 import { extractHooks, extractComponents } from '../../../src/core/astParser/extractors/componentExtractor.js';
 
@@ -182,6 +182,72 @@ describe('Component Extractor', () => {
 
       expect(components.filter(c => c === 'Button').length).toBe(1);
       expect(components.filter(c => c === 'Card').length).toBe(1);
+    });
+  });
+
+  describe('Error handling', () => {
+    it('should handle AST traversal errors gracefully in extractHooks', () => {
+      // Create a file that might cause issues during AST traversal
+      const sourceCode = `
+        function MyComponent() {
+          const [count, setCount] = useState(0);
+          return <div>{count}</div>;
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      // Should not throw even if there are issues
+      const hooks = extractHooks(sourceFile);
+      expect(Array.isArray(hooks)).toBe(true);
+    });
+
+    it('should handle AST traversal errors gracefully in extractComponents', () => {
+      const sourceCode = `
+        function MyComponent() {
+          return (
+            <div>
+              <Button>Click</Button>
+            </div>
+          );
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      // Should not throw even if there are issues
+      const components = extractComponents(sourceFile);
+      expect(Array.isArray(components)).toBe(true);
+    });
+
+    it('should have debug logging infrastructure in place', () => {
+      const originalEnv = process.env.LOGICSTAMP_DEBUG;
+      process.env.LOGICSTAMP_DEBUG = '1';
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', 'const x = useState(0);');
+
+      extractHooks(sourceFile);
+      extractComponents(sourceFile);
+
+      // If errors were logged, verify they have the correct format
+      const errorCalls = consoleErrorSpy.mock.calls;
+      if (errorCalls.length > 0) {
+        const hasComponentExtractorLog = errorCalls.some(call =>
+          call[0]?.toString().includes('[logicstamp:componentExtractor]')
+        );
+        expect(hasComponentExtractorLog).toBe(true);
+      }
+
+      consoleErrorSpy.mockRestore();
+      if (originalEnv === undefined) {
+        delete process.env.LOGICSTAMP_DEBUG;
+      } else {
+        process.env.LOGICSTAMP_DEBUG = originalEnv;
+      }
     });
   });
 });

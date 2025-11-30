@@ -22,7 +22,7 @@
   </defs>
 
   <g
-    transform="translate(10,4)"
+    transform="translate(0,6)"
     fill="none"
     stroke="#05022a"
     stroke-width="3.2"
@@ -70,4 +70,3 @@
     />
   </g>
 </svg>
-

@@ -49,7 +49,9 @@ export async function parseStyleFile(filePath: string, importPath: string): Prom
       hasMixins,
     };
   } catch (error) {
-    // File not found or can't be read
+    if (process.env.LOGICSTAMP_DEBUG === '1') {
+      console.error('[logicstamp:scss] Failed to parse style file:', (error as Error).message);
+    }
     return {
       selectors: [],
       properties: [],
@@ -75,44 +77,51 @@ export async function extractScssMetadata(source: SourceFile, filePath: string):
     };
   };
 }> {
-  const result: {
-    scssModule?: string;
-    scssDetails?: {
-      selectors: string[];
-      properties: string[];
-      features: {
-        variables?: boolean;
-        nesting?: boolean;
-        mixins?: boolean;
-      };
-    };
-  } = {};
-
-  // Check for SCSS module imports and parse them
-  const scssModuleImport = source.getImportDeclarations().find(imp => {
-    const moduleSpecifier = imp.getModuleSpecifierValue();
-    return moduleSpecifier.endsWith('.module.scss') || moduleSpecifier.endsWith('.scss');
-  });
-
-  if (scssModuleImport) {
-    const moduleSpecifier = scssModuleImport.getModuleSpecifierValue();
-    result.scssModule = moduleSpecifier;
-
-    // Parse the SCSS file for detailed information
-    const scssInfo = await parseStyleFile(filePath, moduleSpecifier);
-    if (scssInfo.selectors.length > 0 || scssInfo.properties.length > 0) {
-      result.scssDetails = {
-        selectors: scssInfo.selectors,
-        properties: scssInfo.properties,
+  try {
+    const result: {
+      scssModule?: string;
+      scssDetails?: {
+        selectors: string[];
+        properties: string[];
         features: {
-          ...(scssInfo.hasVariables && { variables: true }),
-          ...(scssInfo.hasNesting && { nesting: true }),
-          ...(scssInfo.hasMixins && { mixins: true }),
-        },
+          variables?: boolean;
+          nesting?: boolean;
+          mixins?: boolean;
+        };
       };
-    }
-  }
+    } = {};
 
-  return result;
+    // Check for SCSS module imports and parse them
+    const scssModuleImport = source.getImportDeclarations().find(imp => {
+      const moduleSpecifier = imp.getModuleSpecifierValue();
+      return moduleSpecifier.endsWith('.module.scss') || moduleSpecifier.endsWith('.scss');
+    });
+
+    if (scssModuleImport) {
+      const moduleSpecifier = scssModuleImport.getModuleSpecifierValue();
+      result.scssModule = moduleSpecifier;
+
+      // Parse the SCSS file for detailed information
+      const scssInfo = await parseStyleFile(filePath, moduleSpecifier);
+      if (scssInfo.selectors.length > 0 || scssInfo.properties.length > 0) {
+        result.scssDetails = {
+          selectors: scssInfo.selectors,
+          properties: scssInfo.properties,
+          features: {
+            ...(scssInfo.hasVariables && { variables: true }),
+            ...(scssInfo.hasNesting && { nesting: true }),
+            ...(scssInfo.hasMixins && { mixins: true }),
+          },
+        };
+      }
+    }
+
+    return result;
+  } catch (error) {
+    if (process.env.LOGICSTAMP_DEBUG === '1') {
+      console.error('[logicstamp:scss] Failed to extract SCSS metadata:', (error as Error).message);
+    }
+    return {};
+  }
 }
 

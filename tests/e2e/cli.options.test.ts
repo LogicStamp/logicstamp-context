@@ -460,6 +460,58 @@ describe('CLI Command Options Tests', () => {
       expect(stdout).toContain('header');
       expect(stdout).toContain('full');
     }, 30000);
+
+    it('should generate context_compare_modes.json when both --compare-modes and --stats are set', async () => {
+      const outDir = join(outputPath, 'compare-modes-stats');
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --compare-modes --stats --out ${outDir}`
+      );
+
+      // Verify context_compare_modes.json file exists
+      const compareModesPath = join(outDir, 'context_compare_modes.json');
+      await access(compareModesPath);
+
+      // Verify JSON structure
+      const compareModesData = JSON.parse(await readFile(compareModesPath, 'utf-8'));
+      expect(compareModesData).toHaveProperty('type', 'LogicStampCompareModes');
+      expect(compareModesData).toHaveProperty('schemaVersion', '0.1');
+      expect(compareModesData).toHaveProperty('createdAt');
+      expect(compareModesData).toHaveProperty('elapsed');
+      expect(compareModesData).toHaveProperty('files');
+      expect(compareModesData.files).toHaveProperty('total');
+      expect(compareModesData.files).toHaveProperty('ts');
+      expect(compareModesData.files).toHaveProperty('tsx');
+      expect(compareModesData).toHaveProperty('comparison');
+      
+      // Verify comparison structure
+      expect(compareModesData.comparison).toHaveProperty('headerNoStyleGPT4');
+      expect(compareModesData.comparison).toHaveProperty('headerNoStyleClaude');
+      expect(compareModesData.comparison).toHaveProperty('headerWithStyleGPT4');
+      expect(compareModesData.comparison).toHaveProperty('headerWithStyleClaude');
+      expect(compareModesData.comparison).toHaveProperty('sourceTokensGPT4');
+      expect(compareModesData.comparison).toHaveProperty('sourceTokensClaude');
+      expect(compareModesData.comparison).toHaveProperty('modeEstimates');
+      expect(compareModesData.comparison.modeEstimates).toHaveProperty('none');
+      expect(compareModesData.comparison.modeEstimates).toHaveProperty('header');
+      expect(compareModesData.comparison.modeEstimates).toHaveProperty('headerStyle');
+      expect(compareModesData.comparison.modeEstimates).toHaveProperty('full');
+    }, 60000);
+
+    it('should NOT generate context_compare_modes.json when only --compare-modes is set', async () => {
+      const outDir = join(outputPath, 'compare-modes-only');
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --compare-modes --out ${outDir}`
+      );
+
+      // Verify context_compare_modes.json file does NOT exist
+      const compareModesPath = join(outDir, 'context_compare_modes.json');
+      try {
+        await access(compareModesPath);
+        expect.fail('context_compare_modes.json should not be created when --stats is not set');
+      } catch {
+        // Expected - file should not exist
+      }
+    }, 30000);
   });
 
   describe('Help and version', () => {

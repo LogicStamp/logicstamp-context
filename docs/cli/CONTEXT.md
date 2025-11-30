@@ -26,8 +26,8 @@ stamp context [path] [options]
 | `--strict` | `-s` | `false` | Fail when dependencies are missing. |
 | `--predict-behavior` | | `false` | Experimental behavioral prediction annotations. |
 | `--dry-run` | | `false` | Skip writing the output; display summary only. |
-| `--stats` | | `false` | Emit single-line JSON stats (ideal for CI). |
-| `--compare-modes` | | `false` | Show detailed token comparison table across all modes (none/header/header+style/full) with accurate style metadata impact. See [COMPARE-MODES.md](COMPARE-MODES.md) for comprehensive guide. |
+| `--stats` | | `false` | Emit single-line JSON stats (ideal for CI). When combined with `--compare-modes`, writes `context_compare_modes.json` for MCP integration. |
+| `--compare-modes` | | `false` | Show detailed token comparison table across all modes (none/header/header+style/full) with accurate style metadata impact. When combined with `--stats`, writes `context_compare_modes.json` for MCP (Model Context Protocol) integration. See [COMPARE-MODES.md](COMPARE-MODES.md) for comprehensive guide. |
 | `--include-style` | | `false` | Extract style metadata (Tailwind, SCSS, Material UI, animations, layout). |
 | `--skip-gitignore` | | `false` | Skip `.gitignore` setup (never prompt or modify). |
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors). |
@@ -69,6 +69,10 @@ stamp context --include-style
 # Compare token costs across all modes (including style)
 stamp context --compare-modes
 # See COMPARE-MODES.md for comprehensive guide
+
+# Generate comparison data file for MCP integration
+stamp context --compare-modes --stats
+# Creates: context_compare_modes.json with structured comparison data
 
 # Custom output directory
 stamp context --out ./output
@@ -203,4 +207,55 @@ npm install @anthropic-ai/tokenizer
 ```
 
 If these packages are installed, `--compare-modes` and token estimates throughout the tool will automatically use them for precise token counting.
+
+## Error Handling
+
+The AST parser handles errors gracefully by default. When parsing fails or encounters malformed code, it returns an empty AST structure instead of crashing, allowing the tool to continue processing other files.
+
+**Behavior:**
+- Invalid file paths return empty AST structures
+- Malformed TypeScript/React syntax is handled gracefully
+- Individual extraction failures (hooks, props, components, state, events, etc.) don't stop the entire process
+- Each extractor function (componentExtractor, propExtractor, stateExtractor, eventExtractor) has its own error handling
+- The tool continues processing other files even when some fail
+
+**Debug Logging:**
+
+All error handling is silent by default. To enable debug logging for troubleshooting, set the `LOGICSTAMP_DEBUG=1` environment variable:
+
+```bash
+LOGICSTAMP_DEBUG=1 stamp context
+```
+
+When enabled, error logs include:
+- The file path where the error occurred
+- The specific extraction step that failed (hooks, props, components, state, events, etc.)
+- The error message
+- Module-specific prefixes for easier filtering
+
+Example debug output:
+```
+[logicstamp:astParser][hooks] /path/to/file.tsx: Cannot read property 'name' of undefined
+[logicstamp:astParser][props] /path/to/file.tsx: Unexpected token
+[logicstamp:componentExtractor][hooks-iteration] /path/to/file.tsx: Invalid AST node
+[logicstamp:propExtractor][props-interface] /path/to/file.tsx: Type resolution failed
+[logicstamp:stateExtractor][state-type-inference] /path/to/file.tsx: Pattern match error
+[logicstamp:eventExtractor][events-signature] /path/to/file.tsx: Signature parsing failed
+[logicstamp:detector][directive] /path/to/file.tsx: Failed to read file text
+[logicstamp:detector][kind-jsx-traversal] /path/to/file.tsx: AST traversal error
+```
+
+**Error Handling Architecture:**
+- **Main parser** (`extractFromFile`): Catches top-level errors and returns empty AST
+- **Extractor functions**: Each extractor (hooks, components, props, state, events, routes) has try-catch blocks around risky operations
+- **Detector functions**: Next.js directive detection and component kind detection have error handling with graceful fallbacks
+- **Graceful fallbacks**: All extractors return empty arrays/objects on errors; detectors return `undefined` or default values (`ts:module` for kind detection)
+- **Debug logging**: Each module logs errors with its own prefix when `LOGICSTAMP_DEBUG=1` is set
+
+**Troubleshooting Tips:**
+- Enable `LOGICSTAMP_DEBUG=1` if you suspect parsing issues
+- Check debug logs to identify which files and extraction steps are causing problems
+- Files with syntax errors will return empty AST structures but won't crash the tool
+- Individual extractor failures are logged separately for easier debugging
+- Use `--strict-missing` in CI to catch missing dependencies early
 

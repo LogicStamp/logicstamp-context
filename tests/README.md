@@ -85,6 +85,8 @@ Unit tests verify individual modules and functions in isolation:
   - `styled.test.ts` - styled-components/Emotion extraction
   - `motion.test.ts` - framer-motion extraction
   - `material.test.ts` - Material UI extraction
+  - `shadcn.test.ts` - ShadCN/UI extraction
+  - `radix.test.ts` - Radix UI extraction
   - `layout.test.ts` - Layout metadata extraction
 - **`pack/`** - Bundle generation
 - **`tokens.test.ts`** - Token counting utilities

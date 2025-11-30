@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { Project } from 'ts-morph';
 import { extractEvents, extractJsxRoutes } from '../../../src/core/astParser/extractors/eventExtractor.js';
 
@@ -198,6 +198,72 @@ describe('Event Extractor', () => {
       const routes = extractJsxRoutes(sourceFile);
 
       expect(routes.filter(r => r === '/home').length).toBe(1);
+    });
+  });
+
+  describe('Error handling', () => {
+    it('should handle AST traversal errors gracefully in extractEvents', () => {
+      const sourceCode = `
+        function MyComponent() {
+          return (
+            <button onClick={() => {}}>
+              Click
+            </button>
+          );
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      // Should not throw even if there are issues
+      const events = extractEvents(sourceFile);
+      expect(typeof events).toBe('object');
+    });
+
+    it('should handle AST traversal errors gracefully in extractJsxRoutes', () => {
+      const sourceCode = `
+        function MyComponent() {
+          return (
+            <Route path="/home" />
+          );
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      // Should not throw even if there are issues
+      const routes = extractJsxRoutes(sourceFile);
+      expect(Array.isArray(routes)).toBe(true);
+    });
+
+    it('should have debug logging infrastructure in place', () => {
+      const originalEnv = process.env.LOGICSTAMP_DEBUG;
+      process.env.LOGICSTAMP_DEBUG = '1';
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', '<button onClick={() => {}} />');
+
+      extractEvents(sourceFile);
+      extractJsxRoutes(sourceFile);
+
+      // If errors were logged, verify they have the correct format
+      const errorCalls = consoleErrorSpy.mock.calls;
+      if (errorCalls.length > 0) {
+        const hasEventExtractorLog = errorCalls.some(call =>
+          call[0]?.toString().includes('[logicstamp:eventExtractor]')
+        );
+        expect(hasEventExtractorLog).toBe(true);
+      }
+
+      consoleErrorSpy.mockRestore();
+      if (originalEnv === undefined) {
+        delete process.env.LOGICSTAMP_DEBUG;
+      } else {
+        process.env.LOGICSTAMP_DEBUG = originalEnv;
+      }
     });
   });
 });

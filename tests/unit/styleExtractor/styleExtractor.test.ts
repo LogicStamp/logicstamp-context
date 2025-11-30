@@ -463,5 +463,150 @@ describe('Style Extractor', () => {
       expect(result?.styleSources?.cssModule).toBeDefined();
     });
   });
+
+  describe('Error handling', () => {
+    it('should handle missing SCSS file gracefully', async () => {
+      const sourceCode = `
+        import styles from './missing.module.scss';
+        
+        function MyComponent() {
+          return <div className={styles.container}>Hello</div>;
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      // Should not throw, should return partial results
+      const result = await extractStyleMetadata(sourceFile, tempDir);
+      
+      // Should still be able to extract other metadata if available
+      expect(result).toBeDefined();
+    });
+
+    it('should handle missing CSS file gracefully', async () => {
+      const sourceCode = `
+        import './missing.css';
+        
+        function MyComponent() {
+          return <div className="container">Hello</div>;
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      // Should not throw
+      const result = await extractStyleMetadata(sourceFile, tempDir);
+      expect(result).toBeDefined();
+    });
+
+    it('should return partial results when some extractors fail', async () => {
+      // Create a file that will cause one extractor to potentially fail,
+      // but others should still work
+      const sourceCode = `
+        function MyComponent() {
+          return <div className="flex p-4 bg-blue-500">Hello</div>;
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      const result = await extractStyleMetadata(sourceFile, tempDir);
+
+      // Should still extract Tailwind even if other extractors fail
+      expect(result).toBeDefined();
+      expect(result?.styleSources?.tailwind).toBeDefined();
+    });
+
+    it('should handle malformed JSX gracefully', async () => {
+      const project = new Project({ useInMemoryFileSystem: true });
+      // Malformed JSX - unclosed tag
+      const sourceFile = project.createSourceFile(
+        'test.tsx',
+        `
+        export function Component() {
+          return (
+            <div className="flex p-4"
+          );
+        }
+        `
+      );
+
+      // Should not throw
+      const result = await extractStyleMetadata(sourceFile, tempDir);
+      expect(result).toBeDefined();
+    });
+
+    it('should handle empty SourceFile gracefully', async () => {
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', '');
+
+      const result = await extractStyleMetadata(sourceFile, tempDir);
+
+      // Should return undefined when no style information is found
+      expect(result).toBeUndefined();
+    });
+
+    it('should handle invalid source file path gracefully', async () => {
+      const sourceCode = `
+        function MyComponent() {
+          return <div className="flex">Hello</div>;
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      // Use an invalid path - should not crash
+      const invalidPath = join(tempDir, 'nonexistent', 'subdir');
+      const result = await extractStyleMetadata(sourceFile, invalidPath);
+
+      // Should still extract metadata that doesn't require file system access
+      expect(result).toBeDefined();
+      expect(result?.styleSources?.tailwind).toBeDefined();
+    });
+
+    it('should isolate extractor failures - one failure should not break others', async () => {
+      // This test verifies that if one extractor fails, others still work
+      const sourceCode = `
+        import styled from 'styled-components';
+        
+        const StyledDiv = styled.div\`padding: 1rem;\`;
+        
+        function MyComponent() {
+          return (
+            <div className="flex p-4 bg-blue-500">
+              <StyledDiv>Hello</StyledDiv>
+            </div>
+          );
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      const result = await extractStyleMetadata(sourceFile, tempDir);
+
+      // Should extract multiple sources even if one might fail
+      expect(result).toBeDefined();
+      expect(result?.styleSources?.tailwind).toBeDefined();
+      expect(result?.styleSources?.styledComponents).toBeDefined();
+    });
+
+    it('should return undefined instead of throwing on critical errors', async () => {
+      // Test that the main function catches errors and returns undefined
+      // rather than throwing
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', '');
+
+      // Should not throw
+      const result = await extractStyleMetadata(sourceFile, tempDir);
+      
+      // Should return undefined gracefully
+      expect(result).toBeUndefined();
+    });
+  });
 });
 

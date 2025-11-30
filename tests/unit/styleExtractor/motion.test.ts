@@ -109,6 +109,53 @@ describe('Motion Extractor', () => {
       expect(result.hasViewport).toBe(true);
     });
 
+    it('should not detect gestures when Framer Motion is not imported', () => {
+      const sourceCode = `
+        function MyComponent() {
+          return <div whileHover={{ scale: 1.1 }}>Hover me</div>;
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      const result = extractMotionConfig(sourceFile);
+
+      expect(result.hasGestures).toBe(false);
+    });
+
+    it('should not detect layout when Framer Motion is not imported', () => {
+      const sourceCode = `
+        function MyComponent() {
+          return <div layout={true}>Content</div>;
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      const result = extractMotionConfig(sourceFile);
+
+      expect(result.hasLayout).toBe(false);
+    });
+
+    it('should detect framer-motion/client imports', () => {
+      const sourceCode = `
+        import { motion } from 'framer-motion/client';
+        
+        function MyComponent() {
+          return <motion.div>Hello</motion.div>;
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      const result = extractMotionConfig(sourceFile);
+
+      expect(result.components).toContain('div');
+    });
+
     it('should handle empty file', () => {
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile('test.tsx', '');
@@ -190,6 +237,69 @@ describe('Motion Extractor', () => {
 
       expect(result.library).toBe('css');
       expect(result.type).toBe('spin');
+    });
+
+    it('should detect CSS animations with hyphenated names', () => {
+      const sourceCode = `
+        function MyComponent() {
+          return <div className="animate-fade-in">Hello</div>;
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      const result = extractAnimationMetadata(sourceFile);
+
+      expect(result.library).toBe('css');
+      expect(result.type).toBe('fade-in');
+    });
+
+    it('should not detect transitions from className alone', () => {
+      const sourceCode = `
+        function MyComponent() {
+          return <div className="text-blue-500">Hello</div>;
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      const result = extractAnimationMetadata(sourceFile);
+
+      expect(result.library).toBeUndefined();
+    });
+
+    it('should detect CSS transitions from transition- classes', () => {
+      const sourceCode = `
+        function MyComponent() {
+          return <div className="transition-all duration-300">Hello</div>;
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      const result = extractAnimationMetadata(sourceFile);
+
+      expect(result.library).toBe('css');
+    });
+
+    it('should detect framer-motion/client imports', () => {
+      const sourceCode = `
+        import { motion } from 'framer-motion/client';
+        
+        function MyComponent() {
+          return <motion.div>Hello</motion.div>;
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      const result = extractAnimationMetadata(sourceFile);
+
+      expect(result.library).toBe('framer-motion');
     });
 
     it('should prioritize framer-motion over CSS', () => {
