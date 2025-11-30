@@ -253,7 +253,8 @@ describe('Event Extractor', () => {
       const errorCalls = consoleErrorSpy.mock.calls;
       if (errorCalls.length > 0) {
         const hasEventExtractorLog = errorCalls.some(call =>
-          call[0]?.toString().includes('[logicstamp:eventExtractor]')
+          call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
+          call[0]?.toString().includes('eventExtractor')
         );
         expect(hasEventExtractorLog).toBe(true);
       }

@@ -359,7 +359,7 @@ LOGICSTAMP_DEBUG=1 stamp context --include-style
 This will output error messages to help identify problematic files or expressions:
 
 ```
-[logicstamp:shadcn] Failed to extract ShadCN/UI metadata: Cannot read property 'getText' of undefined
+[LogicStamp][DEBUG] shadcn.extractShadcnUI error: { filePath: '/path/to/file.tsx', error: 'Cannot read property \'getText\' of undefined' }
 ```
 
 ### Best Practices

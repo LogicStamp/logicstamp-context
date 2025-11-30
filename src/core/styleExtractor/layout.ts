@@ -4,6 +4,7 @@
 
 import { SourceFile, SyntaxKind } from 'ts-morph';
 import type { LayoutMetadata, VisualMetadata } from '../../types/UIFContract.js';
+import { debugError } from '../../utils/debug.js';
 import { extractTailwindClasses } from './tailwind.js';
 
 /**
@@ -97,9 +98,9 @@ export function extractLayoutMetadata(source: SourceFile): LayoutMetadata {
       }
     }
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:layout] Failed to extract layout metadata:', (error as Error).message);
-    }
+    debugError('layout', 'extractLayoutMetadata', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {};
   }
 
@@ -165,9 +166,9 @@ export function extractVisualMetadata(source: SourceFile): VisualMetadata {
       visual.typography = Array.from(new Set(typographyClasses)).sort().slice(0, 10);
     }
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:layout] Failed to extract visual metadata:', (error as Error).message);
-    }
+    debugError('layout', 'extractVisualMetadata', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {};
   }
 

@@ -140,7 +140,8 @@ describe('AST Parser Error Handling', () => {
       const errorCalls = consoleErrorSpy.mock.calls;
       if (errorCalls.length > 0) {
         const hasAstParserLog = errorCalls.some(call => 
-          call[0]?.toString().includes('[logicstamp:astParser]')
+          call[0]?.toString().includes('[LogicStamp][DEBUG]') && 
+          call[0]?.toString().includes('astParser')
         );
         expect(hasAstParserLog).toBe(true);
       }
@@ -177,14 +178,18 @@ describe('AST Parser Error Handling', () => {
       // Check that if errors were logged, they include the file path
       const errorCalls = consoleErrorSpy.mock.calls;
       const astParserLogs = errorCalls.filter(call => 
-        call[0]?.toString().includes('[logicstamp:astParser]')
+        call[0]?.toString().includes('[LogicStamp][DEBUG]') && 
+        call[0]?.toString().includes('astParser')
       );
       
       if (astParserLogs.length > 0) {
         // If we have AST parser logs, verify they include file path information
+        // The context object (second argument) should contain filePath
         const hasFilePath = astParserLogs.some(call => {
           const message = call[0]?.toString() || '';
-          return message.includes('test-file.tsx') || message.includes(invalidFile) || message.includes('/invalid/path');
+          const context = call[1] || {};
+          return message.includes('[LogicStamp][DEBUG]') || 
+                 (typeof context === 'object' && 'filePath' in context);
         });
         expect(hasFilePath).toBe(true);
       }

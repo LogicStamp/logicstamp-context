@@ -4,17 +4,7 @@
 
 import { SourceFile, SyntaxKind } from 'ts-morph';
 import type { EventType } from '../../../types/UIFContract.js';
-
-const DEBUG = process.env.LOGICSTAMP_DEBUG === '1';
-
-/**
- * Debug logging helper for event extractor errors
- */
-function debugEventExtractor(scope: string, filePath: string, error: unknown) {
-  if (!DEBUG) return;
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(`[logicstamp:eventExtractor][${scope}] ${filePath}: ${message}`);
-}
+import { debugError } from '../../../utils/debug.js';
 
 /**
  * Extract event handlers from JSX attributes
@@ -50,7 +40,11 @@ export function extractEvents(source: SourceFile): Record<string, EventType> {
                 signature
               };
             } catch (error) {
-              debugEventExtractor('events-signature', filePath, error);
+              debugError('eventExtractor', 'extractEvents', {
+                filePath,
+                error: error instanceof Error ? error.message : String(error),
+                context: 'events-signature',
+              });
               // Use default signature
               events[name] = {
                 type: 'function',
@@ -60,12 +54,19 @@ export function extractEvents(source: SourceFile): Record<string, EventType> {
           }
         }
       } catch (error) {
-        debugEventExtractor('events-iteration', filePath, error);
+        debugError('eventExtractor', 'extractEvents', {
+          filePath,
+          error: error instanceof Error ? error.message : String(error),
+          context: 'events-iteration',
+        });
         // Continue with next attribute
       }
     });
   } catch (error) {
-    debugEventExtractor('events', filePath, error);
+    debugError('eventExtractor', 'extractEvents', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {};
   }
 
@@ -89,12 +90,19 @@ export function extractJsxRoutes(source: SourceFile): string[] {
           routes.add(value);
         }
       } catch (error) {
-        debugEventExtractor('jsxRoutes-iteration', filePath, error);
+        debugError('eventExtractor', 'extractJsxRoutes', {
+          filePath,
+          error: error instanceof Error ? error.message : String(error),
+          context: 'jsxRoutes-iteration',
+        });
         // Continue with next literal
       }
     });
   } catch (error) {
-    debugEventExtractor('jsxRoutes', filePath, error);
+    debugError('eventExtractor', 'extractJsxRoutes', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return [];
   }
 

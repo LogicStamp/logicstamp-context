@@ -12,6 +12,7 @@ import {
   CallExpression,
   ImportDeclaration,
 } from 'ts-morph';
+import { debugError } from '../../utils/debug.js';
 
 /**
  * Common ShadCN/UI component names
@@ -370,9 +371,9 @@ export function extractShadcnUI(source: SourceFile): {
       },
     };
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:shadcn] Failed to extract ShadCN/UI metadata:', (error as Error).message);
-    }
+    debugError('shadcn', 'extractShadcnUI', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {
       components: [],
       variants: {},

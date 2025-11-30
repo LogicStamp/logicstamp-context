@@ -237,7 +237,8 @@ describe('Component Extractor', () => {
       const errorCalls = consoleErrorSpy.mock.calls;
       if (errorCalls.length > 0) {
         const hasComponentExtractorLog = errorCalls.some(call =>
-          call[0]?.toString().includes('[logicstamp:componentExtractor]')
+          call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
+          call[0]?.toString().includes('componentExtractor')
         );
         expect(hasComponentExtractorLog).toBe(true);
       }

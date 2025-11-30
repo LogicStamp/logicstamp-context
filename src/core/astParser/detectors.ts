@@ -4,17 +4,7 @@
 
 import { SourceFile, SyntaxKind } from 'ts-morph';
 import type { ContractKind, NextJSMetadata } from '../../types/UIFContract.js';
-
-const DEBUG = process.env.LOGICSTAMP_DEBUG === '1';
-
-/**
- * Debug logging helper for detector errors
- */
-function debugDetector(scope: string, filePath: string, error: unknown) {
-  if (!DEBUG) return;
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(`[logicstamp:detector][${scope}] ${filePath}: ${message}`);
-}
+import { debugError } from '../../utils/debug.js';
 
 /**
  * Detect Next.js 'use client' or 'use server' directives
@@ -54,12 +44,19 @@ export function detectNextJsDirective(source: SourceFile): 'client' | 'server' |
           break;
         }
       } catch (error) {
-        debugDetector('directive-line', filePath, error);
+        debugError('detector', 'detectNextJsDirective', {
+          filePath,
+          error: error instanceof Error ? error.message : String(error),
+          context: 'directive-line',
+        });
         // Continue with next line
       }
     }
   } catch (error) {
-    debugDetector('directive', filePath, error);
+    debugError('detector', 'detectNextJsDirective', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return undefined;
   }
 
@@ -97,7 +94,10 @@ export function extractNextJsMetadata(source: SourceFile, filePath: string): Nex
       };
     }
   } catch (error) {
-    debugDetector('nextjs-metadata', resolvedPath, error);
+    debugError('detector', 'extractNextJsMetadata', {
+      filePath: resolvedPath,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return undefined;
   }
 
@@ -136,7 +136,11 @@ export function detectKind(
                           source.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement).length > 0 ||
                           source.getDescendantsOfKind(SyntaxKind.JsxFragment).length > 0;
         } catch (error) {
-          debugDetector('kind-jsx-traversal', resolvedPath, error);
+          debugError('detector', 'detectKind', {
+            filePath: resolvedPath,
+            error: error instanceof Error ? error.message : String(error),
+            context: 'kind-jsx-traversal',
+          });
           // Continue with other checks
         }
 
@@ -155,7 +159,11 @@ export function detectKind(
           return 'react:component';
         }
       } catch (error) {
-        debugDetector('kind-react-check', resolvedPath, error);
+        debugError('detector', 'detectKind', {
+          filePath: resolvedPath,
+          error: error instanceof Error ? error.message : String(error),
+          context: 'kind-react-check',
+        });
         // Continue with other checks
       }
     }
@@ -172,11 +180,18 @@ export function detectKind(
         return 'node:cli';
       }
     } catch (error) {
-      debugDetector('kind-cli-check', resolvedPath, error);
+      debugError('detector', 'detectKind', {
+        filePath: resolvedPath,
+        error: error instanceof Error ? error.message : String(error),
+        context: 'kind-cli-check',
+      });
       // If CLI check fails, continue to default
     }
   } catch (error) {
-    debugDetector('kind', resolvedPath, error);
+    debugError('detector', 'detectKind', {
+      filePath: resolvedPath,
+      error: error instanceof Error ? error.message : String(error),
+    });
     // Default fallback on any error
     return 'ts:module';
   }

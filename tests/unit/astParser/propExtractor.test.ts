@@ -206,7 +206,8 @@ describe('Prop Extractor', () => {
       const errorCalls = consoleErrorSpy.mock.calls;
       if (errorCalls.length > 0) {
         const hasPropExtractorLog = errorCalls.some(call =>
-          call[0]?.toString().includes('[logicstamp:propExtractor]')
+          call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
+          call[0]?.toString().includes('propExtractor')
         );
         expect(hasPropExtractorLog).toBe(true);
       }

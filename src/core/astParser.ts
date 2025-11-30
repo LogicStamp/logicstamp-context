@@ -30,6 +30,7 @@
 
 import { Project, SyntaxKind, SourceFile, Node } from 'ts-morph';
 import type { LogicSignature, ContractKind, PropType, EventType, NextJSMetadata } from '../types/UIFContract.js';
+import { debugError } from '../utils/debug.js';
 import { extractComponents, extractHooks } from './astParser/extractors/componentExtractor.js';
 import { extractProps } from './astParser/extractors/propExtractor.js';
 import { extractState, extractVariables } from './astParser/extractors/stateExtractor.js';
@@ -50,17 +51,6 @@ export interface AstExtract {
   nextjs?: NextJSMetadata;
 }
 
-const DEBUG = process.env.LOGICSTAMP_DEBUG === '1';
-
-/**
- * Debug logging helper for AST parser errors
- */
-function debugAst(scope: string, filePath: string, error: unknown) {
-  if (!DEBUG) return;
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(`[logicstamp:astParser][${scope}] ${filePath}: ${message}`);
-}
-
 /**
  * Safe extraction wrapper that catches errors and logs them
  */
@@ -73,7 +63,11 @@ function safeExtract<T>(
   try {
     return extractor();
   } catch (error) {
-    debugAst(label, filePath, error);
+    debugError('astParser', 'safeExtract', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+      context: label,
+    });
     return fallback;
   }
 }
@@ -122,7 +116,10 @@ export async function extractFromFile(filePath: string): Promise<AstExtract> {
       ...(nextjs && { nextjs }),
     };
   } catch (error) {
-    debugAst('parse', filePath, error);
+    debugError('astParser', 'extractFromFile', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
     // Return empty AST on parsing errors instead of crashing
     // Callers should check if the result is meaningful before using it
     return {

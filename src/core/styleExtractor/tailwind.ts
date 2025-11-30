@@ -3,6 +3,7 @@
  */
 
 import { SourceFile, SyntaxKind, Node, JsxExpression, NoSubstitutionTemplateLiteral } from 'ts-morph';
+import { debugError } from '../../utils/debug.js';
 
 /**
  * Tailwind utility class categories for semantic grouping
@@ -121,9 +122,9 @@ export function extractTailwindClasses(source: SourceFile | string): string[] {
 
     return Array.from(classNames);
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:tailwind] Failed to extract Tailwind classes:', (error as Error).message);
-    }
+    debugError('tailwind', 'extractTailwindClasses', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return [];
   }
 }
@@ -242,9 +243,9 @@ function extractTailwindClassesFromText(sourceText: string): string[] {
 
     return Array.from(classNames);
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:tailwind] Failed to extract Tailwind classes from text:', (error as Error).message);
-    }
+    debugError('tailwind', 'extractTailwindClassesFromText', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return [];
   }
 }
@@ -310,9 +311,9 @@ export function categorizeTailwindClasses(
     );
     return result;
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:tailwind] Failed to categorize Tailwind classes:', (error as Error).message);
-    }
+    debugError('tailwind', 'categorizeTailwindClasses', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {};
   }
 }
@@ -340,9 +341,9 @@ export function extractBreakpoints(classes: string[]): string[] {
 
     return Array.from(breakpoints).sort();
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:tailwind] Failed to extract breakpoints:', (error as Error).message);
-    }
+    debugError('tailwind', 'extractBreakpoints', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return [];
   }
 }

@@ -12,6 +12,7 @@ import {
   ImportDeclaration,
   JsxAttribute,
 } from 'ts-morph';
+import { debugError } from '../../utils/debug.js';
 
 /**
  * Common Radix UI packages and their key components
@@ -346,9 +347,9 @@ export function extractRadixUI(source: SourceFile): {
       features: featuresResult,
     };
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:radix] Failed to extract Radix UI metadata:', (error as Error).message);
-    }
+    debugError('radix', 'extractRadixUI', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {
       primitives: {},
       patterns: {

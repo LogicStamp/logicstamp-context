@@ -3,17 +3,7 @@
  */
 
 import { SourceFile, SyntaxKind } from 'ts-morph';
-
-const DEBUG = process.env.LOGICSTAMP_DEBUG === '1';
-
-/**
- * Debug logging helper for state extractor errors
- */
-function debugStateExtractor(scope: string, filePath: string, error: unknown) {
-  if (!DEBUG) return;
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(`[logicstamp:stateExtractor][${scope}] ${filePath}: ${message}`);
-}
+import { debugError } from '../../../utils/debug.js';
 
 /**
  * Extract all variable declarations (const, let, var)
@@ -31,12 +21,19 @@ export function extractVariables(source: SourceFile): string[] {
           variables.add(name);
         }
       } catch (error) {
-        debugStateExtractor('variables-iteration', filePath, error);
+        debugError('stateExtractor', 'extractVariables', {
+          filePath,
+          error: error instanceof Error ? error.message : String(error),
+          context: 'variables-iteration',
+        });
         // Continue with next variable
       }
     });
   } catch (error) {
-    debugStateExtractor('variables', filePath, error);
+    debugError('stateExtractor', 'extractVariables', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return [];
   }
 
@@ -85,7 +82,11 @@ export function extractState(source: SourceFile): Record<string, string> {
                 }
               }
             } catch (error) {
-              debugStateExtractor('state-type-inference', filePath, error);
+              debugError('stateExtractor', 'extractState', {
+                filePath,
+                error: error instanceof Error ? error.message : String(error),
+                context: 'state-type-inference',
+              });
               // Use 'unknown' as fallback
             }
 
@@ -93,12 +94,19 @@ export function extractState(source: SourceFile): Record<string, string> {
           }
         }
       } catch (error) {
-        debugStateExtractor('state-iteration', filePath, error);
+        debugError('stateExtractor', 'extractState', {
+          filePath,
+          error: error instanceof Error ? error.message : String(error),
+          context: 'state-iteration',
+        });
         // Continue with next declaration
       }
     });
   } catch (error) {
-    debugStateExtractor('state', filePath, error);
+    debugError('stateExtractor', 'extractState', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {};
   }
 

@@ -4,17 +4,7 @@
 
 import { SourceFile } from 'ts-morph';
 import type { PropType } from '../../../types/UIFContract.js';
-
-const DEBUG = process.env.LOGICSTAMP_DEBUG === '1';
-
-/**
- * Debug logging helper for prop extractor errors
- */
-function debugPropExtractor(scope: string, filePath: string, error: unknown) {
-  if (!DEBUG) return;
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(`[logicstamp:propExtractor][${scope}] ${filePath}: ${message}`);
-}
+import { debugError } from '../../../utils/debug.js';
 
 /**
  * Extract component props from TypeScript interfaces/types
@@ -37,18 +27,30 @@ export function extractProps(source: SourceFile): Record<string, PropType> {
 
                 props[name] = normalizePropType(type, isOptional);
               } catch (error) {
-                debugPropExtractor('props-interface-property', filePath, error);
+                debugError('propExtractor', 'extractProps', {
+                  filePath,
+                  error: error instanceof Error ? error.message : String(error),
+                  context: 'props-interface-property',
+                });
                 // Continue with next property
               }
             });
           }
         } catch (error) {
-          debugPropExtractor('props-interface', filePath, error);
+          debugError('propExtractor', 'extractProps', {
+            filePath,
+            error: error instanceof Error ? error.message : String(error),
+            context: 'props-interface',
+          });
           // Continue with next interface
         }
       });
     } catch (error) {
-      debugPropExtractor('props-interfaces-batch', filePath, error);
+      debugError('propExtractor', 'extractProps', {
+        filePath,
+        error: error instanceof Error ? error.message : String(error),
+        context: 'props-interfaces-batch',
+      });
     }
 
     // Look for type aliases ending with Props
@@ -71,21 +73,36 @@ export function extractProps(source: SourceFile): Record<string, PropType> {
 
                 props[name] = normalizePropType(propType, isOptional);
               } catch (error) {
-                debugPropExtractor('props-typealias-property', filePath, error);
+                debugError('propExtractor', 'extractProps', {
+                  filePath,
+                  error: error instanceof Error ? error.message : String(error),
+                  context: 'props-typealias-property',
+                });
                 // Continue with next property
               }
             });
           }
         } catch (error) {
-          debugPropExtractor('props-typealias', filePath, error);
+          debugError('propExtractor', 'extractProps', {
+            filePath,
+            error: error instanceof Error ? error.message : String(error),
+            context: 'props-typealias',
+          });
           // Continue with next type alias
         }
       });
     } catch (error) {
-      debugPropExtractor('props-typealiases-batch', filePath, error);
+      debugError('propExtractor', 'extractProps', {
+        filePath,
+        error: error instanceof Error ? error.message : String(error),
+        context: 'props-typealiases-batch',
+      });
     }
   } catch (error) {
-    debugPropExtractor('props', filePath, error);
+    debugError('propExtractor', 'extractProps', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {};
   }
 
@@ -135,9 +152,10 @@ export function normalizePropType(typeText: string, isOptional: boolean): PropTy
     return cleanType;
   } catch (error) {
     // Fallback to simple string type on error
-    if (DEBUG) {
-      console.error(`[logicstamp:propExtractor][normalizePropType] Error normalizing type "${typeText}":`, error instanceof Error ? error.message : String(error));
-    }
+    debugError('propExtractor', 'normalizePropType', {
+      error: error instanceof Error ? error.message : String(error),
+      typeText,
+    });
     return typeText;
   }
 }

@@ -321,7 +321,7 @@ LOGICSTAMP_DEBUG=1 stamp context --include-style
 This will output error messages to help identify problematic files or expressions:
 
 ```
-[logicstamp:radix] Failed to extract Radix UI metadata: Cannot read property 'getText' of undefined
+[LogicStamp][DEBUG] radix.extractRadixUI error: { filePath: '/path/to/file.tsx', error: 'Cannot read property \'getText\' of undefined' }
 ```
 
 ### Best Practices

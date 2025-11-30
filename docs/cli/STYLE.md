@@ -506,9 +506,9 @@ LOGICSTAMP_DEBUG=1 stamp context style
 This will output detailed error messages to help identify problematic files or expressions:
 
 ```
-[logicstamp:styleExtractor] Failed to extract SCSS metadata: ENOENT: no such file or directory
-[logicstamp:styleExtractor] Failed to extract Material UI metadata: Unexpected token
-[logicstamp:styleExtractor] Failed to extract layout metadata: Cannot read property 'getText' of undefined
+[LogicStamp][DEBUG] styleExtractor.extractStyleMetadata error: { filePath: '/path/to/file.tsx', error: 'ENOENT: no such file or directory' }
+[LogicStamp][DEBUG] material.extractMaterialUI error: { filePath: '/path/to/file.tsx', error: 'Unexpected token' }
+[LogicStamp][DEBUG] layout.extractLayoutMetadata error: { filePath: '/path/to/file.tsx', error: 'Cannot read property \'getText\' of undefined' }
 ```
 
 ### Best Practices

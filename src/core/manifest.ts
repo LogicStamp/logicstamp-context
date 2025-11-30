@@ -31,6 +31,7 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { UIFContract } from '../types/UIFContract.js';
 import { structureHash, signatureHash } from '../utils/hash.js';
+import { debugError } from '../utils/debug.js';
 
 export interface ComponentNode {
   entryId: string;
@@ -204,7 +205,34 @@ function findComponentByName(
 export async function writeManifest(manifest: ProjectManifest, outPath: string): Promise<void> {
   const manifestPath = join(outPath, 'logicstamp.manifest.json');
   const json = JSON.stringify(manifest, null, 2);
-  await writeFile(manifestPath, json, 'utf8');
+  
+  try {
+    await writeFile(manifestPath, json, 'utf8');
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    debugError('manifest', 'writeManifest', {
+      manifestPath,
+      outPath,
+      message: err.message,
+      code: err.code,
+    });
+    
+    let userMessage: string;
+    switch (err.code) {
+      case 'ENOENT':
+        userMessage = `Parent directory not found for: "${manifestPath}"`;
+        break;
+      case 'EACCES':
+        userMessage = `Permission denied writing to: "${manifestPath}"`;
+        break;
+      case 'ENOSPC':
+        userMessage = `No space left on device. Cannot write: "${manifestPath}"`;
+        break;
+      default:
+        userMessage = `Failed to write manifest "${manifestPath}": ${err.message}`;
+    }
+    throw new Error(userMessage);
+  }
 }
 
 /**

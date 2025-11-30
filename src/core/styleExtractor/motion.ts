@@ -4,6 +4,7 @@
 
 import { SourceFile, SyntaxKind, JsxAttribute, PropertyAccessExpression, CallExpression, VariableDeclaration } from 'ts-morph';
 import type { AnimationMetadata } from '../../types/UIFContract.js';
+import { debugError } from '../../utils/debug.js';
 
 /**
  * Extract Framer Motion animation configurations using AST
@@ -27,9 +28,10 @@ export function extractMotionConfig(source: SourceFile): {
     try {
       importDeclarations = source.getImportDeclarations();
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:motion] Failed to get import declarations:', (error as Error).message);
-      }
+      debugError('motion', 'extractMotionConfig', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'getImportDeclarations',
+      });
       // Continue with empty array
     }
 
@@ -41,9 +43,10 @@ export function extractMotionConfig(source: SourceFile): {
         return mod === 'framer-motion' || mod.startsWith('framer-motion/');
       });
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:motion] Failed to check Framer Motion imports:', (error as Error).message);
-      }
+      debugError('motion', 'extractMotionConfig', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'checkFramerMotionImports',
+      });
       // Default to false on error
     }
 
@@ -52,9 +55,10 @@ export function extractMotionConfig(source: SourceFile): {
     try {
       propertyAccessExpressions = source.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression);
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:motion] Failed to extract property access expressions:', (error as Error).message);
-      }
+      debugError('motion', 'extractMotionConfig', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'getPropertyAccessExpressions',
+      });
       // Continue with empty array
     }
 
@@ -67,9 +71,10 @@ export function extractMotionConfig(source: SourceFile): {
         }
       }
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:motion] Failed to process property access expressions:', (error as Error).message);
-      }
+      debugError('motion', 'extractMotionConfig', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'processPropertyAccessExpressions',
+      });
       // Continue - component detection may be incomplete but not fatal
     }
 
@@ -81,9 +86,10 @@ export function extractMotionConfig(source: SourceFile): {
     try {
       jsxAttributes = source.getDescendantsOfKind(SyntaxKind.JsxAttribute);
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:motion] Failed to extract JSX attributes:', (error as Error).message);
-      }
+      debugError('motion', 'extractMotionConfig', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'getJsxAttributes',
+      });
       // Continue with empty array
     }
 
@@ -135,9 +141,10 @@ export function extractMotionConfig(source: SourceFile): {
                   }
                 }
               } catch (error) {
-                if (process.env.LOGICSTAMP_DEBUG === '1') {
-                  console.error('[logicstamp:motion] Failed to extract variants from variable declarations:', (error as Error).message);
-                }
+                debugError('motion', 'extractMotionConfig', {
+                  error: error instanceof Error ? error.message : String(error),
+                  context: 'extractVariantsFromVariableDeclarations',
+                });
                 // Continue - variant detection may be incomplete but not fatal
               }
             }
@@ -145,9 +152,10 @@ export function extractMotionConfig(source: SourceFile): {
         }
       }
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:motion] Failed to extract variants from JSX attributes:', (error as Error).message);
-      }
+      debugError('motion', 'extractMotionConfig', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'extractVariantsFromJsxAttributes',
+      });
       // Continue - variant detection may be incomplete but not fatal
     }
 
@@ -167,9 +175,10 @@ export function extractMotionConfig(source: SourceFile): {
           }
         }
       } catch (error) {
-        if (process.env.LOGICSTAMP_DEBUG === '1') {
-          console.error('[logicstamp:motion] Failed to check gestures:', (error as Error).message);
-        }
+        debugError('motion', 'extractMotionConfig', {
+          error: error instanceof Error ? error.message : String(error),
+          context: 'checkGestures',
+        });
         // Default to false on error
       }
     }
@@ -186,9 +195,10 @@ export function extractMotionConfig(source: SourceFile): {
           }
         }
       } catch (error) {
-        if (process.env.LOGICSTAMP_DEBUG === '1') {
-          console.error('[logicstamp:motion] Failed to check layout animations:', (error as Error).message);
-        }
+        debugError('motion', 'extractMotionConfig', {
+          error: error instanceof Error ? error.message : String(error),
+          context: 'checkLayoutAnimations',
+        });
         // Default to false on error
       }
     }
@@ -205,9 +215,10 @@ export function extractMotionConfig(source: SourceFile): {
           }
         }
       } catch (error) {
-        if (process.env.LOGICSTAMP_DEBUG === '1') {
-          console.error('[logicstamp:motion] Failed to check viewport animations:', (error as Error).message);
-        }
+        debugError('motion', 'extractMotionConfig', {
+          error: error instanceof Error ? error.message : String(error),
+          context: 'checkViewportAnimations',
+        });
         // Default to false on error
       }
     }
@@ -224,9 +235,10 @@ export function extractMotionConfig(source: SourceFile): {
           }
         }
       } catch (error) {
-        if (process.env.LOGICSTAMP_DEBUG === '1') {
-          console.error('[logicstamp:motion] Failed to check useInView hook:', (error as Error).message);
-        }
+        debugError('motion', 'extractMotionConfig', {
+          error: error instanceof Error ? error.message : String(error),
+          context: 'checkUseInViewHook',
+        });
         // Default to false on error
       }
     }
@@ -239,9 +251,9 @@ export function extractMotionConfig(source: SourceFile): {
       hasViewport,
     };
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:motion] Failed to extract Motion config:', (error as Error).message);
-    }
+    debugError('motion', 'extractMotionConfig', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     // Return empty/default values on unexpected errors
     return {
       components: [],
@@ -265,9 +277,10 @@ export function extractAnimationMetadata(source: SourceFile): AnimationMetadata 
     try {
       importDeclarations = source.getImportDeclarations();
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:motion] Failed to get import declarations:', (error as Error).message);
-      }
+      debugError('motion', 'extractAnimationMetadata', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'getImportDeclarations',
+      });
       // Continue with empty array
     }
 
@@ -279,9 +292,10 @@ export function extractAnimationMetadata(source: SourceFile): AnimationMetadata 
         return mod === 'framer-motion' || mod.startsWith('framer-motion/');
       });
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:motion] Failed to check Framer Motion imports:', (error as Error).message);
-      }
+      debugError('motion', 'extractAnimationMetadata', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'checkFramerMotionImports',
+      });
       // Default to false on error
     }
 
@@ -290,9 +304,10 @@ export function extractAnimationMetadata(source: SourceFile): AnimationMetadata 
     try {
       jsxAttributes = source.getDescendantsOfKind(SyntaxKind.JsxAttribute);
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:motion] Failed to extract JSX attributes:', (error as Error).message);
-      }
+      debugError('motion', 'extractAnimationMetadata', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'getJsxAttributes',
+      });
       // Continue with empty array
     }
 
@@ -328,14 +343,15 @@ export function extractAnimationMetadata(source: SourceFile): AnimationMetadata 
                 if (animation.type === 'fade-in') break;
               }
             }
-          }
         }
-      } catch (error) {
-        if (process.env.LOGICSTAMP_DEBUG === '1') {
-          console.error('[logicstamp:motion] Failed to check fade-in patterns:', (error as Error).message);
-        }
-        // Continue - animation detection may be incomplete but not fatal
       }
+    } catch (error) {
+      debugError('motion', 'extractAnimationMetadata', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'checkFadeInPatterns',
+      });
+      // Continue - animation detection may be incomplete but not fatal
+    }
 
       // Check for useInView hook using AST
       if (!animation.trigger) {
@@ -349,9 +365,10 @@ export function extractAnimationMetadata(source: SourceFile): AnimationMetadata 
             }
           }
         } catch (error) {
-          if (process.env.LOGICSTAMP_DEBUG === '1') {
-            console.error('[logicstamp:motion] Failed to check useInView hook:', (error as Error).message);
-          }
+          debugError('motion', 'extractAnimationMetadata', {
+            error: error instanceof Error ? error.message : String(error),
+            context: 'checkUseInViewHook',
+          });
           // Continue - trigger detection may be incomplete but not fatal
         }
       }
@@ -392,9 +409,10 @@ export function extractAnimationMetadata(source: SourceFile): AnimationMetadata 
         return false;
       });
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:motion] Failed to check CSS transitions/animations:', (error as Error).message);
-      }
+      debugError('motion', 'extractAnimationMetadata', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'checkCSSTransitionsAnimations',
+      });
       // Default to false on error
     }
 
@@ -420,9 +438,10 @@ export function extractAnimationMetadata(source: SourceFile): AnimationMetadata 
             }
           }
         } catch (error) {
-          if (process.env.LOGICSTAMP_DEBUG === '1') {
-            console.error('[logicstamp:motion] Failed to extract animate class name:', (error as Error).message);
-          }
+          debugError('motion', 'extractAnimationMetadata', {
+            error: error instanceof Error ? error.message : String(error),
+            context: 'extractAnimateClassName',
+          });
           // Continue - animation type detection may be incomplete but not fatal
         }
       }
@@ -430,9 +449,9 @@ export function extractAnimationMetadata(source: SourceFile): AnimationMetadata 
 
     return animation;
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:motion] Failed to extract animation metadata:', (error as Error).message);
-    }
+    debugError('motion', 'extractAnimationMetadata', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     // Return empty object on unexpected errors
     return {};
   }

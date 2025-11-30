@@ -241,7 +241,8 @@ describe('State Extractor', () => {
       const errorCalls = consoleErrorSpy.mock.calls;
       if (errorCalls.length > 0) {
         const hasStateExtractorLog = errorCalls.some(call =>
-          call[0]?.toString().includes('[logicstamp:stateExtractor]')
+          call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
+          call[0]?.toString().includes('stateExtractor')
         );
         expect(hasStateExtractorLog).toBe(true);
       }

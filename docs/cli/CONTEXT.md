@@ -235,14 +235,14 @@ When enabled, error logs include:
 
 Example debug output:
 ```
-[logicstamp:astParser][hooks] /path/to/file.tsx: Cannot read property 'name' of undefined
-[logicstamp:astParser][props] /path/to/file.tsx: Unexpected token
-[logicstamp:componentExtractor][hooks-iteration] /path/to/file.tsx: Invalid AST node
-[logicstamp:propExtractor][props-interface] /path/to/file.tsx: Type resolution failed
-[logicstamp:stateExtractor][state-type-inference] /path/to/file.tsx: Pattern match error
-[logicstamp:eventExtractor][events-signature] /path/to/file.tsx: Signature parsing failed
-[logicstamp:detector][directive] /path/to/file.tsx: Failed to read file text
-[logicstamp:detector][kind-jsx-traversal] /path/to/file.tsx: AST traversal error
+[LogicStamp][DEBUG] astParser.safeExtract error: { filePath: '/path/to/file.tsx', error: 'Cannot read property \'name\' of undefined', context: 'hooks' }
+[LogicStamp][DEBUG] astParser.extractFromFile error: { filePath: '/path/to/file.tsx', message: 'Unexpected token' }
+[LogicStamp][DEBUG] componentExtractor.extractHooks error: { filePath: '/path/to/file.tsx', error: 'Invalid AST node' }
+[LogicStamp][DEBUG] propExtractor.extractProps error: { filePath: '/path/to/file.tsx', error: 'Type resolution failed' }
+[LogicStamp][DEBUG] stateExtractor.extractState error: { filePath: '/path/to/file.tsx', error: 'Pattern match error' }
+[LogicStamp][DEBUG] eventExtractor.extractEvents error: { filePath: '/path/to/file.tsx', error: 'Signature parsing failed' }
+[LogicStamp][DEBUG] detector.detectNextJsDirective error: { filePath: '/path/to/file.tsx', error: 'Failed to read file text' }
+[LogicStamp][DEBUG] detector.detectKind error: { filePath: '/path/to/file.tsx', error: 'AST traversal error' }
 ```
 
 **Error Handling Architecture:**

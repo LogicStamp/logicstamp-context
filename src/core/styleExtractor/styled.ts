@@ -3,6 +3,7 @@
  */
 
 import { SourceFile, SyntaxKind, Node, NoSubstitutionTemplateLiteral, JsxAttribute, TaggedTemplateExpression, CallExpression, JsxElement, JsxSelfClosingElement } from 'ts-morph';
+import { debugError } from '../../utils/debug.js';
 
 /**
  * Check if styled is imported from styled-components or emotion libraries
@@ -68,9 +69,10 @@ export function extractStyledComponents(source: SourceFile): {
     try {
       taggedTemplates = source.getDescendantsOfKind(SyntaxKind.TaggedTemplateExpression);
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:styled] Failed to extract tagged templates:', (error as Error).message);
-      }
+      debugError('styled', 'extractStyledComponents', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'getTaggedTemplateExpressions',
+      });
       // Keep taggedTemplates = [] and continue to theme/useTheme/css checks
     }
 
@@ -108,9 +110,10 @@ export function extractStyledComponents(source: SourceFile): {
       try {
         callExpressions = source.getDescendantsOfKind(SyntaxKind.CallExpression);
       } catch (error) {
-        if (process.env.LOGICSTAMP_DEBUG === '1') {
-          console.error('[logicstamp:styled] Failed to extract call expressions:', (error as Error).message);
-        }
+        debugError('styled', 'extractStyledComponents', {
+          error: error instanceof Error ? error.message : String(error),
+          context: 'getCallExpressions',
+        });
         // Continue with empty array
       }
 
@@ -140,9 +143,10 @@ export function extractStyledComponents(source: SourceFile): {
           ...source.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement),
         ];
       } catch (error) {
-        if (process.env.LOGICSTAMP_DEBUG === '1') {
-          console.error('[logicstamp:styled] Failed to extract JSX elements:', (error as Error).message);
-        }
+        debugError('styled', 'extractStyledComponents', {
+          error: error instanceof Error ? error.message : String(error),
+          context: 'getJsxElements',
+        });
         // Continue with empty array
       }
 
@@ -182,9 +186,9 @@ export function extractStyledComponents(source: SourceFile): {
       hasCssProps,
     };
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:styled] Failed to extract styled components:', (error as Error).message);
-    }
+    debugError('styled', 'extractStyledComponents', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {
       components: [],
       hasTheme: false,

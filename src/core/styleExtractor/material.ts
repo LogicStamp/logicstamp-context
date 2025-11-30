@@ -3,6 +3,7 @@
  */
 
 import { SourceFile, SyntaxKind, JsxAttribute, JsxElement, JsxSelfClosingElement } from 'ts-morph';
+import { debugError } from '../../utils/debug.js';
 
 /**
  * Common Material UI component names
@@ -53,9 +54,10 @@ export function extractMaterialUI(source: SourceFile): {
     try {
       importDeclarations = source.getImportDeclarations();
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:material] Failed to get import declarations:', (error as Error).message);
-      }
+      debugError('material', 'extractMaterialUI', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'getImportDeclarations',
+      });
       // Continue with empty array - imports won't be detected but other checks can proceed
     }
 
@@ -108,9 +110,10 @@ export function extractMaterialUI(source: SourceFile): {
         }
       });
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:material] Failed to extract Material UI imports:', (error as Error).message);
-      }
+      debugError('material', 'extractMaterialUI', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'extractMaterialUIImports',
+      });
       // Continue with empty imports - can still check JSX usage
     }
 
@@ -124,9 +127,10 @@ export function extractMaterialUI(source: SourceFile): {
         ...source.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement),
       ];
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:material] Failed to extract JSX elements:', (error as Error).message);
-      }
+      debugError('material', 'extractMaterialUI', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'getJsxElements',
+      });
       // Continue with empty array - will skip JSX-based component detection
     }
 
@@ -152,9 +156,10 @@ export function extractMaterialUI(source: SourceFile): {
           }
         }
       } catch (error) {
-        if (process.env.LOGICSTAMP_DEBUG === '1') {
-          console.error('[logicstamp:material] Failed to process JSX elements:', (error as Error).message);
-        }
+        debugError('material', 'extractMaterialUI', {
+          error: error instanceof Error ? error.message : String(error),
+          context: 'processJsxElements',
+        });
         // Continue - component detection may be incomplete but not fatal
       }
     }
@@ -187,9 +192,10 @@ export function extractMaterialUI(source: SourceFile): {
           return /theme\./.test(text);
         });
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:material] Failed to check theme usage:', (error as Error).message);
-      }
+      debugError('material', 'extractMaterialUI', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'checkThemeUsage',
+      });
       // Default to false on error
     }
 
@@ -204,9 +210,10 @@ export function extractMaterialUI(source: SourceFile): {
           return attrName === 'sx';
         });
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:material] Failed to check sx prop usage:', (error as Error).message);
-      }
+      debugError('material', 'extractMaterialUI', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'checkSxPropUsage',
+      });
       // Default to false on error
     }
 
@@ -238,9 +245,10 @@ export function extractMaterialUI(source: SourceFile): {
             return expr.getKind() === SyntaxKind.Identifier && expr.getText() === 'styled';
           }));
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:material] Failed to check styled usage:', (error as Error).message);
-      }
+      debugError('material', 'extractMaterialUI', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'checkStyledUsage',
+      });
       // Default to false on error
     }
 
@@ -257,9 +265,10 @@ export function extractMaterialUI(source: SourceFile): {
           return mod === '@mui/styles' || mod === '@material-ui/styles';
         });
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:material] Failed to check makeStyles usage:', (error as Error).message);
-      }
+      debugError('material', 'extractMaterialUI', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'checkMakeStylesUsage',
+      });
       // Default to false on error
     }
 
@@ -295,9 +304,10 @@ export function extractMaterialUI(source: SourceFile): {
           });
         });
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:material] Failed to check system props usage:', (error as Error).message);
-      }
+      debugError('material', 'extractMaterialUI', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'checkSystemPropsUsage',
+      });
       // Default to false on error
     }
 
@@ -312,9 +322,10 @@ export function extractMaterialUI(source: SourceFile): {
         .slice(0, 20)
         .map(([name]) => name);
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:material] Failed to rank components:', (error as Error).message);
-      }
+      debugError('material', 'extractMaterialUI', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'rankComponents',
+      });
       // Default to empty array on error
     }
 
@@ -330,9 +341,9 @@ export function extractMaterialUI(source: SourceFile): {
       },
     };
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:material] Failed to extract Material UI:', (error as Error).message);
-    }
+    debugError('material', 'extractMaterialUI', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     // Return empty/default values on unexpected errors
     return {
       components: [],

@@ -3,17 +3,7 @@
  */
 
 import { SourceFile, SyntaxKind } from 'ts-morph';
-
-const DEBUG = process.env.LOGICSTAMP_DEBUG === '1';
-
-/**
- * Debug logging helper for component extractor errors
- */
-function debugComponentExtractor(scope: string, filePath: string, error: unknown) {
-  if (!DEBUG) return;
-  const message = error instanceof Error ? error.message : String(error);
-  console.error(`[logicstamp:componentExtractor][${scope}] ${filePath}: ${message}`);
-}
+import { debugError } from '../../../utils/debug.js';
 
 /**
  * Extract all React hooks (useState, useEffect, custom hooks)
@@ -33,12 +23,19 @@ export function extractHooks(source: SourceFile): string[] {
           hooks.add(text);
         }
       } catch (error) {
-        debugComponentExtractor('hooks-iteration', filePath, error);
+        debugError('componentExtractor', 'extractHooks', {
+          filePath,
+          error: error instanceof Error ? error.message : String(error),
+          context: 'hooks-iteration',
+        });
         // Continue with next hook
       }
     });
   } catch (error) {
-    debugComponentExtractor('hooks', filePath, error);
+    debugError('componentExtractor', 'extractHooks', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return [];
   }
 
@@ -62,12 +59,20 @@ export function extractComponents(source: SourceFile): string[] {
             components.add(tagName);
           }
         } catch (error) {
-          debugComponentExtractor('components-opening', filePath, error);
+          debugError('componentExtractor', 'extractComponents', {
+            filePath,
+            error: error instanceof Error ? error.message : String(error),
+            context: 'components-opening',
+          });
           // Continue with next element
         }
       });
     } catch (error) {
-      debugComponentExtractor('components-opening-batch', filePath, error);
+      debugError('componentExtractor', 'extractComponents', {
+        filePath,
+        error: error instanceof Error ? error.message : String(error),
+        context: 'components-opening-batch',
+      });
     }
 
     // Self-closing JSX elements
@@ -79,15 +84,26 @@ export function extractComponents(source: SourceFile): string[] {
             components.add(tagName);
           }
         } catch (error) {
-          debugComponentExtractor('components-selfclosing', filePath, error);
+          debugError('componentExtractor', 'extractComponents', {
+            filePath,
+            error: error instanceof Error ? error.message : String(error),
+            context: 'components-selfclosing',
+          });
           // Continue with next element
         }
       });
     } catch (error) {
-      debugComponentExtractor('components-selfclosing-batch', filePath, error);
+      debugError('componentExtractor', 'extractComponents', {
+        filePath,
+        error: error instanceof Error ? error.message : String(error),
+        context: 'components-selfclosing-batch',
+      });
     }
   } catch (error) {
-    debugComponentExtractor('components', filePath, error);
+    debugError('componentExtractor', 'extractComponents', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return [];
   }
 

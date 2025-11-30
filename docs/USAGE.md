@@ -1003,6 +1003,25 @@ stamp context --strict-missing
 - Focus on specific directories to speed up
 - Use `--max-nodes` to limit bundle generation
 
+### Debug logging for parsing issues
+If you encounter parsing errors or unexpected behavior, enable debug logging:
+
+```bash
+LOGICSTAMP_DEBUG=1 stamp context
+```
+
+This will output detailed error messages with the format:
+```
+[LogicStamp][DEBUG] moduleName.functionName error: { filePath: '...', error: '...', ... }
+```
+
+Debug logs help identify:
+- Which files are causing parsing issues
+- Which extraction steps are failing (hooks, props, state, etc.)
+- File paths and error details for troubleshooting
+
+**Note:** Debug logging is silent by default. Only enable it when troubleshooting specific issues.
+
 ## Best Practices
 
 1. **Start with defaults**: The default `llm-chat` profile works for most cases

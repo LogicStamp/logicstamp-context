@@ -78,6 +78,12 @@ End-to-end tests verify complete CLI workflows and command behavior:
 Unit tests verify individual modules and functions in isolation:
 
 - **`astParser/`** - AST parsing and extraction
+  - `astParser.test.ts` - Main parser with error handling tests
+  - `detectors.test.ts` - Component kind and Next.js detection with error handling
+  - `componentExtractor.test.ts` - Component extraction with error handling
+  - `propExtractor.test.ts` - Prop extraction with error handling
+  - `stateExtractor.test.ts` - State extraction with error handling
+  - `eventExtractor.test.ts` - Event extraction with error handling
 - **`styleExtractor/`** - Style metadata extraction
   - `styleExtractor.test.ts` - Main integration tests
   - `tailwind.test.ts` - Tailwind CSS extraction
@@ -99,6 +105,8 @@ Unit tests verify individual modules and functions in isolation:
 - Mock external dependencies
 - Test specific functions and edge cases
 - Verify type handling and transformations
+- Test error handling with `LOGICSTAMP_DEBUG` environment variable
+- Verify debug log format: `[LogicStamp][DEBUG] moduleName.functionName error:`
 
 ### Test Fixtures (`tests/fixtures/`)
 
@@ -268,6 +276,71 @@ it('should handle missing files gracefully', async () => {
 });
 ```
 
+### Testing Error Handling and Debug Logging
+
+The codebase uses a centralized error handling system with debug logging. When testing error handling:
+
+```typescript
+import { beforeEach, afterEach, vi } from 'vitest';
+
+describe('Error Handling', () => {
+  let originalEnv: string | undefined;
+
+  beforeEach(() => {
+    // Save original LOGICSTAMP_DEBUG value
+    originalEnv = process.env.LOGICSTAMP_DEBUG;
+  });
+
+  afterEach(() => {
+    // Restore original environment
+    if (originalEnv === undefined) {
+      delete process.env.LOGICSTAMP_DEBUG;
+    } else {
+      process.env.LOGICSTAMP_DEBUG = originalEnv;
+    }
+  });
+
+  it('should log errors when LOGICSTAMP_DEBUG is enabled', async () => {
+    process.env.LOGICSTAMP_DEBUG = '1';
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    // Trigger error condition
+    await extractFromFile('/invalid/path.tsx');
+
+    // Verify debug logs use correct format
+    const errorCalls = consoleErrorSpy.mock.calls;
+    if (errorCalls.length > 0) {
+      const hasDebugLog = errorCalls.some(call =>
+        call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
+        call[0]?.toString().includes('moduleName')
+      );
+      expect(hasDebugLog).toBe(true);
+    }
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('should not log errors when LOGICSTAMP_DEBUG is disabled', async () => {
+    delete process.env.LOGICSTAMP_DEBUG;
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    await extractFromFile('/invalid/path.tsx');
+
+    // Should not have logged any errors
+    expect(consoleErrorSpy).not.toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
+  });
+});
+```
+
+**Error Handling Test Patterns:**
+- All error handling tests should verify the `[LogicStamp][DEBUG] moduleName.functionName error:` format
+- Tests should check both enabled and disabled `LOGICSTAMP_DEBUG` states
+- Always restore the original environment variable in `afterEach`
+- Use `vi.spyOn(console, 'error')` to capture debug logs
+- Verify graceful fallbacks (empty arrays/objects) when errors occur
+
 ## Debugging Tests
 
 ### Running a Single Test
@@ -289,6 +362,25 @@ node --inspect-brk node_modules/.bin/vitest
 # Run with verbose output
 npm test -- --reporter=verbose
 ```
+
+### Testing with Debug Logging Enabled
+
+To test error handling with debug logging enabled:
+
+```bash
+# Enable debug logging for all tests
+LOGICSTAMP_DEBUG=1 npm test
+
+# Enable debug logging for specific test
+LOGICSTAMP_DEBUG=1 npm test -- astParser.test.ts
+```
+
+**Note:** Debug logging is controlled by the `LOGICSTAMP_DEBUG` environment variable. When set to `'1'`, error logs will be output in the format:
+```
+[LogicStamp][DEBUG] moduleName.functionName error: { context object }
+```
+
+Tests should verify this format when checking error handling behavior.
 
 ### Common Issues
 

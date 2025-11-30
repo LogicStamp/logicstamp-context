@@ -5,6 +5,7 @@
 import { SourceFile } from 'ts-morph';
 import { readFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
+import { debugError } from '../../utils/debug.js';
 
 /**
  * Parse SCSS/CSS file content to extract style information
@@ -49,9 +50,11 @@ export async function parseStyleFile(filePath: string, importPath: string): Prom
       hasMixins,
     };
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:scss] Failed to parse style file:', (error as Error).message);
-    }
+    debugError('scss', 'parseStyleFile', {
+      filePath,
+      importPath,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {
       selectors: [],
       properties: [],
@@ -118,9 +121,10 @@ export async function extractScssMetadata(source: SourceFile, filePath: string):
 
     return result;
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:scss] Failed to extract SCSS metadata:', (error as Error).message);
-    }
+    debugError('scss', 'extractScssMetadata', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {};
   }
 }

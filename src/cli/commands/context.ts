@@ -4,6 +4,7 @@
 
 import { resolve, dirname, join } from 'node:path';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { debugError } from '../../utils/debug.js';
 import { globFiles } from '../../utils/fsx.js';
 import { buildDependencyGraph } from '../../core/manifest.js';
 import type { UIFContract } from '../../types/UIFContract.js';
@@ -213,7 +214,18 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
       const outputDir = outPath.endsWith('.json') ? dirname(outPath) : outPath;
       
       // Create output directory if it doesn't exist
-      await mkdir(outputDir, { recursive: true });
+      try {
+        await mkdir(outputDir, { recursive: true });
+      } catch (error) {
+        const err = error as NodeJS.ErrnoException;
+        debugError('context', 'contextCommand', {
+          outputDir,
+          operation: 'mkdir',
+          message: err.message,
+          code: err.code,
+        });
+        throw new Error(`Failed to create output directory "${outputDir}": ${err.code === 'EACCES' ? 'Permission denied' : err.message}`);
+      }
       
       // Write comparison data to JSON file
       const compareModesPath = join(outputDir, 'context_compare_modes.json');
@@ -231,7 +243,33 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
         comparison,
       };
       
-      await writeFile(compareModesPath, JSON.stringify(compareModesData, null, 2), 'utf8');
+      try {
+        await writeFile(compareModesPath, JSON.stringify(compareModesData, null, 2), 'utf8');
+      } catch (error) {
+        const err = error as NodeJS.ErrnoException;
+        debugError('context', 'contextCommand', {
+          compareModesPath,
+          operation: 'writeFile',
+          message: err.message,
+          code: err.code,
+        });
+        
+        let userMessage: string;
+        switch (err.code) {
+          case 'ENOENT':
+            userMessage = `Parent directory not found for: "${compareModesPath}"`;
+            break;
+          case 'EACCES':
+            userMessage = `Permission denied writing to: "${compareModesPath}"`;
+            break;
+          case 'ENOSPC':
+            userMessage = `No space left on device. Cannot write: "${compareModesPath}"`;
+            break;
+          default:
+            userMessage = `Failed to write comparison data "${compareModesPath}": ${err.message}`;
+        }
+        throw new Error(userMessage);
+      }
       
       if (!options.quiet) {
         console.log(`\n📝 Written comparison data to ${displayPath(compareModesPath)}`);

@@ -5,6 +5,7 @@
 
 import { SourceFile, SyntaxKind, JsxAttribute } from 'ts-morph';
 import type { StyleMetadata, StyleSources } from '../../types/UIFContract.js';
+import { debugError } from '../../utils/debug.js';
 import { extractTailwindClasses, categorizeTailwindClasses, extractBreakpoints } from './tailwind.js';
 import { extractScssMetadata, parseStyleFile } from './scss.js';
 import { extractStyledComponents } from './styled.js';
@@ -25,27 +26,33 @@ export async function extractStyleMetadata(source: SourceFile, filePath: string)
     try {
       layout = extractLayoutMetadata(source);
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:styleExtractor] Failed to extract layout metadata:', (error as Error).message);
-      }
+      debugError('styleExtractor', 'extractStyleMetadata', {
+        filePath,
+        error: error instanceof Error ? error.message : String(error),
+        context: 'extractLayoutMetadata',
+      });
     }
 
     let visual: ReturnType<typeof extractVisualMetadata> = {};
     try {
       visual = extractVisualMetadata(source);
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:styleExtractor] Failed to extract visual metadata:', (error as Error).message);
-      }
+      debugError('styleExtractor', 'extractStyleMetadata', {
+        filePath,
+        error: error instanceof Error ? error.message : String(error),
+        context: 'extractVisualMetadata',
+      });
     }
 
     let animation: ReturnType<typeof extractAnimationMetadata> = {};
     try {
       animation = extractAnimationMetadata(source);
     } catch (error) {
-      if (process.env.LOGICSTAMP_DEBUG === '1') {
-        console.error('[logicstamp:styleExtractor] Failed to extract animation metadata:', (error as Error).message);
-      }
+      debugError('styleExtractor', 'extractStyleMetadata', {
+        filePath,
+        error: error instanceof Error ? error.message : String(error),
+        context: 'extractAnimationMetadata',
+      });
     }
 
     // Only return metadata if we found any style information
@@ -65,9 +72,10 @@ export async function extractStyleMetadata(source: SourceFile, filePath: string)
       ...(Object.keys(animation).length > 0 && { animation }),
     };
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:styleExtractor] Failed to extract style metadata:', (error as Error).message);
-    }
+    debugError('styleExtractor', 'extractStyleMetadata', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return undefined;
   }
 }
@@ -88,9 +96,11 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
       }
     }
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:styleExtractor] Failed to extract SCSS metadata:', (error as Error).message);
-    }
+    debugError('styleExtractor', 'extractStyleSources', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+      context: 'extractScssMetadata',
+    });
   }
 
   // Check for CSS module imports and parse them
@@ -114,9 +124,11 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
       }
     }
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:styleExtractor] Failed to extract CSS module metadata:', (error as Error).message);
-    }
+    debugError('styleExtractor', 'extractStyleSources', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+      context: 'extractCSSModuleMetadata',
+    });
   }
 
   // Extract Tailwind classes (using AST for better dynamic class support)
@@ -142,9 +154,11 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
       };
     }
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:styleExtractor] Failed to extract Tailwind classes:', (error as Error).message);
-    }
+    debugError('styleExtractor', 'extractStyleSources', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+      context: 'extractTailwindClasses',
+    });
   }
 
   // Check for inline styles using AST
@@ -164,9 +178,11 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
       sources.inlineStyles = true;
     }
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:styleExtractor] Failed to detect inline styles:', (error as Error).message);
-    }
+    debugError('styleExtractor', 'extractStyleSources', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+      context: 'detectInlineStyles',
+    });
   }
 
   // Check for styled-components/emotion
@@ -185,9 +201,11 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
       };
     }
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:styleExtractor] Failed to extract styled-components metadata:', (error as Error).message);
-    }
+    debugError('styleExtractor', 'extractStyleSources', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+      context: 'extractStyledComponents',
+    });
   }
 
   // Check for framer-motion
@@ -221,9 +239,11 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
       };
     }
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:styleExtractor] Failed to extract framer-motion metadata:', (error as Error).message);
-    }
+    debugError('styleExtractor', 'extractStyleSources', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+      context: 'extractFramerMotion',
+    });
   }
 
   // Check for Material UI
@@ -242,9 +262,11 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
       };
     }
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:styleExtractor] Failed to extract Material UI metadata:', (error as Error).message);
-    }
+    debugError('styleExtractor', 'extractStyleSources', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+      context: 'extractMaterialUI',
+    });
   }
 
   // Check for ShadCN/UI
@@ -269,9 +291,11 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
       };
     }
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:styleExtractor] Failed to extract ShadCN/UI metadata:', (error as Error).message);
-    }
+    debugError('styleExtractor', 'extractStyleSources', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+      context: 'extractShadcnUI',
+    });
   }
 
   // Check for Radix UI
@@ -294,9 +318,11 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
       };
     }
   } catch (error) {
-    if (process.env.LOGICSTAMP_DEBUG === '1') {
-      console.error('[logicstamp:styleExtractor] Failed to extract Radix UI metadata:', (error as Error).message);
-    }
+    debugError('styleExtractor', 'extractStyleSources', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+      context: 'extractRadixUI',
+    });
   }
 
   return sources;

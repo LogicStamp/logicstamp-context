@@ -14,6 +14,7 @@ import {
 import { parseCompareArgs } from '../parser/argumentParser.js';
 import { getCompareHelp } from '../parser/helpText.js';
 import { printFoxIcon } from './initHandler.js';
+import { debugError } from '../../utils/debug.js';
 
 /**
  * Prompt user for Y/N input (only in TTY mode)
@@ -106,7 +107,18 @@ async function handleAutoCompareMode(options: {
 
   // Create temp directory for new context generation
   const tempDir = join(tmpdir(), `context-compare-${Date.now()}`);
-  await mkdir(tempDir, { recursive: true });
+  try {
+    await mkdir(tempDir, { recursive: true });
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    debugError('compareHandler', 'handleAutoCompareMode', {
+      tempDir,
+      operation: 'mkdir',
+      message: err.message,
+      code: err.code,
+    });
+    throw new Error(`Failed to create temp directory "${tempDir}": ${err.code === 'EACCES' ? 'Permission denied' : err.message}`);
+  }
 
   if (!quiet) {
     console.log('🔄 Generating fresh context...');
@@ -168,8 +180,34 @@ async function handleAutoCompareMode(options: {
       if (shouldUpdate) {
         // Copy all new context files to current directory
         const { readFile } = await import('node:fs/promises');
-        const newIndexContent = await readFile(join(tempDir, 'context_main.json'), 'utf8');
-        const newIndex = JSON.parse(newIndexContent);
+        let newIndexContent: string;
+        const indexPath = join(tempDir, 'context_main.json');
+        
+        try {
+          newIndexContent = await readFile(indexPath, 'utf8');
+        } catch (error) {
+          const err = error as NodeJS.ErrnoException;
+          debugError('compareHandler', 'handleAutoCompareMode', {
+            indexPath,
+            operation: 'readFile',
+            message: err.message,
+            code: err.code,
+          });
+          throw new Error(`Failed to read index file "${indexPath}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`);
+        }
+        
+        let newIndex: any;
+        try {
+          newIndex = JSON.parse(newIndexContent);
+        } catch (error) {
+          const err = error as Error;
+          debugError('compareHandler', 'handleAutoCompareMode', {
+            indexPath,
+            operation: 'JSON.parse',
+            message: err.message,
+          });
+          throw new Error(`Failed to parse index file "${indexPath}": ${err.message}`);
+        }
 
         let copiedFiles = 0;
         for (const folder of newIndex.folders) {
@@ -177,8 +215,32 @@ async function handleAutoCompareMode(options: {
           const destPath = folder.contextFile;
 
           // Create parent directory if needed
-          await mkdir(dirname(destPath), { recursive: true });
-          await copyFile(srcPath, destPath);
+          try {
+            await mkdir(dirname(destPath), { recursive: true });
+          } catch (error) {
+            const err = error as NodeJS.ErrnoException;
+            debugError('compareHandler', 'handleAutoCompareMode', {
+              destPath,
+              operation: 'mkdir',
+              message: err.message,
+              code: err.code,
+            });
+            throw new Error(`Failed to create directory for "${destPath}": ${err.code === 'EACCES' ? 'Permission denied' : err.message}`);
+          }
+          
+          try {
+            await copyFile(srcPath, destPath);
+          } catch (error) {
+            const err = error as NodeJS.ErrnoException;
+            debugError('compareHandler', 'handleAutoCompareMode', {
+              srcPath,
+              destPath,
+              operation: 'copyFile',
+              message: err.message,
+              code: err.code,
+            });
+            throw new Error(`Failed to copy file from "${srcPath}" to "${destPath}": ${err.message}`);
+          }
           copiedFiles++;
           if (!quiet) {
             console.log(`   ✓ Updated ${destPath}`);
@@ -276,8 +338,33 @@ async function handleMultiFileCompareMode(options: {
         // Copy all new context files
         const { readFile, copyFile, mkdir } = await import('node:fs/promises');
         const { dirname, join } = await import('node:path');
-        const newIndexContent = await readFile(newFile, 'utf8');
-        const newIndex = JSON.parse(newIndexContent);
+        
+        let newIndexContent: string;
+        try {
+          newIndexContent = await readFile(newFile, 'utf8');
+        } catch (error) {
+          const err = error as NodeJS.ErrnoException;
+          debugError('compareHandler', 'handleMultiFileCompareMode', {
+            newFile,
+            operation: 'readFile',
+            message: err.message,
+            code: err.code,
+          });
+          throw new Error(`Failed to read index file "${newFile}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`);
+        }
+        
+        let newIndex: any;
+        try {
+          newIndex = JSON.parse(newIndexContent);
+        } catch (error) {
+          const err = error as Error;
+          debugError('compareHandler', 'handleMultiFileCompareMode', {
+            newFile,
+            operation: 'JSON.parse',
+            message: err.message,
+          });
+          throw new Error(`Failed to parse index file "${newFile}": ${err.message}`);
+        }
 
         const baseDir = dirname(oldFile);
         let copiedFiles = 0;
@@ -287,8 +374,32 @@ async function handleMultiFileCompareMode(options: {
           const destPath = join(baseDir, folder.contextFile);
 
           // Create parent directory if needed
-          await mkdir(dirname(destPath), { recursive: true });
-          await copyFile(srcPath, destPath);
+          try {
+            await mkdir(dirname(destPath), { recursive: true });
+          } catch (error) {
+            const err = error as NodeJS.ErrnoException;
+            debugError('compareHandler', 'handleMultiFileCompareMode', {
+              destPath,
+              operation: 'mkdir',
+              message: err.message,
+              code: err.code,
+            });
+            throw new Error(`Failed to create directory for "${destPath}": ${err.code === 'EACCES' ? 'Permission denied' : err.message}`);
+          }
+          
+          try {
+            await copyFile(srcPath, destPath);
+          } catch (error) {
+            const err = error as NodeJS.ErrnoException;
+            debugError('compareHandler', 'handleMultiFileCompareMode', {
+              srcPath,
+              destPath,
+              operation: 'copyFile',
+              message: err.message,
+              code: err.code,
+            });
+            throw new Error(`Failed to copy file from "${srcPath}" to "${destPath}": ${err.message}`);
+          }
           copiedFiles++;
           if (!quiet) {
             console.log(`   ✓ Updated ${folder.contextFile}`);

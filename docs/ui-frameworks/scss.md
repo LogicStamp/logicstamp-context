@@ -428,8 +428,8 @@ LOGICSTAMP_DEBUG=1 stamp context --include-style
 This will output error messages to help identify problematic files or expressions:
 
 ```
-[logicstamp:scss] Failed to parse style file: ENOENT: no such file or directory
-[logicstamp:scss] Failed to extract SCSS metadata: Cannot read property 'getText' of undefined
+[LogicStamp][DEBUG] scss.parseStyleFile error: { filePath: '/path/to/file.scss', error: 'ENOENT: no such file or directory' }
+[LogicStamp][DEBUG] scss.extractScssMetadata error: { filePath: '/path/to/file.tsx', error: 'Cannot read property \'getText\' of undefined' }
 ```
 
 ### Best Practices

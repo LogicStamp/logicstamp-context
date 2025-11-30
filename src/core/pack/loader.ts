@@ -6,19 +6,40 @@ import { readFile } from 'node:fs/promises';
 import { join, resolve, isAbsolute } from 'node:path';
 import type { UIFContract } from '../../types/UIFContract.js';
 import type { ProjectManifest } from '../manifest.js';
+import { debugError } from '../../utils/debug.js';
 
 /**
  * Load manifest from file
  */
 export async function loadManifest(basePath: string): Promise<ProjectManifest> {
   const manifestPath = join(basePath, 'logicstamp.manifest.json');
+  
+  let content: string;
   try {
-    const content = await readFile(manifestPath, 'utf8');
+    content = await readFile(manifestPath, 'utf8');
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    debugError('loader', 'loadManifest', {
+      manifestPath,
+      basePath,
+      message: err.message,
+      code: err.code,
+    });
+    throw new Error(
+      `Failed to load manifest at ${manifestPath}: ${err.code === 'ENOENT' ? 'File not found' : err.message}`
+    );
+  }
+  
+  try {
     return JSON.parse(content) as ProjectManifest;
   } catch (error) {
-    throw new Error(
-      `Failed to load manifest at ${manifestPath}: ${(error as Error).message}`
-    );
+    const err = error as Error;
+    debugError('loader', 'loadManifest', {
+      manifestPath,
+      operation: 'JSON.parse',
+      message: err.message,
+    });
+    throw new Error(`Failed to parse manifest at ${manifestPath}: ${err.message}`);
   }
 }
 

@@ -339,7 +339,8 @@ export function MyComponent() {
       const errorCalls = consoleErrorSpy.mock.calls;
       if (errorCalls.length > 0) {
         const hasDetectorLog = errorCalls.some(call =>
-          call[0]?.toString().includes('[logicstamp:detector]')
+          call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
+          call[0]?.toString().includes('detector')
         );
         expect(hasDetectorLog).toBe(true);
       }
