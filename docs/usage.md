@@ -210,7 +210,7 @@ Style metadata is included in the `style` field of each component's contract:
 
 **Note:** Style extraction adds a small token overhead to context bundles. Use `stamp context --compare-modes` to see the token impact.
 
-For detailed documentation on the style command, see [docs/cli/STYLE.md](cli/STYLE.md).
+For detailed documentation on the style command, see [docs/cli/style.md](cli/style.md).
 
 ### `stamp context validate`
 
@@ -409,7 +409,7 @@ stamp context clean ./src --all --yes
 - Clean before switching git branches
 - Remove context artifacts from a project
 
-**See also:** [CLEAN.md](./CLEAN.md) for comprehensive documentation.
+**See also:** [clean.md](./clean.md) for comprehensive documentation.
 
 ## Profiles
 

@@ -448,7 +448,7 @@ This will output error messages to help identify problematic files or expression
 
 ## Related Documentation
 
-- [Style Extraction](../cli/STYLE.md) - Complete style extraction guide
+- [Style Extraction](../cli/style.md) - Complete style extraction guide
 - [Tailwind CSS Support](./tailwind.md) - Combining with Tailwind
 - [React Support](../frameworks/react.md) - React component patterns
 

@@ -159,5 +159,5 @@ stamp context --include-style
 
 - [TypeScript Support](./typescript.md) - TypeScript-specific features
 - [Next.js Support](./nextjs.md) - Next.js framework features
-- [Style Extraction](../cli/STYLE.md) - React styling patterns
+- [Style Extraction](../cli/style.md) - React styling patterns
 

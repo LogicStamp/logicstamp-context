@@ -341,6 +341,6 @@ This will output error messages to help identify problematic files or expression
 
 - [ShadCN Support](./shadcn.md) - ShadCN is built on Radix UI
 - [Tailwind CSS Support](./tailwind.md) - Common styling approach with Radix
-- [Style Extraction](../cli/STYLE.md) - Complete style extraction guide
+- [Style Extraction](../cli/style.md) - Complete style extraction guide
 - [React Support](../frameworks/react.md) - React component patterns
 

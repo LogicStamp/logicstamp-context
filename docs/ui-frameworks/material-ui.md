@@ -462,7 +462,7 @@ function UserCard({ user }: { user: User }) {
 
 ## Related Documentation
 
-- [Style Extraction](../cli/STYLE.md) - Complete style extraction guide
+- [Style Extraction](../cli/style.md) - Complete style extraction guide
 - [React Support](../frameworks/react.md) - React component patterns
 - [TypeScript Support](../frameworks/typescript.md) - TypeScript with Material UI
 

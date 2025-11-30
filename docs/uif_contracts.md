@@ -238,7 +238,7 @@ Page-level layout metadata:
 2. Style information is detected in the component
 3. Components without any style usage will not have a `style` field
 
-See [STYLE.md](./cli/STYLE.md) for detailed documentation on style extraction.
+See [style.md](./cli/style.md) for detailed documentation on style extraction.
 
 ### `semanticHash`
 Unique hash based on the component's logic and contract. Changes when:
@@ -252,12 +252,12 @@ Does **not** change for:
 - Whitespace/formatting
 - Implementation details that don't affect the contract
 
-See [HASHES.md](./HASHES.md) for detailed information about semantic hashes.
+See [hashes.md](./hashes.md) for detailed information about semantic hashes.
 
 ### `fileHash`
 Content-based hash of the raw file. Changes for any file modification. Used to validate that a stored contract still matches the actual file.
 
-See [HASHES.md](./HASHES.md) for detailed information about file hashes.
+See [hashes.md](./hashes.md) for detailed information about file hashes.
 
 ## @uif Header Blocks
 
@@ -416,8 +416,8 @@ Each node in a bundle's dependency graph contains a contract for that component.
 
 ## See Also
 
-- [HASHES.md](./HASHES.md) – Detailed information about semantic and file hashes
-- [SCHEMA.md](./SCHEMA.md) – Complete schema reference for all LogicStamp types
-- [USAGE.md](./USAGE.md) – How to generate and use context files with contracts
-- [VALIDATE.md](./VALIDATE.md) – Contract validation guide
+- [hashes.md](./hashes.md) – Detailed information about semantic and file hashes
+- [schema.md](./schema.md) – Complete schema reference for all LogicStamp types
+- [usage.md](./usage.md) – How to generate and use context files with contracts
+- [validate.md](./cli/validate.md) – Contract validation guide
 

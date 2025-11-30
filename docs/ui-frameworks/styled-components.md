@@ -537,7 +537,7 @@ This prevents false positives from other libraries (e.g., Material-UI's `styled`
 
 ## Related Documentation
 
-- [Style Extraction](../cli/STYLE.md) - Complete style extraction guide
+- [Style Extraction](../cli/style.md) - Complete style extraction guide
 - [React Support](../frameworks/react.md) - React component patterns
 - [TypeScript Support](../frameworks/typescript.md) - TypeScript with styled-components
 

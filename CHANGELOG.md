@@ -154,8 +154,8 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 
 ### Documentation
 
-- Added comprehensive `docs/cli/STYLE.md` documentation for the style command
-- Added comprehensive `docs/cli/COMPARE-MODES.md` guide for token cost analysis
+- Added comprehensive `docs/cli/style.md` documentation for the style command
+- Added comprehensive `docs/cli/compare-modes.md` guide for token cost analysis
 - Updated all command documentation to include style command and `--include-style` flag
 - Enhanced token optimization documentation with `--compare-modes` examples
 - Added style metadata examples and use cases throughout documentation
@@ -204,14 +204,14 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 
 ### Added
 
-- **UIF Contracts documentation** - Added comprehensive `docs/UIF_CONTRACTS.md` guide explaining contract structure, semantic hashing, and contract-based change detection
+- **UIF Contracts documentation** - Added comprehensive `docs/uif_contracts.md` guide explaining contract structure, semantic hashing, and contract-based change detection
 - **Enhanced test documentation** - Improved `tests/README.md` with better structure, test categories, and usage examples
 
 ### Changed
 
 - **README.md significantly streamlined** - Reduced from 1,015 to 700 lines while preserving all essential information. Removed verbose "What's New" sections in favor of brief summaries with CHANGELOG links, condensed command documentation to quick reference tables, and streamlined output format section with links to detailed schema docs
 - **Improved token estimation accuracy** - Enhanced raw source token estimation formulas in regular output (not `--compare-modes`). When in header mode, now uses more accurate formulas to estimate raw source tokens: raw source = header / 0.30 (header is 30% of raw source), and style adds 105% overhead (header+style = header × 2.05). When in header+style mode, first estimates header without style (header = header+style / 2.05), then derives raw source from that estimate. Note: "Raw source" refers to the original source files concatenated, which is always estimated using these formulas (never actually generated). The actual context bundles (header, header+style, etc.) use tokenizers when available for accurate token counts. The `--compare-modes` flag regenerates contracts to provide accurate token counts for all modes
-- **Updated COMPARE-MODES.md documentation** - Refined examples and explanations with more accurate token savings percentages and clearer interpretation guidelines
+- **Updated compare-modes.md documentation** - Refined examples and explanations with more accurate token savings percentages and clearer interpretation guidelines
 
 ### Fixed
 

@@ -251,7 +251,7 @@ Page-level layout information:
 
 **Note:** Style metadata is only included when style information is detected. Components without style usage will not have a `style` field.
 
-See [STYLE.md](./cli/STYLE.md) for comprehensive documentation on style metadata extraction.
+See [style.md](./cli/style.md) for comprehensive documentation on style metadata extraction.
 
 ## LogicStampBundle Schema
 
@@ -527,7 +527,7 @@ All hashes in LogicStamp follow consistent formats:
 - **Based on:** Bundle structure (nodes, depth, schema version)
 - **Changes when:** Any component's semantic hash changes, or bundle structure changes
 
-See [HASHES.md](./HASHES.md) for detailed information about hash computation.
+See [hashes.md](./hashes.md) for detailed information about hash computation.
 
 ## Validation
 
@@ -580,8 +580,8 @@ This enables:
 
 ## See Also
 
-- [UIF_CONTRACTS.md](./UIF_CONTRACTS.md) – Detailed UIF contract documentation
-- [HASHES.md](./HASHES.md) – Hash computation and formats
-- [VALIDATE.md](./VALIDATE.md) – Schema validation guide
-- [USAGE.md](./USAGE.md) – How to generate context files
+- [uif_contracts.md](./uif_contracts.md) – Detailed UIF contract documentation
+- [hashes.md](./hashes.md) – Hash computation and formats
+- [validate.md](./cli/validate.md) – Schema validation guide
+- [usage.md](./usage.md) – How to generate context files
 

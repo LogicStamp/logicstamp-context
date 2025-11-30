@@ -6,7 +6,7 @@ LogicStamp Context provides specialized support for Framer Motion, extracting an
 
 LogicStamp automatically detects Framer Motion usage by:
 
-- **Package imports**: Detects imports from `framer-motion`
+- **Package imports**: Detects imports from `framer-motion` and subpath imports (e.g., `framer-motion/client`)
 - **Motion components**: Recognizes `motion.*` component patterns
 - **Animation patterns**: Identifies animation configurations and variants
 - **Gesture handlers**: Detects gesture-based interactions
@@ -504,7 +504,7 @@ function Page({ children }: { children: React.ReactNode }) {
 
 ## Related Documentation
 
-- [Style Extraction](../cli/STYLE.md) - Complete style extraction guide
+- [Style Extraction](../cli/style.md) - Complete style extraction guide
 - [React Support](../frameworks/react.md) - React component patterns
 - [Layout Patterns](./layout.md) - Layout and visual metadata
 

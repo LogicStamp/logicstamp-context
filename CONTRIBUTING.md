@@ -337,7 +337,7 @@ For manual verification, you can also test manually:
 When adding features, update:
 
 1. **README.md** - Main documentation
-2. **docs/USAGE.md** - Detailed usage guide
+2. **docs/usage.md** - Detailed usage guide
 3. **CHANGELOG.md** - Version history
 4. **CLI help text** - In `src/cli/index.ts`
 

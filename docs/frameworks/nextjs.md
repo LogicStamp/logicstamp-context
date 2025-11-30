@@ -239,5 +239,5 @@ my-nextjs-app/
 
 - [React Support](./react.md) - React component patterns
 - [TypeScript Support](./typescript.md) - TypeScript features
-- [Style Extraction](../cli/STYLE.md) - Styling with Next.js
+- [Style Extraction](../cli/style.md) - Styling with Next.js
 
