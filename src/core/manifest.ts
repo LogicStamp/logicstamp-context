@@ -61,6 +61,59 @@ export interface ProjectManifest {
 }
 
 /**
+ * Filter out internal components from dependencies
+ * Internal components are defined in the same file but not exported
+ */
+function filterInternalComponents(
+  contract: UIFContract
+): string[] {
+  // Get list of exported names from exports field
+  const exportedNames = new Set<string>();
+  let hasExportsList = false;
+  
+  if (contract.exports) {
+    if (contract.exports === 'default') {
+      // Default export - we can't determine the specific name from exports field alone
+      // Be conservative: don't filter anything
+      hasExportsList = false;
+    } else if (contract.exports === 'named') {
+      // Single named export - we can't determine the specific name from 'named' alone
+      // Be conservative: don't filter anything
+      hasExportsList = false;
+    } else if (typeof contract.exports === 'object' && contract.exports.named) {
+      // Multiple named exports - we have the explicit list
+      contract.exports.named.forEach(name => exportedNames.add(name));
+      hasExportsList = true;
+    }
+  }
+
+  // Only filter if we have an explicit exports list
+  // A component is internal if:
+  // 1. It appears in version.functions (defined in this file as a function component), AND
+  // 2. It's not in the exported names list
+  if (!hasExportsList) {
+    // Can't determine internal components without explicit exports list
+    return contract.version.components;
+  }
+
+  const internalComponents = new Set<string>();
+  const functionsSet = new Set(contract.version.functions);
+  
+  for (const component of contract.version.components) {
+    // If component name matches a function in this file, it's likely a function component
+    if (functionsSet.has(component)) {
+      // If it's not in the exported names list, it's internal
+      if (!exportedNames.has(component)) {
+        internalComponents.add(component);
+      }
+    }
+  }
+
+  // Return only external components (those not in internalComponents)
+  return contract.version.components.filter(comp => !internalComponents.has(comp));
+}
+
+/**
  * Build dependency graph from contracts
  */
 export function buildDependencyGraph(
@@ -77,10 +130,13 @@ export function buildDependencyGraph(
     const structHash = structureHash(contract.version);
     const sigHash = signatureHash(contract.logicSignature);
 
+    // Filter out internal components from dependencies
+    const externalDependencies = filterInternalComponents(contract);
+
     components[contract.entryId] = {
       entryId: contract.entryId,
       description: contract.description,
-      dependencies: contract.version.components,
+      dependencies: externalDependencies,
       usedBy: [],
       imports: contract.version.imports || [],
       routes: contract.usedIn || [],
@@ -94,8 +150,11 @@ export function buildDependencyGraph(
   for (const contract of contracts) {
     const componentId = contract.entryId;
 
-    // For each component this one uses
-    for (const dependency of contract.version.components) {
+    // Use filtered dependencies (excluding internal components) for consistency
+    const externalDependencies = filterInternalComponents(contract);
+
+    // For each external component this one uses
+    for (const dependency of externalDependencies) {
       // Find the matching component in our graph
       const depNode = findComponentByName(components, dependency);
 

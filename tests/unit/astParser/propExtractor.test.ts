@@ -114,15 +114,24 @@ describe('Prop Extractor', () => {
     });
 
     it('should handle optional types', () => {
-      // For common types (string, number, boolean), when optional, 
-      // the function returns simple string for backward compatibility
+      // For all optional types, the function returns an object with optional flag
+      // This preserves the optional information in the JSON output
       const result = normalizePropType('string', true);
-      expect(result).toBe('string');
+      expect(result).toHaveProperty('type', 'string');
+      expect(result).toHaveProperty('optional', true);
       
-      // For non-common types, it returns an object with optional flag
-      const result2 = normalizePropType('User', true);
-      expect(result2).toHaveProperty('type', 'User');
+      const result2 = normalizePropType('number', true);
+      expect(result2).toHaveProperty('type', 'number');
       expect(result2).toHaveProperty('optional', true);
+      
+      const result3 = normalizePropType('boolean', true);
+      expect(result3).toHaveProperty('type', 'boolean');
+      expect(result3).toHaveProperty('optional', true);
+      
+      // For non-common types, it also returns an object with optional flag
+      const result4 = normalizePropType('User', true);
+      expect(result4).toHaveProperty('type', 'User');
+      expect(result4).toHaveProperty('optional', true);
     });
 
     it('should normalize literal unions', () => {

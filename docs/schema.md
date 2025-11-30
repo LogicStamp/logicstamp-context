@@ -35,6 +35,7 @@ interface UIFContract {
     events: Record<string, EventSignature>;
     state: Record<string, StateSignature>;
   };
+  exports?: "default" | "named" | { named: string[] };  // Optional export metadata
   style?: StyleMetadata;  // Optional style metadata (when --include-style is used)
   semanticHash: string; // Format: "uif:..." (24 hex chars)
   fileHash: string;     // Format: "uif:..." (24 hex chars)
@@ -194,6 +195,7 @@ interface PageLayoutMetadata {
 | `logicSignature.props` | `object` | ✅ | Component props |
 | `logicSignature.events` | `object` | ✅ | Component events |
 | `logicSignature.state` | `object` | ✅ | Component state |
+| `exports` | `string \| object` | ❌ | Export metadata: `"default"`, `"named"`, or `{ named: string[] }` |
 | `style` | `StyleMetadata` | ❌ | Style metadata (only when `--include-style` is used) |
 | `semanticHash` | `string` | ✅ | Logic-based hash (uif:...) |
 | `fileHash` | `string` | ✅ | Content-based hash (uif:...) |
@@ -275,7 +277,7 @@ interface LogicStampBundle {
   };
   meta: {
     missing: MissingDependency[];
-    source: string;  // Tool version (e.g., "logicstamp-context@0.2.5")
+    source: string;  // Tool version (e.g., "logicstamp-context@0.2.6")
   };
 }
 
@@ -334,6 +336,7 @@ interface MissingDependency {
             "events": {},
             "state": {}
           },
+          "exports": "default",
           "semanticHash": "uif:1a27d0944bbaaf561ee05a01",
           "fileHash": "uif:1f0fa0e2c8958d7fc1696036",
           "style": {
@@ -380,7 +383,7 @@ interface MissingDependency {
         "referencedBy": "src/components/Button.tsx"
       }
     ],
-    "source": "logicstamp-context@0.2.5"
+    "source": "logicstamp-context@0.2.6"
   }
 }
 ```
@@ -475,7 +478,7 @@ interface FolderEntry {
     }
   ],
   "meta": {
-    "source": "logicstamp-context@0.2.5"
+    "source": "logicstamp-context@0.2.6"
   }
 }
 ```

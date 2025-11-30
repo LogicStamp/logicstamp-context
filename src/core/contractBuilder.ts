@@ -54,30 +54,23 @@ export interface ContractBuildResult {
 
 /**
  * Extract export metadata from AST
+ * Uses the export metadata extracted directly from the source file
  */
 function extractExportsMetadata(ast: AstExtract): ExportMetadata | undefined {
-  // Check if we have any exports at all
-  if (!ast.functions || ast.functions.length === 0) {
-    return undefined;
+  // Use the export metadata extracted from the AST if available
+  if (ast.exports !== undefined) {
+    return ast.exports;
   }
 
-  // Check for default export in the component name
-  const hasDefaultExport = ast.functions.some(fn => fn.toLowerCase() === 'default');
-
-  // If we have only one function and it matches the file name, assume default export
-  const isLikelyDefault = ast.functions.length === 1 && !hasDefaultExport;
-
-  if (hasDefaultExport || isLikelyDefault) {
-    return 'default';
+  // Fallback: if no exports metadata but we have exported functions, infer from them
+  if (ast.exportedFunctions && ast.exportedFunctions.length > 0) {
+    if (ast.exportedFunctions.length === 1) {
+      return 'named';
+    }
+    return { named: ast.exportedFunctions };
   }
 
-  // If multiple exports or clear named exports
-  if (ast.functions.length > 1) {
-    return { named: ast.functions };
-  }
-
-  // Single named export
-  return { named: ast.functions };
+  return undefined;
 }
 
 /**

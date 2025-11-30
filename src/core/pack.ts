@@ -48,6 +48,73 @@ const pkg = require('../../package.json');
 const PACKAGE_VERSION = `${pkg.name}@${pkg.version}`;
 
 /**
+ * Check if a component name is an internal component (function defined in the same file)
+ * Internal components appear in both version.functions and version.components of a contract
+ */
+function isInternalComponent(contract: UIFContract, componentName: string): boolean {
+  const functionsSet = new Set(contract.version.functions);
+  const componentsSet = new Set(contract.version.components);
+  
+  // A component is internal if it appears in both functions and components arrays
+  // This means it's a function component defined in the same file
+  return functionsSet.has(componentName) && componentsSet.has(componentName);
+}
+
+/**
+ * Filter out internal components from missing dependencies
+ * Internal components should not appear in meta.missing since they're defined in the same file
+ * Only checks contracts that are already loaded to avoid I/O overhead
+ */
+function filterInternalComponentsFromMissing(
+  missing: MissingDependency[],
+  nodes: BundleNode[],
+  contractsMap: Map<string, UIFContract> | undefined
+): MissingDependency[] {
+  // Build a map of entryId -> contract for quick lookup
+  // Only use contracts we already have (no I/O to avoid timeouts)
+  const contractMap = new Map<string, UIFContract>();
+  
+  // Add contracts from nodes (already loaded)
+  for (const node of nodes) {
+    if (node.contract) {
+      contractMap.set(node.entryId, node.contract);
+    }
+  }
+  
+  // Add contracts from contractsMap (in-memory)
+  if (contractsMap) {
+    for (const [key, contract] of contractsMap.entries()) {
+      contractMap.set(key, contract);
+    }
+  }
+  
+  // Filter missing dependencies
+  const filtered: MissingDependency[] = [];
+  
+  for (const dep of missing) {
+    // If referencedBy is not set, we can't check if it's internal - keep it
+    if (!dep.referencedBy) {
+      filtered.push(dep);
+      continue;
+    }
+    
+    // Only check contracts we already have loaded (no I/O)
+    const contract = contractMap.get(dep.referencedBy);
+    
+    // If we have the contract, check if the dependency is an internal component
+    if (contract && isInternalComponent(contract, dep.name)) {
+      // This is an internal component - skip it (don't add to filtered)
+      continue;
+    }
+    
+    // Not an internal component (or contract not available) - keep it
+    filtered.push(dep);
+  }
+  
+  return filtered;
+}
+
+/**
  * Code inclusion mode for bundles
  */
 export type CodeInclusionMode = 'none' | 'header' | 'full';
@@ -317,6 +384,15 @@ export async function pack(
     );
   }
 
+  // Filter out internal components from missing dependencies
+  // Internal components are functions defined in the same file that are used as components
+  // Only uses contracts already loaded to avoid I/O overhead
+  const filteredMissing = filterInternalComponentsFromMissing(
+    missing,
+    nodes,
+    options.contractsMap
+  );
+
   // Build edges
   const edges = buildEdges(nodes, manifest);
 
@@ -345,7 +421,7 @@ export async function pack(
       edges: sortedEdges,
     },
     meta: {
-      missing,
+      missing: filteredMissing,
       source: PACKAGE_VERSION,
     },
   };
