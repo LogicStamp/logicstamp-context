@@ -44,6 +44,28 @@ describe('Styled Components Extractor', () => {
       expect(result.components).toContain('Button');
     });
 
+    it('should extract styled component with string literal', () => {
+      const sourceCode = `
+        import styled from 'styled-components';
+        
+        const Box = styled('div')\`
+          padding: 1rem;
+        \`;
+        
+        const Wrapper = styled("section")\`
+          margin: 1rem;
+        \`;
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      const result = extractStyledComponents(sourceFile);
+
+      expect(result.components).toContain('div');
+      expect(result.components).toContain('section');
+    });
+
     it('should detect theme usage', () => {
       const sourceCode = `
         import styled from 'styled-components';

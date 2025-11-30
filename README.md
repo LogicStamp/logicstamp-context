@@ -4,7 +4,7 @@
   <img src="https://raw.githubusercontent.com/LogicStamp/logicstamp-context/main/assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="120" height="120">
 </div>
 
-![Version](https://img.shields.io/badge/version-0.2.4-blue.svg)
+![Version](https://img.shields.io/badge/version-0.2.5-blue.svg)
 ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
@@ -32,7 +32,7 @@ That's it! LogicStamp Context will scan your project and generate `context.json`
 ![LogicStamp Context in action](https://raw.githubusercontent.com/LogicStamp/logicstamp-context/main/assets/demo-screenshot.png)
 *Sample stamp context output with generated bundles*
 
-> **Note:** This is a beta release (v0.2.4). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+> **Note:** This is a beta release (v0.2.5). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 ## Why LogicStamp?
 
@@ -81,7 +81,7 @@ LogicStamp Context generates structured JSON contracts for each component:
 }
 ```
 
-📋 **See [docs/SCHEMA.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/SCHEMA.md) for complete output format documentation**
+📋 **See [docs/schema.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/schema.md) for complete output format documentation**
 
 ## Installation
 
@@ -97,12 +97,16 @@ After installation, the `stamp` command will be available globally.
 
 ## Recent Updates
 
+**v0.2.5**
+- ShadCN/UI and Radix UI style extraction
+- Enhanced debug logging and error handling
+- Model name corrections (GPT-4o-mini → GPT-4o)
+- Documentation consistency improvements
+
 **v0.2.4**
 - Material UI style extraction
 - Improved global CLI installation docs
 - Refined README and docs structure
-
-**v0.2.3**
 - Streamlined README
 - Improved token estimation
 - UIF Contracts documentation
@@ -126,12 +130,12 @@ stamp context clean [path] [options]  # Remove generated files
 
 | Command | Description | Docs |
 |---------|-------------|------|
-| `stamp init` | Initialize project (`.gitignore`, `LLM_CONTEXT.md`, config) | [INIT.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/INIT.md) |
-| `stamp context` | Generate AI-ready context bundles organized by folder | [CONTEXT.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/CONTEXT.md) |
-| `stamp context style` | Generate context with style metadata (Tailwind, SCSS, etc.) | [STYLE.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/STYLE.md) |
-| `stamp context compare` | Compare context files to detect changes (CI-friendly) | [COMPARE.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/COMPARE.md) |
-| `stamp context validate` | Validate context file schema and structure | [VALIDATE.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/VALIDATE.md) |
-| `stamp context clean` | Remove all generated context artifacts | [CLEAN.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/CLEAN.md) |
+| `stamp init` | Initialize project (`.gitignore`, `LLM_CONTEXT.md`, config) | [init.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/init.md) |
+| `stamp context` | Generate AI-ready context bundles organized by folder | [context.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/context.md) |
+| `stamp context style` | Generate context with style metadata (Tailwind, SCSS, etc.) | [style.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/style.md) |
+| `stamp context compare` | Compare context files to detect changes (CI-friendly) | [compare.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/compare.md) |
+| `stamp context validate` | Validate context file schema and structure | [validate.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/validate.md) |
+| `stamp context clean` | Remove all generated context artifacts | [clean.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/clean.md) |
 
 ### Common Options
 
@@ -146,17 +150,17 @@ stamp context clean [path] [options]  # Remove generated files
 - `--out <path>` / `-o` - Output directory or file path
 - `--quiet` / `-q` - Suppress verbose output
 
-📋 **See [docs/cli/COMMANDS.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/COMMANDS.md) for complete option reference**
+📋 **See [docs/cli/commands.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/commands.md) for complete option reference**
 
 ## Documentation
 
-- **[Usage Guide](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/USAGE.md)** — Complete usage documentation with examples
-- **[Token Optimization](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/USAGE.md#token-cost-comparison)** — Understand token costs and savings
-- **[Mode Comparison](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/COMPARE-MODES.md)** — Detailed comparison across all modes
-- **[Output Format](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/SCHEMA.md)** — Complete schema documentation
-- **[CI Integration](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/USAGE.md#cicd-integration)** — CI/CD workflows and validation
-- **[Troubleshooting](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/USAGE.md#troubleshooting)** — Common issues and solutions
-- **[UIF Contracts](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/UIF_CONTRACTS.md)** — Understanding component contracts
+- **[Usage Guide](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md)** — Complete usage documentation with examples
+- **[Token Optimization](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md#token-cost-comparison)** — Understand token costs and savings
+- **[Mode Comparison](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/compare-modes.md)** — Detailed comparison across all modes
+- **[Output Format](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/schema.md)** — Complete schema documentation
+- **[CI Integration](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md#cicd-integration)** — CI/CD workflows and validation
+- **[Troubleshooting](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md#troubleshooting)** — Common issues and solutions
+- **[UIF Contracts](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/uif_contracts.md)** — Understanding component contracts
 
 ## Need Help?
 

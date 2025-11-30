@@ -5,6 +5,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolve, join, dirname } from 'node:path';
 import type { LogicStampBundle, LogicStampIndex } from '../../core/pack.js';
+import { debugError } from '../../utils/debug.js';
 
 /**
  * Normalize path for display (convert backslashes to forward slashes)
@@ -138,8 +139,21 @@ export interface MultiFileValidationResult {
  * Load LogicStampIndex from file
  */
 async function loadIndex(indexPath: string): Promise<LogicStampIndex> {
+  let content: string;
+  
   try {
-    const content = await readFile(indexPath, 'utf8');
+    content = await readFile(indexPath, 'utf8');
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    debugError('validate', 'loadIndex', {
+      indexPath,
+      message: err.message,
+      code: err.code,
+    });
+    throw new Error(`Failed to load index from ${indexPath}: ${err.code === 'ENOENT' ? 'File not found' : err.message}`);
+  }
+  
+  try {
     const index = JSON.parse(content) as LogicStampIndex;
 
     if (index.type !== 'LogicStampIndex') {
@@ -148,7 +162,12 @@ async function loadIndex(indexPath: string): Promise<LogicStampIndex> {
 
     return index;
   } catch (error) {
-    throw new Error(`Failed to load index from ${indexPath}: ${(error as Error).message}`);
+    const err = error as Error;
+    debugError('validate', 'loadIndex', {
+      indexPath,
+      message: err.message,
+    });
+    throw new Error(`Failed to load index from ${indexPath}: ${err.message}`);
   }
 }
 
@@ -156,9 +175,31 @@ async function loadIndex(indexPath: string): Promise<LogicStampIndex> {
  * Validate a single context file and return results
  */
 async function validateContextFile(contextPath: string): Promise<ValidationResult> {
-  const content = await readFile(contextPath, 'utf8');
-  const bundles = JSON.parse(content) as LogicStampBundle[];
-  return validateBundles(bundles);
+  let content: string;
+  
+  try {
+    content = await readFile(contextPath, 'utf8');
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    debugError('validate', 'validateContextFile', {
+      contextPath,
+      message: err.message,
+      code: err.code,
+    });
+    throw new Error(`Failed to read context file "${contextPath}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`);
+  }
+  
+  try {
+    const bundles = JSON.parse(content) as LogicStampBundle[];
+    return validateBundles(bundles);
+  } catch (error) {
+    const err = error as Error;
+    debugError('validate', 'validateContextFile', {
+      contextPath,
+      message: err.message,
+    });
+    throw new Error(`Failed to parse context file "${contextPath}": ${err.message}`);
+  }
 }
 
 /**
@@ -297,7 +338,18 @@ export async function validateCommand(filePath?: string, quiet?: boolean): Promi
 
     try {
       // Try to read context_main.json
-      await readFile(mainIndexPath, 'utf8');
+      try {
+        await readFile(mainIndexPath, 'utf8');
+      } catch (error) {
+        const err = error as NodeJS.ErrnoException;
+        // Only log in debug mode, this is expected to fail sometimes
+        debugError('validate', 'validateCommand', {
+          mainIndexPath,
+          message: err.message,
+          code: err.code,
+        });
+        throw error;
+      }
 
       // Multi-file mode - validate all context files
       if (!quiet) {
@@ -338,8 +390,31 @@ export async function validateCommand(filePath?: string, quiet?: boolean): Promi
       console.log(`🔍 Validating "${displayPath(path)}"...`);
     }
 
-    const content = await readFile(path, 'utf8');
-    const bundles = JSON.parse(content) as LogicStampBundle[];
+    let content: string;
+    try {
+      content = await readFile(path, 'utf8');
+    } catch (error) {
+      const err = error as NodeJS.ErrnoException;
+      debugError('validate', 'validateCommand', {
+        path,
+        message: err.message,
+        code: err.code,
+      });
+      // Error handling continues below in the catch block
+      throw error;
+    }
+    
+    let bundles: LogicStampBundle[];
+    try {
+      bundles = JSON.parse(content) as LogicStampBundle[];
+    } catch (error) {
+      const err = error as Error;
+      debugError('validate', 'validateCommand', {
+        path,
+        message: err.message,
+      });
+      throw error;
+    }
 
     // Basic validation
     if (!Array.isArray(bundles)) {

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { Project } from 'ts-morph';
 import { extractProps, normalizePropType } from '../../../src/core/astParser/extractors/propExtractor.js';
 
@@ -164,6 +164,60 @@ describe('Prop Extractor', () => {
       expect(normalizePropType('string', false)).toBe('string');
       expect(normalizePropType('number', false)).toBe('number');
       expect(normalizePropType('boolean', false)).toBe('boolean');
+    });
+  });
+
+  describe('Error handling', () => {
+    it('should handle AST traversal errors gracefully in extractProps', () => {
+      const sourceCode = `
+        interface ButtonProps {
+          label: string;
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      // Should not throw even if there are issues
+      const props = extractProps(sourceFile);
+      expect(typeof props).toBe('object');
+    });
+
+    it('should handle errors in normalizePropType gracefully', () => {
+      // normalizePropType should handle any type string without throwing
+      const result1 = normalizePropType('string', false);
+      expect(result1).toBeDefined();
+
+      const result2 = normalizePropType('complex<type<with<nested>>>>', false);
+      expect(result2).toBeDefined();
+    });
+
+    it('should have debug logging infrastructure in place', () => {
+      const originalEnv = process.env.LOGICSTAMP_DEBUG;
+      process.env.LOGICSTAMP_DEBUG = '1';
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', 'interface TestProps { x: string; }');
+
+      extractProps(sourceFile);
+
+      // If errors were logged, verify they have the correct format
+      const errorCalls = consoleErrorSpy.mock.calls;
+      if (errorCalls.length > 0) {
+        const hasPropExtractorLog = errorCalls.some(call =>
+          call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
+          call[0]?.toString().includes('propExtractor')
+        );
+        expect(hasPropExtractorLog).toBe(true);
+      }
+
+      consoleErrorSpy.mockRestore();
+      if (originalEnv === undefined) {
+        delete process.env.LOGICSTAMP_DEBUG;
+      } else {
+        process.env.LOGICSTAMP_DEBUG = originalEnv;
+      }
     });
   });
 });

@@ -30,6 +30,7 @@
 
 import { Project, SyntaxKind, SourceFile, Node } from 'ts-morph';
 import type { LogicSignature, ContractKind, PropType, EventType, NextJSMetadata } from '../types/UIFContract.js';
+import { debugError } from '../utils/debug.js';
 import { extractComponents, extractHooks } from './astParser/extractors/componentExtractor.js';
 import { extractProps } from './astParser/extractors/propExtractor.js';
 import { extractState, extractVariables } from './astParser/extractors/stateExtractor.js';
@@ -50,40 +51,90 @@ export interface AstExtract {
   nextjs?: NextJSMetadata;
 }
 
+/**
+ * Safe extraction wrapper that catches errors and logs them
+ */
+function safeExtract<T>(
+  label: string,
+  filePath: string,
+  extractor: () => T,
+  fallback: T
+): T {
+  try {
+    return extractor();
+  } catch (error) {
+    debugError('astParser', 'safeExtract', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+      context: label,
+    });
+    return fallback;
+  }
+}
 
 /**
  * Extract all structural information from a TypeScript/React file
+ * Returns empty AST on parsing errors to prevent crashes
  */
 export async function extractFromFile(filePath: string): Promise<AstExtract> {
-  const project = new Project({
-    skipAddingFilesFromTsConfig: true,
-    compilerOptions: {
-      jsx: 1, // React JSX
-      target: 99, // ESNext
-    },
-  });
+  try {
+    const project = new Project({
+      skipAddingFilesFromTsConfig: true,
+      compilerOptions: {
+        jsx: 1, // React JSX
+        target: 99, // ESNext
+      },
+    });
 
-  const source = project.addSourceFileAtPath(filePath);
+    const source = project.addSourceFileAtPath(filePath);
+    const resolvedPath = source.getFilePath?.() ?? filePath;
 
-  // Extract basic data first
-  const hooks = extractHooks(source);
-  const components = extractComponents(source);
-  const imports = extractImports(source);
-  const nextjs = extractNextJsMetadata(source, filePath);
+    // Extract basic data first - wrap each extraction in try-catch for resilience
+    const hooks = safeExtract('hooks', resolvedPath, () => extractHooks(source), []);
+    const components = safeExtract('components', resolvedPath, () => extractComponents(source), []);
+    const imports = safeExtract('imports', resolvedPath, () => extractImports(source), []);
+    const nextjs = safeExtract('nextjs', resolvedPath, () => extractNextJsMetadata(source, filePath), undefined);
+    const variables = safeExtract('variables', resolvedPath, () => extractVariables(source), []);
+    const functions = safeExtract('functions', resolvedPath, () => extractFunctions(source), []);
+    const props = safeExtract('props', resolvedPath, () => extractProps(source), {});
+    const state = safeExtract('state', resolvedPath, () => extractState(source), {});
+    const emits = safeExtract('events', resolvedPath, () => extractEvents(source), {});
+    const jsxRoutes = safeExtract('jsxRoutes', resolvedPath, () => extractJsxRoutes(source), []);
+    const kind = safeExtract('kind', resolvedPath, () => detectKind(hooks, components, imports, filePath, source), 'ts:module' as ContractKind);
 
-  return {
-    kind: detectKind(hooks, components, imports, filePath, source),
-    variables: extractVariables(source),
-    hooks,
-    components,
-    functions: extractFunctions(source),
-    props: extractProps(source),
-    state: extractState(source),
-    emits: extractEvents(source),
-    imports,
-    jsxRoutes: extractJsxRoutes(source),
-    ...(nextjs && { nextjs }),
-  };
+    return {
+      kind,
+      variables,
+      hooks,
+      components,
+      functions,
+      props,
+      state,
+      emits,
+      imports,
+      jsxRoutes,
+      ...(nextjs && { nextjs }),
+    };
+  } catch (error) {
+    debugError('astParser', 'extractFromFile', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    // Return empty AST on parsing errors instead of crashing
+    // Callers should check if the result is meaningful before using it
+    return {
+      kind: 'ts:module',
+      variables: [],
+      hooks: [],
+      components: [],
+      functions: [],
+      props: {},
+      state: {},
+      emits: {},
+      imports: [],
+      jsxRoutes: [],
+    };
+  }
 }
 
 

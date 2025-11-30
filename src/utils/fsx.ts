@@ -30,6 +30,7 @@
 import { glob } from 'glob';
 import { readFile, unlink, stat } from 'node:fs/promises';
 import { resolve, relative, join, normalize, isAbsolute } from 'node:path';
+import { debugError } from './debug.js';
 
 export interface FileWithText {
   path: string;
@@ -55,7 +56,9 @@ export async function globFiles(
 
   const files: string[] = [];
 
+  try {
   for (const pattern of patterns) {
+      try {
     const matches = await glob(pattern, {
       cwd: searchPath,
       absolute: true,
@@ -73,29 +76,93 @@ export async function globFiles(
     });
 
     files.push(...matches);
+      } catch (error) {
+        const err = error as Error;
+        debugError('fsx', 'globFiles inner pattern', {
+          pattern,
+          searchPath,
+          message: err.message,
+        });
+        throw new Error(
+          `Failed to glob pattern "${pattern}" in "${searchPath}": ${err.message}`
+        );
+      }
   }
 
   // Remove duplicates and sort
   return [...new Set(files)].sort();
+  } catch (error) {
+    const err = error as Error;
+    debugError('fsx', 'globFiles', {
+      searchPath,
+      extensions,
+      message: err.message,
+    });
+    throw err;
+  }
 }
 
 /**
  * Read file and return path + content
  */
 export async function readFileWithText(filePath: string): Promise<FileWithText> {
+  try {
   const text = await readFile(filePath, 'utf8');
   return { path: filePath, text };
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    debugError('fsx', 'readFileWithText', {
+      filePath,
+      code: err.code,
+      message: err.message,
+    });
+    
+    // Provide user-friendly error messages based on errno
+    let userMessage: string;
+    switch (err.code) {
+      case 'ENOENT':
+        userMessage = `File not found: "${filePath}"`;
+        break;
+      case 'EACCES':
+        userMessage = `Permission denied: "${filePath}"`;
+        break;
+      case 'EISDIR':
+        userMessage = `Path is a directory, not a file: "${filePath}"`;
+        break;
+      case 'EMFILE':
+        userMessage = `Too many open files. Cannot read: "${filePath}"`;
+        break;
+      case 'ENFILE':
+        userMessage = `System limit reached. Cannot read: "${filePath}"`;
+        break;
+      default:
+        userMessage = `Failed to read file "${filePath}": ${err.message}`;
+    }
+    
+    throw new Error(userMessage);
+  }
 }
 
 /**
  * Find all sidecar files (*.uif.json) in a directory
+ * Returns empty array if glob fails (sidecars are optional)
  */
 export async function findSidecarFiles(searchPath: string): Promise<string[]> {
-  return glob('**/*.uif.json', {
+  try {
+    return await glob('**/*.uif.json', {
     cwd: searchPath,
     absolute: true,
     ignore: ['**/node_modules/**', '**/dist/**', '**/build/**'],
   });
+  } catch (error) {
+    const err = error as Error;
+    debugError('fsx', 'findSidecarFiles', {
+      searchPath,
+      message: err.message,
+    });
+    // Sidecars are optional → safe fallback
+    return [];
+  }
 }
 
 /**
@@ -133,7 +200,12 @@ export async function fileExists(filePath: string): Promise<boolean> {
   try {
     await stat(filePath);
     return true;
-  } catch {
+  } catch (error) {
+    const err = error as Error;
+    debugError('fsx', 'fileExists', {
+      filePath,
+      message: err.message,
+    });
     return false;
   }
 }
@@ -189,8 +261,7 @@ export function getFolderPath(filePath: string): string {
  * Group files by their containing folder
  * Returns a Map of folderPath -> array of file paths
  */
-export function groupFilesByFolder(files: string[], projectRoot: string): Map<string, string[]> {
-  const normalizedRoot = normalizeEntryId(projectRoot);
+export function groupFilesByFolder(files: string[]): Map<string, string[]> {
   const folderMap = new Map<string, string[]>();
 
   for (const file of files) {

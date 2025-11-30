@@ -46,10 +46,11 @@ Identifies which styling approaches are used in each component:
 
 - **Inline Styles** – Detects `style={{...}}` usage
 
-- **styled-components/Emotion** – Identifies:
-  - Styled component declarations
-  - Theme usage
-  - CSS prop usage
+- **styled-components/Emotion** – Identifies (via AST-based extraction):
+  - Styled component declarations (`styled.div`, `styled(Component)`, `styled('div')`)
+  - Theme usage (`props.theme`, `useTheme()` hook)
+  - CSS prop usage (Emotion)
+  - Precise import verification (only matches styled-components/Emotion, not MUI styled)
 
 - **framer-motion** – Detects:
   - Motion components (motion.div, motion.button, etc.)
@@ -67,24 +68,60 @@ Identifies which styling approaches are used in each component:
   - makeStyles (legacy styling)
   - System props on Box/Stack components
 
+- **ShadCN/UI** – Detects:
+  - ShadCN/UI components used (Button, Card, Dialog, Sheet, etc.)
+  - Component imports from typical ShadCN paths (@/components/ui/*, ~/components/ui/*, etc.)
+  - Variant prop usage (default, destructive, outline, secondary, etc.)
+  - Size prop usage (sm, lg, icon, etc.)
+  - Form integration (react-hook-form)
+  - Theme usage (next-themes, dark mode)
+  - Icon library usage (lucide-react, @radix-ui/react-icons, react-icons)
+  - Component density (low, medium, high based on component count)
+
+- **Radix UI** – Detects:
+  - Radix UI primitives used (Dialog, Popover, DropdownMenu, etc.)
+  - Package imports (@radix-ui/react-*)
+  - Controlled vs uncontrolled component patterns
+  - Portal usage for overlays
+  - asChild composition pattern
+  - Accessibility features (RTL/LTR support, focus management, keyboard navigation, modal dialogs)
+  - Composition depth (simple, moderate, complex)
+
 ### 2. Layout Metadata
 
-Extracts structural layout information:
+Extracts structural layout information using AST-based analysis:
 
-- **Layout Type** – Identifies flex or grid layouts
-- **Grid Patterns** – Extracts column configurations (e.g., "grid-cols-2 md:grid-cols-3")
+- **Layout Type** – Identifies flex or grid layouts (grid takes precedence if both are present)
+  - Handles variant-prefixed classes: `md:flex`, `lg:grid`
+  - Supports dynamic className expressions: `className={cn('flex')}`, `className={`grid ${cols}`}`
+- **Grid Patterns** – Extracts column configurations (e.g., "2 3" from "grid-cols-2 md:grid-cols-3")
+  - Works with variant-prefixed classes: `md:grid-cols-3`
 - **Hero Patterns** – Detects hero sections (large text + CTA buttons)
+  - Recognizes variant-prefixed text sizes: `md:text-5xl`
 - **Feature Cards** – Identifies grid layouts with card-like elements
-- **Responsive Breakpoints** – Lists all breakpoints used (sm, md, lg, etc.)
+  - Detects card patterns with variant prefixes: `md:rounded-xl`, `lg:shadow-lg`
 
 ### 3. Visual Metadata
 
-Captures visual design patterns:
+Captures visual design patterns using AST-based extraction:
 
 - **Color Palette** – Extracts color classes (bg-*, text-*, border-*)
+  - Handles variant prefixes: `md:bg-blue-500`, `dark:text-slate-50`
+  - Supports dynamic className expressions
 - **Spacing Patterns** – Identifies padding and margin utilities used
+  - Supports all Tailwind spacing formats:
+    - Integer values: `p-4`, `m-2`
+    - Fractional values: `p-1.5`, `px-0.5`
+    - Named values: `p-px`, `m-auto`
+    - Arbitrary values: `p-[2px]`, `m-[1rem]`
+    - Negative spacing: `-mt-2`, `-p-4`
+  - Handles variant prefixes: `lg:px-4`, `sm:m-2`, `md:-mt-2`
 - **Border Radius** – Detects rounded corner patterns
+  - Stores token value (e.g., "lg" from "rounded-lg")
+  - Handles variant prefixes: `md:rounded-xl`
+  - Valid values: "default", "sm", "md", "lg", "xl", "2xl", "3xl", "full"
 - **Typography** – Extracts text size and font weight classes
+  - Handles variant prefixes: `sm:text-lg`
 
 ### 4. Animation Metadata
 
@@ -183,6 +220,39 @@ Style metadata is included in the `style` field of each component's contract wit
           "usesSxProp": true,
           "usesSystemProps": true
         }
+      },
+      "shadcnUI": {
+        "components": ["Button", "Card", "Dialog"],
+        "variants": {
+          "button": ["default", "outline"],
+          "badge": ["secondary"]
+        },
+        "sizes": ["sm", "lg"],
+        "features": {
+          "usesForm": true,
+          "usesTheme": true,
+          "usesIcons": true,
+          "componentDensity": "medium"
+        }
+      },
+      "radixUI": {
+        "primitives": {
+          "react-dialog": ["Dialog", "DialogTrigger", "DialogContent"],
+          "react-popover": ["Popover", "PopoverTrigger"]
+        },
+        "patterns": {
+          "controlled": ["Dialog"],
+          "portals": 2,
+          "asChild": 1
+        },
+        "accessibility": {
+          "usesFocusManagement": true,
+          "usesModal": true
+        },
+        "features": {
+          "primitiveCount": 5,
+          "compositionDepth": "moderate"
+        }
       }
     },
     "layout": {
@@ -218,24 +288,42 @@ Object containing detected styling approaches:
 - `styledComponents` – Object with component names and theme usage
 - `motion` – Object with framer-motion components and features
 - `materialUI` – Object with Material UI components, packages, and styling features
+- `shadcnUI` – Object with ShadCN/UI components, variants, sizes, and features (form integration, theme, icons, component density)
+- `radixUI` – Object with Radix UI primitives (organized by package), patterns (controlled/uncontrolled, portals, asChild), accessibility features, and composition depth
 
 #### `layout`
 
-Layout structure information:
+Layout structure information (AST-based extraction):
 
-- `type` – "flex" or "grid"
-- `cols` – Grid column pattern (e.g., "grid-cols-2 md:grid-cols-3")
-- `hasHeroPattern` – Boolean indicating hero section pattern
+- `type` – "flex" or "grid" (grid takes precedence if both are present)
+- `cols` – Grid column numbers (e.g., "2 3" extracted from "grid-cols-2 md:grid-cols-3")
+- `hasHeroPattern` – Boolean indicating hero section pattern (large text + CTA buttons)
 - `hasFeatureCards` – Boolean indicating feature card grid pattern
+
+**Note:** Layout extraction uses AST analysis, so it correctly handles:
+- Dynamic className expressions: `className={cn('flex')}`, `className={`grid ${cols}`}`
+- Variant-prefixed classes: `md:flex`, `lg:grid`, `md:text-5xl`
+- Conditional expressions: `className={isActive && 'flex'}`
 
 #### `visual`
 
-Visual design patterns:
+Visual design patterns (AST-based extraction):
 
 - `colors` – Array of color utility classes (sorted, limited to top 10)
+  - Includes variant-prefixed classes: `md:bg-blue-500`, `dark:text-slate-50`
 - `spacing` – Array of spacing utility classes (sorted, limited to top 10)
-- `radius` – Most common border radius pattern
+  - Supports all formats: `p-4`, `p-1.5`, `p-px`, `p-[2px]`, `-mt-2`
+  - Includes variant-prefixed classes: `lg:px-4`, `sm:m-2`, `md:-mt-2`
+- `radius` – Most common border radius token (e.g., "lg" from "rounded-lg")
+  - Valid values: "default", "sm", "md", "lg", "xl", "2xl", "3xl", "full"
+  - Handles variant prefixes: `md:rounded-xl`
 - `typography` – Array of typography classes (sorted, limited to top 10)
+  - Includes variant-prefixed classes: `sm:text-lg`
+
+**Note:** Visual extraction uses AST analysis, so it correctly handles:
+- Dynamic className expressions: `className={cn('bg-blue-500', 'p-4')}`
+- Variant-prefixed classes: `md:bg-blue-500`, `lg:px-4`
+- Template literals: `className={`p-4 ${padding}`}` (static segments extracted)
 
 #### `animation`
 
@@ -388,12 +476,54 @@ In this example, including style metadata adds approximately **1,667 GPT-4 token
 - **CI integration** – Use `--stats` to track style metadata size in CI pipelines
 - **Design reviews** – Generate style context before design system reviews to understand current patterns
 
+## Error Handling
+
+The style extractor is designed to be robust and will never crash the CLI, even when encountering:
+
+- **Missing files**: SCSS/CSS module files that don't exist are silently skipped
+- **Malformed code**: Invalid JSX, TypeScript syntax errors, or parse failures are handled gracefully
+- **Extractor failures**: If one style extractor fails (e.g., Material UI parsing), others continue to work and return partial results
+- **AST traversal errors**: Complex or malformed code that causes AST parsing issues falls back gracefully
+- **Invalid file paths**: Non-existent directories or invalid paths are handled without crashing
+
+### Partial Results
+
+The extractor is designed to return **partial results** rather than failing completely. This means:
+
+- If Tailwind extraction fails, other extractors (styled-components, Material UI, etc.) still work
+- If SCSS file parsing fails, other style sources are still extracted
+- If layout metadata extraction fails, visual and animation metadata can still be extracted
+- The main function returns `undefined` only when **no style information** is found (which is expected behavior)
+
+### Debug Logging
+
+All error handling is silent by default. To enable debug logging for troubleshooting, set the `LOGICSTAMP_DEBUG=1` environment variable:
+
+```bash
+LOGICSTAMP_DEBUG=1 stamp context style
+```
+
+This will output detailed error messages to help identify problematic files or expressions:
+
+```
+[LogicStamp][DEBUG] styleExtractor.extractStyleMetadata error: { filePath: '/path/to/file.tsx', error: 'ENOENT: no such file or directory' }
+[LogicStamp][DEBUG] material.extractMaterialUI error: { filePath: '/path/to/file.tsx', error: 'Unexpected token' }
+[LogicStamp][DEBUG] layout.extractLayoutMetadata error: { filePath: '/path/to/file.tsx', error: 'Cannot read property \'getText\' of undefined' }
+```
+
+### Best Practices
+
+- **Don't worry about missing files**: If a component imports a style file that doesn't exist, the extractor will skip it and continue
+- **Check debug logs when issues occur**: Enable `LOGICSTAMP_DEBUG=1` if you suspect extraction problems
+- **Expect partial results**: Some extraction failures are normal (e.g., runtime-generated classes can't be statically analyzed)
+
 ## Limitations
 
-- **Dynamic classes** – Classes generated dynamically (e.g., `className={clsx(...)}`) may not be fully detected
-- **CSS-in-JS** – Only styled-components, emotion, and Material UI styled are detected; other CSS-in-JS libraries may not be recognized
+- **Dynamic class values** – While AST extraction handles `cn()`, `clsx()`, and template literals, classes generated from runtime variables (e.g., `className={styles[someVar]}`) are not detected
+- **CSS-in-JS** – Only styled-components and emotion are detected via AST-based extraction; Material UI styled is detected separately; other CSS-in-JS libraries may not be recognized
 - **External stylesheets** – Global CSS files are not analyzed; only module imports are parsed
 - **Runtime styles** – Styles applied via JavaScript at runtime are not detected
+- **Template literal dynamic segments** – In `className={`flex ${variable}`}`, only the static "flex" segment is extracted; the dynamic variable value is not analyzed
 
 ## Examples
 
@@ -417,6 +547,8 @@ $ stamp context style
      - SCSS modules: 3 components
      - framer-motion: 2 components
      - Material UI: 5 components
+     - ShadCN/UI: 8 components
+     - Radix UI: 4 components
 ```
 
 ### With Custom Options

@@ -4,6 +4,7 @@
 
 import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
+import { debugError } from './debug.js';
 
 export interface LogicStampConfig {
   /** User's preference for .gitignore management: "added" | "skipped" */
@@ -59,10 +60,47 @@ export async function writeConfig(projectRoot: string, config: LogicStampConfig)
   const configPath = getConfigPath(projectRoot);
 
   // Ensure config directory exists
-  await mkdir(configDir, { recursive: true });
+  try {
+    await mkdir(configDir, { recursive: true });
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    debugError('config', 'writeConfig', {
+      configDir,
+      operation: 'mkdir',
+      message: err.message,
+      code: err.code,
+    });
+    throw new Error(`Failed to create config directory "${configDir}": ${err.code === 'EACCES' ? 'Permission denied' : err.message}`);
+  }
 
   // Write config file
-  await writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
+  try {
+    await writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    debugError('config', 'writeConfig', {
+      configPath,
+      operation: 'writeFile',
+      message: err.message,
+      code: err.code,
+    });
+    
+    let userMessage: string;
+    switch (err.code) {
+      case 'ENOENT':
+        userMessage = `Parent directory not found for: "${configPath}"`;
+        break;
+      case 'EACCES':
+        userMessage = `Permission denied writing to: "${configPath}"`;
+        break;
+      case 'ENOSPC':
+        userMessage = `No space left on device. Cannot write: "${configPath}"`;
+        break;
+      default:
+        userMessage = `Failed to write config file "${configPath}": ${err.message}`;
+    }
+    throw new Error(userMessage);
+  }
 }
 
 /**

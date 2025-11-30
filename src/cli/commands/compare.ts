@@ -3,10 +3,11 @@
  * Detects added/removed components and changed signatures
  */
 
-import { readFile, readdir, unlink } from 'node:fs/promises';
+import { readFile, unlink } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import type { LogicStampBundle, LogicStampIndex } from '../../core/pack.js';
 import { estimateGPT4Tokens, estimateClaudeTokens, formatTokenCount } from '../../utils/tokens.js';
+import { debugError } from '../../utils/debug.js';
 
 interface LiteSig {
   semanticHash: string;
@@ -195,11 +196,48 @@ async function calculateTokens(bundles: LogicStampBundle[]): Promise<{ gpt4: num
  */
 export async function compareCommand(options: CompareOptions): Promise<CompareResult> {
   // Load both files
-  const oldContent = await readFile(options.oldFile, 'utf8');
-  const newContent = await readFile(options.newFile, 'utf8');
+  let oldContent: string;
+  let newContent: string;
+  
+  try {
+    oldContent = await readFile(options.oldFile, 'utf8');
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    debugError('compare', 'compareCommand', {
+      file: options.oldFile,
+      message: err.message,
+      code: err.code,
+    });
+    throw new Error(`Failed to read old file "${options.oldFile}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`);
+  }
+  
+  try {
+    newContent = await readFile(options.newFile, 'utf8');
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    debugError('compare', 'compareCommand', {
+      file: options.newFile,
+      message: err.message,
+      code: err.code,
+    });
+    throw new Error(`Failed to read new file "${options.newFile}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`);
+  }
 
-  const oldBundles: LogicStampBundle[] = JSON.parse(oldContent);
-  const newBundles: LogicStampBundle[] = JSON.parse(newContent);
+  let oldBundles: LogicStampBundle[];
+  let newBundles: LogicStampBundle[];
+
+  try {
+    oldBundles = JSON.parse(oldContent) as LogicStampBundle[];
+    newBundles = JSON.parse(newContent) as LogicStampBundle[];
+  } catch (error) {
+    const err = error as Error;
+    debugError('compare', 'compareCommand', {
+      oldFile: options.oldFile,
+      newFile: options.newFile,
+      message: err.message,
+    });
+    throw new Error(`Failed to parse context files: ${err.message}`);
+  }
 
   // Index bundles
   const oldIdx = index(oldBundles);
@@ -285,7 +323,17 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
     const oldTokens = await calculateTokens(oldBundles);
     const newTokens = await calculateTokens(newBundles);
     const deltaStat = newTokens.gpt4 - oldTokens.gpt4;
-    const deltaPercent = ((deltaStat / oldTokens.gpt4) * 100).toFixed(2);
+    
+    let deltaPercentStr = '0.00';
+    let deltaPercentNum = 0;
+    
+    if (oldTokens.gpt4 > 0) {
+      deltaPercentNum = (deltaStat / oldTokens.gpt4) * 100;
+      deltaPercentStr = deltaPercentNum.toFixed(2);
+    }
+    
+    const sign = deltaStat > 0 ? '+' : '';
+    const percentSign = deltaPercentNum > 0 ? '+' : deltaPercentNum < 0 ? '' : '';
 
     console.log('Token Stats:');
     console.log(`  ⚠️  Current mode = tokenizer-based.`);
@@ -293,7 +341,7 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
     console.log(`      For precise per-mode breakdown, use "stamp context --compare-modes".`);
     console.log(`  Old: ${formatTokenCount(oldTokens.gpt4)} (GPT-4o-mini) | ${formatTokenCount(oldTokens.claude)} (Claude)`);
     console.log(`  New: ${formatTokenCount(newTokens.gpt4)} (GPT-4o-mini) | ${formatTokenCount(newTokens.claude)} (Claude)`);
-    console.log(`  Δ ${deltaStat > 0 ? '+' : ''}${formatTokenCount(deltaStat)} (${deltaPercent > '0' ? '+' : ''}${deltaPercent}%)\n`);
+    console.log(`  Δ ${sign}${formatTokenCount(deltaStat)} (${percentSign}${deltaPercentStr}%)\n`);
   }
 
   return result;
@@ -303,8 +351,21 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
  * Load LogicStampIndex from file
  */
 async function loadIndex(indexPath: string): Promise<LogicStampIndex> {
+  let content: string;
+  
   try {
-    const content = await readFile(indexPath, 'utf8');
+    content = await readFile(indexPath, 'utf8');
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    debugError('compare', 'loadIndex', {
+      indexPath,
+      message: err.message,
+      code: err.code,
+    });
+    throw new Error(`Failed to load index from ${indexPath}: ${err.code === 'ENOENT' ? 'File not found' : err.message}`);
+  }
+  
+  try {
     const index = JSON.parse(content) as LogicStampIndex;
 
     if (index.type !== 'LogicStampIndex') {
@@ -313,7 +374,12 @@ async function loadIndex(indexPath: string): Promise<LogicStampIndex> {
 
     return index;
   } catch (error) {
-    throw new Error(`Failed to load index from ${indexPath}: ${(error as Error).message}`);
+    const err = error as Error;
+    debugError('compare', 'loadIndex', {
+      indexPath,
+      message: err.message,
+    });
+    throw new Error(`Failed to load index from ${indexPath}: ${err.message}`);
   }
 }
 
@@ -336,8 +402,16 @@ async function findOrphanedFiles(
       try {
         await readFile(contextPath, 'utf8');
         orphaned.push(folder.contextFile);
-      } catch {
+      } catch (error) {
         // File doesn't exist, not orphaned (already deleted)
+        const err = error as NodeJS.ErrnoException;
+        if (err.code !== 'ENOENT') {
+          debugError('compare', 'findOrphanedFiles', {
+            contextPath,
+            message: err.message,
+            code: err.code,
+          });
+        }
       }
     }
   }
@@ -355,11 +429,48 @@ async function compareFolderContext(
   quiet?: boolean
 ): Promise<{ result: CompareResult; tokenDelta?: { gpt4: number; claude: number } }> {
   // Load both files
-  const oldContent = await readFile(oldContextPath, 'utf8');
-  const newContent = await readFile(newContextPath, 'utf8');
+  let oldContent: string;
+  let newContent: string;
+  
+  try {
+    oldContent = await readFile(oldContextPath, 'utf8');
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    debugError('compare', 'compareFolderContext', {
+      oldContextPath,
+      message: err.message,
+      code: err.code,
+    });
+    throw new Error(`Failed to read old context file "${oldContextPath}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`);
+  }
+  
+  try {
+    newContent = await readFile(newContextPath, 'utf8');
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    debugError('compare', 'compareFolderContext', {
+      newContextPath,
+      message: err.message,
+      code: err.code,
+    });
+    throw new Error(`Failed to read new context file "${newContextPath}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`);
+  }
 
-  const oldBundles: LogicStampBundle[] = JSON.parse(oldContent);
-  const newBundles: LogicStampBundle[] = JSON.parse(newContent);
+  let oldBundles: LogicStampBundle[];
+  let newBundles: LogicStampBundle[];
+
+  try {
+    oldBundles = JSON.parse(oldContent) as LogicStampBundle[];
+    newBundles = JSON.parse(newContent) as LogicStampBundle[];
+  } catch (error) {
+    const err = error as Error;
+    debugError('compare', 'compareFolderContext', {
+      oldContextPath,
+      newContextPath,
+      message: err.message,
+    });
+    throw new Error(`Failed to parse context files for folder: ${err.message}`);
+  }
 
   // Index bundles
   const oldIdx = index(oldBundles);

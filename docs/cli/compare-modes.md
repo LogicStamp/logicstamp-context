@@ -242,6 +242,21 @@ for repo in api web mobile; do
 done
 ```
 
+### MCP Integration
+
+```bash
+# Generate comparison data file for MCP (Model Context Protocol) integration
+stamp context --compare-modes --stats
+# Creates: context_compare_modes.json with structured comparison data
+
+# The generated file contains:
+# - Token counts for all modes (none, header, header+style, full)
+# - File statistics (total, .ts, .tsx)
+# - Comparison data for programmatic consumption
+```
+
+**Note:** The `--compare-modes --stats` combination is specifically designed for MCP integration. It writes `context_compare_modes.json` to the output directory (determined by `--out`), providing structured comparison data that MCP servers and AI agents can consume programmatically.
+
 ## Understanding the Numbers
 
 ### Savings Percentages
@@ -334,13 +349,23 @@ stamp context ./src/components --compare-modes
 
 ### Does --compare-modes write files?
 
-No, `--compare-modes` is analysis-only:
+By default, `--compare-modes` is analysis-only:
 - Generates contracts in memory
 - Computes token estimates
 - Displays comparison tables
 - Exits without writing files
 
-Use `stamp context` (without the flag) to actually generate files.
+**MCP Integration:** When combined with `--stats`, `--compare-modes` writes `context_compare_modes.json` for MCP (Model Context Protocol) integration:
+
+```bash
+# Generate comparison data file for MCP
+stamp context --compare-modes --stats
+# Creates: context_compare_modes.json with structured comparison data
+```
+
+The `context_compare_modes.json` file contains the full comparison data in JSON format, suitable for programmatic consumption by MCP servers and AI agents.
+
+Use `stamp context` (without the flag) to actually generate context bundle files.
 
 ## Performance Notes
 
@@ -351,10 +376,10 @@ Use `stamp context` (without the flag) to actually generate files.
 
 ## Related Commands
 
-- [`stamp context`](CONTEXT.md) - Generate context files
-- [`stamp context style`](STYLE.md) - Generate context with style metadata
-- [`stamp context compare`](COMPARE.md) - Compare context changes over time
-- [`stamp context validate`](VALIDATE.md) - Validate schema compliance
+- [`stamp context`](context.md) - Generate context files
+- [`stamp context style`](style.md) - Generate context with style metadata
+- [`stamp context compare`](compare.md) - Compare context changes over time
+- [`stamp context validate`](validate.md) - Validate schema compliance
 
 ## Tips
 

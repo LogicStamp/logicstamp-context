@@ -68,7 +68,7 @@ Generates LogicStamp bundles from a directory.
 | `--strict` | `-s` | `false` | Fail if any dependency is missing |
 | `--predict-behavior` | | `false` | Include experimental behavioral predictions |
 | `--dry-run` | | `false` | Skip writing the output file; prints summary instead |
-| `--stats` | | `false` | Emit one-line JSON stats (helpful for CI pipelines) |
+| `--stats` | | `false` | Emit one-line JSON stats (helpful for CI pipelines). When combined with `--compare-modes`, writes `context_compare_modes.json` for MCP integration. |
 | `--skip-gitignore` | | `false` | Skip `.gitignore` setup (never prompt or modify) |
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors) |
 
@@ -103,18 +103,24 @@ The style command analyzes components and extracts:
    - framer-motion animation components
    - Material UI components, packages, and styling features (theme, sx prop, styled, makeStyles, system props)
 
-2. **Layout Metadata**
-   - Layout type (flex, grid)
-   - Grid column patterns (e.g., "grid-cols-2 md:grid-cols-3")
+2. **Layout Metadata** (AST-based)
+   - Layout type (flex, grid) - grid takes precedence if both present
+   - Grid column patterns (e.g., "2 3" extracted from "grid-cols-2 md:grid-cols-3")
    - Hero pattern detection (large text + CTA buttons)
    - Feature card patterns (grid with card-like elements)
-   - Responsive breakpoints used
+   - Handles variant-prefixed classes: `md:flex`, `lg:grid`
+   - Supports dynamic className expressions: `cn()`, `clsx()`, template literals
 
-3. **Visual Metadata**
+3. **Visual Metadata** (AST-based)
    - Color palette (bg-*, text-*, border-* classes)
+     - Handles variant prefixes: `md:bg-blue-500`, `dark:text-slate-50`
    - Spacing patterns (padding, margin utilities)
-   - Border radius patterns
+     - Supports all formats: integers, fractions (`p-1.5`), arbitrary (`p-[2px]`), negative (`-mt-2`)
+     - Handles variant prefixes: `lg:px-4`, `sm:m-2`, `md:-mt-2`
+   - Border radius patterns (stores token: "lg" from "rounded-lg")
+     - Handles variant prefixes: `md:rounded-xl`
    - Typography classes (text-*, font-*)
+     - Handles variant prefixes: `sm:text-lg`
 
 4. **Animation Metadata**
    - framer-motion library usage
@@ -204,7 +210,7 @@ Style metadata is included in the `style` field of each component's contract:
 
 **Note:** Style extraction adds a small token overhead to context bundles. Use `stamp context --compare-modes` to see the token impact.
 
-For detailed documentation on the style command, see [docs/cli/STYLE.md](cli/STYLE.md).
+For detailed documentation on the style command, see [docs/cli/style.md](cli/style.md).
 
 ### `stamp context validate`
 
@@ -359,7 +365,7 @@ stamp context compare --approve
 stamp context compare --stats
 ```
 
-**See also:** [COMPARE_COMMAND.md](./COMPARE_COMMAND.md) for comprehensive documentation.
+**See also:** [compare.md](./compare.md) for comprehensive documentation.
 
 ### `stamp context clean`
 
@@ -403,7 +409,7 @@ stamp context clean ./src --all --yes
 - Clean before switching git branches
 - Remove context artifacts from a project
 
-**See also:** [CLEAN.md](./CLEAN.md) for comprehensive documentation.
+**See also:** [clean.md](./clean.md) for comprehensive documentation.
 
 ## Profiles
 
@@ -473,7 +479,12 @@ stamp context --include-code full --max-nodes 20
 Use `--compare-modes` to see detailed token estimates across all modes, including style metadata:
 
 ```bash
+# Display comparison table
 stamp context --compare-modes
+
+# Generate comparison data file for MCP integration
+stamp context --compare-modes --stats
+# Creates: context_compare_modes.json
 ```
 
 This command shows two comparison tables:
@@ -991,6 +1002,25 @@ stamp context --strict-missing
 - Large projects take longer to analyze
 - Focus on specific directories to speed up
 - Use `--max-nodes` to limit bundle generation
+
+### Debug logging for parsing issues
+If you encounter parsing errors or unexpected behavior, enable debug logging:
+
+```bash
+LOGICSTAMP_DEBUG=1 stamp context
+```
+
+This will output detailed error messages with the format:
+```
+[LogicStamp][DEBUG] moduleName.functionName error: { filePath: '...', error: '...', ... }
+```
+
+Debug logs help identify:
+- Which files are causing parsing issues
+- Which extraction steps are failing (hooks, props, state, etc.)
+- File paths and error details for troubleshooting
+
+**Note:** Debug logging is silent by default. Only enable it when troubleshooting specific issues.
 
 ## Best Practices
 

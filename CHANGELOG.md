@@ -5,6 +5,232 @@ All notable changes to `logicstamp-context` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Planned Features
+- Custom profile configuration and overrides
+- Incremental bundle caching
+- Output size optimization
+- Additional output formats
+- Integration examples for popular AI assistants
+- Vue.js support
+- Advanced Next.js App Router features (route roles, segment paths, metadata exports)
+
+### Known Limitations
+- No incremental caching (planned for future release)
+- No custom profiles beyond the three presets (planned for future release)
+
+---
+
+## [0.2.5] - 2025-11-30
+
+### Added
+
+#### Style Metadata Extraction
+- **ShadCN/UI style extraction** - Added ShadCN/UI component library detection and extraction:
+  - Detects ShadCN components imported from `@/components/ui/*`, `~/components/ui/*`, or relative `components/ui/*` paths
+  - Identifies ShadCN component usage (Button, Card, Dialog, Form components, etc.)
+  - Extracts ShadCN variant and size prop values
+  - Recognizes compound component patterns (e.g., Dialog with DialogTrigger, DialogContent)
+  - Detects form integration with React Hook Form
+  - Identifies theme integration patterns (useTheme, ThemeProvider)
+  - Tracks icon usage (lucide-react, @radix-ui/react-icons)
+  - Calculates component density based on ShadCN component usage
+  - Integrated into style metadata extraction when using `--include-style` or `stamp context style`
+
+- **Radix UI style extraction** - Added Radix UI primitive library detection and extraction:
+  - Detects Radix UI primitives imported from `@radix-ui/*` packages
+  - Identifies Radix primitive components (Dialog, DropdownMenu, Popover, Tooltip, Accordion, Select, etc.)
+  - Extracts Radix package usage and component relationships
+  - Detects controlled/uncontrolled state patterns
+  - Identifies portal usage patterns
+  - Recognizes `asChild` prop usage
+  - Extracts accessibility features and ARIA patterns
+  - Integrated into style metadata extraction when using `--include-style` or `stamp context style`
+
+- **Enhanced debug logging** - Improved debug logging and error handling across core modules for better troubleshooting and diagnostics
+
+### Changed
+
+- **Model name corrections** - Updated all documentation references from "GPT-4o-mini" to "GPT-4o" for accurate token estimation model naming
+- **Documentation consistency** - Improved consistency and clarity across all documentation files
+
+### Fixed
+
+- N/A
+
+### Security
+
+- N/A
+
+---
+
+## [0.2.4] - 2025-11-29
+
+### Added
+
+- **Material UI style extraction** - Added Material UI component library detection and extraction:
+  - Detects Material UI components used (Button, TextField, Card, etc.)
+  - Identifies Material UI packages imported (@mui/material, @material-ui/core, etc.)
+  - Extracts Material UI styling features: theme usage, sx prop, styled components, makeStyles, and system props
+  - Integrated into style metadata extraction when using `--include-style` or `stamp context style`
+
+### Fixed
+
+- **README clarification** - Fixed and clarified the "Global CLI" installation note to better explain the difference between local and global npm installations
+
+### Changed
+
+- **README.md significantly streamlined and optimized** - Reduced from 718 lines to 199 lines (72% reduction) while maintaining all essential information:
+  - Moved detailed documentation sections to `docs/` folder (Token Optimization, Mode Comparison, Behavioral Predictions, CI usage, Troubleshooting, Output Format schema, Next.js examples)
+  - Added "Why LogicStamp?" section highlighting token savings and key benefits
+  - Added concise "Core Features" list with bullet points
+  - Added minimal "Example Output" section with realistic JSON sample
+  - Shortened "Recent Updates" to show only 2 recent versions with link to full CHANGELOG
+  - Added "Getting Help" section with links to GitHub issues and roadmap
+  - Updated Quick Start to show both global and local installation methods
+  - Fixed npm link compatibility - converted all relative links to absolute GitHub URLs for proper rendering on npmjs.com
+  - Improved structure following best practices from top-tier dev tools (Astro, Vite, ESLint) - README focuses on marketing/onboarding, detailed docs in `/docs`
+- Updated all version references in documentation to reflect 0.2.4 release
+
+---
+
+## [0.2.3] - 2025-11-29
+
+### Added
+
+- **UIF Contracts documentation** - Added comprehensive `docs/uif_contracts.md` guide explaining contract structure, semantic hashing, and contract-based change detection
+- **Enhanced test documentation** - Improved `tests/README.md` with better structure, test categories, and usage examples
+
+### Changed
+
+- **README.md significantly streamlined** - Reduced from 1,015 to 700 lines while preserving all essential information. Removed verbose "What's New" sections in favor of brief summaries with CHANGELOG links, condensed command documentation to quick reference tables, and streamlined output format section with links to detailed schema docs
+- **Improved token estimation accuracy** - Enhanced raw source token estimation formulas in regular output (not `--compare-modes`). When in header mode, now uses more accurate formulas to estimate raw source tokens: raw source = header / 0.30 (header is 30% of raw source), and style adds 105% overhead (header+style = header × 2.05). When in header+style mode, first estimates header without style (header = header+style / 2.05), then derives raw source from that estimate. Note: "Raw source" refers to the original source files concatenated, which is always estimated using these formulas (never actually generated). The actual context bundles (header, header+style, etc.) use tokenizers when available for accurate token counts. The `--compare-modes` flag regenerates contracts to provide accurate token counts for all modes
+- **Updated compare-modes.md documentation** - Refined examples and explanations with more accurate token savings percentages and clearer interpretation guidelines
+
+### Fixed
+
+- N/A
+
+### Security
+
+- N/A
+
+---
+
+## [0.2.2] - 2025-11-28
+
+### Fixed
+
+- **Documentation accuracy** - Fixed all documentation to correctly state that `@dqbd/tiktoken` and `@anthropic-ai/tokenizer` are included as optional dependencies in package.json. npm automatically attempts to install them when installing `logicstamp-context`. Previously, documentation incorrectly suggested users needed to manually install these packages.
+
+### Changed
+
+- Updated all documentation files (README.md, all docs/cli/*.md files, CHANGELOG.md) to clarify that tokenizers are optional dependencies installed automatically by npm
+- Updated user-facing console messages to mention that tokenizers are optional dependencies
+- Updated source code comments in `src/utils/tokens.ts` to reflect optional dependency installation
+
+---
+
+## [0.2.1] - 2025-11-28
+
+### Fixed
+
+- **Dynamic version loading** - Fixed hardcoded version string in `fileWriter.ts` to dynamically load from `package.json`, ensuring version consistency across all generated context files
+
+### Changed
+
+- Updated all version references in documentation to reflect 0.2.1 release
+
+---
+
+## [0.2.0] - 2025-11-28
+- **`stamp init` now prompts interactively** — Prompts for `.gitignore` patterns and `LLM_CONTEXT.md` generation (only in interactive/TTY environments).
+- **Non-interactive defaults** — In CI/non-TTY environments, `stamp init` defaults to "yes" for both prompts.
+- **Better user control** — Users can establish `.gitignore` and `LLM_CONTEXT.md` preferences early via `stamp init` before running `stamp context`.
+
+### Added
+
+#### Style Metadata Extraction
+- **`stamp context style` command** - New subcommand to generate context with style metadata included
+- **`--include-style` flag** - Alternative syntax for enabling style metadata extraction
+- **Style source detection** - Identifies Tailwind CSS, SCSS/CSS modules, inline styles, styled-components, and framer-motion usage
+- **Layout metadata** - Extracts flex/grid patterns, hero sections, feature cards, and responsive breakpoints
+- **Visual metadata** - Captures color palettes, spacing patterns, border radius, and typography classes
+- **Animation metadata** - Detects framer-motion animations, CSS transitions, and viewport triggers
+- **SCSS/CSS module parsing** - Analyzes imported style files to extract selectors, properties, and SCSS features
+
+#### Enhanced Token Comparison
+- **Four-mode comparison** - `--compare-modes` now shows `none`, `header`, `header+style`, and `full` modes
+- **Dual comparison tables** - Shows savings vs raw source and vs full context
+- **Accurate style impact** - Automatically regenerates contracts with/without style metadata for precise token counts
+- **Style overhead visibility** - Clearly displays the token cost of including style metadata
+- **Optional tokenizer support** - Includes `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) as optional dependencies in package.json. npm automatically attempts to install them when installing `logicstamp-context`. If installation succeeds, the tool uses them for accurate token counts. If installation fails or is skipped (normal for optional dependencies), gracefully falls back to character-based estimation
+
+#### Architectural Improvements
+- **Modular CLI structure** - Refactored CLI into dedicated handlers for better maintainability
+- **Extracted AST parsing** - Modularized AST extraction into dedicated detector and extractor modules
+- **Modularized style extraction** - Organized style extraction into focused modules (tailwind, scss, motion, layout, etc.)
+- **Modularized pack utilities** - Separated pack functionality into builder, collector, loader, and resolver modules
+- **Improved code organization** - Better separation of concerns and testability
+
+### Changed
+
+- **`--compare-modes` output format** - Enhanced to include `header+style` mode and show two comparison tables
+- **Token estimation** - Now accounts for style metadata in token calculations when `--include-style` is used
+- **Token estimation API** - Token estimation functions are now async to support optional tokenizer libraries
+
+### Documentation
+
+- Added comprehensive `docs/cli/style.md` documentation for the style command
+- Added comprehensive `docs/cli/compare-modes.md` guide for token cost analysis
+- Updated all command documentation to include style command and `--include-style` flag
+- Enhanced token optimization documentation with `--compare-modes` examples
+- Added style metadata examples and use cases throughout documentation
+- Documented optional dependencies (`@dqbd/tiktoken` and `@anthropic-ai/tokenizer`) for accurate token counts - these are included in package.json as optionalDependencies and installed automatically by npm
+- Updated schema documentation to include style metadata fields
+- **`--skip-gitignore` flag for `stamp context`** — Temporarily skips `.gitignore` setup on a per-run basis, regardless of saved preferences.
+- **Config-based behavior** — `stamp context` now respects preferences saved in `.logicstamp/config.json` without prompting.
+
+### Fixed
+
+- N/A
+
+### Security
+
+- N/A
+
+---
+
+## [0.1.1] - 2025-01-27
+
+### Changed
+
+#### CI-Friendly Defaults
+- **`stamp context` no longer prompts** — All interactive prompts were moved to `stamp init` for better CI/CD compatibility.
+- **Safe defaults** — `stamp context` now skips both `.gitignore` setup and `LLM_CONTEXT.md` generation unless these preferences are explicitly enabled via `stamp init`.
+- **Auto-config creation** — On first run, `stamp context` creates `.logicstamp/config.json` with both preferences set to "skipped" for maximum CI safety and reproducibility.
+
+#### Improved Initialization
+- **`stamp init` now prompts interactively** — Prompts for `.gitignore` patterns and `LLM_CONTEXT.md` generation (only in interactive/TTY environments).
+- **Non-interactive defaults** — In CI/non-TTY environments, `stamp init` defaults to "yes" for both prompts.
+- **Better user control** — Users can establish `.gitignore` and `LLM_CONTEXT.md` preferences early via `stamp init` before running `stamp context`.
+
+### Added
+
+- **`--skip-gitignore` flag for `stamp context`** — Temporarily skips `.gitignore` setup on a per-run basis, regardless of saved preferences.
+- **Config-based behavior** — `stamp context` now respects preferences saved in `.logicstamp/config.json` without prompting.
+
+### Fixed
+
+- N/A
+
+### Security
+
+- N/A
+
+---
+
 ## [0.1.0] - 2025-01-25
 
 ### 🎉 Initial Release
@@ -83,187 +309,3 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 - N/A (initial release)
 
 ---
-
-## [0.1.1] - 2025-01-27
-
-### Changed
-
-#### CI-Friendly Defaults
-- **`stamp context` no longer prompts** — All interactive prompts were moved to `stamp init` for better CI/CD compatibility.
-- **Safe defaults** — `stamp context` now skips both `.gitignore` setup and `LLM_CONTEXT.md` generation unless these preferences are explicitly enabled via `stamp init`.
-- **Auto-config creation** — On first run, `stamp context` creates `.logicstamp/config.json` with both preferences set to "skipped" for maximum CI safety and reproducibility.
-- **`stamp context` no longer prompts** — All interactive prompts were moved to `stamp init` for better CI/CD compatibility.
-- **Safe defaults** — `stamp context` now skips both `.gitignore` setup and `LLM_CONTEXT.md` generation unless these preferences are explicitly enabled via `stamp init`.
-- **Auto-config creation** — On first run, `stamp context` creates `.logicstamp/config.json` with both preferences set to "skipped" for maximum CI safety and reproducibility.
-
-#### Improved Initialization
-- **`stamp init` now prompts interactively** — Prompts for `.gitignore` patterns and `LLM_CONTEXT.md` generation (only in interactive/TTY environments).
-- **Non-interactive defaults** — In CI/non-TTY environments, `stamp init` defaults to "yes" for both prompts.
-- **Better user control** — Users can establish `.gitignore` and `LLM_CONTEXT.md` preferences early via `stamp init` before running `stamp context`.
-
-### Added
-
-- **`--skip-gitignore` flag for `stamp context`** — Temporarily skips `.gitignore` setup on a per-run basis, regardless of saved preferences.
-- **Config-based behavior** — `stamp context` now respects preferences saved in `.logicstamp/config.json` without prompting.
-
-### Fixed
-
-- N/A
-
-### Security
-
-- N/A
-
----
-
-## [0.2.0] - 2025-11-28
-- **`stamp init` now prompts interactively** — Prompts for `.gitignore` patterns and `LLM_CONTEXT.md` generation (only in interactive/TTY environments).
-- **Non-interactive defaults** — In CI/non-TTY environments, `stamp init` defaults to "yes" for both prompts.
-- **Better user control** — Users can establish `.gitignore` and `LLM_CONTEXT.md` preferences early via `stamp init` before running `stamp context`.
-
-### Added
-
-#### Style Metadata Extraction
-- **`stamp context style` command** - New subcommand to generate context with style metadata included
-- **`--include-style` flag** - Alternative syntax for enabling style metadata extraction
-- **Style source detection** - Identifies Tailwind CSS, SCSS/CSS modules, inline styles, styled-components, and framer-motion usage
-- **Layout metadata** - Extracts flex/grid patterns, hero sections, feature cards, and responsive breakpoints
-- **Visual metadata** - Captures color palettes, spacing patterns, border radius, and typography classes
-- **Animation metadata** - Detects framer-motion animations, CSS transitions, and viewport triggers
-- **SCSS/CSS module parsing** - Analyzes imported style files to extract selectors, properties, and SCSS features
-
-#### Enhanced Token Comparison
-- **Four-mode comparison** - `--compare-modes` now shows `none`, `header`, `header+style`, and `full` modes
-- **Dual comparison tables** - Shows savings vs raw source and vs full context
-- **Accurate style impact** - Automatically regenerates contracts with/without style metadata for precise token counts
-- **Style overhead visibility** - Clearly displays the token cost of including style metadata
-- **Optional tokenizer support** - Includes `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) as optional dependencies in package.json. npm automatically attempts to install them when installing `logicstamp-context`. If installation succeeds, the tool uses them for accurate token counts. If installation fails or is skipped (normal for optional dependencies), gracefully falls back to character-based estimation
-
-#### Architectural Improvements
-- **Modular CLI structure** - Refactored CLI into dedicated handlers for better maintainability
-- **Extracted AST parsing** - Modularized AST extraction into dedicated detector and extractor modules
-- **Modularized style extraction** - Organized style extraction into focused modules (tailwind, scss, motion, layout, etc.)
-- **Modularized pack utilities** - Separated pack functionality into builder, collector, loader, and resolver modules
-- **Improved code organization** - Better separation of concerns and testability
-
-### Changed
-
-- **`--compare-modes` output format** - Enhanced to include `header+style` mode and show two comparison tables
-- **Token estimation** - Now accounts for style metadata in token calculations when `--include-style` is used
-- **Token estimation API** - Token estimation functions are now async to support optional tokenizer libraries
-
-### Documentation
-
-- Added comprehensive `docs/cli/STYLE.md` documentation for the style command
-- Added comprehensive `docs/cli/COMPARE-MODES.md` guide for token cost analysis
-- Updated all command documentation to include style command and `--include-style` flag
-- Enhanced token optimization documentation with `--compare-modes` examples
-- Added style metadata examples and use cases throughout documentation
-- Documented optional dependencies (`@dqbd/tiktoken` and `@anthropic-ai/tokenizer`) for accurate token counts - these are included in package.json as optionalDependencies and installed automatically by npm
-- Updated schema documentation to include style metadata fields
-- **`--skip-gitignore` flag for `stamp context`** — Temporarily skips `.gitignore` setup on a per-run basis, regardless of saved preferences.
-- **Config-based behavior** — `stamp context` now respects preferences saved in `.logicstamp/config.json` without prompting.
-
-### Fixed
-
-- N/A
-
-### Security
-
-- N/A
-
----
-
-## [0.2.1] - 2025-11-28
-
-### Fixed
-
-- **Dynamic version loading** - Fixed hardcoded version string in `fileWriter.ts` to dynamically load from `package.json`, ensuring version consistency across all generated context files
-
-### Changed
-
-- Updated all version references in documentation to reflect 0.2.1 release
-
----
-
-## [0.2.2] - 2025-11-28
-
-### Fixed
-
-- **Documentation accuracy** - Fixed all documentation to correctly state that `@dqbd/tiktoken` and `@anthropic-ai/tokenizer` are included as optional dependencies in package.json. npm automatically attempts to install them when installing `logicstamp-context`. Previously, documentation incorrectly suggested users needed to manually install these packages.
-
-### Changed
-
-- Updated all documentation files (README.md, all docs/cli/*.md files, CHANGELOG.md) to clarify that tokenizers are optional dependencies installed automatically by npm
-- Updated user-facing console messages to mention that tokenizers are optional dependencies
-- Updated source code comments in `src/utils/tokens.ts` to reflect optional dependency installation
-
----
-
-## [0.2.3] - 2025-11-29
-
-### Added
-
-- **UIF Contracts documentation** - Added comprehensive `docs/UIF_CONTRACTS.md` guide explaining contract structure, semantic hashing, and contract-based change detection
-- **Enhanced test documentation** - Improved `tests/README.md` with better structure, test categories, and usage examples
-
-### Changed
-
-- **README.md significantly streamlined** - Reduced from 1,015 to 700 lines while preserving all essential information. Removed verbose "What's New" sections in favor of brief summaries with CHANGELOG links, condensed command documentation to quick reference tables, and streamlined output format section with links to detailed schema docs
-- **Improved token estimation accuracy** - Enhanced raw source token estimation formulas in regular output (not `--compare-modes`). When in header mode, now uses more accurate formulas to estimate raw source tokens: raw source = header / 0.30 (header is 30% of raw source), and style adds 105% overhead (header+style = header × 2.05). When in header+style mode, first estimates header without style (header = header+style / 2.05), then derives raw source from that estimate. Note: "Raw source" refers to the original source files concatenated, which is always estimated using these formulas (never actually generated). The actual context bundles (header, header+style, etc.) use tokenizers when available for accurate token counts. The `--compare-modes` flag regenerates contracts to provide accurate token counts for all modes
-- **Updated COMPARE-MODES.md documentation** - Refined examples and explanations with more accurate token savings percentages and clearer interpretation guidelines
-
-### Fixed
-
-- N/A
-
-### Security
-
-- N/A
-
----
-
-## [0.2.4] - 2025-11-29
-
-### Added
-
-- **Material UI style extraction** - Added Material UI component library detection and extraction:
-  - Detects Material UI components used (Button, TextField, Card, etc.)
-  - Identifies Material UI packages imported (@mui/material, @material-ui/core, etc.)
-  - Extracts Material UI styling features: theme usage, sx prop, styled components, makeStyles, and system props
-  - Integrated into style metadata extraction when using `--include-style` or `stamp context style`
-
-### Fixed
-
-- **README clarification** - Fixed and clarified the "Global CLI" installation note to better explain the difference between local and global npm installations
-
-### Changed
-
-- **README.md significantly streamlined and optimized** - Reduced from 718 lines to 199 lines (72% reduction) while maintaining all essential information:
-  - Moved detailed documentation sections to `docs/` folder (Token Optimization, Mode Comparison, Behavioral Predictions, CI usage, Troubleshooting, Output Format schema, Next.js examples)
-  - Added "Why LogicStamp?" section highlighting token savings and key benefits
-  - Added concise "Core Features" list with bullet points
-  - Added minimal "Example Output" section with realistic JSON sample
-  - Shortened "Recent Updates" to show only 2 recent versions with link to full CHANGELOG
-  - Added "Getting Help" section with links to GitHub issues and roadmap
-  - Updated Quick Start to show both global and local installation methods
-  - Fixed npm link compatibility - converted all relative links to absolute GitHub URLs for proper rendering on npmjs.com
-  - Improved structure following best practices from top-tier dev tools (Astro, Vite, ESLint) - README focuses on marketing/onboarding, detailed docs in `/docs`
-- Updated all version references in documentation to reflect 0.2.4 release
-
----
-
-## [Unreleased]
-
-### Planned Features
-- Custom profile configuration and overrides
-- Incremental bundle caching
-- Output size optimization
-- Additional output formats
-- Integration examples for popular AI assistants
-- Vue.js support
-- Advanced Next.js App Router features (route roles, segment paths, metadata exports)
-
-### Known Limitations
-- No incremental caching (planned for future release)
-- No custom profiles beyond the three presets (planned for future release)

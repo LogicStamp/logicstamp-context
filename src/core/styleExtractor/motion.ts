@@ -2,11 +2,12 @@
  * Framer Motion extractor - Extracts animation configurations
  */
 
-import { SourceFile } from 'ts-morph';
+import { SourceFile, SyntaxKind, JsxAttribute, PropertyAccessExpression, CallExpression, VariableDeclaration } from 'ts-morph';
 import type { AnimationMetadata } from '../../types/UIFContract.js';
+import { debugError } from '../../utils/debug.js';
 
 /**
- * Extract Framer Motion animation configurations
+ * Extract Framer Motion animation configurations using AST
  */
 export function extractMotionConfig(source: SourceFile): {
   components: string[];
@@ -15,81 +16,444 @@ export function extractMotionConfig(source: SourceFile): {
   hasLayout: boolean;
   hasViewport: boolean;
 } {
-  const sourceText = source.getFullText();
+  try {
+    const components = new Set<string>();
+    const variants = new Set<string>();
+    let hasGestures = false;
+    let hasLayout = false;
+    let hasViewport = false;
 
-  // Extract motion components (motion.div, motion.button, etc.)
-  const motionComponentMatches = sourceText.matchAll(/motion\.(\w+)/g);
-  const components = new Set<string>();
-  for (const match of motionComponentMatches) {
-    if (match[1]) components.add(match[1]);
+    // Cache import declarations for reuse
+    let importDeclarations = [] as ReturnType<SourceFile['getImportDeclarations']>;
+    try {
+      importDeclarations = source.getImportDeclarations();
+    } catch (error) {
+      debugError('motion', 'extractMotionConfig', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'getImportDeclarations',
+      });
+      // Continue with empty array
+    }
+
+    // Check if Framer Motion is actually being used
+    let hasFramerMotionImport = false;
+    try {
+      hasFramerMotionImport = importDeclarations.some(imp => {
+        const mod = imp.getModuleSpecifierValue();
+        return mod === 'framer-motion' || mod.startsWith('framer-motion/');
+      });
+    } catch (error) {
+      debugError('motion', 'extractMotionConfig', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'checkFramerMotionImports',
+      });
+      // Default to false on error
+    }
+
+    // Extract motion components (motion.div, motion.button, etc.) using AST
+    let propertyAccessExpressions: PropertyAccessExpression[] = [];
+    try {
+      propertyAccessExpressions = source.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression);
+    } catch (error) {
+      debugError('motion', 'extractMotionConfig', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'getPropertyAccessExpressions',
+      });
+      // Continue with empty array
+    }
+
+    try {
+      for (const propAccess of propertyAccessExpressions) {
+        const expression = propAccess.getExpression();
+        if (expression.getKind() === SyntaxKind.Identifier && expression.getText() === 'motion') {
+          const name = propAccess.getNameNode().getText();
+          components.add(name);
+        }
+      }
+    } catch (error) {
+      debugError('motion', 'extractMotionConfig', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'processPropertyAccessExpressions',
+      });
+      // Continue - component detection may be incomplete but not fatal
+    }
+
+    // Only check for gestures/layout/viewport if Framer Motion is actually being used
+    const usesMotion = hasFramerMotionImport || components.size > 0;
+
+    // Extract variant names from JSX attributes using AST
+    let jsxAttributes: JsxAttribute[] = [];
+    try {
+      jsxAttributes = source.getDescendantsOfKind(SyntaxKind.JsxAttribute);
+    } catch (error) {
+      debugError('motion', 'extractMotionConfig', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'getJsxAttributes',
+      });
+      // Continue with empty array
+    }
+
+    try {
+      for (const attr of jsxAttributes) {
+        const jsxAttr = attr as JsxAttribute;
+        const attrName = jsxAttr.getNameNode().getText();
+        
+        if (attrName === 'variants') {
+          const initializer = jsxAttr.getInitializer();
+          if (initializer && initializer.getKind() === SyntaxKind.JsxExpression) {
+            const expr = (initializer as any).getExpression();
+            if (expr && expr.getKind() === SyntaxKind.ObjectLiteralExpression) {
+              // Extract property names from inline object literal
+              const objLiteral = expr.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+              const properties = objLiteral.getProperties();
+              for (const prop of properties) {
+                if (prop.getKind() === SyntaxKind.PropertyAssignment) {
+                  const name = prop.getNameNode();
+                  if (name.getKind() === SyntaxKind.Identifier) {
+                    variants.add(name.getText());
+                  }
+                }
+              }
+            } else if (expr && expr.getKind() === SyntaxKind.Identifier) {
+              // Handle variants passed as variable reference (e.g., variants={variants})
+              // Find the variable declaration and extract from it
+              try {
+                const varName = expr.getText();
+                const variableDeclarations: VariableDeclaration[] = source.getDescendantsOfKind(SyntaxKind.VariableDeclaration);
+                for (const varDecl of variableDeclarations) {
+                  const nameNode = varDecl.getNameNode();
+                  if (nameNode.getKind() === SyntaxKind.Identifier && nameNode.getText() === varName) {
+                    const initializer = varDecl.getInitializer();
+                    if (initializer && initializer.getKind() === SyntaxKind.ObjectLiteralExpression) {
+                      const objLiteral = initializer.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+                      const properties = objLiteral.getProperties();
+                      for (const prop of properties) {
+                        if (prop.getKind() === SyntaxKind.PropertyAssignment) {
+                          const propAssignment = prop.asKindOrThrow(SyntaxKind.PropertyAssignment);
+                          const propName = propAssignment.getNameNode();
+                          if (propName.getKind() === SyntaxKind.Identifier) {
+                            variants.add(propName.getText());
+                          }
+                        }
+                      }
+                    }
+                    break;
+                  }
+                }
+              } catch (error) {
+                debugError('motion', 'extractMotionConfig', {
+                  error: error instanceof Error ? error.message : String(error),
+                  context: 'extractVariantsFromVariableDeclarations',
+                });
+                // Continue - variant detection may be incomplete but not fatal
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      debugError('motion', 'extractMotionConfig', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'extractVariantsFromJsxAttributes',
+      });
+      // Continue - variant detection may be incomplete but not fatal
+    }
+
+    // Check for gesture handlers (only if Framer Motion is being used)
+    if (usesMotion && !hasGestures) {
+      const gestureProps = ['whileHover', 'whileTap', 'whileDrag', 'whileFocus', 'whileInView',
+        'onTap', 'onPan', 'onDrag', 'onHover', 'onTapStart', 'onTapEnd', 
+        'onPanStart', 'onPanEnd', 'onDragStart', 'onDragEnd', 'onHoverStart', 'onHoverEnd'];
+      
+      try {
+        for (const attr of jsxAttributes) {
+          const jsxAttr = attr as JsxAttribute;
+          const attrName = jsxAttr.getNameNode().getText();
+          if (gestureProps.includes(attrName)) {
+            hasGestures = true;
+            break;
+          }
+        }
+      } catch (error) {
+        debugError('motion', 'extractMotionConfig', {
+          error: error instanceof Error ? error.message : String(error),
+          context: 'checkGestures',
+        });
+        // Default to false on error
+      }
+    }
+
+    // Check for layout animations (only if Framer Motion is being used)
+    if (usesMotion && !hasLayout) {
+      try {
+        for (const attr of jsxAttributes) {
+          const jsxAttr = attr as JsxAttribute;
+          const attrName = jsxAttr.getNameNode().getText();
+          if (attrName === 'layout' || attrName === 'layoutId') {
+            hasLayout = true;
+            break;
+          }
+        }
+      } catch (error) {
+        debugError('motion', 'extractMotionConfig', {
+          error: error instanceof Error ? error.message : String(error),
+          context: 'checkLayoutAnimations',
+        });
+        // Default to false on error
+      }
+    }
+
+    // Check for viewport animations (only if Framer Motion is being used)
+    if (usesMotion && !hasViewport) {
+      try {
+        for (const attr of jsxAttributes) {
+          const jsxAttr = attr as JsxAttribute;
+          const attrName = jsxAttr.getNameNode().getText();
+          if (attrName === 'viewport') {
+            hasViewport = true;
+            break;
+          }
+        }
+      } catch (error) {
+        debugError('motion', 'extractMotionConfig', {
+          error: error instanceof Error ? error.message : String(error),
+          context: 'checkViewportAnimations',
+        });
+        // Default to false on error
+      }
+    }
+
+    // Check for useInView hook using AST (only if Framer Motion is being used)
+    if (usesMotion && !hasViewport) {
+      try {
+        const callExpressions = source.getDescendantsOfKind(SyntaxKind.CallExpression);
+        for (const callExpr of callExpressions) {
+          const expr = callExpr.getExpression();
+          if (expr.getKind() === SyntaxKind.Identifier && expr.getText() === 'useInView') {
+            hasViewport = true;
+            break;
+          }
+        }
+      } catch (error) {
+        debugError('motion', 'extractMotionConfig', {
+          error: error instanceof Error ? error.message : String(error),
+          context: 'checkUseInViewHook',
+        });
+        // Default to false on error
+      }
+    }
+
+    return {
+      components: Array.from(components).sort(),
+      variants: Array.from(variants).sort(),
+      hasGestures,
+      hasLayout,
+      hasViewport,
+    };
+  } catch (error) {
+    debugError('motion', 'extractMotionConfig', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    // Return empty/default values on unexpected errors
+    return {
+      components: [],
+      variants: [],
+      hasGestures: false,
+      hasLayout: false,
+      hasViewport: false,
+    };
   }
-
-  // Extract variant names
-  const variantMatches = sourceText.matchAll(/variants\s*=\s*\{\s*(\w+)/g);
-  const variants = new Set<string>();
-  for (const match of variantMatches) {
-    if (match[1]) variants.add(match[1]);
-  }
-
-  // Check for gesture handlers
-  const hasGestures = /while(Hover|Tap|Drag|Focus|InView)\s*=/.test(sourceText) ||
-                     /on(Tap|Pan|Drag|Hover)(Start|End)?\s*=/.test(sourceText);
-
-  // Check for layout animations
-  const hasLayout = /layout(?:Id)?\s*=/.test(sourceText);
-
-  // Check for viewport animations
-  const hasViewport = /useInView|viewport\s*=\s*\{/.test(sourceText);
-
-  return {
-    components: Array.from(components).sort(),
-    variants: Array.from(variants).sort(),
-    hasGestures,
-    hasLayout,
-    hasViewport,
-  };
 }
 
 /**
- * Extract animation metadata
+ * Extract animation metadata using AST
  */
 export function extractAnimationMetadata(source: SourceFile): AnimationMetadata {
-  const animation: AnimationMetadata = {};
-  const sourceText = source.getFullText();
+  try {
+    const animation: AnimationMetadata = {};
 
-  // Check for framer-motion animations
-  const hasFramerMotion = source.getImportDeclarations().some(imp => {
-    const moduleSpecifier = imp.getModuleSpecifierValue();
-    return moduleSpecifier === 'framer-motion';
-  });
-
-  if (hasFramerMotion) {
-    animation.library = 'framer-motion';
-
-    // Check for fade-in patterns
-    if (/animate\s*=\s*\{\{\s*opacity:\s*1/.test(sourceText)) {
-      animation.type = 'fade-in';
+    // Cache import declarations for reuse
+    let importDeclarations = [] as ReturnType<SourceFile['getImportDeclarations']>;
+    try {
+      importDeclarations = source.getImportDeclarations();
+    } catch (error) {
+      debugError('motion', 'extractAnimationMetadata', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'getImportDeclarations',
+      });
+      // Continue with empty array
     }
 
-    // Check for useInView hook
-    if (/useInView/.test(sourceText)) {
-      animation.trigger = 'inView';
+    // Check for framer-motion animations using AST
+    let hasFramerMotion = false;
+    try {
+      hasFramerMotion = importDeclarations.some(imp => {
+        const mod = imp.getModuleSpecifierValue();
+        return mod === 'framer-motion' || mod.startsWith('framer-motion/');
+      });
+    } catch (error) {
+      debugError('motion', 'extractAnimationMetadata', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'checkFramerMotionImports',
+      });
+      // Default to false on error
     }
-  }
 
-  // Check for CSS transitions/animations
-  if (/transition/.test(sourceText) || /animate-/.test(sourceText)) {
-    if (!animation.library) {
-      animation.library = 'css';
+    // Cache JSX attributes once for reuse in both Framer Motion and CSS checks
+    let jsxAttributes: JsxAttribute[] = [];
+    try {
+      jsxAttributes = source.getDescendantsOfKind(SyntaxKind.JsxAttribute);
+    } catch (error) {
+      debugError('motion', 'extractAnimationMetadata', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'getJsxAttributes',
+      });
+      // Continue with empty array
     }
-    if (!animation.type && /animate-/.test(sourceText)) {
-      const animateMatch = sourceText.match(/animate-(\w+)/);
-      if (animateMatch) {
-        animation.type = animateMatch[1];
+
+    if (hasFramerMotion) {
+      animation.library = 'framer-motion';
+
+      // Check for fade-in patterns using AST
+
+      try {
+        for (const attr of jsxAttributes) {
+          if (attr.getNameNode().getText() === 'animate') {
+            const animateInitializer = attr.getInitializer();
+            if (animateInitializer && animateInitializer.getKind() === SyntaxKind.JsxExpression) {
+              const expr = (animateInitializer as any).getExpression();
+              if (expr && expr.getKind() === SyntaxKind.ObjectLiteralExpression) {
+                const objLiteral = expr.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+                const properties = objLiteral.getProperties();
+                for (const prop of properties) {
+                  if (prop.getKind() === SyntaxKind.PropertyAssignment) {
+                    const name = prop.getNameNode();
+                    if (name.getKind() === SyntaxKind.Identifier && name.getText() === 'opacity') {
+                      const opacityInitializer = prop.getInitializer();
+                      if (opacityInitializer && opacityInitializer.getKind() === SyntaxKind.NumericLiteral) {
+                        const value = (opacityInitializer as any).getLiteralValue?.() ?? parseFloat(opacityInitializer.getText());
+                        if (value === 1) {
+                          animation.type = 'fade-in';
+                          break;
+                        }
+                      }
+                    }
+                  }
+                }
+                if (animation.type === 'fade-in') break;
+              }
+            }
+        }
+      }
+    } catch (error) {
+      debugError('motion', 'extractAnimationMetadata', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'checkFadeInPatterns',
+      });
+      // Continue - animation detection may be incomplete but not fatal
+    }
+
+      // Check for useInView hook using AST
+      if (!animation.trigger) {
+        try {
+          const callExpressions: CallExpression[] = source.getDescendantsOfKind(SyntaxKind.CallExpression);
+          for (const callExpr of callExpressions) {
+            const expr = callExpr.getExpression();
+            if (expr.getKind() === SyntaxKind.Identifier && expr.getText() === 'useInView') {
+              animation.trigger = 'inView';
+              break;
+            }
+          }
+        } catch (error) {
+          debugError('motion', 'extractAnimationMetadata', {
+            error: error instanceof Error ? error.message : String(error),
+            context: 'checkUseInViewHook',
+          });
+          // Continue - trigger detection may be incomplete but not fatal
+        }
       }
     }
-  }
 
-  return animation;
+    // Check for CSS transitions/animations using AST (reuse jsxAttributes from above)
+    let hasTransition = false;
+    let hasAnimateClass = false;
+    
+    try {
+      // Check for transition attribute or transition-related classes in className
+      hasTransition = jsxAttributes.some(attr => {
+        const name = attr.getNameNode().getText();
+        
+        if (name === 'transition') return true; // explicit prop
+        
+        if (name === 'className' || name === 'class') {
+          const attrInitializer = attr.getInitializer();
+          if (attrInitializer) {
+            const text = attrInitializer.getText();
+            // Tailwind-style transitions
+            return /(?:^|\s)transition-/.test(text) || /(?:^|\s)duration-/.test(text);
+          }
+        }
+        
+        return false;
+      });
+
+      hasAnimateClass = jsxAttributes.some(attr => {
+        const attrName = attr.getNameNode().getText();
+        if (attrName === 'className' || attrName === 'class') {
+          const attrInitializer = attr.getInitializer();
+          if (attrInitializer) {
+            const text = attrInitializer.getText();
+            return /animate-/.test(text);
+          }
+        }
+        return false;
+      });
+    } catch (error) {
+      debugError('motion', 'extractAnimationMetadata', {
+        error: error instanceof Error ? error.message : String(error),
+        context: 'checkCSSTransitionsAnimations',
+      });
+      // Default to false on error
+    }
+
+    if (hasTransition || hasAnimateClass) {
+      if (!animation.library) {
+        animation.library = 'css';
+      }
+      if (!animation.type && hasAnimateClass) {
+        try {
+          // Extract animate- class name
+          for (const attr of jsxAttributes) {
+            const attrName = attr.getNameNode().getText();
+            if (attrName === 'className' || attrName === 'class') {
+              const attrInitializer = attr.getInitializer();
+              if (attrInitializer) {
+                const text = attrInitializer.getText();
+                const animateMatch = text.match(/animate-([a-zA-Z0-9_-]+)/);
+                if (animateMatch) {
+                  animation.type = animateMatch[1];
+                  break;
+                }
+              }
+            }
+          }
+        } catch (error) {
+          debugError('motion', 'extractAnimationMetadata', {
+            error: error instanceof Error ? error.message : String(error),
+            context: 'extractAnimateClassName',
+          });
+          // Continue - animation type detection may be incomplete but not fatal
+        }
+      }
+    }
+
+    return animation;
+  } catch (error) {
+    debugError('motion', 'extractAnimationMetadata', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    // Return empty object on unexpected errors
+    return {};
+  }
 }
 

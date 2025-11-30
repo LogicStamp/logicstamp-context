@@ -117,4 +117,4 @@ stamp context style --out examples/my-style-example.json
 
 - [../README.md](../README.md) - Main documentation
 - [../schema/logicstamp.context.schema.json](../schema/logicstamp.context.schema.json) - JSON Schema
-- [../docs/USAGE.md](../docs/USAGE.md) - Detailed usage guide
+- [../docs/usage.md](../docs/usage.md) - Detailed usage guide

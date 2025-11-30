@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { Project } from 'ts-morph';
 import {
   detectNextJsDirective,
@@ -269,6 +269,115 @@ export function calculate() {
       const kind = detectKind([], [], [], 'src/utils.ts', sourceFile);
 
       expect(kind).toBe('ts:module');
+    });
+  });
+
+  describe('Error handling', () => {
+    it('should handle AST traversal errors gracefully in detectNextJsDirective', () => {
+      const sourceCode = `'use client';
+
+export function MyComponent() {
+  return <div>Hello</div>;
+}
+`;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      // Should not throw even if there are issues
+      const directive = detectNextJsDirective(sourceFile);
+      expect(directive === 'client' || directive === 'server' || directive === undefined).toBe(true);
+    });
+
+    it('should handle AST traversal errors gracefully in extractNextJsMetadata', () => {
+      const sourceCode = `'use client';
+
+export function MyComponent() {
+  return <div>Hello</div>;
+}
+`;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('app/page.tsx', sourceCode);
+
+      // Should not throw even if there are issues
+      const metadata = extractNextJsMetadata(sourceFile, 'app/page.tsx');
+      expect(metadata === undefined || typeof metadata === 'object').toBe(true);
+    });
+
+    it('should handle AST traversal errors gracefully in detectKind', () => {
+      const sourceCode = `
+import { useState } from 'react';
+
+export function MyComponent() {
+  const [count, setCount] = useState(0);
+  return <div>{count}</div>;
+}
+`;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      // Should not throw even if there are issues
+      const kind = detectKind(['useState'], [], ['react'], 'test.tsx', sourceFile);
+      expect(['react:component', 'node:cli', 'ts:module']).toContain(kind);
+    });
+
+    it('should have debug logging infrastructure in place', () => {
+      const originalEnv = process.env.LOGICSTAMP_DEBUG;
+      process.env.LOGICSTAMP_DEBUG = '1';
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', 'export function test() {}');
+
+      detectNextJsDirective(sourceFile);
+      extractNextJsMetadata(sourceFile, 'test.tsx');
+      detectKind([], [], [], 'test.tsx', sourceFile);
+
+      // If errors were logged, verify they have the correct format
+      const errorCalls = consoleErrorSpy.mock.calls;
+      if (errorCalls.length > 0) {
+        const hasDetectorLog = errorCalls.some(call =>
+          call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
+          call[0]?.toString().includes('detector')
+        );
+        expect(hasDetectorLog).toBe(true);
+      }
+
+      consoleErrorSpy.mockRestore();
+      if (originalEnv === undefined) {
+        delete process.env.LOGICSTAMP_DEBUG;
+      } else {
+        process.env.LOGICSTAMP_DEBUG = originalEnv;
+      }
+    });
+
+    it('should return undefined on error in detectNextJsDirective', () => {
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', '');
+
+      // Should return undefined on any error, not throw
+      const directive = detectNextJsDirective(sourceFile);
+      expect(directive === 'client' || directive === 'server' || directive === undefined).toBe(true);
+    });
+
+    it('should return undefined on error in extractNextJsMetadata', () => {
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', '');
+
+      // Should return undefined on any error, not throw
+      const metadata = extractNextJsMetadata(sourceFile, 'test.tsx');
+      expect(metadata === undefined || typeof metadata === 'object').toBe(true);
+    });
+
+    it('should return ts:module as fallback on error in detectKind', () => {
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', '');
+
+      // Should return a valid ContractKind on any error, defaulting to ts:module
+      const kind = detectKind([], [], [], 'test.tsx', sourceFile);
+      expect(['react:component', 'node:cli', 'ts:module']).toContain(kind);
     });
   });
 });

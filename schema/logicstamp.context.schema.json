@@ -117,7 +117,7 @@
         "source": {
           "type": "string",
           "pattern": "^logicstamp-context@\\d+\\.\\d+\\.\\d+$",
-          "description": "Generator identifier with version (e.g., 'logicstamp-context@0.2.4'). Used for compatibility tracking and debugging."
+          "description": "Generator identifier with version (e.g., 'logicstamp-context@0.2.5'). Used for compatibility tracking and debugging."
         }
       },
       "additionalProperties": false

@@ -169,6 +169,40 @@ export interface StyleSources {
       usesSystemProps?: boolean; // System props on Box/Stack
     };
   };
+
+  // ShadCN/UI with component and variant analysis
+  shadcnUI?: {
+    components?: string[]; // Button, Card, Dialog, Sheet, etc.
+    variants?: Record<string, string[]>; // Variant usage per component type
+    sizes?: string[]; // Size prop values used (sm, lg, icon, etc.)
+    features: {
+      usesForm?: boolean; // react-hook-form integration
+      usesTheme?: boolean; // next-themes or dark mode
+      usesIcons?: boolean; // lucide-react or radix icons
+      componentDensity?: 'low' | 'medium' | 'high'; // Number of ShadCN components
+    };
+  };
+
+  // Radix UI with primitive and pattern analysis
+  radixUI?: {
+    primitives?: Record<string, string[]>; // Package -> components (e.g., 'react-dialog' -> ['Dialog', 'DialogContent'])
+    patterns?: {
+      controlled?: string[]; // Components using controlled pattern
+      uncontrolled?: string[]; // Components using uncontrolled pattern
+      portals?: number; // Portal usage count
+      asChild?: number; // asChild composition pattern count
+    };
+    accessibility?: {
+      usesDirection?: boolean; // RTL/LTR support
+      usesFocusManagement?: boolean; // Focus trapping, etc.
+      usesKeyboardNav?: boolean; // Loop, orientation, etc.
+      usesModal?: boolean; // Modal dialogs
+    };
+    features?: {
+      primitiveCount?: number; // Total unique primitives used
+      compositionDepth?: 'simple' | 'moderate' | 'complex'; // Composition complexity
+    };
+  };
 }
 
 export interface LayoutMetadata {
@@ -182,6 +216,10 @@ export interface LayoutMetadata {
 export interface VisualMetadata {
   colors?: string[];
   spacing?: string[];
+  /**
+   * Border radius token (e.g., "default", "sm", "md", "lg", "xl", "2xl", "3xl", "full")
+   * Stores just the token, not the full class name (e.g., "lg" not "rounded-lg")
+   */
   radius?: string;
   typography?: string[];
 }

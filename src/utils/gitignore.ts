@@ -5,6 +5,7 @@
 import { readFile, writeFile, access } from 'node:fs/promises';
 import { join } from 'node:path';
 import { readConfig, updateConfig } from './config.js';
+import { debugError } from './debug.js';
 
 /**
  * Patterns that should be added to .gitignore for LogicStamp context files
@@ -99,7 +100,34 @@ export function addLogicStampPatterns(content: string): string {
  */
 export async function writeGitignore(targetDir: string, content: string): Promise<void> {
   const gitignorePath = join(targetDir, '.gitignore');
-  await writeFile(gitignorePath, content, 'utf-8');
+  
+  try {
+    await writeFile(gitignorePath, content, 'utf-8');
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    debugError('gitignore', 'writeGitignore', {
+      gitignorePath,
+      targetDir,
+      message: err.message,
+      code: err.code,
+    });
+    
+    let userMessage: string;
+    switch (err.code) {
+      case 'ENOENT':
+        userMessage = `Parent directory not found for: "${gitignorePath}"`;
+        break;
+      case 'EACCES':
+        userMessage = `Permission denied writing to: "${gitignorePath}"`;
+        break;
+      case 'ENOSPC':
+        userMessage = `No space left on device. Cannot write: "${gitignorePath}"`;
+        break;
+      default:
+        userMessage = `Failed to write .gitignore file "${gitignorePath}": ${err.message}`;
+    }
+    throw new Error(userMessage);
+  }
 }
 
 /**

@@ -3,17 +3,24 @@
  */
 
 import { writeFile, mkdir } from 'node:fs/promises';
-import { resolve, dirname, join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { createRequire } from 'module';
 import type { LogicStampBundle, LogicStampIndex, FolderInfo } from '../../../core/pack.js';
 import { getFolderPath, normalizeEntryId } from '../../../utils/fsx.js';
 import { estimateGPT4Tokens } from '../../../utils/tokens.js';
 import { formatBundlesForFolder } from './bundleFormatter.js';
+import { debugError } from '../../../utils/debug.js';
 
 // Load package.json to get version
 const require = createRequire(import.meta.url);
-const pkg = require('../../../../package.json');
-const PACKAGE_VERSION = `${pkg.name}@${pkg.version}`;
+let PACKAGE_VERSION: string;
+try {
+  const pkg = require('../../../../package.json');
+  PACKAGE_VERSION = `${pkg.name}@${pkg.version}`;
+} catch (error) {
+  // Fallback if package.json is missing (e.g., in bundled scenarios)
+  PACKAGE_VERSION = 'logicstamp-context@unknown';
+}
 
 /**
  * Normalize path for display (convert backslashes to forward slashes)
@@ -141,9 +148,36 @@ export async function writeContextFiles(
     const contextFileName = relativePath === '.' ? 'context.json' : join(relativePath, 'context.json');
     const contextFilePath = relativePath === '.' ? 'context.json' : `${relativePath}/context.json`;
     const folderContextPath = join(outputDir, contextFileName);
-    await mkdir(dirname(folderContextPath), { recursive: true });
-    await writeFile(folderContextPath, folderOutput, 'utf8');
-    filesWritten++;
+    
+    try {
+      await mkdir(dirname(folderContextPath), { recursive: true });
+      await writeFile(folderContextPath, folderOutput, 'utf8');
+      filesWritten++;
+    } catch (error) {
+      const err = error as NodeJS.ErrnoException;
+      debugError('fileWriter', 'writeContextFiles', {
+        folderContextPath,
+        relativePath,
+        message: err.message,
+        code: err.code,
+      });
+      
+      let userMessage: string;
+      switch (err.code) {
+        case 'ENOENT':
+          userMessage = `Parent directory not found for: "${folderContextPath}"`;
+          break;
+        case 'EACCES':
+          userMessage = `Permission denied writing to: "${folderContextPath}"`;
+          break;
+        case 'ENOSPC':
+          userMessage = `No space left on device. Cannot write: "${folderContextPath}"`;
+          break;
+        default:
+          userMessage = `Failed to write context file "${folderContextPath}": ${err.message}`;
+      }
+      throw new Error(userMessage);
+    }
     if (!options.quiet) {
       console.log(`   ✓ ${displayPath(folderContextPath)} (${folderBundles.length} bundles)`);
     }
@@ -200,6 +234,9 @@ export async function writeMainIndex(
       totalComponents: contracts.length,
       totalBundles: bundles.length,
       totalFolders: bundlesByFolderSize,
+      // Note: totalTokenEstimate uses GPT-4 token counting (estimateGPT4Tokens)
+      // If per-model token estimates are needed in the future, consider:
+      // totalTokenEstimateGPT4, totalTokenEstimateClaude, etc.
       totalTokenEstimate,
     },
     folders: folderInfos,
@@ -209,7 +246,34 @@ export async function writeMainIndex(
   };
 
   const indexOutput = JSON.stringify(index, null, 2);
-  await writeFile(mainContextPath, indexOutput, 'utf8');
+  
+  try {
+    await writeFile(mainContextPath, indexOutput, 'utf8');
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    debugError('fileWriter', 'writeMainIndex', {
+      mainContextPath,
+      message: err.message,
+      code: err.code,
+    });
+    
+    let userMessage: string;
+    switch (err.code) {
+      case 'ENOENT':
+        userMessage = `Parent directory not found for: "${mainContextPath}"`;
+        break;
+      case 'EACCES':
+        userMessage = `Permission denied writing to: "${mainContextPath}"`;
+        break;
+      case 'ENOSPC':
+        userMessage = `No space left on device. Cannot write: "${mainContextPath}"`;
+        break;
+      default:
+        userMessage = `Failed to write main index "${mainContextPath}": ${err.message}`;
+    }
+    throw new Error(userMessage);
+  }
+  
   if (options.quiet && !options.suppressSuccessIndicator) {
     // Minimal output in quiet mode (unless suppressed for internal calls)
     process.stdout.write('✓\n');

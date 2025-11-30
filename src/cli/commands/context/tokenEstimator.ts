@@ -187,7 +187,7 @@ export async function generateModeComparison(
     
     // Generate bundles with no-style contracts
     const noStyleContractsMap = new Map(noStyleContracts.map(c => [c.entryId, c]));
-    const noStyleBundles = await Promise.all(
+    const noStyleBundles = await Promise.allSettled(
       manifest.graph.roots.map(rootId =>
         pack(rootId, manifest, {
           depth: options.depth,
@@ -201,9 +201,13 @@ export async function generateModeComparison(
         }, projectRoot)
       )
     );
+    // Filter out failed bundles, keep only successful ones
+    const successfulNoStyleBundles = noStyleBundles
+      .filter((result): result is PromiseFulfilledResult<LogicStampBundle> => result.status === 'fulfilled')
+      .map(result => result.value);
     
     // Format no-style bundles to get token count
-    const noStyleOutput = formatBundles(noStyleBundles, options.format);
+    const noStyleOutput = formatBundles(successfulNoStyleBundles, options.format);
     
     headerNoStyleGPT4 = await estimateGPT4Tokens(noStyleOutput);
     headerNoStyleClaude = await estimateClaudeTokens(noStyleOutput);
@@ -256,7 +260,7 @@ export async function generateModeComparison(
     
     // Generate bundles with style-enabled contracts
     const styleContractsMap = new Map(styleContracts.map(c => [c.entryId, c]));
-    const styleBundles = await Promise.all(
+    const styleBundles = await Promise.allSettled(
       manifest.graph.roots.map(rootId =>
         pack(rootId, manifest, {
           depth: options.depth,
@@ -270,9 +274,13 @@ export async function generateModeComparison(
         }, projectRoot)
       )
     );
+    // Filter out failed bundles, keep only successful ones
+    const successfulStyleBundles = styleBundles
+      .filter((result): result is PromiseFulfilledResult<LogicStampBundle> => result.status === 'fulfilled')
+      .map(result => result.value);
     
     // Format style bundles to get token count
-    const styleOutput = formatBundles(styleBundles, options.format);
+    const styleOutput = formatBundles(successfulStyleBundles, options.format);
     
     headerWithStyleGPT4 = await estimateGPT4Tokens(styleOutput);
     headerWithStyleClaude = await estimateClaudeTokens(styleOutput);

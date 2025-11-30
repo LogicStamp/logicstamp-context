@@ -4,39 +4,71 @@
 
 import { SourceFile, SyntaxKind } from 'ts-morph';
 import type { EventType } from '../../../types/UIFContract.js';
+import { debugError } from '../../../utils/debug.js';
 
 /**
  * Extract event handlers from JSX attributes
  */
 export function extractEvents(source: SourceFile): Record<string, EventType> {
   const events: Record<string, EventType> = {};
+  const filePath = source.getFilePath?.() ?? 'unknown';
 
-  source.getDescendantsOfKind(SyntaxKind.JsxAttribute).forEach((attr) => {
-    const name = attr.getNameNode().getText();
+  try {
+    source.getDescendantsOfKind(SyntaxKind.JsxAttribute).forEach((attr) => {
+      try {
+        const name = attr.getNameNode().getText();
 
-    // Match onXxx pattern
-    if (/^on[A-Z]/.test(name)) {
-      const initializer = attr.getInitializer();
-      if (initializer) {
-        // Try to infer the event handler signature
-        const initText = initializer.getText();
+        // Match onXxx pattern
+        if (/^on[A-Z]/.test(name)) {
+          const initializer = attr.getInitializer();
+          if (initializer) {
+            try {
+              // Try to infer the event handler signature
+              const initText = initializer.getText();
 
-        // Extract function signature if possible
-        let signature = '() => void';  // default
+              // Extract function signature if possible
+              let signature = '() => void';  // default
 
-        // Try to parse arrow function signature: (arg) => { ... }
-        const arrowMatch = initText.match(/\(([^)]*)\)\s*=>/);
-        if (arrowMatch) {
-          signature = `(${arrowMatch[1]}) => void`;
+              // Try to parse arrow function signature: (arg) => { ... }
+              const arrowMatch = initText.match(/\(([^)]*)\)\s*=>/);
+              if (arrowMatch) {
+                signature = `(${arrowMatch[1]}) => void`;
+              }
+
+              events[name] = {
+                type: 'function',
+                signature
+              };
+            } catch (error) {
+              debugError('eventExtractor', 'extractEvents', {
+                filePath,
+                error: error instanceof Error ? error.message : String(error),
+                context: 'events-signature',
+              });
+              // Use default signature
+              events[name] = {
+                type: 'function',
+                signature: '() => void'
+              };
+            }
+          }
         }
-
-        events[name] = {
-          type: 'function',
-          signature
-        };
+      } catch (error) {
+        debugError('eventExtractor', 'extractEvents', {
+          filePath,
+          error: error instanceof Error ? error.message : String(error),
+          context: 'events-iteration',
+        });
+        // Continue with next attribute
       }
-    }
-  });
+    });
+  } catch (error) {
+    debugError('eventExtractor', 'extractEvents', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return {};
+  }
 
   return events;
 }
@@ -46,15 +78,33 @@ export function extractEvents(source: SourceFile): Record<string, EventType> {
  */
 export function extractJsxRoutes(source: SourceFile): string[] {
   const routes = new Set<string>();
+  const filePath = source.getFilePath?.() ?? 'unknown';
 
-  // Look for route-like string literals in JSX
-  source.getDescendantsOfKind(SyntaxKind.StringLiteral).forEach((strLit) => {
-    const value = strLit.getLiteralValue();
-    // Match route patterns like /path, /path/:id, etc.
-    if (/^\/[a-z0-9\-_/:.]*$/i.test(value)) {
-      routes.add(value);
-    }
-  });
+  try {
+    // Look for route-like string literals in JSX
+    source.getDescendantsOfKind(SyntaxKind.StringLiteral).forEach((strLit) => {
+      try {
+        const value = strLit.getLiteralValue();
+        // Match route patterns like /path, /path/:id, etc.
+        if (/^\/[a-z0-9\-_/:.]*$/i.test(value)) {
+          routes.add(value);
+        }
+      } catch (error) {
+        debugError('eventExtractor', 'extractJsxRoutes', {
+          filePath,
+          error: error instanceof Error ? error.message : String(error),
+          context: 'jsxRoutes-iteration',
+        });
+        // Continue with next literal
+      }
+    });
+  } catch (error) {
+    debugError('eventExtractor', 'extractJsxRoutes', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return [];
+  }
 
   return Array.from(routes).sort();
 }

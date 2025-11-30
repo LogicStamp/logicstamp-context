@@ -28,7 +28,7 @@ The `stamp init` command sets up LogicStamp in your project by:
    - `logicstamp.manifest.json` - Dependency manifest files
    - `.logicstamp/` - Configuration directory
 
-2. **Generating `LLM_CONTEXT.md`** in the project root (if it doesn't already exist) - A guide that helps AI assistants understand your project structure and how to work with LogicStamp context files
+2. **Generating `LLM_context.md`** in the project root (if it doesn't already exist) - A guide that helps AI assistants understand your project structure and how to work with LogicStamp context files
 
 3. **Creating `.logicstamp/config.json`** to save your preferences so `stamp context` won't prompt again
 
@@ -102,17 +102,17 @@ No changes are made:
    - logicstamp.manifest.json
 ```
 
-### LLM_CONTEXT.md Generation
+### LLM_context.md Generation
 
-The `stamp init` command also generates `LLM_CONTEXT.md` in your project root:
+The `stamp init` command also generates `LLM_context.md` in your project root:
 
 ```
-✅ Created LLM_CONTEXT.md
+✅ Created LLM_context.md
 ```
 
-**If `LLM_CONTEXT.md` already exists:**
+**If `LLM_context.md` already exists:**
 ```
-ℹ️  LLM_CONTEXT.md already exists
+ℹ️  LLM_context.md already exists
 ```
 
 This file provides guidance for AI assistants on how to understand and work with your LogicStamp context files. It's automatically generated from the package template and includes information about:
@@ -123,7 +123,7 @@ This file provides guidance for AI assistants on how to understand and work with
 
 ## Interactive Prompts
 
-The `stamp init` command prompts you interactively (in TTY mode) for both `.gitignore` and `LLM_CONTEXT.md` setup:
+The `stamp init` command prompts you interactively (in TTY mode) for both `.gitignore` and `LLM_context.md` setup:
 
 ### .gitignore Setup Prompt
 
@@ -152,23 +152,23 @@ Add recommended patterns to .gitignore? [Y/n]
 - Preference saved as `"skipped"` in `.logicstamp/config.json`
 - `stamp context` will never touch `.gitignore`
 
-### LLM_CONTEXT.md Generation Prompt
+### LLM_context.md Generation Prompt
 
-When `LLM_CONTEXT.md` doesn't exist, you'll see:
+When `LLM_context.md` doesn't exist, you'll see:
 
 ```
-💡 LogicStamp can generate LLM_CONTEXT.md to help AI assistants understand your project structure.
+💡 LogicStamp can generate LLM_context.md to help AI assistants understand your project structure.
 
-Generate LLM_CONTEXT.md in project root? [Y/n]
+Generate LLM_context.md in project root? [Y/n]
 ```
 
 **If you choose "Y" (or just press Enter):**
-- `LLM_CONTEXT.md` is created in the project root
+- `LLM_context.md` is created in the project root
 - Preference saved as `"added"` in `.logicstamp/config.json`
 - `stamp context` will automatically maintain the file in future runs
 
 **If you choose "n":**
-- `LLM_CONTEXT.md` is not created
+- `LLM_context.md` is not created
 - Preference saved as `"skipped"` in `.logicstamp/config.json`
 - `stamp context` will never create this file
 
@@ -212,11 +212,11 @@ The `stamp init` command is:
 ### You don't need `stamp init` if:
 
 - Your `.gitignore` already has the necessary patterns
-- You prefer to manually manage `.gitignore` and `LLM_CONTEXT.md`
+- You prefer to manually manage `.gitignore` and `LLM_context.md`
 - You're running `stamp context` in CI (it defaults to skipping both operations)
 
 ## Related Commands
 
-- [`stamp context`](CONTEXT.md) - Generate context files (includes smart detection)
-- [`stamp context validate`](VALIDATE.md) - Validate generated context files
-- [`stamp context compare`](COMPARE_COMMAND.md) - Detect drift in context files
+- [`stamp context`](context.md) - Generate context files (includes smart detection)
+- [`stamp context validate`](validate.md) - Validate generated context files
+- [`stamp context compare`](compare.md) - Detect drift in context files

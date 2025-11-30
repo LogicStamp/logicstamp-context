@@ -10,4 +10,5 @@ export { extractStyledComponents } from './styled.js';
 export { extractMotionConfig, extractAnimationMetadata } from './motion.js';
 export { extractLayoutMetadata, extractVisualMetadata } from './layout.js';
 export { extractMaterialUI } from './material.js';
+export { extractShadcnUI } from './shadcn.js';
 

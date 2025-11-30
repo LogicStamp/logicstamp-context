@@ -4,40 +4,60 @@
 
 import { SourceFile, SyntaxKind } from 'ts-morph';
 import type { ContractKind, NextJSMetadata } from '../../types/UIFContract.js';
+import { debugError } from '../../utils/debug.js';
 
 /**
  * Detect Next.js 'use client' or 'use server' directives
  * These directives must appear at the top of the file (before any imports)
  */
 export function detectNextJsDirective(source: SourceFile): 'client' | 'server' | undefined {
-  const fullText = source.getFullText();
+  const filePath = source.getFilePath?.() ?? 'unknown';
 
-  // Get the first few lines (directives must be at the top)
-  const firstLines = fullText.split('\n').slice(0, 5);
+  try {
+    const fullText = source.getFullText();
 
-  // Check each line - directive must be at start of line (ignoring whitespace)
-  for (const line of firstLines) {
-    const trimmed = line.trim();
+    // Get the first few lines (directives must be at the top)
+    const firstLines = fullText.split('\n').slice(0, 5);
 
-    // Skip empty lines and comments
-    if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('/*')) {
-      continue;
+    // Check each line - directive must be at start of line (ignoring whitespace)
+    for (const line of firstLines) {
+      try {
+        const trimmed = line.trim();
+
+        // Skip empty lines and comments
+        if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('/*')) {
+          continue;
+        }
+
+        // Check for 'use client' directive at start of statement
+        if (/^['"]use client['"];?$/.test(trimmed)) {
+          return 'client';
+        }
+
+        // Check for 'use server' directive at start of statement
+        if (/^['"]use server['"];?$/.test(trimmed)) {
+          return 'server';
+        }
+
+        // If we hit a non-comment, non-directive line, stop looking
+        if (trimmed) {
+          break;
+        }
+      } catch (error) {
+        debugError('detector', 'detectNextJsDirective', {
+          filePath,
+          error: error instanceof Error ? error.message : String(error),
+          context: 'directive-line',
+        });
+        // Continue with next line
+      }
     }
-
-    // Check for 'use client' directive at start of statement
-    if (/^['"]use client['"];?$/.test(trimmed)) {
-      return 'client';
-    }
-
-    // Check for 'use server' directive at start of statement
-    if (/^['"]use server['"];?$/.test(trimmed)) {
-      return 'server';
-    }
-
-    // If we hit a non-comment, non-directive line, stop looking
-    if (trimmed) {
-      break;
-    }
+  } catch (error) {
+    debugError('detector', 'detectNextJsDirective', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return undefined;
   }
 
   return undefined;
@@ -60,15 +80,25 @@ export function isInNextAppDir(filePath: string): boolean {
  * Extract Next.js metadata from the file
  */
 export function extractNextJsMetadata(source: SourceFile, filePath: string): NextJSMetadata | undefined {
-  const directive = detectNextJsDirective(source);
-  const isInApp = isInNextAppDir(filePath);
+  const resolvedPath = source.getFilePath?.() ?? filePath;
 
-  // Only return metadata if we have something to report
-  if (directive || isInApp) {
-    return {
-      ...(isInApp && { isInAppDir: true }),
-      ...(directive && { directive })
-    };
+  try {
+    const directive = detectNextJsDirective(source);
+    const isInApp = isInNextAppDir(filePath);
+
+    // Only return metadata if we have something to report
+    if (directive || isInApp) {
+      return {
+        ...(isInApp && { isInAppDir: true }),
+        ...(directive && { directive })
+      };
+    }
+  } catch (error) {
+    debugError('detector', 'extractNextJsMetadata', {
+      filePath: resolvedPath,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return undefined;
   }
 
   return undefined;
@@ -84,47 +114,86 @@ export function detectKind(
   filePath: string,
   source: SourceFile
 ): ContractKind {
-  // React component: has hooks or JSX components
-  if (hooks.length > 0 || components.length > 0) {
-    return 'react:component';
-  }
+  const resolvedPath = source.getFilePath?.() ?? filePath;
 
-  // Check for React imports
-  const hasReactImport = imports.some(imp => imp === 'react' || imp.startsWith('react/'));
+  try {
+    // React component: has hooks or JSX components
+    if (hooks.length > 0 || components.length > 0) {
+      return 'react:component';
+    }
 
-  if (hasReactImport) {
-    const sourceText = source.getFullText();
+    // Check for React imports
+    const hasReactImport = imports.some(imp => imp === 'react' || imp.startsWith('react/'));
 
-    // Check for any JSX usage (including lowercase HTML elements)
-    const hasJsxElements = source.getDescendantsOfKind(SyntaxKind.JsxElement).length > 0 ||
+    if (hasReactImport) {
+      try {
+        const sourceText = source.getFullText();
+
+        // Check for any JSX usage (including lowercase HTML elements)
+        let hasJsxElements = false;
+        try {
+          hasJsxElements = source.getDescendantsOfKind(SyntaxKind.JsxElement).length > 0 ||
                           source.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement).length > 0 ||
                           source.getDescendantsOfKind(SyntaxKind.JsxFragment).length > 0;
+        } catch (error) {
+          debugError('detector', 'detectKind', {
+            filePath: resolvedPath,
+            error: error instanceof Error ? error.message : String(error),
+            context: 'kind-jsx-traversal',
+          });
+          // Continue with other checks
+        }
 
-    if (hasJsxElements) {
-      return 'react:component';
+        if (hasJsxElements) {
+          return 'react:component';
+        }
+
+        // Check for React.createElement usage
+        if (/React\.createElement/.test(sourceText)) {
+          return 'react:component';
+        }
+
+        // Check for React component type annotations
+        // Look for React.FC, React.FunctionComponent, or return type JSX.Element
+        if (/React\.(FC|FunctionComponent|ReactElement)|:\s*JSX\.Element/.test(sourceText)) {
+          return 'react:component';
+        }
+      } catch (error) {
+        debugError('detector', 'detectKind', {
+          filePath: resolvedPath,
+          error: error instanceof Error ? error.message : String(error),
+          context: 'kind-react-check',
+        });
+        // Continue with other checks
+      }
     }
 
-    // Check for React.createElement usage
-    if (/React\.createElement/.test(sourceText)) {
-      return 'react:component';
+    // Node CLI: check for CLI-specific patterns
+    // 1. File is in a /cli/ directory, OR
+    // 2. File uses process.argv (CLI argument parsing)
+    const isInCliDir = /[/\\]cli[/\\]/.test(filePath);
+    try {
+      const sourceText = source.getFullText();
+      const usesProcessArgv = /process\.argv/.test(sourceText);
+
+      if (isInCliDir || usesProcessArgv) {
+        return 'node:cli';
+      }
+    } catch (error) {
+      debugError('detector', 'detectKind', {
+        filePath: resolvedPath,
+        error: error instanceof Error ? error.message : String(error),
+        context: 'kind-cli-check',
+      });
+      // If CLI check fails, continue to default
     }
-
-    // Check for React component type annotations
-    // Look for React.FC, React.FunctionComponent, or return type JSX.Element
-    if (/React\.(FC|FunctionComponent|ReactElement)|:\s*JSX\.Element/.test(sourceText)) {
-      return 'react:component';
-    }
-  }
-
-  // Node CLI: check for CLI-specific patterns
-  // 1. File is in a /cli/ directory, OR
-  // 2. File uses process.argv (CLI argument parsing)
-  const isInCliDir = /[/\\]cli[/\\]/.test(filePath);
-  const sourceText = source.getFullText();
-  const usesProcessArgv = /process\.argv/.test(sourceText);
-
-  if (isInCliDir || usesProcessArgv) {
-    return 'node:cli';
+  } catch (error) {
+    debugError('detector', 'detectKind', {
+      filePath: resolvedPath,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    // Default fallback on any error
+    return 'ts:module';
   }
 
   // Default: TypeScript module (even if it imports from node:)
