@@ -4,7 +4,7 @@
   <img src="https://raw.githubusercontent.com/LogicStamp/logicstamp-context/main/assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="120" height="120">
 </div>
 
-![Version](https://img.shields.io/badge/version-0.2.4-blue.svg)
+![Version](https://img.shields.io/badge/version-0.2.5-blue.svg)
 ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
@@ -32,7 +32,7 @@ That's it! LogicStamp Context will scan your project and generate `context.json`
 ![LogicStamp Context in action](https://raw.githubusercontent.com/LogicStamp/logicstamp-context/main/assets/demo-screenshot.png)
 *Sample stamp context output with generated bundles*
 
-> **Note:** This is a beta release (v0.2.4). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+> **Note:** This is a beta release (v0.2.5). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 ## Why LogicStamp?
 
@@ -97,12 +97,16 @@ After installation, the `stamp` command will be available globally.
 
 ## Recent Updates
 
+**v0.2.5**
+- ShadCN/UI and Radix UI style extraction
+- Enhanced debug logging and error handling
+- Model name corrections (GPT-4o-mini → GPT-4o)
+- Documentation consistency improvements
+
 **v0.2.4**
 - Material UI style extraction
 - Improved global CLI installation docs
 - Refined README and docs structure
-
-**v0.2.3**
 - Streamlined README
 - Improved token estimation
 - UIF Contracts documentation

@@ -253,6 +253,49 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 
 ---
 
+## [0.2.5] - 2025-11-30
+
+### Added
+
+#### Style Metadata Extraction
+- **ShadCN/UI style extraction** - Added ShadCN/UI component library detection and extraction:
+  - Detects ShadCN components imported from `@/components/ui/*`, `~/components/ui/*`, or relative `components/ui/*` paths
+  - Identifies ShadCN component usage (Button, Card, Dialog, Form components, etc.)
+  - Extracts ShadCN variant and size prop values
+  - Recognizes compound component patterns (e.g., Dialog with DialogTrigger, DialogContent)
+  - Detects form integration with React Hook Form
+  - Identifies theme integration patterns (useTheme, ThemeProvider)
+  - Tracks icon usage (lucide-react, @radix-ui/react-icons)
+  - Calculates component density based on ShadCN component usage
+  - Integrated into style metadata extraction when using `--include-style` or `stamp context style`
+
+- **Radix UI style extraction** - Added Radix UI primitive library detection and extraction:
+  - Detects Radix UI primitives imported from `@radix-ui/*` packages
+  - Identifies Radix primitive components (Dialog, DropdownMenu, Popover, Tooltip, Accordion, Select, etc.)
+  - Extracts Radix package usage and component relationships
+  - Detects controlled/uncontrolled state patterns
+  - Identifies portal usage patterns
+  - Recognizes `asChild` prop usage
+  - Extracts accessibility features and ARIA patterns
+  - Integrated into style metadata extraction when using `--include-style` or `stamp context style`
+
+- **Enhanced debug logging** - Improved debug logging and error handling across core modules for better troubleshooting and diagnostics
+
+### Changed
+
+- **Model name corrections** - Updated all documentation references from "GPT-4o-mini" to "GPT-4o" for accurate token estimation model naming
+- **Documentation consistency** - Improved consistency and clarity across all documentation files
+
+### Fixed
+
+- N/A
+
+### Security
+
+- N/A
+
+---
+
 ## [Unreleased]
 
 ### Planned Features
