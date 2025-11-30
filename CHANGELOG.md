@@ -44,6 +44,7 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - **Dependency graph accuracy** - Dependency graphs now only include external dependencies, excluding internal components defined in the same file
 - **Missing dependency reporting** - Missing dependency lists no longer include internal components, reducing noise in dependency diagnostics
+- **Documentation updates** - Updated SECURITY.md to include 0.2.x in supported versions, updated example files to reflect version 0.2.6
 
 ### Fixed
 
