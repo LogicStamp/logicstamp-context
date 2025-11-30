@@ -22,6 +22,40 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.2.6] - 2025-12-01
+
+### Added
+
+- **Export metadata extraction** - Added automatic extraction of export information from source files:
+  - Detects default exports (`export default`)
+  - Detects named exports (`export { ... }`, `export function`, `export class`, `export const`)
+  - Extracts list of exported function names
+  - Stores export metadata in contracts as `exports` field (optional)
+  - Export metadata format: `'default'`, `'named'`, or `{ named: string[] }` for multiple named exports
+  - Used to improve dependency tracking accuracy
+
+- **Internal component filtering** - Improved dependency tracking by filtering out internal components:
+  - Internal components are function components defined in the same file (appear in both `version.functions` and `version.components`)
+  - Internal components are now excluded from dependency graphs and missing dependency lists
+  - Reduces false positives in missing dependency detection
+  - Improves accuracy of dependency analysis for multi-component files
+
+### Changed
+
+- **Dependency graph accuracy** - Dependency graphs now only include external dependencies, excluding internal components defined in the same file
+- **Missing dependency reporting** - Missing dependency lists no longer include internal components, reducing noise in dependency diagnostics
+- **Documentation updates** - Updated SECURITY.md to include 0.2.x in supported versions, updated example files to reflect version 0.2.6
+
+### Fixed
+
+- N/A
+
+### Security
+
+- N/A
+
+---
+
 ## [0.2.5] - 2025-11-30
 
 ### Added

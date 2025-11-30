@@ -52,6 +52,7 @@ Each UIF contract follows the `UIFContract` schema (version `0.3`):
       }
     }
   },
+  "exports": { "named": ["Button", "ButtonProps"] },
   "semanticHash": "uif:1a27d0944bbaaf561ee05a01",
   "fileHash": "uif:1f0fa0e2c8958d7fc1696036"
 }
@@ -100,6 +101,22 @@ Object mapping event names to their signatures. For React components, these are 
 
 #### `state`
 Object mapping state variable names to their types. Represents the component's internal state structure.
+
+### `exports` (optional)
+Export metadata indicating how the component/module is exported from the file:
+
+- `"default"` – File has a default export
+- `"named"` – File has a single named export
+- `{ named: string[] }` – File has multiple named exports (array contains all exported names)
+
+This metadata is used to improve dependency tracking accuracy by distinguishing between internal components (defined in the same file) and external dependencies.
+
+**Example:**
+```json
+{
+  "exports": { "named": ["Button", "ButtonProps", "useButton"] }
+}
+```
 
 ### `style` (optional)
 Style metadata extracted from the component. This field is only present when style extraction is enabled (via `stamp context style` or `--include-style` flag). Contains visual, layout, and animation information to enable design-aware AI context generation.

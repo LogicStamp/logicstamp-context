@@ -117,7 +117,7 @@
         "source": {
           "type": "string",
           "pattern": "^logicstamp-context@\\d+\\.\\d+\\.\\d+$",
-          "description": "Generator identifier with version (e.g., 'logicstamp-context@0.2.5'). Used for compatibility tracking and debugging."
+          "description": "Generator identifier with version (e.g., 'logicstamp-context@0.2.6'). Used for compatibility tracking and debugging."
         }
       },
       "additionalProperties": false
@@ -198,6 +198,31 @@
         "style": {
           "$ref": "#/definitions/StyleMetadata",
           "description": "Optional style metadata (only when --include-style is used)"
+        },
+        "exports": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": ["default", "named"],
+              "description": "Export type: 'default' for default export, 'named' for single named export"
+            },
+            {
+              "type": "object",
+              "required": ["named"],
+              "properties": {
+                "named": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Array of named export names (for multiple named exports)"
+                }
+              },
+              "additionalProperties": false,
+              "description": "Multiple named exports with explicit list"
+            }
+          ],
+          "description": "Optional export metadata: export type and exported names"
         },
         "semanticHash": {
           "type": "string",

@@ -28,8 +28,8 @@
  * Uses ts-morph for robust AST traversal
  */
 
-import { Project, SyntaxKind, SourceFile, Node } from 'ts-morph';
-import type { LogicSignature, ContractKind, PropType, EventType, NextJSMetadata } from '../types/UIFContract.js';
+import { Project, SyntaxKind, SourceFile, Node, FunctionDeclaration, ClassDeclaration, VariableStatement, ExportDeclaration } from 'ts-morph';
+import type { LogicSignature, ContractKind, PropType, EventType, NextJSMetadata, ExportMetadata } from '../types/UIFContract.js';
 import { debugError } from '../utils/debug.js';
 import { extractComponents, extractHooks } from './astParser/extractors/componentExtractor.js';
 import { extractProps } from './astParser/extractors/propExtractor.js';
@@ -49,6 +49,8 @@ export interface AstExtract {
   imports: string[];
   jsxRoutes: string[];
   nextjs?: NextJSMetadata;
+  exports?: ExportMetadata;
+  exportedFunctions?: string[];
 }
 
 /**
@@ -101,6 +103,7 @@ export async function extractFromFile(filePath: string): Promise<AstExtract> {
     const emits = safeExtract('events', resolvedPath, () => extractEvents(source), {});
     const jsxRoutes = safeExtract('jsxRoutes', resolvedPath, () => extractJsxRoutes(source), []);
     const kind = safeExtract('kind', resolvedPath, () => detectKind(hooks, components, imports, filePath, source), 'ts:module' as ContractKind);
+    const { exports: exportMetadata, exportedFunctions } = safeExtract('exports', resolvedPath, () => extractExports(source), { exports: undefined, exportedFunctions: [] });
 
     return {
       kind,
@@ -114,6 +117,8 @@ export async function extractFromFile(filePath: string): Promise<AstExtract> {
       imports,
       jsxRoutes,
       ...(nextjs && { nextjs }),
+      ...(exportMetadata && { exports: exportMetadata }),
+      ...(exportedFunctions.length > 0 && { exportedFunctions }),
     };
   } catch (error) {
     debugError('astParser', 'extractFromFile', {
@@ -133,6 +138,8 @@ export async function extractFromFile(filePath: string): Promise<AstExtract> {
       emits: {},
       imports: [],
       jsxRoutes: [],
+      exports: undefined,
+      exportedFunctions: [],
     };
   }
 }
@@ -169,6 +176,114 @@ function extractFunctions(source: SourceFile): string[] {
   });
 
   return Array.from(functions).sort();
+}
+
+/**
+ * Extract export metadata and exported functions from source file
+ * Uses fast AST traversal - optimized single pass through statements
+ */
+function extractExports(source: SourceFile): { exports: ExportMetadata | undefined; exportedFunctions: string[] } {
+  const exportedFunctions = new Set<string>();
+  let hasDefaultExport = false;
+  const namedExports = new Set<string>();
+
+  // Fast single-pass AST traversal - check statements directly
+  const statements = source.getStatements();
+
+  // Early exit if no statements
+  if (statements.length === 0) {
+    return { exports: undefined, exportedFunctions: [] };
+  }
+  // Optimized loop: only process export-related statements
+  for (let i = 0; i < statements.length; i++) {
+    const stmt = statements[i];
+    const kind = stmt.getKind();
+
+    // Handle explicit export declarations first (most common for exports)
+    if (kind === SyntaxKind.ExportDeclaration) {
+      const exportStmt = stmt as ExportDeclaration;
+      const namedExportsFromDecl = exportStmt.getNamedExports();
+      for (let j = 0; j < namedExportsFromDecl.length; j++) {
+        const name = namedExportsFromDecl[j].getName();
+        if (name) {
+          namedExports.add(name);
+          exportedFunctions.add(name);
+        }
+      }
+      continue;
+    }
+
+    // Skip statements that can't be exports
+    if (kind !== SyntaxKind.FunctionDeclaration &&
+        kind !== SyntaxKind.ClassDeclaration &&
+        kind !== SyntaxKind.VariableStatement) {
+      continue;
+    }
+
+    // Check modifiers once for declarations that can be exported
+    const modifiers = (stmt as any).getModifiers?.() || [];
+    let hasExport = false;
+    let isDefault = false;
+
+    for (let m = 0; m < modifiers.length; m++) {
+      const modKind = modifiers[m].getKind();
+      if (modKind === SyntaxKind.ExportKeyword) hasExport = true;
+      if (modKind === SyntaxKind.DefaultKeyword) isDefault = true;
+    }
+
+    if (!hasExport) continue; // Skip non-exported statements
+
+    // Process exported declarations
+    if (kind === SyntaxKind.FunctionDeclaration || kind === SyntaxKind.ClassDeclaration) {
+      const decl = stmt as FunctionDeclaration | ClassDeclaration;
+      const name = decl.getName();
+
+      if (isDefault) {
+        hasDefaultExport = true;
+        if (name) exportedFunctions.add(name);
+      } else {
+        if (name) {
+          namedExports.add(name);
+          exportedFunctions.add(name);
+        }
+      }
+    } else if (kind === SyntaxKind.VariableStatement) {
+      const varStmt = stmt as VariableStatement;
+      if (isDefault) hasDefaultExport = true;
+
+      const declarations = varStmt.getDeclarationList().getDeclarations();
+      for (let j = 0; j < declarations.length; j++) {
+        const name = declarations[j].getName();
+        if (name) {
+          if (isDefault) {
+            exportedFunctions.add(name);
+          } else {
+            namedExports.add(name);
+            exportedFunctions.add(name);
+          }
+        }
+      }
+    }
+  }
+
+  // Determine export metadata
+  let exports: ExportMetadata | undefined;
+
+  if (hasDefaultExport) {
+    exports = 'default';
+  } else if (namedExports.size > 0) {
+    const namedArray = Array.from(namedExports).sort();
+    if (namedArray.length === 1) {
+      exports = 'named';
+    } else {
+      exports = { named: namedArray };
+    }
+  }
+
+  return {
+    exports,
+    exportedFunctions: Array.from(exportedFunctions).sort(),
+  };
 }
 
 

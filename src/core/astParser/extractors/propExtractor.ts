@@ -2,7 +2,7 @@
  * Prop Extractor - Extracts component props from TypeScript interfaces/types
  */
 
-import { SourceFile } from 'ts-morph';
+import { SourceFile, Node } from 'ts-morph';
 import type { PropType } from '../../../types/UIFContract.js';
 import { debugError } from '../../../utils/debug.js';
 
@@ -65,11 +65,21 @@ export function extractProps(source: SourceFile): Record<string, PropType> {
               try {
                 const name = prop.getName();
                 const propType = prop.getTypeAtLocation(typeAlias).getText();
-                // Check if optional from declaration
-                const declarations = prop.getDeclarations();
-                const isOptional = declarations.some((decl) =>
-                  decl.getText().includes('?:')
-                );
+                
+                // Check if optional using fast methods
+                let isOptional = false;
+
+                // Method 1: If type includes undefined in union, it's optional
+                if (propType.includes('undefined')) {
+                  isOptional = true;
+                } else {
+                  // Method 2: Check declarations for question token (faster than getText())
+                  const declarations = prop.getDeclarations();
+                  isOptional = declarations.some((decl) => {
+                    // Use AST method to check for question token (faster than text parsing)
+                    return (decl as any).hasQuestionToken?.() === true;
+                  });
+                }
 
                 props[name] = normalizePropType(propType, isOptional);
               } catch (error) {
@@ -141,7 +151,8 @@ export function normalizePropType(typeText: string, isOptional: boolean): PropTy
     }
 
     // Simple type with optionality
-    if (isOptional && !['string', 'number', 'boolean'].includes(cleanType)) {
+    if (isOptional) {
+      // For all optional types, return object with optional flag to preserve the optional information
       return {
         type: cleanType,
         optional: true

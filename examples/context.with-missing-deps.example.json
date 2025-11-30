@@ -82,7 +82,7 @@
           "referencedBy": "src/components/Dashboard.tsx"
         }
       ],
-      "source": "logicstamp-context@0.2.5"
+      "source": "logicstamp-context@0.2.6"
     }
   }
 ]

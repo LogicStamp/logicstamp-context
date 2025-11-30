@@ -39,7 +39,7 @@ These options are available at the top level (before any subcommand):
 
 **Examples:**
 ```bash
-stamp --version    # Shows: fox mascot + "Version: 0.2.5"
+stamp --version    # Shows: fox mascot + "Version: 0.2.6"
 stamp -v           # Same as --version
 stamp --help       # Shows main help
 stamp -h           # Same as --help
@@ -755,7 +755,7 @@ These are advanced concerns for future LogicStamp platform features, not v1 "con
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp-context@0.2.5"
+      "source": "logicstamp-context@0.2.6"
     }
   }
 ]
@@ -787,7 +787,7 @@ These are advanced concerns for future LogicStamp platform features, not v1 "con
     }
   ],
   "meta": {
-    "source": "logicstamp-context@0.2.5"
+    "source": "logicstamp-context@0.2.6"
   }
 }
 ```
@@ -839,7 +839,7 @@ The `meta.missing` array tracks dependencies that couldn't be resolved. An empty
         "referencedBy": "src/helpers.ts"
       }
     ],
-    "source": "logicstamp-context@0.2.5"
+    "source": "logicstamp-context@0.2.6"
   }
 }
 ```
