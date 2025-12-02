@@ -76,6 +76,8 @@ LogicStamp Context does not perform automatic redaction or removal of sensitive 
 
 We strongly recommend avoiding hard-coded credentials and using environment variables or secret management tools.
 
+**Security Scanning**: Use the `stamp security scan` command to detect secrets in your codebase before generating context files. The scanner can automatically add files containing secrets to `.stampignore` to prevent them from being included in context generation. See [`docs/cli/security-scan.md`](docs/cli/security-scan.md) for complete documentation.
+
 ## Security Considerations
 
 LogicStamp Context:

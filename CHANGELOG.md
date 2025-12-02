@@ -7,13 +7,6 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Changed
-
-- **Security documentation improvements** - Enhanced SECURITY.md with:
-  - Clarified that `stamp context` no longer prompts on first run (only `stamp init` prompts)
-  - Added section on sensitive data/credentials handling (no automatic redaction)
-  - Added clarification that LogicStamp Context does not use any LLM internally (deterministic AST parsing only)
-
 ### Planned Features
 - Custom profile configuration and overrides
 - Incremental bundle caching
@@ -26,6 +19,57 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Known Limitations
 - No incremental caching (planned for future release)
 - No custom profiles beyond the three presets (planned for future release)
+
+---
+
+## [0.2.7] - 2025-12-02
+
+### Added
+
+- **Security scanning command** - New `stamp security scan` command to detect secrets in your codebase:
+  - Scans TypeScript, JavaScript, and JSON files for common secret patterns (API keys, passwords, tokens, etc.)
+  - Generates detailed security reports with file locations and severity levels
+  - Runs 100% locally — nothing is uploaded or sent anywhere
+  - Automatically integrates with `.stampignore` to exclude files with secrets from context generation
+  - `--apply` flag to automatically add detected secret files to `.stampignore`
+
+- **Security reset command** - New `stamp security --hard-reset` command to reset security configuration:
+  - Deletes `.stampignore` and security report files
+  - Useful for starting fresh after remediation or resetting security configuration
+
+- **Enhanced initialization** - Improved `stamp init` command with new options:
+  - `--yes` / `-y` flag for non-interactive mode (CI-friendly)
+  - `--secure` flag to initialize with auto-yes and automatically run security scan with `--apply`
+  - Better integration with security scanning workflow
+
+- **File exclusion with .stampignore** - Enhanced `stamp context` with automatic file exclusion:
+  - Automatically excludes files listed in `.stampignore` from context generation
+  - Prevents files containing secrets or sensitive information from being included in context files
+  - Supports glob patterns and exact file paths
+  - Files are filtered before processing, with optional exclusion count messages
+
+### Changed
+
+- **CLI documentation enhancements** - Enhanced CLI documentation to include:
+  - New security commands and options (`stamp security scan`, `stamp security --hard-reset`)
+  - Details on file exclusion behavior with `.stampignore` for context generation
+  - Improved initialization command documentation with non-interactive mode and security scan integration
+  - Updated all command references and examples for consistency
+
+- **security documentation improvements** - Added comprehensive `docs/cli/security-scan.md` documentation covering:
+  - Security scanning command usage and options
+  - Secret detection patterns and severity levels
+  - `.stampignore` integration for excluding files with secrets
+  - Security report format and structure
+  - CI/CD integration examples
+
+### Fixed
+
+- N/A
+
+### Security
+
+- N/A
 
 ---
 

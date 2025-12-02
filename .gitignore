@@ -9,6 +9,7 @@ dist/
 coverage/
 *.log
 tests/e2e/output/
+stamp_security_report.json
 
 # IDE
 .vscode/

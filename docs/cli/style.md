@@ -10,6 +10,8 @@ stamp context style [path] [options]
 
 **Note:** The `stamp context style` command is equivalent to `stamp context --include-style`. Both syntaxes produce identical output.
 
+**File Exclusion:** `stamp context style` automatically excludes files listed in `.stampignore` from context generation, just like `stamp context`. This prevents files containing secrets or sensitive information from being included in style metadata extraction. Use `stamp security scan --apply` to automatically add files to `.stampignore` (the file is only created when secrets are detected). See [`stamp security scan`](security-scan.md) for more details.
+
 ## Overview
 
 While `stamp context` focuses on component logic and structure, `stamp context style` adds visual and layout understanding. This enables AI assistants to:
@@ -39,10 +41,11 @@ Identifies which styling approaches are used in each component:
   - Transitions and animations
   - Responsive breakpoints (sm, md, lg, xl, 2xl)
 
-- **SCSS/CSS Modules** – Detects module imports and parses:
+- **SCSS/CSS Modules** – Detects module imports from TSX/TS files and parses the imported style files:
   - CSS selectors used
   - CSS properties defined
   - SCSS features (variables, nesting, mixins)
+  - **Note**: Only CSS/SCSS files that are imported by component files are parsed. Standalone CSS/SCSS files that aren't imported won't be analyzed.
 
 - **Inline Styles** – Detects `style={{...}}` usage
 
@@ -443,7 +446,7 @@ The `--compare-modes` flag automatically regenerates contracts with and without 
 - **Comparison across all modes** – none, header, header+style, and full
 - **Savings percentages** compared to both raw source and full context
 
-See [COMPARE-MODES.md](COMPARE-MODES.md) for a comprehensive guide to token cost analysis and mode comparison.
+See [compare-modes.md](compare-modes.md) for a comprehensive guide to token cost analysis and mode comparison.
 
 **Example output:**
 
@@ -521,7 +524,7 @@ This will output detailed error messages to help identify problematic files or e
 
 - **Dynamic class values** – While AST extraction handles `cn()`, `clsx()`, and template literals, classes generated from runtime variables (e.g., `className={styles[someVar]}`) are not detected
 - **CSS-in-JS** – Only styled-components and emotion are detected via AST-based extraction; Material UI styled is detected separately; other CSS-in-JS libraries may not be recognized
-- **External stylesheets** – Global CSS files are not analyzed; only module imports are parsed
+- **External stylesheets** – Global CSS files are not analyzed; only CSS/SCSS files imported by TSX/TS component files are parsed. Standalone CSS/SCSS files that aren't imported won't be scanned.
 - **Runtime styles** – Styles applied via JavaScript at runtime are not detected
 - **Template literal dynamic segments** – In `className={`flex ${variable}`}`, only the static "flex" segment is extracted; the dynamic variable value is not analyzed
 
@@ -566,7 +569,7 @@ $ stamp context style ./src --profile llm-safe --out ./style-context
 
 ## Related Commands
 
-- [`stamp context`](CONTEXT.md) – Generate context without style metadata
-- [`stamp context validate`](VALIDATE.md) – Validate generated context files
-- [`stamp context compare`](COMPARE.md) – Compare context files including style changes
+- [`stamp context`](context.md) – Generate context without style metadata
+- [`stamp context validate`](validate.md) – Validate generated context files
+- [`stamp context compare`](compare.md) – Compare context files including style changes
 

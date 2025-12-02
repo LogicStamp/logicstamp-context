@@ -13,6 +13,8 @@ stamp context [path] [options]
 
 **Setup:** `stamp context` respects preferences saved in `.logicstamp/config.json` and never prompts. On first run (no config), it defaults to skipping both `.gitignore` and `LLM_CONTEXT.md` setup for CI-friendly behavior. Use [`stamp init`](init.md) to interactively configure these options.
 
+**File Exclusion:** `stamp context` automatically excludes files listed in `.stampignore` from context generation. This is useful for excluding files containing secrets or sensitive information. Files are automatically filtered before processing, and you'll see a message indicating how many files were excluded (unless using `--quiet`). See [`stamp security scan`](security-scan.md) for automatically adding files to `.stampignore` (the file is only created when secrets are detected).
+
 ## Options
 
 | Option | Alias | Default | Description |
@@ -80,6 +82,42 @@ stamp context --out ./output
 stamp context --out ./output/context.json
 ```
 
+## File Exclusion with .stampignore
+
+The `stamp context` command automatically excludes files listed in `.stampignore` from context generation. This prevents files containing secrets, API keys, passwords, or other sensitive information from being included in your context files.
+
+### How It Works
+
+- Files listed in `.stampignore` are filtered out before processing
+- The exclusion happens automatically—no flags needed
+- You'll see a message indicating how many files were excluded (unless using `--quiet`)
+- Supports glob patterns and exact file paths
+
+### Example .stampignore
+
+```json
+{
+  "ignore": [
+    "src/config/secrets.ts",
+    "src/api/keys.ts",
+    "**/*.secret.ts"
+  ]
+}
+```
+
+### Generating .stampignore
+
+Use `stamp security scan --apply` to automatically detect files with secrets and add them to `.stampignore`:
+
+```bash
+# Scan for secrets and automatically add to .stampignore
+stamp security scan --apply
+```
+
+This prevents these files from ever reaching `context.json`. 
+
+**Note:** `.stampignore` is only created when secrets are actually detected. If no secrets are found, the file is not created. See [`stamp security scan`](security-scan.md) for more details.
+
 ## Output Structure
 
 LogicStamp Context generates a **folder-organized, multi-file output**:
@@ -137,7 +175,7 @@ The `context_main.json` file provides a complete directory index:
     }
   ],
   "meta": {
-    "source": "logicstamp-context@0.2.6"
+    "source": "logicstamp-context@0.2.7"
   }
 }
 ```

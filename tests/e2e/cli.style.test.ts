@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
-import { readFile, rm, access, mkdir } from 'node:fs/promises';
+import { readFile, rm, access, mkdir, writeFile, cp } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
@@ -435,6 +435,167 @@ describe('CLI Style Command Tests', () => {
         const output = error.stdout || error.stderr || '';
         expect(output).toMatch(/unknown|invalid/i);
       }
+    }, 30000);
+  });
+
+  describe('Stampignore behavior with style command', () => {
+    it('should respect .stampignore and exclude ignored files', async () => {
+      const testDir = join(outputPath, 'style-stampignore-test');
+      await mkdir(testDir, { recursive: true });
+      
+      // Copy fixture contents to test directory
+      const fixturesPath = join(process.cwd(), 'tests/fixtures/simple-app');
+      const testFixturesPath = join(testDir, 'simple-app');
+      await cp(fixturesPath, testFixturesPath, { recursive: true });
+      
+      const outDir = join(testDir, 'output');
+
+      // Create .stampignore to ignore a specific file
+      const stampignorePath = join(testFixturesPath, '.stampignore');
+      await writeFile(
+        stampignorePath,
+        JSON.stringify({
+          ignore: ['src/components/Button.tsx'],
+        })
+      );
+
+      // Run context style command
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context style ${testFixturesPath} --out ${outDir}`
+      );
+
+      // Should mention excluded files
+      expect(stdout).toContain('Excluded');
+      expect(stdout).toContain('.stampignore');
+
+      // Verify context files were generated
+      const mainIndexPath = join(outDir, 'context_main.json');
+      await access(mainIndexPath);
+
+      // Read the context and verify Button.tsx is not included
+      const indexContent = await readFile(mainIndexPath, 'utf-8');
+      const index = JSON.parse(indexContent);
+
+      // Check all bundles to ensure Button.tsx is not included
+      let foundButton = false;
+      for (const folder of index.folders) {
+        const contextPath = join(outDir, folder.contextFile);
+        const bundles = JSON.parse(await readFile(contextPath, 'utf-8'));
+        
+        for (const bundle of bundles) {
+          for (const node of bundle.graph.nodes) {
+            if (node.contract?.entryId && node.contract.entryId.includes('Button.tsx')) {
+              foundButton = true;
+              break;
+            }
+          }
+          if (foundButton) break;
+        }
+        if (foundButton) break;
+      }
+
+      // Button.tsx should not be found in any bundle
+      expect(foundButton).toBe(false);
+    }, 30000);
+
+    it('should respect .stampignore with glob patterns in style command', async () => {
+      const testDir = join(outputPath, 'style-stampignore-glob-test');
+      await mkdir(testDir, { recursive: true });
+      
+      // Copy fixture contents to test directory
+      const fixturesPath = join(process.cwd(), 'tests/fixtures/simple-app');
+      const testFixturesPath = join(testDir, 'simple-app');
+      await cp(fixturesPath, testFixturesPath, { recursive: true });
+      
+      const outDir = join(testDir, 'output');
+
+      // Create .stampignore with glob pattern
+      const stampignorePath = join(testFixturesPath, '.stampignore');
+      await writeFile(
+        stampignorePath,
+        JSON.stringify({
+          ignore: ['src/components/**'],
+        })
+      );
+
+      // Run context style command
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context style ${testFixturesPath} --out ${outDir}`
+      );
+
+      // Should mention excluded files
+      expect(stdout).toContain('Excluded');
+      expect(stdout).toContain('.stampignore');
+
+      // Verify context files were generated
+      const mainIndexPath = join(outDir, 'context_main.json');
+      await access(mainIndexPath);
+
+      // Read the context and verify no component files are included
+      const indexContent = await readFile(mainIndexPath, 'utf-8');
+      const index = JSON.parse(indexContent);
+
+      // Check all bundles to ensure no component files are included
+      let foundComponent = false;
+      for (const folder of index.folders) {
+        const contextPath = join(outDir, folder.contextFile);
+        const bundles = JSON.parse(await readFile(contextPath, 'utf-8'));
+        
+        for (const bundle of bundles) {
+          for (const node of bundle.graph.nodes) {
+            const entryId = node.contract?.entryId || '';
+            if (entryId.includes('components/Button.tsx') || entryId.includes('components/Card.tsx')) {
+              foundComponent = true;
+              break;
+            }
+          }
+          if (foundComponent) break;
+        }
+        if (foundComponent) break;
+      }
+
+      // Component files should not be found
+      expect(foundComponent).toBe(false);
+    }, 30000);
+
+    it('should work without .stampignore in style command', async () => {
+      const testDir = join(outputPath, 'style-no-stampignore-test');
+      await mkdir(testDir, { recursive: true });
+      
+      // Copy fixture contents to test directory
+      const fixturesPath = join(process.cwd(), 'tests/fixtures/simple-app');
+      const testFixturesPath = join(testDir, 'simple-app');
+      await cp(fixturesPath, testFixturesPath, { recursive: true });
+      
+      const outDir = join(testDir, 'output');
+
+      // Ensure .stampignore does not exist
+      const stampignorePath = join(testFixturesPath, '.stampignore');
+      try {
+        await rm(stampignorePath, { force: true });
+      } catch {
+        // File doesn't exist, which is fine
+      }
+
+      // Run context style command
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context style ${testFixturesPath} --out ${outDir}`
+      );
+
+      // Should not mention excluded files
+      expect(stdout).not.toContain('Excluded');
+      expect(stdout).not.toContain('.stampignore');
+
+      // Verify context files were generated with style metadata
+      const mainIndexPath = join(outDir, 'context_main.json');
+      await access(mainIndexPath);
+
+      // Read the context and verify files are included
+      const indexContent = await readFile(mainIndexPath, 'utf-8');
+      const index = JSON.parse(indexContent);
+
+      // Should have bundles
+      expect(index.folders.length).toBeGreaterThan(0);
     }, 30000);
   });
 });

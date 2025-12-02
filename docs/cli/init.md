@@ -15,6 +15,8 @@ stamp init [path] [options]
 ## Options
 
 - `--skip-gitignore` - Skip `.gitignore` setup
+- `--yes, -y` - Skip all prompts (non-interactive mode)
+- `--secure` - Initialize with auto-yes and run security scan with `--apply`
 - `-h, --help` - Show help
 
 ## What It Does
@@ -57,6 +59,30 @@ stamp init --skip-gitignore
 ```
 
 Initializes LogicStamp but skips modifying `.gitignore`. Useful if you want to manage `.gitignore` manually.
+
+### Non-interactive mode
+
+```bash
+stamp init --yes
+```
+
+Initializes LogicStamp without any prompts. All operations are performed automatically. Useful for CI/CD pipelines.
+
+### Secure initialization
+
+```bash
+stamp init --secure
+```
+
+Initializes LogicStamp with auto-yes (no prompts) and automatically runs a security scan with `--apply` after initialization. This will:
+
+1. Set up `.gitignore` patterns automatically
+2. Generate `LLM_context.md` automatically
+3. Run `stamp security scan --apply` to scan for secrets (API keys, passwords, tokens) and automatically add detected secret files to `.stampignore`, preventing these files from ever reaching `context.json`
+
+**Runs 100% locally — nothing is uploaded or sent anywhere.**
+
+This is useful for setting up new projects with security checks from the start.
 
 ## Behavior
 
@@ -220,3 +246,4 @@ The `stamp init` command is:
 - [`stamp context`](context.md) - Generate context files (includes smart detection)
 - [`stamp context validate`](validate.md) - Validate generated context files
 - [`stamp context compare`](compare.md) - Detect drift in context files
+- [`stamp security scan`](security-scan.md) - Scan for secrets and generate security report

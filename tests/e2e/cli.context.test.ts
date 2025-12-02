@@ -506,7 +506,7 @@ describe('CLI Context Generation Tests', () => {
       // Should match initial content (unchanged)
       expect(finalGitignoreContent).toBe(initialGitignoreContent);
       // Should not contain LogicStamp patterns (since preference is 'skipped')
-      expect(finalGitignoreContent).not.toContain('# LogicStamp context files');
+      expect(finalGitignoreContent).not.toContain('# LogicStamp context & security files');
     }, 30000);
 
     it('should respect config preference for gitignore (added)', async () => {
@@ -538,7 +538,7 @@ describe('CLI Context Generation Tests', () => {
 
       // Should add patterns based on config preference
       const gitignoreContent = await readFile(gitignorePath, 'utf-8');
-      expect(gitignoreContent).toContain('# LogicStamp context files');
+      expect(gitignoreContent).toContain('# LogicStamp context & security files');
       expect(gitignoreContent).toContain('context.json');
       expect(gitignoreContent).toContain('node_modules'); // Original content preserved
     }, 30000);
@@ -573,9 +573,204 @@ describe('CLI Context Generation Tests', () => {
       // Verify .gitignore was NOT modified
       const gitignoreContent = await readFile(gitignorePath, 'utf-8');
       expect(gitignoreContent).toBe(initialContent);
-      expect(gitignoreContent).not.toContain('# LogicStamp context files');
+      expect(gitignoreContent).not.toContain('# LogicStamp context & security files');
       expect(stdout).not.toContain('Created .gitignore');
       expect(stdout).not.toContain('Added LogicStamp patterns');
+    }, 30000);
+  });
+
+  describe('Stampignore behavior', () => {
+    it('should respect .stampignore and exclude ignored files', async () => {
+      const testDir = join(outputPath, 'stampignore-test');
+      await mkdir(testDir, { recursive: true });
+      
+      // Copy fixture contents to test directory
+      const testFixturesPath = join(testDir, 'simple-app');
+      await cp(fixturesPath, testFixturesPath, { recursive: true });
+      
+      const outDir = join(testDir, 'output');
+
+      // Create .stampignore to ignore a specific file
+      const stampignorePath = join(testFixturesPath, '.stampignore');
+      await writeFile(
+        stampignorePath,
+        JSON.stringify({
+          ignore: ['src/components/Button.tsx'],
+        })
+      );
+
+      // Run context command
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`
+      );
+
+      // Should mention excluded files
+      expect(stdout).toContain('Excluded');
+      expect(stdout).toContain('.stampignore');
+
+      // Verify context files were generated
+      const mainIndexPath = join(outDir, 'context_main.json');
+      await access(mainIndexPath);
+
+      // Read the context and verify Button.tsx is not included
+      const indexContent = await readFile(mainIndexPath, 'utf-8');
+      const index = JSON.parse(indexContent);
+
+      // Check all bundles to ensure Button.tsx is not included
+      let foundButton = false;
+      for (const folder of index.folders) {
+        const contextPath = join(outDir, folder.contextFile);
+        const bundles = JSON.parse(await readFile(contextPath, 'utf-8'));
+        
+        for (const bundle of bundles) {
+          for (const node of bundle.graph.nodes) {
+            if (node.contract?.entryId && node.contract.entryId.includes('Button.tsx')) {
+              foundButton = true;
+              break;
+            }
+          }
+          if (foundButton) break;
+        }
+        if (foundButton) break;
+      }
+
+      // Button.tsx should not be found in any bundle
+      expect(foundButton).toBe(false);
+    }, 30000);
+
+    it('should respect .stampignore with glob patterns', async () => {
+      const testDir = join(outputPath, 'stampignore-glob-test');
+      await mkdir(testDir, { recursive: true });
+      
+      // Copy fixture contents to test directory
+      const testFixturesPath = join(testDir, 'simple-app');
+      await cp(fixturesPath, testFixturesPath, { recursive: true });
+      
+      const outDir = join(testDir, 'output');
+
+      // Create .stampignore with glob pattern to ignore all files in components directory
+      const stampignorePath = join(testFixturesPath, '.stampignore');
+      await writeFile(
+        stampignorePath,
+        JSON.stringify({
+          ignore: ['src/components/**'],
+        })
+      );
+
+      // Run context command
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`
+      );
+
+      // Should mention excluded files
+      expect(stdout).toContain('Excluded');
+      expect(stdout).toContain('.stampignore');
+
+      // Verify context files were generated
+      const mainIndexPath = join(outDir, 'context_main.json');
+      await access(mainIndexPath);
+
+      // Read the context and verify no component files are included
+      const indexContent = await readFile(mainIndexPath, 'utf-8');
+      const index = JSON.parse(indexContent);
+
+      // Check all bundles to ensure no component files are included
+      let foundComponent = false;
+      for (const folder of index.folders) {
+        const contextPath = join(outDir, folder.contextFile);
+        const bundles = JSON.parse(await readFile(contextPath, 'utf-8'));
+        
+        for (const bundle of bundles) {
+          for (const node of bundle.graph.nodes) {
+            const entryId = node.contract?.entryId || '';
+            if (entryId.includes('components/Button.tsx') || entryId.includes('components/Card.tsx')) {
+              foundComponent = true;
+              break;
+            }
+          }
+          if (foundComponent) break;
+        }
+        if (foundComponent) break;
+      }
+
+      // Component files should not be found
+      expect(foundComponent).toBe(false);
+    }, 30000);
+
+    it('should work without .stampignore (no exclusions)', async () => {
+      const testDir = join(outputPath, 'no-stampignore-test');
+      await mkdir(testDir, { recursive: true });
+      
+      // Copy fixture contents to test directory
+      const testFixturesPath = join(testDir, 'simple-app');
+      await cp(fixturesPath, testFixturesPath, { recursive: true });
+      
+      const outDir = join(testDir, 'output');
+
+      // Ensure .stampignore does not exist
+      const stampignorePath = join(testFixturesPath, '.stampignore');
+      try {
+        await rm(stampignorePath, { force: true });
+      } catch {
+        // File doesn't exist, which is fine
+      }
+
+      // Run context command
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`
+      );
+
+      // Should not mention excluded files
+      expect(stdout).not.toContain('Excluded');
+      expect(stdout).not.toContain('.stampignore');
+
+      // Verify context files were generated
+      const mainIndexPath = join(outDir, 'context_main.json');
+      await access(mainIndexPath);
+
+      // Read the context and verify files are included
+      const indexContent = await readFile(mainIndexPath, 'utf-8');
+      const index = JSON.parse(indexContent);
+
+      // Should have bundles
+      expect(index.folders.length).toBeGreaterThan(0);
+    }, 30000);
+
+    it('should handle empty .stampignore gracefully', async () => {
+      const testDir = join(outputPath, 'empty-stampignore-test');
+      await mkdir(testDir, { recursive: true });
+      
+      // Copy fixture contents to test directory
+      const testFixturesPath = join(testDir, 'simple-app');
+      await cp(fixturesPath, testFixturesPath, { recursive: true });
+      
+      const outDir = join(testDir, 'output');
+
+      // Create empty .stampignore
+      const stampignorePath = join(testFixturesPath, '.stampignore');
+      await writeFile(
+        stampignorePath,
+        JSON.stringify({
+          ignore: [],
+        })
+      );
+
+      // Run context command
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`
+      );
+
+      // Should not mention excluded files (empty ignore array)
+      expect(stdout).not.toContain('Excluded');
+
+      // Verify context files were generated
+      const mainIndexPath = join(outDir, 'context_main.json');
+      await access(mainIndexPath);
+
+      // Should have bundles
+      const indexContent = await readFile(mainIndexPath, 'utf-8');
+      const index = JSON.parse(indexContent);
+      expect(index.folders.length).toBeGreaterThan(0);
     }, 30000);
   });
 });

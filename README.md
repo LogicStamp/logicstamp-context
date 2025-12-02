@@ -4,7 +4,7 @@
   <img src="https://raw.githubusercontent.com/LogicStamp/logicstamp-context/main/assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="120" height="120">
 </div>
 
-![Version](https://img.shields.io/badge/version-0.2.6-blue.svg)
+![Version](https://img.shields.io/badge/version-0.2.7-blue.svg)
 ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
@@ -32,7 +32,7 @@ That's it! LogicStamp Context will scan your project and generate `context.json`
 ![LogicStamp Context in action](https://raw.githubusercontent.com/LogicStamp/logicstamp-context/main/assets/demo-screenshot.png)
 *Sample stamp context output with generated bundles*
 
-> **Note:** This is a beta release (v0.2.6). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+> **Note:** This is a beta release (v0.2.7). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 ## Why LogicStamp?
 
@@ -97,6 +97,12 @@ After installation, the `stamp` command will be available globally.
 
 ## Recent Updates
 
+**v0.2.7**
+- Security scanning command (`stamp security scan`) for secret detection
+- Enhanced initialization with `--yes` and `--secure` flags
+- File exclusion with `.stampignore` for context generation
+- Improved CLI documentation with security commands
+
 **v0.2.6**
 - Export metadata extraction (default/named exports detection)
 - Internal component filtering (improved dependency tracking accuracy)
@@ -136,6 +142,7 @@ stamp context clean [path] [options]  # Remove generated files
 | Command | Description | Docs |
 |---------|-------------|------|
 | `stamp init` | Initialize project (`.gitignore`, `LLM_CONTEXT.md`, config) | [init.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/init.md) |
+| `stamp security scan` | Scan for secrets (API keys, passwords, tokens) | [security-scan.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/security-scan.md) |
 | `stamp context` | Generate AI-ready context bundles organized by folder | [context.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/context.md) |
 | `stamp context style` | Generate context with style metadata (Tailwind, SCSS, etc.) | [style.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/style.md) |
 | `stamp context compare` | Compare context files to detect changes (CI-friendly) | [compare.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/compare.md) |
@@ -166,6 +173,12 @@ stamp context clean [path] [options]  # Remove generated files
 - **[CI Integration](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md#cicd-integration)** — CI/CD workflows and validation
 - **[Troubleshooting](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md#troubleshooting)** — Common issues and solutions
 - **[UIF Contracts](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/uif_contracts.md)** — Understanding component contracts
+
+## Known Limitations
+
+LogicStamp Context is still in beta. A few edge cases are not fully supported yet.
+
+See the full list here: [docs/limitations.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/limitations.md)
 
 ## Need Help?
 
@@ -198,6 +211,12 @@ All in one command, no pre-compilation needed!
 ## License
 
 MIT
+
+## Branding & Attribution
+
+The LogicStamp Fox mascot and related brand assets are © 2025 LogicStamp Contributors.
+
+These assets may not be used for third-party branding, logos, or commercial identity without permission. They are included in this repository for documentation and non-commercial use within the LogicStamp ecosystem only.
 
 ## Contributing
 

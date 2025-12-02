@@ -16,6 +16,8 @@ USAGE:
   stamp context validate [file]        Validate context file
   stamp context compare [options]      Detect drift (auto-generates fresh context)
   stamp context clean [path] [options] Remove all generated context artifacts
+  stamp security scan [path] [options] Scan for secrets and generate report
+  stamp security --hard-reset [options] Delete .stampignore and security report
 
 OPTIONS:
   -v, --version                       Show version number
@@ -53,6 +55,51 @@ For detailed help on a specific command, run:
   stamp context validate --help
   stamp context compare --help
   stamp context clean --help
+  stamp security scan --help
+  stamp security --help
+  `;
+}
+
+export function getSecurityHelp(): string {
+  return `
+╭─────────────────────────────────────────────────╮
+│  Stamp Security - Security Management          │
+│  Manage security scans and configuration       │
+╰─────────────────────────────────────────────────╯
+
+USAGE:
+  stamp security scan [path] [options]       Scan for secrets and generate report
+  stamp security --hard-reset [path] [options] Delete .stampignore and security report
+
+COMMANDS:
+  scan                                    Scan codebase for exposed secrets
+  --hard-reset                            Delete .stampignore and report file
+  --hard-reset --force                    Delete files without prompting
+
+OPTIONS:
+  --out, -o <file>                        Output file for scan (default: stamp_security_report.json)
+  --force                                 Skip confirmation prompt (use with --hard-reset)
+  --quiet, -q                            Suppress verbose output
+  -h, --help                             Show this help
+
+EXAMPLES:
+  stamp security scan
+    Scan current directory for secrets
+
+  stamp security scan --apply
+    Scan and automatically add files with secrets to .stampignore
+
+  stamp security --hard-reset
+    Delete .stampignore and security report (with confirmation)
+
+  stamp security --hard-reset --force
+    Delete .stampignore and security report (no confirmation)
+
+  stamp security --hard-reset --out custom-report.json
+    Delete .stampignore and custom report file
+
+For detailed help on scan command:
+  stamp security scan --help
   `;
 }
 
@@ -351,6 +398,8 @@ ARGUMENTS:
 
 OPTIONS:
   --skip-gitignore                    Skip .gitignore setup
+  --yes, -y                           Skip all prompts (non-interactive mode)
+  --secure                            Initialize with auto-yes and run security scan
   -h, --help                          Show this help
 
 EXAMPLES:
@@ -362,6 +411,12 @@ EXAMPLES:
 
   stamp init --skip-gitignore
     Initialize without modifying .gitignore
+
+  stamp init --yes
+    Initialize without any prompts (CI-friendly)
+
+  stamp init --secure
+    Initialize with auto-yes and run security scan with --apply
 
 WHAT IT DOES:
   • Creates or updates .gitignore with LogicStamp patterns:
@@ -375,6 +430,58 @@ NOTES:
   • Safe to run multiple times (idempotent)
   • Won't duplicate patterns if they already exist
   • Creates .gitignore if it doesn't exist
+  `;
+}
+
+export function getSecurityScanHelp(): string {
+  return `
+╭─────────────────────────────────────────────────╮
+│  Stamp Security Scan - Detect Secrets         │
+│  Scan codebase for exposed secrets              │
+╰─────────────────────────────────────────────────╯
+
+USAGE:
+  stamp security scan [path] [options]
+
+ARGUMENTS:
+  [path]                              Directory to scan (default: current)
+
+OPTIONS:
+  --out, -o <file>                    Output file (default: stamp_security_report.json)
+  --apply                             Automatically add files with secrets to .stampignore
+  --quiet, -q                         Suppress verbose output (show only JSON stats)
+  -h, --help                          Show this help
+
+EXAMPLES:
+  stamp security scan
+    Scan current directory for secrets
+
+  stamp security scan ./src
+    Scan specific directory
+
+  stamp security scan --apply
+    Scan and automatically add files with secrets to .stampignore
+
+  stamp security scan --out report.json
+    Write report to custom file
+
+WHAT IT DOES:
+  • Scans TypeScript/JavaScript/JSON files for common secret patterns:
+    - API keys, tokens, passwords
+    - AWS access keys, private keys
+    - OAuth secrets, JWT secrets
+    - Database URLs with credentials
+  • Generates stamp_security_report.json with findings
+  • Optionally adds files to .stampignore (via --apply or interactive prompt)
+
+OUTPUT:
+  • stamp_security_report.json        Detailed report with all findings
+  • Exits with code 1 if secrets found, 0 if clean
+
+NOTES:
+  • Files listed in .stampignore are automatically excluded from context generation
+  • Use --apply to automatically add files with secrets to .stampignore
+  • Report includes file paths, line numbers, and severity levels
   `;
 }
 

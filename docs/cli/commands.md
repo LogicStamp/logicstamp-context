@@ -6,7 +6,9 @@ LogicStamp Context ships a single CLI entry point, `stamp`, with
 | Command | Summary | When to use | Key options |
 |---------|---------|-------------|-------------|
 | `stamp --version` | Show version number and exit. | Check installed version. | `-v` (alias) |
-| `stamp init [path]` | Initialize LogicStamp in a project by setting up `.gitignore` patterns. | First-time project setup or explicit `.gitignore` configuration. | `--skip-gitignore` |
+| `stamp init [path]` | Initialize LogicStamp in a project by setting up `.gitignore` patterns. | First-time project setup or explicit `.gitignore` configuration. | `--skip-gitignore`, `--yes`, `--secure` |
+| `stamp security scan [path]` | Scan your project for secrets (API keys, passwords, tokens). Runs 100% locally — nothing is uploaded or sent anywhere. | Prevent accidental exposure of sensitive credentials, CI/CD security checks, project initialization. | `--out`, `--apply`, `--quiet` |
+| `stamp security --hard-reset` | Delete `.stampignore` and security report file, resetting security configuration. | Reset security configuration, start fresh after remediation. | `--force`, `--out`, `--quiet` |
 | `stamp context [path] [options]` | Generates AI-ready context files organized by folder (one `context.json` per folder plus `context_main.json` index). CI-friendly: never prompts, respects preferences from `stamp init`. | Produce fresh context for AI workflows, documentation, or review. | `--depth`, `--include-code`, `--format`, `--profile`, `--max-nodes`, `--dry-run`, `--stats`, `--predict-behavior`, `--compare-modes`, `--include-style`, `--strict-missing`, `--skip-gitignore`, `--out`, `--quiet` |
 | `stamp context style [path] [options]` | Generates context with style metadata included. Extracts visual and layout information (Tailwind, SCSS, Material UI, animations, layout patterns). Equivalent to `stamp context --include-style`. | Design system analysis, AI-assisted design suggestions, layout understanding, animation detection. | All `stamp context` options supported. |
 | `stamp context validate [file]` | Validates context files. With no arguments, auto-detects and validates all context files using `context_main.json` (multi-file mode). With a file argument, validates that specific file (single-file mode). Falls back to `context.json` if `context_main.json` doesn't exist. | Gate CI pipelines, pre-commit checks, or manual QA before sharing context files. Ensures all folder context files are valid. | `[file]` (positional), `--quiet` |
@@ -15,7 +17,8 @@ LogicStamp Context ships a single CLI entry point, `stamp`, with
 
 ## Command interactions
 
-- Run `stamp init` to interactively set up `.gitignore` patterns and `LLM_CONTEXT.md` before generating context files. `stamp context` respects these preferences and never prompts (CI-friendly).
+- Run `stamp init` to interactively set up `.gitignore` patterns and `LLM_context.md` before generating context files. `stamp context` respects these preferences and never prompts (CI-friendly). Use `stamp init --secure` to also run a security scan automatically.
+- Run `stamp security scan` to scan your project for secrets (API keys, passwords, tokens). Runs 100% locally — nothing is uploaded or sent anywhere. Use `--apply` to automatically add detected secret files to `.stampignore`, preventing these files from ever reaching `context.json`. The scan can be integrated with `stamp init --secure` for automated security checks during project setup.
 - Run `stamp context` to generate multiple `context.json` files (one per folder) plus `context_main.json` index, or use `--out` for a custom output directory.
 - Run `stamp context style` to generate context with style metadata (Tailwind, SCSS, Material UI, animations, layout patterns). Equivalent to `stamp context --include-style`.
 - Use `stamp context validate` to validate **all context files** (multi-file mode using `context_main.json`) or a specific file. With no arguments, automatically validates all folder context files. The exit code is CI-friendly.
@@ -28,8 +31,14 @@ LogicStamp Context ships a single CLI entry point, `stamp`, with
 # Show version number
 stamp --version
 
-# Initialize LogicStamp in your project (sets up .gitignore and LLM_CONTEXT.md preferences)
+# Initialize LogicStamp in your project (sets up .gitignore and LLM_context.md preferences)
 stamp init
+
+# Initialize with security scan (auto-yes + security scan with --apply)
+stamp init --secure
+
+# Initialize without prompts (CI-friendly)
+stamp init --yes
 
 # Generate context for your repository
 stamp context
@@ -69,16 +78,31 @@ stamp context clean --all --yes
 
 # Compare token costs across all modes
 stamp context --compare-modes
+
+# Scan your project for secrets (API keys, passwords, tokens)
+# Runs 100% locally — nothing is uploaded or sent anywhere
+stamp security scan
+
+# Scan and automatically add detected secret files to .stampignore
+# Prevents these files from ever reaching context.json
+stamp security scan --apply
+
+# Scan with custom output path
+stamp security scan --out ./reports/security.json
+
+# Reset security configuration (delete .stampignore and report)
+stamp security --hard-reset --force
 ```
 
 ## See also
 
 For detailed documentation on specific features and commands:
 
-- [CONTEXT.md](CONTEXT.md) - Complete `stamp context` command reference
-- [STYLE.md](STYLE.md) - Style metadata extraction guide
-- [COMPARE-MODES.md](COMPARE-MODES.md) - Token cost analysis and mode comparison
-- [COMPARE.md](COMPARE.md) - Context drift detection and comparison
-- [INIT.md](INIT.md) - Project initialization guide
-- [VALIDATE.md](VALIDATE.md) - Schema validation reference
+- [context.md](context.md) - Complete `stamp context` command reference
+- [style.md](style.md) - Style metadata extraction guide
+- [compare-modes.md](compare-modes.md) - Token cost analysis and mode comparison
+- [compare.md](compare.md) - Context drift detection and comparison
+- [init.md](init.md) - Project initialization guide
+- [validate.md](validate.md) - Schema validation reference
+- [security-scan.md](security-scan.md) - Security scanning and secret detection guide
 
