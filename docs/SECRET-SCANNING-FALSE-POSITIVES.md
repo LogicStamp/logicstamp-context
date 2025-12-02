@@ -2,6 +2,14 @@
 
 This document explains how to handle false positives from GitHub's secret scanning when working with LogicStamp Context's security scanning features.
 
+## Who is this for?
+
+This document is for **contributors** to the LogicStamp Context repository (and forks).
+
+It does **not** affect people using the LogicStamp CLI in their own projects.
+
+**No real credentials are stored in this repository** — all flagged patterns are either detection code or test data.
+
 ## Overview
 
 GitHub's push protection may flag certain patterns in this repository as potential secrets. These are **false positives** caused by:
