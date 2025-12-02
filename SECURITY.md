@@ -59,6 +59,7 @@ When using LogicStamp Context:
   - `*.uif.json`
   - `logicstamp.manifest.json`
   - `.logicstamp/`
+  - `stamp_security_report.json`
   
   Review these changes to ensure they align with your project's needs.
 
