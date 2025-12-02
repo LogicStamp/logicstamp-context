@@ -7,6 +7,13 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **Security documentation improvements** - Enhanced SECURITY.md with:
+  - Clarified that `stamp context` no longer prompts on first run (only `stamp init` prompts)
+  - Added section on sensitive data/credentials handling (no automatic redaction)
+  - Added clarification that LogicStamp Context does not use any LLM internally (deterministic AST parsing only)
+
 ### Planned Features
 - Custom profile configuration and overrides
 - Incremental bundle caching
