@@ -74,7 +74,7 @@ export async function init(options: InitOptions = {}): Promise<void> {
         console.log('   - *.uif.json');
         console.log('   - logicstamp.manifest.json');
         console.log('   - .logicstamp/');
-        console.log('   - stamp_security_report.json');
+        console.log('   - stamp_security_report.json (🔒 SECURITY: contains sensitive secret locations)');
         
         let shouldAdd = true; // Default to "yes" in non-interactive mode
         if (isTTY() && !autoYes) {
@@ -96,6 +96,7 @@ export async function init(options: InitOptions = {}): Promise<void> {
           }
         } else {
           console.log('📝 Skipping .gitignore setup');
+          console.log('⚠️  Note: If you run `stamp security scan`, it will automatically add `stamp_security_report.json` to `.gitignore` to protect sensitive findings.');
           await updateConfig(targetDir, { gitignorePreference: 'skipped' });
         }
       } else {

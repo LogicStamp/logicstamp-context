@@ -1,0 +1,10 @@
+{
+  "ignore": [
+    "src/config/secrets.ts",
+    "src/api/keys.ts",
+    "lib/credentials.js",
+    "**/*.secret.ts",
+    "**/secrets/**"
+  ]
+}
+

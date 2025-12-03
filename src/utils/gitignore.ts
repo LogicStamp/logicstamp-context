@@ -248,6 +248,50 @@ export async function ensureGitignorePatterns(targetDir: string): Promise<{ adde
 }
 
 /**
+ * Ensure a specific pattern is in .gitignore
+ * Adds the pattern if it doesn't exist, preserves existing content
+ * 
+ * @param targetDir - Project root directory
+ * @param pattern - Pattern to ensure (relative to project root, e.g., "reports/security.json")
+ * @returns Result indicating if pattern was added and if .gitignore was created
+ */
+export async function ensurePatternInGitignore(
+  targetDir: string,
+  pattern: string
+): Promise<{ added: boolean; created: boolean }> {
+  const exists = await gitignoreExists(targetDir);
+  const content = await readGitignore(targetDir);
+  
+  // Normalize pattern (forward slashes, no leading slash)
+  const normalizedPattern = pattern.replace(/\\/g, '/').replace(/^\//, '').trim();
+  
+  // Check if pattern already exists
+  if (hasPattern(content, normalizedPattern)) {
+    return { added: false, created: false };
+  }
+  
+  // Add pattern to .gitignore
+  let newContent = content;
+  
+  // Ensure content ends with newline
+  if (newContent.length > 0 && !newContent.endsWith('\n')) {
+    newContent += '\n';
+  }
+  
+  // Add blank line before pattern if content exists
+  if (newContent.length > 0 && !newContent.endsWith('\n\n')) {
+    newContent += '\n';
+  }
+  
+  // Add pattern
+  newContent += normalizedPattern + '\n';
+  
+  await writeGitignore(targetDir, newContent);
+  
+  return { added: true, created: !exists };
+}
+
+/**
  * Smart .gitignore management with config-based behavior (no prompting)
  *
  * Behavior:

@@ -9,6 +9,7 @@ import { stdin, stdout } from 'node:process';
 import { globFiles, readFileWithText } from '../../utils/fsx.js';
 import { scanFileForSecrets, filterFalsePositives, type SecretMatch } from '../../utils/secretDetector.js';
 import { addToStampignore, readStampignore, deleteStampignore, STAMPIGNORE_FILENAME } from '../../utils/stampignore.js';
+import { ensureGitignorePatterns, ensurePatternInGitignore } from '../../utils/gitignore.js';
 import { debugError } from '../../utils/debug.js';
 import { displayPath } from './context/fileWriter.js';
 
@@ -179,6 +180,28 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
         });
         throw new Error(`Failed to write security report: ${err.message}`);
       }
+
+      // Automatically ensure report file is in .gitignore to prevent accidental commits
+      try {
+        const reportPathRelative = relative(projectRoot, resolvedOutputFile).replace(/\\/g, '/');
+        const isDefaultPath = outputPath === 'stamp_security_report.json' || 
+                              (outputPath.endsWith('.json') && resolvedOutputFile.endsWith('stamp_security_report.json'));
+        
+        if (isDefaultPath) {
+          // Default path - ensure all LogicStamp patterns are in .gitignore
+          await ensureGitignorePatterns(projectRoot);
+        } else {
+          // Custom path - ensure this specific file is in .gitignore
+          await ensurePatternInGitignore(projectRoot, reportPathRelative);
+        }
+      } catch (error) {
+        // Non-fatal: log warning but don't fail the scan
+        if (!options.quiet) {
+          const err = error as Error;
+          console.warn(`\n⚠️  Warning: Could not update .gitignore: ${err.message}`);
+          console.warn(`   Please manually add the report file to .gitignore to prevent accidental commits.`);
+        }
+      }
       
       if (!options.quiet) {
         console.log(`\n✅ No secrets detected`);
@@ -255,6 +278,29 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
     throw new Error(`Failed to write security report: ${err.message}`);
   }
 
+  // Automatically ensure report file is in .gitignore to prevent accidental commits
+  // The report contains sensitive information (locations of secrets)
+  try {
+    const reportPathRelative = relative(projectRoot, outputFile).replace(/\\/g, '/');
+    const isDefaultPath = outputPath === 'stamp_security_report.json' || 
+                          (outputPath.endsWith('.json') && outputFile.endsWith('stamp_security_report.json'));
+    
+    if (isDefaultPath) {
+      // Default path - ensure all LogicStamp patterns are in .gitignore
+      await ensureGitignorePatterns(projectRoot);
+    } else {
+      // Custom path - ensure this specific file is in .gitignore
+      await ensurePatternInGitignore(projectRoot, reportPathRelative);
+    }
+  } catch (error) {
+    // Non-fatal: log warning but don't fail the scan
+    if (!options.quiet) {
+      const err = error as Error;
+      console.warn(`\n⚠️  Warning: Could not update .gitignore: ${err.message}`);
+      console.warn(`   Please manually add the report file to .gitignore to prevent accidental commits.`);
+    }
+  }
+
   // Display results
   if (!options.quiet) {
     console.log(`\n📊 Security Scan Results:`);
@@ -291,19 +337,38 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
       if (options.apply) {
         // Auto-apply: add files to .stampignore
         // Convert absolute paths to relative paths for .stampignore
-        const filesToIgnore = Array.from(filesWithSecrets).map(file => 
-          relative(projectRoot, file).replace(/\\/g, '/')
-        );
-        const result = await addToStampignore(projectRoot, filesToIgnore);
+        // All paths are relative to project root (no user-specific or absolute paths)
+        const filesToIgnore = Array.from(filesWithSecrets)
+          .map(file => {
+            const relPath = relative(projectRoot, file).replace(/\\/g, '/');
+            // Validate: ensure path is relative (doesn't start with / or contain .. outside project)
+            // relative() can return absolute paths if files are outside project root, but
+            // since globFiles is scoped to projectRoot, this shouldn't happen
+            if (relPath.startsWith('/') || relPath.match(/^[A-Z]:/)) {
+              // Absolute path detected - this shouldn't happen, but skip it to be safe
+              console.warn(`⚠️  Skipping absolute path outside project: ${file}`);
+              return null;
+            }
+            return relPath;
+          })
+          .filter((path): path is string => path !== null);
         
-        if (result.added) {
-          console.log(`\n✅ Added ${filesToIgnore.length} file(s) to .stampignore`);
-          if (result.created) {
-            console.log(`   Created .stampignore`);
+          if (filesToIgnore.length === 0) {
+            if (!options.quiet) {
+              console.log(`\nℹ️  No valid relative paths to add to .stampignore`);
+            }
+          } else {
+            const result = await addToStampignore(projectRoot, filesToIgnore);
+            
+            if (result.added) {
+              console.log(`\n✅ Added ${filesToIgnore.length} file(s) to .stampignore`);
+              if (result.created) {
+                console.log(`   Created .stampignore`);
+              }
+            } else {
+              console.log(`\nℹ️  Files already in .stampignore`);
+            }
           }
-        } else {
-          console.log(`\nℹ️  Files already in .stampignore`);
-        }
       } else {
         // Interactive prompt
         console.log(`\n💡 To automatically add these files to .stampignore, run:`);

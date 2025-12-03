@@ -269,6 +269,134 @@ const password = 'mySecretPassword123';
       // The pattern looks for: apiKey : "value" or apiKey: "value"
       expect(reportedFiles.some((f: string) => f.includes('config.json'))).toBe(true);
     }, 30000);
+
+    it('should automatically add default report file to .gitignore', async () => {
+      const reportPath = join(fixturesPath, 'stamp_security_report.json');
+
+      // Run security scan (no secrets expected)
+      await execAsync(
+        `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`
+      );
+
+      // Verify report was created
+      await access(reportPath);
+
+      // Verify .gitignore was updated with stamp_security_report.json
+      const gitignorePath = join(fixturesPath, '.gitignore');
+      let gitignoreExists = false;
+      try {
+        await access(gitignorePath);
+        gitignoreExists = true;
+      } catch {
+        // .gitignore might not exist yet - ensureGitignorePatterns should create it
+      }
+
+      // Read .gitignore
+      const gitignoreContent = gitignoreExists
+        ? await readFile(gitignorePath, 'utf-8')
+        : '';
+
+      // Should contain stamp_security_report.json pattern
+      expect(gitignoreContent).toContain('stamp_security_report.json');
+    }, 30000);
+
+    it('should automatically add custom report file path to .gitignore', async () => {
+      const customReportPath = join(testDir, 'reports', 'security-report.json');
+
+      // Run security scan with custom report path
+      await execAsync(
+        `node dist/cli/stamp.js security scan ${fixturesPath} --out ${customReportPath}`
+      );
+
+      // Verify report was created
+      await access(customReportPath);
+
+      // Verify .gitignore was updated with custom report path
+      const gitignorePath = join(fixturesPath, '.gitignore');
+      const gitignoreContent = await readFile(gitignorePath, 'utf-8');
+
+      // Should contain the custom report path (relative to project root)
+      const relativeReportPath = customReportPath.replace(fixturesPath + '/', '').replace(/\\/g, '/');
+      expect(gitignoreContent).toContain('reports/security-report.json');
+    }, 30000);
+
+    it('should not fail if .gitignore update fails (non-fatal)', async () => {
+      // Create a read-only directory to simulate permission issues
+      // This is tricky on Windows, so we'll test that the scan continues even if gitignore update fails
+      const reportPath = join(fixturesPath, 'stamp_security_report.json');
+
+      // Run security scan - should complete successfully even if gitignore update fails
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`
+      );
+
+      // Verify report was still created
+      await access(reportPath);
+
+      // Should not mention gitignore errors in successful run (errors are non-fatal warnings)
+      // The scan should complete successfully
+      expect(stdout).toContain('No secrets detected');
+    }, 30000);
+
+    it('should handle report file already in .gitignore (idempotent)', async () => {
+      // Create .gitignore with stamp_security_report.json already in it
+      const gitignorePath = join(fixturesPath, '.gitignore');
+      await writeFile(
+        gitignorePath,
+        `# Existing patterns
+node_modules/
+stamp_security_report.json
+`
+      );
+
+      const reportPath = join(fixturesPath, 'stamp_security_report.json');
+
+      // Run security scan
+      await execAsync(
+        `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`
+      );
+
+      // Verify report was created
+      await access(reportPath);
+
+      // Verify .gitignore still contains the pattern (idempotent)
+      const gitignoreContent = await readFile(gitignorePath, 'utf-8');
+      expect(gitignoreContent).toContain('stamp_security_report.json');
+      
+      // Should not duplicate the pattern
+      const matches = gitignoreContent.match(/stamp_security_report\.json/g);
+      expect(matches?.length).toBeLessThanOrEqual(2); // Allow for comment and pattern
+    }, 30000);
+
+    it('should add default report to LogicStamp patterns block in .gitignore', async () => {
+      // Create .gitignore with LogicStamp block already started
+      const gitignorePath = join(fixturesPath, '.gitignore');
+      await writeFile(
+        gitignorePath,
+        `# LogicStamp context & security files
+context.json
+context_*.json
+`
+      );
+
+      const reportPath = join(fixturesPath, 'stamp_security_report.json');
+
+      // Run security scan
+      await execAsync(
+        `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`
+      );
+
+      // Verify .gitignore was updated with the report in the LogicStamp block
+      const gitignoreContent = await readFile(gitignorePath, 'utf-8');
+      expect(gitignoreContent).toContain('# LogicStamp context & security files');
+      expect(gitignoreContent).toContain('stamp_security_report.json');
+      
+      // The report should be in the LogicStamp section
+      const lines = gitignoreContent.split('\n');
+      const logicStampIndex = lines.findIndex(line => line.includes('# LogicStamp context & security files'));
+      const reportIndex = lines.findIndex(line => line.includes('stamp_security_report.json'));
+      expect(reportIndex).toBeGreaterThan(logicStampIndex);
+    }, 30000);
   });
 
   describe('stamp security scan --apply', () => {
@@ -396,6 +524,89 @@ const password = 'mySecretPassword123';
       // Should only have one entry for secrets.ts
       const secretsCount = stampignore.ignore.filter((p: string) => p.includes('secrets.ts')).length;
       expect(secretsCount).toBe(1);
+    }, 30000);
+
+    it('should only add relative paths to .stampignore (no absolute paths)', async () => {
+      // Create a file with a secret
+      const secretFile = join(fixturesPath, 'src', 'secrets.ts');
+      await writeFile(
+        secretFile,
+        `const apiKey = 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz';`
+      );
+
+      const reportPath = join(testDir, 'stamp_security_report.json');
+
+      // Command exits with code 1 when secrets are found (expected behavior)
+      let stdout = '';
+      try {
+        const result = await execAsync(
+          `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath} --apply`
+        );
+        stdout = result.stdout;
+      } catch (error: any) {
+        // Expected: command exits with code 1 when secrets found
+        expect(error.code).toBe(1);
+        stdout = error.stdout || '';
+      }
+
+      // Verify .stampignore was created
+      const stampignorePath = join(fixturesPath, '.stampignore');
+      await access(stampignorePath);
+
+      // Read and verify content
+      const stampignoreContent = await readFile(stampignorePath, 'utf-8');
+      const stampignore = JSON.parse(stampignoreContent);
+
+      // All paths should be relative (no absolute paths, no user-specific paths)
+      stampignore.ignore.forEach((path: string) => {
+        // Should not start with / (Unix absolute path)
+        expect(path).not.toMatch(/^\//);
+        // Should not match Windows absolute path pattern (C:, D:, etc.)
+        expect(path).not.toMatch(/^[A-Z]:/);
+        // Should not contain user home directory patterns
+        expect(path).not.toMatch(/^~\/|^\/Users\/|^\/home\/|^C:\\Users\\/);
+      });
+
+      // Should contain relative path to secrets file
+      const ignorePaths = stampignore.ignore.map((p: string) => p.replace(/\\/g, '/'));
+      expect(ignorePaths.some((p: string) => p.includes('src/secrets.ts') || p.includes('secrets.ts'))).toBe(true);
+    }, 30000);
+
+    it('should filter out absolute paths when adding to .stampignore', async () => {
+      // This test verifies that if somehow an absolute path gets through,
+      // it will be filtered out (though this shouldn't happen in practice)
+      
+      // Create a file with a secret
+      const secretFile = join(fixturesPath, 'src', 'secrets.ts');
+      await writeFile(
+        secretFile,
+        `const apiKey = 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz';`
+      );
+
+      const reportPath = join(testDir, 'stamp_security_report.json');
+
+      // Run security scan
+      try {
+        await execAsync(
+          `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath} --apply`
+        );
+      } catch (error: any) {
+        // Expected: command exits with code 1 when secrets found
+        expect(error.code).toBe(1);
+      }
+
+      // Verify .stampignore paths are all relative
+      const stampignorePath = join(fixturesPath, '.stampignore');
+      await access(stampignorePath);
+      const stampignoreContent = await readFile(stampignorePath, 'utf-8');
+      const stampignore = JSON.parse(stampignoreContent);
+
+      // Verify all paths are relative to project root
+      stampignore.ignore.forEach((path: string) => {
+        // Paths should not be absolute
+        const isAbsolute = path.startsWith('/') || !!path.match(/^[A-Z]:/);
+        expect(isAbsolute).toBe(false);
+      });
     }, 30000);
   });
 

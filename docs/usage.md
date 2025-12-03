@@ -70,7 +70,16 @@ stamp init ./my-project
 
 **What it does**
 
-1. **Sets up `.gitignore`** - Adds patterns for LogicStamp-generated files (`context.json`, `context_*.json`, etc.)
+1. **Sets up `.gitignore`** - Adds patterns for LogicStamp-generated files:
+   - `context.json` - Per-folder context bundles (large, regenerable)
+   - `context_*.json` - Main index and context variants
+   - `*.uif.json` - UIF contract sidecar files
+   - `logicstamp.manifest.json` - Dependency manifest files
+   - `.logicstamp/` - Configuration directory (user preferences)
+   - `stamp_security_report.json` - 🔒 Security scan reports (contains sensitive findings - **never commit**)
+
+   These patterns prevent large generated files and sensitive reports from being committed. See [init.md](cli/init.md) for detailed explanations of each pattern.
+
 2. **Generates `LLM_context.md`** - Creates a guide for AI assistants to understand your project structure
 3. **Creates `.logicstamp/config.json`** - Saves preferences so `stamp context` never prompts (CI-friendly)
 

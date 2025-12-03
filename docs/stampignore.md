@@ -50,14 +50,23 @@ When you run `stamp context` or `stamp context style` (equivalent to `stamp cont
 
 ### Relative Paths
 
-All paths in `.stampignore` must be **relative to the project root**:
+All paths in `.stampignore` must be **relative to the project root**. Paths are automatically normalized when added via `stamp security scan --apply`:
+
+- ✅ **Project-relative paths**: `src/config/secrets.ts`, `lib/keys.js`
+- ❌ **Absolute paths not supported**: `/home/user/project/src/config.ts`, `C:\Users\...\src\config.ts`
+- ❌ **User-specific paths not included**: No home directory paths, no absolute paths outside project
+
+When `stamp security scan --apply` automatically adds files to `.stampignore`, it:
+1. Converts absolute file paths to relative paths using `path.relative(projectRoot, file)`
+2. Normalizes path separators (backslashes → forward slashes for cross-platform consistency)
+3. Validates that paths are relative (skips any absolute paths as a safety measure)
 
 ```json
 {
   "ignore": [
     "src/config.ts",        // ✅ Correct - relative to project root
     "/src/config.ts",       // ❌ Wrong - absolute paths not supported
-    "./src/config.ts"       // ✅ Correct - ./ is optional but works
+    "./src/config.ts"       // ✅ Correct - ./ is normalized and works
   ]
 }
 ```
@@ -172,6 +181,20 @@ Files are matched against `.stampignore` patterns using glob matching:
 - Glob patterns match according to their rules
 - Matching happens before file processing
 - Excluded files are never read or analyzed
+
+## Relationship with .gitignore
+
+`.stampignore` and `.gitignore` serve different purposes:
+
+- **`.gitignore`**: Prevents files from being committed to version control
+- **`.stampignore`**: Prevents files from being included in LogicStamp context bundles
+
+**Important**: The security report file (`stamp_security_report.json`) is automatically added to `.gitignore` by `stamp security scan` to prevent accidental commits. This is separate from `.stampignore`, which only affects context generation.
+
+**Use cases:**
+- Files in `.gitignore` are excluded from Git commits
+- Files in `.stampignore` are excluded from context generation (but may still be committed)
+- Files can be in both (like secret files that shouldn't be committed OR included in context)
 
 ## Best Practices
 

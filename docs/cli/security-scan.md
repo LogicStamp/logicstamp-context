@@ -156,6 +156,23 @@ The following files are automatically excluded from scanning:
 - The `.stampignore` file (which may contain file paths that reference secrets)
 - Files larger than 10MB (skipped with a warning message)
 
+## Automatic .gitignore Protection
+
+🔒 **SECURITY CRITICAL**: **Security reports contain sensitive information** (locations of detected secrets, line numbers, code snippets), so `stamp security scan` automatically ensures the report file is added to `.gitignore` to prevent accidental commits. **This happens automatically and cannot be disabled** - the security report must never be committed to version control.
+
+- For the default report file (`stamp_security_report.json`): Automatically ensures all LogicStamp patterns are in `.gitignore` (including `context.json`, `context_*.json`, etc.)
+- For custom report paths: Automatically adds the specific report file path to `.gitignore`
+
+**Why ignore the report?** The security report contains:
+- File paths where secrets were detected
+- Line and column numbers pointing to secret locations
+- Code snippets showing the context around secrets
+- Severity levels and secret types
+
+Even if no secrets are found, the report structure itself reveals which files were scanned, which could be sensitive information in some contexts.
+
+This happens automatically after the report is written, regardless of whether secrets were found. If the report file cannot be added to `.gitignore` (e.g., permission issues), a warning is shown but the scan continues.
+
 ## .stampignore Integration
 
 When secrets are detected, you can automatically add affected files to `.stampignore` to prevent them from being included in context generation.
@@ -271,7 +288,7 @@ stamp security --hard-reset --force
 3. **Use Environment Variables**: Store secrets in environment variables or secret management systems, not in code
 4. **Update .stampignore Carefully**: Only add files to `.stampignore` if they legitimately contain secrets that should be excluded
 5. **Version Control**: Consider committing `.stampignore` to version control so the team knows which files are excluded
-6. **Don't Commit Reports**: Add `stamp_security_report.json` to `.gitignore` to avoid committing sensitive findings
+6. **Report Files Are Automatically Protected**: The security report file is automatically added to `.gitignore` to prevent accidental commits of sensitive findings
 
 ## Limitations
 

@@ -16,6 +16,7 @@ import {
   addLogicStampPatterns,
   writeGitignore,
   ensureGitignorePatterns,
+  ensurePatternInGitignore,
   LOGICSTAMP_GITIGNORE_PATTERNS,
 } from '../../src/utils/gitignore.js';
 
@@ -373,6 +374,111 @@ describe('gitignore utilities', () => {
 
       const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
       expect(content).toBe(fullContent);
+    });
+  });
+
+  describe('ensurePatternInGitignore', () => {
+    it('should create .gitignore and add pattern when file does not exist', async () => {
+      const pattern = 'reports/security.json';
+      const result = await ensurePatternInGitignore(testDir, pattern);
+
+      expect(result.added).toBe(true);
+      expect(result.created).toBe(true);
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      expect(content).toContain('reports/security.json');
+    });
+
+    it('should add pattern to existing .gitignore', async () => {
+      await writeFile(join(testDir, '.gitignore'), 'node_modules\n');
+      
+      const pattern = 'reports/security.json';
+      const result = await ensurePatternInGitignore(testDir, pattern);
+
+      expect(result.added).toBe(true);
+      expect(result.created).toBe(false);
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      expect(content).toContain('node_modules');
+      expect(content).toContain('reports/security.json');
+    });
+
+    it('should not duplicate pattern if it already exists', async () => {
+      await writeFile(join(testDir, '.gitignore'), 'node_modules\nreports/security.json\n');
+      
+      const pattern = 'reports/security.json';
+      const result = await ensurePatternInGitignore(testDir, pattern);
+
+      expect(result.added).toBe(false);
+      expect(result.created).toBe(false);
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      const matches = content.match(/reports\/security\.json/g);
+      expect(matches?.length).toBe(1);
+    });
+
+    it('should normalize path separators (backslashes to forward slashes)', async () => {
+      const pattern = 'reports\\security.json';
+      await ensurePatternInGitignore(testDir, pattern);
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      // Should normalize backslashes to forward slashes
+      expect(content).toContain('reports/security.json');
+      expect(content).not.toContain('reports\\security.json');
+    });
+
+    it('should remove leading slash from pattern', async () => {
+      const pattern = '/reports/security.json';
+      await ensurePatternInGitignore(testDir, pattern);
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      // Should remove leading slash
+      expect(content).toContain('reports/security.json');
+      expect(content).not.toContain('/reports/security.json');
+    });
+
+    it('should handle patterns with subdirectories', async () => {
+      const pattern = 'custom/reports/security-scan.json';
+      await ensurePatternInGitignore(testDir, pattern);
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      expect(content).toContain('custom/reports/security-scan.json');
+    });
+
+    it('should preserve existing content when adding pattern', async () => {
+      const existingContent = '# Custom ignores\nnode_modules\n*.log\n';
+      await writeFile(join(testDir, '.gitignore'), existingContent);
+      
+      await ensurePatternInGitignore(testDir, 'reports/security.json');
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      expect(content).toContain('# Custom ignores');
+      expect(content).toContain('node_modules');
+      expect(content).toContain('*.log');
+      expect(content).toContain('reports/security.json');
+    });
+
+    it('should handle empty .gitignore', async () => {
+      await writeFile(join(testDir, '.gitignore'), '');
+      
+      const pattern = 'reports/security.json';
+      const result = await ensurePatternInGitignore(testDir, pattern);
+
+      expect(result.added).toBe(true);
+      expect(result.created).toBe(false);
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      expect(content).toContain('reports/security.json');
+    });
+
+    it('should add blank line before pattern if content exists', async () => {
+      await writeFile(join(testDir, '.gitignore'), 'node_modules\n');
+      
+      await ensurePatternInGitignore(testDir, 'reports/security.json');
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      // Should have blank line separator
+      expect(content).toMatch(/node_modules\n\nreports\/security\.json/);
     });
   });
 });

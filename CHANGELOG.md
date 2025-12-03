@@ -63,6 +63,13 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - Security report format and structure
   - CI/CD integration examples
 
+- **Enhanced gitignore pattern documentation** - Improved documentation across all files to better explain what each `.gitignore` pattern does and why it's being ignored:
+  - Added detailed explanations in `docs/cli/init.md` for each pattern (context.json, context_*.json, *.uif.json, logicstamp.manifest.json, .logicstamp/, stamp_security_report.json)
+  - Enhanced `docs/USAGE.md` with brief pattern explanations and reference to detailed docs
+  - Improved `docs/cli/security-scan.md` to clarify why security reports are automatically protected
+  - Updated `SECURITY.md` with comprehensive explanations of each pattern and security implications
+  - All documentation now consistently explains what each pattern matches, why it's ignored, and when it's generated
+
 ### Fixed
 
 - N/A
