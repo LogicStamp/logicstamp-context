@@ -184,6 +184,22 @@ The `--apply` flag will:
 - Create `.stampignore` if it doesn't exist (only if secrets are found and there are new files to add)
 - Preserve existing entries and avoid duplicates
 
+🔐 **Important Security Note**
+
+`.stampignore` is only created when secrets are actually detected in your project (`.ts`, `.tsx`, `.js`, `.jsx`, `.json`).
+
+However, committing secrets to a codebase is unsafe and strongly discouraged.
+
+LogicStamp's `.stampignore` mechanism is a temporary safety layer to prevent secrets from being included in your context bundles - it is not a substitute for proper secret hygiene.
+
+We strongly recommend:
+
+- Moving all secrets to environment variables
+- Using a secrets manager (e.g., Vault, Doppler, AWS Secrets Manager)
+- Removing the secrets from your code before running context generation
+
+The best long-term solution is to ensure that no secrets ever exist in tracked source files.
+
 `.stampignore` uses JSON format with paths relative to project root (forward slashes):
 
 ```json
