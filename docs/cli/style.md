@@ -1,6 +1,6 @@
 # `stamp context style` Command
 
-Generate AI-ready context bundles with style metadata included. This command extracts visual and layout information from your React components, making context bundles design-aware for AI assistants.
+Generate context bundles that include style metadata. This extracts visual and layout info from your React components so AI assistants can understand your design.
 
 ```bash
 stamp context style [path] [options]
@@ -10,11 +10,11 @@ stamp context style [path] [options]
 
 **Note:** The `stamp context style` command is equivalent to `stamp context --include-style`. Both syntaxes produce identical output.
 
-**File Exclusion:** `stamp context style` automatically excludes files listed in `.stampignore` from context generation, just like `stamp context`. This prevents files containing secrets or sensitive information from being included in style metadata extraction. Use `stamp security scan --apply` to automatically add files to `.stampignore` (the file is only created when secrets are detected). See [`stamp security scan`](security-scan.md) for more details.
+**File Exclusion:** `stamp context style` respects `.stampignore`, just like `stamp context`. This keeps files with secrets out of your context bundles. Run `stamp security scan --apply` to automatically add files to `.stampignore` when secrets are found. See [`stamp security scan`](security-scan.md) for details.
 
 ## Overview
 
-While `stamp context` focuses on component logic and structure, `stamp context style` adds visual and layout understanding. This enables AI assistants to:
+`stamp context style` adds visual and layout info on top of the component logic and structure that `stamp context` extracts. This lets AI assistants:
 
 - Understand the visual design of components
 - Suggest visually consistent components
@@ -24,7 +24,7 @@ While `stamp context` focuses on component logic and structure, `stamp context s
 
 ## What It Extracts
 
-The style command analyzes components and extracts four categories of metadata:
+It extracts four types of metadata:
 
 ### 1. Style Sources
 
