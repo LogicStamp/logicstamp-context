@@ -1,37 +1,32 @@
 # GitHub Secret Scanning False Positives
 
-This document explains how to handle false positives from GitHub's secret scanning when working with LogicStamp Context's security scanning features.
+How to handle false positives from GitHub's secret scanning when working with LogicStamp Context's security scanning features.
 
-## Who is this for?
+**For contributors only** — this only affects the LogicStamp Context repository (and forks), not people using the CLI in their own projects.
 
-This document is for **contributors** to the LogicStamp Context repository (and forks).
-
-It does **not** affect people using the LogicStamp CLI in their own projects.
-
-**No real credentials are stored in this repository** — all flagged patterns are either detection code or test data.
+**No real credentials are stored in this repository** — all flagged patterns are detection code or test data.
 
 ## Overview
 
-GitHub's push protection may flag certain patterns in this repository as potential secrets. These are **false positives** caused by:
+GitHub's push protection may flag patterns in this repository as potential secrets. These are false positives from:
 
-1. **Secret detection patterns** in `src/utils/secretDetector.ts` that match secret formats (but don't contain actual secrets)
-2. **Test files** that contain example/fake secret patterns for testing purposes
-3. **Security reports** that document detected patterns (which may reference fake secrets)
+1. **Secret detection patterns** in `src/utils/secretDetector.ts` — regex patterns that match secret formats but don't contain actual secrets
+2. **Test files** — fake secret patterns (e.g., `FAKE_SECRET_KEY_...`) used to verify detection works
+3. **Security reports** — generated reports that document detected patterns (excluded from version control)
 
-All flagged patterns are **detection code or test data**, not actual credentials.
+All flagged patterns are detection code or test data, not actual credentials.
 
 ## Common False Positive Scenarios
 
 ### Detection Pattern False Positives
 
-The `src/utils/secretDetector.ts` file contains regular expressions that detect secret patterns (AWS keys, GitHub tokens, etc.). These patterns are intentionally obfuscated but may still be flagged by GitHub's scanner.
+The `src/utils/secretDetector.ts` file contains regex patterns that detect secret formats (AWS keys, GitHub tokens, etc.). These patterns don't contain real secrets — they're just detection logic. They're intentionally obfuscated using string concatenation at runtime, but GitHub's scanner may still flag them.
 
-**Why it's safe:**
-- Patterns are constructed dynamically at runtime using string concatenation
-- No hardcoded secret values exist in the codebase
-- These are detection patterns, not actual secrets
+They're safe because:
+- Patterns are built dynamically (no hardcoded secrets)
+- These are detection patterns, not actual credentials
 
-**Example obfuscation:**
+Example obfuscation:
 ```typescript
 pattern: (() => {
   const part1 = 'A'.concat('K');
@@ -42,44 +37,38 @@ pattern: (() => {
 
 ### Test File False Positives
 
-Test files may contain fake secret patterns (e.g., `FAKE_SECRET_KEY_...`) to verify detection works correctly. These are intentionally fake and safe to commit.
+Test files contain fake secret patterns (e.g., `FAKE_SECRET_KEY_...`) to verify detection works. They're intentionally fake and safe to commit.
 
 ### Security Report False Positives
 
-Generated security reports (in `tests/e2e/output/`) may contain references to detected patterns. These reports are excluded from version control via `.gitignore`.
+Generated security reports (in `tests/e2e/output/`) may reference detected patterns. We exclude these reports in `.gitignore`, so they won't trigger false positives.
 
 ## Resolution
 
-### If Your Push is Blocked
+### If GitHub Blocks Your Push
 
-1. **Review the flagged content** — Verify it's from a test file or detection pattern
-2. **Use GitHub's bypass option** — When prompted, confirm you understand it's a false positive
-3. **Continue with your push**
+If GitHub blocks your push, check that the flagged content is from a test file or detection pattern. Then use GitHub's bypass option to confirm it's a false positive and continue with your push.
 
 ### For Repository Administrators
 
-To configure push protection exceptions:
+If this keeps happening, you can tweak GitHub's push protection settings:
 
 1. Go to **Settings** → **Code security and analysis** → **Push protection**
 2. Configure exceptions for known false positive patterns
 3. Consider allowlisting files like `src/utils/secretDetector.ts` if needed
 
-### Need Help?
+### Still Having Issues?
 
-If you continue to experience issues:
-
-- Review the flagged content to confirm it's a false positive
 - Contact GitHub Support with context about detection patterns or test files
-- Check that all security reports are properly excluded via `.gitignore`
+- Make sure security reports are in `.gitignore` so they're excluded
 
 ## Prevention
 
-To minimize false positives:
-
-- ✅ Security reports are in `.gitignore` (`stamp_security_report.json`)
-- ✅ Test files use `FAKE_*` prefixes for fake secrets
-- ✅ Detection patterns are obfuscated using string concatenation
-- ✅ Generated output directories are excluded from version control
+We minimize false positives by:
+- Excluding security reports in `.gitignore` (`stamp_security_report.json`)
+- Using `FAKE_*` prefixes for fake secrets in test files
+- Obfuscating detection patterns with string concatenation
+- Excluding generated output directories from version control
 
 ## Related Documentation
 

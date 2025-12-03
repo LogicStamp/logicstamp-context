@@ -1,14 +1,13 @@
 # `stamp context validate` Command
 
-Verify that generated LogicStamp context files match the expected schema and
-structure. Supports both multi-file validation (all folders) and single-file validation.
+Check that generated LogicStamp context files match the expected schema and structure. Supports both multi-file validation (all folders) and single-file validation.
 
 ```bash
 stamp context validate [file]
 ```
 
-- `[file]` – Optional path to a context file created by the `stamp context` command.
-  - **With no arguments:** Automatically validates all context files using `context_main.json` (multi-file mode). Falls back to `context.json` if `context_main.json` doesn't exist.
+- `[file]` – Optional path to a context file created by `stamp context`.
+  - **No arguments:** Validates all context files using `context_main.json` (multi-file mode). Falls back to `context.json` if `context_main.json` doesn't exist.
   - **With a file argument:** Validates that specific file (single-file mode). Can be a folder context file or the main index file.
 
 ## What it checks
@@ -16,33 +15,34 @@ stamp context validate [file]
 ### Multi-File Mode (default with no arguments)
 
 When `context_main.json` exists, validates **all** context files in your project:
-- Reads `context_main.json` to discover all folder context files
+- Reads `context_main.json` to find all folder context files
 - Validates each folder's `context.json` file
-- Reports comprehensive summary across all folders:
+- Reports a summary across all folders:
   - Total valid/invalid folders
   - Total errors and warnings across all files
   - Total nodes and edges across all files
 - Shows detailed validation results for each folder
-- Exit code reflects overall validation status (fails if any folder is invalid)
+- Exit code shows overall validation status (fails if any folder is invalid)
 
 ### Single-File Mode (with file argument)
 
 Validates a specific context file:
 
 #### For Folder Context Files (`context.json`)
-- File exists and parses as JSON.
-- Top-level value is an array of `LogicStampBundle` objects.
+- File exists and parses as JSON
+- Top-level value is an array of `LogicStampBundle` objects
 - Each bundle has the required fields (`type`, `schemaVersion`, `entryId`,
-  `graph`, `meta`, etc.).
-- Contracts stored within nodes are `UIFContract` with schema version `0.3`.
-- Warns when bundle hashes or schema versions diverge from expected values.
+  `graph`, `meta`, etc.)
+- Contracts stored within nodes are `UIFContract` with schema version `0.3`
+- Warns when bundle hashes or schema versions diverge from expected values
 
 #### For Main Index File (`context_main.json`)
-- File exists and parses as JSON.
-- Structure matches `LogicStampIndex` schema.
-- Contains required fields: `type`, `schemaVersion`, `projectRoot`, `summary`, `folders`, `meta`.
+- File exists and parses as JSON
+- Structure matches `LogicStampIndex` schema
+- Contains required fields: `type`, `schemaVersion`, `projectRoot`, `summary`, `folders`, `meta`
 - Each folder entry has valid structure with `path`, `contextFile`, `bundles`, `components`, etc.
-- Note: Validating only `context_main.json` (single-file mode) does not validate the folder context files themselves. Use multi-file mode (no arguments) to validate all files.
+
+**Note:** Validating only `context_main.json` (single-file mode) doesn't validate the folder context files themselves. Use multi-file mode (no arguments) to validate all files.
 
 ## Options
 
@@ -162,13 +162,13 @@ Warnings example (still exits 0):
 ✅ Valid with 1 warning(s)
 ```
 
-## CI/CD usage
+## CI/CD Usage
 
-- Pair with the `stamp context` command to block merges when context files become invalid.
-- Use multi-file mode (no arguments) to validate **all** context files in one command.
-- Combine with `npm run` scripts or Git hooks for automated checks.
-- Use the exit code to fail pipelines and prompt regeneration of context files.
-- Multi-file mode ensures comprehensive validation across the entire project.
+- Use with `stamp context` to block merges when context files become invalid
+- Use multi-file mode (no arguments) to validate **all** context files in one command
+- Combine with `npm run` scripts or Git hooks for automated checks
+- Use the exit code to fail pipelines and prompt regeneration of context files
+- Multi-file mode validates everything across the entire project
 
 **Example CI validation:**
 ```bash
@@ -190,9 +190,9 @@ stamp context validate context.json && \
 stamp context validate src/components/context.json
 ```
 
-The multi-file mode is preferred because it:
-- Automatically discovers all context files from the index
+Multi-file mode is preferred because it:
+- Finds all context files from the index automatically
 - Validates everything in one command
-- Provides a comprehensive summary
+- Provides a summary across all files
 - Detects if any folder context files are missing or corrupted
 

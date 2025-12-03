@@ -1,16 +1,10 @@
 # Tailwind CSS Support
 
-LogicStamp Context provides comprehensive support for Tailwind CSS, extracting utility classes, responsive breakpoints, and design patterns from your components.
+LogicStamp Context extracts Tailwind CSS utility classes, responsive breakpoints, and design patterns from your components.
 
 ## Tailwind Detection
 
-LogicStamp automatically detects Tailwind CSS usage by:
-
-- **AST-based extraction**: Uses `ts-morph` to parse TypeScript/JavaScript and extract classes from JSX attributes
-- **Utility classes**: Detects Tailwind utility class patterns
-- **Configuration**: Reads `tailwind.config.js` or `tailwind.config.ts` when available
-- **Class patterns**: Identifies Tailwind's class naming conventions
-- **Responsive prefixes**: Detects breakpoint prefixes (`sm:`, `md:`, `lg:`, etc.)
+LogicStamp detects Tailwind CSS by parsing your TypeScript/JavaScript with `ts-morph` to extract classes from JSX attributes, detecting utility class patterns, and reading your Tailwind config when available. It also identifies Tailwind's class naming conventions and detects breakpoint prefixes (`sm:`, `md:`, `lg:`, etc.).
 
 ## What Gets Extracted
 

@@ -1,12 +1,12 @@
 # Security Scan
 
-The `stamp security scan` command scans your project for secrets (API keys, passwords, tokens) and other sensitive information that should not be committed to version control.
+The `stamp security scan` command finds secrets (API keys, passwords, tokens) and other sensitive data in your project before they get committed.
 
 **Runs 100% locally — nothing is uploaded or sent anywhere.**
 
 ## Overview
 
-The security scan feature helps prevent accidental exposure of sensitive credentials by:
+The security scan helps prevent accidentally exposing sensitive credentials by:
 
 - Scanning TypeScript, JavaScript, and JSON files for common secret patterns
 - Generating detailed reports of detected secrets
@@ -18,8 +18,6 @@ The security scan feature helps prevent accidental exposure of sensitive credent
 ### Basic Scan
 
 ```bash
-# Scan your project for secrets (API keys, passwords, tokens)
-# Runs 100% locally — nothing is uploaded or sent anywhere
 stamp security scan
 ```
 
@@ -41,7 +39,7 @@ Scans a specific directory path.
 stamp security scan --apply
 ```
 
-Automatically adds files containing secrets to `.stampignore` without prompting. This prevents these files from ever being included in context generation.
+Automatically adds files containing secrets to `.stampignore` without prompting, so they won't be included in context generation.
 
 ### Custom Output Path
 
@@ -99,25 +97,18 @@ The security scan generates a JSON report with the following structure:
 
 ### Report Fields
 
-- **type**: Always `"LogicStampSecurityReport"` to identify the report format
-- **schemaVersion**: Version of the report schema (`"0.1"`)
-- **createdAt**: ISO 8601 timestamp of when the scan was performed
-- **projectRoot**: Absolute path to the project root directory
-- **filesScanned**: Total number of files scanned
-- **secretsFound**: Total number of secret matches detected
-- **matches**: Array of individual secret matches with details
-- **filesWithSecrets**: Array of file paths that contain secrets (sorted)
+The report includes these fields:
 
-### Match Object
+- **type**: `"LogicStampSecurityReport"` (report format identifier)
+- **schemaVersion**: `"0.1"` (schema version)
+- **createdAt**: ISO 8601 timestamp
+- **projectRoot**: Absolute path to project root
+- **filesScanned**: Total files scanned
+- **secretsFound**: Total secret matches detected
+- **matches**: Array of individual secret matches
+- **filesWithSecrets**: Array of file paths containing secrets (sorted)
 
-Each match in the `matches` array contains:
-
-- **file**: Path to the file containing the secret
-- **line**: Line number where the secret was found (1-indexed)
-- **column**: Column number where the secret starts (1-indexed)
-- **type**: Type of secret detected (e.g., "API Key", "Password", "Token")
-- **snippet**: Code snippet showing context around the secret (approximately 40 characters)
-- **severity**: Severity level (`"high"`, `"medium"`, or `"low"`)
+Each match shows the file path, line and column numbers, secret type, a code snippet (about 40 characters), and severity level (high, medium, or low).
 
 ## Detected Secret Types
 
@@ -169,34 +160,14 @@ The following files are automatically excluded from scanning:
 
 When secrets are detected, you can automatically add affected files to `.stampignore` to prevent them from being included in context generation.
 
-### Manual Addition
+After running a scan, you'll see a suggestion to run `stamp security scan --apply` to automatically add files to `.stampignore`.
 
-After running a scan, you'll see a suggestion:
+The `--apply` flag will:
+- Add files containing secrets to the ignore list (only new ones)
+- Create `.stampignore` if it doesn't exist (only if secrets are found and there are new files to add)
+- Preserve existing entries and avoid duplicates
 
-```
-💡 To automatically add these files to .stampignore, run:
-   stamp security scan --apply
-```
-
-### Automatic Addition
-
-Use the `--apply` flag to automatically add files:
-
-```bash
-stamp security scan --apply
-```
-
-This will:
-1. Add all files containing secrets to the ignore list (only files not already ignored)
-2. Create `.stampignore` if it doesn't exist **and** secrets are detected **and** there are new files to add
-3. Preserve existing entries in `.stampignore`
-4. Avoid duplicate entries
-
-**Note:** `.stampignore` is only created when secrets are actually found and there are new files to add to the ignore list. If no secrets are detected, or if all detected files are already in `.stampignore`, the file is not created.
-
-### .stampignore Format
-
-The `.stampignore` file uses JSON format:
+`.stampignore` uses JSON format with paths relative to project root (forward slashes):
 
 ```json
 {
@@ -208,32 +179,17 @@ The `.stampignore` file uses JSON format:
 }
 ```
 
-Paths are relative to the project root and use forward slashes (`/`) regardless of the operating system.
-
 ## Hard Reset
 
-The `stamp security --hard-reset` command deletes both `.stampignore` and the security report file, effectively resetting your security configuration.
-
-### Usage
+Delete both `.stampignore` and the security report file:
 
 ```bash
-# With confirmation prompt
-stamp security --hard-reset
-
-# Without confirmation (force)
-stamp security --hard-reset --force
-
-# With custom report path
+stamp security --hard-reset              # with confirmation
+stamp security --hard-reset --force      # without confirmation
 stamp security --hard-reset --out ./reports/security.json --force
 ```
 
-### Options
-
-| Option | Description |
-|--------|-------------|
-| `--force` | Skip confirmation prompt and delete immediately |
-| `--out <file>` | Path to the security report file to delete |
-| `--quiet` | Suppress output messages |
+Options: `--force` (skip confirmation), `--out <file>` (custom report path), `--quiet` (suppress output)
 
 ## Integration with Init
 
@@ -248,29 +204,23 @@ This command:
 2. Automatically runs `stamp security scan --apply` after initialization to scan for secrets (API keys, passwords, tokens)
 3. Adds any detected secret files to `.stampignore`, preventing these files from ever reaching `context.json`
 
-**Runs 100% locally — nothing is uploaded or sent anywhere.**
-
-This is useful for:
+Useful for:
 - Setting up new projects with security checks from the start
 - CI/CD pipelines that need automated security validation
 - Ensuring security best practices are followed from project initialization
 
 ## Exit Codes
 
-The security scan command uses the following exit codes:
+- **0**: No secrets found
+- **1**: Secrets detected
 
-- **0**: No secrets found, scan completed successfully
-- **1**: Secrets were detected in the codebase
-
-This makes it suitable for use in CI/CD pipelines where you want builds to fail if secrets are detected.
+Use in CI/CD pipelines to fail builds when secrets are detected.
 
 ## Examples
 
 ### Basic Usage
 
 ```bash
-# Scan your project for secrets (API keys, passwords, tokens)
-# Runs 100% locally — nothing is uploaded or sent anywhere
 stamp security scan
 
 # Scan specific directory
@@ -325,11 +275,11 @@ stamp security --hard-reset --force
 
 ## Limitations
 
-- **Pattern-Based Detection**: The scanner uses pattern matching and may have false positives or miss some secret formats
-- **File Type Coverage**: Only scans TypeScript, JavaScript, and JSON files
-- **File Size Limit**: Files larger than 10MB are automatically skipped to prevent performance issues (you'll see a warning message)
-- **No Encryption Detection**: Does not detect encrypted secrets or secrets stored in environment-specific files
-- **Static Analysis Only**: Performs static analysis and cannot detect secrets passed at runtime
+- Pattern-based detection (may have false positives or miss some formats)
+- Only scans TypeScript, JavaScript, and JSON files
+- Files larger than 10MB are skipped (you'll see a warning)
+- Doesn't detect encrypted secrets or secrets in environment-specific files
+- Static analysis only (can't detect secrets passed at runtime)
 
 ## Troubleshooting
 
