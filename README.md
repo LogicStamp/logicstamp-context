@@ -162,6 +162,7 @@ stamp context clean [path] [options]  # Remove generated files
 For full Documentation see: https://logicstamp.dev/docs
 
 - **[Usage Guide](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md)** — Complete usage documentation with examples
+- **[Example Files](https://github.com/LogicStamp/logicstamp-context/blob/main/examples/README.md)** — Complete example files (context.json, .stampignore, security reports)
 - **[Token Optimization](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md#token-cost-comparison)** — Understand token costs and savings
 - **[Mode Comparison](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/compare-modes.md)** — Detailed comparison across all modes
 - **[Output Format](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/schema.md)** — Complete schema documentation

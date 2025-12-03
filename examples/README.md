@@ -48,6 +48,29 @@ Example demonstrating style metadata extraction:
 - Learn how layout and visual patterns are extracted
 - Reference when generating context with `stamp context style` or `--include-style`
 
+### `.stampignore.example`
+Example `.stampignore` file demonstrating file exclusion patterns:
+- 🔒 Shows how to exclude files containing secrets from context generation
+- 📝 Demonstrates both specific file paths and glob patterns
+- 🎯 Example patterns for common secret file locations
+
+**Use this example to:**
+- Understand the `.stampignore` JSON format
+- See how to exclude specific files or use glob patterns
+- Reference when setting up file exclusion for security
+
+### `stamp_security_report.example.json`
+Example security scan report showing the output format:
+- 🔍 Demonstrates the structure of security scan reports
+- 📊 Shows match details (file, line, column, type, snippet, severity)
+- 📈 Includes summary statistics (files scanned, secrets found)
+- 🎯 Uses clearly fake example values (safe for GitHub)
+
+**Use this example to:**
+- Understand the security report format
+- See what information is included in scan results
+- Reference when integrating security scanning into your workflow
+
 ## Understanding Missing Dependencies
 
 The `meta.missing` array tracks unresolved dependencies:
