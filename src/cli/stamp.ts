@@ -14,7 +14,9 @@ import { handleCompare } from './handlers/compareHandler.js';
 import { handleClean } from './handlers/cleanHandler.js';
 import { handleStyle } from './handlers/styleHandler.js';
 import { handleGenerate } from './handlers/contextHandler.js';
-import { getMainHelp } from './parser/helpText.js';
+import { handleSecurityScan } from './handlers/securityHandler.js';
+import { securityHardResetCommand, type SecurityHardResetOptions } from './commands/security.js';
+import { getMainHelp, getSecurityHelp } from './parser/helpText.js';
 import { printFoxIcon } from './handlers/initHandler.js';
 
 async function main() {
@@ -51,6 +53,64 @@ async function main() {
   if (subcommand === 'init') {
     await handleInit(args.slice(1));
     return;
+  }
+
+  // Handle security command
+  if (subcommand === 'security') {
+    // Check for help
+    if (args.includes('--help') || args.includes('-h')) {
+      printFoxIcon();
+      console.log(getSecurityHelp());
+      process.exit(0);
+    }
+    
+    // Handle security scan subcommand
+    if (args[1] === 'scan') {
+      // Check if --hard-reset was passed to scan (should be rejected)
+      const scanArgs = args.slice(2);
+      if (scanArgs.includes('--hard-reset')) {
+        console.error(`❌ Error: --hard-reset is not available for "stamp security scan"`);
+        console.error(`   Use "stamp security --hard-reset" instead`);
+        process.exit(1);
+      }
+      await handleSecurityScan(scanArgs);
+      return;
+    }
+    
+    // Check for --hard-reset at top level (only if no subcommand)
+    if (args.includes('--hard-reset')) {
+      const hardResetOptions: SecurityHardResetOptions = {
+        entry: undefined,
+        out: undefined,
+        force: args.includes('--force'),
+        quiet: args.includes('--quiet') || args.includes('-q'),
+      };
+      
+      // Parse entry and out options
+      for (let i = 1; i < args.length; i++) {
+        const arg = args[i];
+        if (arg === '--out' || arg === '-o') {
+          hardResetOptions.out = args[i + 1];
+          i++;
+        } else if (!arg.startsWith('-') && !hardResetOptions.entry && arg !== 'scan') {
+          hardResetOptions.entry = arg;
+        }
+      }
+      
+      await securityHardResetCommand(hardResetOptions);
+      return;
+    }
+    
+    // If no subcommand and no --hard-reset, show error
+    if (!args[1] || args[1].startsWith('--')) {
+      console.error(`❌ Security command requires a subcommand or --hard-reset`);
+      console.error('Run "stamp security scan --help" for usage information');
+      process.exit(1);
+    }
+    
+    console.error(`❌ Unknown security command: ${args[1]}`);
+    console.error('Run "stamp security scan --help" for usage information');
+    process.exit(1);
   }
 
   if (subcommand !== 'context') {

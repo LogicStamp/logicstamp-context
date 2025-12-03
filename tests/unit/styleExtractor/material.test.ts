@@ -443,6 +443,33 @@ describe('Material UI Extractor', () => {
       expect(result.packages).toContain('@mui/material/TextField');
     });
 
+    it('should detect default imports with aliases (derives canonical name from module path)', () => {
+      const sourceCode = `
+        import Btn from '@mui/material/Button';
+        import CustomTextField from '@mui/material/TextField';
+        
+        function MyComponent() {
+          return (
+            <>
+              <Btn>Click</Btn>
+              <CustomTextField label="Name" />
+            </>
+          );
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      const result = extractMaterialUI(sourceFile);
+
+      // Should detect canonical component names, not the aliases
+      expect(result.components).toContain('Button');
+      expect(result.components).toContain('TextField');
+      expect(result.packages).toContain('@mui/material/Button');
+      expect(result.packages).toContain('@mui/material/TextField');
+    });
+
     it('should detect theme usage via property access', () => {
       const sourceCode = `
         import { useTheme } from '@mui/material/styles';

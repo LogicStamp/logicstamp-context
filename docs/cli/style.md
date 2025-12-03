@@ -1,6 +1,6 @@
 # `stamp context style` Command
 
-Generate AI-ready context bundles with style metadata included. This command extracts visual and layout information from your React components, making context bundles design-aware for AI assistants.
+Generate context bundles that include style metadata. This extracts visual and layout info from your React components so AI assistants can understand your design.
 
 ```bash
 stamp context style [path] [options]
@@ -10,9 +10,11 @@ stamp context style [path] [options]
 
 **Note:** The `stamp context style` command is equivalent to `stamp context --include-style`. Both syntaxes produce identical output.
 
+**File Exclusion:** `stamp context style` respects `.stampignore`, just like `stamp context`. This keeps files with secrets out of your context bundles. Run `stamp security scan --apply` to automatically add files to `.stampignore` when secrets are found. See [`stamp security scan`](security-scan.md) for details.
+
 ## Overview
 
-While `stamp context` focuses on component logic and structure, `stamp context style` adds visual and layout understanding. This enables AI assistants to:
+`stamp context style` adds visual and layout info on top of the component logic and structure that `stamp context` extracts. This lets AI assistants:
 
 - Understand the visual design of components
 - Suggest visually consistent components
@@ -22,7 +24,7 @@ While `stamp context` focuses on component logic and structure, `stamp context s
 
 ## What It Extracts
 
-The style command analyzes components and extracts four categories of metadata:
+It extracts four types of metadata:
 
 ### 1. Style Sources
 
@@ -39,10 +41,11 @@ Identifies which styling approaches are used in each component:
   - Transitions and animations
   - Responsive breakpoints (sm, md, lg, xl, 2xl)
 
-- **SCSS/CSS Modules** – Detects module imports and parses:
+- **SCSS/CSS Modules** – Detects module imports from TSX/TS files and parses the imported style files:
   - CSS selectors used
   - CSS properties defined
   - SCSS features (variables, nesting, mixins)
+  - **Note**: Only CSS/SCSS files that are imported by component files are parsed. Standalone CSS/SCSS files that aren't imported won't be analyzed.
 
 - **Inline Styles** – Detects `style={{...}}` usage
 
@@ -89,39 +92,21 @@ Identifies which styling approaches are used in each component:
 
 ### 2. Layout Metadata
 
-Extracts structural layout information using AST-based analysis:
+Extracts structural layout information using AST-based analysis. All layout extraction handles variant-prefixed classes (e.g., `md:flex`, `lg:grid`) and dynamic className expressions (e.g., `className={cn('flex')}`, `className={`grid ${cols}`}`).
 
 - **Layout Type** – Identifies flex or grid layouts (grid takes precedence if both are present)
-  - Handles variant-prefixed classes: `md:flex`, `lg:grid`
-  - Supports dynamic className expressions: `className={cn('flex')}`, `className={`grid ${cols}`}`
 - **Grid Patterns** – Extracts column configurations (e.g., "2 3" from "grid-cols-2 md:grid-cols-3")
-  - Works with variant-prefixed classes: `md:grid-cols-3`
 - **Hero Patterns** – Detects hero sections (large text + CTA buttons)
-  - Recognizes variant-prefixed text sizes: `md:text-5xl`
 - **Feature Cards** – Identifies grid layouts with card-like elements
-  - Detects card patterns with variant prefixes: `md:rounded-xl`, `lg:shadow-lg`
 
 ### 3. Visual Metadata
 
-Captures visual design patterns using AST-based extraction:
+Captures visual design patterns using AST-based extraction. All visual extraction handles variant-prefixed classes (e.g., `md:bg-blue-500`, `dark:text-slate-50`, `lg:px-4`).
 
 - **Color Palette** – Extracts color classes (bg-*, text-*, border-*)
-  - Handles variant prefixes: `md:bg-blue-500`, `dark:text-slate-50`
-  - Supports dynamic className expressions
-- **Spacing Patterns** – Identifies padding and margin utilities used
-  - Supports all Tailwind spacing formats:
-    - Integer values: `p-4`, `m-2`
-    - Fractional values: `p-1.5`, `px-0.5`
-    - Named values: `p-px`, `m-auto`
-    - Arbitrary values: `p-[2px]`, `m-[1rem]`
-    - Negative spacing: `-mt-2`, `-p-4`
-  - Handles variant prefixes: `lg:px-4`, `sm:m-2`, `md:-mt-2`
-- **Border Radius** – Detects rounded corner patterns
-  - Stores token value (e.g., "lg" from "rounded-lg")
-  - Handles variant prefixes: `md:rounded-xl`
-  - Valid values: "default", "sm", "md", "lg", "xl", "2xl", "3xl", "full"
+- **Spacing Patterns** – Identifies padding and margin utilities. Supports all Tailwind formats: integers (`p-4`), fractions (`p-1.5`), named (`p-px`), arbitrary (`p-[2px]`), negative (`-mt-2`)
+- **Border Radius** – Detects rounded corner patterns, stores token value (e.g., "lg" from "rounded-lg"). Valid values: "default", "sm", "md", "lg", "xl", "2xl", "3xl", "full"
 - **Typography** – Extracts text size and font weight classes
-  - Handles variant prefixes: `sm:text-lg`
 
 ### 4. Animation Metadata
 
@@ -300,30 +285,18 @@ Layout structure information (AST-based extraction):
 - `hasHeroPattern` – Boolean indicating hero section pattern (large text + CTA buttons)
 - `hasFeatureCards` – Boolean indicating feature card grid pattern
 
-**Note:** Layout extraction uses AST analysis, so it correctly handles:
-- Dynamic className expressions: `className={cn('flex')}`, `className={`grid ${cols}`}`
-- Variant-prefixed classes: `md:flex`, `lg:grid`, `md:text-5xl`
-- Conditional expressions: `className={isActive && 'flex'}`
+Layout extraction uses AST analysis, so it handles dynamic className expressions (`cn()`, `clsx()`), variant-prefixed classes, and conditional expressions.
 
 #### `visual`
 
 Visual design patterns (AST-based extraction):
 
 - `colors` – Array of color utility classes (sorted, limited to top 10)
-  - Includes variant-prefixed classes: `md:bg-blue-500`, `dark:text-slate-50`
-- `spacing` – Array of spacing utility classes (sorted, limited to top 10)
-  - Supports all formats: `p-4`, `p-1.5`, `p-px`, `p-[2px]`, `-mt-2`
-  - Includes variant-prefixed classes: `lg:px-4`, `sm:m-2`, `md:-mt-2`
-- `radius` – Most common border radius token (e.g., "lg" from "rounded-lg")
-  - Valid values: "default", "sm", "md", "lg", "xl", "2xl", "3xl", "full"
-  - Handles variant prefixes: `md:rounded-xl`
+- `spacing` – Array of spacing utility classes (sorted, limited to top 10). Supports all formats: `p-4`, `p-1.5`, `p-px`, `p-[2px]`, `-mt-2`
+- `radius` – Most common border radius token (e.g., "lg" from "rounded-lg"). Valid values: "default", "sm", "md", "lg", "xl", "2xl", "3xl", "full"
 - `typography` – Array of typography classes (sorted, limited to top 10)
-  - Includes variant-prefixed classes: `sm:text-lg`
 
-**Note:** Visual extraction uses AST analysis, so it correctly handles:
-- Dynamic className expressions: `className={cn('bg-blue-500', 'p-4')}`
-- Variant-prefixed classes: `md:bg-blue-500`, `lg:px-4`
-- Template literals: `className={`p-4 ${padding}`}` (static segments extracted)
+Visual extraction uses AST analysis, so it handles dynamic className expressions (`cn()`, `clsx()`), variant-prefixed classes, and template literals (static segments extracted).
 
 #### `animation`
 
@@ -333,7 +306,7 @@ Animation and motion information:
 - `type` – Animation type (e.g., "fade-in")
 - `trigger` – Trigger type (e.g., "inView", "hover")
 
-**Note:** Style metadata is only included when style information is detected. Components without style usage will not have a `style` field.
+Style metadata is only included when style information is detected. Components without style usage won't have a `style` field.
 
 ## Use Cases
 
@@ -443,7 +416,7 @@ The `--compare-modes` flag automatically regenerates contracts with and without 
 - **Comparison across all modes** – none, header, header+style, and full
 - **Savings percentages** compared to both raw source and full context
 
-See [COMPARE-MODES.md](COMPARE-MODES.md) for a comprehensive guide to token cost analysis and mode comparison.
+See [compare-modes.md](compare-modes.md) for a comprehensive guide to token cost analysis and mode comparison.
 
 **Example output:**
 
@@ -521,7 +494,7 @@ This will output detailed error messages to help identify problematic files or e
 
 - **Dynamic class values** – While AST extraction handles `cn()`, `clsx()`, and template literals, classes generated from runtime variables (e.g., `className={styles[someVar]}`) are not detected
 - **CSS-in-JS** – Only styled-components and emotion are detected via AST-based extraction; Material UI styled is detected separately; other CSS-in-JS libraries may not be recognized
-- **External stylesheets** – Global CSS files are not analyzed; only module imports are parsed
+- **External stylesheets** – Global CSS files are not analyzed; only CSS/SCSS files imported by TSX/TS component files are parsed. Standalone CSS/SCSS files that aren't imported won't be scanned.
 - **Runtime styles** – Styles applied via JavaScript at runtime are not detected
 - **Template literal dynamic segments** – In `className={`flex ${variable}`}`, only the static "flex" segment is extracted; the dynamic variable value is not analyzed
 
@@ -566,7 +539,7 @@ $ stamp context style ./src --profile llm-safe --out ./style-context
 
 ## Related Commands
 
-- [`stamp context`](CONTEXT.md) – Generate context without style metadata
-- [`stamp context validate`](VALIDATE.md) – Validate generated context files
-- [`stamp context compare`](COMPARE.md) – Compare context files including style changes
+- [`stamp context`](context.md) – Generate context without style metadata
+- [`stamp context validate`](validate.md) – Validate generated context files
+- [`stamp context compare`](compare.md) – Compare context files including style changes
 

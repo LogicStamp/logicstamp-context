@@ -6,9 +6,11 @@ LogicStamp Context provides comprehensive support for SCSS and CSS Modules, extr
 
 LogicStamp automatically detects SCSS and CSS Modules usage by:
 
-- **File imports**: Detects imports from `.module.scss`, `.module.css`, `.scss`, and `.css` files
+- **File imports**: Detects imports from `.module.scss`, `.module.css`, `.scss`, and `.css` files in TSX/TS component files
 - **Module syntax**: Recognizes CSS Module import patterns
-- **File parsing**: Parses style files to extract selectors, properties, and SCSS features
+- **File parsing**: Parses the imported style files to extract selectors, properties, and SCSS features
+
+**Important**: Only CSS/SCSS files that are imported by your TSX/TS component files are parsed. Standalone CSS/SCSS files that aren't imported won't be analyzed.
 
 ## What Gets Extracted
 

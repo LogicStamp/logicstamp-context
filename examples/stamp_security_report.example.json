@@ -1,0 +1,39 @@
+{
+  "type": "LogicStampSecurityReport",
+  "schemaVersion": "0.1",
+  "createdAt": "2025-01-15T10:30:00.000Z",
+  "projectRoot": "/path/to/your/project",
+  "filesScanned": 42,
+  "secretsFound": 3,
+  "matches": [
+    {
+      "file": "src/config/api-keys.ts",
+      "line": 5,
+      "column": 12,
+      "type": "API Key",
+      "snippet": "const apiKey = 'EXAMPLE_KEY_123';",
+      "severity": "high"
+    },
+    {
+      "file": "src/config/api-keys.ts",
+      "line": 8,
+      "column": 15,
+      "type": "Password",
+      "snippet": "const dbPassword = 'EXAMPLE_PASS_123';",
+      "severity": "high"
+    },
+    {
+      "file": "lib/credentials.js",
+      "line": 2,
+      "column": 10,
+      "type": "Token",
+      "snippet": "export const token = 'EXAMPLE_TOKEN_123';",
+      "severity": "high"
+    }
+  ],
+  "filesWithSecrets": [
+    "src/config/api-keys.ts",
+    "lib/credentials.js"
+  ]
+}
+

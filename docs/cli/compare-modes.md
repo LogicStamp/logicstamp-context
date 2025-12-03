@@ -1,6 +1,6 @@
 # Mode Comparison Guide
 
-The `--compare-modes` flag provides detailed token cost analysis across all available context generation modes, helping you make informed decisions about which mode to use for your AI workflows.
+Compare token costs across all context generation modes to choose the right one for your workflow.
 
 ```bash
 stamp context --compare-modes
@@ -8,51 +8,22 @@ stamp context --compare-modes
 
 ## Overview
 
-Context generation supports multiple modes that balance information completeness against token cost:
+Four modes balance information vs token cost:
 
-- **none** - Contracts only (props, state, hooks, dependencies) with no source code
+- **none** - Contracts only (props, state, hooks, dependencies), no source code
 - **header** - Contracts plus JSDoc headers and function signatures
-- **header+style** - Header mode plus extracted style metadata (Tailwind, SCSS, Material UI, animations, layout)
+- **header+style** - Header mode plus style metadata (Tailwind, SCSS, Material UI, animations, layout)
 - **full** - Everything including complete source code
 
-The `--compare-modes` flag generates a detailed comparison table showing token costs for all modes, helping you understand the tradeoffs.
-
-## When to Use
-
-Use `--compare-modes` when you need to:
-
-- **Optimize token budgets** - See exact costs for different modes before committing
-- **Evaluate style overhead** - Understand the token impact of including style metadata
-- **Compare against raw source** - Calculate savings from using LogicStamp vs raw file dumps
-- **Plan AI workflows** - Choose the most cost-effective mode for your use case
-- **Budget for scale** - Project token costs for larger codebases
+The comparison shows token costs for all modes so you can see the tradeoffs.
 
 ## Output Format
 
-The `--compare-modes` output includes three sections:
+The output shows three things:
 
-### 1. Token Estimation Method
+**1. Token estimation method** - Shows which tokenizers are being used, or if it's falling back to approximations
 
-Shows which tokenizers are being used:
-
-```
-📊 Mode Comparison
-
-   Token estimation: GPT-4o (tiktoken) | Claude (tokenizer)
-```
-
-or if tokenizers aren't installed (automatic installation failed or skipped):
-
-```
-📊 Mode Comparison
-
-   Token estimation: GPT-4o (approximation) | Claude (approximation)
-   💡 Tip: Tokenizers are included as optional dependencies. If installation failed, manually install @dqbd/tiktoken (GPT-4) and/or @anthropic-ai/tokenizer (Claude) for accurate token counts
-```
-
-### 2. Comparison vs Raw Source
-
-Shows token savings compared to dumping raw source files:
+**2. Comparison vs raw source** - Savings compared to including all source files directly:
 
 ```
    Comparison:
@@ -63,15 +34,9 @@ Shows token savings compared to dumping raw source files:
      Header+style |       170,466 |       184,864 | 38%
 ```
 
-**Interpretation:**
-- **Raw source** - Baseline showing tokens for all source code without any processing. This is the token count if you simply concatenated all source files.
-- **Header** - Typical savings of 70% by extracting only contracts and signatures (no implementation code). This is the recommended default mode.
-- **Header+style** - Savings of 38% when including style metadata. Style metadata adds significant tokens but provides visual context.
-- **Note:** The "full" mode (contracts + complete source) will be larger than raw source due to contract structure overhead (~30% additional tokens).
+Header mode saves ~70% by extracting contracts and signatures without implementation code. Header+style saves ~38% but adds visual context. Full mode actually costs more than raw source (~30% overhead) due to contract structure.
 
-### 3. Mode Breakdown vs Full Context
-
-Shows savings compared to the maximum information mode:
+**3. Mode breakdown** - All modes compared to the maximum (full):
 
 ```
    Mode breakdown:
@@ -83,296 +48,119 @@ Shows savings compared to the maximum information mode:
      full         |       355,923 |       379,704 | 0%
 ```
 
-**Interpretation:**
-- **none** - Maximum compression, 86% savings, contracts only (no code or style)
-- **header** - Balanced compression, 77% savings, includes function signatures and JSDoc (recommended default)
-- **header+style** - Moderate compression, 52% savings, adds visual/styling context
-- **full** - No compression, includes complete source code plus contract overhead (~30% more than raw source)
-
 ## Token Estimation
 
-### Default: Character-Based Approximation
+By default, the tool uses character-based approximations (~4 chars/token for GPT-4o, ~4.5 for Claude). These are usually within 10-15% of actual counts, which is fine for most cases.
 
-By default, token estimation uses character-based approximations:
-- **GPT-4o**: ~4 characters per token
-- **Claude**: ~4.5 characters per token
+For accurate counts, LogicStamp includes `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) as optional dependencies. npm installs them automatically when you install `logicstamp-context`. If that works, you get exact token counts. If it fails (normal for optional deps), it falls back to approximation.
 
-These approximations are reasonably accurate for most codebases (typically within 10-15% of actual token counts).
-
-### Accurate: Optional Tokenizers
-
-LogicStamp Context includes `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) as optional dependencies. npm will automatically attempt to install them when you install `logicstamp-context`. If installation succeeds, you get model-accurate token counts. If installation fails or is skipped (normal for optional dependencies), the tool gracefully falls back to character-based estimation.
-
-**Behavior:**
-- npm automatically tries to install tokenizers when installing `logicstamp-context`
-- If installed, automatically detected and used for accurate counts
-- If not installed (installation failed/skipped), gracefully falls back to approximation
-- No configuration required - works automatically
-
-**Manual installation (optional - only if you want accurate counts and automatic installation failed):**
-
-The tool works fine without tokenizers (uses approximation). Only install manually if:
-- You need accurate token counts (not approximations)
-- AND automatic installation failed or was skipped
+You only need to install tokenizers manually if:
+- You need exact counts (not approximations)
+- AND automatic installation failed
 
 ```bash
-# For accurate GPT-4 token counts
-npm install @dqbd/tiktoken
-
-# For accurate Claude token counts
-npm install @anthropic-ai/tokenizer
-
-# Install both for complete accuracy
 npm install @dqbd/tiktoken @anthropic-ai/tokenizer
 ```
 
-**When accurate counts matter:**
-- Cost-sensitive workflows with tight token budgets
-- Production deployments requiring precise cost projections
-- Large-scale batch processing
-- Comparing multiple tools or approaches
+Accurate counts matter for production deployments, tight budgets, or comparing tools. For development, approximations are usually fine.
 
 ## Mode Selection Guide
 
-### none - Maximum Compression
+**none** - Maximum compression (~18% of raw source)
+- Contracts only, no code or style
+- Good for: CI/CD validation, dependency analysis, architecture reviews
+- Skip if: You need implementation details or visual context
 
-**Best for:**
-- CI/CD contract validation
-- Dependency graph analysis
-- Architecture reviews without implementation details
-- Maximum token efficiency
+**header** - Balanced compression (~30% of raw source) *recommended default*
+- Contracts + JSDoc headers + function signatures
+- Good for: Most AI chat workflows, code review, understanding interfaces
+- This is what most people need 90% of the time
 
-**Limitations:**
-- No source code or implementation details
-- No visual/styling information
-- Limited context for code generation tasks
+**header+style** - Visual context (~62% of raw source)
+- Everything from header + style metadata (Tailwind, SCSS, animations, layout patterns)
+- Good for: UI/UX discussions, design system work, frontend generation
+- Adds ~13% token overhead vs header mode
 
-**Token cost:** Typically 18% of raw source
-
-### header - Balanced Compression
-
-**Best for:**
-- General AI chat workflows (default for `llm-chat` profile)
-- Code review and refactoring
-- Understanding component interfaces
-- Most LLM interactions
-
-**Includes:**
-- Full contracts (props, state, hooks)
-- JSDoc headers and comments
-- Function signatures and types
-- Dependency relationships
-
-**Token cost:** Typically 30% of raw source
-
-### header+style - Visual Context
-
-**Best for:**
-- UI/UX discussions with AI
-- Design system maintenance
-- Frontend code generation
-- Visual consistency reviews
-
-**Includes:**
-- Everything from header mode
-- Tailwind/CSS class patterns
-- SCSS/CSS module analysis
-- Animation metadata
-- Layout patterns (flex/grid)
-- Color and spacing patterns
-
-**Token cost:** Typically 62% of raw source
-
-### full - Complete Context
-
-**Best for:**
-- Deep implementation reviews
-- Complex refactoring tasks
-- Bug investigation requiring source
-- When AI needs all implementation details
-
-**Includes:**
-- Everything from header+style mode
-- Complete source code for all components
-- Full file contents
-
-**Token cost:** Typically 130% of raw source (includes contract structure overhead)
+**full** - Complete context (~130% of raw source)
+- Everything including full source code
+- Good for: Deep reviews, complex refactoring, bug investigation
+- Note: Costs more than raw source due to contract structure overhead
 
 ## Example Workflows
 
-### Budget Planning
-
+**Budget planning:**
 ```bash
-# See costs before generating context
 stamp context --compare-modes
-
-# Choose appropriate mode based on budget
 stamp context --include-code header --max-nodes 50
 ```
 
-### Style Cost Analysis
-
+**Style cost analysis:**
 ```bash
-# Compare with and without style metadata
 stamp context --compare-modes
-
-# Enable style only if budget allows
-stamp context style
+stamp context style  # only if budget allows
 ```
 
-### Production Optimization
-
+**Production optimization:**
 ```bash
-# Audit token costs across repository
 stamp context --compare-modes | tee token-analysis.txt
-
-# Switch to more efficient mode if needed
 stamp context --include-code none --profile ci-strict
 ```
 
-### Multi-Repo Comparison
-
+**Multi-repo comparison:**
 ```bash
-# Compare token costs across multiple projects
 for repo in api web mobile; do
   echo "=== $repo ==="
-  cd $repo
-  stamp context --compare-modes --quiet
-  cd ..
+  cd $repo && stamp context --compare-modes --quiet && cd ..
 done
 ```
 
-### MCP Integration
-
+**MCP integration:**
 ```bash
-# Generate comparison data file for MCP (Model Context Protocol) integration
 stamp context --compare-modes --stats
-# Creates: context_compare_modes.json with structured comparison data
-
-# The generated file contains:
-# - Token counts for all modes (none, header, header+style, full)
-# - File statistics (total, .ts, .tsx)
-# - Comparison data for programmatic consumption
+# Creates context_compare_modes.json with structured data for MCP servers
 ```
-
-**Note:** The `--compare-modes --stats` combination is specifically designed for MCP integration. It writes `context_compare_modes.json` to the output directory (determined by `--out`), providing structured comparison data that MCP servers and AI agents can consume programmatically.
 
 ## Understanding the Numbers
 
-### Savings Percentages
+**Savings vs Raw Source:** Shows how much you save compared to just concatenating all source files. Higher is better. Header mode typically saves ~70%, header+style saves ~38%. Full mode actually costs more (~30% overhead) due to contract structure.
 
-**Savings vs Raw Source:**
-- Measures reduction compared to dumping all source files (simple concatenation)
-- Higher is better for token efficiency
-- Typical range: 70% for header mode, 38% for header+style mode
-- Note: "Full" mode exceeds raw source due to contract structure overhead (~30% more)
+**Savings vs Full Context:** Shows efficiency compared to the maximum mode. Header saves ~77%, header+style saves ~52%.
 
-**Savings vs Full Context:**
-- Measures reduction compared to maximum information mode (full contracts + complete source)
-- Shows relative efficiency between modes
-- Typical range: 77% for header mode, 52% for header+style mode
+**GPT-4o vs Claude:** Token counts differ slightly (usually 5-10%) because each model tokenizes differently. Both estimates are shown so you can plan for either.
 
-### Token Counts
-
-**GPT-4o vs Claude:**
-- Token counts vary by model-specific tokenization (typically within 5-10% difference)
-- Differences depend on the specific content being tokenized
-- Both estimates are provided for flexibility
-
-### Accuracy
-
-**With approximation:**
-- Typically within 10-15% of actual counts
-- Sufficient for most planning purposes
-- Fast and zero-configuration
-
-**With tokenizers:**
-- Exact token counts matching model behavior
-- Required for precise cost projections
-- Minimal performance overhead
+**Accuracy:** Approximations are usually within 10-15% and fine for planning. Tokenizers give exact counts but require installation.
 
 ## Common Questions
 
-### Why are my numbers different from raw file sizes?
+**Why are my numbers different from raw file sizes?**
+Token counts ≠ character counts. Tokenizers split text into semantic units—common words are 1 token, rare words are multiple, code symbols vary, whitespace compresses.
 
-Token counts are not the same as character counts. Tokenizers split text into semantic units:
-- Common words = 1 token
-- Rare words = multiple tokens
-- Code symbols vary widely
-- Whitespace is typically compressed
+**Should I always use accurate tokenizers?**
+Use approximations for development/prototyping. Use tokenizers for production, tight budgets, or comparing tools.
 
-### Should I always use accurate tokenizers?
+**How much overhead do contracts add?**
+In `full` mode, contracts add ~30% overhead vs raw source due to JSON structure and metadata. The overhead is worth it for structured dependency graphs and better AI comprehension, but `header` mode avoids most of it while still giving you what you need.
 
-**Use approximation when:**
-- Rough estimates are sufficient
-- Development/prototyping phase
-- Token costs aren't critical
-- You want zero-configuration setup
+**Why do the savings percentages seem generous?**
+"Savings vs raw source" compares against simple file concatenation. Header mode saves 70% because it extracts contracts and signatures without implementation code. Full mode actually costs more than raw source (~30% overhead) due to contract structure. The real win: header mode gives you 90% of what you need at 30% of the cost.
 
-**Use tokenizers when:**
-- Precise costs matter for budgeting
-- Production deployments
-- Cost-sensitive workflows
-- Comparing against other tools
-
-### How much overhead do contracts add?
-
-In `full` mode, contracts add ~30% overhead compared to raw source due to the structured contract metadata (JSON structure, type information, dependency relationships). However, contracts enable:
-- Structured dependency graphs
-- Semantic component analysis
-- Missing dependency tracking
-- Reproducible builds
-- Better AI comprehension through structured data
-
-The overhead is typically worth it for AI context generation, but consider using `header` mode (which adds minimal overhead) for most use cases to maximize token efficiency.
-
-### Why do the savings percentages seem generous?
-
-The "savings vs raw source" compares LogicStamp output against a simple concatenation of all source files. However:
-
-- **Raw source** = Just the file contents concatenated (no structure, no metadata)
-- **Full mode** = Contracts + complete source = 130% of raw source (due to contract overhead)
-- **Header mode** = Contracts + signatures only = 30% of raw source
-
-So while header mode saves 70% compared to raw source, if you need complete source code, the "full" mode actually costs MORE than raw source due to the structured contract format. The real value is that header mode provides most of the semantic information at a fraction of the cost.
-
-**In practice:** Use `header` mode for most AI interactions - it provides contracts, types, and function signatures (what you need 90% of the time) at only 30% of the raw source token cost.
-
-### Can I compare specific folders?
-
-Yes, use the comparison on a subset:
-
+**Can I compare specific folders?**
+Yes:
 ```bash
-# Compare modes for specific directory
 stamp context ./src/components --compare-modes
 ```
 
-### Does --compare-modes write files?
+**Does --compare-modes write files?**
+No, it's analysis-only by default. It generates contracts in memory, computes estimates, and displays tables. Use `stamp context` (without the flag) to actually generate context files.
 
-By default, `--compare-modes` is analysis-only:
-- Generates contracts in memory
-- Computes token estimates
-- Displays comparison tables
-- Exits without writing files
-
-**MCP Integration:** When combined with `--stats`, `--compare-modes` writes `context_compare_modes.json` for MCP (Model Context Protocol) integration:
-
+With `--stats`, it writes `context_compare_modes.json` for MCP integration:
 ```bash
-# Generate comparison data file for MCP
 stamp context --compare-modes --stats
-# Creates: context_compare_modes.json with structured comparison data
 ```
 
-The `context_compare_modes.json` file contains the full comparison data in JSON format, suitable for programmatic consumption by MCP servers and AI agents.
+## Performance
 
-Use `stamp context` (without the flag) to actually generate context bundle files.
-
-## Performance Notes
-
-- `--compare-modes` takes longer than normal generation (2-3x)
-- Regenerates contracts with/without style for accurate comparison
-- Uses in-memory processing, no disk writes
-- Typical execution: 5-15 seconds for medium projects (50-150 files)
+Takes 2-3x longer than normal generation because it regenerates contracts with and without style for accurate comparison. Uses in-memory processing (no disk writes). Typical execution: 5-15 seconds for medium projects (50-150 files).
 
 ## Related Commands
 
@@ -383,9 +171,9 @@ Use `stamp context` (without the flag) to actually generate context bundle files
 
 ## Tips
 
-- Run `--compare-modes` before committing to a generation mode
-- Use approximation during development, tokenizers in CI/production
-- Consider `header` mode as the default balanced choice
-- Add `header+style` only when visual context is needed
-- Reserve `full` mode for deep implementation tasks
-- Check token costs regularly as your codebase grows
+- Run `--compare-modes` before committing to a mode
+- Use approximations in dev, tokenizers in production
+- Default to `header` mode—it covers most use cases
+- Add `header+style` only when you need visual context
+- Reserve `full` mode for deep implementation work
+- Check costs regularly as your codebase grows

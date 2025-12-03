@@ -21,11 +21,14 @@ stamp context
 ```bash
 stamp --version                    # Show version number
 stamp --help                       # Show help
+stamp init [path] [options]        # Initialize LogicStamp in project
 stamp context [path] [options]
 stamp context style [path] [options]  # Generate context with style metadata
 stamp context validate [file]
 stamp context compare [oldFile] [newFile] [options]
 stamp context clean [path] [options]
+stamp security scan [path] [options]  # Scan for secrets and generate report
+stamp security --hard-reset [options]  # Reset security configuration
 ```
 
 ## Global Options
@@ -39,13 +42,81 @@ These options are available at the top level (before any subcommand):
 
 **Examples:**
 ```bash
-stamp --version    # Shows: fox mascot + "Version: 0.2.6"
+stamp --version    # Shows: fox mascot + "Version: 0.2.7"
 stamp -v           # Same as --version
 stamp --help       # Shows main help
 stamp -h           # Same as --help
 ```
 
 ## Commands
+
+### `stamp init`
+
+Initialize LogicStamp in your project by setting up `.gitignore` patterns and project configuration.
+
+```bash
+# Basic initialization (interactive)
+stamp init
+
+# Initialize without prompts (CI-friendly)
+stamp init --yes
+
+# Initialize with security scan (recommended for new projects)
+stamp init --secure
+
+# Initialize specific directory
+stamp init ./my-project
+```
+
+**What it does**
+
+1. **Sets up `.gitignore`** - Adds patterns for LogicStamp-generated files:
+   - `context.json` - Per-folder context bundles (large, regenerable)
+   - `context_*.json` - Main index and context variants
+   - `*.uif.json` - UIF contract sidecar files
+   - `logicstamp.manifest.json` - Dependency manifest files
+   - `.logicstamp/` - Configuration directory (user preferences)
+   - `stamp_security_report.json` - 🔒 Security scan reports (contains sensitive findings - **never commit**)
+
+   These patterns prevent large generated files and sensitive reports from being committed. See [init.md](cli/init.md) for detailed explanations of each pattern.
+
+2. **Generates `LLM_context.md`** - Creates a guide for AI assistants to understand your project structure
+3. **Creates `.logicstamp/config.json`** - Saves preferences so `stamp context` never prompts (CI-friendly)
+
+**Key options**
+
+| Option | Description |
+|--------|-------------|
+| `--skip-gitignore` | Skip `.gitignore` setup |
+| `--yes`, `-y` | Skip all prompts (non-interactive mode) |
+| `--secure` | Initialize with auto-yes and run security scan with `--apply` |
+
+**Secure initialization (`--secure`)**
+
+The `--secure` flag is recommended for new projects. It automatically:
+
+1. Sets up `.gitignore` patterns (no prompts)
+2. Generates `LLM_context.md` (no prompts)
+3. Runs `stamp security scan --apply` to:
+   - Scan for secrets (API keys, passwords, tokens)
+   - Automatically add detected secret files to `.stampignore`
+   - Ensures secrets won't be included in `context.json`
+
+**Runs 100% locally — nothing is uploaded or sent anywhere.**
+
+```bash
+# Recommended: Secure initialization for new projects
+stamp init --secure
+```
+
+**Behavior**
+
+- `stamp init` is **idempotent** - safe to run multiple times
+- Preferences are saved to `.logicstamp/config.json`
+- `stamp context` respects these preferences and **never prompts** (CI-friendly)
+- In CI/non-TTY environments, defaults to skipping both operations
+
+**See also:** [init.md](cli/init.md) for comprehensive documentation.
 
 ### `stamp context`
 
@@ -476,54 +547,14 @@ stamp context --include-code full --max-nodes 20
 
 ### Token Cost Comparison
 
-Use `--compare-modes` to see detailed token estimates across all modes, including style metadata:
+Use `--compare-modes` to see token estimates across all modes:
 
 ```bash
-# Display comparison table
 stamp context --compare-modes
-
-# Generate comparison data file for MCP integration
-stamp context --compare-modes --stats
-# Creates: context_compare_modes.json
+stamp context --compare-modes --stats  # Creates context_compare_modes.json for MCP
 ```
 
-This command shows two comparison tables:
-
-1. **Comparison vs Raw Source** – Shows savings compared to raw source code
-2. **Mode Breakdown** – Shows all available modes and savings vs full context
-
-**Example output:**
-
-```
-📊 Mode Comparison
-
-   Comparison:
-     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Raw Source
-     -------------|---------------|---------------|------------------------
-     Raw source   |        22,000 |        19,556 | 0%
-     Header       |        12,228 |        10,867 | 44%
-     Header+style |        13,895 |        12,351 | 37%
-
-   Mode breakdown:
-     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Full Context
-     -------------|---------------|---------------|--------------------------
-     none         |         8,337 |         7,411 | 79%
-     header       |        12,228 |        10,867 | 69%
-     header+style |        13,895 |        12,351 | 65%
-     full         |        39,141 |        34,792 | 0%
-```
-
-**Key features:**
-- **Accurate token counts** – Automatically regenerates contracts with and without style metadata for precise comparisons
-- **Four modes compared** – Shows `none`, `header`, `header+style`, and `full` modes
-- **Dual comparison** – Compares against both raw source and full context
-- **Style impact visible** – Clearly shows the token overhead of including style metadata
-- **Optional tokenizers** – LogicStamp Context includes `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) as optional dependencies. npm will automatically attempt to install them when you install `logicstamp-context`. If installation succeeds, you get model-accurate token counts. If installation fails or is skipped, the tool gracefully falls back to character-based estimation.
-
-**When to use:**
-- Before generating context to choose the right mode for your budget
-- To understand the cost impact of including style metadata
-- To compare token savings across different inclusion modes
+Shows two comparison tables: savings vs raw source, and mode breakdown vs full context. Automatically regenerates contracts with/without style for accurate comparisons. Optional tokenizers (`@dqbd/tiktoken`, `@anthropic-ai/tokenizer`) provide exact counts if installed; otherwise uses approximations.
 
 ## Output Formats
 
@@ -689,23 +720,13 @@ The `context_main.json` file serves as a directory index with:
 
 Each folder's `context.json` contains an array of bundles (one bundle per root component/entry point). Each bundle represents a complete dependency graph, with all related components and their contracts included within that bundle.
 
-### Design: Per-Root Bundles vs Per-Component Files
+### Design: Per-Root Bundles
 
-LogicStamp Context generates **per-root component bundles** rather than individual files per component. This design choice is intentional and optimized for how developers and LLMs actually work:
+LogicStamp generates per-root component bundles (not individual files per component). This matches how developers work—you think in features/pages/screens, not individual atoms. When asking an LLM about "DashboardPage", you get the root bundle with DashboardPage + its full dependency graph in one shot.
 
-**✅ Why per-root bundles?**
-- **Developer workflow**: Developers think in features/pages/screens (root components), not individual atoms. When asking an LLM for help with "DashboardPage", you want the root bundle containing DashboardPage + its full dependency graph in one shot.
-- **Dependency context**: Having the full dependency graph inside each root bundle means the AI sees all related components and their relationships together, improving understanding and suggestions.
-- **Self-contained units**: Each bundle is completely self-contained—you can share a single bundle with an LLM and it has everything needed to understand that feature.
-- **Future-proof for splitting**: The current structure naturally supports a future `--split` mode that would write each root bundle to its own file (`/logicstamp/bundles/<entryId>.json`) plus an index, without any breaking changes.
+Each bundle is self-contained with the complete dependency graph, so the AI sees all related components together. This structure also supports a future `--split` mode without breaking changes.
 
-**❓ Why not per-component files?**
-True per-component splitting (where each component is its own file) would be useful for advanced use cases like:
-- Super granular Git diff/cache behavior per component
-- Component-level analytics across repositories  
-- Platform-level component indexing/search
-
-These are advanced concerns for future LogicStamp platform features, not v1 "context generation for AI chat" use cases.
+Per-component files would be useful for advanced use cases (granular Git diffs, component analytics, platform indexing), but those are future platform features, not v1 "context generation for AI chat" use cases.
 
 **Example: `src/components/context.json`**
 
@@ -755,7 +776,7 @@ These are advanced concerns for future LogicStamp platform features, not v1 "con
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp-context@0.2.6"
+      "source": "logicstamp-context@0.2.7"
     }
   }
 ]
@@ -787,7 +808,7 @@ These are advanced concerns for future LogicStamp platform features, not v1 "con
     }
   ],
   "meta": {
-    "source": "logicstamp-context@0.2.6"
+    "source": "logicstamp-context@0.2.7"
   }
 }
 ```
@@ -807,42 +828,7 @@ Each component contract includes:
 
 ### Missing Dependencies
 
-The `meta.missing` array tracks dependencies that couldn't be resolved. An empty array `[]` means complete dependency resolution.
-
-**Structure of each missing dependency:**
-```json
-{
-  "name": "import specifier",
-  "reason": "why it failed",
-  "referencedBy": "component that imports it"
-}
-```
-
-**Complete example with multiple missing types:**
-```json
-{
-  "meta": {
-    "missing": [
-      {
-        "name": "@mui/material",
-        "reason": "external package",
-        "referencedBy": "src/components/Button.tsx"
-      },
-      {
-        "name": "./DeletedComponent",
-        "reason": "file not found",
-        "referencedBy": "src/App.tsx"
-      },
-      {
-        "name": "../../shared/utils",
-        "reason": "outside scan path",
-        "referencedBy": "src/helpers.ts"
-      }
-    ],
-    "source": "logicstamp-context@0.2.6"
-  }
-}
-```
+The `meta.missing` array tracks dependencies that couldn't be resolved. Empty array means all dependencies were resolved. Each missing dependency has `name`, `reason`, and `referencedBy` fields.
 
 **Common reasons and what they mean:**
 

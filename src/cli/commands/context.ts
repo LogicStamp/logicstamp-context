@@ -6,6 +6,7 @@ import { resolve, dirname, join } from 'node:path';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { debugError } from '../../utils/debug.js';
 import { globFiles } from '../../utils/fsx.js';
+import { readStampignore, filterIgnoredFiles } from '../../utils/stampignore.js';
 import { buildDependencyGraph } from '../../core/manifest.js';
 import type { UIFContract } from '../../types/UIFContract.js';
 import {
@@ -56,7 +57,17 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   }
 
   // Step 1: Find all React/TS files
-  const files = await globFiles(projectRoot);
+  let files = await globFiles(projectRoot);
+
+  // Step 1.5: Filter files based on .stampignore
+  const stampignore = await readStampignore(projectRoot);
+  if (stampignore && stampignore.ignore.length > 0) {
+    const originalCount = files.length;
+    files = filterIgnoredFiles(files, stampignore.ignore, projectRoot);
+    if (!options.quiet && files.length < originalCount) {
+      console.log(`   Excluded ${originalCount - files.length} file(s) via .stampignore`);
+    }
+  }
 
   if (files.length === 0) {
     console.error(`❌ No React/TypeScript modules found under ${displayPath(projectRoot)}`);

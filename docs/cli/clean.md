@@ -1,6 +1,6 @@
 # `stamp context clean` Command
 
-Remove all generated context artifacts from your project. This command helps you reset your context files and start fresh.
+Remove all generated context artifacts from your project. Use this to reset your context files and start fresh.
 
 ```bash
 stamp context clean [path] [options]
@@ -10,9 +10,9 @@ stamp context clean [path] [options]
 
 ## Behavior
 
-**Default (dry run):** Shows what would be removed without actually deleting anything. This is safe and allows you to preview the cleanup operation.
+**Default (dry run):** Shows what would be removed without actually deleting anything. Safe way to preview the cleanup.
 
-**With `--all --yes`:** Actually deletes all context artifacts. Both flags are required to prevent accidental deletions.
+**With `--all --yes`:** Deletes all context artifacts. Both flags are required to prevent accidental deletions.
 
 ## Options
 
@@ -25,13 +25,13 @@ stamp context clean [path] [options]
 
 ## Files Removed
 
-The clean command removes:
+Removes:
 
 - **`context_main.json`** – Main index file with folder metadata
 - **`**/context.json`** – All folder context files (recursively)
 - **`.logicstamp/`** – Cache directory (if present, automatically included)
 
-The command automatically detects and includes the `.logicstamp/` directory if it exists. You don't need a separate flag for this.
+Automatically detects and includes the `.logicstamp/` directory if it exists. No separate flag needed.
 
 ## Examples
 
@@ -105,9 +105,9 @@ Output:
 
 ## Safety Features
 
-- **Dry run by default** – The command shows what would be removed without deleting anything unless both `--all` and `--yes` flags are provided
-- **Requires both flags** – Both `--all` and `--yes` must be specified to actually delete files, preventing accidental deletions
-- **Ignores build directories** – Automatically ignores `node_modules/`, `dist/`, `build/`, and `.next/` directories when searching for context files
+- **Dry run by default** – Shows what would be removed without deleting anything unless both `--all` and `--yes` flags are provided
+- **Requires both flags** – Both `--all` and `--yes` must be specified to delete files, preventing accidental deletions
+- **Ignores build directories** – Automatically ignores `node_modules/`, `dist/`, `build/`, and `.next/` when searching for context files
 
 ## Use Cases
 
@@ -162,14 +162,14 @@ stamp context compare
 
 ## Notes
 
-- The command is **safe by default** – it requires explicit confirmation (`--all --yes`) to actually delete files
+- **Safe by default** – Requires explicit confirmation (`--all --yes`) to delete files
 - Files are searched recursively but build directories (`node_modules`, `dist`, `build`, `.next`) are automatically ignored
 - The `.logicstamp/` directory is automatically included if it exists (no separate flag needed)
 - Exit code is `0` on success (whether files were found or not)
 
 ## Related Commands
 
-- [`stamp context`](CONTEXT.md) – Generate context files
-- [`stamp context compare`](COMPARE_COMMAND.md) – Detect drift in context files
-- [`stamp context validate`](VALIDATE.md) – Validate context files
+- [`stamp context`](context.md) – Generate context files
+- [`stamp context compare`](compare.md) – Detect drift in context files
+- [`stamp context validate`](validate.md) – Validate context files
 

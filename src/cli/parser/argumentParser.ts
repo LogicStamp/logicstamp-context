@@ -178,8 +178,30 @@ export function parseInitArgs(args: string[]): InitOptions {
         case 'skip-gitignore':
           options.skipGitignore = true;
           break;
+        case 'yes':
+          options.yes = true;
+          break;
+        case 'secure':
+          options.secure = true;
+          // --secure implies --yes
+          options.yes = true;
+          break;
         case 'quiet':
           // Ignore --quiet for init (quiet mode not supported)
+          break;
+        default:
+          console.error(`❌ Unknown option: ${arg}`);
+          process.exit(1);
+      }
+    } else if (arg.startsWith('-') && arg.length === 2) {
+      // Single-dash flags like -y, -q
+      const flag = arg[1];
+      switch (flag) {
+        case 'y':
+          options.yes = true;
+          break;
+        case 'q':
+          // Ignore -q for init (quiet mode not supported)
           break;
         default:
           console.error(`❌ Unknown option: ${arg}`);

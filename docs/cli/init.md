@@ -15,11 +15,13 @@ stamp init [path] [options]
 ## Options
 
 - `--skip-gitignore` - Skip `.gitignore` setup
+- `--yes, -y` - Skip all prompts (non-interactive mode)
+- `--secure` - Initialize with auto-yes and run security scan with `--apply`
 - `-h, --help` - Show help
 
 ## What It Does
 
-The `stamp init` command sets up LogicStamp in your project by:
+`stamp init` sets up LogicStamp in your project by:
 
 1. **Creating or updating `.gitignore`** with LogicStamp-specific patterns:
    - `context.json` - Context files generated per folder
@@ -57,6 +59,30 @@ stamp init --skip-gitignore
 ```
 
 Initializes LogicStamp but skips modifying `.gitignore`. Useful if you want to manage `.gitignore` manually.
+
+### Non-interactive mode
+
+```bash
+stamp init --yes
+```
+
+Initializes LogicStamp without any prompts. All operations are performed automatically. Useful for CI/CD pipelines.
+
+### Secure initialization
+
+```bash
+stamp init --secure
+```
+
+Initializes LogicStamp with auto-yes (no prompts) and automatically runs a security scan with `--apply` after initialization. This will:
+
+1. Set up `.gitignore` patterns automatically
+2. Generate `LLM_context.md` automatically
+3. Run `stamp security scan --apply` to scan for secrets (API keys, passwords, tokens) and automatically add detected secret files to `.stampignore`, so they won't be included in `context.json`
+
+**Runs 100% locally — nothing is uploaded or sent anywhere.**
+
+This is useful for setting up new projects with security checks from the start.
 
 ## Behavior
 
@@ -104,7 +130,7 @@ No changes are made:
 
 ### LLM_context.md Generation
 
-The `stamp init` command also generates `LLM_context.md` in your project root:
+`stamp init` also generates `LLM_context.md` in your project root:
 
 ```
 ✅ Created LLM_context.md
@@ -123,7 +149,7 @@ This file provides guidance for AI assistants on how to understand and work with
 
 ## Interactive Prompts
 
-The `stamp init` command prompts you interactively (in TTY mode) for both `.gitignore` and `LLM_context.md` setup:
+`stamp init` prompts you interactively (in TTY mode) for both `.gitignore` and `LLM_context.md` setup:
 
 ### .gitignore Setup Prompt
 
@@ -181,7 +207,7 @@ In CI or non-TTY environments:
 
 ### Behavior in `stamp context`
 
-The `stamp context` command **never prompts** - it respects the preferences you set via `stamp init`:
+The `stamp context` command **never prompts**—it respects the preferences you set via `stamp init`:
 
 - **If config has `"added"` preference**: Automatically performs the operation
 - **If config has `"skipped"` preference**: Skips the operation
@@ -195,7 +221,7 @@ stamp context --skip-gitignore  # Never touch .gitignore this run
 
 ## Safety
 
-The `stamp init` command is:
+`stamp init` is:
 
 - **Idempotent** - Safe to run multiple times without duplicating patterns
 - **Non-destructive** - Preserves existing `.gitignore` content
@@ -220,3 +246,4 @@ The `stamp init` command is:
 - [`stamp context`](context.md) - Generate context files (includes smart detection)
 - [`stamp context validate`](validate.md) - Validate generated context files
 - [`stamp context compare`](compare.md) - Detect drift in context files
+- [`stamp security scan`](security-scan.md) - Scan for secrets and generate security report

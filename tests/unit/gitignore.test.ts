@@ -11,9 +11,12 @@ import {
   readGitignore,
   hasPattern,
   hasLogicStampPatterns,
+  hasLogicStampBlock,
+  getMissingPatterns,
   addLogicStampPatterns,
   writeGitignore,
   ensureGitignorePatterns,
+  ensurePatternInGitignore,
   LOGICSTAMP_GITIGNORE_PATTERNS,
 } from '../../src/utils/gitignore.js';
 
@@ -101,6 +104,42 @@ describe('gitignore utilities', () => {
     });
   });
 
+  describe('hasLogicStampBlock', () => {
+    it('should return false when block header does not exist', () => {
+      const content = 'node_modules\ncontext.json\n';
+      expect(hasLogicStampBlock(content)).toBe(false);
+    });
+
+    it('should return true when block header exists', () => {
+      const content = 'node_modules\n# LogicStamp context & security files\ncontext.json\n';
+      expect(hasLogicStampBlock(content)).toBe(true);
+    });
+  });
+
+  describe('getMissingPatterns', () => {
+    it('should return all patterns for empty content', () => {
+      const missing = getMissingPatterns('');
+      expect(missing).toEqual(LOGICSTAMP_GITIGNORE_PATTERNS);
+    });
+
+    it('should return empty array when all patterns exist', () => {
+      const content = LOGICSTAMP_GITIGNORE_PATTERNS.join('\n') + '\n';
+      const missing = getMissingPatterns(content);
+      expect(missing).toEqual([]);
+    });
+
+    it('should return only missing patterns', () => {
+      const content = '# LogicStamp context & security files\ncontext.json\ncontext_*.json\n';
+      const missing = getMissingPatterns(content);
+      expect(missing).toContain('*.uif.json');
+      expect(missing).toContain('logicstamp.manifest.json');
+      expect(missing).toContain('.logicstamp/');
+      expect(missing).toContain('stamp_security_report.json');
+      expect(missing).not.toContain('context.json');
+      expect(missing).not.toContain('context_*.json');
+    });
+  });
+
   describe('addLogicStampPatterns', () => {
     it('should add all patterns to empty content', () => {
       const result = addLogicStampPatterns('');
@@ -112,7 +151,7 @@ describe('gitignore utilities', () => {
       const content = 'node_modules\ndist\n';
       const result = addLogicStampPatterns(content);
       expect(result).toContain('node_modules');
-      expect(result).toContain('# LogicStamp context files');
+      expect(result).toContain('# LogicStamp context & security files');
       expect(result).toContain('context.json');
     });
 
@@ -126,7 +165,95 @@ describe('gitignore utilities', () => {
       const content = 'node_modules';
       const result = addLogicStampPatterns(content);
       expect(result).toContain('node_modules');
-      expect(result).toContain('# LogicStamp context files');
+      expect(result).toContain('# LogicStamp context & security files');
+    });
+
+    it('should append only missing patterns when old block exists (edge case)', () => {
+      // Simulate old .gitignore without stamp_security_report.json
+      const oldPatterns = [
+        '# LogicStamp context & security files',
+        'context.json',
+        'context_*.json',
+        '*.uif.json',
+        'logicstamp.manifest.json',
+        '.logicstamp/',
+        // Missing: stamp_security_report.json
+      ];
+      const content = oldPatterns.join('\n') + '\n';
+      
+      const result = addLogicStampPatterns(content);
+      
+      // Should contain all original patterns
+      expect(result).toContain('context.json');
+      expect(result).toContain('context_*.json');
+      expect(result).toContain('*.uif.json');
+      expect(result).toContain('logicstamp.manifest.json');
+      expect(result).toContain('.logicstamp/');
+      
+      // Should now contain the missing pattern
+      expect(result).toContain('stamp_security_report.json');
+      
+      // Should not duplicate the header
+      const headerMatches = (result.match(/# LogicStamp context & security files/g) || []).length;
+      expect(headerMatches).toBe(1);
+    });
+
+    it('should append multiple missing patterns when old block exists', () => {
+      // Simulate very old .gitignore missing multiple patterns
+      const oldPatterns = [
+        '# LogicStamp context & security files',
+        'context.json',
+        'context_*.json',
+        // Missing: *.uif.json, logicstamp.manifest.json, .logicstamp/, stamp_security_report.json
+      ];
+      const content = oldPatterns.join('\n') + '\n';
+      
+      const result = addLogicStampPatterns(content);
+      
+      // Should contain all patterns
+      expect(result).toContain('context.json');
+      expect(result).toContain('context_*.json');
+      expect(result).toContain('*.uif.json');
+      expect(result).toContain('logicstamp.manifest.json');
+      expect(result).toContain('.logicstamp/');
+      expect(result).toContain('stamp_security_report.json');
+      
+      // Should not duplicate existing patterns
+      const contextJsonMatches = (result.match(/^context\.json$/gm) || []).length;
+      expect(contextJsonMatches).toBe(1);
+    });
+
+    it('should preserve user content after LogicStamp block', () => {
+      const content = [
+        'node_modules',
+        '',
+        '# LogicStamp context & security files',
+        'context.json',
+        'context_*.json',
+        '',
+        '# User custom ignore',
+        'custom.log',
+      ].join('\n');
+      
+      const result = addLogicStampPatterns(content);
+      
+      // Should preserve user content
+      expect(result).toContain('node_modules');
+      expect(result).toContain('# User custom ignore');
+      expect(result).toContain('custom.log');
+      
+      // Should add missing patterns
+      expect(result).toContain('stamp_security_report.json');
+    });
+
+    it('should handle Windows line endings (CRLF)', () => {
+      const content = 'node_modules\r\ncontext.json\r\n';
+      const result = addLogicStampPatterns(content);
+      
+      // Should preserve CRLF line endings
+      expect(result).toContain('node_modules');
+      expect(result).toContain('context.json');
+      expect(result).toContain('# LogicStamp context & security files');
     });
   });
 
@@ -192,6 +319,166 @@ describe('gitignore utilities', () => {
       expect(content).toContain('node_modules');
       expect(content).toContain('*.log');
       expect(content).toContain('context.json');
+    });
+
+    it('should update old block with missing patterns (edge case fix)', async () => {
+      // Simulate old .gitignore without stamp_security_report.json
+      const oldContent = [
+        'node_modules',
+        '',
+        '# LogicStamp context & security files',
+        'context.json',
+        'context_*.json',
+        '*.uif.json',
+        'logicstamp.manifest.json',
+        '.logicstamp/',
+        // Missing: stamp_security_report.json
+      ].join('\n') + '\n';
+      
+      await writeFile(join(testDir, '.gitignore'), oldContent);
+
+      const result = await ensureGitignorePatterns(testDir);
+
+      // Should detect and add the missing pattern
+      expect(result.added).toBe(true);
+      expect(result.created).toBe(false);
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      
+      // Should preserve all original patterns
+      expect(content).toContain('node_modules');
+      expect(content).toContain('context.json');
+      expect(content).toContain('context_*.json');
+      expect(content).toContain('*.uif.json');
+      expect(content).toContain('logicstamp.manifest.json');
+      expect(content).toContain('.logicstamp/');
+      
+      // Should now include the missing pattern
+      expect(content).toContain('stamp_security_report.json');
+      
+      // Should not duplicate the header
+      const headerMatches = (content.match(/# LogicStamp context & security files/g) || []).length;
+      expect(headerMatches).toBe(1);
+    });
+
+    it('should not modify .gitignore if all patterns already exist (even with old hasLogicStampPatterns check)', async () => {
+      // This tests that ensureGitignorePatterns works correctly even when
+      // hasLogicStampPatterns would return true (old check)
+      const fullContent = LOGICSTAMP_GITIGNORE_PATTERNS.join('\n') + '\n';
+      await writeFile(join(testDir, '.gitignore'), fullContent);
+
+      const result = await ensureGitignorePatterns(testDir);
+
+      expect(result.added).toBe(false);
+      expect(result.created).toBe(false);
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      expect(content).toBe(fullContent);
+    });
+  });
+
+  describe('ensurePatternInGitignore', () => {
+    it('should create .gitignore and add pattern when file does not exist', async () => {
+      const pattern = 'reports/security.json';
+      const result = await ensurePatternInGitignore(testDir, pattern);
+
+      expect(result.added).toBe(true);
+      expect(result.created).toBe(true);
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      expect(content).toContain('reports/security.json');
+    });
+
+    it('should add pattern to existing .gitignore', async () => {
+      await writeFile(join(testDir, '.gitignore'), 'node_modules\n');
+      
+      const pattern = 'reports/security.json';
+      const result = await ensurePatternInGitignore(testDir, pattern);
+
+      expect(result.added).toBe(true);
+      expect(result.created).toBe(false);
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      expect(content).toContain('node_modules');
+      expect(content).toContain('reports/security.json');
+    });
+
+    it('should not duplicate pattern if it already exists', async () => {
+      await writeFile(join(testDir, '.gitignore'), 'node_modules\nreports/security.json\n');
+      
+      const pattern = 'reports/security.json';
+      const result = await ensurePatternInGitignore(testDir, pattern);
+
+      expect(result.added).toBe(false);
+      expect(result.created).toBe(false);
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      const matches = content.match(/reports\/security\.json/g);
+      expect(matches?.length).toBe(1);
+    });
+
+    it('should normalize path separators (backslashes to forward slashes)', async () => {
+      const pattern = 'reports\\security.json';
+      await ensurePatternInGitignore(testDir, pattern);
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      // Should normalize backslashes to forward slashes
+      expect(content).toContain('reports/security.json');
+      expect(content).not.toContain('reports\\security.json');
+    });
+
+    it('should remove leading slash from pattern', async () => {
+      const pattern = '/reports/security.json';
+      await ensurePatternInGitignore(testDir, pattern);
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      // Should remove leading slash
+      expect(content).toContain('reports/security.json');
+      expect(content).not.toContain('/reports/security.json');
+    });
+
+    it('should handle patterns with subdirectories', async () => {
+      const pattern = 'custom/reports/security-scan.json';
+      await ensurePatternInGitignore(testDir, pattern);
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      expect(content).toContain('custom/reports/security-scan.json');
+    });
+
+    it('should preserve existing content when adding pattern', async () => {
+      const existingContent = '# Custom ignores\nnode_modules\n*.log\n';
+      await writeFile(join(testDir, '.gitignore'), existingContent);
+      
+      await ensurePatternInGitignore(testDir, 'reports/security.json');
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      expect(content).toContain('# Custom ignores');
+      expect(content).toContain('node_modules');
+      expect(content).toContain('*.log');
+      expect(content).toContain('reports/security.json');
+    });
+
+    it('should handle empty .gitignore', async () => {
+      await writeFile(join(testDir, '.gitignore'), '');
+      
+      const pattern = 'reports/security.json';
+      const result = await ensurePatternInGitignore(testDir, pattern);
+
+      expect(result.added).toBe(true);
+      expect(result.created).toBe(false);
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      expect(content).toContain('reports/security.json');
+    });
+
+    it('should add blank line before pattern if content exists', async () => {
+      await writeFile(join(testDir, '.gitignore'), 'node_modules\n');
+      
+      await ensurePatternInGitignore(testDir, 'reports/security.json');
+
+      const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
+      // Should have blank line separator
+      expect(content).toMatch(/node_modules\n\nreports\/security\.json/);
     });
   });
 });

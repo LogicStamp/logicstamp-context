@@ -1,6 +1,6 @@
 # `stamp context` Command
 
-Generate AI-ready bundles organized by folder that describe your React/TypeScript codebase.
+Generate bundles organized by folder that describe your React/TypeScript codebase.
 
 ```bash
 stamp context [path] [options]
@@ -9,9 +9,11 @@ stamp context [path] [options]
 - `[path]` (optional) – Directory to scan. Defaults to the current working
   directory. Paths can be relative (`./src`) or absolute.
 
-**Output Structure:** The command generates multiple `context.json` files (one per folder containing components) plus a `context_main.json` index file at the output root, maintaining your project's directory hierarchy.
+**Output Structure:** Generates multiple `context.json` files (one per folder containing components) plus a `context_main.json` index file at the output root, keeping your project's directory structure.
 
 **Setup:** `stamp context` respects preferences saved in `.logicstamp/config.json` and never prompts. On first run (no config), it defaults to skipping both `.gitignore` and `LLM_CONTEXT.md` setup for CI-friendly behavior. Use [`stamp init`](init.md) to interactively configure these options.
+
+**File Exclusion:** `stamp context` respects `.stampignore` and excludes those files from context generation. This keeps files with secrets or sensitive info out of your bundles. You'll see how many files were excluded (unless using `--quiet`). Run `stamp security scan --apply` to automatically add files to `.stampignore` when secrets are found. See [`stamp security scan`](security-scan.md) for details.
 
 ## Options
 
@@ -80,9 +82,26 @@ stamp context --out ./output
 stamp context --out ./output/context.json
 ```
 
+## File Exclusion with .stampignore
+
+Files in `.stampignore` are excluded from context generation (no flags needed). You'll see how many files were excluded (unless using `--quiet`). Supports glob patterns and exact file paths.
+
+Example `.stampignore`:
+```json
+{
+  "ignore": [
+    "src/config/secrets.ts",
+    "src/api/keys.ts",
+    "**/*.secret.ts"
+  ]
+}
+```
+
+Use `stamp security scan --apply` to automatically detect files with secrets and add them to `.stampignore`. The file is only created when secrets are actually detected. See [`stamp security scan`](security-scan.md) for details.
+
 ## Output Structure
 
-LogicStamp Context generates a **folder-organized, multi-file output**:
+LogicStamp Context creates a **folder-organized, multi-file output**:
 
 ### File Organization
 
@@ -137,43 +156,25 @@ The `context_main.json` file provides a complete directory index:
     }
   ],
   "meta": {
-    "source": "logicstamp-context@0.2.6"
+    "source": "logicstamp-context@0.2.7"
   }
 }
 ```
 
-**Folder entry fields:**
-- `path` - Relative path from project root
-- `contextFile` - Path to this folder's context.json
-- `bundles` - Number of bundles in this folder
-- `components` - List of component file names
-- `isRoot` - Whether this is an application entry point
-- `rootLabel` - Label for root folders (e.g., "Next.js App", "Project Root")
-- `tokenEstimate` - Token count for this folder's context
+Each folder entry includes: `path`, `contextFile`, `bundles`, `components`, `isRoot`, `rootLabel`, and `tokenEstimate`.
 
-### Folder Context Files
-
-Each folder's `context.json` contains an array of bundles following the `LogicStampBundle` schema (`schemaVersion: "0.1"`):
-- Contracts embed `UIFContract` data (`schemaVersion: "0.3"`).
-- A dependency graph lists `nodes` and `edges` for each bundle.
-- `meta.missing` captures unresolved dependencies with detailed reasons:
-  - `file not found` - Component was deleted or moved
-  - `external package` - Third-party npm module (expected)
-  - `outside scan path` - File exists but not in scanned directory
-  - `max depth exceeded` - Dependency chain deeper than `--depth` setting
-  - `circular dependency` - Circular import detected and broken
+Each folder's `context.json` contains bundles with:
+- Contracts (UIFContract schema v0.3)
+- Dependency graph (`nodes` and `edges`)
+- `meta.missing` for unresolved dependencies: `file not found`, `external package`, `outside scan path`, `max depth exceeded`, `circular dependency`
 
 ## Understanding meta.missing
 
-An empty `missing` array (`[]`) confirms all dependencies were successfully resolved. Non-empty indicates:
+An empty `missing` array means all dependencies were resolved. Non-empty means some couldn't be found.
 
-**Expected missing deps:**
-- External packages (React, lodash, etc.) - these are normal and safe to ignore
+**Expected (safe to ignore):** External packages (React, lodash, etc.)
 
-**Actionable missing deps:**
-- "file not found" entries - indicate broken imports requiring fixes
-- "outside scan path" - consider expanding scan directory
-- "max depth exceeded" - increase `--depth` for fuller analysis
+**Actionable:** "file not found" (broken imports), "outside scan path" (expand scan directory), "max depth exceeded" (increase `--depth`)
 
 Use `--strict-missing` in CI to catch unexpected missing dependencies:
 ```bash
@@ -194,7 +195,7 @@ stamp context --strict-missing || exit 1
 
 Token counts are estimated using character-based approximations by default (~4 characters per token for GPT-4, ~4.5 for Claude). 
 
-**Optional Tokenizers:** LogicStamp Context includes `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) as optional dependencies. npm will automatically attempt to install them when you install `logicstamp-context`. If installation succeeds, you get model-accurate token counts. If installation fails or is skipped (normal for optional dependencies), the tool gracefully falls back to character-based estimation.
+**Optional Tokenizers:** LogicStamp Context includes `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) as optional dependencies. npm installs them automatically when you install `logicstamp-context`. If that works, you get model-accurate token counts. If it fails or is skipped (normal for optional dependencies), it falls back to character-based estimation.
 
 If you need accurate token counts and the automatic installation failed, you can manually install them:
 
@@ -210,52 +211,15 @@ If these packages are installed, `--compare-modes` and token estimates throughou
 
 ## Error Handling
 
-The AST parser handles errors gracefully by default. When parsing fails or encounters malformed code, it returns an empty AST structure instead of crashing, allowing the tool to continue processing other files.
+The parser handles errors gracefully—malformed code returns empty AST structures instead of crashing, so it keeps processing other files.
 
-**Behavior:**
-- Invalid file paths return empty AST structures
-- Malformed TypeScript/React syntax is handled gracefully
-- Individual extraction failures (hooks, props, components, state, events, etc.) don't stop the entire process
-- Each extractor function (componentExtractor, propExtractor, stateExtractor, eventExtractor) has its own error handling
-- The tool continues processing other files even when some fail
-
-**Debug Logging:**
-
-All error handling is silent by default. To enable debug logging for troubleshooting, set the `LOGICSTAMP_DEBUG=1` environment variable:
+Error handling is silent by default. Enable debug logging:
 
 ```bash
 LOGICSTAMP_DEBUG=1 stamp context
 ```
 
-When enabled, error logs include:
-- The file path where the error occurred
-- The specific extraction step that failed (hooks, props, components, state, events, etc.)
-- The error message
-- Module-specific prefixes for easier filtering
+Debug logs show file paths, failed extraction steps (hooks, props, components, state, events), and error messages with module-specific prefixes.
 
-Example debug output:
-```
-[LogicStamp][DEBUG] astParser.safeExtract error: { filePath: '/path/to/file.tsx', error: 'Cannot read property \'name\' of undefined', context: 'hooks' }
-[LogicStamp][DEBUG] astParser.extractFromFile error: { filePath: '/path/to/file.tsx', message: 'Unexpected token' }
-[LogicStamp][DEBUG] componentExtractor.extractHooks error: { filePath: '/path/to/file.tsx', error: 'Invalid AST node' }
-[LogicStamp][DEBUG] propExtractor.extractProps error: { filePath: '/path/to/file.tsx', error: 'Type resolution failed' }
-[LogicStamp][DEBUG] stateExtractor.extractState error: { filePath: '/path/to/file.tsx', error: 'Pattern match error' }
-[LogicStamp][DEBUG] eventExtractor.extractEvents error: { filePath: '/path/to/file.tsx', error: 'Signature parsing failed' }
-[LogicStamp][DEBUG] detector.detectNextJsDirective error: { filePath: '/path/to/file.tsx', error: 'Failed to read file text' }
-[LogicStamp][DEBUG] detector.detectKind error: { filePath: '/path/to/file.tsx', error: 'AST traversal error' }
-```
-
-**Error Handling Architecture:**
-- **Main parser** (`extractFromFile`): Catches top-level errors and returns empty AST
-- **Extractor functions**: Each extractor (hooks, components, props, state, events, routes) has try-catch blocks around risky operations
-- **Detector functions**: Next.js directive detection and component kind detection have error handling with graceful fallbacks
-- **Graceful fallbacks**: All extractors return empty arrays/objects on errors; detectors return `undefined` or default values (`ts:module` for kind detection)
-- **Debug logging**: Each module logs errors with its own prefix when `LOGICSTAMP_DEBUG=1` is set
-
-**Troubleshooting Tips:**
-- Enable `LOGICSTAMP_DEBUG=1` if you suspect parsing issues
-- Check debug logs to identify which files and extraction steps are causing problems
-- Files with syntax errors will return empty AST structures but won't crash the tool
-- Individual extractor failures are logged separately for easier debugging
-- Use `--strict-missing` in CI to catch missing dependencies early
+Files with syntax errors return empty AST structures but won't crash the tool. Use `--strict-missing` in CI to catch missing dependencies early.
 
