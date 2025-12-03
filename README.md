@@ -41,9 +41,7 @@ LLMs understand your project instantly - without scanning 10,000+ lines of code
 - **~65–72% token savings** vs raw source
 - **Deterministic, structured contracts** that help AI avoid hallucinations by only referencing the true architecture
 - **Perfect for Cursor/Claude/GitHub Copilot Chat** — share context files for instant codebase understanding
-- **CI-friendly** — detect drift, validate bundles, track changes
-
-This gives newcomers the "aha moment" in seconds.
+- **CI-friendly** - detect drift, validate bundles, track changes
 
 ## Features
 
@@ -114,14 +112,6 @@ After installation, the `stamp` command will be available globally.
 - Model name corrections (GPT-4o-mini → GPT-4o)
 - Documentation consistency improvements
 
-**v0.2.4**
-- Material UI style extraction
-- Improved global CLI installation docs
-- Refined README and docs structure
-- Streamlined README
-- Improved token estimation
-- UIF Contracts documentation
-
 📋 **Full history → [CHANGELOG.md](https://github.com/LogicStamp/logicstamp-context/blob/main/CHANGELOG.md)**
 
 ## Usage
@@ -130,6 +120,8 @@ After installation, the `stamp` command will be available globally.
 stamp --version                    # Show version number
 stamp --help                       # Show help
 stamp init [path] [options]        # Initialize project preferences
+stamp init --secure                # Initialize with security scan (recommended)
+stamp security scan [path] [options]  # Scan for secrets (API keys, passwords, tokens)
 stamp context [path] [options]     # Generate context bundles
 stamp context style [path] [options]  # Generate with style metadata
 stamp context compare [options]    # Detect context drift
@@ -143,6 +135,7 @@ stamp context clean [path] [options]  # Remove generated files
 |---------|-------------|------|
 | `stamp init` | Initialize project (`.gitignore`, `LLM_CONTEXT.md`, config) | [init.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/init.md) |
 | `stamp security scan` | Scan for secrets (API keys, passwords, tokens) | [security-scan.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/security-scan.md) |
+| `stamp security --hard-reset` | Reset security configuration (delete `.stampignore` and report) | [security-scan.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/security-scan.md) |
 | `stamp context` | Generate AI-ready context bundles organized by folder | [context.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/context.md) |
 | `stamp context style` | Generate context with style metadata (Tailwind, SCSS, etc.) | [style.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/style.md) |
 | `stamp context compare` | Compare context files to detect changes (CI-friendly) | [compare.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/compare.md) |
@@ -165,6 +158,8 @@ stamp context clean [path] [options]  # Remove generated files
 📋 **See [docs/cli/commands.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/commands.md) for complete option reference**
 
 ## Documentation
+
+For full Documentation see: https://logicstamp.dev/docs
 
 - **[Usage Guide](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md)** — Complete usage documentation with examples
 - **[Token Optimization](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md#token-cost-comparison)** — Understand token costs and savings

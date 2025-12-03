@@ -311,5 +311,5 @@ If files are still being included after adding to `.stampignore`:
 ## See Also
 
 - [.stampignore Format](../stampignore.md) - Detailed documentation on `.stampignore` file format
-- [Secret Detection Patterns](../security-patterns.md) - Complete list of detected secret patterns
+- [`stamp context`](./context.md) - Generate context (respects `.stampignore`)
 
