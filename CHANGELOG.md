@@ -56,16 +56,15 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - Scans TypeScript, JavaScript, and JSON files for common secret patterns (API keys, passwords, tokens, etc.)
   - Generates detailed security reports with file locations and severity levels
   - Runs 100% locally — nothing is uploaded or sent anywhere
-  - Automatically integrates with `.stampignore` to exclude files with secrets from context generation
-  - `--apply` flag to automatically add detected secret files to `.stampignore`
+  - Review the security report and use `stamp ignore <file>` to manually add files with secrets to `.stampignore` to exclude them from context generation
 
 - **Security reset command** - New `stamp security --hard-reset` command to reset security configuration:
-  - Deletes `.stampignore` and security report files
+  - Deletes the security report file
   - Useful for starting fresh after remediation or resetting security configuration
 
 - **Enhanced initialization** - Improved `stamp init` command with new options:
   - `--yes` / `-y` flag for non-interactive mode (CI-friendly)
-  - `--secure` flag to initialize with auto-yes and automatically run security scan with `--apply`
+  - `--secure` flag to initialize with auto-yes and automatically run security scan (removed in v0.3.0, security scan now runs by default)
   - Better integration with security scanning workflow
 
 - **`stamp ignore` command** - New command to add files or folders to `.stampignore`:

@@ -127,7 +127,7 @@ LogicStamp Context automatically protects sensitive data in generated context fi
 
 - **🔍 Security scanning by default** - `stamp init` automatically scans for secrets (API keys, passwords, tokens)
 - **🛡️ Automatic sanitization** - Detected secrets are replaced with `"PRIVATE_DATA"` in generated context files (source files are never modified)
-- **📋 Smart exclusions** - Files with secrets are automatically excluded from context generation via `.stampignore`
+- **📋 Manual exclusions** - Use `stamp ignore <file>` to manually exclude files with secrets from context generation via `.stampignore`
 - **🔐 Safe by default** - Only metadata is included in default modes; credentials only appear in `--include-code full` mode
 
 > **⚠️ Seeing `"PRIVATE_DATA"` in your context files?** This means secrets were detected in your codebase during scanning. The security scan examines `.ts`, `.tsx`, `.js`, `.jsx`, and `.json` files for secret patterns. **Action required:**
@@ -163,7 +163,7 @@ stamp context clean [path] [options]  # Remove generated files
 | `stamp init` | Initialize project (`.gitignore`, `LLM_CONTEXT.md`, config) | [init.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/init.md) |
 | `stamp ignore` | Add files/folders to `.stampignore` to exclude from context | [ignore.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/ignore.md) |
 | `stamp security scan` | Scan for secrets (API keys, passwords, tokens) | [security-scan.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/security-scan.md) |
-| `stamp security --hard-reset` | Reset security configuration (delete `.stampignore` and report) | [security-scan.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/security-scan.md) |
+| `stamp security --hard-reset` | Reset security configuration (delete security report) | [security-scan.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/security-scan.md) |
 | `stamp context` | Generate AI-ready context bundles organized by folder | [context.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/context.md) |
 | `stamp context style` | Generate context with style metadata (Tailwind, SCSS, etc.) | [style.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/style.md) |
 | `stamp context compare` | Compare context files to detect changes (CI-friendly) | [compare.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/compare.md) |
