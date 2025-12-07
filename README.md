@@ -12,6 +12,9 @@
 
 **A tiny CLI that compiles your React/TypeScript codebase into machine-readable context bundles for AI and CI. Fast, deterministic, zero-config.**
 
+![LogicStamp Context in action](./assets/logicstamp-context-demo.gif)
+*Sample stamp context output with generated bundles*
+
 ## 🚀 Quick Start
 
 **Try it in 30 seconds (no install required):**
@@ -20,9 +23,6 @@ npx logicstamp-context context
 ```
 
 ⏱️ Scans your repo and writes `context.json` files + `context_main.json` for AI tools.
-
-![LogicStamp Context in action](./assets/logicstamp-context-demo.gif)
-*Sample stamp context output with generated bundles*
 
 **What you'll get:**
 - 📁 `context.json` files (one per folder with components)
