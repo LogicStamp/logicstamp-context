@@ -19,38 +19,25 @@
 npx logicstamp-context context
 ```
 
-That's it! LogicStamp Context will scan your project and generate `context.json` files organized by folder, plus a `context_main.json` index file. Share these files with AI assistants for instant codebase understanding.
+⏱️ Scans your repo and writes `context.json` files + `context_main.json` for AI tools.
 
-**For a complete setup (recommended):**
-```bash
-# Install globally
-npm install -g logicstamp-context
-
-# Initialize project (runs security scan by default)
-stamp init
-
-# Generate context bundles
-stamp context
-```
-
-> **💡 First time?** Run `stamp init` to set up `.gitignore` patterns and scan for secrets. The security scan runs automatically to help protect sensitive data.
+![LogicStamp Context in action](./assets/logicstamp-context-demo.gif)
+*Sample stamp context output with generated bundles*
 
 **What you'll get:**
 - 📁 `context.json` files (one per folder with components)
 - 📋 `context_main.json` index file with project overview
-- 🔒 Automatic secret sanitization (secrets replaced with `"PRIVATE_DATA"`)
-- ⚡ Ready to share with AI assistants (Cursor, Claude, GitHub Copilot)
 
-> **⚠️ Seeing `"PRIVATE_DATA"` in your context files?** This means secrets were detected in your codebase during scanning. The security scan examines `.ts`, `.tsx`, `.js`, `.jsx`, and `.json` files for secret patterns. **Action required:**
-> 1. Review `stamp_security_report.json` to see what was found
-> 2. Remove hard-coded secrets from your source code
-> 3. Use environment variables or secret management tools instead
-> 4. Run `stamp ignore <file>` to exclude files with secrets from context generation
-> 
-> **Best practice:** Never commit secrets to version control. Use `.env` files (in `.gitignore`) or secret management services.
+**For a complete setup (recommended):**
+```bash
+npm install -g logicstamp-context
+stamp init        # security scan by default
+stamp context
+```
 
-![LogicStamp Context in action](./assets/logicstamp-context-demo.gif)
-*Sample stamp context output with generated bundles*
+> **💡 First time?** Run `stamp init` to set up `.gitignore` patterns and scan for secrets.
+
+> **ℹ️** If you see `"PRIVATE_DATA"` in output, see the **Security** section below.
 
 > **Note:** This is a beta release (v0.3.0). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
@@ -142,6 +129,14 @@ LogicStamp Context automatically protects sensitive data in generated context fi
 - **🛡️ Automatic sanitization** - Detected secrets are replaced with `"PRIVATE_DATA"` in generated context files (source files are never modified)
 - **📋 Smart exclusions** - Files with secrets are automatically excluded from context generation via `.stampignore`
 - **🔐 Safe by default** - Only metadata is included in default modes; credentials only appear in `--include-code full` mode
+
+> **⚠️ Seeing `"PRIVATE_DATA"` in your context files?** This means secrets were detected in your codebase during scanning. The security scan examines `.ts`, `.tsx`, `.js`, `.jsx`, and `.json` files for secret patterns. **Action required:**
+> 1. Review `stamp_security_report.json` to see what was found
+> 2. Remove hard-coded secrets from your source code
+> 3. Use environment variables or secret management tools instead
+> 4. Run `stamp ignore <file>` to exclude files with secrets from context generation
+> 
+> **Best practice:** Never commit secrets to version control. Use `.env` files (in `.gitignore`) or secret management services.
 
 > **Important**: Always review generated context files before sharing. For complete security documentation, see [SECURITY.md](https://github.com/LogicStamp/logicstamp-context/blob/main/SECURITY.md).
 
