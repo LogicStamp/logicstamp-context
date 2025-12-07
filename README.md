@@ -1,7 +1,7 @@
 # LogicStamp Context
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/LogicStamp/logicstamp-context/main/assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="120" height="120">
+  <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="120" height="120">
 </div>
 
 ![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)
@@ -49,7 +49,7 @@ stamp context
 > 
 > **Best practice:** Never commit secrets to version control. Use `.env` files (in `.gitignore`) or secret management services.
 
-![LogicStamp Context in action](https://raw.githubusercontent.com/LogicStamp/logicstamp-context/main/assets/logicstamp-context-demo.gif)
+![LogicStamp Context in action](./assets/logicstamp-context-demo.gif)
 *Sample stamp context output with generated bundles*
 
 > **Note:** This is a beta release (v0.3.0). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
