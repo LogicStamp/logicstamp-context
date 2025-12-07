@@ -1,6 +1,6 @@
 # .stampignore File Format
 
-The `.stampignore` file tells LogicStamp Context which files to exclude from context generation. This is especially useful for preventing files containing secrets or sensitive information from being included in your context bundles.
+The `.stampignore` file tells LogicStamp Context which files to exclude from context generation. You can use it to exclude any files you don't want included in your context bundles.
 
 ## Overview
 
@@ -12,10 +12,10 @@ When you run `stamp context` or `stamp context style` (equivalent to `stamp cont
 - `stamp context --include-style` - Alternative syntax for style metadata extraction
 
 **Use cases:**
-- Exclude files containing API keys, passwords, or tokens
-- Skip sensitive configuration files
-- Ignore test fixtures with mock secrets
 - Exclude large files that aren't needed for context
+- Skip test fixtures or mock data files
+- Ignore generated or temporary files
+- Exclude any files you don't want in context bundles
 
 ## File Format
 
@@ -50,16 +50,11 @@ When you run `stamp context` or `stamp context style` (equivalent to `stamp cont
 
 ### Relative Paths
 
-All paths in `.stampignore` must be **relative to the project root**. Paths are automatically normalized when added via `stamp security scan --apply`:
+All paths in `.stampignore` must be **relative to the project root**:
 
 - ✅ **Project-relative paths**: `src/config/secrets.ts`, `lib/keys.js`
 - ❌ **Absolute paths not supported**: `/home/user/project/src/config.ts`, `C:\Users\...\src\config.ts`
 - ❌ **User-specific paths not included**: No home directory paths, no absolute paths outside project
-
-When `stamp security scan --apply` automatically adds files to `.stampignore`, it:
-1. Converts absolute file paths to relative paths using `path.relative(projectRoot, file)`
-2. Normalizes path separators (backslashes → forward slashes for cross-platform consistency)
-3. Validates that paths are relative (skips any absolute paths as a safety measure)
 
 ```json
 {
@@ -108,9 +103,32 @@ Always use **forward slashes** (`/`) even on Windows:
 
 ## Creating .stampignore
 
+### Using `stamp ignore` Command (Recommended)
+
+The easiest way to add files to `.stampignore` is using the `stamp ignore` command:
+
+```bash
+# Add a single file
+stamp ignore src/config/secrets.ts
+
+# Add multiple files/folders
+stamp ignore src/config/credentials.ts src/secrets/
+
+# Add glob patterns
+stamp ignore "**/secrets.ts" "**/*.key"
+```
+
+The `stamp ignore` command:
+- Creates `.stampignore` if it doesn't exist
+- Adds paths to the file automatically
+- Prevents duplicate entries
+- Normalizes paths correctly
+
+**See [ignore.md](cli/ignore.md) for complete documentation on the `stamp ignore` command.**
+
 ### Manual Creation
 
-Create `.stampignore` in your project root:
+You can also create `.stampignore` manually in your project root:
 
 ```bash
 # Create the file
@@ -126,47 +144,10 @@ cat > .stampignore << 'EOF'
 EOF
 ```
 
-### Automatic Creation with Security Scan
+### Integration with Other Commands
 
-The easiest way to create `.stampignore` is using the security scan:
-
-```bash
-# Scan for secrets and automatically add files to .stampignore
-stamp security scan --apply
-```
-
-This will:
-1. Scan your project for secrets (API keys, passwords, tokens)
-2. Create `.stampignore` if it doesn't exist
-3. Add files containing secrets to the ignore list
-4. Preserve existing entries and avoid duplicates
-
-🔐 **Important Security Note**
-
-`.stampignore` is only created when secrets are actually detected in your project (`.ts`, `.tsx`, `.js`, `.jsx`, `.json`).
-
-However, committing secrets to a codebase is unsafe and strongly discouraged.
-
-LogicStamp's `.stampignore` mechanism is a temporary safety layer to prevent secrets from being included in your context bundles — it is not a substitute for proper secret hygiene.
-
-We strongly recommend:
-
-- Moving all secrets to environment variables
-- Using a secrets manager (e.g., Vault, Doppler, AWS Secrets Manager)
-- Removing the secrets from your code before running context generation
-
-The best long-term solution is to ensure that no secrets ever exist in tracked source files.
-
-### Integration with Init
-
-You can also set up `.stampignore` during project initialization:
-
-```bash
-# Initialize with security scan (recommended for new projects)
-stamp init --secure
-```
-
-This automatically runs `stamp security scan --apply` after initialization.
+- **`stamp security scan --apply`** - Automatically adds files with detected secrets to `.stampignore`
+- **`stamp init`** - The init command runs a security scan by default, but `.stampignore` is completely optional and independent of security scanning
 
 ## How It Works
 
@@ -179,7 +160,7 @@ When you run `stamp context` or `stamp context style` (equivalent to `stamp cont
 3. Processes only the remaining files
 4. Shows how many files were excluded (unless using `--quiet`)
 
-**Note:** Both `stamp context` and `stamp context style` respect `.stampignore` in exactly the same way. The style command is internally equivalent to `stamp context --include-style`, and file exclusion happens before any processing, including style extraction.
+**Note:** Both `stamp context` and `stamp context style` respect `.stampignore` in exactly the same way. The style command is internally equivalent to `stamp context --include-style`, and file exclusion happens before any processing, including style extraction. `.stampignore` is completely optional - if it doesn't exist, all files will be processed normally.
 
 **Example output:**
 ```
@@ -203,7 +184,7 @@ Files are matched against `.stampignore` patterns using glob matching:
 - **`.gitignore`**: Prevents files from being committed to version control
 - **`.stampignore`**: Prevents files from being included in LogicStamp context bundles
 
-**Important**: The security report file (`stamp_security_report.json`) is automatically added to `.gitignore` by `stamp security scan` to prevent accidental commits. This is separate from `.stampignore`, which only affects context generation.
+**Note**: `.stampignore` is independent of security scanning. The security report file (`stamp_security_report.json`) is automatically added to `.gitignore` by `stamp security scan`, but this is separate from `.stampignore`, which only affects context generation.
 
 **Use cases:**
 - Files in `.gitignore` are excluded from Git commits
@@ -236,27 +217,15 @@ Prefer specific file paths over broad glob patterns when possible:
 }
 ```
 
-### 3. Review Before Adding
-
-Before adding files to `.stampignore`, verify they actually contain secrets:
-
-```bash
-# First, scan to see what would be added
-stamp security scan
-
-# Review the report, then apply
-stamp security scan --apply
-```
-
-### 4. Keep It Updated
+### 3. Keep It Updated
 
 Regularly review and update `.stampignore`:
 
-- Remove files after secrets are moved to environment variables
-- Add new files that contain sensitive data
+- Remove files that are no longer needed
+- Add new files that should be excluded
 - Clean up patterns that are no longer needed
 
-### 5. Don't Ignore Everything
+### 4. Don't Ignore Everything
 
 Only exclude files that legitimately contain secrets or sensitive information. Don't use `.stampignore` as a general file exclusion mechanism—that's what `.gitignore` is for.
 
@@ -288,18 +257,18 @@ If files are still being included after adding to `.stampignore`:
 
 ### Reset .stampignore
 
-To start fresh with `.stampignore`:
+To start fresh with `.stampignore`, simply delete the file:
 
 ```bash
-# Delete .stampignore and security report
-stamp security --hard-reset --force
+# Delete .stampignore manually
+rm .stampignore
 ```
 
-This removes both `.stampignore` and `stamp_security_report.json`, allowing you to start over.
+Or edit it to remove entries you no longer need.
 
 ## Examples
 
-### Excluding Secret Files
+### Excluding Specific Files
 
 ```json
 {
@@ -337,14 +306,13 @@ This removes both `.stampignore` and `stamp_security_report.json`, allowing you 
 
 ## Related Commands
 
-- [`stamp security scan --apply`](cli/security-scan.md) - Automatically add files with secrets to `.stampignore`
-- [`stamp security --hard-reset`](cli/security-scan.md) - Delete `.stampignore` and reset security configuration
+- [`stamp ignore`](cli/ignore.md) - Add files/folders to `.stampignore` (recommended way to manage exclusions)
 - [`stamp context`](cli/context.md) - Generate context (respects `.stampignore`)
 - [`stamp context style`](cli/style.md) - Generate context with style metadata (respects `.stampignore`, equivalent to `stamp context --include-style`)
+- [`stamp security scan`](cli/security-scan.md) - Use `--apply` flag to automatically add files with detected secrets to `.stampignore`
 
 ## See Also
 
-- [Security Scan Documentation](cli/security-scan.md) - Complete guide to security scanning
 - [Context Generation](cli/context.md) - How context generation works with file exclusion
-- [Init Command](cli/init.md) - Project initialization with security checks
+- [Init Command](cli/init.md) - Project initialization
 

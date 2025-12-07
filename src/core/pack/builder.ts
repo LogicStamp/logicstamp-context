@@ -8,6 +8,7 @@ import type { UIFContract } from '../../types/UIFContract.js';
 import type { ProjectManifest } from '../manifest.js';
 import { bundleHash as computeBundleHashStable } from '../../utils/hash.js';
 import { resolveDependency } from './resolver.js';
+import { normalizeEntryId } from '../../utils/fsx.js';
 
 /**
  * A node in the bundle graph
@@ -24,18 +25,39 @@ export interface BundleNode {
  */
 export function buildEdges(nodes: BundleNode[], manifest: ProjectManifest): [string, string][] {
   const edges: [string, string][] = [];
+  // Node entryIds are normalized relative paths
   const nodeIds = new Set(nodes.map((n) => n.entryId));
 
   for (const node of nodes) {
-    const componentNode = manifest.components[node.entryId];
+    // Find component node - node.entryId is normalized, so normalize manifest keys for lookup
+    let componentNode = manifest.components[node.entryId];
+    let manifestKeyForNode = node.entryId;
+    
+    if (!componentNode) {
+      // Try to find by normalizing manifest keys
+      for (const [key, comp] of Object.entries(manifest.components)) {
+        const normalizedKey = normalizeEntryId(key);
+        if (normalizedKey === node.entryId) {
+          componentNode = comp;
+          manifestKeyForNode = key; // Keep original key for resolveDependency
+          break;
+        }
+      }
+    }
+    
     if (!componentNode) continue;
 
     for (const dep of componentNode.dependencies) {
-      const resolvedId = resolveDependency(manifest, dep, node.entryId);
+      // Use original manifest key format for resolveDependency
+      const resolvedId = resolveDependency(manifest, dep, manifestKeyForNode);
 
-      // Only add edge if both nodes are in the bundle
-      if (resolvedId && nodeIds.has(resolvedId)) {
-        edges.push([node.entryId, resolvedId]);
+      // Normalize resolvedId before comparing with nodeIds (which are normalized)
+      if (resolvedId) {
+        const normalizedResolvedId = normalizeEntryId(resolvedId);
+        // Only add edge if both nodes are in the bundle
+        if (nodeIds.has(normalizedResolvedId)) {
+          edges.push([node.entryId, normalizedResolvedId]);
+        }
       }
     }
   }

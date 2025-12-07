@@ -6,9 +6,9 @@ import { resolve, dirname, join, relative } from 'node:path';
 import { readFile, writeFile, mkdir, unlink, stat } from 'node:fs/promises';
 import { createInterface } from 'node:readline';
 import { stdin, stdout } from 'node:process';
-import { globFiles, readFileWithText } from '../../utils/fsx.js';
+import { globFiles, readFileWithText, getRelativePath } from '../../utils/fsx.js';
 import { scanFileForSecrets, filterFalsePositives, type SecretMatch } from '../../utils/secretDetector.js';
-import { addToStampignore, readStampignore, deleteStampignore, STAMPIGNORE_FILENAME } from '../../utils/stampignore.js';
+import { STAMPIGNORE_FILENAME } from '../../utils/stampignore.js';
 import { ensureGitignorePatterns, ensurePatternInGitignore } from '../../utils/gitignore.js';
 import { debugError } from '../../utils/debug.js';
 import { displayPath } from './context/fileWriter.js';
@@ -16,7 +16,6 @@ import { displayPath } from './context/fileWriter.js';
 export interface SecurityScanOptions {
   entry?: string;
   out?: string;
-  apply?: boolean;
   quiet?: boolean;
   /** If true, return result instead of calling process.exit */
   noExit?: boolean;
@@ -61,7 +60,7 @@ export interface SecurityHardResetOptions {
 }
 
 /**
- * Hard reset command - deletes .stampignore and security report file
+ * Hard reset command - deletes security report file
  */
 export async function securityHardResetCommand(options: SecurityHardResetOptions): Promise<void> {
   const projectRoot = resolve(options.entry || '.');
@@ -74,14 +73,11 @@ export async function securityHardResetCommand(options: SecurityHardResetOptions
   if (!shouldReset) {
     // Prompt for confirmation
     shouldReset = await promptYesNo(
-      `⚠️  This will delete ${STAMPIGNORE_FILENAME} and ${displayPath(reportPath)}. Continue?`
+      `⚠️  This will delete ${displayPath(reportPath)}. Continue?`
     );
   }
   
   if (shouldReset) {
-    // Delete .stampignore
-    const stampignoreDeleted = await deleteStampignore(projectRoot);
-    
     // Delete report file
     let reportDeleted = false;
     try {
@@ -96,16 +92,11 @@ export async function securityHardResetCommand(options: SecurityHardResetOptions
     }
     
     if (!options.quiet) {
-      if (stampignoreDeleted || reportDeleted) {
+      if (reportDeleted) {
         console.log(`\n✅ Reset complete:`);
-        if (stampignoreDeleted) {
-          console.log(`   Deleted ${STAMPIGNORE_FILENAME}`);
-        }
-        if (reportDeleted) {
-          console.log(`   Deleted ${displayPath(reportPath)}`);
-        }
+        console.log(`   Deleted ${displayPath(reportPath)}`);
       } else {
-        console.log(`\nℹ️  No files to reset (both files don't exist)`);
+        console.log(`\nℹ️  No report file to reset (file doesn't exist)`);
       }
     }
   } else {
@@ -131,12 +122,17 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
     console.log(`🔒 Scanning for secrets in ${displayPath(projectRoot)}...`);
   }
 
+  // Resolve output file relative to project root if it's a relative path
+  const resolvedOutputFile = outputFile.startsWith('/') || outputFile.match(/^[A-Z]:/) 
+    ? outputFile 
+    : join(projectRoot, outputFile);
+
   // Find all files to scan (TypeScript, JavaScript, and JSON files)
   let files = await globFiles(projectRoot, '.ts,.tsx,.js,.jsx,.json');
 
   // Exclude the report file and .stampignore from scanning (they may contain secrets)
   // Use absolute path comparison to be safe
-  const reportFileAbs = resolve(outputFile);
+  const reportFileAbs = resolve(resolvedOutputFile);
   const stampignoreFileAbs = join(projectRoot, STAMPIGNORE_FILENAME);
   
   files = files.filter(file => {
@@ -158,8 +154,8 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
         projectRoot,
         filesScanned: 0,
         secretsFound: 0,
-        matches: [],
-        filesWithSecrets: [],
+        matches: [], // Already empty, no paths to convert
+        filesWithSecrets: [], // Already empty, no paths to convert
       };
       
       // Resolve output file relative to project root if it's a relative path
@@ -252,7 +248,7 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
     }
   }
 
-  // Generate report
+  // Generate report - convert absolute paths to relative before serializing
   const report: SecurityReport = {
     type: 'LogicStampSecurityReport',
     schemaVersion: '0.1',
@@ -260,18 +256,25 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
     projectRoot,
     filesScanned: files.length,
     secretsFound: allMatches.length,
-    matches: allMatches,
-    filesWithSecrets: Array.from(filesWithSecrets).sort(),
+    matches: allMatches.map(match => ({
+      ...match,
+      file: getRelativePath(projectRoot, match.file),
+    })),
+    filesWithSecrets: Array.from(filesWithSecrets)
+      .map(file => getRelativePath(projectRoot, file))
+      .sort(),
   };
 
   // Write report
+  const resolvedOutputDir = dirname(resolvedOutputFile);
+  
   try {
-    await mkdir(outputDir, { recursive: true });
-    await writeFile(outputFile, JSON.stringify(report, null, 2), 'utf8');
+    await mkdir(resolvedOutputDir, { recursive: true });
+    await writeFile(resolvedOutputFile, JSON.stringify(report, null, 2), 'utf8');
   } catch (error) {
     const err = error as NodeJS.ErrnoException;
     debugError('security', 'securityScanCommand', {
-      outputFile,
+      outputFile: resolvedOutputFile,
       message: err.message,
       code: err.code,
     });
@@ -281,9 +284,9 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
   // Automatically ensure report file is in .gitignore to prevent accidental commits
   // The report contains sensitive information (locations of secrets)
   try {
-    const reportPathRelative = relative(projectRoot, outputFile).replace(/\\/g, '/');
+    const reportPathRelative = relative(projectRoot, resolvedOutputFile).replace(/\\/g, '/');
     const isDefaultPath = outputPath === 'stamp_security_report.json' || 
-                          (outputPath.endsWith('.json') && outputFile.endsWith('stamp_security_report.json'));
+                          (outputPath.endsWith('.json') && resolvedOutputFile.endsWith('stamp_security_report.json'));
     
     if (isDefaultPath) {
       // Default path - ensure all LogicStamp patterns are in .gitignore
@@ -331,49 +334,7 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
         }
       }
       
-      console.log(`\n📝 Report written to: ${displayPath(outputFile)}`);
-      
-      // Ask if user wants to add files to .stampignore
-      if (options.apply) {
-        // Auto-apply: add files to .stampignore
-        // Convert absolute paths to relative paths for .stampignore
-        // All paths are relative to project root (no user-specific or absolute paths)
-        const filesToIgnore = Array.from(filesWithSecrets)
-          .map(file => {
-            const relPath = relative(projectRoot, file).replace(/\\/g, '/');
-            // Validate: ensure path is relative (doesn't start with / or contain .. outside project)
-            // relative() can return absolute paths if files are outside project root, but
-            // since globFiles is scoped to projectRoot, this shouldn't happen
-            if (relPath.startsWith('/') || relPath.match(/^[A-Z]:/)) {
-              // Absolute path detected - this shouldn't happen, but skip it to be safe
-              console.warn(`⚠️  Skipping absolute path outside project: ${file}`);
-              return null;
-            }
-            return relPath;
-          })
-          .filter((path): path is string => path !== null);
-        
-          if (filesToIgnore.length === 0) {
-            if (!options.quiet) {
-              console.log(`\nℹ️  No valid relative paths to add to .stampignore`);
-            }
-          } else {
-            const result = await addToStampignore(projectRoot, filesToIgnore);
-            
-            if (result.added) {
-              console.log(`\n✅ Added ${filesToIgnore.length} file(s) to .stampignore`);
-              if (result.created) {
-                console.log(`   Created .stampignore`);
-              }
-            } else {
-              console.log(`\nℹ️  Files already in .stampignore`);
-            }
-          }
-      } else {
-        // Interactive prompt
-        console.log(`\n💡 To automatically add these files to .stampignore, run:`);
-        console.log(`   stamp security scan --apply`);
-      }
+      console.log(`\n📝 Report written to: ${displayPath(resolvedOutputFile)}`);
     } else {
       console.log(`\n✅ No secrets detected`);
       console.log(`📝 Report written to: ${displayPath(outputFile)}`);
@@ -384,7 +345,7 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
       filesScanned: files.length,
       secretsFound: allMatches.length,
       filesWithSecrets: filesWithSecrets.size,
-      reportPath: outputFile,
+      reportPath: resolvedOutputFile,
     }));
   }
 

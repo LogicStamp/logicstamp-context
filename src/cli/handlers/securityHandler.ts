@@ -16,7 +16,6 @@ export async function handleSecurityScan(args: string[]): Promise<void> {
   const options: SecurityScanOptions = {
     entry: undefined,
     out: undefined,
-    apply: args.includes('--apply'),
     quiet: args.includes('--quiet') || args.includes('-q'),
   };
 
@@ -24,9 +23,7 @@ export async function handleSecurityScan(args: string[]): Promise<void> {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     
-    if (arg === '--apply') {
-      options.apply = true;
-    } else if (arg === '--quiet' || arg === '-q') {
+    if (arg === '--quiet' || arg === '-q') {
       options.quiet = true;
     } else if (arg === '--out' || arg === '-o') {
       options.out = args[i + 1];

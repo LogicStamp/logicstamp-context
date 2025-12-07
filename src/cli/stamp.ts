@@ -14,6 +14,7 @@ import { handleCompare } from './handlers/compareHandler.js';
 import { handleClean } from './handlers/cleanHandler.js';
 import { handleStyle } from './handlers/styleHandler.js';
 import { handleGenerate } from './handlers/contextHandler.js';
+import { handleIgnore } from './handlers/ignoreHandler.js';
 import { handleSecurityScan } from './handlers/securityHandler.js';
 import { securityHardResetCommand, type SecurityHardResetOptions } from './commands/security.js';
 import { getMainHelp, getSecurityHelp } from './parser/helpText.js';
@@ -52,6 +53,12 @@ async function main() {
   // Handle init command
   if (subcommand === 'init') {
     await handleInit(args.slice(1));
+    return;
+  }
+
+  // Handle ignore command
+  if (subcommand === 'ignore') {
+    await handleIgnore(args.slice(1));
     return;
   }
 

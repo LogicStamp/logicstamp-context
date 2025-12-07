@@ -181,10 +181,8 @@ export function parseInitArgs(args: string[]): InitOptions {
         case 'yes':
           options.yes = true;
           break;
-        case 'secure':
-          options.secure = true;
-          // --secure implies --yes
-          options.yes = true;
+        case 'no-secure':
+          options.noSecure = true;
           break;
         case 'quiet':
           // Ignore --quiet for init (quiet mode not supported)
@@ -250,5 +248,42 @@ export function parseStyleArgs(args: string[]): StyleOptions {
   const { includeStyle, ...styleOptions } = contextOptions;
   
   return styleOptions as StyleOptions;
+}
+
+export interface IgnoreArgs {
+  targetDir?: string;
+  paths: string[];
+  quiet: boolean;
+}
+
+/**
+ * Parse ignore command arguments
+ */
+export function parseIgnoreArgs(args: string[]): IgnoreArgs {
+  const options: IgnoreArgs = {
+    paths: [],
+    quiet: args.includes('--quiet') || args.includes('-q'),
+  };
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
+    if (arg === '--quiet' || arg === '-q') {
+      // Already handled above
+      continue;
+    } else if (!arg.startsWith('--') && !arg.startsWith('-')) {
+      // Non-option argument - could be targetDir or a path
+      if (!options.targetDir && options.paths.length === 0) {
+        // First non-option could be targetDir, but we'll treat all as paths
+        // If user wants to specify targetDir, they can use --target-dir
+        options.paths.push(arg);
+      } else {
+        // Additional paths
+        options.paths.push(arg);
+      }
+    }
+  }
+
+  return options;
 }
 

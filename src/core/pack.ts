@@ -29,6 +29,7 @@
  */
 
 import { resolve, isAbsolute } from 'node:path';
+import { getRelativePath } from '../utils/fsx.js';
 import { normalizeEntryId } from '../utils/fsx.js';
 import type { UIFContract } from '../types/UIFContract.js';
 import type { ProjectManifest, ComponentNode } from './manifest.js';
@@ -366,8 +367,13 @@ export async function pack(
     }
 
     if (contract) {
+      // Ensure node entryId is relative (manifest keys should already be relative, but convert if needed)
+      let nodeEntryId = manifestKey;
+      if (isAbsolute(manifestKey)) {
+        nodeEntryId = getRelativePath(projectRoot, manifestKey);
+      }
       nodes.push({
-        entryId: manifestKey, // Use manifest key as the canonical identifier
+        entryId: normalizeEntryId(nodeEntryId), // Use manifest key as the canonical identifier, normalized to relative
         contract,
         ...(codeHeader !== undefined && { codeHeader }),
         ...(code !== undefined && { code }),
@@ -409,10 +415,17 @@ export async function pack(
   const bundleHash = computeBundleHash(sortedNodes, options.depth);
 
   // Create bundle
+  // Ensure entryId is normalized and relative (not absolute)
+  // Convert absolute paths to relative before normalizing
+  let entryIdForBundle = actualEntryId;
+  if (isAbsolute(actualEntryId)) {
+    entryIdForBundle = getRelativePath(projectRoot, actualEntryId);
+  }
+  const normalizedEntryId = normalizeEntryId(entryIdForBundle);
   const bundle: LogicStampBundle = {
     type: 'LogicStampBundle',
     schemaVersion: '0.1',
-    entryId: actualEntryId,
+    entryId: normalizedEntryId,
     depth: options.depth,
     createdAt: new Date().toISOString(),
     bundleHash,

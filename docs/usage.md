@@ -42,7 +42,7 @@ These options are available at the top level (before any subcommand):
 
 **Examples:**
 ```bash
-stamp --version    # Shows: fox mascot + "Version: 0.2.7"
+stamp --version    # Shows: fox mascot + "Version: 0.3.0"
 stamp -v           # Same as --version
 stamp --help       # Shows main help
 stamp -h           # Same as --help
@@ -89,7 +89,7 @@ stamp init ./my-project
 |--------|-------------|
 | `--skip-gitignore` | Skip `.gitignore` setup |
 | `--yes`, `-y` | Skip all prompts (non-interactive mode) |
-| `--secure` | Initialize with auto-yes and run security scan with `--apply` |
+| `--secure` | Initialize with auto-yes and run security scan |
 
 **Secure initialization (`--secure`)**
 
@@ -97,10 +97,7 @@ The `--secure` flag is recommended for new projects. It automatically:
 
 1. Sets up `.gitignore` patterns (no prompts)
 2. Generates `LLM_context.md` (no prompts)
-3. Runs `stamp security scan --apply` to:
-   - Scan for secrets (API keys, passwords, tokens)
-   - Automatically add detected secret files to `.stampignore`
-   - Ensures secrets won't be included in `context.json`
+3. Runs `stamp security scan` to scan for secrets (API keys, passwords, tokens)
 
 **Runs 100% locally — nothing is uploaded or sent anywhere.**
 
@@ -776,7 +773,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp-context@0.2.7"
+      "source": "logicstamp-context@0.3.0"
     }
   }
 ]
@@ -808,7 +805,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
     }
   ],
   "meta": {
-    "source": "logicstamp-context@0.2.7"
+    "source": "logicstamp-context@0.3.0"
   }
 }
 ```

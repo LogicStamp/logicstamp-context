@@ -399,226 +399,9 @@ context_*.json
     }, 30000);
   });
 
-  describe('stamp security scan --apply', () => {
-    it('should automatically add files with secrets to .stampignore', async () => {
-      // Create a file with a secret
-      const secretFile = join(fixturesPath, 'src', 'secrets.ts');
-      await writeFile(
-        secretFile,
-        `const apiKey = 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz';`
-      );
-
-      const reportPath = join(testDir, 'stamp_security_report.json');
-
-      // Command exits with code 1 when secrets are found (expected behavior)
-      let stdout = '';
-      try {
-        const result = await execAsync(
-          `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath} --apply`
-        );
-        stdout = result.stdout;
-      } catch (error: any) {
-        // Expected: command exits with code 1 when secrets found
-        expect(error.code).toBe(1);
-        stdout = error.stdout || '';
-      }
-
-      // Should mention adding files to .stampignore
-      expect(stdout).toContain('Added');
-      expect(stdout).toContain('.stampignore');
-
-      // Verify .stampignore was created
-      const stampignorePath = join(fixturesPath, '.stampignore');
-      await access(stampignorePath);
-
-      // Read and verify content
-      const stampignoreContent = await readFile(stampignorePath, 'utf-8');
-      const stampignore = JSON.parse(stampignoreContent);
-
-      expect(stampignore).toHaveProperty('ignore');
-      expect(Array.isArray(stampignore.ignore)).toBe(true);
-      expect(stampignore.ignore.length).toBeGreaterThan(0);
-      
-      // Should contain the file with secrets (relative path)
-      const ignorePaths = stampignore.ignore.map((p: string) => p.replace(/\\/g, '/'));
-      expect(ignorePaths.some((p: string) => p.includes('secrets.ts'))).toBe(true);
-    }, 30000);
-
-    it('should append to existing .stampignore', async () => {
-      // Create existing .stampignore
-      const stampignorePath = join(fixturesPath, '.stampignore');
-      await writeFile(
-        stampignorePath,
-        JSON.stringify({
-          ignore: ['src/old-file.ts'],
-        })
-      );
-
-      // Create a file with a secret
-      const secretFile = join(fixturesPath, 'src', 'secrets.ts');
-      await writeFile(
-        secretFile,
-        `const apiKey = 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz';`
-      );
-
-      const reportPath = join(testDir, 'stamp_security_report.json');
-
-      // Command exits with code 1 when secrets are found (expected behavior)
-      try {
-        await execAsync(
-          `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath} --apply`
-        );
-      } catch (error: any) {
-        // Expected: command exits with code 1 when secrets found
-        expect(error.code).toBe(1);
-      }
-
-      // Read .stampignore
-      const stampignoreContent = await readFile(stampignorePath, 'utf-8');
-      const stampignore = JSON.parse(stampignoreContent);
-
-      // Should contain both old and new files
-      expect(stampignore.ignore).toContain('src/old-file.ts');
-      expect(stampignore.ignore.some((p: string) => p.includes('secrets.ts'))).toBe(true);
-    }, 30000);
-
-    it('should not duplicate files already in .stampignore', async () => {
-      // Create .stampignore with the file already ignored
-      const stampignorePath = join(fixturesPath, '.stampignore');
-      await writeFile(
-        stampignorePath,
-        JSON.stringify({
-          ignore: ['src/secrets.ts'],
-        })
-      );
-
-      // Create a file with a secret
-      const secretFile = join(fixturesPath, 'src', 'secrets.ts');
-      await writeFile(
-        secretFile,
-        `const apiKey = 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz';`
-      );
-
-      const reportPath = join(testDir, 'stamp_security_report.json');
-
-      // Command exits with code 1 when secrets are found (expected behavior)
-      let stdout = '';
-      try {
-        const result = await execAsync(
-          `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath} --apply`
-        );
-        stdout = result.stdout;
-      } catch (error: any) {
-        // Expected: command exits with code 1 when secrets found
-        expect(error.code).toBe(1);
-        stdout = error.stdout || '';
-      }
-
-      // Should mention files already in .stampignore
-      expect(stdout).toContain('already in .stampignore');
-
-      // Read .stampignore
-      const stampignoreContent = await readFile(stampignorePath, 'utf-8');
-      const stampignore = JSON.parse(stampignoreContent);
-
-      // Should only have one entry for secrets.ts
-      const secretsCount = stampignore.ignore.filter((p: string) => p.includes('secrets.ts')).length;
-      expect(secretsCount).toBe(1);
-    }, 30000);
-
-    it('should only add relative paths to .stampignore (no absolute paths)', async () => {
-      // Create a file with a secret
-      const secretFile = join(fixturesPath, 'src', 'secrets.ts');
-      await writeFile(
-        secretFile,
-        `const apiKey = 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz';`
-      );
-
-      const reportPath = join(testDir, 'stamp_security_report.json');
-
-      // Command exits with code 1 when secrets are found (expected behavior)
-      let stdout = '';
-      try {
-        const result = await execAsync(
-          `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath} --apply`
-        );
-        stdout = result.stdout;
-      } catch (error: any) {
-        // Expected: command exits with code 1 when secrets found
-        expect(error.code).toBe(1);
-        stdout = error.stdout || '';
-      }
-
-      // Verify .stampignore was created
-      const stampignorePath = join(fixturesPath, '.stampignore');
-      await access(stampignorePath);
-
-      // Read and verify content
-      const stampignoreContent = await readFile(stampignorePath, 'utf-8');
-      const stampignore = JSON.parse(stampignoreContent);
-
-      // All paths should be relative (no absolute paths, no user-specific paths)
-      stampignore.ignore.forEach((path: string) => {
-        // Should not start with / (Unix absolute path)
-        expect(path).not.toMatch(/^\//);
-        // Should not match Windows absolute path pattern (C:, D:, etc.)
-        expect(path).not.toMatch(/^[A-Z]:/);
-        // Should not contain user home directory patterns
-        expect(path).not.toMatch(/^~\/|^\/Users\/|^\/home\/|^C:\\Users\\/);
-      });
-
-      // Should contain relative path to secrets file
-      const ignorePaths = stampignore.ignore.map((p: string) => p.replace(/\\/g, '/'));
-      expect(ignorePaths.some((p: string) => p.includes('src/secrets.ts') || p.includes('secrets.ts'))).toBe(true);
-    }, 30000);
-
-    it('should filter out absolute paths when adding to .stampignore', async () => {
-      // This test verifies that if somehow an absolute path gets through,
-      // it will be filtered out (though this shouldn't happen in practice)
-      
-      // Create a file with a secret
-      const secretFile = join(fixturesPath, 'src', 'secrets.ts');
-      await writeFile(
-        secretFile,
-        `const apiKey = 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz';`
-      );
-
-      const reportPath = join(testDir, 'stamp_security_report.json');
-
-      // Run security scan
-      try {
-        await execAsync(
-          `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath} --apply`
-        );
-      } catch (error: any) {
-        // Expected: command exits with code 1 when secrets found
-        expect(error.code).toBe(1);
-      }
-
-      // Verify .stampignore paths are all relative
-      const stampignorePath = join(fixturesPath, '.stampignore');
-      await access(stampignorePath);
-      const stampignoreContent = await readFile(stampignorePath, 'utf-8');
-      const stampignore = JSON.parse(stampignoreContent);
-
-      // Verify all paths are relative to project root
-      stampignore.ignore.forEach((path: string) => {
-        // Paths should not be absolute
-        const isAbsolute = path.startsWith('/') || !!path.match(/^[A-Z]:/);
-        expect(isAbsolute).toBe(false);
-      });
-    }, 30000);
-  });
 
   describe('stamp security --hard-reset', () => {
     it('should accept --hard-reset flag without --force (confirmation required)', async () => {
-      // Create .stampignore
-      const stampignorePath = join(fixturesPath, '.stampignore');
-      await writeFile(
-        stampignorePath,
-        JSON.stringify({ ignore: ['src/secrets.ts'] })
-      );
-
       // Create report file
       const reportPath = join(fixturesPath, 'stamp_security_report.json');
       await writeFile(
@@ -626,8 +409,7 @@ context_*.json
         JSON.stringify({ type: 'LogicStampSecurityReport', secretsFound: 0 })
       );
 
-      // Verify files exist before test
-      await access(stampignorePath);
+      // Verify file exists before test
       await access(reportPath);
       
       // Test that the command accepts --hard-reset without --force
@@ -645,20 +427,12 @@ context_*.json
       } catch (error: any) {
         // Timeout is expected since we're not providing stdin input
         // The command structure is valid (verified by no syntax errors)
-        // Files should still exist since we didn't confirm
-        await access(stampignorePath);
+        // File should still exist since we didn't confirm
         await access(reportPath);
       }
     }, 5000);
 
-    it('should delete .stampignore and report file with --force flag', async () => {
-      // Create .stampignore
-      const stampignorePath = join(fixturesPath, '.stampignore');
-      await writeFile(
-        stampignorePath,
-        JSON.stringify({ ignore: ['src/secrets.ts'] })
-      );
-
+    it('should delete report file with --force flag', async () => {
       // Create report file
       const reportPath = join(fixturesPath, 'stamp_security_report.json');
       await writeFile(
@@ -672,24 +446,16 @@ context_*.json
 
       // Should delete without prompting
       expect(stdout).toContain('Reset complete');
-      expect(stdout).toContain('Deleted .stampignore');
       expect(stdout).toContain('Deleted');
 
-      // Verify files were deleted
-      let stampignoreExists = true;
+      // Verify report file was deleted
       let reportExists = true;
-      try {
-        await access(stampignorePath);
-      } catch {
-        stampignoreExists = false;
-      }
       try {
         await access(reportPath);
       } catch {
         reportExists = false;
       }
 
-      expect(stampignoreExists).toBe(false);
       expect(reportExists).toBe(false);
     }, 30000);
 
@@ -701,18 +467,11 @@ context_*.json
         `node dist/cli/stamp.js security --hard-reset ${fixturesPath} --out ${reportPath} --force`
       );
 
-      // Should report that no files were found
-      expect(stdout).toContain('No files to reset');
+      // Should report that no report file was found
+      expect(stdout).toContain('No report file to reset');
     }, 30000);
 
     it('should work with custom report file path', async () => {
-      // Create .stampignore
-      const stampignorePath = join(fixturesPath, '.stampignore');
-      await writeFile(
-        stampignorePath,
-        JSON.stringify({ ignore: ['src/secrets.ts'] })
-      );
-
       // Create custom report file
       const customReportPath = join(testDir, 'custom-report.json');
       await writeFile(
@@ -724,35 +483,21 @@ context_*.json
         `node dist/cli/stamp.js security --hard-reset ${fixturesPath} --out ${customReportPath} --force`
       );
 
-      // Should delete both files
+      // Should delete report file
       expect(stdout).toContain('Reset complete');
 
-      // Verify files were deleted
-      let stampignoreExists = true;
+      // Verify report file was deleted
       let reportExists = true;
-      try {
-        await access(stampignorePath);
-      } catch {
-        stampignoreExists = false;
-      }
       try {
         await access(customReportPath);
       } catch {
         reportExists = false;
       }
 
-      expect(stampignoreExists).toBe(false);
       expect(reportExists).toBe(false);
     }, 30000);
 
     it('should work with --quiet flag', async () => {
-      // Create .stampignore
-      const stampignorePath = join(fixturesPath, '.stampignore');
-      await writeFile(
-        stampignorePath,
-        JSON.stringify({ ignore: ['src/secrets.ts'] })
-      );
-
       // Create report file
       const reportPath = join(fixturesPath, 'stamp_security_report.json');
       await writeFile(
@@ -767,14 +512,14 @@ context_*.json
       // Should be minimal output
       expect(stdout.length).toBeLessThan(200);
       
-      // Verify files were deleted
-      let stampignoreExists = true;
+      // Verify report file was deleted
+      let reportExists = true;
       try {
-        await access(stampignorePath);
+        await access(reportPath);
       } catch {
-        stampignoreExists = false;
+        reportExists = false;
       }
-      expect(stampignoreExists).toBe(false);
+      expect(reportExists).toBe(false);
     }, 30000);
   });
 });

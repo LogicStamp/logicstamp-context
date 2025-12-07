@@ -35,9 +35,9 @@ describe('CLI Init Command Tests', () => {
       const testDir = join(outputPath, 'init-test-1');
       await mkdir(testDir, { recursive: true });
 
-      // Run stamp init
+      // Run stamp init (with --no-secure to match old behavior)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir}`
+        `node dist/cli/stamp.js init ${testDir} --no-secure`
       );
 
       // Verify output messages
@@ -72,9 +72,9 @@ describe('CLI Init Command Tests', () => {
       const gitignorePath = join(testDir, '.gitignore');
       await writeFile(gitignorePath, 'node_modules\ndist\n');
 
-      // Run stamp init
+      // Run stamp init (with --no-secure to match old behavior)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir}`
+        `node dist/cli/stamp.js init ${testDir} --no-secure`
       );
 
       // Verify output messages
@@ -110,9 +110,9 @@ describe('CLI Init Command Tests', () => {
       const existingContent = '# LogicStamp context & security files\ncontext.json\ncontext_*.json\n*.uif.json\nlogicstamp.manifest.json\n.logicstamp/\nstamp_security_report.json\n';
       await writeFile(gitignorePath, existingContent);
 
-      // Run stamp init
+      // Run stamp init (with --no-secure to match old behavior)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir}`
+        `node dist/cli/stamp.js init ${testDir} --no-secure`
       );
 
       // Verify output messages
@@ -128,9 +128,9 @@ describe('CLI Init Command Tests', () => {
       const testDir = join(outputPath, 'init-test-4');
       await mkdir(testDir, { recursive: true });
 
-      // Run stamp init with --skip-gitignore
+      // Run stamp init with --skip-gitignore (with --no-secure to match old behavior)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} --skip-gitignore`
+        `node dist/cli/stamp.js init ${testDir} --skip-gitignore --no-secure`
       );
 
       // Verify output messages
@@ -159,9 +159,9 @@ describe('CLI Init Command Tests', () => {
       const testDir = join(outputPath, 'init-test-5');
       await mkdir(testDir, { recursive: true });
 
-      // Run stamp init
+      // Run stamp init (with --no-secure to match old behavior)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir}`
+        `node dist/cli/stamp.js init ${testDir} --no-secure`
       );
 
       // Verify informational messages are shown (in non-interactive mode, defaults to yes)
@@ -175,9 +175,9 @@ describe('CLI Init Command Tests', () => {
       const testDir = join(outputPath, 'init-test-6');
       await mkdir(testDir, { recursive: true });
 
-      // Run stamp init
+      // Run stamp init (with --no-secure to match old behavior)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} --skip-gitignore`
+        `node dist/cli/stamp.js init ${testDir} --skip-gitignore --no-secure`
       );
 
       // Verify LLM_CONTEXT.md was handled (either created or skipped message)
@@ -215,9 +215,9 @@ describe('CLI Init Command Tests', () => {
       const testDir = join(outputPath, 'init-test-7');
       await mkdir(testDir, { recursive: true });
 
-      // Run stamp init with --yes flag
+      // Run stamp init with --yes flag (with --no-secure to match old behavior)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} --yes`
+        `node dist/cli/stamp.js init ${testDir} --yes --no-secure`
       );
 
       // Verify output messages - should not contain prompts
@@ -245,9 +245,9 @@ describe('CLI Init Command Tests', () => {
       const testDir = join(outputPath, 'init-test-8');
       await mkdir(testDir, { recursive: true });
 
-      // Run stamp init with -y flag
+      // Run stamp init with -y flag (with --no-secure to match old behavior)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} -y`
+        `node dist/cli/stamp.js init ${testDir} -y --no-secure`
       );
 
       // Verify output messages - should not contain prompts
@@ -275,9 +275,9 @@ describe('CLI Init Command Tests', () => {
       const testDir = join(outputPath, 'init-test-9');
       await mkdir(testDir, { recursive: true });
 
-      // Run stamp init with both --yes and --skip-gitignore
+      // Run stamp init with both --yes and --skip-gitignore (with --no-secure to match old behavior)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} --yes --skip-gitignore`
+        `node dist/cli/stamp.js init ${testDir} --yes --skip-gitignore --no-secure`
       );
 
       // Verify output messages
@@ -302,15 +302,15 @@ describe('CLI Init Command Tests', () => {
     }, 30000);
   });
 
-  describe('Init command with --secure flag', () => {
-    it('should run init with auto-yes and then security scan when --secure is used', async () => {
+  describe('Init command with security scan (default behavior)', () => {
+    it('should run init with auto-yes and then security scan by default', async () => {
       // Create a test directory without .gitignore
       const testDir = join(outputPath, 'init-secure-test-1');
       await mkdir(testDir, { recursive: true });
 
-      // Run stamp init with --secure flag
+      // Run stamp init (security scan runs by default)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} --secure`
+        `node dist/cli/stamp.js init ${testDir}`
       );
 
       // Verify init was run (no prompts, auto-yes)
@@ -340,14 +340,14 @@ describe('CLI Init Command Tests', () => {
       expect(report).toHaveProperty('type', 'LogicStampSecurityReport');
     }, 30000);
 
-    it('should exit with code 0 when --secure is used and no secrets are found', async () => {
+    it('should exit with code 0 when security scan runs and no secrets are found', async () => {
       // Create a test directory without secrets
       const testDir = join(outputPath, 'init-secure-test-2');
       await mkdir(testDir, { recursive: true });
 
-      // Run stamp init with --secure flag
+      // Run stamp init (security scan runs by default)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} --secure`
+        `node dist/cli/stamp.js init ${testDir}`
       );
 
       // Should complete successfully
@@ -355,7 +355,7 @@ describe('CLI Init Command Tests', () => {
       expect(stdout).toContain('No secrets detected');
     }, 30000);
 
-    it('should exit with code 1 when --secure is used and secrets are found', async () => {
+    it('should exit with code 1 when security scan runs and secrets are found', async () => {
       // Create a test directory with a secret
       const testDir = join(outputPath, 'init-secure-test-3');
       await mkdir(testDir, { recursive: true });
@@ -367,11 +367,11 @@ describe('CLI Init Command Tests', () => {
         `const apiKey = 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz';`
       );
 
-      // Run stamp init with --secure flag
+      // Run stamp init (security scan runs by default)
       let stdout = '';
       try {
         const result = await execAsync(
-          `node dist/cli/stamp.js init ${testDir} --secure`
+          `node dist/cli/stamp.js init ${testDir}`
         );
         stdout = result.stdout;
         expect.fail('Should have exited with code 1 when secrets are found');
@@ -387,25 +387,25 @@ describe('CLI Init Command Tests', () => {
       expect(stdout).toContain('Security scan:');
       expect(stdout).toContain('secrets found');
 
-      // Verify .stampignore was created (--apply was used)
-      const stampignorePath = join(testDir, '.stampignore');
-      await access(stampignorePath);
-      const stampignoreContent = await readFile(stampignorePath, 'utf-8');
-      const stampignore = JSON.parse(stampignoreContent);
-      expect(stampignore.ignore).toContain('secrets.ts');
+      // Verify security report was created
+      const reportPath = join(testDir, 'stamp_security_report.json');
+      await access(reportPath);
+      const reportContent = await readFile(reportPath, 'utf-8');
+      const report = JSON.parse(reportContent);
+      expect(report.secretsFound).toBeGreaterThan(0);
     }, 30000);
 
-    it('should work with --secure --yes (redundant but harmless)', async () => {
+    it('should work with --yes flag (security scan still runs by default)', async () => {
       // Create a test directory
       const testDir = join(outputPath, 'init-secure-test-4');
       await mkdir(testDir, { recursive: true });
 
-      // Run stamp init with both --secure and --yes
+      // Run stamp init with --yes (security scan runs by default)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} --secure --yes`
+        `node dist/cli/stamp.js init ${testDir} --yes`
       );
 
-      // Should work the same as --secure alone
+      // Should run security scan by default
       expect(stdout).toContain('Initializing LogicStamp');
       expect(stdout).toContain('Running security scan');
       expect(stdout).toContain('Initialization complete');
@@ -417,9 +417,9 @@ describe('CLI Init Command Tests', () => {
       const testDir = join(outputPath, 'init-secure-test-5');
       await mkdir(testDir, { recursive: true });
 
-      // Run stamp init with --secure flag
+      // Run stamp init (security scan runs by default)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} --secure`
+        `node dist/cli/stamp.js init ${testDir}`
       );
 
       // Verify combined summary format
@@ -436,6 +436,36 @@ describe('CLI Init Command Tests', () => {
       expect(stdout).toContain('files scanned');
       expect(stdout).toContain('secrets found');
       expect(stdout).toContain('Report written to stamp_security_report.json');
+    }, 30000);
+
+    it('should skip security scan when --no-secure is used', async () => {
+      // Create a test directory
+      const testDir = join(outputPath, 'init-no-secure-test');
+      await mkdir(testDir, { recursive: true });
+
+      // Run stamp init with --no-secure flag
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js init ${testDir} --no-secure`
+      );
+
+      // Verify init ran but security scan did not
+      expect(stdout).toContain('Initializing LogicStamp');
+      expect(stdout).toContain('initialization complete');
+      expect(stdout).not.toContain('Running security scan');
+      expect(stdout).not.toContain('Security scan:');
+      expect(stdout).toContain('Next steps:');
+      expect(stdout).toContain('Run `stamp context`');
+
+      // Verify security report was NOT created
+      const reportPath = join(testDir, 'stamp_security_report.json');
+      let reportExists = false;
+      try {
+        await access(reportPath);
+        reportExists = true;
+      } catch {
+        // Report doesn't exist, which is expected
+      }
+      expect(reportExists).toBe(false);
     }, 30000);
   });
 });

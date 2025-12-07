@@ -10,7 +10,6 @@ The security scan helps prevent accidentally exposing sensitive credentials by:
 
 - Scanning TypeScript, JavaScript, and JSON files for common secret patterns
 - Generating detailed reports of detected secrets
-- Optionally adding files with secrets to `.stampignore` to exclude them from context generation
 - Integrating with the `stamp init` command for automated security checks
 
 ## Usage
@@ -31,15 +30,6 @@ stamp security scan ./src
 
 Scans a specific directory path.
 
-### Auto-Apply to .stampignore
-
-```bash
-# Scan and automatically add detected secret files to .stampignore
-# Prevents these files from ever reaching context.json
-stamp security scan --apply
-```
-
-Automatically adds files containing secrets to `.stampignore` without prompting, so they won't be included in context generation.
 
 ### Custom Output Path
 
@@ -62,7 +52,6 @@ Outputs only JSON statistics (useful for CI/CD pipelines).
 | Option | Short | Description |
 |--------|-------|-------------|
 | `--out <file>` | `-o` | Output file path for the security report (default: `stamp_security_report.json`) |
-| `--apply` | | Automatically add files with secrets to `.stampignore` |
 | `--quiet` | `-q` | Output only JSON statistics, suppress other messages |
 | `--help` | `-h` | Show help information |
 
@@ -173,48 +162,10 @@ Even if no secrets are found, the report structure itself reveals which files we
 
 This happens automatically after the report is written, regardless of whether secrets were found. If the report file cannot be added to `.gitignore` (e.g., permission issues), a warning is shown but the scan continues.
 
-## .stampignore Integration
-
-When secrets are detected, you can automatically add affected files to `.stampignore` to prevent them from being included in context generation.
-
-After running a scan, you'll see a suggestion to run `stamp security scan --apply` to automatically add files to `.stampignore`.
-
-The `--apply` flag will:
-- Add files containing secrets to the ignore list (only new ones)
-- Create `.stampignore` if it doesn't exist (only if secrets are found and there are new files to add)
-- Preserve existing entries and avoid duplicates
-
-🔐 **Important Security Note**
-
-`.stampignore` is only created when secrets are actually detected in your project (`.ts`, `.tsx`, `.js`, `.jsx`, `.json`).
-
-However, committing secrets to a codebase is unsafe and strongly discouraged.
-
-LogicStamp's `.stampignore` mechanism is a temporary safety layer to prevent secrets from being included in your context bundles - it is not a substitute for proper secret hygiene.
-
-We strongly recommend:
-
-- Moving all secrets to environment variables
-- Using a secrets manager (e.g., Vault, Doppler, AWS Secrets Manager)
-- Removing the secrets from your code before running context generation
-
-The best long-term solution is to ensure that no secrets ever exist in tracked source files.
-
-`.stampignore` uses JSON format with paths relative to project root (forward slashes):
-
-```json
-{
-  "ignore": [
-    "src/config.ts",
-    "src/secrets.js",
-    "lib/api-keys.ts"
-  ]
-}
-```
 
 ## Hard Reset
 
-Delete both `.stampignore` and the security report file:
+Delete the security report file:
 
 ```bash
 stamp security --hard-reset              # with confirmation
@@ -226,21 +177,74 @@ Options: `--force` (skip confirmation), `--out <file>` (custom report path), `--
 
 ## Integration with Init
 
-The security scan can be automatically run during project initialization using the `--secure` flag:
+The security scan is automatically run during project initialization by default:
 
 ```bash
-stamp init --secure
+stamp init
 ```
 
 This command:
-1. Runs `stamp init` with auto-yes (no prompts)
-2. Automatically runs `stamp security scan --apply` after initialization to scan for secrets (API keys, passwords, tokens)
-3. Adds any detected secret files to `.stampignore`, preventing these files from ever reaching `context.json`
+1. Runs `stamp init` (with auto-yes when security scan runs)
+2. Automatically runs `stamp security scan` after initialization to scan for secrets (API keys, passwords, tokens)
+
+To skip the security scan during initialization:
+
+```bash
+stamp init --no-secure
+```
 
 Useful for:
 - Setting up new projects with security checks from the start
 - CI/CD pipelines that need automated security validation
 - Ensuring security best practices are followed from project initialization
+
+## Automatic Secret Sanitization in Context Generation
+
+When you run `stamp context` or `stamp context style`, LogicStamp automatically sanitizes secrets in the generated JSON files if a security report exists.
+
+**How it works:**
+
+1. If `stamp_security_report.json` exists in your project root, it's automatically loaded
+2. When generating context JSON files, any secrets detected in the security report are replaced with `"PRIVATE_DATA"` in the generated files
+3. **Your source code files are never modified** - only the generated JSON files contain sanitized values
+
+**Example:**
+
+If your source code contains:
+```typescript
+const apiKey = 'sk_live_1234567890abcdef';
+```
+
+The generated `context.json` will contain:
+```json
+{
+  "code": "const apiKey = 'PRIVATE_DATA';"
+}
+```
+
+**Important notes:**
+
+- ✅ **Source files are never modified** - your actual code remains unchanged
+- ✅ **Automatic** - happens automatically when a security report exists
+- ✅ **Safe** - secrets are replaced only in generated JSON files, never in source code
+- ✅ **Works with all code inclusion modes** - applies to both `--include-code header` and `--include-code full`
+
+**Code inclusion modes and credentials:**
+
+- **`none` mode**: No code is included, so credentials cannot appear in bundles
+- **`header` mode**: Only JSDoc `@uif` metadata blocks are included (not implementation code), so credentials in your source code will not appear in bundles
+- **`header+style` mode**: Same as `header` mode (only metadata), plus style information in contracts (not code), so credentials will not appear in bundles
+- **`full` mode**: Full source code is included, so credentials could appear unless sanitized. Sanitization automatically replaces detected secrets with `"PRIVATE_DATA"` when a security report exists
+
+**Even if credentials exist in your source files (which they shouldn't), they can only be included in generated bundles when using `--include-code full` mode. The other modes (`none`, `header`, `header+style`) only include metadata and contracts, not actual implementation code where credentials would typically be found.**
+
+**When sanitization happens:**
+
+- `stamp context` - Secrets are sanitized in generated context files
+- `stamp context style` - Secrets are sanitized in generated context files (same behavior)
+- If no security report exists, code is included as-is (no sanitization)
+
+This ensures that sensitive credentials never appear in your context JSON files, even if they exist in your source code.
 
 ## Exit Codes
 
@@ -259,9 +263,6 @@ stamp security scan
 # Scan specific directory
 stamp security scan ./src
 
-# Scan and automatically add detected secret files to .stampignore
-# Prevents these files from ever reaching context.json
-stamp security scan --apply
 ```
 
 ### CI/CD Integration
@@ -290,10 +291,10 @@ stamp security scan --out ./reports/
 ### Reset Security Configuration
 
 ```bash
-# Reset with confirmation
+# Delete security report with confirmation
 stamp security --hard-reset
 
-# Reset without confirmation
+# Delete security report without confirmation
 stamp security --hard-reset --force
 ```
 
@@ -302,9 +303,7 @@ stamp security --hard-reset --force
 1. **Run Regularly**: Include security scans in your development workflow and CI/CD pipelines
 2. **Review Reports**: Don't just ignore findings—review and remediate actual secrets
 3. **Use Environment Variables**: Store secrets in environment variables or secret management systems, not in code
-4. **Update .stampignore Carefully**: Only add files to `.stampignore` if they legitimately contain secrets that should be excluded
-5. **Version Control**: Consider committing `.stampignore` to version control so the team knows which files are excluded
-6. **Report Files Are Automatically Protected**: The security report file is automatically added to `.gitignore` to prevent accidental commits of sensitive findings
+4. **Report Files Are Automatically Protected**: The security report file is automatically added to `.gitignore` to prevent accidental commits of sensitive findings
 
 ## Limitations
 
@@ -329,20 +328,14 @@ If legitimate secrets aren't being detected:
 - Check that the file type is supported (`.ts`, `.tsx`, `.js`, `.jsx`, `.json`)
 - Ensure the secret format matches the expected pattern (e.g., API keys should be ≥20 characters)
 
-### .stampignore Not Working
-
-If files are still being included after adding to `.stampignore`:
-- Verify the paths in `.stampignore` are relative to the project root
-- Check that paths use forward slashes (`/`) not backslashes
-- Ensure the `.stampignore` file is valid JSON
 
 ## Related Commands
 
 - [`stamp init`](./init.md) - Initialize LogicStamp with optional security scan
-- [`stamp context`](./context.md) - Generate context (respects `.stampignore`)
+- [`stamp context`](./context.md) - Generate context
 
 ## See Also
 
-- [.stampignore Format](../stampignore.md) - Detailed documentation on `.stampignore` file format
-- [`stamp context`](./context.md) - Generate context (respects `.stampignore`)
+- [.stampignore Format](../stampignore.md) - Documentation on `.stampignore` file format (optional, independent of security scan)
+- [`stamp context`](./context.md) - Generate context
 
