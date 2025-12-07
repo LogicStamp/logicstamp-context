@@ -4,7 +4,7 @@
   <img src="https://raw.githubusercontent.com/LogicStamp/logicstamp-context/main/assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="120" height="120">
 </div>
 
-![Version](https://img.shields.io/badge/version-0.2.7-blue.svg)
+![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)
 ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
@@ -32,7 +32,7 @@ That's it! LogicStamp Context will scan your project and generate `context.json`
 ![LogicStamp Context in action](https://raw.githubusercontent.com/LogicStamp/logicstamp-context/main/assets/demo-screenshot.png)
 *Sample stamp context output with generated bundles*
 
-> **Note:** This is a beta release (v0.2.7). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+> **Note:** This is a beta release (v0.3.0). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 ## Why LogicStamp?
 
@@ -95,22 +95,18 @@ After installation, the `stamp` command will be available globally.
 
 ## Recent Updates
 
+**v0.3.0**
+- Security scan now runs by default in `stamp init`
+- Removed `--secure` flag (security scanning is now default)
+- Added `--no-secure` flag to skip security scan during initialization
+- Automatic secret sanitization in context files
+- **Security**: Credentials can only be included in bundles when using `--include-code full` mode. Other modes (`none`, `header`, `header+style`) only include metadata, not implementation code.
+
 **v0.2.7**
 - Security scanning command (`stamp security scan`) for secret detection
 - Enhanced initialization with `--yes` and `--secure` flags
 - File exclusion with `.stampignore` for context generation
 - Improved CLI documentation with security commands
-
-**v0.2.6**
-- Export metadata extraction (default/named exports detection)
-- Internal component filtering (improved dependency tracking accuracy)
-- Enhanced dependency graph accuracy
-
-**v0.2.5**
-- ShadCN/UI and Radix UI style extraction
-- Enhanced debug logging and error handling
-- Model name corrections (GPT-4o-mini → GPT-4o)
-- Documentation consistency improvements
 
 📋 **Full history → [CHANGELOG.md](https://github.com/LogicStamp/logicstamp-context/blob/main/CHANGELOG.md)**
 
@@ -119,8 +115,9 @@ After installation, the `stamp` command will be available globally.
 ```bash
 stamp --version                    # Show version number
 stamp --help                       # Show help
-stamp init [path] [options]        # Initialize project preferences
-stamp init --secure                # Initialize with security scan (recommended)
+stamp init [path] [options]        # Initialize project preferences (security scan runs by default)
+stamp init --no-secure             # Initialize without security scan
+stamp ignore <path> [path2] ...    # Add files/folders to .stampignore
 stamp security scan [path] [options]  # Scan for secrets (API keys, passwords, tokens)
 stamp context [path] [options]     # Generate context bundles
 stamp context style [path] [options]  # Generate with style metadata
@@ -134,6 +131,7 @@ stamp context clean [path] [options]  # Remove generated files
 | Command | Description | Docs |
 |---------|-------------|------|
 | `stamp init` | Initialize project (`.gitignore`, `LLM_CONTEXT.md`, config) | [init.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/init.md) |
+| `stamp ignore` | Add files/folders to `.stampignore` to exclude from context | [ignore.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/ignore.md) |
 | `stamp security scan` | Scan for secrets (API keys, passwords, tokens) | [security-scan.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/security-scan.md) |
 | `stamp security --hard-reset` | Reset security configuration (delete `.stampignore` and report) | [security-scan.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/security-scan.md) |
 | `stamp context` | Generate AI-ready context bundles organized by folder | [context.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/context.md) |

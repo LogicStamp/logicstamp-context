@@ -22,6 +22,32 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.3.0] - 2025-12-07
+
+### Changed
+
+- **Security scan now runs by default in `stamp init`** - `stamp init` now automatically runs a security scan after initialization by default. This improves security posture for new projects by ensuring secrets are detected during setup. Use the `--no-secure` flag to skip the security scan if needed.
+
+- **Removed `--secure` flag from `stamp init`** - The `--secure` flag has been removed since security scanning is now the default behavior. If you have scripts or CI/CD pipelines that used `--secure`, they will continue to work (security scan now runs by default), or you can use `--no-secure` to skip it.
+
+- **Updated initialization command documentation** - All documentation has been updated to reflect that security scanning runs by default. The `--no-secure` flag is documented as the way to opt out of security scanning during initialization.
+
+### Added
+
+- **`--no-secure` flag for `stamp init`** - New flag to skip the security scan during initialization when security scanning is not desired.
+
+### Fixed
+
+- N/A
+
+### Security
+
+- **Improved default security posture** - By running security scans by default during initialization, projects are now more likely to catch secrets and sensitive information before they're committed to version control.
+
+- **Automatic secret sanitization in context files** - When generating context JSON files with `stamp context`, any secrets **detected by the security scanner** are automatically replaced with `"PRIVATE_DATA"` in the generated files. This ensures that secrets never appear in context files that might be shared with AI assistants or committed to version control. Source files are never modified - only the generated JSON files contain sanitized values. **Important security note**: Credentials can only be included in generated bundles when using `--include-code full` mode. The other modes (`none`, `header`, `header+style`) only include metadata and contracts (with secrets sanitized), not actual implementation code where credentials would typically be found.
+
+---
+
 ## [0.2.7] - 2025-12-03
 
 ### Added
@@ -42,6 +68,14 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - `--secure` flag to initialize with auto-yes and automatically run security scan with `--apply`
   - Better integration with security scanning workflow
 
+- **`stamp ignore` command** - New command to add files or folders to `.stampignore`:
+  - `stamp ignore <path> [path2] ...` to add files/folders to `.stampignore`
+  - Automatically creates `.stampignore` if it doesn't exist
+  - Prevents duplicates and normalizes paths
+  - Supports glob patterns (e.g., `**/*.key`, `**/secrets.ts`)
+  - `--quiet` flag to suppress verbose output
+  - Recommended way to manage file exclusions (alternative to manually editing `.stampignore`)
+
 - **File exclusion with .stampignore** - Enhanced `stamp context` with automatic file exclusion:
   - Automatically excludes files listed in `.stampignore` from context generation
   - Prevents files containing secrets or sensitive information from being included in context files
@@ -52,6 +86,7 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - **CLI documentation enhancements** - Enhanced CLI documentation to include:
   - New security commands and options (`stamp security scan`, `stamp security --hard-reset`)
+  - New `stamp ignore` command for managing `.stampignore` file
   - Details on file exclusion behavior with `.stampignore` for context generation
   - Improved initialization command documentation with non-interactive mode and security scan integration
   - Updated all command references and examples for consistency

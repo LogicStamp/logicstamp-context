@@ -22,6 +22,7 @@ import { calculateTokenEstimates, generateModeComparison, displayModeComparison 
 import { calculateStats, generateStatsOutput, generateSummary } from './context/statsCalculator.js';
 import { writeContextFiles, writeMainIndex, groupBundlesByFolder, displayPath } from './context/fileWriter.js';
 import { ensureConfigExists, setupGitignore, setupLLMContext } from './context/configManager.js';
+import { getAndResetSanitizeStats } from '../../core/pack/loader.js';
 
 export interface ContextOptions {
   entry?: string;
@@ -112,34 +113,43 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     contractsMap.set(contract.entryId, contract);
   }
 
-  // Apply profile settings
+  // Apply profile settings (only if user hasn't explicitly set the option)
+  // Check if user explicitly set options by looking for flags in argv
+  const userSetIncludeCode = process.argv.some((arg, i) => 
+    (arg === '--include-code' || arg === '-c') && process.argv[i + 1]);
+  const userSetDepth = process.argv.some((arg, i) => 
+    (arg === '--depth' || arg === '-d') && process.argv[i + 1]);
+  
   let depth = options.depth;
   let includeCode = options.includeCode;
   let hashLock = options.hashLock;
   let strict = options.strict;
 
   if (options.profile === 'llm-safe') {
-    depth = 1;
-    includeCode = 'header';
+    depth = userSetDepth ? options.depth : 1;
+    includeCode = userSetIncludeCode ? options.includeCode : 'header';
     hashLock = false;
     options.maxNodes = 30;
     options.allowMissing = true;
     if (!options.quiet) {
-      console.log('📋 Using profile: llm-safe (depth=1, header only, max 30 nodes)');
+      const codeMode = includeCode === 'full' ? 'full code' : includeCode === 'none' ? 'no code' : 'header only';
+      console.log(`📋 Using profile: llm-safe (depth=${depth}, ${codeMode}, max 30 nodes)`);
     }
   } else if (options.profile === 'llm-chat') {
-    depth = 1;
-    includeCode = 'header';
+    depth = userSetDepth ? options.depth : 1;
+    includeCode = userSetIncludeCode ? options.includeCode : 'header';
     hashLock = false;
     if (!options.quiet) {
-      console.log('📋 Using profile: llm-chat (depth=1, header only, max 100 nodes)');
+      const codeMode = includeCode === 'full' ? 'full code' : includeCode === 'none' ? 'no code' : 'header only';
+      console.log(`📋 Using profile: llm-chat (depth=${depth}, ${codeMode}, max 100 nodes)`);
     }
   } else if (options.profile === 'ci-strict') {
-    includeCode = 'none';
+    includeCode = userSetIncludeCode ? options.includeCode : 'none';
     hashLock = false;
     strict = true;
     if (!options.quiet) {
-      console.log('📋 Using profile: ci-strict (no code, strict dependencies)');
+      const codeMode = includeCode === 'full' ? 'full code' : includeCode === 'header' ? 'header only' : 'no code';
+      console.log(`📋 Using profile: ci-strict (${codeMode}, strict dependencies)`);
     }
   }
 
@@ -407,6 +417,15 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
       },
       quiet: options.quiet,
     });
+
+    // Display sanitization summary
+    const sanitizeStats = getAndResetSanitizeStats();
+    if (sanitizeStats.filesWithSecrets > 0) {
+      console.log(`\n⚠️  Secret sanitization: Replaced ${sanitizeStats.totalSecretsReplaced} secret(s) in ${sanitizeStats.filesWithSecrets} file(s)`);
+      console.log(`   Secrets were replaced with "PRIVATE_DATA" in generated JSON files`);
+    } else {
+      console.log(`\n✅ Generated context verified - no secret patterns detected`);
+    }
 
     console.log(`\n⏱  Completed in ${elapsed}ms`);
   }

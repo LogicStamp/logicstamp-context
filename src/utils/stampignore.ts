@@ -4,9 +4,9 @@
  */
 
 import { readFile, writeFile, access, unlink } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { join, resolve, isAbsolute } from 'node:path';
 import { debugError } from './debug.js';
-import { normalizeEntryId } from './fsx.js';
+import { normalizeEntryId, getRelativePath } from './fsx.js';
 
 export interface StampIgnoreConfig {
   /**
@@ -156,20 +156,44 @@ export function matchesIgnorePattern(
   patterns: string[],
   projectRoot: string
 ): boolean {
-  const normalizedPath = normalizeEntryId(filePath);
-  const normalizedRoot = normalizeEntryId(projectRoot);
-  
-  // Make path relative to project root for matching
-  let relativePath = normalizedPath;
-  if (normalizedPath.startsWith(normalizedRoot)) {
-    relativePath = normalizedPath.slice(normalizedRoot.length).replace(/^\//, '');
+  // Get relative path from project root
+  // Use getRelativePath which properly handles Windows paths and converts to forward slashes
+  let relativePath: string;
+  if (isAbsolute(filePath)) {
+    relativePath = getRelativePath(projectRoot, filePath);
+    // If the relative path starts with '..', the file is outside the project root
+    // Don't match files outside the project root
+    if (relativePath.startsWith('../')) {
+      return false;
+    }
+  } else {
+    relativePath = filePath;
   }
   
+  // Handle edge case: if relative path is empty or just '.', skip matching
+  if (!relativePath || relativePath === '.' || relativePath === './') {
+    return false;
+  }
+  
+  // Normalize the relative path for consistent matching
+  // normalizeEntryId normalizes path separators, drive letters, and removes leading ./
+  const normalizedRelativePath = normalizeEntryId(relativePath);
+  
+  // Extract just the filename for filename-only pattern matching
+  const fileName = normalizedRelativePath.split('/').pop() || '';
+  
   for (const pattern of patterns) {
+    // Normalize the pattern (should already be relative, but normalize for consistency)
     const normalizedPattern = normalizeEntryId(pattern);
     
-    // Exact match
-    if (normalizedPattern === relativePath || normalizedPattern === normalizedPath) {
+    // Exact match against full relative path
+    if (normalizedPattern === normalizedRelativePath) {
+      return true;
+    }
+    
+    // Filename-only match: if pattern doesn't contain a slash, match against filename
+    // This allows patterns like "not-found.tsx" to match "src/not-found.tsx" or "app/not-found.tsx"
+    if (!normalizedPattern.includes('/') && normalizedPattern === fileName) {
       return true;
     }
     
@@ -183,13 +207,13 @@ export function matchesIgnorePattern(
     
     const regex = new RegExp(`^${regexPattern}$`);
     
-    // Check against relative path
-    if (regex.test(relativePath)) {
+    // Check against normalized relative path
+    if (regex.test(normalizedRelativePath)) {
       return true;
     }
     
-    // Also check against full normalized path
-    if (regex.test(normalizedPath)) {
+    // Also check filename-only glob patterns (e.g., "*.test.tsx")
+    if (!normalizedPattern.includes('/') && regex.test(fileName)) {
       return true;
     }
   }

@@ -16,8 +16,9 @@ USAGE:
   stamp context validate [file]        Validate context file
   stamp context compare [options]      Detect drift (auto-generates fresh context)
   stamp context clean [path] [options] Remove all generated context artifacts
+  stamp ignore <path> [path2] ...      Add files/folders to .stampignore
   stamp security scan [path] [options] Scan for secrets and generate report
-  stamp security --hard-reset [options] Delete .stampignore and security report
+  stamp security --hard-reset [options] Delete security report
 
 OPTIONS:
   -v, --version                       Show version number
@@ -48,6 +49,9 @@ EXAMPLES:
   stamp context clean --all --yes
     Actually delete all context artifacts
 
+  stamp ignore src/secrets.ts
+    Add a file to .stampignore
+
 For detailed help on a specific command, run:
   stamp init --help
   stamp context --help
@@ -55,6 +59,7 @@ For detailed help on a specific command, run:
   stamp context validate --help
   stamp context compare --help
   stamp context clean --help
+  stamp ignore --help
   stamp security scan --help
   stamp security --help
   `;
@@ -69,12 +74,12 @@ export function getSecurityHelp(): string {
 
 USAGE:
   stamp security scan [path] [options]       Scan for secrets and generate report
-  stamp security --hard-reset [path] [options] Delete .stampignore and security report
+  stamp security --hard-reset [path] [options] Delete security report
 
 COMMANDS:
   scan                                    Scan codebase for exposed secrets
-  --hard-reset                            Delete .stampignore and report file
-  --hard-reset --force                    Delete files without prompting
+  --hard-reset                            Delete security report file
+  --hard-reset --force                    Delete report file without prompting
 
 OPTIONS:
   --out, -o <file>                        Output file for scan (default: stamp_security_report.json)
@@ -86,17 +91,17 @@ EXAMPLES:
   stamp security scan
     Scan current directory for secrets
 
-  stamp security scan --apply
-    Scan and automatically add files with secrets to .stampignore
+  stamp security scan ./src
+    Scan specific directory
 
   stamp security --hard-reset
-    Delete .stampignore and security report (with confirmation)
+    Delete security report (with confirmation)
 
   stamp security --hard-reset --force
-    Delete .stampignore and security report (no confirmation)
+    Delete security report (no confirmation)
 
   stamp security --hard-reset --out custom-report.json
-    Delete .stampignore and custom report file
+    Delete custom report file
 
 For detailed help on scan command:
   stamp security scan --help
@@ -399,24 +404,24 @@ ARGUMENTS:
 OPTIONS:
   --skip-gitignore                    Skip .gitignore setup
   --yes, -y                           Skip all prompts (non-interactive mode)
-  --secure                            Initialize with auto-yes and run security scan
+  --no-secure                         Skip security scan (security scan runs by default)
   -h, --help                          Show this help
 
 EXAMPLES:
   stamp init
-    Set up LogicStamp in current directory
+    Set up LogicStamp in current directory and run security scan
 
   stamp init ./my-project
-    Set up LogicStamp in a specific directory
+    Set up LogicStamp in a specific directory and run security scan
 
   stamp init --skip-gitignore
-    Initialize without modifying .gitignore
+    Initialize without modifying .gitignore (security scan still runs)
 
   stamp init --yes
-    Initialize without any prompts (CI-friendly)
+    Initialize without any prompts (CI-friendly, security scan still runs)
 
-  stamp init --secure
-    Initialize with auto-yes and run security scan with --apply
+  stamp init --no-secure
+    Initialize without running security scan
 
 WHAT IT DOES:
   • Creates or updates .gitignore with LogicStamp patterns:
@@ -448,7 +453,6 @@ ARGUMENTS:
 
 OPTIONS:
   --out, -o <file>                    Output file (default: stamp_security_report.json)
-  --apply                             Automatically add files with secrets to .stampignore
   --quiet, -q                         Suppress verbose output (show only JSON stats)
   -h, --help                          Show this help
 
@@ -458,9 +462,6 @@ EXAMPLES:
 
   stamp security scan ./src
     Scan specific directory
-
-  stamp security scan --apply
-    Scan and automatically add files with secrets to .stampignore
 
   stamp security scan --out report.json
     Write report to custom file
@@ -472,16 +473,55 @@ WHAT IT DOES:
     - OAuth secrets, JWT secrets
     - Database URLs with credentials
   • Generates stamp_security_report.json with findings
-  • Optionally adds files to .stampignore (via --apply or interactive prompt)
 
 OUTPUT:
   • stamp_security_report.json        Detailed report with all findings
   • Exits with code 1 if secrets found, 0 if clean
 
 NOTES:
-  • Files listed in .stampignore are automatically excluded from context generation
-  • Use --apply to automatically add files with secrets to .stampignore
   • Report includes file paths, line numbers, and severity levels
+  • Report file is automatically added to .gitignore to prevent accidental commits
+  `;
+}
+
+export function getIgnoreHelp(): string {
+  return `
+╭─────────────────────────────────────────────────╮
+│  Stamp Ignore - Add Files to .stampignore      │
+│  Exclude files from context generation          │
+╰─────────────────────────────────────────────────╯
+
+USAGE:
+  stamp ignore <path1> [path2] ... [options]
+
+ARGUMENTS:
+  <path1> [path2] ...                 File or folder paths to ignore (relative to project root)
+
+OPTIONS:
+  --quiet, -q                         Suppress verbose output (show only errors)
+  -h, --help                          Show this help
+
+EXAMPLES:
+  stamp ignore src/secrets.ts
+    Add a single file to .stampignore
+
+  stamp ignore src/config/credentials.ts src/secrets/
+    Add multiple files/folders to .stampignore
+
+  stamp ignore "**/secrets.ts" "**/*.key"
+    Add glob patterns to .stampignore
+
+WHAT IT DOES:
+  • Adds file or folder paths to .stampignore
+  • Creates .stampignore if it doesn't exist
+  • Prevents duplicate entries
+  • Normalizes paths automatically
+
+NOTES:
+  • Paths are relative to project root
+  • Supports glob patterns (e.g., **/*.key, src/**/secrets.ts)
+  • Files in .stampignore are excluded from context generation
+  • Use "stamp context" to verify files are excluded
   `;
 }
 

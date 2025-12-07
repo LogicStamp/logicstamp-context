@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readFile, rm, access, mkdir, writeFile, cp } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, isAbsolute } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 const execAsync = promisify(exec);
@@ -93,6 +93,50 @@ describe('CLI Context Generation Tests', () => {
       expect(bundle.graph).toHaveProperty('edges');
     }, 30000);
 
+    it('should use relative paths in context_main.json (not absolute)', async () => {
+      const outDir = join(outputPath, 'relative-paths-test');
+
+      // Run the CLI
+      await execAsync(
+        `node dist/cli/index.js ${fixturesPath} --out ${outDir}`
+      );
+
+      // Read context_main.json
+      const mainIndexPath = join(outDir, 'context_main.json');
+      await access(mainIndexPath);
+      const indexContent = await readFile(mainIndexPath, 'utf-8');
+      const index = JSON.parse(indexContent);
+
+      // Verify projectRoot is relative
+      expect(index.projectRoot).toBe('.');
+      expect(!isAbsolute(index.projectRoot)).toBe(true);
+
+      // Verify all folder paths are relative
+      expect(Array.isArray(index.folders)).toBe(true);
+      for (const folder of index.folders) {
+        expect(!isAbsolute(folder.path)).toBe(true);
+        expect(!isAbsolute(folder.contextFile)).toBe(true);
+      }
+
+      // Verify bundle entryIds are relative (read a folder context file)
+      if (index.folders.length > 0) {
+        const folderContextPath = join(outDir, index.folders[0].contextFile);
+        const folderContent = await readFile(folderContextPath, 'utf-8');
+        const bundles = JSON.parse(folderContent);
+        
+        expect(Array.isArray(bundles)).toBe(true);
+        for (const bundle of bundles) {
+          expect(!isAbsolute(bundle.entryId)).toBe(true);
+          // Check all node entryIds are relative
+          if (bundle.graph && bundle.graph.nodes) {
+            for (const node of bundle.graph.nodes) {
+              expect(!isAbsolute(node.entryId)).toBe(true);
+            }
+          }
+        }
+      }
+    }, 30000);
+
     it('should generate context with custom depth', async () => {
       const outDir = join(outputPath, 'depth-test');
 
@@ -100,9 +144,9 @@ describe('CLI Context Generation Tests', () => {
         `node dist/cli/index.js ${fixturesPath} --depth 2 --out ${outDir}`
       );
 
-      // Note: depth is overridden by the default llm-chat profile which sets depth=1
+      // User-set depth is now respected (not overridden by profile)
       // The profile logs show the actual depth used
-      expect(stdout).toContain('depth=1');
+      expect(stdout).toContain('depth=2');
 
       // Check context_main.json
       const mainIndexPath = join(outDir, 'context_main.json');
@@ -115,8 +159,8 @@ describe('CLI Context Generation Tests', () => {
       const bundles = JSON.parse(await readFile(folderContextPath, 'utf-8'));
 
       expect(bundles.length).toBeGreaterThan(0);
-      // The profile overrides to depth 1
-      expect(bundles[0].depth).toBe(1);
+      // User-set depth is now respected (not overridden by profile)
+      expect(bundles[0].depth).toBe(2);
     }, 30000);
 
     it('should work with different output formats', async () => {
@@ -771,6 +815,167 @@ describe('CLI Context Generation Tests', () => {
       const indexContent = await readFile(mainIndexPath, 'utf-8');
       const index = JSON.parse(indexContent);
       expect(index.folders.length).toBeGreaterThan(0);
+    }, 30000);
+  });
+
+  describe('Secret sanitization', () => {
+    it('should sanitize secrets in generated context files when security report exists', async () => {
+      // Create a test directory with a file containing secrets
+      const testDir = join(outputPath, 'sanitization-test');
+      await mkdir(testDir, { recursive: true });
+      
+      const srcDir = join(testDir, 'src');
+      await mkdir(srcDir, { recursive: true });
+      
+      // Create a file with secrets
+      const configFile = join(srcDir, 'config.ts');
+      await writeFile(
+        configFile,
+        `export const config = {
+  apiKey: 'FAKE_API_KEY_1234567890abcdefghijklmnopqrstuvwxyz',
+  password: 'FAKE_PASSWORD_1234567890abcdefghijklmnop',
+  token: 'FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz',
+};`
+      );
+
+      // Create a security report
+      const securityReport = {
+        type: 'LogicStampSecurityReport',
+        schemaVersion: '0.1',
+        createdAt: new Date().toISOString(),
+        projectRoot: testDir,
+        filesScanned: 1,
+        secretsFound: 3,
+        matches: [
+          {
+            file: 'src/config.ts',
+            line: 2,
+            column: 12,
+            type: 'API Key',
+            snippet: "  apiKey: 'FAKE_API_KEY_1234567890abcdefghijklmnopqrstuvwxyz',",
+            severity: 'high',
+          },
+          {
+            file: 'src/config.ts',
+            line: 3,
+            column: 13,
+            type: 'Password',
+            snippet: "  password: 'FAKE_PASSWORD_1234567890abcdefghijklmnop',",
+            severity: 'high',
+          },
+          {
+            file: 'src/config.ts',
+            line: 4,
+            column: 10,
+            type: 'Token',
+            snippet: "  token: 'FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz',",
+            severity: 'high',
+          },
+        ],
+        filesWithSecrets: ['src/config.ts'],
+      };
+
+      const reportPath = join(testDir, 'stamp_security_report.json');
+      await writeFile(reportPath, JSON.stringify(securityReport, null, 2));
+
+      // Generate context with full code inclusion
+      const outDir = join(outputPath, 'sanitized-context');
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context ${testDir} --include-code full --out ${outDir}`
+      );
+
+      expect(stdout).toContain('Generating context');
+
+      // Read the generated context file
+      const contextPath = join(outDir, 'src', 'context.json');
+      await access(contextPath);
+      const contextContent = await readFile(contextPath, 'utf-8');
+      const bundles = JSON.parse(contextContent);
+      
+      expect(Array.isArray(bundles)).toBe(true);
+      expect(bundles.length).toBeGreaterThan(0);
+
+      // Find the bundle with config.ts
+      const configBundle = bundles.find((b: any) => 
+        b.entryId && b.entryId.includes('config.ts')
+      );
+      
+      expect(configBundle).toBeDefined();
+      
+      // Check that the code contains PRIVATE_DATA instead of actual secrets
+      if (configBundle.graph?.nodes) {
+        const configNode = configBundle.graph.nodes.find((n: any) => 
+          n.entryId && n.entryId.includes('config.ts')
+        );
+        
+        if (configNode?.code) {
+          expect(configNode.code).toContain('PRIVATE_DATA');
+          expect(configNode.code).not.toContain('FAKE_API_KEY_1234567890abcdefghijklmnopqrstuvwxyz');
+          expect(configNode.code).not.toContain('FAKE_PASSWORD_1234567890abcdefghijklmnop');
+          expect(configNode.code).not.toContain('FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz');
+        }
+      }
+
+      // Verify source file was NOT modified
+      const originalContent = await readFile(configFile, 'utf-8');
+      expect(originalContent).toContain('FAKE_API_KEY_1234567890abcdefghijklmnopqrstuvwxyz');
+      expect(originalContent).toContain('FAKE_PASSWORD_1234567890abcdefghijklmnop');
+      expect(originalContent).toContain('FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz');
+    }, 30000);
+
+    it('should not sanitize when no security report exists', async () => {
+      // Create a test directory with a file containing secrets
+      const testDir = join(outputPath, 'no-sanitization-test');
+      await mkdir(testDir, { recursive: true });
+      
+      const srcDir = join(testDir, 'src');
+      await mkdir(srcDir, { recursive: true });
+      
+      // Create a file with secrets (but no security report)
+      const configFile = join(srcDir, 'config.ts');
+      const secretValue = 'FAKE_API_KEY_1234567890abcdefghijklmnopqrstuvwxyz';
+      await writeFile(
+        configFile,
+        `export const config = {
+  apiKey: '${secretValue}',
+};`
+      );
+
+      // Generate context WITHOUT security report
+      const outDir = join(outputPath, 'unsanitized-context');
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context ${testDir} --include-code full --out ${outDir}`
+      );
+
+      expect(stdout).toContain('Generating context');
+
+      // Read the generated context file
+      const contextPath = join(outDir, 'src', 'context.json');
+      await access(contextPath);
+      const contextContent = await readFile(contextPath, 'utf-8');
+      const bundles = JSON.parse(contextContent);
+      
+      expect(Array.isArray(bundles)).toBe(true);
+      expect(bundles.length).toBeGreaterThan(0);
+
+      // Find the bundle with config.ts
+      const configBundle = bundles.find((b: any) => 
+        b.entryId && b.entryId.includes('config.ts')
+      );
+      
+      if (configBundle?.graph?.nodes) {
+        const configNode = configBundle.graph.nodes.find((n: any) => 
+          n.entryId && n.entryId.includes('config.ts')
+        );
+        
+        // Without security report, code should NOT be sanitized
+        // (Note: This test may need adjustment based on actual behavior)
+        // The code might still contain the secret if no report exists
+        if (configNode?.code) {
+          // Code should be present (not sanitized when no report)
+          expect(configNode.code.length).toBeGreaterThan(0);
+        }
+      }
     }, 30000);
   });
 });

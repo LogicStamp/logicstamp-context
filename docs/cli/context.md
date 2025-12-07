@@ -156,7 +156,7 @@ The `context_main.json` file provides a complete directory index:
     }
   ],
   "meta": {
-    "source": "logicstamp-context@0.2.7"
+    "source": "logicstamp-context@0.3.0"
   }
 }
 ```

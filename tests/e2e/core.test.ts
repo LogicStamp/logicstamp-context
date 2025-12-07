@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { join } from 'node:path';
+import { join, isAbsolute } from 'node:path';
 import { extractFromFile } from '../../src/core/astParser.js';
 import { buildContract } from '../../src/core/contractBuilder.js';
 import { buildDependencyGraph } from '../../src/core/manifest.js';
 import { pack } from '../../src/core/pack.js';
-import { readFileWithText } from '../../src/utils/fsx.js';
+import { readFileWithText, normalizeEntryId, getRelativePath } from '../../src/utils/fsx.js';
 import type { UIFContract } from '../../src/types/UIFContract.js';
 
 describe('Core Modules End-to-End Tests', () => {
@@ -303,7 +303,13 @@ describe('Core Modules End-to-End Tests', () => {
         expect(bundle).toBeDefined();
         expect(bundle.type).toBe('LogicStampBundle');
         expect(bundle.schemaVersion).toBe('0.1');
-        expect(bundle.entryId).toBe(cardId);
+        // Bundle entryId is now normalized to relative path
+        // Normalize the expected cardId to match
+        let expectedEntryId = cardId;
+        if (isAbsolute(cardId)) {
+          expectedEntryId = getRelativePath(fixturesPath, cardId);
+        }
+        expect(bundle.entryId).toBe(normalizeEntryId(expectedEntryId));
         expect(bundle.depth).toBe(1);
         expect(bundle.graph).toBeDefined();
         expect(bundle.graph.nodes.length).toBeGreaterThan(0);
