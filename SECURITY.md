@@ -45,6 +45,27 @@ After you submit a security report:
 
 We appreciate your efforts to responsibly disclose your findings and will make every effort to acknowledge your contributions.
 
+## Scope of This Policy
+
+This security policy currently applies to **LogicStamp Context (CLI / local mode only)**.
+
+LogicStamp Context (CLI) is designed as a local, standalone tool that:
+
+- Runs entirely on the user's machine
+- Does not send source code or metadata over the network
+- Does not integrate with any LLMs or external services
+
+The local CLI is intended to remain a fully functional, offline-first tool.
+
+Future versions of LogicStamp may introduce **separate, optional cloud or team-based products** (such as shared analysis or LLM-assisted workflows). These features will:
+
+- Be opt-in only
+- Be delivered as separate services or modes
+- Be documented under their own security and privacy policies
+- Clearly disclose what data is transmitted, stored, or processed remotely
+
+This document applies only to the local CLI unless explicitly stated otherwise and will be updated if the scope changes.
+
 ## Security Best Practices
 
 When using LogicStamp Context:
@@ -79,11 +100,13 @@ When using LogicStamp Context:
 
 🔒 **Sensitive Data / Credentials Handling**
 
-LogicStamp Context does not perform automatic redaction or removal of sensitive information (passwords, API keys, user data, secrets). If such data exists in your source code, it may appear in the generated context bundles. Always review context files before sharing them with external tools or LLMs.
+**Automatic Secret Sanitization (v0.3.0+)**: LogicStamp Context automatically sanitizes secrets in generated context files when a security report exists. When you run `stamp context` or `stamp context style`, if `stamp_security_report.json` exists, any secrets **detected by the security scanner** are automatically replaced with `"PRIVATE_DATA"` in the generated JSON files. **Your source code files are never modified** - only the generated context files contain sanitized values.
 
-We strongly recommend avoiding hard-coded credentials and using environment variables or secret management tools.
+**Important**: Credentials can only be included in generated bundles when using `--include-code full` mode. The other modes (`none`, `header`, `header+style`) only include metadata and contracts (with secrets sanitized), not actual implementation code where credentials would typically be found.
 
 **Security Scanning**: Use the `stamp security scan` command to detect secrets in your codebase before generating context files. The scanner can automatically add files containing secrets to `.stampignore` to prevent them from being included in context generation. See [`docs/cli/security-scan.md`](docs/cli/security-scan.md) for complete documentation.
+
+**Best Practice**: We strongly recommend avoiding hard-coded credentials and using environment variables or secret management tools. Even with automatic sanitization, it's better to keep secrets out of source code entirely.
 
 ## Security Considerations
 

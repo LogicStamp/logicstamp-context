@@ -10,7 +10,7 @@ stamp context style [path] [options]
 
 **Note:** The `stamp context style` command is equivalent to `stamp context --include-style`. Both syntaxes produce identical output.
 
-**File Exclusion:** `stamp context style` respects `.stampignore`, just like `stamp context`. This keeps files with secrets out of your context bundles. Run `stamp security scan --apply` to automatically add files to `.stampignore` when secrets are found. See [`stamp security scan`](security-scan.md) for details.
+**File Exclusion:** `stamp context style` respects `.stampignore`, just like `stamp context`. `.stampignore` is completely optional and independent of security scanning. See [stampignore.md](../stampignore.md) for details.
 
 ## Overview
 
