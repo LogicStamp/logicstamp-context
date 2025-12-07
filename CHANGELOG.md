@@ -28,7 +28,7 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - **Security scan now runs by default in `stamp init`** - `stamp init` now automatically runs a security scan after initialization by default. This improves security posture for new projects by ensuring secrets are detected during setup. Use the `--no-secure` flag to skip the security scan if needed.
 
-- **Removed `--secure` flag from `stamp init`** - The `--secure` flag has been removed since security scanning is now the default behavior. This is a breaking change if your scripts or CI/CD pipelines explicitly used `--secure`; update them to rely on the default behavior or use `--no-secure` to skip.
+- **Removed `--secure` flag from `stamp init`** - The `--secure` flag has been removed since security scanning is now the default behavior. If you have scripts or CI/CD pipelines that used `--secure`, they will continue to work (security scan now runs by default), or you can use `--no-secure` to skip it.
 
 - **Updated initialization command documentation** - All documentation has been updated to reflect that security scanning runs by default. The `--no-secure` flag is documented as the way to opt out of security scanning during initialization.
 
