@@ -330,15 +330,19 @@ style={{ transformOrigin: 'center' }}
 
 **Priority**: Low
 
-### 9. Test Files Minimal
+### 9. Test Files Excluded
 
-**Captured**: Basic file info
+**Issue**: Test files are completely excluded from context generation.
 
-**Missing**: Test structure, test cases, coverage info
+**Current behavior**: Test files (`.test.ts`, `.test.tsx`, `.spec.ts`, `.spec.tsx`) are explicitly filtered out during file scanning and never analyzed.
 
-**Impact**: Limited test understanding
+**Missing**: Test structure, test cases, test coverage information, test utilities, and test helpers are not included in context bundles.
+
+**Impact**: No test understanding - AI assistants cannot see test files, test patterns, or testing strategies used in the codebase.
 
 **Priority**: Low
+
+**Note**: This is intentional by design - test files are excluded to keep context bundles focused on production code. If test analysis is needed, it would require a separate feature or flag to include test files.
 
 ### 10. Runtime Behavior
 
