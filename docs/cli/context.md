@@ -13,7 +13,9 @@ stamp context [path] [options]
 
 **Setup:** `stamp context` respects preferences saved in `.logicstamp/config.json` and never prompts. On first run (no config), it defaults to skipping both `.gitignore` and `LLM_CONTEXT.md` setup for CI-friendly behavior. Use [`stamp init`](init.md) to interactively configure these options.
 
-**File Exclusion:** `stamp context` respects `.stampignore` and excludes those files from context generation. This keeps files with secrets or sensitive info out of your bundles. You'll see how many files were excluded (unless using `--quiet`). Run `stamp security scan --apply` to automatically add files to `.stampignore` when secrets are found. See [`stamp security scan`](security-scan.md) for details.
+**File Exclusion:** `stamp context` respects `.stampignore` and excludes those files from context generation. You'll see how many files were excluded (unless using `--quiet`). Use `stamp ignore <file>` to add files to `.stampignore`. `.stampignore` is completely optional and independent of security scanning. See [stampignore.md](../stampignore.md) for details.
+
+**Secret Sanitization:** If a security report (`stamp_security_report.json`) exists, `stamp context` automatically replaces detected secrets with `"PRIVATE_DATA"` in the generated JSON files. **Your source code files are never modified** - only the generated context files contain sanitized values. See [security-scan.md](security-scan.md) for details.
 
 ## Options
 
@@ -97,7 +99,58 @@ Example `.stampignore`:
 }
 ```
 
-Use `stamp security scan --apply` to automatically detect files with secrets and add them to `.stampignore`. The file is only created when secrets are actually detected. See [`stamp security scan`](security-scan.md) for details.
+`.stampignore` is completely optional and can be created manually. It's independent of security scanning. See [stampignore.md](../stampignore.md) for complete documentation.
+
+For complete documentation on `.stampignore` file format, see [stampignore.md](../stampignore.md).
+
+## Secret Sanitization
+
+When generating context files, LogicStamp automatically sanitizes secrets if a security report exists.
+
+**How it works:**
+
+- If `stamp_security_report.json` exists in your project root, it's automatically used
+- Secrets detected in the security report are replaced with `"PRIVATE_DATA"` in generated JSON files
+- **Your source code files are never modified** - only the generated context files are affected
+
+**Example:**
+
+Source code:
+```typescript
+const apiKey = 'sk_live_1234567890abcdef';
+const password = 'mySecretPassword123';
+```
+
+Generated `context.json`:
+```json
+{
+  "code": "const apiKey = 'PRIVATE_DATA';\nconst password = 'PRIVATE_DATA';"
+}
+```
+
+**Important:**
+
+- ✅ Source files remain unchanged
+- ✅ Sanitization happens automatically (no flags needed)
+- ✅ Works with all code inclusion modes (`--include-code none`, `header`, `full`)
+- ✅ Applies to both `stamp context` and `stamp context style`
+
+**Code inclusion modes and credentials:**
+
+- **`none` mode**: No code is included, so credentials cannot appear in bundles
+- **`header` mode**: Only JSDoc `@uif` metadata blocks are included (not implementation code), so credentials in your source code will not appear in bundles
+- **`header+style` mode**: Same as `header` mode (only metadata), plus style information in contracts (not code), so credentials will not appear in bundles
+- **`full` mode**: Full source code is included, so credentials could appear unless sanitized. Sanitization automatically replaces detected secrets with `"PRIVATE_DATA"` when a security report exists
+
+**Even if credentials exist in your source files (which they shouldn't), they can only be included in generated bundles when using `--include-code full` mode. The other modes (`none`, `header`, `header+style`) only include metadata and contracts, not actual implementation code where credentials would typically be found.**
+
+**To enable secret sanitization:**
+
+1. Run `stamp security scan` (or `stamp init` which runs it automatically)
+2. This creates `stamp_security_report.json`
+3. Subsequent `stamp context` runs will automatically sanitize secrets
+
+See [security-scan.md](security-scan.md) for more information about security scanning.
 
 ## Output Structure
 

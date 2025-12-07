@@ -163,7 +163,7 @@ stamp ignore src/secrets.ts --quiet
 **Integration with other commands**
 
 - Files in `.stampignore` are automatically excluded when running `stamp context`
-- Use `stamp security scan --apply` to automatically add files with detected secrets to `.stampignore`
+- Use `stamp ignore <file>` to add files with detected secrets to `.stampignore` after reviewing the security report
 
 **See also:** [ignore.md](cli/ignore.md) for comprehensive documentation.
 

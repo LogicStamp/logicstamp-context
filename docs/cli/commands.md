@@ -19,8 +19,8 @@ LogicStamp Context provides a single CLI entry point, `stamp`, with
 ## Command interactions
 
 - `stamp init` sets up `.gitignore` patterns and `LLM_context.md` interactively before generating context files. `stamp context` respects these preferences and never prompts (CI-friendly). By default, `stamp init` automatically runs a security scan. Use `--no-secure` to skip it.
-- `stamp ignore` adds files or folders to `.stampignore` to exclude them from context generation. Useful for excluding files with secrets or other sensitive information. Can also use `stamp security scan --apply` to automatically add files with detected secrets.
-- `stamp security scan` finds secrets (API keys, passwords, tokens) in your project. Runs 100% locally—nothing is uploaded or sent anywhere. The scan runs automatically during `stamp init` by default. Use `--apply` to automatically add files with secrets to `.stampignore`.
+- `stamp ignore` adds files or folders to `.stampignore` to exclude them from context generation. Useful for excluding files with secrets or other sensitive information. After running `stamp security scan`, review the report and use `stamp ignore <file>` to exclude files with detected secrets.
+- `stamp security scan` finds secrets (API keys, passwords, tokens) in your project. Runs 100% locally—nothing is uploaded or sent anywhere. The scan runs automatically during `stamp init` by default. Review the security report and use `stamp ignore <file>` to exclude files with secrets from context generation.
 - `stamp context` generates multiple `context.json` files (one per folder) plus `context_main.json` index, or use `--out` for a custom output directory. Automatically excludes files listed in `.stampignore`.
 - `stamp context style` generates context with style metadata (Tailwind, SCSS, Material UI, animations, layout patterns). Equivalent to `stamp context --include-style`.
 - `stamp context validate` validates **all context files** (multi-file mode using `context_main.json`) or a specific file. With no arguments, automatically validates all folder context files. Exit code is CI-friendly.

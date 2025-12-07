@@ -146,7 +146,7 @@ EOF
 
 ### Integration with Other Commands
 
-- **`stamp security scan --apply`** - Automatically adds files with detected secrets to `.stampignore`
+- **`stamp ignore <file>`** - Add files or folders to `.stampignore` (recommended way to manage exclusions)
 - **`stamp init`** - The init command runs a security scan by default, but `.stampignore` is completely optional and independent of security scanning
 
 ## How It Works
@@ -309,7 +309,7 @@ Or edit it to remove entries you no longer need.
 - [`stamp ignore`](cli/ignore.md) - Add files/folders to `.stampignore` (recommended way to manage exclusions)
 - [`stamp context`](cli/context.md) - Generate context (respects `.stampignore`)
 - [`stamp context style`](cli/style.md) - Generate context with style metadata (respects `.stampignore`, equivalent to `stamp context --include-style`)
-- [`stamp security scan`](cli/security-scan.md) - Use `--apply` flag to automatically add files with detected secrets to `.stampignore`
+- [`stamp security scan`](cli/security-scan.md) - Scan for secrets in your codebase
 
 ## See Also
 
