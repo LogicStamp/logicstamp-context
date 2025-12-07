@@ -12,24 +12,44 @@
 
 **A tiny CLI that compiles your React/TypeScript codebase into machine-readable context bundles for AI and CI. Fast, deterministic, zero-config.**
 
-## Quick Start
+## 🚀 Quick Start
 
-**Global CLI (recommended):**
+**Try it in 30 seconds (no install required):**
 ```bash
-npm install -g logicstamp-context
-cd your-project
-stamp context
-```
-
-**OR local:**
-```bash
-npm install -D logicstamp-context
-npx stamp context
+npx logicstamp-context context
 ```
 
 That's it! LogicStamp Context will scan your project and generate `context.json` files organized by folder, plus a `context_main.json` index file. Share these files with AI assistants for instant codebase understanding.
 
-![LogicStamp Context in action](https://raw.githubusercontent.com/LogicStamp/logicstamp-context/main/assets/demo-screenshot.png)
+**For a complete setup (recommended):**
+```bash
+# Install globally
+npm install -g logicstamp-context
+
+# Initialize project (runs security scan by default)
+stamp init
+
+# Generate context bundles
+stamp context
+```
+
+> **💡 First time?** Run `stamp init` to set up `.gitignore` patterns and scan for secrets. The security scan runs automatically to help protect sensitive data.
+
+**What you'll get:**
+- 📁 `context.json` files (one per folder with components)
+- 📋 `context_main.json` index file with project overview
+- 🔒 Automatic secret sanitization (secrets replaced with `"PRIVATE_DATA"`)
+- ⚡ Ready to share with AI assistants (Cursor, Claude, GitHub Copilot)
+
+> **⚠️ Seeing `"PRIVATE_DATA"` in your context files?** This means secrets were detected in your codebase during scanning. The security scan examines `.ts`, `.tsx`, `.js`, `.jsx`, and `.json` files for secret patterns. **Action required:**
+> 1. Review `stamp_security_report.json` to see what was found
+> 2. Remove hard-coded secrets from your source code
+> 3. Use environment variables or secret management tools instead
+> 4. Run `stamp ignore <file>` to exclude files with secrets from context generation
+> 
+> **Best practice:** Never commit secrets to version control. Use `.env` files (in `.gitignore`) or secret management services.
+
+![LogicStamp Context in action](https://raw.githubusercontent.com/LogicStamp/logicstamp-context/main/assets/logicstamp-context-demo.gif)
 *Sample stamp context output with generated bundles*
 
 > **Note:** This is a beta release (v0.3.0). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
@@ -40,6 +60,7 @@ LLMs understand your project instantly - without scanning 10,000+ lines of code
 
 - **~65–72% token savings** vs raw source
 - **Deterministic, structured contracts** that help AI avoid hallucinations by only referencing the true architecture
+- **🔒 Built-in security** - automatic secret detection and sanitization in generated context files
 - **Perfect for Cursor/Claude/GitHub Copilot Chat** — share context files for instant codebase understanding
 - **CI-friendly** - detect drift, validate bundles, track changes
 
@@ -53,6 +74,7 @@ LLMs understand your project instantly - without scanning 10,000+ lines of code
 - 📦 **Per-folder bundles** - organized by your project structure
 - ⚙️ **CI validation** - (drift detection, schema validation)
 - 🔢 **Accurate token estimates** - (GPT/Claude)
+- 🔒 **Security-first** - automatic secret detection and sanitization
 - 💨 **Fast, zero-config** - works out of the box
 - 🤖 **MCP-ready (coming soon)** - AI agents can consume context bundles via a standardized MCP interface
 
@@ -95,12 +117,12 @@ After installation, the `stamp` command will be available globally.
 
 ## Recent Updates
 
-**v0.3.0**
-- Security scan now runs by default in `stamp init`
-- Removed `--secure` flag (security scanning is now default)
-- Added `--no-secure` flag to skip security scan during initialization
-- Automatic secret sanitization in context files
-- **Security**: Credentials can only be included in bundles when using `--include-code full` mode. Other modes (`none`, `header`, `header+style`) only include metadata, not implementation code.
+**v0.3.0** 🔒 **Security Release**
+- **🛡️ Security scan now runs by default** - `stamp init` automatically scans for secrets to protect sensitive data
+- **🔐 Automatic secret sanitization** - Detected secrets are automatically replaced with `"PRIVATE_DATA"` in generated context files
+- **⚡ Improved default security posture** - Better protection out of the box for new projects
+- Removed `--secure` flag (security scanning is now default; use `--no-secure` to skip)
+- **Important**: Credentials can only be included in bundles when using `--include-code full` mode. Other modes (`none`, `header`, `header+style`) only include metadata, not implementation code.
 
 **v0.2.7**
 - Security scanning command (`stamp security scan`) for secret detection
@@ -109,6 +131,19 @@ After installation, the `stamp` command will be available globally.
 - Improved CLI documentation with security commands
 
 📋 **Full history → [CHANGELOG.md](https://github.com/LogicStamp/logicstamp-context/blob/main/CHANGELOG.md)**
+
+## Security
+
+**Automatic Secret Protection (v0.3.0+)**
+
+LogicStamp Context automatically protects sensitive data in generated context files:
+
+- **🔍 Security scanning by default** - `stamp init` automatically scans for secrets (API keys, passwords, tokens)
+- **🛡️ Automatic sanitization** - Detected secrets are replaced with `"PRIVATE_DATA"` in generated context files (source files are never modified)
+- **📋 Smart exclusions** - Files with secrets are automatically excluded from context generation via `.stampignore`
+- **🔐 Safe by default** - Only metadata is included in default modes; credentials only appear in `--include-code full` mode
+
+> **Important**: Always review generated context files before sharing. For complete security documentation, see [SECURITY.md](https://github.com/LogicStamp/logicstamp-context/blob/main/SECURITY.md).
 
 ## Usage
 

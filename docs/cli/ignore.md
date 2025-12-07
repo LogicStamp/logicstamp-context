@@ -146,17 +146,6 @@ stamp context
 # ℹ️  Excluded 3 file(s) via .stampignore
 ```
 
-### `stamp security scan --apply`
-
-The security scan can automatically add files with detected secrets to `.stampignore`:
-
-```bash
-# Scan for secrets and automatically add files with secrets to .stampignore
-stamp security scan --apply
-```
-
-This is more convenient than manually adding files after a security scan.
-
 ## File Format
 
 `.stampignore` uses JSON format:
@@ -198,7 +187,7 @@ See [stampignore.md](../stampignore.md) for more details on glob pattern syntax.
 
 1. **Use for secrets and sensitive files** - The primary use case is excluding files that contain secrets or sensitive information
 2. **Commit `.stampignore` to version control** - This helps your team know which files are excluded
-3. **Use `stamp security scan --apply`** - Automatically add files with detected secrets instead of manually adding them
+3. **Use `stamp ignore` after security scans** - After running `stamp security scan`, review the report and use `stamp ignore <file>` to exclude files with detected secrets
 4. **Review periodically** - Regularly review `.stampignore` to ensure it's still accurate
 5. **Use glob patterns wisely** - Glob patterns are powerful but can exclude more than intended if not careful
 
@@ -206,5 +195,5 @@ See [stampignore.md](../stampignore.md) for more details on glob pattern syntax.
 
 - [stampignore.md](../stampignore.md) - Complete `.stampignore` file format and usage guide
 - [context.md](context.md) - How `.stampignore` affects context generation
-- [security-scan.md](security-scan.md) - Using `--apply` to automatically add files with secrets
+- [security-scan.md](security-scan.md) - Security scanning to detect secrets in your codebase
 
