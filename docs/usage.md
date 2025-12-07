@@ -22,6 +22,7 @@ stamp context
 stamp --version                    # Show version number
 stamp --help                       # Show help
 stamp init [path] [options]        # Initialize LogicStamp in project
+stamp ignore <path> [path2] ...     # Add files/folders to .stampignore
 stamp context [path] [options]
 stamp context style [path] [options]  # Generate context with style metadata
 stamp context validate [file]
@@ -58,11 +59,14 @@ Initialize LogicStamp in your project by setting up `.gitignore` patterns and pr
 # Basic initialization (interactive)
 stamp init
 
-# Initialize without prompts (CI-friendly)
+# Initialize (runs security scan by default)
+stamp init
+
+# Initialize without prompts (CI-friendly, security scan still runs)
 stamp init --yes
 
-# Initialize with security scan (recommended for new projects)
-stamp init --secure
+# Initialize without security scan
+stamp init --no-secure
 
 # Initialize specific directory
 stamp init ./my-project
@@ -89,21 +93,24 @@ stamp init ./my-project
 |--------|-------------|
 | `--skip-gitignore` | Skip `.gitignore` setup |
 | `--yes`, `-y` | Skip all prompts (non-interactive mode) |
-| `--secure` | Initialize with auto-yes and run security scan |
+| `--no-secure` | Skip security scan (security scan runs by default) |
 
-**Secure initialization (`--secure`)**
+**Security scan (default behavior)**
 
-The `--secure` flag is recommended for new projects. It automatically:
+By default, `stamp init` automatically runs a security scan after initialization. This:
 
-1. Sets up `.gitignore` patterns (no prompts)
-2. Generates `LLM_context.md` (no prompts)
+1. Sets up `.gitignore` patterns
+2. Generates `LLM_context.md` (if prompted and accepted)
 3. Runs `stamp security scan` to scan for secrets (API keys, passwords, tokens)
 
 **Runs 100% locally — nothing is uploaded or sent anywhere.**
 
 ```bash
-# Recommended: Secure initialization for new projects
-stamp init --secure
+# Default: Security scan runs automatically
+stamp init
+
+# Skip security scan if needed
+stamp init --no-secure
 ```
 
 **Behavior**
@@ -115,6 +122,51 @@ stamp init --secure
 
 **See also:** [init.md](cli/init.md) for comprehensive documentation.
 
+### `stamp ignore`
+
+Add files or folders to `.stampignore` to exclude them from context generation. This is useful for excluding files with secrets, large generated files, or other files that shouldn't be included in context bundles.
+
+**Arguments**
+
+- `<path1> [path2] ...` - One or more file or folder paths to ignore (relative to project root). Supports glob patterns.
+
+**Key options**
+
+| Option | Alias | Description |
+|--------|-------|-------------|
+| `--quiet` | `-q` | Suppress verbose output (show only errors) |
+
+**Examples**
+
+```bash
+# Add a single file to .stampignore
+stamp ignore src/secrets.ts
+
+# Add multiple files/folders
+stamp ignore src/config/credentials.ts src/secrets/
+
+# Add glob patterns
+stamp ignore "**/secrets.ts" "**/*.key"
+
+# Quiet mode
+stamp ignore src/secrets.ts --quiet
+```
+
+**What it does**
+
+- Creates `.stampignore` if it doesn't exist
+- Adds specified paths to `.stampignore`
+- Prevents duplicate entries
+- Normalizes paths automatically
+- Shows feedback about what was added (unless `--quiet` is used)
+
+**Integration with other commands**
+
+- Files in `.stampignore` are automatically excluded when running `stamp context`
+- Use `stamp security scan --apply` to automatically add files with detected secrets to `.stampignore`
+
+**See also:** [ignore.md](cli/ignore.md) for comprehensive documentation.
+
 ### `stamp context`
 
 Generates LogicStamp bundles from a directory.
@@ -122,6 +174,10 @@ Generates LogicStamp bundles from a directory.
 **Arguments**
 
 - `[path]` – Directory to scan (defaults to current working directory)
+
+**Secret Sanitization**
+
+If a security report (`stamp_security_report.json`) exists, `stamp context` automatically replaces detected secrets with `"PRIVATE_DATA"` in the generated JSON files. **Your source code files are never modified** - only the generated context files contain sanitized values. This happens automatically when a security report exists. See [security-scan.md](cli/security-scan.md) for details.
 
 **Key options**
 
@@ -154,6 +210,10 @@ Generates context with style metadata included. This command extracts visual and
 **Arguments**
 
 - `[path]` – Directory to scan (defaults to current working directory)
+
+**Secret Sanitization**
+
+Like `stamp context`, the style command also automatically sanitizes secrets in generated JSON files if a security report exists. **Your source code files are never modified.**
 
 **Key options**
 
@@ -805,7 +865,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
     }
   ],
   "meta": {
-    "source": "logicstamp-context@0.3.0"
+            "source": "logicstamp-context@0.3.0"
   }
 }
 ```
