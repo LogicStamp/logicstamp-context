@@ -105,7 +105,7 @@ When using LogicStamp Context:
 
 **Important**: Credentials can only be included in generated bundles when using `--include-code full` mode. The other modes (`none`, `header`, `header+style`) only include metadata and contracts (with secrets sanitized), not actual implementation code where credentials would typically be found.
 
-**Security Scanning**: Use the `stamp security scan` command to detect secrets in your codebase before generating context files. The scanner can automatically add files containing secrets to `.stampignore` to prevent them from being included in context generation. See [`docs/cli/security-scan.md`](docs/cli/security-scan.md) for complete documentation.
+**Security Scanning**: Use the `stamp security scan` command to detect secrets in your codebase before generating context files. After scanning, review the security report and manually add files containing secrets to `.stampignore` using `stamp ignore <file>` to prevent them from being included in context generation. See [`docs/cli/security-scan.md`](docs/cli/security-scan.md) for complete documentation.
 
 **Best Practice**: We strongly recommend avoiding hard-coded credentials and using environment variables or secret management tools. Even with automatic sanitization, it's better to keep secrets out of source code entirely.
 
