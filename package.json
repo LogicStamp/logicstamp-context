@@ -1,6 +1,6 @@
 {
   "name": "logicstamp-context",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Generate AI-friendly context bundles from React codebases with LogicStamp contracts",
   "type": "module",
   "main": "./dist/index.js",
@@ -47,7 +47,10 @@
     "url": "https://github.com/LogicStamp/logicstamp-context/issues"
   },
   "homepage": "https://github.com/LogicStamp/logicstamp-context#readme",
-  "author": "LogicStamp Contributors",
+  "author": "Amit Levi <amit23082@gmail.com> (https://amitlevi.dev)",
+  "contributors": [
+    "LogicStamp Contributors"
+  ],
   "license": "MIT",
   "publishConfig": {
     "access": "public"

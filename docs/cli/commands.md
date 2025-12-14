@@ -18,7 +18,7 @@ LogicStamp Context provides a single CLI entry point, `stamp`, with
 
 ## Command interactions
 
-- `stamp init` sets up `.gitignore` patterns and `LLM_context.md` interactively before generating context files. `stamp context` respects these preferences and never prompts (CI-friendly). By default, `stamp init` automatically runs a security scan. Use `--no-secure` to skip it.
+- `stamp init` sets up `.gitignore` patterns and `LLM_context.md` non-interactively (by default) before generating context files. `stamp context` respects these preferences and never prompts (CI-friendly). By default, `stamp init` automatically runs a security scan, which makes it non-interactive. Use `--no-secure` to skip the security scan and enable interactive prompts (in TTY mode).
 - `stamp ignore` adds files or folders to `.stampignore` to exclude them from context generation. Useful for excluding files with secrets or other sensitive information. After running `stamp security scan`, review the report and use `stamp ignore <file>` to exclude files with detected secrets.
 - `stamp security scan` finds secrets (API keys, passwords, tokens) in your project. Runs 100% locally—nothing is uploaded or sent anywhere. The scan runs automatically during `stamp init` by default. Review the security report and use `stamp ignore <file>` to exclude files with secrets from context generation.
 - `stamp context` generates multiple `context.json` files (one per folder) plus `context_main.json` index, or use `--out` for a custom output directory. Automatically excludes files listed in `.stampignore`.
@@ -34,13 +34,13 @@ LogicStamp Context provides a single CLI entry point, `stamp`, with
 stamp --version
 
 # Initialize LogicStamp in your project (sets up .gitignore and LLM_context.md preferences)
-# Security scan runs by default
+# Non-interactive by default, security scan runs automatically
 stamp init
 
-# Initialize without prompts (CI-friendly, security scan still runs)
+# Explicitly skip prompts (redundant - already non-interactive by default)
 stamp init --yes
 
-# Initialize without security scan
+# Initialize without security scan (enables interactive prompts in TTY mode)
 stamp init --no-secure
 
 # Add files to .stampignore to exclude from context generation

@@ -2,7 +2,7 @@
  * Detectors - Detect component kind and Next.js metadata
  */
 
-import { SourceFile, SyntaxKind } from 'ts-morph';
+import { SourceFile, SyntaxKind, FunctionDeclaration, VariableStatement, ArrowFunction } from 'ts-morph';
 import type { ContractKind, NextJSMetadata } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
 
@@ -105,6 +105,88 @@ export function extractNextJsMetadata(source: SourceFile, filePath: string): Nex
 }
 
 /**
+ * Check if the main export is a hook function (starts with "use")
+ */
+function isMainExportAHook(source: SourceFile): boolean {
+  try {
+    const statements = source.getStatements();
+    
+    for (const stmt of statements) {
+      const kind = stmt.getKind();
+      const modifiers = (stmt as any).getModifiers?.() || [];
+      
+      let hasExport = false;
+      let isDefault = false;
+      
+      for (const mod of modifiers) {
+        const modKind = mod.getKind();
+        if (modKind === SyntaxKind.ExportKeyword) hasExport = true;
+        if (modKind === SyntaxKind.DefaultKeyword) isDefault = true;
+      }
+      
+      // Check default export first (highest priority)
+      if (isDefault && hasExport) {
+        if (kind === SyntaxKind.FunctionDeclaration) {
+          const func = stmt as FunctionDeclaration;
+          const name = func.getName();
+          if (name && /^use[A-Z]/.test(name)) {
+            return true;
+          }
+        } else if (kind === SyntaxKind.VariableStatement) {
+          const varStmt = stmt as VariableStatement;
+          const declarations = varStmt.getDeclarationList().getDeclarations();
+          for (const decl of declarations) {
+            const name = decl.getName();
+            const initializer = decl.getInitializer();
+            // Check if it's an arrow function or function expression
+            if (name && /^use[A-Z]/.test(name)) {
+              if (initializer && (
+                initializer.getKind() === SyntaxKind.ArrowFunction ||
+                initializer.getKind() === SyntaxKind.FunctionExpression
+              )) {
+                return true;
+              }
+            }
+          }
+        }
+      }
+      
+      // Check named exports (if no default export found)
+      if (hasExport && !isDefault) {
+        if (kind === SyntaxKind.FunctionDeclaration) {
+          const func = stmt as FunctionDeclaration;
+          const name = func.getName();
+          if (name && /^use[A-Z]/.test(name)) {
+            return true;
+          }
+        } else if (kind === SyntaxKind.VariableStatement) {
+          const varStmt = stmt as VariableStatement;
+          const declarations = varStmt.getDeclarationList().getDeclarations();
+          for (const decl of declarations) {
+            const name = decl.getName();
+            const initializer = decl.getInitializer();
+            // Check if it's an arrow function or function expression
+            if (name && /^use[A-Z]/.test(name)) {
+              if (initializer && (
+                initializer.getKind() === SyntaxKind.ArrowFunction ||
+                initializer.getKind() === SyntaxKind.FunctionExpression
+              )) {
+                return true;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    return false;
+  } catch (error) {
+    // If we can't determine, return false (fall back to other checks)
+    return false;
+  }
+}
+
+/**
  * Detect component kind based on its characteristics
  */
 export function detectKind(
@@ -117,6 +199,26 @@ export function detectKind(
   const resolvedPath = source.getFilePath?.() ?? filePath;
 
   try {
+    // Check if main export is a hook BEFORE checking for components
+    // This ensures hook files are classified correctly even if they use hooks internally
+    const mainExportIsHook = isMainExportAHook(source);
+    
+    // If main export is a hook and file has no JSX/components, it's a hook file
+    if (mainExportIsHook && components.length === 0) {
+      // Double-check: no JSX elements in the file
+      try {
+        const hasJsxElements = source.getDescendantsOfKind(SyntaxKind.JsxElement).length > 0 ||
+                            source.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement).length > 0 ||
+                            source.getDescendantsOfKind(SyntaxKind.JsxFragment).length > 0;
+        if (!hasJsxElements) {
+          return 'react:hook';
+        }
+      } catch (error) {
+        // If JSX check fails, still classify as hook if main export is hook
+        return 'react:hook';
+      }
+    }
+    
     // React component: has hooks or JSX components
     if (hooks.length > 0 || components.length > 0) {
       return 'react:component';

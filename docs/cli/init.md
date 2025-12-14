@@ -61,7 +61,7 @@ stamp init [path] [options]
 stamp init
 ```
 
-Initializes LogicStamp in the current directory. Creates or updates `.gitignore` with the necessary patterns and runs a security scan by default.
+Initializes LogicStamp in the current directory. Creates or updates `.gitignore` with the necessary patterns and runs a security scan by default. **This is non-interactive by default** - all operations are performed automatically without prompts.
 
 ### Initialize a specific directory
 
@@ -85,9 +85,9 @@ Initializes LogicStamp but skips modifying `.gitignore`. Useful if you want to m
 stamp init --yes
 ```
 
-Initializes LogicStamp without any prompts. All operations are performed automatically. Useful for CI/CD pipelines.
+Initializes LogicStamp without any prompts. All operations are performed automatically. **Note:** This is redundant since `stamp init` is already non-interactive by default (security scan runs automatically). The `--yes` flag is provided for explicit clarity in CI/CD pipelines.
 
-### Skip security scan
+### Skip security scan (enables interactive mode)
 
 ```bash
 stamp init --no-secure
@@ -95,10 +95,10 @@ stamp init --no-secure
 
 Initializes LogicStamp without running the security scan. This will:
 
-1. Set up `.gitignore` patterns
-2. Generate `LLM_context.md` (if prompted and accepted)
+1. Set up `.gitignore` patterns (with interactive prompts if in TTY)
+2. Generate `LLM_context.md` (with interactive prompts if in TTY)
 
-**Note**: By default, `stamp init` runs a security scan automatically. Use `--no-secure` to skip it.
+**Note**: By default, `stamp init` runs a security scan automatically, which makes it non-interactive. Use `--no-secure` to skip the security scan and enable interactive prompts (when running in a TTY environment).
 
 ## Behavior
 
@@ -165,7 +165,7 @@ This file provides guidance for AI assistants on how to understand and work with
 
 ## Interactive Prompts
 
-`stamp init` prompts you interactively (in TTY mode) for both `.gitignore` and `LLM_context.md` setup:
+**By default, `stamp init` is non-interactive** because the security scan runs automatically. However, if you use `--no-secure`, `stamp init` will prompt you interactively (in TTY mode) for both `.gitignore` and `LLM_context.md` setup:
 
 ### .gitignore Setup Prompt
 
@@ -215,12 +215,14 @@ Generate LLM_context.md in project root? [Y/n]
 - Preference saved as `"skipped"` in `.logicstamp/config.json`
 - `stamp context` will never create this file
 
-### Non-Interactive Mode (CI)
+### Default Behavior (Non-Interactive)
 
-In CI or non-TTY environments:
-- Prompts default to "yes" (non-interactive)
-- Both operations will be performed automatically
-- Preferences are still saved to config
+By default, `stamp init` is non-interactive because the security scan runs automatically:
+- No prompts are shown
+- All operations are performed automatically
+- Preferences are saved to config
+
+**To enable interactive mode:** Use `--no-secure` to skip the security scan, which will enable interactive prompts (when running in a TTY environment).
 
 ### Behavior in `stamp context`
 

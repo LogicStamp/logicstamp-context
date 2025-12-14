@@ -403,25 +403,25 @@ ARGUMENTS:
 
 OPTIONS:
   --skip-gitignore                    Skip .gitignore setup
-  --yes, -y                           Skip all prompts (non-interactive mode)
-  --no-secure                         Skip security scan (security scan runs by default)
+  --yes, -y                           Explicitly skip prompts (non-interactive; default behavior)
+  --no-secure                         Skip security scan (enables interactive prompts in TTY)
   -h, --help                          Show this help
 
 EXAMPLES:
   stamp init
-    Set up LogicStamp in current directory and run security scan
+    Set up LogicStamp in current directory (non-interactive, runs security scan by default)
 
   stamp init ./my-project
-    Set up LogicStamp in a specific directory and run security scan
+    Set up LogicStamp in a specific directory (non-interactive, runs security scan by default)
 
   stamp init --skip-gitignore
     Initialize without modifying .gitignore (security scan still runs)
 
   stamp init --yes
-    Initialize without any prompts (CI-friendly, security scan still runs)
+    Explicitly skip prompts (redundant - already non-interactive by default)
 
   stamp init --no-secure
-    Initialize without running security scan
+    Initialize without security scan (enables interactive prompts in TTY mode)
 
 WHAT IT DOES:
   • Creates or updates .gitignore with LogicStamp patterns:

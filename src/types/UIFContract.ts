@@ -30,7 +30,7 @@
 
 export type ContractPreset = 'submit-only' | 'nav-only' | 'display-only' | 'none';
 
-export type ContractKind = 'react:component' | 'ts:module' | 'node:cli';
+export type ContractKind = 'react:component' | 'react:hook' | 'ts:module' | 'node:cli';
 
 export interface ComponentVersion {
   variables: string[];

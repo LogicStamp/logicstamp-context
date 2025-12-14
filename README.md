@@ -4,7 +4,7 @@
   <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="120" height="120">
 </div>
 
-![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.3.1-blue.svg)
 ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
@@ -39,7 +39,7 @@ stamp context
 
 > **ℹ️** If you see `"PRIVATE_DATA"` in output, see the **Security** section below.
 
-> **Note:** This is a beta release (v0.3.0). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+> **Note:** This is a beta release (v0.3.1). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 ## Why LogicStamp?
 
@@ -104,18 +104,16 @@ After installation, the `stamp` command will be available globally.
 
 ## Recent Updates
 
+**v0.3.1**
+- **🔧 Hook classification accuracy** - Custom React hooks are now correctly classified as `react:hook` instead of `react:component`. The detection logic now checks if the main export is a function starting with "use" and has no JSX elements, ensuring hook files are properly distinguished from component files in context bundles.
+- **📝 Added `react:hook` to ContractKind type** - The `ContractKind` type now includes `'react:hook'` as a valid kind, allowing proper classification of hook files in the contract system.
+
 **v0.3.0** 🔒 **Security Release**
 - **🛡️ Security scan now runs by default** - `stamp init` automatically scans for secrets to protect sensitive data
 - **🔐 Automatic secret sanitization** - Detected secrets are automatically replaced with `"PRIVATE_DATA"` in generated context files
 - **⚡ Improved default security posture** - Better protection out of the box for new projects
 - Removed `--secure` flag (security scanning is now default; use `--no-secure` to skip)
 - **Important**: Credentials can only be included in bundles when using `--include-code full` mode. Other modes (`none`, `header`, `header+style`) only include metadata, not implementation code.
-
-**v0.2.7**
-- Security scanning command (`stamp security scan`) for secret detection
-- Enhanced initialization with `--yes` and `--secure` flags
-- File exclusion with `.stampignore` for context generation
-- Improved CLI documentation with security commands
 
 📋 **Full history → [CHANGELOG.md](https://github.com/LogicStamp/logicstamp-context/blob/main/CHANGELOG.md)**
 
@@ -238,7 +236,7 @@ MIT
 
 ## Branding & Attribution
 
-The LogicStamp Fox mascot and related brand assets are © 2025 LogicStamp Contributors.
+The LogicStamp Fox mascot and related brand assets are © 2025 Amit Levi.
 
 These assets may not be used for third-party branding, logos, or commercial identity without permission. They are included in this repository for documentation and non-commercial use within the LogicStamp ecosystem only.
 

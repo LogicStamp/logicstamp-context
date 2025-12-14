@@ -270,6 +270,97 @@ export function calculate() {
 
       expect(kind).toBe('ts:module');
     });
+
+    it('should detect React hook with default export', () => {
+      const sourceCode = `
+import { useState } from 'react';
+
+export default function useTypewriter(text: string, speed = 30) {
+  const [displayedText, setDisplayedText] = useState('');
+  return displayedText;
+}
+`;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('hooks/useTypewriter.ts', sourceCode);
+
+      const kind = detectKind(['useState'], [], ['react'], 'hooks/useTypewriter.ts', sourceFile);
+
+      expect(kind).toBe('react:hook');
+    });
+
+    it('should detect React hook with named export', () => {
+      const sourceCode = `
+import { useState } from 'react';
+
+export function useCounter(initialValue = 0) {
+  const [count, setCount] = useState(initialValue);
+  return { count, setCount };
+}
+`;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('hooks/useCounter.ts', sourceCode);
+
+      const kind = detectKind(['useState'], [], ['react'], 'hooks/useCounter.ts', sourceFile);
+
+      expect(kind).toBe('react:hook');
+    });
+
+    it('should detect React hook with arrow function export', () => {
+      const sourceCode = `
+import { useState } from 'react';
+
+export const useDebounce = (value: string, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  return debouncedValue;
+};
+`;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('hooks/useDebounce.ts', sourceCode);
+
+      const kind = detectKind(['useState'], [], ['react'], 'hooks/useDebounce.ts', sourceFile);
+
+      expect(kind).toBe('react:hook');
+    });
+
+    it('should not classify component with JSX as hook', () => {
+      const sourceCode = `
+import { useState } from 'react';
+
+export function useCounter(initialValue = 0) {
+  const [count, setCount] = useState(initialValue);
+  return <div>{count}</div>; // Has JSX, should be component
+}
+`;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('components/Counter.tsx', sourceCode);
+
+      const kind = detectKind(['useState'], [], ['react'], 'components/Counter.tsx', sourceFile);
+
+      expect(kind).toBe('react:component');
+    });
+
+    it('should not classify hook that uses components as hook', () => {
+      const sourceCode = `
+import { useState } from 'react';
+import { Button } from './Button';
+
+export function useCounter(initialValue = 0) {
+  const [count, setCount] = useState(initialValue);
+  return { count, setCount };
+}
+`;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('hooks/useCounter.ts', sourceCode);
+
+      const kind = detectKind(['useState'], ['Button'], ['react'], 'hooks/useCounter.ts', sourceFile);
+
+      expect(kind).toBe('react:component');
+    });
   });
 
   describe('Error handling', () => {
@@ -320,7 +411,7 @@ export function MyComponent() {
 
       // Should not throw even if there are issues
       const kind = detectKind(['useState'], [], ['react'], 'test.tsx', sourceFile);
-      expect(['react:component', 'node:cli', 'ts:module']).toContain(kind);
+      expect(['react:component', 'react:hook', 'node:cli', 'ts:module']).toContain(kind);
     });
 
     it('should have debug logging infrastructure in place', () => {
@@ -377,7 +468,7 @@ export function MyComponent() {
 
       // Should return a valid ContractKind on any error, defaulting to ts:module
       const kind = detectKind([], [], [], 'test.tsx', sourceFile);
-      expect(['react:component', 'node:cli', 'ts:module']).toContain(kind);
+      expect(['react:component', 'react:hook', 'node:cli', 'ts:module']).toContain(kind);
     });
   });
 });
