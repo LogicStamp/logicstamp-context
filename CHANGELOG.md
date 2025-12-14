@@ -22,6 +22,18 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.3.1] - 2025-12-15
+
+### Fixed
+
+- **Hook classification accuracy** - Custom React hooks are now correctly classified as `react:hook` instead of `react:component`. The detection logic now checks if the main export (default or named) is a function starting with "use" and has no JSX elements, ensuring hook files are properly distinguished from component files in context bundles. This improves accuracy when analyzing codebases with custom hooks.
+
+### Changed
+
+- **Added `react:hook` to ContractKind type** - The `ContractKind` type now includes `'react:hook'` as a valid kind, allowing proper classification of hook files in the contract system.
+
+---
+
 ## [0.3.0] - 2025-12-07
 
 ### Changed
@@ -435,3 +447,19 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 - N/A (initial release)
 
 ---
+
+## Version links
+
+- [Unreleased](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.1...HEAD)
+- [0.3.1](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.0...HEAD)
+- [0.3.0](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.7...v0.3.0)
+- [0.2.7](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.6...v0.2.7)
+- [0.2.6](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.5...v0.2.6)
+- [0.2.5](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.4...v0.2.5)
+- [0.2.4](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.3...v0.2.4)
+- [0.2.3](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.2...v0.2.3)
+- [0.2.2](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.1...v0.2.2)
+- [0.2.1](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.0...v0.2.1)
+- [0.2.0](https://github.com/LogicStamp/logicstamp-context/compare/v0.1.1...v0.2.0)
+- [0.1.1](https://github.com/LogicStamp/logicstamp-context/compare/v0.1.0...v0.1.1)
+- [0.1.0](https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.1.0)

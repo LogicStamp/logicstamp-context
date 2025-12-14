@@ -82,7 +82,7 @@ function Header() {
 
 **Issue**
 
-Style extraction works great for static Tailwind classes, but we can't parse template literals or classes that are built from variables. If you're storing classes in variables or building them dynamically, those won't show up in the style metadata.
+Style extraction works great for static Tailwind classes and template literals. Static segments within template literals are extracted (e.g., `` className={`base static-class`} `` will extract `"base"` and `"static-class"`). However, dynamic expressions within `${}` are not resolved. If you're storing classes in variables or building them from variables, those dynamic parts won't show up in the style metadata.
 
 **Example**
 
@@ -116,13 +116,13 @@ function Button({ variant }: { variant: 'primary' | 'secondary' }) {
 }
 ```
 
-**Impact:** This is expected—we just can't parse dynamic classes yet. If you build classes from variables, the style metadata will be incomplete.
+**Impact:** Static parts of template literals are extracted, but dynamic expressions (variables, function calls, etc.) within `${}` are not resolved. If you build classes from variables, the style metadata will be incomplete.
 
 ## Hook Classification
 
-**Issue**
+**Status:** ✅ **Fixed in v0.3.1**
 
-Custom hooks sometimes get labeled as `react:component` instead of `react:hook`. Makes it harder to tell hooks apart from components when you're looking at the context.
+Custom hooks are now correctly classified as `react:hook` instead of `react:component`. The detection logic checks if the main export (default or named) is a function starting with "use" and has no JSX elements.
 
 **Example**
 
@@ -135,21 +135,12 @@ function useTypewriter(text: string, speed = 30) {
 }
 ```
 
-**Context Output (Incorrect):**
-```json
-{
-  "kind": "react:component"
-}
-```
-
-**Expected Output:**
+**Context Output (Correct):**
 ```json
 {
   "kind": "react:hook"
 }
 ```
-
-**Impact:** Hooks and components can look the same in context files, which makes it trickier to tell them apart.
 
 ## Summary
 
@@ -163,8 +154,7 @@ function useTypewriter(text: string, speed = 30) {
 **Areas for improvement:**
 - Hook function signatures (parameters not captured)
 - Emit detection accuracy (internal handlers vs. actual emits)
-- Dynamic style extraction (template literals and variable concatenation)
-- Hook classification (`react:hook` vs. `react:component`)
+- Dynamic style extraction (variable-based classes within template literals)
 
 **Bottom line:** We're hitting around 90% accuracy overall. Solid foundation, but there's definitely room to improve. These issues are on our roadmap.
 
@@ -218,20 +208,11 @@ This section documents what's currently captured in context files versus what's 
 
 - **Created timestamps**: When context was generated
 - **OS detection**: Platform info (e.g., `win32`)
-- **Source tool version**: `logicstamp-context@0.3.0`
+- **Source tool version**: `logicstamp-context@0.3.1`
 - **Missing dependencies**: Tracked in `missing` array
 
 ## What's Missing or Incomplete
 
-### 1. Style Metadata Inconsistency
-
-**Issue**: Components generated without `--style` flag have no style metadata, even if they contain Tailwind classes.
-
-**Example**: `BetaSignup.tsx` has Tailwind classes but `context.json` shows no style metadata when generated without `--style`.
-
-**Impact**: Style analysis incomplete for components generated without style flag.
-
-**Priority**: High
 
 ### 2. Inline Style Objects Not Fully Extracted
 
@@ -253,32 +234,40 @@ style={{ transformOrigin: 'center' }}
 
 **Priority**: High
 
-### 3. CSS-in-JS Not Supported
+### 2. CSS-in-JS Partially Supported
 
-**Missing**: Support for styled-components, Emotion, Chakra UI, Ant Design
+**Supported**: 
+- styled-components (component names, theme usage, css prop)
+- Emotion (@emotion/styled)
+- Material UI (@mui/material) - components, packages, features
+- ShadCN/UI - components, variants, sizes
+- Radix UI - primitives, patterns, accessibility
+- Framer Motion - components, variants, animation features
 
-**Status**: Mentioned as "coming soon" in Integrations component
+**Missing/Incomplete**: 
+- Chakra UI - not yet detected
+- Ant Design - not yet detected
+- Styled JSX - CSS content from `<style jsx>` blocks not extracted (only detected)
+- Inline style object values - detected but property values not extracted
 
-**Impact**: Style analysis incomplete for CSS-in-JS projects
+**Impact**: Most major CSS-in-JS libraries are supported, but some smaller libraries and inline style values are not fully extracted.
 
 **Priority**: Medium
 
-### 4. Edge Relationships Empty
+### 3. Edge Relationships (Status: Implemented)
 
-**Issue**: Dependency graph edges are always empty arrays.
+**Status**: Dependency graph edges ARE built and populated.
 
-**Example**:
-```json
-"edges": []  // Always empty!
-```
+**Implementation**: The `buildEdges()` function in `src/core/pack/builder.ts` creates edges between components based on their dependencies. Edges are included in bundle output.
 
-**Missing**: Actual dependency edges between components
+**Note**: If edges appear empty in your output, this may be due to:
+- Components having no dependencies
+- Dependencies not being resolved (missing from manifest)
+- Dependencies being filtered as internal components
 
-**Impact**: Can't traverse component graph relationships
+**Priority**: ~~High~~ Resolved (remove from limitations if edges are working correctly in practice)
 
-**Priority**: High
-
-### 5. Third-Party Components Minimal Info
+### 4. Third-Party Components Minimal Info
 
 **Issue**: Third-party components only show basic "missing" info without details.
 
@@ -298,7 +287,7 @@ style={{ transformOrigin: 'center' }}
 
 **Priority**: Medium
 
-### 6. Code Content Not Captured
+### 5. Code Content Not Captured
 
 **Missing**: Actual source code (by design for token efficiency)
 
@@ -310,7 +299,7 @@ style={{ transformOrigin: 'center' }}
 
 **Priority**: Low
 
-### 7. TypeScript Types Incomplete
+### 6. TypeScript Types Incomplete
 
 **Captured**: Prop types as strings (`"string"`, `"number"`)
 
@@ -320,7 +309,7 @@ style={{ transformOrigin: 'center' }}
 
 **Priority**: Medium
 
-### 8. Comments/JSDoc Only in Header Mode
+### 7. Comments/JSDoc Only in Header Mode
 
 **Missing**: Regular comments, TODO notes
 
@@ -330,7 +319,7 @@ style={{ transformOrigin: 'center' }}
 
 **Priority**: Low
 
-### 9. Test Files Excluded
+### 8. Test Files Excluded
 
 **Issue**: Test files are completely excluded from context generation.
 
@@ -344,7 +333,7 @@ style={{ transformOrigin: 'center' }}
 
 **Note**: This is intentional by design - test files are excluded to keep context bundles focused on production code. If test analysis is needed, it would require a separate feature or flag to include test files.
 
-### 10. Runtime Behavior
+### 9. Runtime Behavior
 
 **Missing**: Runtime props, state changes, side effects
 
@@ -356,7 +345,7 @@ style={{ transformOrigin: 'center' }}
 
 **Priority**: Low
 
-### 11. Styled JSX Not Fully Parsed
+### 10. Styled JSX Not Fully Parsed
 
 **Issue**: Styled JSX blocks are detected but CSS content is not extracted.
 
@@ -377,7 +366,7 @@ style={{ transformOrigin: 'center' }}
 
 **Priority**: High
 
-### 12. Context main.json Limitations
+### 11. Context main.json Limitations
 
 **Missing**: Cross-folder relationships, project-wide statistics
 
@@ -393,12 +382,11 @@ style={{ transformOrigin: 'center' }}
 
 1. **Extract inline style values**: Parse `style={{ ... }}` objects and include properties
 2. **Parse styled-jsx**: Extract CSS from `<style jsx>` blocks
-3. **Populate edges**: Build actual dependency graph edges
-4. **Style flag consistency**: Ensure all components get style metadata when flag is used
+3. **Populate edges**: Build actual dependency graph edges (if not working correctly in practice)
 
 ### Medium Priority
 
-1. **CSS-in-JS support**: Add styled-components, Emotion parsers
+1. **CSS-in-JS support**: Complete support for remaining libraries (Chakra UI, Ant Design), extract styled-jsx CSS content
 2. **Enhanced third-party info**: Include package names, versions, prop types
 3. **TypeScript type extraction**: Capture full type definitions
 4. **Project-level insights**: Add cross-folder analysis to `context_main.json`
@@ -418,8 +406,7 @@ style={{ transformOrigin: 'center' }}
 - Versioning/hashing system is robust
 
 **What needs improvement:**
-- Style metadata extraction completeness (inline styles, styled-jsx)
-- Dependency graph edges (currently empty)
-- CSS-in-JS support (planned)
-- Consistency in style flag application
+- Style metadata extraction completeness (inline style values, styled-jsx CSS content)
+- Dynamic class resolution (variable-based classes within template literals)
+- CSS-in-JS support completeness (remaining libraries like Chakra UI, Ant Design)
 

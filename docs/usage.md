@@ -43,7 +43,7 @@ These options are available at the top level (before any subcommand):
 
 **Examples:**
 ```bash
-stamp --version    # Shows: fox mascot + "Version: 0.3.0"
+stamp --version    # Shows: fox mascot + "Version: 0.3.1"
 stamp -v           # Same as --version
 stamp --help       # Shows main help
 stamp -h           # Same as --help
@@ -56,16 +56,13 @@ stamp -h           # Same as --help
 Initialize LogicStamp in your project by setting up `.gitignore` patterns and project configuration.
 
 ```bash
-# Basic initialization (interactive)
+# Basic initialization (non-interactive, runs security scan by default)
 stamp init
 
-# Initialize (runs security scan by default)
-stamp init
-
-# Initialize without prompts (CI-friendly, security scan still runs)
+# Initialize without prompts (redundant - already non-interactive by default)
 stamp init --yes
 
-# Initialize without security scan
+# Initialize with interactive prompts (skips security scan)
 stamp init --no-secure
 
 # Initialize specific directory
@@ -833,7 +830,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp-context@0.3.0"
+      "source": "logicstamp-context@0.3.1"
     }
   }
 ]
@@ -865,7 +862,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
     }
   ],
   "meta": {
-            "source": "logicstamp-context@0.3.0"
+            "source": "logicstamp-context@0.3.1"
   }
 }
 ```

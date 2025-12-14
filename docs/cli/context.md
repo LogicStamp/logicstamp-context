@@ -11,7 +11,7 @@ stamp context [path] [options]
 
 **Output Structure:** Generates multiple `context.json` files (one per folder containing components) plus a `context_main.json` index file at the output root, keeping your project's directory structure.
 
-**Setup:** `stamp context` respects preferences saved in `.logicstamp/config.json` and never prompts. On first run (no config), it defaults to skipping both `.gitignore` and `LLM_CONTEXT.md` setup for CI-friendly behavior. Use [`stamp init`](init.md) to interactively configure these options.
+**Setup:** `stamp context` respects preferences saved in `.logicstamp/config.json` and never prompts. On first run (no config), it defaults to skipping both `.gitignore` and `LLM_CONTEXT.md` setup for CI-friendly behavior. Use [`stamp init`](init.md) to configure these options (non-interactive by default; use `--no-secure` for interactive mode).
 
 **File Exclusion:** `stamp context` respects `.stampignore` and excludes those files from context generation. You'll see how many files were excluded (unless using `--quiet`). Use `stamp ignore <file>` to add files to `.stampignore`. `.stampignore` is completely optional and independent of security scanning. See [stampignore.md](../stampignore.md) for details.
 
@@ -209,7 +209,7 @@ The `context_main.json` file provides a complete directory index:
     }
   ],
   "meta": {
-    "source": "logicstamp-context@0.3.0"
+    "source": "logicstamp-context@0.3.1"
   }
 }
 ```

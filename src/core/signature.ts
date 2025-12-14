@@ -237,6 +237,11 @@ export function inferDescription(filePath: string, ast: AstExtract): string {
     return `${fileName} - TypeScript module`;
   }
 
+  // React hook patterns (kind === 'react:hook')
+  if (ast.kind === 'react:hook') {
+    return `${fileName} - Custom React hook`;
+  }
+
   // React component patterns (kind === 'react:component')
   if (fileName.toLowerCase().includes('button')) {
     return `${fileName} - Interactive button component`;
