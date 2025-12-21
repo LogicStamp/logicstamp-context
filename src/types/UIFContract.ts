@@ -248,10 +248,7 @@ export interface UIFContract {
   type: 'UIFContract';
   schemaVersion: '0.3';
   kind: ContractKind;
-  entryId: string;
-  entryPathAbs?: string;  // Absolute native path (e.g., C:\\Users\\...\\App.tsx)
-  entryPathRel?: string;  // Relative POSIX path (e.g., src/App.tsx)
-  os?: 'win32' | 'posix';  // OS where contract was generated
+  entryId: string;  // Relative normalized path (e.g., src/App.tsx) - always uses forward slashes
   description: string;
   usedIn?: string[];  // Optional: only persisted when non-empty
   version: ComponentVersion;
@@ -264,6 +261,12 @@ export interface UIFContract {
   style?: StyleMetadata;  // Optional style metadata
   semanticHash: string;
   fileHash: string;
+  /** @deprecated No longer generated as of v0.3.2. Use `entryId` instead (contains relative normalized path). Kept for backward compatibility with old contracts. */
+  entryPathAbs?: string;
+  /** @deprecated No longer generated as of v0.3.2. Use `entryId` instead (contains relative normalized path). Kept for backward compatibility with old contracts. */
+  entryPathRel?: string;
+  /** @deprecated No longer generated as of v0.3.2. Relative paths are OS-agnostic. Kept for backward compatibility with old contracts. */
+  os?: 'win32' | 'posix';
 }
 
 /**

@@ -41,10 +41,11 @@ Identifies which styling approaches are used in each component:
   - Transitions and animations
   - Responsive breakpoints (sm, md, lg, xl, 2xl)
 
-- **SCSS/CSS Modules** – Detects module imports from TSX/TS files and parses the imported style files:
-  - CSS selectors used
+- **SCSS/CSS Modules** – Detects module imports from TSX/TS files and parses the imported style files using AST-based parsing (css-tree):
+  - CSS selectors used (class, ID, and type selectors)
   - CSS properties defined
   - SCSS features (variables, nesting, mixins)
+  - Nested rules inside `@media`, `@supports`, `@container`, and other at-rules
   - **Note**: Only CSS/SCSS files that are imported by component files are parsed. Standalone CSS/SCSS files that aren't imported won't be analyzed.
 
 - **Inline Styles** – Detects `style={{...}}` usage

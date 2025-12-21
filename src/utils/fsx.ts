@@ -61,7 +61,7 @@ export async function globFiles(
       try {
     const matches = await glob(pattern, {
       cwd: searchPath,
-      absolute: true,
+      absolute: false,
       ignore: [
         '**/node_modules/**',
         '**/dist/**',
@@ -75,7 +75,9 @@ export async function globFiles(
       ],
     });
 
-    files.push(...matches);
+    // Convert to relative paths (normalize for consistency)
+    const relativeMatches = matches.map(match => normalizeEntryId(match));
+    files.push(...relativeMatches);
       } catch (error) {
         const err = error as Error;
         debugError('fsx', 'globFiles inner pattern', {
@@ -149,11 +151,13 @@ export async function readFileWithText(filePath: string): Promise<FileWithText> 
  */
 export async function findSidecarFiles(searchPath: string): Promise<string[]> {
   try {
-    return await glob('**/*.uif.json', {
+    const matches = await glob('**/*.uif.json', {
     cwd: searchPath,
-    absolute: true,
+    absolute: false,
     ignore: ['**/node_modules/**', '**/dist/**', '**/build/**'],
   });
+    // Convert to relative paths (normalize for consistency)
+    return matches.map(match => normalizeEntryId(match));
   } catch (error) {
     const err = error as Error;
     debugError('fsx', 'findSidecarFiles', {

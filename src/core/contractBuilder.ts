@@ -36,8 +36,6 @@ import {
 } from './signature.js';
 import { semanticHashFromAst, fileHash } from '../utils/hash.js';
 import { normalizeEntryId } from '../utils/fsx.js';
-import { resolve, relative } from 'node:path';
-import { platform } from 'node:os';
 
 export interface ContractBuildParams {
   description?: string;
@@ -95,24 +93,16 @@ export function buildContract(
   // Combine all predictions
   const allPredictions = [...presetPredictions, ...behavioralPredictions];
 
-  // Compute path fields
-  const entryPathAbs = resolve(entryId);
-  const cwd = process.cwd();
-  const entryPathRel = relative(cwd, entryId).replace(/\\/g, '/'); // Always use POSIX separators
-  const os = platform() === 'win32' ? 'win32' : 'posix';
-
   // Extract exports
   const exports = extractExportsMetadata(ast);
 
   // Build the contract (usedIn omitted - computed at manifest time, not persisted)
+  // Note: entryPathAbs and entryPathRel are omitted - entryId is already relative and normalized
   const contract: UIFContract = {
     type: 'UIFContract',
     schemaVersion: '0.3',
     kind: ast.kind,
     entryId: normalizeEntryId(entryId),
-    entryPathAbs,
-    entryPathRel,
-    os,
     description: params.description || inferDescription(entryId, ast),
     version: {
       variables: ast.variables,

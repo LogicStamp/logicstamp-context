@@ -179,9 +179,8 @@ The `context_main.json` file provides a complete directory index:
 ```json
 {
   "type": "LogicStampIndex",
-  "schemaVersion": "0.1",
+  "schemaVersion": "0.2",
   "projectRoot": ".",
-  "projectRootResolved": "/absolute/path/to/project",
   "createdAt": "2025-01-15T10:30:00.000Z",
   "summary": {
     "totalComponents": 42,
@@ -209,7 +208,7 @@ The `context_main.json` file provides a complete directory index:
     }
   ],
   "meta": {
-    "source": "logicstamp-context@0.3.1"
+      "source": "logicstamp-context@0.3.2"
   }
 }
 ```

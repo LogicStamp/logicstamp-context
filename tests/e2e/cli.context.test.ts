@@ -54,8 +54,9 @@ describe('CLI Context Generation Tests', () => {
       const index = JSON.parse(indexContent);
 
       expect(index).toHaveProperty('type', 'LogicStampIndex');
-      expect(index).toHaveProperty('schemaVersion', '0.1');
+      expect(index).toHaveProperty('schemaVersion', '0.2');
       expect(index).toHaveProperty('projectRoot', '.');
+      expect(index).not.toHaveProperty('projectRootResolved'); // Removed in v0.3.2
       expect(index).toHaveProperty('summary');
       expect(index.summary).toHaveProperty('totalBundles');
       expect(index.summary).toHaveProperty('totalFolders');
@@ -110,6 +111,9 @@ describe('CLI Context Generation Tests', () => {
       // Verify projectRoot is relative
       expect(index.projectRoot).toBe('.');
       expect(!isAbsolute(index.projectRoot)).toBe(true);
+
+      // Verify projectRootResolved is not present (removed in v0.3.2 for portability)
+      expect(index).not.toHaveProperty('projectRootResolved');
 
       // Verify all folder paths are relative
       expect(Array.isArray(index.folders)).toBe(true);
@@ -468,7 +472,7 @@ describe('CLI Context Generation Tests', () => {
       const index = JSON.parse(indexContent);
 
       expect(index).toHaveProperty('type', 'LogicStampIndex');
-      expect(index).toHaveProperty('schemaVersion', '0.1');
+      expect(index).toHaveProperty('schemaVersion', '0.2');
       expect(index).toHaveProperty('folders');
       expect(Array.isArray(index.folders)).toBe(true);
       expect(index.folders.length).toBeGreaterThan(0);

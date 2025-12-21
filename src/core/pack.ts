@@ -187,7 +187,7 @@ export interface FolderInfo {
  */
 export interface LogicStampIndex {
   type: 'LogicStampIndex';
-  schemaVersion: '0.1';
+  schemaVersion: '0.1' | '0.2';
   projectRoot: string;
   projectRootResolved?: string;
   createdAt: string;

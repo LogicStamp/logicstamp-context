@@ -8,6 +8,7 @@ import { extractStyleMetadata } from '../../../core/styleExtractor.js';
 import { readFileWithText } from '../../../utils/fsx.js';
 import type { UIFContract } from '../../../types/UIFContract.js';
 import { Project } from 'ts-morph';
+import { join, isAbsolute } from 'node:path';
 
 export interface BuildContractsResult {
   contracts: UIFContract[];
@@ -17,9 +18,13 @@ export interface BuildContractsResult {
 
 /**
  * Build contracts from files
+ * @param files - Array of file paths (relative to projectRoot)
+ * @param projectRoot - Project root directory for resolving relative paths
+ * @param options - Build options
  */
 export async function buildContractsFromFiles(
   files: string[],
+  projectRoot: string,
   options: {
     includeStyle?: boolean;
     predictBehavior: boolean;
@@ -44,19 +49,22 @@ export async function buildContractsFromFiles(
 
   for (const file of files) {
     try {
+      // Resolve relative path to absolute for file operations
+      const absoluteFilePath = isAbsolute(file) ? file : join(projectRoot, file);
+      
       // Extract AST from file
-      const ast = await extractFromFile(file);
+      const ast = await extractFromFile(absoluteFilePath);
 
       // Build contract from AST
-      const { text } = await readFileWithText(file);
+      const { text } = await readFileWithText(absoluteFilePath);
       totalSourceSize += text.length; // Accumulate source size
 
       // Extract style metadata if requested (separate layer)
       let styleMetadata;
       if (options.includeStyle && styleProject) {
         try {
-          const sourceFile = styleProject.addSourceFileAtPath(file);
-          styleMetadata = await extractStyleMetadata(sourceFile, file);
+          const sourceFile = styleProject.addSourceFileAtPath(absoluteFilePath);
+          styleMetadata = await extractStyleMetadata(sourceFile, absoluteFilePath);
         } catch (styleError) {
           // Style extraction is optional - don't fail if it errors
           if (!options.quiet) {
@@ -65,6 +73,7 @@ export async function buildContractsFromFiles(
         }
       }
 
+      // Use relative path for contract entryId (file is relative)
       const result = buildContract(file, ast, {
         preset: 'none',
         sourceText: text,

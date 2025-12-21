@@ -43,7 +43,7 @@ These options are available at the top level (before any subcommand):
 
 **Examples:**
 ```bash
-stamp --version    # Shows: fox mascot + "Version: 0.3.1"
+stamp --version    # Shows: fox mascot + "Version: 0.3.2"
 stamp -v           # Same as --version
 stamp --help       # Shows main help
 stamp -h           # Same as --help
@@ -830,7 +830,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp-context@0.3.1"
+      "source": "logicstamp-context@0.3.2"
     }
   }
 ]
@@ -841,9 +841,8 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
 ```json
 {
   "type": "LogicStampIndex",
-  "schemaVersion": "0.1",
+  "schemaVersion": "0.2",
   "projectRoot": ".",
-  "projectRootResolved": "/absolute/path/to/project",
   "createdAt": "2025-01-15T10:30:00.000Z",
   "summary": {
     "totalComponents": 42,
@@ -862,7 +861,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
     }
   ],
   "meta": {
-            "source": "logicstamp-context@0.3.1"
+            "source": "logicstamp-context@0.3.2"
   }
 }
 ```

@@ -22,6 +22,28 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.3.2] - 2025-12-21
+
+### Security
+
+- **Updated `glob` dependency to 11.1.0+** - Updated `glob` package from `^10.3.10` to `^11.1.0` to address CVE-2025-64756 (command injection vulnerability in the `-c/--cmd` option). This vulnerability affected versions 10.3.7 through 11.0.3. The update patches the security issue. Note: LogicStamp Context uses the `glob` API (not the CLI), so it was not directly affected by this vulnerability, but the update ensures the latest security patches are in place.
+
+### Changed
+
+- **Output files now use relative paths** - Generated context files (`context_main.json` and folder `context.json` files) now use relative paths instead of absolute paths. The `projectRoot` field in `context_main.json` is now `"."` (relative) instead of an absolute path, and all `contextFile` paths in folder entries are relative to the project root. Output change: `projectRootResolved` is no longer emitted in generated context files (kept as optional in types for backward compatibility). The `LogicStampIndex` schema version has been bumped from `0.1` to `0.2` to reflect this output change. This improves portability of context files across different machines and environments. **Note:** This is a breaking change if you have tools or scripts that expect absolute paths in the generated JSON files or rely on the `projectRootResolved` field. Most consumers should continue to work as-is since relative paths can be resolved from the project root. See [Migration Guide](docs/MIGRATION_0.3.2.md) for details.
+
+- **CSS/SCSS parsing now uses AST-based parsing** - Migrated CSS and SCSS file parsing from regex-based extraction to a deterministic AST walk using `css-tree`. This replaces heuristic regex-based parsing with a deterministic AST walk, improving correctness and future extensibility. The parser provides more robust and accurate parsing of CSS/SCSS files, consistent with the AST-based approach used for TypeScript/React files with `ts-morph`, and properly handles:
+  - CSS selectors (class, ID, and type selectors) with accurate extraction
+  - CSS properties with proper filtering of SCSS variables and at-rules
+  - SCSS features (variables, nesting, mixins) detection
+  - Nested rules inside `@media`, `@supports`, `@container`, and other at-rules
+  - SCSS `//` comments (automatically converted to `/* */` for css-tree compatibility)
+  - Invalid selector filtering (file extensions, numeric values, keyframe percentages, color values, pixel values)
+  - Better error handling with graceful fallback on parse failures
+
+
+---
+
 ## [0.3.1] - 2025-12-15
 
 ### Fixed
@@ -450,8 +472,9 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 
 ## Version links
 
-- [Unreleased](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.1...HEAD)
-- [0.3.1](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.0...HEAD)
+- [Unreleased](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.2...HEAD)
+- [0.3.2](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.1...v0.3.2)
+- [0.3.1](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.0...v0.3.1)
 - [0.3.0](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.7...v0.3.0)
 - [0.2.7](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.6...v0.2.7)
 - [0.2.6](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.5...v0.2.6)
