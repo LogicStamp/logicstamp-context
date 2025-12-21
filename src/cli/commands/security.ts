@@ -136,7 +136,8 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
   const stampignoreFileAbs = join(projectRoot, STAMPIGNORE_FILENAME);
   
   files = files.filter(file => {
-    const fileAbs = resolve(file);
+    // file is now relative, resolve it relative to projectRoot
+    const fileAbs = join(projectRoot, file);
     return fileAbs !== reportFileAbs && fileAbs !== stampignoreFileAbs;
   });
 
@@ -223,8 +224,11 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
 
   for (const file of files) {
     try {
+      // file is now relative, resolve it for file operations
+      const absoluteFilePath = join(projectRoot, file);
+      
       // Check file size before reading
-      const fileStats = await stat(file);
+      const fileStats = await stat(absoluteFilePath);
       if (fileStats.size > MAX_FILE_SIZE) {
         if (!options.quiet) {
           console.warn(`   ⚠️  Skipped ${file}: file too large (${Math.round(fileStats.size / 1024 / 1024)}MB > 10MB)`);
@@ -232,7 +236,8 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
         continue;
       }
 
-      const { text } = await readFileWithText(file);
+      const { text } = await readFileWithText(absoluteFilePath);
+      // Use relative path in matches (file is relative from globFiles)
       const matches = scanFileForSecrets(file, text);
       const filteredMatches = filterFalsePositives(matches);
 
@@ -248,7 +253,7 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
     }
   }
 
-  // Generate report - convert absolute paths to relative before serializing
+  // Generate report (files are already relative from globFiles)
   const report: SecurityReport = {
     type: 'LogicStampSecurityReport',
     schemaVersion: '0.1',
@@ -256,13 +261,8 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
     projectRoot,
     filesScanned: files.length,
     secretsFound: allMatches.length,
-    matches: allMatches.map(match => ({
-      ...match,
-      file: getRelativePath(projectRoot, match.file),
-    })),
-    filesWithSecrets: Array.from(filesWithSecrets)
-      .map(file => getRelativePath(projectRoot, file))
-      .sort(),
+    matches: allMatches,
+    filesWithSecrets: Array.from(filesWithSecrets).sort(),
   };
 
   // Write report

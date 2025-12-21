@@ -16,11 +16,16 @@ export function extractHooks(source: SourceFile): string[] {
     source.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((callExpr) => {
       try {
         const expr = callExpr.getExpression();
-        const text = expr.getText();
+        
+        // Only extract hooks from direct identifier calls (not method chains)
+        // e.g., useState() is extracted, but useState().map() should only extract useState
+        if (expr.getKind() === SyntaxKind.Identifier) {
+          const text = expr.getText();
 
-        // Match useXxx pattern
-        if (/^use[A-Z]/.test(text)) {
-          hooks.add(text);
+          // Match useXxx pattern
+          if (/^use[A-Z]/.test(text)) {
+            hooks.add(text);
+          }
         }
       } catch (error) {
         debugError('componentExtractor', 'extractHooks', {

@@ -10,7 +10,7 @@ LogicStamp uses semantic versioning for schemas:
 |--------|----------------|---------|
 | `UIFContract` | `0.3` | Component contract structure |
 | `LogicStampBundle` | `0.1` | LLM context bundle format |
-| `LogicStampIndex` | `0.1` | Main index for multi-file context |
+| `LogicStampIndex` | `0.2` | Main index for multi-file context |
 
 ## UIFContract Schema
 
@@ -277,7 +277,7 @@ interface LogicStampBundle {
   };
   meta: {
     missing: MissingDependency[];
-    source: string;  // Tool version (e.g., "logicstamp-context@0.3.1")
+    source: string;  // Tool version (e.g., "logicstamp-context@0.3.2")
   };
 }
 
@@ -383,7 +383,7 @@ interface MissingDependency {
         "referencedBy": "src/components/Button.tsx"
       }
     ],
-      "source": "logicstamp-context@0.3.1"
+      "source": "logicstamp-context@0.3.2"
   }
 }
 ```
@@ -411,14 +411,14 @@ interface MissingDependency {
 
 Main index file for multi-file context organization.
 
-### Schema Version: `0.1`
+### Schema Version: `0.2`
 
 ```typescript
 interface LogicStampIndex {
   type: "LogicStampIndex";
-  schemaVersion: "0.1";
+  schemaVersion: "0.2";
   projectRoot: string;              // Relative path (usually ".")
-  projectRootResolved: string;      // Absolute path
+  projectRootResolved?: string;     // Optional absolute path (deprecated, omitted in v0.3.2+ for portability)
   createdAt: string;                // ISO 8601 timestamp
   summary: {
     totalComponents: number;
@@ -448,9 +448,8 @@ interface FolderEntry {
 ```json
 {
   "type": "LogicStampIndex",
-  "schemaVersion": "0.1",
+  "schemaVersion": "0.2",
   "projectRoot": ".",
-  "projectRootResolved": "/absolute/path/to/project",
   "createdAt": "2025-01-15T10:30:00.000Z",
   "summary": {
     "totalComponents": 42,
@@ -478,7 +477,7 @@ interface FolderEntry {
     }
   ],
   "meta": {
-      "source": "logicstamp-context@0.3.1"
+      "source": "logicstamp-context@0.3.2"
   }
 }
 ```
@@ -488,9 +487,9 @@ interface FolderEntry {
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `type` | `"LogicStampIndex"` | ✅ | Index type identifier |
-| `schemaVersion` | `"0.1"` | ✅ | Schema version |
+| `schemaVersion` | `"0.2"` | ✅ | Schema version |
 | `projectRoot` | `string` | ✅ | Relative project root path |
-| `projectRootResolved` | `string` | ✅ | Absolute project root path |
+| `projectRootResolved` | `string` | ⚠️ | Optional absolute project root path (deprecated, omitted in v0.3.2+ for portability) |
 | `createdAt` | `string` | ✅ | ISO 8601 timestamp |
 | `summary` | `object` | ✅ | Project-wide statistics |
 | `summary.totalComponents` | `number` | ✅ | Total components analyzed |
