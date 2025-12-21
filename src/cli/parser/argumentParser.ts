@@ -65,7 +65,7 @@ export function parseContextArgs(args: string[]): ContextOptions {
           break;
         case 'format':
         case 'f':
-          options.format = value as 'json' | 'pretty' | 'ndjson';
+          options.format = value as 'json' | 'pretty' | 'ndjson' | 'toon';
           i++;
           break;
         case 'out':

@@ -123,7 +123,7 @@ export type CodeInclusionMode = 'none' | 'header' | 'full';
 /**
  * Output format for bundles
  */
-export type BundleFormat = 'json' | 'pretty' | 'ndjson';
+export type BundleFormat = 'json' | 'pretty' | 'ndjson' | 'toon';
 
 /**
  * Options for packing a component
