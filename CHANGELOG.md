@@ -35,7 +35,7 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **CSS/SCSS parsing now uses AST-based parsing** - Migrated CSS and SCSS file parsing from regex-based extraction to a deterministic AST walk using `css-tree`. This replaces heuristic regex-based parsing with a deterministic AST walk, improving correctness and future extensibility. The parser provides more robust and accurate parsing of CSS/SCSS files, consistent with the AST-based approach used for TypeScript/React files with `ts-morph`, and properly handles:
   - CSS selectors (class, ID, and type selectors) with accurate extraction
   - CSS properties with proper filtering of SCSS variables and at-rules
-  - SCSS features (variables, nesting, mixins) detection
+  - SCSS feature detection (variables, nesting, mixins) - detects presence as boolean flags
   - Nested rules inside `@media`, `@supports`, `@container`, and other at-rules
   - SCSS `//` comments (automatically converted to `/* */` for css-tree compatibility)
   - Invalid selector filtering (file extensions, numeric values, keyframe percentages, color values, pixel values)
@@ -318,7 +318,7 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **Layout metadata** - Extracts flex/grid patterns, hero sections, feature cards, and responsive breakpoints
 - **Visual metadata** - Captures color palettes, spacing patterns, border radius, and typography classes
 - **Animation metadata** - Detects framer-motion animations, CSS transitions, and viewport triggers
-- **SCSS/CSS module parsing** - Analyzes imported style files to extract selectors, properties, and SCSS features
+- **SCSS/CSS module parsing** - Analyzes imported style files to extract selectors, properties, and SCSS feature detection (variables, nesting, mixins as boolean flags)
 
 #### Enhanced Token Comparison
 - **Four-mode comparison** - `--compare-modes` now shows `none`, `header`, `header+style`, and `full` modes

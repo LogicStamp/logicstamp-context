@@ -268,6 +268,8 @@ ARGUMENTS:
 OPTIONS:
   --approve                           Auto-approve updates (non-interactive, CI-safe)
   --clean-orphaned                    Auto-delete orphaned files with --approve
+  --stats                             Show token count statistics per folder
+  --skip-gitignore                    Skip .gitignore setup when generating fresh context (auto-mode only)
   --quiet                             Show only diffs (suppress summaries, PASS folders, and token analysis)
   -h, --help                          Show this help
 

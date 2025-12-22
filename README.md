@@ -107,7 +107,7 @@ After installation, the `stamp` command will be available globally.
 **v0.3.2**
 - **🔒 Security update** - Updated `glob` dependency to 11.1.0+ to address CVE-2025-64756
 - **📁 Improved portability** - Context files now use relative paths instead of absolute paths, improving portability across different machines and environments. See [Migration Guide](docs/MIGRATION_0.3.2.md) for details.
-- **🎨 CSS/SCSS parsing now uses AST parser** - Migrated from regex-based extraction to AST-based parsing using `css-tree` for more robust and accurate parsing. Properly handles CSS selectors, SCSS features (variables, nesting, mixins), nested rules in at-rules, and includes better error handling with graceful fallback.
+- **🎨 CSS/SCSS parsing now uses AST parser** - Migrated from regex-based extraction to AST-based parsing using `css-tree` for more robust and accurate parsing. Properly handles CSS selectors, SCSS feature detection (variables, nesting, mixins as boolean flags), nested rules in at-rules, and includes better error handling with graceful fallback.
 
 **v0.3.1**
 - **🔧 Hook classification accuracy** - Custom React hooks are now correctly classified as `react:hook` instead of `react:component`. The detection logic now checks if the main export is a function starting with "use" and has no JSX elements, ensuring hook files are properly distinguished from component files in context bundles.
