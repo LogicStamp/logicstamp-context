@@ -167,9 +167,9 @@ $spacing-unit: 8px;
 }
 ```
 
-**Extracted:**
-- Variable usage patterns
-- Variable definitions (when parseable)
+**Detected:**
+- Presence of SCSS variables (boolean flag: `variables: true`)
+- Note: Variable names, values, and usage patterns are not extracted, only the presence of variables is detected
 
 ### Nesting
 
@@ -193,9 +193,10 @@ SCSS nesting is recognized:
 }
 ```
 
-**Extracted:**
-- Nested selector structure
-- Parent selector usage (`&`)
+**Detected:**
+- Presence of SCSS nesting (boolean flag: `nesting: true`)
+- Detects nesting via parent selector (`&`) with indentation
+- Note: Full nested selector structure is not extracted, only the presence of nesting is detected
 
 ### Mixins
 
@@ -226,9 +227,9 @@ SCSS mixins are detected:
 }
 ```
 
-**Extracted:**
-- Mixin definitions
-- Mixin usage (`@include`)
+**Detected:**
+- Presence of `@mixin` definitions (boolean flag: `mixins: true`)
+- Note: `@include` usage is not detected, only `@mixin` definitions are detected
 
 ### Partials and Imports
 

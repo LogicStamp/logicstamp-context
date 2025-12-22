@@ -26,7 +26,7 @@ stamp ignore <path> [path2] ...     # Add files/folders to .stampignore
 stamp context [path] [options]
 stamp context style [path] [options]  # Generate context with style metadata
 stamp context validate [file]
-stamp context compare [oldFile] [newFile] [options]
+stamp context compare [oldFile] [newFile] [options]  # Auto-mode (default): omit files to compare all context files
 stamp context clean [path] [options]
 stamp security scan [path] [options]  # Scan for secrets and generate report
 stamp security --hard-reset [options]  # Reset security configuration
@@ -190,6 +190,9 @@ If a security report (`stamp_security_report.json`) exists, `stamp context` auto
 | `--predict-behavior` | | `false` | Include experimental behavioral predictions |
 | `--dry-run` | | `false` | Skip writing the output file; prints summary instead |
 | `--stats` | | `false` | Emit one-line JSON stats (helpful for CI pipelines). When combined with `--compare-modes`, writes `context_compare_modes.json` for MCP integration. |
+| `--compare-modes` | | `false` | Show detailed token comparison table across all modes (none/header/header+style/full) with accurate style metadata impact. When combined with `--stats`, writes `context_compare_modes.json` for MCP integration. |
+| `--include-style` | | `false` | Extract style metadata (Tailwind, SCSS, Material UI, animations, layout). |
+| `--strict-missing` | | `false` | Exit with error if any missing dependencies found |
 | `--skip-gitignore` | | `false` | Skip `.gitignore` setup (never prompt or modify) |
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors) |
 
@@ -222,7 +225,7 @@ The style command analyzes components and extracts:
 
 1. **Style Sources**
    - Tailwind CSS classes (categorized by type: layout, spacing, colors, typography, etc.)
-   - SCSS/CSS module imports and their details (selectors, properties, features)
+   - SCSS/CSS module imports and their details (selectors, properties, feature detection flags for variables/nesting/mixins)
    - Inline styles detection
    - styled-components/emotion usage
    - framer-motion animation components
@@ -416,6 +419,7 @@ The compare command has **two modes**:
 | `--approve` | Auto-approve updates (non-interactive, CI-safe) |
 | `--clean-orphaned` | Auto-delete orphaned files with `--approve` |
 | `--stats` | Show token count statistics per folder |
+| `--skip-gitignore` | Skip `.gitignore` setup when generating fresh context (auto-mode only) |
 | `--quiet` | `-q` | Suppress verbose output (show only diffs) |
 | `--help` | Show help message |
 

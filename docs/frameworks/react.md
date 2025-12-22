@@ -69,11 +69,12 @@ function MyComponent() {
 
 LogicStamp categorizes components into different kinds:
 
-- **`component`** - Presentational components (no hooks, pure UI)
-- **`container`** - Components with state or side effects
-- **`page`** - Route/page components (Next.js)
-- **`layout`** - Layout components (Next.js)
-- **`hook`** - Custom React hooks
+- **`react:component`** - React functional components (with hooks, JSX, or React imports)
+- **`react:hook`** - Custom React hooks (functions starting with "use" and no JSX)
+- **`ts:module`** - TypeScript modules/utilities (non-React code)
+- **`node:cli`** - Node.js CLI scripts (files in `/cli/` directory or using `process.argv`)
+
+**Note:** The `container`, `page`, and `layout` kinds mentioned in some documentation are not currently implemented. All React components are classified as `react:component` regardless of whether they have state, side effects, or are used as pages/layouts.
 
 ## React-Specific Features
 

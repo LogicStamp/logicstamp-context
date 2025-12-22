@@ -284,31 +284,15 @@ stamp context style
 
 ## Tailwind Configuration
 
-LogicStamp can read your Tailwind configuration for better extraction:
+**Note:** LogicStamp does not read `tailwind.config.js` files. It extracts Tailwind classes directly from your source code using AST-based analysis. Custom classes defined in your Tailwind configuration will be detected if they appear in your component code, but the configuration file itself is not parsed.
 
-```js
-// tailwind.config.js
-module.exports = {
-  content: ['./src/**/*.{js,ts,jsx,tsx}'],
-  theme: {
-    extend: {
-      colors: {
-        brand: {
-          50: '#f0f9ff',
-          500: '#3b82f6',
-          900: '#1e3a8a',
-        },
-      },
-    },
-  },
-};
-```
+The extractor works by:
+- Analyzing className attributes in JSX
+- Extracting utility classes from your source code
+- Categorizing classes by type (layout, spacing, colors, etc.)
+- Detecting breakpoint prefixes from class names
 
-**Supported:**
-- Custom colors
-- Custom spacing
-- Custom breakpoints
-- Theme extensions
+Custom classes from your Tailwind config (e.g., `custom-card`, `custom-shadow`) will be extracted if they're used in your components, but they'll be categorized as "other" since they don't match standard Tailwind utility patterns.
 
 ## Best Practices
 

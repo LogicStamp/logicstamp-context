@@ -80,10 +80,8 @@ function List() {
 ```
 
 **Extracted:**
-- Variant names: `hidden`, `visible`
-- Variant structures
-- Stagger animations
-- Variant composition
+- Variant names: `hidden`, `visible` (property names from variant objects)
+- Note: Variant structures, stagger configuration, and variant composition details are not extracted, only variant names are extracted
 
 ### Gesture Handlers
 
@@ -197,10 +195,9 @@ function DraggableCard() {
 }
 ```
 
-**Extracted:**
-- Drag configuration
-- Drag constraints
-- Drag event handlers
+**Detected:**
+- Drag prop presence (boolean flag: `hasGestures: true` when drag-related props are present)
+- Note: Drag configuration, constraints, and event handlers are not extracted, only the presence of drag-related props is detected
 
 ## Style Extraction
 
@@ -309,9 +306,8 @@ function StaggeredList() {
 }
 ```
 
-**Extracted:**
-- Stagger configuration
-- Parent-child animation patterns
+**Detected:**
+- Variant names from stagger animations (variant names are extracted, but staggerChildren values and stagger configuration are not extracted)
 
 ### Spring Animations
 
@@ -336,9 +332,9 @@ function SpringAnimation() {
 }
 ```
 
-**Extracted:**
-- Spring configuration
-- Physics-based animations
+**Detected:**
+- Animation presence (boolean flags for gestures, layout, viewport)
+- Note: Spring configuration (stiffness, damping, etc.) and physics-based animation values are not extracted, only animation presence is detected
 
 ## Usage
 
