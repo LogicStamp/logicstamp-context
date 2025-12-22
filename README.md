@@ -2,15 +2,20 @@
 
 <div align="center">
   <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="120">
+
+  <br/>
+
+  ![Version](https://img.shields.io/badge/version-0.3.2-blue.svg)
+  ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
+  ![License](https://img.shields.io/badge/license-MIT-green.svg)
+  ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
+  [![CI](https://github.com/LogicStamp/logicstamp-context/workflows/CI/badge.svg)](https://github.com/LogicStamp/logicstamp-context/actions)
+
+  <br/>
+
+  **A tiny CLI that compiles your React/TypeScript codebase into machine-readable context bundles for AI and CI.  
+  Fast, deterministic, zero-config.**
 </div>
-
-![Version](https://img.shields.io/badge/version-0.3.2-blue.svg)
-![Beta](https://img.shields.io/badge/status-beta-orange.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
-[![CI](https://github.com/LogicStamp/logicstamp-context/workflows/CI/badge.svg)](https://github.com/LogicStamp/logicstamp-context/actions)
-
-**A tiny CLI that compiles your React/TypeScript codebase into machine-readable context bundles for AI and CI. Fast, deterministic, zero-config.**
 
 ![LogicStamp Context in action](./assets/logicstamp-context-demo.gif)
 *Sample stamp context output with generated bundles*
@@ -135,7 +140,7 @@ LogicStamp Context automatically protects sensitive data in generated context fi
 - **Manual exclusions** - Use `stamp ignore <file>` to manually exclude files with secrets from context generation via `.stampignore`
 - **Safe by default** - Only metadata is included in default modes; credentials only appear in `--include-code full` mode
 
-> **Seeing `"PRIVATE_DATA"` in your context files?** This means secrets were detected in your codebase during scanning. The security scan examines `.ts`, `.tsx`, `.js`, `.jsx`, and `.json` files for secret patterns. **Action required:**
+> **⚠️ Seeing `"PRIVATE_DATA"` in your context files?** This means secrets were detected in your codebase during scanning. The security scan examines `.ts`, `.tsx`, `.js`, `.jsx`, and `.json` files for secret patterns. **Action required:**
 > 1. Review `stamp_security_report.json` to see what was found
 > 2. Remove hard-coded secrets from your source code
 > 3. Use environment variables or secret management tools instead
@@ -143,7 +148,7 @@ LogicStamp Context automatically protects sensitive data in generated context fi
 > 
 > **Best practice:** Never commit secrets to version control. Use `.env` files (in `.gitignore`) or secret management services.
 
-> **Important**: Always review generated context files before sharing. For complete security documentation, see [SECURITY.md](https://github.com/LogicStamp/logicstamp-context/blob/main/SECURITY.md).
+> **ℹ️ Important**: Always review generated context files before sharing. For complete security documentation, see [SECURITY.md](https://github.com/LogicStamp/logicstamp-context/blob/main/SECURITY.md).
 
 ## Usage
 
