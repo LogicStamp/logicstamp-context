@@ -277,7 +277,7 @@ interface LogicStampBundle {
   };
   meta: {
     missing: MissingDependency[];
-    source: string;  // Tool version (e.g., "logicstamp-context@0.3.2")
+    source: string;  // Tool version (e.g., "logicstamp-context@0.3.3")
   };
 }
 
@@ -383,7 +383,7 @@ interface MissingDependency {
         "referencedBy": "src/components/Button.tsx"
       }
     ],
-      "source": "logicstamp-context@0.3.2"
+      "source": "logicstamp-context@0.3.3"
   }
 }
 ```
@@ -477,7 +477,7 @@ interface FolderEntry {
     }
   ],
   "meta": {
-      "source": "logicstamp-context@0.3.2"
+      "source": "logicstamp-context@0.3.3"
   }
 }
 ```

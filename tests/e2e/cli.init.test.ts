@@ -52,6 +52,8 @@ describe('CLI Init Command Tests', () => {
       expect(gitignoreContent).toContain('# LogicStamp context & security files');
       expect(gitignoreContent).toContain('context.json');
       expect(gitignoreContent).toContain('context_*.json');
+      expect(gitignoreContent).toContain('context.toon');
+      expect(gitignoreContent).toContain('context_*.toon');
       expect(gitignoreContent).toContain('*.uif.json');
       expect(gitignoreContent).toContain('logicstamp.manifest.json');
       expect(gitignoreContent).toContain('.logicstamp/');
@@ -91,6 +93,8 @@ describe('CLI Init Command Tests', () => {
       expect(gitignoreContent).toContain('# LogicStamp context & security files');
       expect(gitignoreContent).toContain('context.json');
       expect(gitignoreContent).toContain('context_*.json');
+      expect(gitignoreContent).toContain('context.toon');
+      expect(gitignoreContent).toContain('context_*.toon');
       expect(gitignoreContent).toContain('.logicstamp/');
       expect(gitignoreContent).toContain('stamp_security_report.json');
 
@@ -107,7 +111,7 @@ describe('CLI Init Command Tests', () => {
       await mkdir(testDir, { recursive: true });
 
       const gitignorePath = join(testDir, '.gitignore');
-      const existingContent = '# LogicStamp context & security files\ncontext.json\ncontext_*.json\n*.uif.json\nlogicstamp.manifest.json\n.logicstamp/\nstamp_security_report.json\n';
+      const existingContent = '# LogicStamp context & security files\ncontext.json\ncontext_*.json\ncontext.toon\ncontext_*.toon\n*.uif.json\nlogicstamp.manifest.json\n.logicstamp/\nstamp_security_report.json\n';
       await writeFile(gitignorePath, existingContent);
 
       // Run stamp init (with --no-secure to match old behavior)
@@ -168,6 +172,8 @@ describe('CLI Init Command Tests', () => {
       expect(stdout).toContain('LogicStamp generates large context files');
       expect(stdout).toContain('context.json');
       expect(stdout).toContain('context_*.json');
+      expect(stdout).toContain('context.toon');
+      expect(stdout).toContain('context_*.toon');
     }, 30000);
 
     it('should handle LLM_CONTEXT.md creation', async () => {

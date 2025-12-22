@@ -73,6 +73,8 @@ export async function init(options: InitOptions = {}): Promise<void> {
         console.log('\n   The following patterns will be added to .gitignore:');
         console.log('   - context.json');
         console.log('   - context_*.json');
+        console.log('   - context.toon');
+        console.log('   - context_*.toon');
         console.log('   - *.uif.json');
         console.log('   - logicstamp.manifest.json');
         console.log('   - .logicstamp/');

@@ -43,7 +43,7 @@ These options are available at the top level (before any subcommand):
 
 **Examples:**
 ```bash
-stamp --version    # Shows: fox mascot + "Version: 0.3.2"
+stamp --version    # Shows: fox mascot + "Version: 0.3.3"
 stamp -v           # Same as --version
 stamp --help       # Shows main help
 stamp -h           # Same as --help
@@ -182,7 +182,7 @@ If a security report (`stamp_security_report.json`) exists, `stamp context` auto
 |--------|-------|---------|-------------|
 | `--depth <n>` | `-d` | `1` | Dependency traversal depth (0=self only, 1=direct deps, etc.) |
 | `--include-code <mode>` | `-c` | `header` | Code inclusion: `none`, `header`, or `full` |
-| `--format <fmt>` | `-f` | `json` | Output format: `json`, `pretty`, or `ndjson` |
+| `--format <fmt>` | `-f` | `json` | Output format: `json`, `pretty`, `ndjson`, or `toon` |
 | `--out <file>` | `-o` | `context.json` | Output directory or file path. If a `.json` file is specified, its directory is used as the output directory. Otherwise, the path is used as the output directory. Context files will be written maintaining folder structure within this directory. |
 | `--max-nodes <n>` | `-m` | `100` | Maximum nodes to include (prevents huge bundles) |
 | `--profile <name>` | | `llm-chat` | Apply preset profile (see below) |
@@ -834,7 +834,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp-context@0.3.2"
+      "source": "logicstamp-context@0.3.3"
     }
   }
 ]
@@ -865,7 +865,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
     }
   ],
   "meta": {
-            "source": "logicstamp-context@0.3.2"
+            "source": "logicstamp-context@0.3.3"
   }
 }
 ```

@@ -208,7 +208,7 @@ This section documents what's currently captured in context files versus what's 
 
 - **Created timestamps**: When context was generated
 - **OS detection**: Platform info (e.g., `win32`)
-- **Source tool version**: `logicstamp-context@0.3.2`
+- **Source tool version**: `logicstamp-context@0.3.3`
 - **Missing dependencies**: Tracked in `missing` array
 
 ## What's Missing or Incomplete

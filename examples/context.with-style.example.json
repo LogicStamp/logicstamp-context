@@ -45,7 +45,7 @@
                 },
                 "ctaText": "string"
               },
-              "events": {},
+              "emits": {},
               "state": {}
             },
             "semanticHash": "uif:b2c3d4e5f6g7h8i9j0k1l2m3",
@@ -157,7 +157,7 @@
               }
             }
           },
-          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: HeroSection - Landing page hero with animated content\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: [\"useInView\"]\n *   components: [\"motion.div\",\"Button\"]\n *   functions: [\"HeroSection\"]\n *   imports: [\"framer-motion\",\"./Button\",\"react\"]\n *\n * Logic Signature:\n *   props: {\"title\":\"string\",\"subtitle\":{\"type\":\"string\",\"optional\":true},\"ctaText\":\"string\"}\n *   events: {}\n *   state: {}\n *\n * Hashes:\n *   semantic: uif:b2c3d4e5f6g7h8i9j0k1l2m3\n *   file: uif:n4o5p6q7r8s9t0u1v2w3x4y5\n *\n * Style Metadata:\n *   - Tailwind CSS: 22 classes (layout, spacing, colors, typography)\n *   - Framer Motion: viewport animations with fadeIn/slideUp variants\n *   - Hero pattern: flex layout with centered content\n *   - Visual: blue-purple gradient, white text, responsive breakpoints\n */"
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: HeroSection - Landing page hero with animated content\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: [\"useInView\"]\n *   components: [\"motion.div\",\"Button\"]\n *   functions: [\"HeroSection\"]\n *   imports: [\"framer-motion\",\"./Button\",\"react\"]\n *\n * Logic Signature:\n *   props: {\"title\":\"string\",\"subtitle\":{\"type\":\"string\",\"optional\":true},\"ctaText\":\"string\"}\n *   emits: {}\n *   state: {}\n *\n * Hashes:\n *   semantic: uif:b2c3d4e5f6g7h8i9j0k1l2m3\n *   file: uif:n4o5p6q7r8s9t0u1v2w3x4y5\n *\n * Style Metadata:\n *   - Tailwind CSS: 22 classes (layout, spacing, colors, typography)\n *   - Framer Motion: viewport animations with fadeIn/slideUp variants\n *   - Hero pattern: flex layout with centered content\n *   - Visual: blue-purple gradient, white text, responsive breakpoints\n */"
         },
         {
           "entryId": "src/components/Button.tsx",
@@ -201,7 +201,7 @@
                   "optional": true
                 }
               },
-              "events": {
+              "emits": {
                 "onClick": {
                   "type": "function",
                   "signature": "() => void"
@@ -263,7 +263,7 @@
               }
             }
           },
-          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: Button - Styled button component with hover effects\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: [\"useState\"]\n *   components: []\n *   functions: [\"Button\"]\n *   imports: [\"./Button.module.scss\",\"react\"]\n *\n * Logic Signature:\n *   props: {\"variant\":{\"type\":\"literal-union\",\"literals\":[\"primary\",\"secondary\",\"outline\"]},\"isLoading\":{\"type\":\"boolean\",\"optional\":true},\"onClick\":{\"type\":\"function\",\"signature\":\"() => void\",\"optional\":true}}\n *   events: {\"onClick\":{\"type\":\"function\",\"signature\":\"() => void\"}}\n *   state: {\"hovered\":\"boolean\"}\n *\n * Hashes:\n *   semantic: uif:a0dd5029ee79e6508fe9db25\n *   file: uif:a6398c5890bcbf31603af36a\n *\n * Style Metadata:\n *   - SCSS Module: Button.module.scss with 6 selectors\n *   - SCSS Features: variables, nesting, mixins\n *   - CSS Properties: background-color, color, padding, transitions\n *   - Animation: CSS transitions with hover trigger\n */"
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: Button - Styled button component with hover effects\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: [\"useState\"]\n *   components: []\n *   functions: [\"Button\"]\n *   imports: [\"./Button.module.scss\",\"react\"]\n *\n * Logic Signature:\n *   props: {\"variant\":{\"type\":\"literal-union\",\"literals\":[\"primary\",\"secondary\",\"outline\"]},\"isLoading\":{\"type\":\"boolean\",\"optional\":true},\"onClick\":{\"type\":\"function\",\"signature\":\"() => void\",\"optional\":true}}\n *   emits: {\"onClick\":{\"type\":\"function\",\"signature\":\"() => void\"}}\n *   state: {\"hovered\":\"boolean\"}\n *\n * Hashes:\n *   semantic: uif:a0dd5029ee79e6508fe9db25\n *   file: uif:a6398c5890bcbf31603af36a\n *\n * Style Metadata:\n *   - SCSS Module: Button.module.scss with 6 selectors\n *   - SCSS Features: variables, nesting, mixins\n *   - CSS Properties: background-color, color, padding, transitions\n *   - Animation: CSS transitions with hover trigger\n */"
         },
         {
           "entryId": "src/components/FeatureCard.tsx",
@@ -292,7 +292,7 @@
                 "title": "string",
                 "description": "string"
               },
-              "events": {},
+              "emits": {},
               "state": {}
             },
             "semanticHash": "uif:c9e8f7a6b5c4d3e2f1a0b9c8d",
@@ -367,7 +367,7 @@
               }
             }
           },
-          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: FeatureCard - Grid card component with Tailwind styling\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: []\n *   components: []\n *   functions: [\"FeatureCard\"]\n *   imports: [\"react\"]\n *\n * Logic Signature:\n *   props: {\"icon\":{\"type\":\"ReactNode\"},\"title\":\"string\",\"description\":\"string\"}\n *   events: {}\n *   state: {}\n *\n * Hashes:\n *   semantic: uif:c9e8f7a6b5c4d3e2f1a0b9c8d\n *   file: uif:d0f1e2d3c4b5a6f7e8d9c0b1a2\n *\n * Style Metadata:\n *   - Tailwind CSS: 16 classes (grid layout, responsive breakpoints)\n *   - Layout: Grid with 3 columns on medium+ screens\n *   - Visual: White background, gray text, shadow effects\n *   - Animation: CSS transitions with hover shadow effect\n */"
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: FeatureCard - Grid card component with Tailwind styling\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: []\n *   components: []\n *   functions: [\"FeatureCard\"]\n *   imports: [\"react\"]\n *\n * Logic Signature:\n *   props: {\"icon\":{\"type\":\"ReactNode\"},\"title\":\"string\",\"description\":\"string\"}\n *   emits: {}\n *   state: {}\n *\n * Hashes:\n *   semantic: uif:c9e8f7a6b5c4d3e2f1a0b9c8d\n *   file: uif:d0f1e2d3c4b5a6f7e8d9c0b1a2\n *\n * Style Metadata:\n *   - Tailwind CSS: 16 classes (grid layout, responsive breakpoints)\n *   - Layout: Grid with 3 columns on medium+ screens\n *   - Visual: White background, gray text, shadow effects\n *   - Animation: CSS transitions with hover shadow effect\n */"
         }
       ],
       "edges": [
@@ -379,7 +379,7 @@
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp-context@0.3.2"
+      "source": "logicstamp-context@0.3.3"
     }
   }
 ]
