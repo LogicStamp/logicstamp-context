@@ -29,12 +29,10 @@ app/
       route.ts        → API route
 ```
 
-**Extracted metadata:**
-- Route paths from folder structure
-- Layout hierarchy
-- Page components
-- API route handlers
-- Loading and error boundaries
+**Detected metadata:**
+- `isInAppDir: true` - File is in `/app/` directory
+- `directive: 'client' | 'server'` - 'use client' or 'use server' directive
+- Note: Route paths, layout hierarchy, page components, API route handlers, and loading/error boundaries are not extracted, only directory location and directives are detected
 
 ### Pages Router (Next.js 12 and earlier)
 
@@ -50,11 +48,10 @@ pages/
     users.ts          → API route (/api/users)
 ```
 
-**Extracted metadata:**
-- Route paths from file structure
-- Dynamic routes (`[param]`, `[...slug]`)
-- API routes
-- `getServerSideProps`, `getStaticProps`, `getStaticPaths`
+**Detected metadata:**
+- `isInAppDir: true` - File is in `/app/` directory (if applicable)
+- `directive: 'client' | 'server'` - 'use client' or 'use server' directive (if present)
+- Note: Route paths, dynamic routes, API routes, and `getServerSideProps`/`getStaticProps`/`getStaticPaths` are not extracted, only directory location and directives are detected
 
 ### Next.js Components
 
@@ -116,10 +113,10 @@ export default function BlogPost({ params }: { params: { slug: string } }) {
 }
 ```
 
-**Extracted:**
-- Dynamic route parameters
-- Route path structure
-- Route metadata
+**Detected:**
+- File location in `/app/` directory (`isInAppDir: true`)
+- 'use client' or 'use server' directive (`directive: 'client' | 'server'`)
+- Note: Dynamic route parameters, route path structure, and route metadata are not extracted, only directory location and directives are detected
 
 ### Next.js Imports
 
@@ -152,10 +149,9 @@ async function ServerComponent() {
 }
 ```
 
-**Extracted:**
-- Async components
-- Server-side data fetching
-- Server component patterns
+**Detected:**
+- `directive: 'server'` - 'use server' directive is detected
+- Note: Async components, server-side data fetching patterns, and server component patterns are not extracted, only the 'use server' directive is detected
 
 ### Client Components
 
@@ -172,21 +168,13 @@ export function ClientComponent() {
 }
 ```
 
-**Extracted:**
-- Client component directive
-- Client-side hooks and interactivity
+**Detected:**
+- `directive: 'client'` - 'use client' directive is detected
+- Note: Client-side hooks and interactivity patterns are not extracted, only the 'use client' directive is detected
 
 ### Metadata
 
-Next.js metadata exports are captured:
-
-```tsx
-// app/page.tsx
-export const metadata = {
-  title: 'Home Page',
-  description: 'Welcome to our site',
-};
-```
+**Note:** Next.js metadata exports (e.g., `export const metadata = {...}`) are not currently extracted. Only the 'use client'/'use server' directives and file location in `/app/` directory are detected.
 
 ## Usage
 

@@ -26,7 +26,7 @@ stamp ignore <path> [path2] ...     # Add files/folders to .stampignore
 stamp context [path] [options]
 stamp context style [path] [options]  # Generate context with style metadata
 stamp context validate [file]
-stamp context compare [oldFile] [newFile] [options]
+stamp context compare [oldFile] [newFile] [options]  # Auto-mode (default): omit files to compare all context files
 stamp context clean [path] [options]
 stamp security scan [path] [options]  # Scan for secrets and generate report
 stamp security --hard-reset [options]  # Reset security configuration
@@ -43,7 +43,7 @@ These options are available at the top level (before any subcommand):
 
 **Examples:**
 ```bash
-stamp --version    # Shows: fox mascot + "Version: 0.3.1"
+stamp --version    # Shows: fox mascot + "Version: 0.3.2"
 stamp -v           # Same as --version
 stamp --help       # Shows main help
 stamp -h           # Same as --help
@@ -190,6 +190,9 @@ If a security report (`stamp_security_report.json`) exists, `stamp context` auto
 | `--predict-behavior` | | `false` | Include experimental behavioral predictions |
 | `--dry-run` | | `false` | Skip writing the output file; prints summary instead |
 | `--stats` | | `false` | Emit one-line JSON stats (helpful for CI pipelines). When combined with `--compare-modes`, writes `context_compare_modes.json` for MCP integration. |
+| `--compare-modes` | | `false` | Show detailed token comparison table across all modes (none/header/header+style/full) with accurate style metadata impact. When combined with `--stats`, writes `context_compare_modes.json` for MCP integration. |
+| `--include-style` | | `false` | Extract style metadata (Tailwind, SCSS, Material UI, animations, layout). |
+| `--strict-missing` | | `false` | Exit with error if any missing dependencies found |
 | `--skip-gitignore` | | `false` | Skip `.gitignore` setup (never prompt or modify) |
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors) |
 
@@ -222,7 +225,7 @@ The style command analyzes components and extracts:
 
 1. **Style Sources**
    - Tailwind CSS classes (categorized by type: layout, spacing, colors, typography, etc.)
-   - SCSS/CSS module imports and their details (selectors, properties, features)
+   - SCSS/CSS module imports and their details (selectors, properties, feature detection flags for variables/nesting/mixins)
    - Inline styles detection
    - styled-components/emotion usage
    - framer-motion animation components
@@ -416,6 +419,7 @@ The compare command has **two modes**:
 | `--approve` | Auto-approve updates (non-interactive, CI-safe) |
 | `--clean-orphaned` | Auto-delete orphaned files with `--approve` |
 | `--stats` | Show token count statistics per folder |
+| `--skip-gitignore` | Skip `.gitignore` setup when generating fresh context (auto-mode only) |
 | `--quiet` | `-q` | Suppress verbose output (show only diffs) |
 | `--help` | Show help message |
 
@@ -830,7 +834,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp-context@0.3.1"
+      "source": "logicstamp-context@0.3.2"
     }
   }
 ]
@@ -841,9 +845,8 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
 ```json
 {
   "type": "LogicStampIndex",
-  "schemaVersion": "0.1",
+  "schemaVersion": "0.2",
   "projectRoot": ".",
-  "projectRootResolved": "/absolute/path/to/project",
   "createdAt": "2025-01-15T10:30:00.000Z",
   "summary": {
     "totalComponents": 42,
@@ -862,7 +865,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
     }
   ],
   "meta": {
-            "source": "logicstamp-context@0.3.1"
+            "source": "logicstamp-context@0.3.2"
   }
 }
 ```

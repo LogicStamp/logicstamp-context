@@ -372,6 +372,19 @@ async function loadIndex(indexPath: string): Promise<LogicStampIndex> {
       throw new Error(`Invalid index file: expected type 'LogicStampIndex', got '${index.type}'`);
     }
 
+    // Backward compatibility: warn about old schema version
+    if (index.schemaVersion === '0.1') {
+      console.warn(`⚠️  Warning: context_main.json uses schema version 0.1 (legacy format).`);
+      console.warn(``);
+      console.warn(`   Consider regenerating with "stamp context" to upgrade to version 0.2 (relative paths).`);
+      console.warn(``);
+      console.warn(`   Optional cleanup: "stamp context clean --all --yes".`);
+      console.warn(``);
+      console.warn(`   See docs/MIGRATION_0.3.2.md for details.\n`);
+    } else if (index.schemaVersion !== '0.2') {
+      console.warn(`⚠️  Warning: Unknown schema version "${index.schemaVersion}". Expected '0.1' or '0.2'.`);
+    }
+
     return index;
   } catch (error) {
     const err = error as Error;

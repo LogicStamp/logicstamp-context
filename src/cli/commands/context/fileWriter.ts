@@ -229,9 +229,8 @@ export async function writeMainIndex(
   // Create index structure
   const index: LogicStampIndex = {
     type: 'LogicStampIndex',
-    schemaVersion: '0.1',
+    schemaVersion: '0.2',
     projectRoot: '.',
-    projectRootResolved: normalizedRoot,
     createdAt: new Date().toISOString(),
     summary: {
       totalComponents: contracts.length,

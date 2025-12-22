@@ -180,6 +180,265 @@ describe('SCSS Extractor', () => {
 
       expect(result.selectors.length).toBeGreaterThan(0);
     });
+
+    it('should not extract invalid selectors from keyframes, colors, and values (regression test)', async () => {
+      const cssFile = join(tempDir, 'styles.css');
+      const cssContent = `
+        .scrolling-journey {
+          position: relative;
+          width: 100%;
+        }
+
+        .journey__missile {
+          position: absolute;
+          background: rgba(99, 102, 241, 0.8);
+          background: rgba(99, 102, 241, 0.5);
+          transform: scale(1.5);
+          width: 1px;
+          height: 2px;
+          margin: 3px;
+        }
+
+        .journey__boom-particle {
+          display: block;
+        }
+
+        .journey-target-hit {
+          opacity: 0;
+        }
+
+        @keyframes smokeFloat {
+          0% {
+            opacity: 0;
+            transform: translateY(0);
+          }
+          50% {
+            opacity: 0.5;
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(-20px);
+          }
+        }
+
+        @keyframes journey-target-hit {
+          0% {
+            scale: 1;
+          }
+          102% {
+            scale: 1.2;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .scrolling-journey {
+            padding: 1rem;
+          }
+        }
+      `;
+      await writeFile(cssFile, cssContent, 'utf-8');
+
+      const result = await parseStyleFile(cssFile, 'styles.css');
+
+      // Should contain valid selectors
+      expect(result.selectors).toContain('.scrolling-journey');
+      expect(result.selectors).toContain('.journey__missile');
+      expect(result.selectors).toContain('.journey__boom-particle');
+      expect(result.selectors).toContain('.journey-target-hit');
+
+      // Should NOT contain invalid tokens from keyframes
+      expect(result.selectors).not.toContain('0');
+      expect(result.selectors).not.toContain('100');
+      expect(result.selectors).not.toContain('102');
+      expect(result.selectors).not.toContain('50');
+
+      // Should NOT contain color values from rgba()
+      expect(result.selectors).not.toContain('99');
+      expect(result.selectors).not.toContain('102');
+      expect(result.selectors).not.toContain('241');
+
+      // Should NOT contain pixel values
+      expect(result.selectors).not.toContain('1px');
+      expect(result.selectors).not.toContain('2px');
+      expect(result.selectors).not.toContain('3px');
+
+      // Should NOT contain decimal numbers from CSS values (e.g., .5 from rgba(..., 0.5) or scale(1.5))
+      expect(result.selectors).not.toContain('.5');
+      expect(result.selectors).not.toContain('.8');
+
+      // Should NOT contain keyframe name fragments
+      expect(result.selectors).not.toContain('hit');
+      expect(result.selectors).not.toContain('smokeFloat');
+      expect(result.selectors).not.toContain('from');
+      expect(result.selectors).not.toContain('to');
+
+      // Verify all selectors are valid (start with . or #, or are valid elements)
+      const invalidPatterns = [
+        /^\d+$/, // pure numbers
+        /^\d+(\.\d+)?(px|em|rem|vh|vw|vmin|vmax|%)$/i, // values with units
+      ];
+      
+      for (const selector of result.selectors) {
+        // Should be a class, ID, or valid element
+        const isValid = 
+          selector.startsWith('.') || 
+          selector.startsWith('#') || 
+          /^[a-zA-Z][\w-]*$/.test(selector);
+        
+        expect(isValid).toBe(true);
+        
+        // Should not match invalid patterns
+        for (const pattern of invalidPatterns) {
+          expect(selector).not.toMatch(pattern);
+        }
+      }
+    });
+
+    it('should not extract selectors from CSS comments', async () => {
+      const cssFile = join(tempDir, 'styles.css');
+      const cssContent = `
+        /* This is a comment with .commented-selector */
+        .container {
+          padding: 1rem;
+        }
+        
+        /* Another comment: #commented-id and div selector */
+        #header {
+          background: blue;
+        }
+        
+        /* SCSS style comment
+           with .multi-line-selector
+           and #another-id
+        */
+        .footer {
+          margin: 1rem;
+        }
+      `;
+      await writeFile(cssFile, cssContent, 'utf-8');
+
+      const result = await parseStyleFile(cssFile, 'styles.css');
+
+      // Should contain valid selectors
+      expect(result.selectors).toContain('.container');
+      expect(result.selectors).toContain('#header');
+      expect(result.selectors).toContain('.footer');
+
+      // Should NOT contain selectors from comments
+      expect(result.selectors).not.toContain('.commented-selector');
+      expect(result.selectors).not.toContain('#commented-id');
+      expect(result.selectors).not.toContain('.multi-line-selector');
+      expect(result.selectors).not.toContain('#another-id');
+    });
+
+    it('should not extract selectors from SCSS // style comments', async () => {
+      const scssFile = join(tempDir, 'styles.scss');
+      const scssContent = `
+        // This is a SCSS comment with .commented-class
+        .container {
+          padding: 1rem;
+        }
+        
+        // Another comment with #commented-id
+        #header {
+          background: blue;
+        }
+      `;
+      await writeFile(scssFile, scssContent, 'utf-8');
+
+      const result = await parseStyleFile(scssFile, 'styles.scss');
+
+      // Should contain valid selectors
+      expect(result.selectors).toContain('.container');
+      expect(result.selectors).toContain('#header');
+
+      // Should NOT contain selectors from comments
+      expect(result.selectors).not.toContain('.commented-class');
+      expect(result.selectors).not.toContain('#commented-id');
+    });
+
+    it('should extract selectors from nested rules inside @supports', async () => {
+      const cssFile = join(tempDir, 'styles.css');
+      const cssContent = `
+        .base {
+          padding: 1rem;
+        }
+
+        @supports (display: grid) {
+          .grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+          }
+          
+          #grid-header {
+            grid-column: 1 / -1;
+          }
+        }
+
+        @supports not (display: grid) {
+          .fallback {
+            display: flex;
+          }
+        }
+      `;
+      await writeFile(cssFile, cssContent, 'utf-8');
+
+      const result = await parseStyleFile(cssFile, 'styles.css');
+
+      // Should contain selectors from outside @supports
+      expect(result.selectors).toContain('.base');
+      
+      // Should contain selectors from inside @supports
+      expect(result.selectors).toContain('.grid-container');
+      expect(result.selectors).toContain('#grid-header');
+      expect(result.selectors).toContain('.fallback');
+
+      // Should extract properties from nested rules
+      expect(result.properties).toContain('display');
+      expect(result.properties).toContain('grid-template-columns');
+      expect(result.properties).toContain('grid-column');
+    });
+
+    it('should extract selectors from nested rules inside @container', async () => {
+      const cssFile = join(tempDir, 'styles.css');
+      const cssContent = `
+        .card {
+          padding: 1rem;
+        }
+
+        @container (min-width: 400px) {
+          .card-large {
+            padding: 2rem;
+          }
+          
+          #card-title {
+            font-size: 1.5rem;
+          }
+        }
+
+        @container sidebar (max-width: 300px) {
+          .sidebar-compact {
+            display: none;
+          }
+        }
+      `;
+      await writeFile(cssFile, cssContent, 'utf-8');
+
+      const result = await parseStyleFile(cssFile, 'styles.css');
+
+      // Should contain selectors from outside @container
+      expect(result.selectors).toContain('.card');
+      
+      // Should contain selectors from inside @container
+      expect(result.selectors).toContain('.card-large');
+      expect(result.selectors).toContain('#card-title');
+      expect(result.selectors).toContain('.sidebar-compact');
+
+      // Should extract properties from nested rules
+      expect(result.properties).toContain('padding');
+      expect(result.properties).toContain('font-size');
+      expect(result.properties).toContain('display');
+    });
   });
 
   describe('extractScssMetadata', () => {

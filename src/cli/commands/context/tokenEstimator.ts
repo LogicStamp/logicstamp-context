@@ -14,6 +14,7 @@ import { extractStyleMetadata } from '../../../core/styleExtractor.js';
 import { readFileWithText } from '../../../utils/fsx.js';
 import { Project } from 'ts-morph';
 import { formatBundles } from './bundleFormatter.js';
+import { join, isAbsolute } from 'node:path';
 
 export interface TokenEstimates {
   currentGPT4: number;
@@ -131,7 +132,9 @@ export async function generateModeComparison(
     const sourceTexts: string[] = [];
     for (const file of files) {
       try {
-        const { text } = await readFileWithText(file);
+        // Resolve relative path to absolute for file operations
+        const absoluteFilePath = isAbsolute(file) ? file : join(projectRoot, file);
+        const { text } = await readFileWithText(absoluteFilePath);
         sourceTexts.push(text);
       } catch (error) {
         // Skip files that can't be read
@@ -167,9 +170,12 @@ export async function generateModeComparison(
     const noStyleContracts: UIFContract[] = [];
     for (const file of files) {
       try {
-        const ast = await extractFromFile(file);
-        const { text } = await readFileWithText(file);
+        // Resolve relative path to absolute for file operations
+        const absoluteFilePath = isAbsolute(file) ? file : join(projectRoot, file);
+        const ast = await extractFromFile(absoluteFilePath);
+        const { text } = await readFileWithText(absoluteFilePath);
         
+        // Use relative path for contract entryId (file is relative)
         const result = buildContract(file, ast, {
           preset: 'none',
           sourceText: text,
@@ -232,17 +238,20 @@ export async function generateModeComparison(
     const styleContracts: UIFContract[] = [];
     for (const file of files) {
       try {
-        const ast = await extractFromFile(file);
-        const { text } = await readFileWithText(file);
+        // Resolve relative path to absolute for file operations
+        const absoluteFilePath = isAbsolute(file) ? file : join(projectRoot, file);
+        const ast = await extractFromFile(absoluteFilePath);
+        const { text } = await readFileWithText(absoluteFilePath);
         
         let styleMetadata;
         try {
-          const sourceFile = styleProject.addSourceFileAtPath(file);
-          styleMetadata = await extractStyleMetadata(sourceFile, file);
+          const sourceFile = styleProject.addSourceFileAtPath(absoluteFilePath);
+          styleMetadata = await extractStyleMetadata(sourceFile, absoluteFilePath);
         } catch (styleError) {
           // Style extraction is optional
         }
         
+        // Use relative path for contract entryId (file is relative)
         const result = buildContract(file, ast, {
           preset: 'none',
           sourceText: text,

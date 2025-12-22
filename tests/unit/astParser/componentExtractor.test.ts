@@ -80,6 +80,27 @@ describe('Component Extractor', () => {
       expect(hooks.filter(h => h === 'useState').length).toBe(1);
       expect(hooks.filter(h => h === 'useEffect').length).toBe(1);
     });
+
+    it('should only extract hook name, not method chains', () => {
+      const sourceCode = `
+        function MyComponent() {
+          const items = useState([]).map(x => x.id);
+          const filtered = useState([]).filter(x => x.active);
+          const reduced = useState([]).reduce((acc, x) => acc + x, 0);
+          const chained = useState([]).map(x => x).filter(x => x);
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      const hooks = extractHooks(sourceFile);
+
+      // Should only contain 'useState', not 'useState.map', 'useState.filter', etc.
+      expect(hooks).toContain('useState');
+      expect(hooks.filter(h => h === 'useState').length).toBe(1);
+      expect(hooks.every(h => !h.includes('.map') && !h.includes('.filter') && !h.includes('.reduce'))).toBe(true);
+    });
   });
 
   describe('extractComponents', () => {

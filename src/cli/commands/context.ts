@@ -84,7 +84,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   if (!options.quiet) {
     console.log(`🔨 Analyzing components...`);
   }
-  const { contracts, analyzed, totalSourceSize } = await buildContractsFromFiles(files, {
+  const { contracts, analyzed, totalSourceSize } = await buildContractsFromFiles(files, projectRoot, {
     includeStyle: options.includeStyle,
     predictBehavior: options.predictBehavior,
     quiet: options.quiet,

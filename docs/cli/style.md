@@ -41,10 +41,11 @@ Identifies which styling approaches are used in each component:
   - Transitions and animations
   - Responsive breakpoints (sm, md, lg, xl, 2xl)
 
-- **SCSS/CSS Modules** – Detects module imports from TSX/TS files and parses the imported style files:
-  - CSS selectors used
+- **SCSS/CSS Modules** – Detects module imports from TSX/TS files and parses the imported style files using AST-based parsing (css-tree):
+  - CSS selectors used (class, ID, and type selectors)
   - CSS properties defined
-  - SCSS features (variables, nesting, mixins)
+  - SCSS feature detection (variables, nesting, mixins as boolean flags)
+  - Nested rules inside `@media`, `@supports`, `@container`, and other at-rules
   - **Note**: Only CSS/SCSS files that are imported by component files are parsed. Standalone CSS/SCSS files that aren't imported won't be analyzed.
 
 - **Inline Styles** – Detects `style={{...}}` usage
@@ -129,8 +130,10 @@ All options from `stamp context` are supported. The style command accepts the sa
 | `--max-nodes <n>` | `-m` | `100` | Maximum graph nodes per bundle. |
 | `--profile <name>` | | `llm-chat` | Preset configuration (`llm-chat`, `llm-safe`, `ci-strict`). |
 | `--strict` | `-s` | `false` | Fail when dependencies are missing. |
+| `--predict-behavior` | | `false` | Include experimental behavioral predictions. |
 | `--dry-run` | | `false` | Skip writing the output; display summary only. |
 | `--stats` | | `false` | Emit single-line JSON stats (ideal for CI). |
+| `--strict-missing` | | `false` | Exit with error if any missing dependencies found. |
 | `--skip-gitignore` | | `false` | Skip `.gitignore` setup (never prompt or modify). |
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors). |
 | `--help` | `-h` | | Print usage help. |

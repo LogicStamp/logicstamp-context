@@ -6,7 +6,7 @@
 import { glob } from 'glob';
 import { unlink, rm, stat } from 'node:fs/promises';
 import { resolve, join, relative } from 'node:path';
-import { fileExists } from '../../utils/fsx.js';
+import { fileExists, normalizeEntryId } from '../../utils/fsx.js';
 
 export interface CleanOptions {
   projectRoot?: string;
@@ -24,15 +24,17 @@ function displayPath(path: string): string {
 
 /**
  * Find all context.json files in the project
+ * Returns relative paths from projectRoot
  */
 async function findContextFiles(projectRoot: string): Promise<string[]> {
   const contextFiles = await glob('**/context.json', {
     cwd: projectRoot,
-    absolute: true,
+    absolute: false,
     ignore: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/.next/**'],
   });
 
-  return contextFiles.sort();
+  // Convert to normalized relative paths
+  return contextFiles.map(file => normalizeEntryId(file)).sort();
 }
 
 /**
@@ -73,10 +75,11 @@ export async function cleanCommand(options: CleanOptions): Promise<void> {
   const mainContextFile = await findMainContextFile(projectRoot);
   const logicStampDir = await findLogicStampDir(projectRoot);
 
-  // Collect all files to remove
+  // Collect all files to remove (as relative paths)
   const filesToRemove: string[] = [];
   if (mainContextFile) {
-    filesToRemove.push(mainContextFile);
+    // Convert absolute path to relative for consistency
+    filesToRemove.push(relative(projectRoot, mainContextFile));
   }
   filesToRemove.push(...contextFiles);
 
@@ -98,8 +101,8 @@ export async function cleanCommand(options: CleanOptions): Promise<void> {
       console.log(`  - ${displayPath(relPath === 'context_main.json' ? 'context_main.json' : relPath)}`);
     }
     for (const file of contextFiles) {
-      const relPath = relative(projectRoot, file);
-      console.log(`  - ${displayPath(relPath)}`);
+      // file is already relative
+      console.log(`  - ${displayPath(file)}`);
     }
     if (logicStampDir) {
       const relPath = relative(projectRoot, logicStampDir);
@@ -116,15 +119,15 @@ export async function cleanCommand(options: CleanOptions): Promise<void> {
     // Delete all context.json files
     for (const file of filesToRemove) {
       try {
-        await unlink(file);
+        // Resolve relative path to absolute for file operations
+        const absolutePath = join(projectRoot, file);
+        await unlink(absolutePath);
         if (!options.quiet) {
-          const relPath = relative(projectRoot, file);
-          console.log(`   ✓ Removed ${displayPath(relPath)}`);
+          console.log(`   ✓ Removed ${displayPath(file)}`);
         }
       } catch (error) {
         // Always show errors
-        const relPath = relative(projectRoot, file);
-        console.error(`   ✗ Failed to remove ${displayPath(relPath)}: ${(error as Error).message}`);
+        console.error(`   ✗ Failed to remove ${displayPath(file)}: ${(error as Error).message}`);
       }
     }
 

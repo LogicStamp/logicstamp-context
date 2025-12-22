@@ -152,13 +152,13 @@ function ThemedComponent() {
 }
 ```
 
-**Extracted:**
+**Detected:**
 - Theme provider usage (`ThemeProvider` import)
 - Theme creation (`createTheme` function calls)
 - Theme hook usage (`useTheme` function calls)
 - Theme property access (direct `theme.palette`, `theme.spacing`, etc.)
 - Theme usage in styled components and template literals
-- Custom theme configuration
+- Note: Custom theme configuration values are not extracted, only theme usage patterns are detected
 
 ### Styling Patterns
 
@@ -255,10 +255,8 @@ function Variants() {
 }
 ```
 
-**Extracted:**
-- Component variant prop values
-- Color prop values
-- Size prop values
+**Detected:**
+- Component usage (components are detected, but variant/color/size prop values are not extracted)
 
 ## Style Extraction
 
@@ -351,10 +349,9 @@ function Responsive() {
 }
 ```
 
-**Extracted:**
-- Responsive breakpoints (`xs`, `sm`, `md`, `lg`, `xl`)
-- Responsive prop values
-- Breakpoint-specific styling
+**Detected:**
+- `sx` prop usage (boolean flag: `usesSxProp: true`)
+- Note: Responsive breakpoints and prop values within `sx` prop objects are not extracted, only the presence of `sx` prop is detected
 
 ## Usage
 
