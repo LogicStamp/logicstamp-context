@@ -1,6 +1,6 @@
-## Compare Command Documentation
+# `stamp context compare` Command
 
-The `compare` command is a powerful tool for detecting drift between context files. It works like **Jest snapshots** – automatically comparing your current code against a baseline context.
+The `compare` command detects drift between context files. It works like **Jest snapshots**—automatically comparing your current code against a baseline context.
 
 ### Quick Start
 
@@ -70,8 +70,8 @@ stamp context compare
    - Folder-level summary (added/orphaned/changed/unchanged)
    - Component-level summary (total added/removed/changed)
    - Detailed per-folder component changes
-5. **Prompts you to update** if drift detected (in terminal)
-6. **Exits with error** if drift detected (in CI)
+5. Prompts you to update if drift detected (in terminal)
+6. Exits with error if drift detected (in CI)
 
 This is perfect for local development – just run it after making changes!
 
@@ -664,7 +664,7 @@ chmod +x .git/hooks/pre-commit
 
 ### Summary
 
-The compare command is your **context drift detector** with multi-file support:
+The compare command detects context drift with multi-file support:
 
 - **Local dev**: auto-detects changes across all folders and prompts to update
 - **CI/CD**: detects drift across the entire project and fails builds automatically
