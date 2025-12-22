@@ -1,7 +1,7 @@
 # LogicStamp Context
 
 <div align="center">
-  <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="120" height="120">
+  <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="120">
 </div>
 
 ![Version](https://img.shields.io/badge/version-0.3.2-blue.svg)
@@ -15,14 +15,16 @@
 ![LogicStamp Context in action](./assets/logicstamp-context-demo.gif)
 *Sample stamp context output with generated bundles*
 
-## 🚀 Quick Start
+## Quick Start
 
 **Try it in 30 seconds (no install required):**
 ```bash
 npx logicstamp-context context
 ```
 
-⏱️ Scans your repo and writes `context.json` files + `context_main.json` for AI tools.
+Scans your repo and writes `context.json` files + `context_main.json` for AI tools.
+
+> **Note:** With `npx`, use the package name `logicstamp-context`. After installation, the command is `stamp`.
 
 **What you'll get:**
 - 📁 `context.json` files (one per folder with components)
@@ -53,17 +55,17 @@ LLMs understand your project instantly - without scanning 10,000+ lines of code
 
 ## Features
 
-- 🧠 **AI-ready bundles** - predictable, structured, deterministic
-- ⚛️ **React/TypeScript awareness** - props, hooks, state, deps
-- 🎨 **Style metadata** - (Tailwind, SCSS, MUI, shadcn)
-- 🛣️ **Next.js App Router detection** - (client/server, layout/page/etc)
-- 🔎 **Dependency graph** - (imports, cycles, missing deps)
-- 📦 **Per-folder bundles** - organized by your project structure
-- ⚙️ **CI validation** - (drift detection, schema validation)
-- 🔢 **Accurate token estimates** - (GPT/Claude)
-- 🔒 **Security-first** - automatic secret detection and sanitization
-- 💨 **Fast, zero-config** - works out of the box
-- 🤖 **MCP-ready** - AI agents can consume context bundles via a standardized MCP interface
+- **AI-ready bundles** - predictable, structured, deterministic
+- **React/TypeScript awareness** - props, hooks, state, deps
+- **Style metadata** - (Tailwind, SCSS, MUI, shadcn)
+- **Next.js App Router detection** - (client/server, layout/page/etc)
+- **Dependency graph** - (imports, cycles, missing deps)
+- **Per-folder bundles** - organized by your project structure
+- **CI validation** - (drift detection, schema validation)
+- **Accurate token estimates** - (GPT/Claude)
+- **Security-first** - automatic secret detection and sanitization
+- **Fast, zero-config** - works out of the box
+- **MCP-ready** - AI agents can consume context bundles via a standardized MCP interface
 
 ## Example Output
 
@@ -105,18 +107,18 @@ After installation, the `stamp` command will be available globally.
 ## Recent Updates
 
 **v0.3.2**
-- **🔒 Security update** - Updated `glob` dependency to 11.1.0+ to address CVE-2025-64756
-- **📁 Improved portability** - Context files now use relative paths instead of absolute paths, improving portability across different machines and environments. See [Migration Guide](docs/MIGRATION_0.3.2.md) for details.
-- **🎨 CSS/SCSS parsing now uses AST parser** - Migrated from regex-based extraction to AST-based parsing using `css-tree` for more robust and accurate parsing. Properly handles CSS selectors, SCSS feature detection (variables, nesting, mixins as boolean flags), nested rules in at-rules, and includes better error handling with graceful fallback.
+- **Security update** - Updated `glob` dependency to 11.1.0+ to address CVE-2025-64756
+- **Improved portability** - Context files now use relative paths instead of absolute paths, improving portability across different machines and environments. See [Migration Guide](docs/MIGRATION_0.3.2.md) for details.
+- **CSS/SCSS parsing now uses AST parser** - Migrated from regex-based extraction to AST-based parsing using `css-tree` for more robust and accurate parsing. Properly handles CSS selectors, SCSS feature detection (variables, nesting, mixins as boolean flags), nested rules in at-rules, and includes better error handling with graceful fallback.
 
 **v0.3.1**
-- **🔧 Hook classification accuracy** - Custom React hooks are now correctly classified as `react:hook` instead of `react:component`. The detection logic now checks if the main export is a function starting with "use" and has no JSX elements, ensuring hook files are properly distinguished from component files in context bundles.
-- **📝 Added `react:hook` to ContractKind type** - The `ContractKind` type now includes `'react:hook'` as a valid kind, allowing proper classification of hook files in the contract system.
+- **Hook classification accuracy** - Custom React hooks are now correctly classified as `react:hook` instead of `react:component`. The detection logic now checks if the main export is a function starting with "use" and has no JSX elements, ensuring hook files are properly distinguished from component files in context bundles.
+- **Added `react:hook` to ContractKind type** - The `ContractKind` type now includes `'react:hook'` as a valid kind, allowing proper classification of hook files in the contract system.
 
-**v0.3.0** 🔒 **Security Release**
-- **🛡️ Security scan now runs by default** - `stamp init` automatically scans for secrets to protect sensitive data
-- **🔐 Automatic secret sanitization** - Detected secrets are automatically replaced with `"PRIVATE_DATA"` in generated context files
-- **⚡ Improved default security posture** - Better protection out of the box for new projects
+**v0.3.0** **Security Release**
+- **Security scan now runs by default** - `stamp init` automatically scans for secrets to protect sensitive data
+- **Automatic secret sanitization** - Detected secrets are automatically replaced with `"PRIVATE_DATA"` in generated context files
+- **Improved default security posture** - Better protection out of the box for new projects
 - Removed `--secure` flag (security scanning is now default; use `--no-secure` to skip)
 - **Important**: Credentials can only be included in bundles when using `--include-code full` mode. Other modes (`none`, `header`, `header+style`) only include metadata, not implementation code.
 
@@ -128,12 +130,12 @@ After installation, the `stamp` command will be available globally.
 
 LogicStamp Context automatically protects sensitive data in generated context files:
 
-- **🔍 Security scanning by default** - `stamp init` automatically scans for secrets (API keys, passwords, tokens)
-- **🛡️ Automatic sanitization** - Detected secrets are replaced with `"PRIVATE_DATA"` in generated context files (source files are never modified)
-- **📋 Manual exclusions** - Use `stamp ignore <file>` to manually exclude files with secrets from context generation via `.stampignore`
-- **🔐 Safe by default** - Only metadata is included in default modes; credentials only appear in `--include-code full` mode
+- **Security scanning by default** - `stamp init` automatically scans for secrets (API keys, passwords, tokens)
+- **Automatic sanitization** - Detected secrets are replaced with `"PRIVATE_DATA"` in generated context files (source files are never modified)
+- **Manual exclusions** - Use `stamp ignore <file>` to manually exclude files with secrets from context generation via `.stampignore`
+- **Safe by default** - Only metadata is included in default modes; credentials only appear in `--include-code full` mode
 
-> **⚠️ Seeing `"PRIVATE_DATA"` in your context files?** This means secrets were detected in your codebase during scanning. The security scan examines `.ts`, `.tsx`, `.js`, `.jsx`, and `.json` files for secret patterns. **Action required:**
+> **Seeing `"PRIVATE_DATA"` in your context files?** This means secrets were detected in your codebase during scanning. The security scan examines `.ts`, `.tsx`, `.js`, `.jsx`, and `.json` files for secret patterns. **Action required:**
 > 1. Review `stamp_security_report.json` to see what was found
 > 2. Remove hard-coded secrets from your source code
 > 3. Use environment variables or secret management tools instead
@@ -211,12 +213,6 @@ See the full list here: [docs/limitations.md](https://github.com/LogicStamp/logi
 
 - **Open an issue** → https://github.com/LogicStamp/logicstamp-context/issues
 - **Join our roadmap** → https://logicstamp.dev
-
-## What is this?
-
-**LogicStamp Context** is a lightweight tool that scans your React/TypeScript codebase and generates structured context bundles optimized for AI tools like Claude, ChatGPT, and other LLMs.
-
-No setup, no configuration, no pre-compilation required. Just point it at your code and get instant, AI-ready documentation.
 
 ## How it Works
 
