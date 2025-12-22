@@ -124,7 +124,7 @@ ARGUMENTS:
 OPTIONS:
   --depth, -d <n>                     Dependency depth (default: 1)
   --include-code, -c <mode>           Code inclusion: none|header|full (default: header)
-  --format, -f <format>                Output format: json|pretty|ndjson (default: json)
+  --format, -f <format>                Output format: json|pretty|ndjson|toon (default: json)
   --out, -o <file>                    Output file (default: context.json)
   --max-nodes, -m <n>                 Max nodes per bundle (default: 100)
   --profile <profile>                 Preset profile: llm-safe|llm-chat|ci-strict
@@ -177,7 +177,7 @@ OPTIONS:
   --depth, -d <n>                     Dependency depth (default: 1)
   --include-code, -c <mode>           Code inclusion: none|header|full (default: header)
   --include-style                     Extract style metadata (Tailwind, SCSS, animations, layout)
-  --format, -f <format>               Output format: json|pretty|ndjson (default: json)
+  --format, -f <format>               Output format: json|pretty|ndjson|toon (default: json)
   --out, -o <file>                    Output file (default: context.json)
   --max-nodes, -m <n>                 Max nodes per bundle (default: 100)
   --profile <profile>                 Preset profile: llm-safe|llm-chat|ci-strict

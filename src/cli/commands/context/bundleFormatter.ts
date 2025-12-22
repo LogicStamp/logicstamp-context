@@ -2,6 +2,7 @@
  * Bundle Formatter - Formats bundles for output
  */
 
+import { encode as encodeToon } from '@toon-format/toon';
 import type { LogicStampBundle } from '../../../core/pack.js';
 
 /**
@@ -9,9 +10,16 @@ import type { LogicStampBundle } from '../../../core/pack.js';
  */
 export function formatBundles(
   bundles: LogicStampBundle[],
-  format: 'json' | 'pretty' | 'ndjson'
+  format: 'json' | 'pretty' | 'ndjson' | 'toon'
 ): string {
-  if (format === 'ndjson') {
+  if (format === 'toon') {
+    const bundlesWithPosition = bundles.map((b, idx) => ({
+      $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
+      position: `${idx + 1}/${bundles.length}`,
+      ...b,
+    }));
+    return encodeToon(bundlesWithPosition);
+  } else if (format === 'ndjson') {
     return bundles.map((b, idx) => {
       const bundleWithSchema = {
         $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
@@ -61,7 +69,7 @@ export function createBundleWithSchema(
  */
 export function formatBundlesForFolder(
   folderBundles: LogicStampBundle[],
-  format: 'json' | 'pretty' | 'ndjson'
+  format: 'json' | 'pretty' | 'ndjson' | 'toon'
 ): string {
   return formatBundles(folderBundles, format);
 }

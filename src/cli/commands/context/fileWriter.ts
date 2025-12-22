@@ -99,7 +99,7 @@ export async function writeContextFiles(
   outputDir: string,
   projectRoot: string,
   options: {
-    format: 'json' | 'pretty' | 'ndjson';
+    format: 'json' | 'pretty' | 'ndjson' | 'toon';
     quiet?: boolean;
   }
 ): Promise<{ filesWritten: number; folderInfos: FolderInfo[]; totalTokenEstimate: number }> {
@@ -144,9 +144,12 @@ export async function writeContextFiles(
     const folderTokenEstimate = await estimateGPT4Tokens(folderOutput);
     totalTokenEstimate += folderTokenEstimate;
 
-    // Write folder's context.json to output directory maintaining relative structure
-    const contextFileName = relativePath === '.' ? 'context.json' : join(relativePath, 'context.json');
-    const contextFilePath = relativePath === '.' ? 'context.json' : `${relativePath}/context.json`;
+    // Write folder's context file to output directory maintaining relative structure
+    // Use .toon extension for TOON format, .json for all others
+    const ext = options.format === 'toon' ? '.toon' : '.json';
+    const contextBaseName = `context${ext}`;
+    const contextFileName = relativePath === '.' ? contextBaseName : join(relativePath, contextBaseName);
+    const contextFilePath = relativePath === '.' ? contextBaseName : `${relativePath}/${contextBaseName}`;
     const folderContextPath = join(outputDir, contextFileName);
     
     try {

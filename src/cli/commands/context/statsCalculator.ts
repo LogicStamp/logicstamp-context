@@ -82,7 +82,7 @@ export async function generateSummary(
     packOptions: {
       depth: number;
       maxNodes: number;
-      format: 'json' | 'pretty' | 'ndjson';
+      format: 'json' | 'pretty' | 'ndjson' | 'toon';
       hashLock: boolean;
       strict: boolean;
       allowMissing: boolean;

@@ -28,7 +28,7 @@ export interface ContextOptions {
   entry?: string;
   depth: number;
   includeCode: 'none' | 'header' | 'full';
-  format: 'json' | 'pretty' | 'ndjson';
+  format: 'json' | 'pretty' | 'ndjson' | 'toon';
   out: string;
   hashLock: boolean;
   strict: boolean;
