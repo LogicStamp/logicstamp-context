@@ -125,7 +125,7 @@ All options from `stamp context` are supported. The style command accepts the sa
 |--------|-------|---------|-------------|
 | `--depth <n>` | `-d` | `1` | Dependency traversal depth (`0` = entry only, `1` = direct deps, etc.). |
 | `--include-code <mode>` | `-c` | `header` | Include `none`, `header`, or `full` source snippets. |
-| `--format <fmt>` | `-f` | `json` | Output format: `json`, `pretty`, `ndjson`. |
+| `--format <fmt>` | `-f` | `json` | Output format: `json`, `pretty`, `ndjson`, `toon`. |
 | `--out <file>` | `-o` | `context.json` | Output directory or file path. |
 | `--max-nodes <n>` | `-m` | `100` | Maximum graph nodes per bundle. |
 | `--profile <name>` | | `llm-chat` | Preset configuration (`llm-chat`, `llm-safe`, `ci-strict`). |

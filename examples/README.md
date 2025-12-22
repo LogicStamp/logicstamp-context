@@ -1,6 +1,6 @@
 # LogicStamp Context - Examples
 
-This directory contains example `context.json` files demonstrating the output format.
+This directory contains example context files demonstrating the output format, including JSON and TOON formats.
 
 ## Files
 
@@ -30,12 +30,12 @@ Example demonstrating missing dependencies:
 
 ### `context.with-style.example.json`
 Example demonstrating style metadata extraction:
-- 🎨 **Tailwind CSS** - Utility classes categorized by type (layout, spacing, colors, typography)
-- 📦 **SCSS Modules** - Module imports with selector and property extraction
-- ✨ **Framer Motion** - Animation metadata with variant detection
-- 🎯 **Layout patterns** - Hero sections, feature cards, grid layouts
-- 🎭 **Visual metadata** - Color palettes, spacing patterns, typography classes
-- 🎬 **Animation info** - Animation types, libraries, and triggers
+- **Tailwind CSS** - Utility classes categorized by type (layout, spacing, colors, typography)
+- **SCSS Modules** - Module imports with selector and property extraction
+- **Framer Motion** - Animation metadata with variant detection
+- **Layout patterns** - Hero sections, feature cards, grid layouts
+- **Visual metadata** - Color palettes, spacing patterns, typography classes
+- **Animation info** - Animation types, libraries, and triggers
 
 **Includes 3 components:**
 1. **HeroSection** - Tailwind + Framer Motion with viewport animations
@@ -48,11 +48,43 @@ Example demonstrating style metadata extraction:
 - Learn how layout and visual patterns are extracted
 - Reference when generating context with `stamp context style` or `--include-style`
 
+### `context.example.toon`
+Example demonstrating the TOON format - a compact binary-encoded format optimized for AI consumption:
+- **TOON format** - Binary-encoded bundle format (smaller file size than JSON)
+- **Same structure** - Contains identical data to JSON format, just encoded differently
+- **Programmatic use** - Designed for tools and AI systems that decode TOON natively
+- **Efficient storage** - Smaller file sizes, ideal for CI/CD artifacts
+
+**⚠️ Important:** TOON files are **not human-readable** - they must be decoded programmatically using the `@toon-format/toon` package.
+
+**Use this example to:**
+- Understand that TOON format exists as an alternative to JSON
+- Test TOON decoding in your tools/integrations
+- See the file size difference compared to JSON format
+- Reference when generating context with `stamp context --format toon`
+
+**Decoding TOON files:**
+
+```javascript
+import { decode } from '@toon-format/toon';
+import { readFile } from 'fs/promises';
+
+// Read and decode a TOON file
+const toonContent = await readFile('examples/context.example.toon', 'utf-8');
+const bundles = decode(toonContent);
+
+// bundles is an array of LogicStampBundle objects (same structure as JSON)
+console.log(bundles[0].entryId);
+console.log(bundles[0].graph.nodes);
+```
+
+The decoded structure is identical to JSON format bundles - same schema, same contracts, same dependency graphs. See [toon.md](../docs/cli/toon.md) for complete TOON format documentation.
+
 ### `.stampignore.example`
 Example `.stampignore` file demonstrating file exclusion patterns:
 - 🔒 Shows how to exclude files containing secrets from context generation
-- 📝 Demonstrates both specific file paths and glob patterns
-- 🎯 Example patterns for common secret file locations
+- Demonstrates both specific file paths and glob patterns
+- Example patterns for common secret file locations
 
 **Use this example to:**
 - Understand the `.stampignore` JSON format
@@ -61,10 +93,10 @@ Example `.stampignore` file demonstrating file exclusion patterns:
 
 ### `stamp_security_report.example.json`
 Example security scan report showing the output format:
-- 🔍 Demonstrates the structure of security scan reports
-- 📊 Shows match details (file, line, column, type, snippet, severity)
-- 📈 Includes summary statistics (files scanned, secrets found)
-- 🎯 Uses clearly fake example values (safe for GitHub)
+- Demonstrates the structure of security scan reports
+- Shows match details (file, line, column, type, snippet, severity)
+- Includes summary statistics (files scanned, secrets found)
+- Uses clearly fake example values (safe for GitHub)
 
 **Use this example to:**
 - Understand the security report format
@@ -134,6 +166,9 @@ stamp context --include-code full --out examples/with-full-code.json
 
 # Generate with style metadata (like context.with-style.example.json)
 stamp context style --out examples/my-style-example.json
+
+# Generate TOON format (like context.example.toon)
+stamp context --format toon --out examples/my-example.toon
 ```
 
 ## See Also

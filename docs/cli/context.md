@@ -23,11 +23,12 @@ stamp context [path] [options]
 |--------|-------|---------|-------------|
 | `--depth <n>` | `-d` | `1` | Dependency traversal depth (`0` = entry only, `1` = direct deps, etc.). |
 | `--include-code <mode>` | `-c` | `header` | Include `none`, `header`, or `full` source snippets. |
-| `--format <fmt>` | `-f` | `json` | Output format: `json`, `pretty`, `ndjson`. |
+| `--format <fmt>` | `-f` | `json` | Output format: `json`, `pretty`, `ndjson`, `toon`. |
 | `--out <file>` | `-o` | `context.json` | Output directory or file path. If a `.json` file is specified, its directory is used as the output directory. Otherwise, the path is used as the output directory. All context files will be written within this directory structure. |
 | `--max-nodes <n>` | `-m` | `100` | Maximum graph nodes per bundle. |
 | `--profile <name>` | | `llm-chat` | Preset configuration (`llm-chat`, `llm-safe`, `ci-strict`). |
 | `--strict` | `-s` | `false` | Fail when dependencies are missing. |
+| `--strict-missing` | | `false` | Exit with error if any missing dependencies found. |
 | `--predict-behavior` | | `false` | Experimental behavioral prediction annotations. |
 | `--dry-run` | | `false` | Skip writing the output; display summary only. |
 | `--stats` | | `false` | Emit single-line JSON stats (ideal for CI). When combined with `--compare-modes`, writes `context_compare_modes.json` for MCP integration. |
@@ -208,7 +209,7 @@ The `context_main.json` file provides a complete directory index:
     }
   ],
   "meta": {
-      "source": "logicstamp-context@0.3.2"
+      "source": "logicstamp-context@0.3.3"
   }
 }
 ```

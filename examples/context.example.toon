@@ -1,0 +1,84 @@
+[1]:
+  -
+    "$schema": "https://logicstamp.dev/schemas/context/v0.1.json"
+    position: 1/1
+    type: LogicStampBundle
+    schemaVersion: "0.1"
+    entryId: App.tsx
+    depth: 1
+    createdAt: "2025-12-22T16:44:03.002Z"
+    bundleHash: "uifb:2654e6d7626df5572fc983f0"
+    graph:
+      nodes[2]:
+        -
+          entryId: App.tsx
+          contract:
+            type: UIFContract
+            schemaVersion: "0.3"
+            kind: "react:component"
+            entryId: App.tsx
+            description: App - Interactive component
+            version:
+              variables[0]:
+              hooks[0]:
+              components[1]: Card
+              functions[1]: App
+              imports[2]: ./components/Card,react
+            logicSignature:
+              props:
+              emits:
+                onAction:
+                  type: function
+                  signature: () => void
+              state: null
+            exports: named
+            prediction: null
+            metrics: null
+            links: null
+            nextjs: null
+            style: null
+            semanticHash: "uif:3714dd95b5333c06dcd16f6f"
+            fileHash: "uif:b6d9f19e64ee0a86ab8873ef"
+          codeHeader: null
+        -
+          entryId: components/Card.tsx
+          contract:
+            type: UIFContract
+            schemaVersion: "0.3"
+            kind: "react:component"
+            entryId: components/Card.tsx
+            description: Card - Card display component
+            version:
+              variables[0]:
+              hooks[1]: useState
+              components[1]: Button
+              functions[1]: Card
+              imports[2]: ./Button,react
+            logicSignature:
+              props:
+                title: string
+                description: string
+                onAction:
+                  type: function
+                  signature: () => void
+                  optional: true
+              emits:
+                onClick:
+                  type: function
+                  signature: () => void
+              state:
+                expanded: boolean
+            exports: named
+            prediction: null
+            metrics: null
+            links: null
+            nextjs: null
+            style: null
+            semanticHash: "uif:63f7e3323159a97133fdcb55"
+            fileHash: "uif:2bea4f44084e0ce1d58029e5"
+          codeHeader: null
+      edges[1]:
+        - [2]: App.tsx,components/Card.tsx
+    meta:
+      missing[0]:
+      source: logicstamp-context@0.3.3

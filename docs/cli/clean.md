@@ -28,8 +28,10 @@ stamp context clean [path] [options]
 Removes:
 
 - **`context_main.json`** – Main index file with folder metadata
-- **`**/context.json`** – All folder context files (recursively)
+- **`**/context.json`** – All folder context files (recursively, JSON format only)
 - **`.logicstamp/`** – Cache directory (if present, automatically included)
+
+**Note:** This command only removes JSON format files (`context.json`). TOON format files (`context.toon`) are not cleaned by this command. See [toon.md](toon.md) for details on TOON format support.
 
 Automatically detects and includes the `.logicstamp/` directory if it exists. No separate flag needed.
 

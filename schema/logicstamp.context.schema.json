@@ -117,7 +117,7 @@
         "source": {
           "type": "string",
           "pattern": "^logicstamp-context@\\d+\\.\\d+\\.\\d+$",
-          "description": "Generator identifier with version (e.g., 'logicstamp-context@0.3.2'). Used for compatibility tracking and debugging."
+          "description": "Generator identifier with version (e.g., 'logicstamp-context@0.3.3'). Used for compatibility tracking and debugging."
         }
       },
       "additionalProperties": false
@@ -281,7 +281,7 @@
     },
     "LogicSignature": {
       "type": "object",
-      "required": ["props", "events"],
+      "required": ["props", "emits"],
       "properties": {
         "props": {
           "type": "object",
@@ -290,7 +290,7 @@
           },
           "description": "Component props with types"
         },
-        "events": {
+        "emits": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/EventType"

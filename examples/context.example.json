@@ -43,7 +43,7 @@
                   "signature": "(data: { email: string; password: string; }) => Promise<void>"
                 }
               },
-              "events": {
+              "emits": {
                 "onSubmit": {
                   "type": "function",
                   "signature": "(data: { email: string; password: string; }) => Promise<void>"
@@ -59,7 +59,7 @@
             "semanticHash": "uif:a1b2c3d4e5f6g7h8i9j0k1l2",
             "fileHash": "uif:m3n4o5p6q7r8s9t0u1v2w3x4"
           },
-          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: LoginForm - Form component with validation\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: [\"useEffect\",\"useState\"]\n *   components: [\"Button\"]\n *   functions: [\"LoginForm\",\"validateEmail\"]\n *   imports: [\"./Button\",\"react\"]\n *\n * Logic Signature:\n *   props: {\"onSubmit\":{\"type\":\"function\",\"signature\":\"(data: { email: string; password: string; }) => Promise<void>\"}}\n *   events: {\"onSubmit\":{\"type\":\"function\",\"signature\":\"(data: { email: string; password: string; }) => Promise<void>\"}}\n *   state: {\"email\":\"string\",\"password\":\"string\",\"error\":\"string | null\",\"loading\":\"boolean\"}\n *\n * Hashes:\n *   semantic: uif:a1b2c3d4e5f6g7h8i9j0k1l2\n *   file: uif:m3n4o5p6q7r8s9t0u1v2w3x4\n */"
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: LoginForm - Form component with validation\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: [\"useEffect\",\"useState\"]\n *   components: [\"Button\"]\n *   functions: [\"LoginForm\",\"validateEmail\"]\n *   imports: [\"./Button\",\"react\"]\n *\n * Logic Signature:\n *   props: {\"onSubmit\":{\"type\":\"function\",\"signature\":\"(data: { email: string; password: string; }) => Promise<void>\"}}\n *   emits: {\"onSubmit\":{\"type\":\"function\",\"signature\":\"(data: { email: string; password: string; }) => Promise<void>\"}}\n *   state: {\"email\":\"string\",\"password\":\"string\",\"error\":\"string | null\",\"loading\":\"boolean\"}\n *\n * Hashes:\n *   semantic: uif:a1b2c3d4e5f6g7h8i9j0k1l2\n *   file: uif:m3n4o5p6q7r8s9t0u1v2w3x4\n */"
         },
         {
           "entryId": "src/components/Button.tsx",
@@ -98,7 +98,7 @@
                   "optional": true
                 }
               },
-              "events": {
+              "emits": {
                 "onClick": {
                   "type": "function",
                   "signature": "() => void"
@@ -111,7 +111,7 @@
             "semanticHash": "uif:a0dd5029ee79e6508fe9db25",
             "fileHash": "uif:a6398c5890bcbf31603af36a"
           },
-          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: Button - Interactive button component\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: [\"useState\"]\n *   components: []\n *   functions: [\"Button\"]\n *   imports: [\"react\"]\n *\n * Logic Signature:\n *   props: {\"variant\":{\"type\":\"literal-union\",\"literals\":[\"primary\",\"secondary\"]},\"isLoading\":\"boolean\",\"onClick\":{\"type\":\"function\",\"signature\":\"() => void\",\"optional\":true}}\n *   events: {\"onClick\":{\"type\":\"function\",\"signature\":\"() => void\"}}\n *   state: {\"pressed\":\"boolean\"}\n *\n * Hashes:\n *   semantic: uif:a0dd5029ee79e6508fe9db25\n *   file: uif:a6398c5890bcbf31603af36a\n */"
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: Button - Interactive button component\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: [\"useState\"]\n *   components: []\n *   functions: [\"Button\"]\n *   imports: [\"react\"]\n *\n * Logic Signature:\n *   props: {\"variant\":{\"type\":\"literal-union\",\"literals\":[\"primary\",\"secondary\"]},\"isLoading\":\"boolean\",\"onClick\":{\"type\":\"function\",\"signature\":\"() => void\",\"optional\":true}}\n *   emits: {\"onClick\":{\"type\":\"function\",\"signature\":\"() => void\"}}\n *   state: {\"pressed\":\"boolean\"}\n *\n * Hashes:\n *   semantic: uif:a0dd5029ee79e6508fe9db25\n *   file: uif:a6398c5890bcbf31603af36a\n */"
         }
       ],
       "edges": [
@@ -123,7 +123,7 @@
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp-context@0.3.2"
+      "source": "logicstamp-context@0.3.3"
     }
   }
 ]

@@ -14,6 +14,8 @@ export const LOGICSTAMP_GITIGNORE_PATTERNS = [
   '# LogicStamp context & security files',
   'context.json',
   'context_*.json',
+  'context.toon',
+  'context_*.toon',
   '*.uif.json',
   'logicstamp.manifest.json',
   '.logicstamp/',

@@ -22,6 +22,30 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.3.3] - 2025-12-22
+
+### Added
+
+- **TOON output format support** - Added new `--format toon` option to generate context bundles in TOON format. This provides an alternative output format for AI consumption, expanding format options beyond JSON, pretty, and NDJSON. See PR #41 for details.
+- **TOON format documentation** - Added comprehensive `docs/cli/toon.md` documentation covering TOON format usage, decoding, and integration.
+- **TOON format gitignore support** - Added `context.toon` and `context_*.toon` patterns to `.gitignore` setup, ensuring generated TOON files are properly excluded from version control.
+
+### Changed
+
+- **Updated `glob` dependency to 10.5.0** - Adjusted `glob` to a Node 18–compatible version while retaining the latest security fixes.
+- **Updated Node.js engine requirement** - Clarified minimum supported Node.js version to >= 18.18.0. Node 20+ is now recommended for best performance and features.
+- **Updated dev dependencies** - Updated development dependencies to latest patch versions:
+  - `@types/node`: `^20.11.5` → `^20.19.27`
+  - `vitest`: `^4.0.8` → `^4.0.16`
+  - `@vitest/coverage-v8`: `^4.0.8` → `^4.0.16`
+  - `@vitest/ui`: `^4.0.8` → `^4.0.16`
+- **Documentation improvements** - Enhanced README formatting and clarity for better readability and user experience (PR #45)
+- **Documentation consistency** - Improved formatting consistency across all documentation files for a more cohesive documentation experience (PR #44)
+- **Framework documentation clarity** - Clarified the distinction between what is detected vs extracted across framework documentation, improving understanding of component analysis capabilities (PR #43)
+- **TOON format tests** - Added comprehensive test coverage for TOON format gitignore patterns and initialization behavior.
+
+---
+
 ## [0.3.2] - 2025-12-21
 
 ### Security
@@ -472,7 +496,8 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 
 ## Version links
 
-- [Unreleased](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.2...HEAD)
+- [Unreleased](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.3...HEAD)
+- [0.3.3](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.2...v0.3.3)
 - [0.3.2](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.1...v0.3.2)
 - [0.3.1](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.0...v0.3.1)
 - [0.3.0](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.7...v0.3.0)

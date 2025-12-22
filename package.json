@@ -1,6 +1,6 @@
 {
   "name": "logicstamp-context",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Generate AI-friendly context bundles from React codebases with LogicStamp contracts",
   "type": "module",
   "main": "./dist/index.js",
@@ -58,7 +58,7 @@
   "dependencies": {
     "@toon-format/toon": "^1.0.0",
     "css-tree": "^3.1.0",
-    "glob": "^11.1.0",
+    "glob": "^10.5.0",
     "ts-morph": "^21.0.1"
   },
   "optionalDependencies": {
@@ -66,13 +66,13 @@
     "@dqbd/tiktoken": "^1.0.17"
   },
   "devDependencies": {
-    "@types/node": "^20.11.5",
-    "@vitest/coverage-v8": "^4.0.8",
-    "@vitest/ui": "^4.0.8",
+    "@types/node": "^20.19.27",
+    "@vitest/coverage-v8": "^4.0.16",
+    "@vitest/ui": "^4.0.16",
     "typescript": "^5.3.3",
-    "vitest": "^4.0.8"
+    "vitest": "^4.0.16"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.18.0"
   }
 }

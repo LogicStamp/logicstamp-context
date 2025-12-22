@@ -44,7 +44,7 @@
               "props": {
                 "userId": "string"
               },
-              "events": {},
+              "emits": {},
               "state": {
                 "data": "any[]",
                 "loading": "boolean",
@@ -54,7 +54,7 @@
             "semanticHash": "uif:p1q2r3s4t5u6v7w8x9y0z1a2",
             "fileHash": "uif:b3c4d5e6f7g8h9i0j1k2l3m4"
           },
-          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: Dashboard - Main dashboard component\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: [\"useEffect\",\"useState\"]\n *   components: [\"Card\",\"Button\"]\n *   functions: [\"Dashboard\",\"fetchData\"]\n *   imports: [\"./Card\",\"@mui/material\",\"../../shared/utils\",\"./DeletedComponent\",\"react\"]\n *\n * Logic Signature:\n *   props: {\"userId\":\"string\"}\n *   events: {}\n *   state: {\"data\":\"any[]\",\"loading\":\"boolean\",\"error\":\"string | null\"}\n *\n * Hashes:\n *   semantic: uif:p1q2r3s4t5u6v7w8x9y0z1a2\n *   file: uif:b3c4d5e6f7g8h9i0j1k2l3m4\n */"
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: Dashboard - Main dashboard component\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: [\"useEffect\",\"useState\"]\n *   components: [\"Card\",\"Button\"]\n *   functions: [\"Dashboard\",\"fetchData\"]\n *   imports: [\"./Card\",\"@mui/material\",\"../../shared/utils\",\"./DeletedComponent\",\"react\"]\n *\n * Logic Signature:\n *   props: {\"userId\":\"string\"}\n *   emits: {}\n *   state: {\"data\":\"any[]\",\"loading\":\"boolean\",\"error\":\"string | null\"}\n *\n * Hashes:\n *   semantic: uif:p1q2r3s4t5u6v7w8x9y0z1a2\n *   file: uif:b3c4d5e6f7g8h9i0j1k2l3m4\n */"
         }
       ],
       "edges": []
@@ -82,7 +82,7 @@
           "referencedBy": "src/components/Dashboard.tsx"
         }
       ],
-      "source": "logicstamp-context@0.3.2"
+      "source": "logicstamp-context@0.3.3"
     }
   }
 ]

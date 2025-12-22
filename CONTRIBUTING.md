@@ -5,7 +5,7 @@ Thank you for your interest in contributing! This document provides guidelines f
 ## Getting Started
 
 ### Prerequisites
-- Node.js >= 18.0.0
+- Node.js >= 18.18.0 (**Node 20+ recommended**)
 - npm or yarn
 - Git
 

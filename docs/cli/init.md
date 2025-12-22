@@ -31,6 +31,8 @@ stamp init [path] [options]
 
    - **`context_*.json`** - Main index file (`context_main.json`) and other context variants. The main index provides a directory overview of all context files. Like `context.json`, these are regenerated and can be large.
 
+   - **`context.toon`** and **`context_*.toon`** - TOON format context bundles generated when using `--format toon`. These are alternative output format files (similar to JSON but in TOON format) that are regenerated on each run and don't need to be versioned.
+
    - **`*.uif.json`** - UIF (User Interface Format) contract files. These are generated contract sidecars that may be created by other LogicStamp tools. They're build artifacts and don't need to be committed.
 
    - **`logicstamp.manifest.json`** - Dependency manifest files that track project dependencies. These are generated metadata files that can be regenerated.
@@ -112,6 +114,8 @@ Creates a new `.gitignore` file with LogicStamp patterns:
    The following patterns were added/verified:
    - context.json
    - context_*.json
+   - context.toon
+   - context_*.toon
    - *.uif.json
    - logicstamp.manifest.json
 ```
@@ -126,6 +130,8 @@ Adds LogicStamp patterns to the existing `.gitignore`:
    The following patterns were added/verified:
    - context.json
    - context_*.json
+   - context.toon
+   - context_*.toon
    - *.uif.json
    - logicstamp.manifest.json
 ```
@@ -140,6 +146,8 @@ No changes are made:
    The following patterns were added/verified:
    - context.json
    - context_*.json
+   - context.toon
+   - context_*.toon
    - *.uif.json
    - logicstamp.manifest.json
 ```
@@ -177,6 +185,8 @@ When `.gitignore` doesn't already have LogicStamp patterns, you'll see:
    The following patterns will be added to .gitignore:
    - context.json
    - context_*.json
+   - context.toon
+   - context_*.toon
    - *.uif.json
    - logicstamp.manifest.json
    - .logicstamp/

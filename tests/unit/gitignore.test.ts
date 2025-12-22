@@ -88,6 +88,11 @@ describe('gitignore utilities', () => {
       expect(hasLogicStampPatterns(content)).toBe(true);
     });
 
+    it('should return true when TOON patterns exist', () => {
+      const content = 'node_modules\ncontext.json\ncontext_*.json\ncontext.toon\ncontext_*.toon\n';
+      expect(hasLogicStampPatterns(content)).toBe(true);
+    });
+
     it('should return true with context_main.json instead of context_*.json', () => {
       const content = 'node_modules\ncontext.json\ncontext_main.json\n';
       expect(hasLogicStampPatterns(content)).toBe(true);
@@ -131,12 +136,21 @@ describe('gitignore utilities', () => {
     it('should return only missing patterns', () => {
       const content = '# LogicStamp context & security files\ncontext.json\ncontext_*.json\n';
       const missing = getMissingPatterns(content);
+      expect(missing).toContain('context.toon');
+      expect(missing).toContain('context_*.toon');
       expect(missing).toContain('*.uif.json');
       expect(missing).toContain('logicstamp.manifest.json');
       expect(missing).toContain('.logicstamp/');
       expect(missing).toContain('stamp_security_report.json');
       expect(missing).not.toContain('context.json');
       expect(missing).not.toContain('context_*.json');
+    });
+
+    it('should detect missing TOON patterns', () => {
+      const content = '# LogicStamp context & security files\ncontext.json\ncontext_*.json\ncontext.toon\n';
+      const missing = getMissingPatterns(content);
+      expect(missing).toContain('context_*.toon');
+      expect(missing).not.toContain('context.toon');
     });
   });
 
@@ -169,7 +183,7 @@ describe('gitignore utilities', () => {
     });
 
     it('should append only missing patterns when old block exists (edge case)', () => {
-      // Simulate old .gitignore without stamp_security_report.json
+      // Simulate old .gitignore without stamp_security_report.json and TOON patterns
       const oldPatterns = [
         '# LogicStamp context & security files',
         'context.json',
@@ -177,7 +191,7 @@ describe('gitignore utilities', () => {
         '*.uif.json',
         'logicstamp.manifest.json',
         '.logicstamp/',
-        // Missing: stamp_security_report.json
+        // Missing: stamp_security_report.json, context.toon, context_*.toon
       ];
       const content = oldPatterns.join('\n') + '\n';
       
@@ -190,8 +204,10 @@ describe('gitignore utilities', () => {
       expect(result).toContain('logicstamp.manifest.json');
       expect(result).toContain('.logicstamp/');
       
-      // Should now contain the missing pattern
+      // Should now contain the missing patterns
       expect(result).toContain('stamp_security_report.json');
+      expect(result).toContain('context.toon');
+      expect(result).toContain('context_*.toon');
       
       // Should not duplicate the header
       const headerMatches = (result.match(/# LogicStamp context & security files/g) || []).length;
@@ -213,6 +229,8 @@ describe('gitignore utilities', () => {
       // Should contain all patterns
       expect(result).toContain('context.json');
       expect(result).toContain('context_*.json');
+      expect(result).toContain('context.toon');
+      expect(result).toContain('context_*.toon');
       expect(result).toContain('*.uif.json');
       expect(result).toContain('logicstamp.manifest.json');
       expect(result).toContain('.logicstamp/');
@@ -277,6 +295,8 @@ describe('gitignore utilities', () => {
       const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
       expect(content).toContain('context.json');
       expect(content).toContain('context_*.json');
+      expect(content).toContain('context.toon');
+      expect(content).toContain('context_*.toon');
       expect(content).toContain('*.uif.json');
       expect(content).toContain('logicstamp.manifest.json');
       expect(content).toContain('.logicstamp/');
@@ -355,6 +375,10 @@ describe('gitignore utilities', () => {
       
       // Should now include the missing pattern
       expect(content).toContain('stamp_security_report.json');
+      
+      // Should include TOON patterns
+      expect(content).toContain('context.toon');
+      expect(content).toContain('context_*.toon');
       
       // Should not duplicate the header
       const headerMatches = (content.match(/# LogicStamp context & security files/g) || []).length;
@@ -479,6 +503,37 @@ describe('gitignore utilities', () => {
       const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
       // Should have blank line separator
       expect(content).toMatch(/node_modules\n\nreports\/security\.json/);
+    });
+  });
+
+  describe('TOON pattern matching', () => {
+    it('should include TOON patterns in LOGICSTAMP_GITIGNORE_PATTERNS', () => {
+      expect(LOGICSTAMP_GITIGNORE_PATTERNS).toContain('context.toon');
+      expect(LOGICSTAMP_GITIGNORE_PATTERNS).toContain('context_*.toon');
+    });
+
+    it('should detect TOON patterns when checking for LogicStamp patterns', () => {
+      const content = '# LogicStamp context & security files\ncontext.json\ncontext_*.json\ncontext.toon\ncontext_*.toon\n';
+      expect(hasLogicStampPatterns(content)).toBe(true);
+    });
+
+    it('should add TOON patterns when they are missing', async () => {
+      const content = '# LogicStamp context & security files\ncontext.json\ncontext_*.json\n';
+      const result = addLogicStampPatterns(content);
+      
+      expect(result).toContain('context.toon');
+      expect(result).toContain('context_*.toon');
+    });
+
+    it('should preserve TOON patterns when they already exist', async () => {
+      const content = '# LogicStamp context & security files\ncontext.json\ncontext_*.json\ncontext.toon\ncontext_*.toon\n*.uif.json\nlogicstamp.manifest.json\n.logicstamp/\nstamp_security_report.json\n';
+      const result = addLogicStampPatterns(content);
+      
+      // Should not duplicate
+      const toonMatches = (result.match(/^context\.toon$/gm) || []).length;
+      const toonWildcardMatches = (result.match(/^context_\*\.toon$/gm) || []).length;
+      expect(toonMatches).toBe(1);
+      expect(toonWildcardMatches).toBe(1);
     });
   });
 });
