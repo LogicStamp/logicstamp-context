@@ -22,7 +22,7 @@ Component contract structure embedded in bundles.
 interface UIFContract {
   type: "UIFContract";
   schemaVersion: "0.3";
-  kind: "react:component" | "react:hook" | "typescript:module";
+  kind: "react:component" | "react:hook" | "vue:component" | "vue:composable" | "ts:module" | "node:cli";
   description?: string;
   version: {
     variables: string[];
@@ -277,7 +277,7 @@ interface LogicStampBundle {
   };
   meta: {
     missing: MissingDependency[];
-    source: string;  // Tool version (e.g., "logicstamp-context@0.3.3")
+    source: string;  // Tool version (e.g., "logicstamp-context@0.3.4")
   };
 }
 
@@ -383,7 +383,7 @@ interface MissingDependency {
         "referencedBy": "src/components/Button.tsx"
       }
     ],
-      "source": "logicstamp-context@0.3.3"
+      "source": "logicstamp-context@0.3.4"
   }
 }
 ```
@@ -477,7 +477,7 @@ interface FolderEntry {
     }
   ],
   "meta": {
-      "source": "logicstamp-context@0.3.3"
+      "source": "logicstamp-context@0.3.4"
   }
 }
 ```

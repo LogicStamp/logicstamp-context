@@ -5,7 +5,7 @@
 
   <br/>
 
-  ![Version](https://img.shields.io/badge/version-0.3.3-blue.svg)
+  ![Version](https://img.shields.io/badge/version-0.3.4-blue.svg)
   ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
   ![License](https://img.shields.io/badge/license-MIT-green.svg)
   ![Node](https://img.shields.io/badge/node-%3E%3D18.18.0-brightgreen.svg)
@@ -13,8 +13,10 @@
 
   <br/>
 
-  **A tiny CLI that compiles your React/TypeScript codebase into machine-readable context bundles for AI and CI.  
-  Fast, deterministic, zero-config.**
+  **A CLI that compiles React, Next.js, Vue, and TypeScript codebases into structured context bundles for AI and CI.**
+
+  **Fast, deterministic, zero-config.**
+   <br/>
 </div>
 
 ![LogicStamp Context in action](./assets/logicstamp-context-demo.gif)
@@ -46,13 +48,13 @@ stamp context
 
 > **ℹ️** If you see `"PRIVATE_DATA"` in output, see the **Security** section below.
 
-> **Note:** This is a beta release (v0.3.3). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+> **Note:** This is a beta release (v0.3.4). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 ## Why LogicStamp?
 
-LLMs understand your project instantly - without scanning 10,000+ lines of code
+LLMs can reason about your project structure without scanning raw source files.
 
-- **~65–72% token savings** vs raw source
+- **Up to 70% token savings** vs raw source
 - **Deterministic, structured contracts** that help AI avoid hallucinations by only referencing the true architecture
 - **🔒 Built-in security** - automatic secret detection and sanitization in generated context files
 - **Perfect for Cursor/Claude/GitHub Copilot Chat** — share context files for instant codebase understanding
@@ -61,9 +63,10 @@ LLMs understand your project instantly - without scanning 10,000+ lines of code
 ## Features
 
 - **AI-ready bundles** - predictable, structured, deterministic
-- **React/TypeScript awareness** - props, hooks, state, deps
+- **React/Next.js/Vue/TypeScript awareness** - props, hooks/composables, state, deps
 - **Style metadata** - (Tailwind, SCSS, MUI, shadcn)
 - **Next.js App Router detection** - (client/server, layout/page/etc)
+- **Vue 3 Composition API** - (ref, reactive, computed, composables) *Note: Works with `.ts`/`.tsx` files only, not `.vue` SFC files*
 - **Dependency graph** - (imports, cycles, missing deps)
 - **Per-folder bundles** - organized by your project structure
 - **CI validation** - (drift detection, schema validation)
@@ -71,6 +74,21 @@ LLMs understand your project instantly - without scanning 10,000+ lines of code
 - **Security-first** - automatic secret detection and sanitization
 - **Fast, zero-config** - works out of the box
 - **MCP-ready** - AI agents can consume context bundles via a standardized MCP interface
+
+## MCP Server
+
+For AI assistants with MCP support (Claude Desktop, Cursor, etc.):
+
+```bash
+npm install -g logicstamp-mcp
+```
+
+Then configure your AI assistant to use the LogicStamp MCP Server to analyze your project.
+
+![LogicStamp MCP Workflow](./assets/logicstamp-workflow.gif)
+*MCP server calling the CLI to generate and consume context bundles*
+
+📋 **See [MCP Getting Started Guide](https://logicstamp.dev/docs/mcp/getting-started) for detailed installation instructions for Claude Code, Claude Desktop, Cursor, and other MCP clients.**
 
 ## Example Output
 
@@ -108,28 +126,6 @@ After installation, the `stamp` command will be available globally.
 **Note**: "Global CLI" means the tool is installed globally on your system (via `npm install -g`), making the `stamp` command available from any directory in your terminal, not just within a specific project folder.
 - **Local install**: `npm install logicstamp-context` → only available in that project
 - **Global install**: `npm install -g logicstamp-context` → available everywhere via `stamp` command
-
-## Recent Updates
-
-**v0.3.3**
-
-- **TOON output format support** – Added new `--format toon` option to generate context bundles in TOON format, expanding output options beyond JSON, pretty, and NDJSON.
-
-- **Improved Node.js 18 compatibility** – Adjusted `glob` to a Node 18–compatible version while retaining the latest security fixes.
-
-- **Updated Node.js requirement** – Clarified minimum supported Node.js version to **>= 18.18.0**.
-
-- **Dev dependency updates** – Updated development dependencies to the latest patch versions.
-
-- **Documentation improvements** – Improved README clarity and formatting consistency, and clarified what is detected vs extracted across framework documentation.
-
-**v0.3.X** (0.3.0 - 0.3.2)
-- **Security features** - Security scan runs by default, automatic secret sanitization, improved default security posture
-- **Improved portability** - Context files now use relative paths instead of absolute paths (see [Migration Guide](docs/MIGRATION_0.3.2.md))
-- **Enhanced parsing** - CSS/SCSS parsing migrated to AST-based parser, improved hook classification accuracy
-- **Security updates** - Addressed CVE-2025-64756 and other security patches
-
-📋 **Full history → [CHANGELOG.md](https://github.com/LogicStamp/logicstamp-context/blob/main/CHANGELOG.md)**
 
 ## Security
 
@@ -224,7 +220,7 @@ See the full list here: [docs/limitations.md](https://github.com/LogicStamp/logi
 ## How it Works
 
 1. **Scan**: Finds all `.ts` and `.tsx` files in your project
-2. **Analyze**: Parses React components using TypeScript AST
+2. **Analyze**: Parses React/Vue components using TypeScript AST
 3. **Extract**: Builds component contracts with structure and signatures
 4. **Graph**: Creates dependency graph showing relationships
 5. **Bundle**: Packages context bundles optimized for AI consumption
@@ -236,7 +232,7 @@ All in one command, no pre-compilation needed!
 ## Requirements
 
 - Node.js >= 18.18.0 (**Node 20+ recommended**)
-- TypeScript/React codebase
+- TypeScript codebase (React, Next.js or Vue)
 
 ## License
 
@@ -262,4 +258,6 @@ Issues and PRs welcome! This is an open-source project.
 
 - [LogicStamp Main Project](https://logicstamp.dev)
 - [GitHub Repository](https://github.com/LogicStamp/logicstamp-context)
+- [MCP Server Repository](https://github.com/LogicStamp/logicstamp-mcp)
+- [Changelog](https://github.com/LogicStamp/logicstamp-context/blob/main/CHANGELOG.md)
 - [Report Issues](https://github.com/LogicStamp/logicstamp-context/issues)

@@ -1,7 +1,7 @@
 {
   "name": "logicstamp-context",
-  "version": "0.3.3",
-  "description": "Generate AI-friendly context bundles from React codebases with LogicStamp contracts",
+  "version": "0.3.4",
+  "description": "Generate AI-friendly context bundles from React/Next.js/Vue/TypeScript codebases with LogicStamp contracts",
   "type": "module",
   "main": "./dist/index.js",
   "exports": {

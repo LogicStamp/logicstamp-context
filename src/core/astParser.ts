@@ -36,6 +36,15 @@ import { extractProps } from './astParser/extractors/propExtractor.js';
 import { extractState, extractVariables } from './astParser/extractors/stateExtractor.js';
 import { extractEvents, extractJsxRoutes } from './astParser/extractors/eventExtractor.js';
 import { detectKind, extractNextJsMetadata } from './astParser/detectors.js';
+import {
+  extractVueComposables,
+  extractVueComponents,
+  extractVueState,
+  extractVuePropsCall,
+  extractVueEmitsCall,
+  extractVueProps,
+  extractVueEmits
+} from './astParser/extractors/vueComponentExtractor.js';
 
 export interface AstExtract {
   kind: ContractKind;
@@ -92,15 +101,35 @@ export async function extractFromFile(filePath: string): Promise<AstExtract> {
     const resolvedPath = source.getFilePath?.() ?? filePath;
 
     // Extract basic data first - wrap each extraction in try-catch for resilience
-    const hooks = safeExtract('hooks', resolvedPath, () => extractHooks(source), []);
-    const components = safeExtract('components', resolvedPath, () => extractComponents(source), []);
     const imports = safeExtract('imports', resolvedPath, () => extractImports(source), []);
+
+    // Check if this is a Vue file
+    const hasVueImport = imports.some(imp => imp === 'vue' || imp.startsWith('vue/'));
+
+    // Extract hooks and components (use Vue extractors if Vue file, otherwise React)
+    let hooks: string[];
+    let components: string[];
+    let state: Record<string, string>;
+    let props: Record<string, PropType>;
+    let emits: Record<string, EventType>;
+
+    if (hasVueImport) {
+      hooks = safeExtract('vue-composables', resolvedPath, () => extractVueComposables(source), []);
+      components = safeExtract('vue-components', resolvedPath, () => extractVueComponents(source), []);
+      state = safeExtract('vue-state', resolvedPath, () => extractVueState(source), {});
+      props = safeExtract('vue-props', resolvedPath, () => extractVueProps(source), {});
+      emits = safeExtract('vue-emits', resolvedPath, () => extractVueEmits(source), {});
+    } else {
+      hooks = safeExtract('hooks', resolvedPath, () => extractHooks(source), []);
+      components = safeExtract('components', resolvedPath, () => extractComponents(source), []);
+      state = safeExtract('state', resolvedPath, () => extractState(source), {});
+      props = safeExtract('props', resolvedPath, () => extractProps(source), {});
+      emits = safeExtract('events', resolvedPath, () => extractEvents(source), {});
+    }
+
     const nextjs = safeExtract('nextjs', resolvedPath, () => extractNextJsMetadata(source, filePath), undefined);
     const variables = safeExtract('variables', resolvedPath, () => extractVariables(source), []);
     const functions = safeExtract('functions', resolvedPath, () => extractFunctions(source), []);
-    const props = safeExtract('props', resolvedPath, () => extractProps(source), {});
-    const state = safeExtract('state', resolvedPath, () => extractState(source), {});
-    const emits = safeExtract('events', resolvedPath, () => extractEvents(source), {});
     const jsxRoutes = safeExtract('jsxRoutes', resolvedPath, () => extractJsxRoutes(source), []);
     const kind = safeExtract('kind', resolvedPath, () => detectKind(hooks, components, imports, filePath, source), 'ts:module' as ContractKind);
     const { exports: exportMetadata, exportedFunctions } = safeExtract('exports', resolvedPath, () => extractExports(source), { exports: undefined, exportedFunctions: [] });

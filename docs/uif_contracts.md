@@ -1,6 +1,6 @@
 # UIF Contracts
 
-UIF (Unified Interface Format) contracts are machine-readable descriptions of your React/TypeScript components that capture their structure, behavior, and API. LogicStamp extracts these contracts from your codebase to enable semantic change detection, AI context generation, and contract verification.
+UIF (Unified Interface Format) contracts are machine-readable descriptions of your React/Vue/TypeScript components that capture their structure, behavior, and API. LogicStamp extracts these contracts from your codebase to enable semantic change detection, AI context generation, and contract verification.
 
 ## What is a UIF Contract?
 
@@ -11,7 +11,7 @@ A UIF contract is a structured representation of a component that includes:
 - **Semantic hash** – Unique identifier based on the component's logic (not implementation details)
 - **File hash** – Content-based hash for change detection
 
-Contracts are extracted automatically from your TypeScript/React files and embedded in LogicStamp bundles.
+Contracts are extracted automatically from your TypeScript/React/Vue files and embedded in LogicStamp bundles.
 
 ## Contract Structure
 
@@ -70,7 +70,10 @@ Schema version string (currently `"0.3"`). Used for compatibility checking and v
 Component type identifier:
 - `"react:component"` – React functional component
 - `"react:hook"` – Custom React hook
-- `"typescript:module"` – TypeScript module/utility
+- `"vue:component"` – Vue component (Composition API)
+- `"vue:composable"` – Vue composable (reusable composition function)
+- `"ts:module"` – TypeScript module/utility
+- `"node:cli"` – Node.js CLI script
 
 ### `description`
 Human-readable description extracted from JSDoc comments or inferred from the component name.
