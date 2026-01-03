@@ -22,7 +22,7 @@ Component contract structure embedded in bundles.
 interface UIFContract {
   type: "UIFContract";
   schemaVersion: "0.3";
-  kind: "react:component" | "react:hook" | "typescript:module";
+  kind: "react:component" | "react:hook" | "vue:component" | "vue:composable" | "ts:module" | "node:cli";
   description?: string;
   version: {
     variables: string[];

@@ -1,6 +1,6 @@
 # TOON Format Support
 
-TOON is an alternative output format for LogicStamp context bundles, providing a compact binary-like encoding optimized for AI consumption and efficient storage.
+TOON is an alternative output format for LogicStamp context bundles, providing a compact text-based encoding optimized for AI consumption and efficient storage.
 
 ```bash
 stamp context --format toon
@@ -93,7 +93,7 @@ All formats contain the same bundle data, just encoded differently:
 | `json` | `.json` | ✅ Yes | Medium | Default, human-readable |
 | `pretty` | `.json` | ✅ Yes | Large | Human inspection, debugging |
 | `ndjson` | `.json` | ✅ Yes | Medium | Streaming, line-by-line processing |
-| `toon` | `.toon` | ❌ No | Small | Compact storage, AI consumption |
+| `toon` | `.toon` | ✅ Yes (less readable) | Small | Compact storage, AI consumption |
 
 ## Integration with Other Commands
 
@@ -151,7 +151,7 @@ await writeFile('src/components/context.json', jsonContent);
 
 ## Limitations
 
-- **Human readability** - TOON files are binary-encoded and not human-readable. Use JSON format for manual inspection.
+- **Human readability** - TOON files are human-readable but less readable than JSON. While you can inspect TOON files directly, JSON format is better for manual inspection and debugging.
 - **Tool compatibility** - Some tools may not support TOON format. JSON is more universally supported.
 - **Index file** - The main index (`context_main.json`) is always JSON, even when using TOON format for bundles.
 - **Command support** - Currently, only the `stamp context` command supports TOON format for generation. The `validate`, `compare`, and `clean` commands do not yet support TOON files and will only work with JSON format.

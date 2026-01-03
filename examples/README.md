@@ -49,13 +49,11 @@ Example demonstrating style metadata extraction:
 - Reference when generating context with `stamp context style` or `--include-style`
 
 ### `context.example.toon`
-Example demonstrating the TOON format - a compact binary-encoded format optimized for AI consumption:
-- **TOON format** - Binary-encoded bundle format (smaller file size than JSON)
+Example demonstrating the TOON format - a compact text-based format optimized for AI consumption:
+- **TOON format** - Compact text-based bundle format (smaller file size than JSON)
 - **Same structure** - Contains identical data to JSON format, just encoded differently
-- **Programmatic use** - Designed for tools and AI systems that decode TOON natively
+- **Human-readable** - Text-based format that's readable but more compact than JSON
 - **Efficient storage** - Smaller file sizes, ideal for CI/CD artifacts
-
-**⚠️ Important:** TOON files are **not human-readable** - they must be decoded programmatically using the `@toon-format/toon` package.
 
 **Use this example to:**
 - Understand that TOON format exists as an alternative to JSON

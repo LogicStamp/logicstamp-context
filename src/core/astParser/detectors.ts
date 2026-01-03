@@ -105,6 +105,131 @@ export function extractNextJsMetadata(source: SourceFile, filePath: string): Nex
 }
 
 /**
+ * Check if the main export is a Vue composable function (starts with "use")
+ */
+function isMainExportAVueComposable(source: SourceFile, imports: string[]): boolean {
+  // Must have Vue imports
+  const hasVueImport = imports.some(imp => imp === 'vue' || imp.startsWith('vue/'));
+  if (!hasVueImport) return false;
+
+  try {
+    const statements = source.getStatements();
+
+    for (const stmt of statements) {
+      const kind = stmt.getKind();
+      const modifiers = (stmt as any).getModifiers?.() || [];
+
+      let hasExport = false;
+      let isDefault = false;
+
+      for (const mod of modifiers) {
+        const modKind = mod.getKind();
+        if (modKind === SyntaxKind.ExportKeyword) hasExport = true;
+        if (modKind === SyntaxKind.DefaultKeyword) isDefault = true;
+      }
+
+      // Check default export first (highest priority)
+      if (isDefault && hasExport) {
+        if (kind === SyntaxKind.FunctionDeclaration) {
+          const func = stmt as FunctionDeclaration;
+          const name = func.getName();
+          if (name && /^use[A-Z]/.test(name)) {
+            return true;
+          }
+        } else if (kind === SyntaxKind.VariableStatement) {
+          const varStmt = stmt as VariableStatement;
+          const declarations = varStmt.getDeclarationList().getDeclarations();
+          for (const decl of declarations) {
+            const name = decl.getName();
+            const initializer = decl.getInitializer();
+            if (name && /^use[A-Z]/.test(name)) {
+              if (initializer && (
+                initializer.getKind() === SyntaxKind.ArrowFunction ||
+                initializer.getKind() === SyntaxKind.FunctionExpression
+              )) {
+                return true;
+              }
+            }
+          }
+        }
+      }
+
+      // Check named exports
+      if (hasExport && !isDefault) {
+        if (kind === SyntaxKind.FunctionDeclaration) {
+          const func = stmt as FunctionDeclaration;
+          const name = func.getName();
+          if (name && /^use[A-Z]/.test(name)) {
+            return true;
+          }
+        } else if (kind === SyntaxKind.VariableStatement) {
+          const varStmt = stmt as VariableStatement;
+          const declarations = varStmt.getDeclarationList().getDeclarations();
+          for (const decl of declarations) {
+            const name = decl.getName();
+            const initializer = decl.getInitializer();
+            if (name && /^use[A-Z]/.test(name)) {
+              if (initializer && (
+                initializer.getKind() === SyntaxKind.ArrowFunction ||
+                initializer.getKind() === SyntaxKind.FunctionExpression
+              )) {
+                return true;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return false;
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * Check if file has Vue composables (ref, reactive, etc.)
+ */
+function hasVueComposables(source: SourceFile): boolean {
+  try {
+    const sourceText = source.getFullText();
+
+    // Check for common Vue composables
+    const vueComposablePatterns = [
+      /\bref\s*\(/,
+      /\breactive\s*\(/,
+      /\bcomputed\s*\(/,
+      /\bwatch\s*\(/,
+      /\bwatchEffect\s*\(/,
+      /\bonMounted\s*\(/,
+      /\bonUnmounted\s*\(/,
+      /\bdefineProps\s*[(<]/,
+      /\bdefineEmits\s*[(<]/,
+    ];
+
+    return vueComposablePatterns.some(pattern => pattern.test(sourceText));
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * Check if file has Vue component registration
+ */
+function hasVueComponentRegistration(source: SourceFile): boolean {
+  try {
+    const sourceText = source.getFullText();
+
+    // Check for defineComponent, component registration, or SFC script setup
+    return /defineComponent\s*\(/.test(sourceText) ||
+           /components\s*:\s*\{/.test(sourceText) ||
+           /<script\s+setup/.test(sourceText);
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
  * Check if the main export is a hook function (starts with "use")
  */
 function isMainExportAHook(source: SourceFile): boolean {
@@ -199,10 +324,38 @@ export function detectKind(
   const resolvedPath = source.getFilePath?.() ?? filePath;
 
   try {
+    // Vue detection (highest priority after hooks)
+    const hasVueImport = imports.some(imp => imp === 'vue' || imp.startsWith('vue/'));
+
+    if (hasVueImport) {
+      // Check if main export is a Vue composable
+      const mainExportIsVueComposable = isMainExportAVueComposable(source, imports);
+
+      if (mainExportIsVueComposable && components.length === 0) {
+        // Double-check: no JSX elements in the file
+        try {
+          const hasJsxElements = source.getDescendantsOfKind(SyntaxKind.JsxElement).length > 0 ||
+                              source.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement).length > 0 ||
+                              source.getDescendantsOfKind(SyntaxKind.JsxFragment).length > 0;
+          if (!hasJsxElements) {
+            return 'vue:composable';
+          }
+        } catch (error) {
+          // If JSX check fails, still classify as composable if main export is composable
+          return 'vue:composable';
+        }
+      }
+
+      // Check for Vue component patterns
+      if (hasVueComposables(source) || hasVueComponentRegistration(source) || components.length > 0) {
+        return 'vue:component';
+      }
+    }
+
     // Check if main export is a hook BEFORE checking for components
     // This ensures hook files are classified correctly even if they use hooks internally
     const mainExportIsHook = isMainExportAHook(source);
-    
+
     // If main export is a hook and file has no JSX/components, it's a hook file
     if (mainExportIsHook && components.length === 0) {
       // Double-check: no JSX elements in the file

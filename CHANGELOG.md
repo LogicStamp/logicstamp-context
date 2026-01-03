@@ -13,12 +13,29 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Output size optimization
 - Additional output formats
 - Integration examples for popular AI assistants
-- Vue.js support
 - Advanced Next.js App Router features (route roles, segment paths, metadata exports)
 
 ### Known Limitations
 - No incremental caching (planned for future release)
 - No custom profiles beyond the three presets (planned for future release)
+
+---
+
+## [0.3.4] - 2026-01-04
+
+### Added
+
+- **Vue.js support** - Added comprehensive support for Vue 3 Composition API:
+  - Vue component and composable detection (`vue:component`, `vue:composable` kinds)
+  - Vue composables extraction (ref, reactive, computed, watch, lifecycle hooks, etc.)
+  - Vue component extraction from JSX and component registration
+  - Vue reactive state extraction (ref, reactive, computed, shallowRef, shallowReactive)
+  - Vue props extraction from `defineProps` (supports both type-based and runtime props)
+  - Vue emits extraction from `defineEmits` (supports both type-based and runtime emits)
+  - Full integration with contract building and signature generation
+  - Framework detection priority: Vue takes priority over React when both are imported
+  - JSX parsing: Uses React JSX mode (Vue JSX is compatible, but Vue templates are not parsed)
+  - See [Vue.js documentation](docs/frameworks/vue.md) for complete documentation
 
 ---
 
