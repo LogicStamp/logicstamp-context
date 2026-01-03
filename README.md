@@ -12,9 +12,10 @@
   [![CI](https://github.com/LogicStamp/logicstamp-context/workflows/CI/badge.svg)](https://github.com/LogicStamp/logicstamp-context/actions)
 
   <br/>
-**A CLI that compiles React, Next.js, Vue, and TypeScript codebases into structured context bundles for AI and CI.**
 
-**Fast, deterministic, zero-config.**
+  **A CLI that compiles React, Next.js, Vue, and TypeScript codebases into structured context bundles for AI and CI.**
+
+  **Fast, deterministic, zero-config.**
 </div>
 
 ![LogicStamp Context in action](./assets/logicstamp-context-demo.gif)
