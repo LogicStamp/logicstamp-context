@@ -168,7 +168,7 @@ This section documents what's currently captured in context files versus what's 
 
 ### 1. Component Contracts (UIFContract)
 
-- **Component kind**: `react:component`, `ts:module`
+- **Component kind**: `react:component`, `react:hook`, `vue:component`, `vue:composable`, `ts:module`, `node:cli`
 - **Props**: Types and signatures
 - **State variables**: With types
 - **Hooks used**: Listed in `version.hooks`
@@ -208,7 +208,7 @@ This section documents what's currently captured in context files versus what's 
 
 - **Created timestamps**: When context was generated
 - **OS detection**: Platform info (e.g., `win32`)
-- **Source tool version**: `logicstamp-context@0.3.3`
+- **Source tool version**: `logicstamp-context@0.3.4`
 - **Missing dependencies**: Tracked in `missing` array
 
 ## What's Missing or Incomplete
