@@ -64,7 +64,7 @@ LLMs can reason about your project structure without scanning raw source files.
 - **React/Next.js/Vue/TypeScript awareness** - props, hooks/composables, state, deps
 - **Style metadata** - (Tailwind, SCSS, MUI, shadcn)
 - **Next.js App Router detection** - (client/server, layout/page/etc)
-- **Vue 3 Composition API** - (ref, reactive, computed, composables)
+- **Vue 3 Composition API** - (ref, reactive, computed, composables) *Note: Works with `.ts`/`.tsx` files only, not `.vue` SFC files*
 - **Dependency graph** - (imports, cycles, missing deps)
 - **Per-folder bundles** - organized by your project structure
 - **CI validation** - (drift detection, schema validation)

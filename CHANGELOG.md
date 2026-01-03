@@ -8,6 +8,7 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Planned Features
+- Vue Single File Component (`.vue`) support - Parse and analyze `.vue` SFC files
 - Custom profile configuration and overrides
 - Incremental bundle caching
 - Output size optimization
@@ -35,7 +36,7 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - Full integration with contract building and signature generation
   - Framework detection priority: Vue takes priority over React when both are imported
   - JSX parsing: Uses React JSX mode (Vue JSX is compatible, but Vue templates are not parsed)
-  - See [Vue.js documentation](docs/frameworks/vue.md) for complete documentation
+  - **Note:** Works with Vue code in `.ts`/`.tsx` files (JSX/TSX components, extracted composables). Single File Components (`.vue` files) are not currently supported. See [Vue.js documentation](docs/frameworks/vue.md) for complete documentation and limitations.
 
 ---
 
