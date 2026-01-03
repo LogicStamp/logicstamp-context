@@ -13,8 +13,8 @@
 
   <br/>
 
-**A tiny CLI that compiles your React/Next.js/Vue/TypeScript codebase into machine-readable context bundles for AI and CI.  
-  Fast, deterministic, zero-config.**
+**A CLI that compiles React/Next.js/Vue/TypeScript codebases into context bundles for AI and CI.  
+Fast, deterministic, zero-config.**
 </div>
 
 ![LogicStamp Context in action](./assets/logicstamp-context-demo.gif)
