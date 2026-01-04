@@ -2,7 +2,7 @@
 
 LogicStamp Context provides comprehensive support for Vue 3 applications using the Composition API. It automatically detects Vue components, composables, and patterns in your codebase.
 
-> **⚠️ Important Limitation:** LogicStamp analyzes TypeScript/JavaScript files (`.ts`, `.tsx`, `.js`, `.jsx`) only. **Single File Components (`.vue` files) are not currently supported.** This means:
+> **⚠️ Important Limitation:** LogicStamp analyzes TypeScript files (`.ts`, `.tsx`) only. **Single File Components (`.vue` files) are not currently supported.** This means:
 > - ✅ **Works with:** Vue components written in `.ts`/`.tsx` files (JSX/TSX), extracted composables, and Nuxt 3 composables
 > - ❌ **Does not work with:** Standard `.vue` SFC files with `<template>` blocks
 > 
@@ -375,7 +375,7 @@ LogicStamp currently focuses on Vue 3 Composition API. Vue 2 Options API is not 
 
 ### Single File Components (.vue)
 
-LogicStamp analyzes TypeScript/JavaScript files (`.ts`, `.tsx`, `.js`, `.jsx`). For `.vue` files:
+LogicStamp analyzes TypeScript files (`.ts`, `.tsx`) only. For `.vue` files:
 
 - Extract the `<script>` section to a separate `.ts` file
 - Or use the `<script setup lang="ts">` pattern with separate logic files
@@ -407,7 +407,7 @@ export function useComponentLogic() {
 
 ### Template Analysis
 
-LogicStamp analyzes JavaScript/TypeScript logic, not Vue templates:
+LogicStamp analyzes TypeScript logic, not Vue templates:
 
 - ✅ Composables, reactive state, and logic
 - ✅ Props, emits, and type signatures
