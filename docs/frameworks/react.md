@@ -6,7 +6,7 @@ LogicStamp Context is designed to work seamlessly with React applications. It au
 
 LogicStamp automatically identifies React code by:
 
-- **File extensions**: `.tsx` and `.jsx` files
+- **File extensions**: `.tsx` and `.ts` files
 - **JSX syntax**: React component declarations and JSX elements
 - **React imports**: Detects imports from `react` and `react-dom`
 - **Component patterns**: Functional components, class components, and hooks
