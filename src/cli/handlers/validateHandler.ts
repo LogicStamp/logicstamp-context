@@ -18,6 +18,9 @@ export async function handleValidate(args: string[]): Promise<void> {
 
   try {
     await validateCommand(filePath, quiet);
+    // validateCommand calls process.exit() internally on all code paths,
+    // so this line should never be reached. If it is, something unexpected happened.
+    // We don't call process.exit() here to avoid race conditions in tests.
   } catch (error) {
     console.error('❌ Validation failed:', (error as Error).message);
     process.exit(1);

@@ -85,7 +85,16 @@ interface StyleSources {
     selectors: string[];
     properties: string[];
   };
-  inlineStyles?: boolean;
+  inlineStyles?: boolean | {
+    properties?: string[]; // CSS property names (e.g., ['animationDelay', 'color', 'padding'])
+    values?: Record<string, string>; // Property-value pairs for literal values (e.g., { animationDelay: '2s', color: 'blue' })
+  };
+  styledJsx?: {
+    css?: string; // Extracted CSS content from <style jsx> blocks
+    global?: boolean; // Whether the style block has global attribute
+    selectors?: string[]; // CSS selectors found in the extracted CSS
+    properties?: string[]; // CSS properties found in the extracted CSS
+  };
   styledComponents?: {
     components?: string[];
     usesTheme?: boolean;
@@ -211,7 +220,14 @@ Identifies which styling approaches are used:
 - **`tailwind`** - Tailwind CSS utility classes, categorized by type (layout, spacing, colors, typography, borders, effects) with breakpoint information
 - **`scssModule`** / **`cssModule`** - Path to imported SCSS/CSS module file
 - **`scssDetails`** / **`cssDetails`** - Parsed details from style files (selectors, properties, SCSS features)
-- **`inlineStyles`** - Boolean indicating `style={{...}}` usage
+- **`inlineStyles`** - Inline style usage. Can be `boolean` (legacy format) or an object with:
+  - `properties`: Array of CSS property names (e.g., `['animationDelay', 'color', 'padding']`)
+  - `values`: Record of property-value pairs for literal values (e.g., `{ animationDelay: '2s', color: 'blue' }`)
+- **`styledJsx`** - Styled JSX CSS content extracted from `<style jsx>` blocks:
+  - `css`: Extracted CSS content string
+  - `global`: Boolean indicating if the style block has `global` attribute
+  - `selectors`: Array of CSS selectors found in the extracted CSS
+  - `properties`: Array of CSS properties found in the extracted CSS
 - **`styledComponents`** - Styled-components/Emotion usage with component names and theme information
 - **`motion`** - Framer Motion usage with components, variants, and feature flags
 - **`materialUI`** - Material UI usage with components, packages, and styling features (theme, sx prop, styled, makeStyles, system props)
@@ -277,7 +293,7 @@ interface LogicStampBundle {
   };
   meta: {
     missing: MissingDependency[];
-    source: string;  // Tool version (e.g., "logicstamp-context@0.3.4")
+    source: string;  // Tool version (e.g., "logicstamp-context@0.3.x")
   };
 }
 
@@ -383,7 +399,7 @@ interface MissingDependency {
         "referencedBy": "src/components/Button.tsx"
       }
     ],
-      "source": "logicstamp-context@0.3.4"
+      "source": "logicstamp-context@0.3.x"
   }
 }
 ```
@@ -477,7 +493,7 @@ interface FolderEntry {
     }
   ],
   "meta": {
-      "source": "logicstamp-context@0.3.4"
+      "source": "logicstamp-context@0.3.x"
   }
 }
 ```

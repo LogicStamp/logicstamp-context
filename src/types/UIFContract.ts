@@ -137,7 +137,18 @@ export interface StyleSources {
   };
 
   // Inline styles
-  inlineStyles?: boolean;
+  inlineStyles?: boolean | {
+    properties?: string[]; // CSS property names (e.g., ['animationDelay', 'transformOrigin', 'color'])
+    values?: Record<string, string>; // Property-value pairs (e.g., { animationDelay: '2s', color: 'blue' })
+  };
+
+  // Styled JSX with CSS content extraction
+  styledJsx?: {
+    css?: string; // Extracted CSS content from <style jsx> blocks
+    global?: boolean; // Whether the style block has global attribute
+    selectors?: string[]; // CSS selectors found in the extracted CSS
+    properties?: string[]; // CSS properties found in the extracted CSS
+  };
 
   // Styled-components/Emotion with component analysis
   styledComponents?: {

@@ -148,7 +148,15 @@ Identifies which styling approaches are used in the component:
   - `selectors` – Array of CSS selectors
   - `properties` – Array of CSS properties
 
-- **`inlineStyles`** – Boolean indicating if inline styles (`style={{...}}`) are used
+- **`inlineStyles`** – Inline style usage. Can be `boolean` (legacy format) or an object with:
+  - `properties` – Array of CSS property names (e.g., `['animationDelay', 'color', 'padding']`)
+  - `values` – Record of property-value pairs for literal values (e.g., `{ animationDelay: '2s', color: 'blue' }`)
+
+- **`styledJsx`** – Styled JSX CSS content extracted from `<style jsx>` blocks:
+  - `css` – Extracted CSS content string
+  - `global` – Boolean indicating if the style block has `global` attribute
+  - `selectors` – Array of CSS selectors found in the extracted CSS
+  - `properties` – Array of CSS properties found in the extracted CSS
 
 - **`styledComponents`** – Styled-components/Emotion information:
   - `components` – Array of styled component names (e.g., `["div", "Button"]`)

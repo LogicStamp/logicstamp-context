@@ -48,7 +48,17 @@ Identifies which styling approaches are used in each component:
   - Nested rules inside `@media`, `@supports`, `@container`, and other at-rules
   - **Note**: Only CSS/SCSS files that are imported by component files are parsed. Standalone CSS/SCSS files that aren't imported won't be analyzed.
 
-- **Inline Styles** – Detects `style={{...}}` usage
+- **Inline Styles** – Extracts inline style objects with:
+  - CSS property names (e.g., `['animationDelay', 'color', 'padding']`)
+  - Literal property values (e.g., `{ animationDelay: '2s', color: 'blue' }`)
+  - Dynamic values (variables, function calls) are detected as properties but values are not extracted (static analysis limitation)
+
+- **Styled JSX** – Extracts CSS content from `<style jsx>` blocks:
+  - Full CSS content extraction from template literals
+  - CSS selector extraction (parsed using css-tree AST)
+  - CSS property extraction
+  - Global attribute detection (`<style jsx global>`)
+  - Support for template literals, string literals, and tagged template expressions
 
 - **styled-components/Emotion** – Identifies (via AST-based extraction):
   - Styled component declarations (`styled.div`, `styled(Component)`, `styled('div')`)
@@ -272,7 +282,8 @@ Object containing detected styling approaches:
 - `tailwind` – Object with categorized classes, breakpoints, and class count
 - `scssModule` / `cssModule` – Path to module file (if imported)
 - `scssDetails` / `cssDetails` – Parsed details from style files
-- `inlineStyles` – Boolean indicating inline style usage
+- `inlineStyles` – Can be `boolean` (legacy) or object with `properties` (array) and `values` (record of property-value pairs)
+- `styledJsx` – Object with `css` (extracted CSS content), `global` (boolean), `selectors` (array), and `properties` (array)
 - `styledComponents` – Object with component names and theme usage
 - `motion` – Object with framer-motion components and features
 - `materialUI` – Object with Material UI components, packages, and styling features

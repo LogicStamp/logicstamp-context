@@ -87,7 +87,7 @@ The `context_main.json` file serves as a directory index:
     }
   ],
   "meta": {
-      "source": "logicstamp-context@0.3.4"
+      "source": "logicstamp-context@0.3.5"
   }
 }
 ```
@@ -110,7 +110,7 @@ Each folder's `context.json` contains an array of LogicStamp bundles. Each bundl
 - `graph.edges` lists dependency relationships between nodes (empty when analysis depth is 1).
 - `meta` section contains two critical fields:
   - `missing`: Array of unresolved dependencies. Each entry includes `name` (import path), `reason` (why it failed), and `referencedBy` (source component). Empty array indicates complete dependency resolution.
-  - `source`: Generator version string (e.g., `"logicstamp-context@0.3.4"`) for compatibility tracking.
+  - `source`: Generator version string (e.g., `"logicstamp-context@0.3.5"`) for compatibility tracking.
 - Example bundle skeleton:
 
 ```

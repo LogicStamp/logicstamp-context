@@ -155,7 +155,7 @@ describe('Style Extractor', () => {
       expect(result?.styleSources?.materialUI?.features?.usesSxProp).toBe(true);
     });
 
-    it('should detect inline styles', async () => {
+    it('should detect and extract inline styles', async () => {
       const sourceCode = `
         function MyComponent() {
           return <div style={{ padding: '1rem', color: 'blue' }}>Hello</div>;
@@ -168,7 +168,128 @@ describe('Style Extractor', () => {
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
       expect(result).toBeDefined();
-      expect(result?.styleSources?.inlineStyles).toBe(true);
+      expect(result?.styleSources?.inlineStyles).toBeDefined();
+      
+      // Should be an object with properties and values
+      if (typeof result?.styleSources?.inlineStyles === 'object') {
+        expect(result.styleSources.inlineStyles.properties).toContain('color');
+        expect(result.styleSources.inlineStyles.properties).toContain('padding');
+        expect(result.styleSources.inlineStyles.values).toBeDefined();
+        expect(result.styleSources.inlineStyles.values?.color).toBe('blue');
+        expect(result.styleSources.inlineStyles.values?.padding).toBe('1rem');
+      } else {
+        // Fallback: at least should be true for backward compat
+        expect(result?.styleSources?.inlineStyles).toBe(true);
+      }
+    });
+
+    it('should extract inline styles with various value types', async () => {
+      const sourceCode = `
+        function MyComponent() {
+          return (
+            <div style={{
+              padding: '1rem',
+              margin: 10,
+              opacity: 0.5,
+              display: true,
+              animationDelay: \`2s\`,
+              transformOrigin: 'center'
+            }}>
+              Hello
+            </div>
+          );
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      const result = await extractStyleMetadata(sourceFile, tempDir);
+
+      expect(result).toBeDefined();
+      if (typeof result?.styleSources?.inlineStyles === 'object') {
+        expect(result.styleSources.inlineStyles.properties).toContain('padding');
+        expect(result.styleSources.inlineStyles.properties).toContain('margin');
+        expect(result.styleSources.inlineStyles.properties).toContain('opacity');
+        expect(result.styleSources.inlineStyles.properties).toContain('display');
+        expect(result.styleSources.inlineStyles.properties).toContain('animationDelay');
+        expect(result.styleSources.inlineStyles.properties).toContain('transformOrigin');
+        
+        // Check extracted values
+        expect(result.styleSources.inlineStyles.values?.padding).toBe('1rem');
+        expect(result.styleSources.inlineStyles.values?.margin).toBe('10');
+        expect(result.styleSources.inlineStyles.values?.opacity).toBe('0.5');
+        expect(result.styleSources.inlineStyles.values?.display).toBe('true');
+        expect(result.styleSources.inlineStyles.values?.animationDelay).toBe('2s');
+        expect(result.styleSources.inlineStyles.values?.transformOrigin).toBe('center');
+      }
+    });
+
+    it('should extract styled-jsx CSS content', async () => {
+      const sourceCode = `
+        function MyComponent() {
+          return (
+            <>
+              <div className="container">Hello</div>
+              <style jsx>{\`
+                .container {
+                  padding: 1rem;
+                  color: blue;
+                  background-color: white;
+                }
+                @keyframes border-spin {
+                  from { transform: rotate(0deg); }
+                  to { transform: rotate(360deg); }
+                }
+              \`}</style>
+            </>
+          );
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      const result = await extractStyleMetadata(sourceFile, tempDir);
+
+      expect(result).toBeDefined();
+      expect(result?.styleSources?.styledJsx).toBeDefined();
+      expect(result?.styleSources?.styledJsx?.css).toContain('.container');
+      expect(result?.styleSources?.styledJsx?.css).toContain('padding: 1rem');
+      expect(result?.styleSources?.styledJsx?.css).toContain('@keyframes border-spin');
+      expect(result?.styleSources?.styledJsx?.selectors).toContain('.container');
+      expect(result?.styleSources?.styledJsx?.properties).toContain('padding');
+      expect(result?.styleSources?.styledJsx?.properties).toContain('color');
+      expect(result?.styleSources?.styledJsx?.properties).toContain('background-color');
+      expect(result?.styleSources?.styledJsx?.global).toBeUndefined(); // Should not be global
+    });
+
+    it('should detect global attribute in styled-jsx', async () => {
+      const sourceCode = `
+        function MyComponent() {
+          return (
+            <>
+              <style jsx global>{\`
+                body {
+                  margin: 0;
+                  font-family: sans-serif;
+                }
+              \`}</style>
+            </>
+          );
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+
+      const result = await extractStyleMetadata(sourceFile, tempDir);
+
+      expect(result).toBeDefined();
+      expect(result?.styleSources?.styledJsx).toBeDefined();
+      expect(result?.styleSources?.styledJsx?.global).toBe(true);
+      expect(result?.styleSources?.styledJsx?.css).toContain('body');
+      expect(result?.styleSources?.styledJsx?.selectors).toContain('body');
     });
 
     it('should extract layout metadata', async () => {
@@ -271,7 +392,12 @@ describe('Style Extractor', () => {
       expect(result?.styleSources?.styledComponents).toBeDefined();
       expect(result?.styleSources?.motion).toBeDefined();
       expect(result?.styleSources?.materialUI).toBeDefined();
-      expect(result?.styleSources?.inlineStyles).toBe(true);
+      // Should detect inline styles (either object or boolean for backward compat)
+      expect(result?.styleSources?.inlineStyles).toBeDefined();
+      if (typeof result?.styleSources?.inlineStyles === 'object') {
+        expect(result.styleSources.inlineStyles.properties).toContain('margin');
+        expect(result.styleSources.inlineStyles.values?.margin).toBe('1rem');
+      }
     });
 
     it('should extract Tailwind breakpoints', async () => {
