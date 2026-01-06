@@ -14,6 +14,7 @@ import { extractLayoutMetadata, extractVisualMetadata } from './layout.js';
 import { extractMaterialUI } from './material.js';
 import { extractShadcnUI } from './shadcn.js';
 import { extractRadixUI } from './radix.js';
+import { extractStyledJsx } from './styledJsx.js';
 
 /**
  * Extract style metadata from a source file
@@ -78,6 +79,115 @@ export async function extractStyleMetadata(source: SourceFile, filePath: string)
     });
     return undefined;
   }
+}
+
+
+/**
+ * Extract inline style properties and values from style={{...}} attributes
+ */
+function extractInlineStyles(source: SourceFile): { properties: string[]; values?: Record<string, string> } | null {
+  const properties = new Set<string>();
+  const values: Record<string, string> = {};
+  const filePath = source.getFilePath?.() ?? 'unknown';
+
+  try {
+    const jsxAttributes = source.getDescendantsOfKind(SyntaxKind.JsxAttribute);
+    
+    for (const attr of jsxAttributes) {
+      try {
+        const jsxAttr = attr as JsxAttribute;
+        const attrName = jsxAttr.getNameNode().getText();
+        
+        if (attrName === 'style') {
+          const initializer = jsxAttr.getInitializer();
+          if (initializer && initializer.getKind() === SyntaxKind.JsxExpression) {
+            const expr = (initializer as any).getExpression();
+            
+            // Handle object literal: style={{ color: 'blue', padding: '1rem' }}
+            if (expr && expr.getKind() === SyntaxKind.ObjectLiteralExpression) {
+              const objLiteral = expr.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+              const objProperties = objLiteral.getProperties();
+              
+              for (const prop of objProperties) {
+                if (prop.getKind() === SyntaxKind.PropertyAssignment) {
+                  const propAssignment = prop.asKindOrThrow(SyntaxKind.PropertyAssignment);
+                  const nameNode = propAssignment.getNameNode();
+                  const initializer = propAssignment.getInitializer();
+                  
+                  // Extract property name (handles both identifier and string literal)
+                  let propName: string | undefined;
+                  if (nameNode.getKind() === SyntaxKind.Identifier) {
+                    propName = nameNode.getText();
+                  } else if (nameNode.getKind() === SyntaxKind.StringLiteral) {
+                    propName = (nameNode as any).getLiteralText?.() ?? nameNode.getText().slice(1, -1);
+                  }
+                  
+                  if (propName) {
+                    properties.add(propName);
+                    
+                    // Extract property value if it's a literal
+                    if (initializer) {
+                      const initKind = initializer.getKind();
+                      
+                      // String literal: 'blue', "1rem"
+                      if (initKind === SyntaxKind.StringLiteral) {
+                        const value = (initializer as any).getLiteralText?.() ?? initializer.getText().slice(1, -1);
+                        values[propName] = value;
+                      }
+                      // Numeric literal: 10, 1.5
+                      else if (initKind === SyntaxKind.NumericLiteral) {
+                        values[propName] = initializer.getText();
+                      }
+                      // Boolean literal: true, false
+                      else if (initKind === SyntaxKind.TrueKeyword || initKind === SyntaxKind.FalseKeyword) {
+                        values[propName] = initializer.getText();
+                      }
+                      // Null literal
+                      else if (initKind === SyntaxKind.NullKeyword) {
+                        values[propName] = 'null';
+                      }
+                      // Template literal (no substitutions): `2s`
+                      else if (initKind === SyntaxKind.NoSubstitutionTemplateLiteral) {
+                        const value = (initializer as any).getLiteralText?.() ?? initializer.getText().slice(1, -1);
+                        values[propName] = value;
+                      }
+                      // For other expressions (variables, function calls, etc.), we skip the value
+                      // but still record the property name
+                    }
+                  }
+                }
+              }
+            }
+            // Handle variable reference: style={myStyles} - we can't extract values statically
+            // but we still want to mark that inline styles are used
+          }
+        }
+      } catch (error) {
+        debugError('styleExtractor', 'extractInlineStyles', {
+          filePath,
+          error: error instanceof Error ? error.message : String(error),
+          context: 'attribute-iteration',
+        });
+        // Continue with next attribute
+      }
+    }
+  } catch (error) {
+    debugError('styleExtractor', 'extractInlineStyles', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+
+  // Only return object if we found properties
+  if (properties.size > 0) {
+    return {
+      properties: Array.from(properties).sort(),
+      ...(Object.keys(values).length > 0 && { values }),
+    };
+  }
+
+  return null;
 }
 
 /**
@@ -161,27 +271,31 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
     });
   }
 
-  // Check for inline styles using AST
+  // Extract inline styles using AST
   try {
-    const hasInlineStyles = source.getDescendantsOfKind(SyntaxKind.JsxAttribute).some(attr => {
-      const jsxAttr = attr as JsxAttribute;
-      const attrName = jsxAttr.getNameNode().getText();
-      if (attrName === 'style') {
-        const initializer = jsxAttr.getInitializer();
-        if (initializer && initializer.getKind() === SyntaxKind.JsxExpression) {
-          return true; // style={...} found
-        }
-      }
-      return false;
-    });
-    if (hasInlineStyles) {
-      sources.inlineStyles = true;
+    const inlineStylesData = extractInlineStyles(source);
+    if (inlineStylesData) {
+      sources.inlineStyles = inlineStylesData;
     }
   } catch (error) {
     debugError('styleExtractor', 'extractStyleSources', {
       filePath,
       error: error instanceof Error ? error.message : String(error),
-      context: 'detectInlineStyles',
+      context: 'extractInlineStyles',
+    });
+  }
+
+  // Extract styled-jsx CSS content
+  try {
+    const styledJsxData = extractStyledJsx(source);
+    if (styledJsxData) {
+      sources.styledJsx = styledJsxData;
+    }
+  } catch (error) {
+    debugError('styleExtractor', 'extractStyleSources', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+      context: 'extractStyledJsx',
     });
   }
 

@@ -5,7 +5,7 @@
 
   <br/>
 
-  ![Version](https://img.shields.io/badge/version-0.3.4-blue.svg)
+  ![Version](https://img.shields.io/badge/version-0.3.5-blue.svg)
   ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
   ![License](https://img.shields.io/badge/license-MIT-green.svg)
   ![Node](https://img.shields.io/badge/node-%3E%3D18.18.0-brightgreen.svg)
@@ -48,7 +48,7 @@ stamp context
 
 > **ℹ️** If you see `"PRIVATE_DATA"` in output, see the **Security** section below.
 
-> **Note:** This is a beta release (v0.3.4). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+> **Note:** This is a beta release (v0.3.5). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 ## Why LogicStamp?
 
@@ -60,7 +60,7 @@ LLMs can reason about your project structure without scanning raw source files.
 - **Perfect for Cursor/Claude/GitHub Copilot Chat** — share context files for instant codebase understanding
 - **CI-friendly** - detect drift, validate bundles, track changes
 
-## Features
+## ⚡ Features
 
 - **AI-ready bundles** - predictable, structured, deterministic
 - **React/Next.js/Vue/TypeScript awareness** - props, hooks/composables, state, deps
@@ -74,6 +74,18 @@ LLMs can reason about your project structure without scanning raw source files.
 - **Security-first** - automatic secret detection and sanitization
 - **Fast, zero-config** - works out of the box
 - **MCP-ready** - AI agents can consume context bundles via a standardized MCP interface
+
+## How it Works
+
+1. **Scan**: Finds all `.ts` and `.tsx` files in your project
+2. **Analyze**: Parses React/Next.js/Vue components using TypeScript AST
+3. **Extract**: Builds component contracts with structure and signatures
+4. **Graph**: Creates dependency graph showing relationships
+5. **Bundle**: Packages context bundles optimized for AI consumption
+6. **Organize**: Groups bundles by folder and writes `context.json` files maintaining directory structure
+7. **Index**: Creates `context_main.json` index with folder metadata and summary statistics
+
+All in one command, no pre-compilation needed!
 
 ## MCP Server
 
@@ -216,18 +228,6 @@ See the full list here: [docs/limitations.md](https://github.com/LogicStamp/logi
 
 - **Open an issue** → https://github.com/LogicStamp/logicstamp-context/issues
 - **Join our roadmap** → https://logicstamp.dev
-
-## How it Works
-
-1. **Scan**: Finds all `.ts` and `.tsx` files in your project
-2. **Analyze**: Parses React/Vue components using TypeScript AST
-3. **Extract**: Builds component contracts with structure and signatures
-4. **Graph**: Creates dependency graph showing relationships
-5. **Bundle**: Packages context bundles optimized for AI consumption
-6. **Organize**: Groups bundles by folder and writes `context.json` files maintaining directory structure
-7. **Index**: Creates `context_main.json` index with folder metadata and summary statistics
-
-All in one command, no pre-compilation needed!
 
 ## Requirements
 

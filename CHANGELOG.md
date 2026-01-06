@@ -7,7 +7,14 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Planned Features
+### Roadmap (not yet implemented)
+- Hook parameter detection - Extract function signatures for custom hooks
+- Emit detection accuracy - Distinguish internal handlers from public API emits
+- Dynamic class parsing - Resolve variable-based classes within template literals
+- CSS-in-JS support - Complete support for remaining libraries (Chakra UI, Ant Design)
+- Enhanced third-party component info - Include package names, versions, prop types
+- TypeScript type extraction - Capture full type definitions (generics, unions, intersections)
+- Project-level insights - Add cross-folder relationships and project-wide statistics to `context_main.json`
 - Vue Single File Component (`.vue`) support - Parse and analyze `.vue` SFC files
 - Custom profile configuration and overrides
 - Incremental bundle caching
@@ -17,8 +24,52 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Advanced Next.js App Router features (route roles, segment paths, metadata exports)
 
 ### Known Limitations
-- No incremental caching (planned for future release)
-- No custom profiles beyond the three presets (planned for future release)
+
+See [docs/LIMITATIONS.md](docs/LIMITATIONS.md) for complete details and code evidence.
+
+- Hook parameter detection not extracted
+- Emit detection accuracy - internal handlers vs public API not distinguished
+- Dynamic class expressions not resolved (variables in template literals)
+- TypeScript types incomplete (generics, complex unions/intersections)
+
+---
+
+## [0.3.5] - 2026-01-06
+
+### Added
+
+- **Styled JSX support** - Added comprehensive support for Styled JSX. Enables accurate style context extraction for Next.js and React codebases using `<style jsx>` blocks:
+  - CSS content extraction from `<style jsx>` blocks
+  - Selector extraction from extracted CSS content
+  - CSS property extraction from extracted CSS content
+  - Global attribute detection (`<style jsx global>`)
+  - Support for template literals, string literals, and tagged template expressions
+  - Full integration with style metadata extraction when using `--include-style` or `stamp context style`
+  - Integrated into `UIFContract.style.styledJsx` field in generated context files
+
+- **Enhanced inline style extraction** - Improved inline style object extraction. Provides more complete style metadata by extracting both property names and their literal values:
+  - Now extracts both CSS property names and their literal values
+  - `inlineStyles` field structure enhanced to include:
+    - `properties`: Array of CSS property names (e.g., `['animationDelay', 'color', 'padding']`)
+    - `values`: Record of property-value pairs for literal values (e.g., `{ animationDelay: '2s', color: 'blue' }`)
+  - Dynamic values (variables, function calls) are detected as properties but their values are not extracted (static analysis limitation)
+  - Provides more complete style metadata for AI context analysis
+
+### Changed
+
+- **Style extractor architecture** - Added new `styledJsx.ts` module for Styled JSX extraction, following the modular style extractor pattern
+- **UIFContract schema** - Added `styledJsx` field to style metadata structure in contract types
+- **Schema version** - Updated context schema to include Styled JSX metadata fields
+
+### Fixed
+
+- **Inline style values** - Fixed issue where inline style objects only extracted property names without values. Now extracts both properties and literal values for better style metadata completeness.
+
+**Impact:** This release is additive and non-breaking. All changes are backward compatible:
+- **Styled JSX support** - New optional field `styledJsx` in style metadata. Only appears when `<style jsx>` blocks are detected. Existing codebases without Styled JSX are unaffected.
+- **Enhanced inline styles** - The `inlineStyles` field structure is extended with an optional `values` field. Existing code accessing `inlineStyles.properties` continues to work unchanged. The `values` field is only added when literal values are extracted, maintaining backward compatibility with previous `inlineStyles` format (boolean or object with `properties` only).
+- **Schema compatibility** - All additions are optional. No existing fields were removed or modified in a breaking way. Context files generated with previous versions remain valid.
+- **CLI/API stability** - No CLI command changes, no breaking API changes.
 
 ---
 
@@ -26,7 +77,7 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- **Vue.js support** - Added comprehensive support for Vue 3 Composition API:
+- **Vue.js TypeScript / TSX Support** - Added comprehensive support for Vue 3 Composition API:
   - Vue component and composable detection (`vue:component`, `vue:composable` kinds)
   - Vue composables extraction (ref, reactive, computed, watch, lifecycle hooks, etc.)
   - Vue component extraction from JSX and component registration
@@ -37,6 +88,8 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - Framework detection priority: Vue takes priority over React when both are imported
   - JSX parsing: Uses React JSX mode (Vue JSX is compatible, but Vue templates are not parsed)
   - **Note:** Works with Vue code in `.ts`/`.tsx` files (JSX/TSX components, extracted composables). Single File Components (`.vue` files) are not currently supported. See [Vue.js documentation](docs/frameworks/vue.md) for complete documentation and limitations.
+
+  **Impact:** This release is additive and non-breaking. Existing React/Next.js/TypeScript workflows are unaffected. Vue support is automatically detected when Vue imports are present in your codebase.
 
 ---
 
@@ -66,13 +119,15 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.3.2] - 2025-12-21
 
+### Breaking
+
+- **Output files now use relative paths** - Generated context files (`context_main.json` and folder `context.json` files) now use relative paths instead of absolute paths. The `projectRoot` field in `context_main.json` is now `"."` (relative) instead of an absolute path, and all `contextFile` paths in folder entries are relative to the project root. Output change: `projectRootResolved` is no longer emitted in generated context files (kept as optional in types for backward compatibility). The `LogicStampIndex` schema version has been bumped from `0.1` to `0.2` to reflect this output change. This improves portability of context files across different machines and environments. **Note:** This is a breaking change if you have tools or scripts that expect absolute paths in the generated JSON files or rely on the `projectRootResolved` field. Most consumers should continue to work as-is since relative paths can be resolved from the project root. See [Migration Guide](docs/MIGRATION_0.3.2.md) for details.
+
 ### Security
 
 - **Updated `glob` dependency to 11.1.0+** - Updated `glob` package from `^10.3.10` to `^11.1.0` to address CVE-2025-64756 (command injection vulnerability in the `-c/--cmd` option). This vulnerability affected versions 10.3.7 through 11.0.3. The update patches the security issue. Note: LogicStamp Context uses the `glob` API (not the CLI), so it was not directly affected by this vulnerability, but the update ensures the latest security patches are in place.
 
 ### Changed
-
-- **Output files now use relative paths** - Generated context files (`context_main.json` and folder `context.json` files) now use relative paths instead of absolute paths. The `projectRoot` field in `context_main.json` is now `"."` (relative) instead of an absolute path, and all `contextFile` paths in folder entries are relative to the project root. Output change: `projectRootResolved` is no longer emitted in generated context files (kept as optional in types for backward compatibility). The `LogicStampIndex` schema version has been bumped from `0.1` to `0.2` to reflect this output change. This improves portability of context files across different machines and environments. **Note:** This is a breaking change if you have tools or scripts that expect absolute paths in the generated JSON files or rely on the `projectRootResolved` field. Most consumers should continue to work as-is since relative paths can be resolved from the project root. See [Migration Guide](docs/MIGRATION_0.3.2.md) for details.
 
 - **CSS/SCSS parsing now uses AST-based parsing** - Migrated CSS and SCSS file parsing from regex-based extraction to a deterministic AST walk using `css-tree`. This replaces heuristic regex-based parsing with a deterministic AST walk, improving correctness and future extensibility. The parser provides more robust and accurate parsing of CSS/SCSS files, consistent with the AST-based approach used for TypeScript/React files with `ts-morph`, and properly handles:
   - CSS selectors (class, ID, and type selectors) with accurate extraction
@@ -514,7 +569,9 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 
 ## Version links
 
-- [Unreleased](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.3...HEAD)
+- [Unreleased](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.5...HEAD)
+- [0.3.5](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.4...v0.3.5)
+- [0.3.4](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.3...v0.3.4)
 - [0.3.3](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.2...v0.3.3)
 - [0.3.2](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.1...v0.3.2)
 - [0.3.1](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.0...v0.3.1)

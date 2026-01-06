@@ -192,5 +192,5 @@
         - [2]: src/components/HeroSection.tsx,src/components/Button.tsx
     meta:
       missing[0]:
-      source: logicstamp-context@0.3.3
+      source: logicstamp-context@0.3.x
 

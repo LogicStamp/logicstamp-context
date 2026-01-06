@@ -24,6 +24,9 @@ export async function handleClean(args: string[]): Promise<void> {
 
   try {
     await cleanCommand(options);
+    // cleanCommand doesn't call process.exit() internally, but this ensures we exit
+    // even if there's an unexpected code path that doesn't return normally
+    process.exit(0);
   } catch (error) {
     console.error('❌ Clean failed:', (error as Error).message);
     process.exit(1);

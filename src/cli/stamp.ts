@@ -155,4 +155,11 @@ async function main() {
   await handleGenerate(contextArgs);
 }
 
-main();
+// Error handling wrapper for main entry point
+main().catch((error) => {
+  console.error('❌ Unexpected error:', error instanceof Error ? error.message : String(error));
+  if (process.env.LOGICSTAMP_DEBUG === '1') {
+    console.error(error instanceof Error ? error.stack : String(error));
+  }
+  process.exit(1);
+});

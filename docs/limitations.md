@@ -185,7 +185,8 @@ This section documents what's currently captured in context files versus what's 
   - Breakpoints detected (sm, md, lg, xl)
   - Class counts per component
 - **CSS modules**: File paths and selectors/properties
-- **Inline styles**: Detected (`inlineStyles: true`)
+- **Inline styles**: Property names and literal values extracted ✅ **v0.3.5**
+- **Styled JSX**: CSS content, selectors, properties, global attribute ✅ **v0.3.5**
 - **Layout patterns**: Flex vs grid, column configs
 - **Visual metadata**: Color palettes, spacing patterns, typography scales
 - **Animation metadata**: Library type, animation types
@@ -208,33 +209,82 @@ This section documents what's currently captured in context files versus what's 
 
 - **Created timestamps**: When context was generated
 - **OS detection**: Platform info (e.g., `win32`)
-- **Source tool version**: `logicstamp-context@0.3.4`
+- **Source tool version**: `logicstamp-context@0.3.x`
 - **Missing dependencies**: Tracked in `missing` array
 
 ## What's Missing or Incomplete
 
+### 1. Hook Parameter Detection
 
-### 2. Inline Style Objects Not Fully Extracted
+**Status:** ❌ **Still unresolved**
 
-**Issue**: Inline style objects are detected (`inlineStyles: true`) but actual property values are not captured.
+**Location**: `src/core/astParser/extractors/componentExtractor.ts` (lines 11-48)
 
-**Example**:
-```tsx
-// Source code has:
-style={{ animationDelay: '2s' }}
-style={{ transformOrigin: 'center' }}
+**Verified Implementation**: The `extractHooks()` function only extracts hook names as strings:
+- ✅ Detects hooks via pattern `/^use[A-Z]/`
+- ✅ Adds hook name to set: `hooks.add(text)`
+- ❌ **Never extracts function parameters or signatures**
+- ❌ **Never analyzes the CallExpression arguments**
 
-// Context.json only shows:
-"inlineStyles": true  // But not the actual values!
+**Code Evidence**:
+```typescript
+// Lines 16-28: Only extracts identifier name, not parameters
+if (expr.getKind() === SyntaxKind.Identifier) {
+  const text = expr.getText();  // Just the name: "useTypewriter"
+  if (/^use[A-Z]/.test(text)) {
+    hooks.add(text);  // Only stores name, not signature
+  }
+}
+// callExpr.getArguments() is never called
 ```
 
-**Missing**: Actual inline style values/properties
-
-**Impact**: Can't analyze specific inline styles
+**Impact**: You'll need to check the source code to see what parameters a hook takes—the context file won't tell you.
 
 **Priority**: High
 
-### 2. CSS-in-JS Partially Supported
+### 2. Emit Detection Accuracy
+
+**Status:** ❌ **Still unresolved**
+
+**Location**: `src/core/astParser/extractors/eventExtractor.ts` (lines 12-74)
+
+**Verified Implementation**: The `extractEvents()` function extracts ALL `onXxx` handlers without any filtering:
+- ✅ Matches pattern `/^on[A-Z]/` to find event handlers
+- ✅ Extracts function signatures from handlers
+- ❌ **No distinction between props (public API) and internal handlers**
+- ❌ **No analysis of whether handler is passed as prop vs defined internally**
+- ❌ **All `onXxx` attributes are treated as emits**
+
+**Code Evidence**:
+```typescript
+// Lines 17-55: Extracts all onXxx without filtering
+source.getDescendantsOfKind(SyntaxKind.JsxAttribute).forEach((attr) => {
+  const name = attr.getNameNode().getText();
+  if (/^on[A-Z]/.test(name)) {  // Matches ALL onXxx
+    // No check if this is a prop vs internal handler
+    events[name] = { type: 'function', signature };
+  }
+});
+// No analysis of whether onClick is from props or defined in component
+```
+
+**Impact**: You might see internal handlers listed as emits, which can be confusing when trying to figure out what events the component actually exposes.
+
+**Priority**: High
+
+### 3. Dynamic Class Parsing
+
+**Status:** ❌ **Still unresolved**
+
+The `extractClassesFromExpression()` function in `src/core/styleExtractor/tailwind.ts` only extracts static segments from template literals. Dynamic expressions within `${}` (variables, function calls, etc.) are not resolved.
+
+**Location**: `src/core/styleExtractor/tailwind.ts` (lines 135-210)
+
+**Impact**: Static parts of template literals are extracted, but dynamic expressions (variables, function calls, etc.) within `${}` are not resolved. If you build classes from variables, the style metadata will be incomplete.
+
+**Priority**: High
+
+### 4. CSS-in-JS Partially Supported
 
 **Supported**: 
 - styled-components (component names, theme usage, css prop)
@@ -243,18 +293,17 @@ style={{ transformOrigin: 'center' }}
 - ShadCN/UI - components, variants, sizes
 - Radix UI - primitives, patterns, accessibility
 - Framer Motion - components, variants, animation features
+- Styled JSX - CSS content extraction, selectors, properties, global attribute detection ✅ **v0.3.5**
 
 **Missing/Incomplete**: 
-- Chakra UI - not yet detected
-- Ant Design - not yet detected
-- Styled JSX - CSS content from `<style jsx>` blocks not extracted (only detected)
-- Inline style object values - detected but property values not extracted
+- Chakra UI - not yet detected (no code found)
+- Ant Design - not yet detected (no code found)
 
-**Impact**: Most major CSS-in-JS libraries are supported, but some smaller libraries and inline style values are not fully extracted.
+**Impact**: Most major CSS-in-JS libraries are supported. Remaining gaps are primarily for smaller/less common libraries.
 
 **Priority**: Medium
 
-### 3. Edge Relationships (Status: Implemented)
+### 5. Edge Relationships (Status: Implemented)
 
 **Status**: Dependency graph edges ARE built and populated.
 
@@ -265,9 +314,11 @@ style={{ transformOrigin: 'center' }}
 - Dependencies not being resolved (missing from manifest)
 - Dependencies being filtered as internal components
 
-**Priority**: ~~High~~ Resolved (remove from limitations if edges are working correctly in practice)
+**Priority**: ~~High~~ Resolved (edges are implemented and working)
 
-### 4. Third-Party Components Minimal Info
+### 6. Third-Party Components Minimal Info
+
+**Status:** ❌ **Still unresolved**
 
 **Issue**: Third-party components only show basic "missing" info without details.
 
@@ -285,9 +336,11 @@ style={{ transformOrigin: 'center' }}
 
 **Impact**: Limited understanding of external dependencies
 
+**Location**: `src/core/pack/collector.ts` - Missing dependency tracking only includes basic info
+
 **Priority**: Medium
 
-### 5. Code Content Not Captured
+### 7. Code Content Not Captured
 
 **Missing**: Actual source code (by design for token efficiency)
 
@@ -299,17 +352,27 @@ style={{ transformOrigin: 'center' }}
 
 **Priority**: Low
 
-### 6. TypeScript Types Incomplete
+### 8. TypeScript Types Incomplete
 
-**Captured**: Prop types as strings (`"string"`, `"number"`)
+**Status:** ❌ **Partially resolved - still incomplete**
 
-**Missing**: Full TypeScript type definitions, generics, unions, intersections
+**Location**: `src/core/astParser/extractors/propExtractor.ts` (lines 125-172)
+
+**Verified Implementation**:
+- ✅ Captures prop types as strings (`"string"`, `"number"`)
+- ✅ Captures literal unions via regex: `"primary" | "secondary"` → `{ type: 'literal-union', literals: ['primary', 'secondary'] }`
+- ✅ Captures function types: `() => void` → `{ type: 'function', signature: '() => void' }`
+- ❌ Does NOT handle generics (e.g., `ListProps<T>`)
+- ❌ Does NOT handle complex unions/intersections (e.g., `A & B`, `A | B | C` where not string literals)
+- ❌ Does NOT extract generic type parameters
+
+**Code Evidence**: `normalizePropType()` only has regex for literal unions (`/^("[\w-]+"(\s*\|\s*"[\w-]+")+)$/`) and function detection. No AST-based type analysis for generics or complex types.
 
 **Impact**: Limited type information for complex types
 
 **Priority**: Medium
 
-### 7. Comments/JSDoc Only in Header Mode
+### 9. Comments/JSDoc Only in Header Mode
 
 **Missing**: Regular comments, TODO notes
 
@@ -319,7 +382,7 @@ style={{ transformOrigin: 'center' }}
 
 **Priority**: Low
 
-### 8. Test Files Excluded
+### 10. Test Files Excluded
 
 **Issue**: Test files are completely excluded from context generation.
 
@@ -333,7 +396,7 @@ style={{ transformOrigin: 'center' }}
 
 **Note**: This is intentional by design - test files are excluded to keep context bundles focused on production code. If test analysis is needed, it would require a separate feature or flag to include test files.
 
-### 9. Runtime Behavior
+### 11. Runtime Behavior
 
 **Missing**: Runtime props, state changes, side effects
 
@@ -345,28 +408,120 @@ style={{ transformOrigin: 'center' }}
 
 **Priority**: Low
 
-### 10. Styled JSX Not Fully Parsed
+### 12. Inline Style Objects Extraction
 
-**Issue**: Styled JSX blocks are detected but CSS content is not extracted.
+**Status:** ✅ **Fixed in v0.3.5** (Verified)
+
+**Location**: `src/core/styleExtractor/styleExtractor.ts` (lines 88-191)
+
+**Verified Implementation**: The `extractInlineStyles()` function extracts both properties AND values:
+- ✅ Extracts property names from object literals
+- ✅ Extracts literal values for strings, numbers, booleans, null, and template literals
+- ✅ Returns `{ properties: string[], values?: Record<string, string> }`
+
+**Code Evidence**:
+```typescript
+// Lines 128-156: Extracts both property names and literal values
+if (initializer) {
+  const initKind = initializer.getKind();
+  if (initKind === SyntaxKind.StringLiteral) {
+    const value = (initializer as any).getLiteralText?.() ?? initializer.getText().slice(1, -1);
+    values[propName] = value;  // ✅ Value extracted
+  }
+  else if (initKind === SyntaxKind.NumericLiteral) {
+    values[propName] = initializer.getText();  // ✅ Value extracted
+  }
+  // ... handles booleans, null, template literals
+}
+// Returns: { properties: [...], values: {...} }  // ✅ Both included
+```
+
+**Example**:
+```tsx
+// Source code has:
+style={{ animationDelay: '2s', color: 'blue', padding: '1rem' }}
+
+// Context.json now shows:
+"inlineStyles": {
+  "properties": ["animationDelay", "color", "padding"],
+  "values": {
+    "animationDelay": "2s",
+    "color": "blue",
+    "padding": "1rem"
+  }
+}
+```
+
+**Note**: Dynamic values (variables, function calls) are detected as properties but their values are not extracted (static analysis limitation).
+
+### 13. Styled JSX CSS Extraction
+
+**Status:** ✅ **Fixed in v0.3.5** (Verified)
+
+**Location**: `src/core/styleExtractor/styledJsx.ts` (lines 59-230)
+
+**Verified Implementation**: The `extractStyledJsx()` function fully extracts CSS content:
+- ✅ Extracts CSS from `<style jsx>` template literals
+- ✅ Parses CSS using css-tree AST for selectors and properties
+- ✅ Detects `global` attribute
+- ✅ Returns `{ css: string, global?: boolean, selectors?: string[], properties?: string[] }`
+
+**Code Evidence**:
+```typescript
+// Lines 99-112: Extracts CSS from JSX expressions
+const css = extractCssFromExpr(expr);  // ✅ Extracts template literal content
+if (css?.trim()) {
+  cssBlocks.push(css);
+}
+
+// Lines 160-194: Parses CSS using css-tree AST
+const ast = csstree.parse(cssBlock, {...});  // ✅ Full CSS parsing
+csstree.walk(ast, (node: any) => {
+  if (node.type === 'Rule' && node.prelude) {
+    selectors.add(generate(node.prelude));  // ✅ Selectors extracted
+  }
+  if (node.type === 'Declaration') {
+    properties.add(node.property);  // ✅ Properties extracted
+  }
+});
+// Returns: { css, global, selectors, properties }  // ✅ All fields included
+```
 
 **Example**:
 ```tsx
 // Source has:
-<style jsx>{`
-  @keyframes border-spin { ... }
+<style jsx global>{`
+  body {
+    margin: 0;
+    font-family: sans-serif;
+  }
+  .container {
+    padding: 1rem;
+    color: blue;
+  }
 `}</style>
 
-// Context shows:
-"inlineStyles": true  // But not the actual CSS!
+// Context.json now shows:
+"styledJsx": {
+  "css": "body {\n  margin: 0;\n  font-family: sans-serif;\n}\n.container {\n  padding: 1rem;\n  color: blue;\n}",
+  "global": true,
+  "selectors": ["body", ".container"],
+  "properties": ["color", "font-family", "margin", "padding"]
+}
 ```
 
-**Missing**: Actual CSS content from `<style jsx>` blocks
+**Features**:
+- Extracts full CSS content from template literals
+- Parses CSS using AST (css-tree) for accurate selector/property extraction
+- Detects `global` attribute (`<style jsx global>`)
+- Handles complex selectors (`.a:hover > span`, `button[aria-expanded="true"]`, etc.)
+- Per-block parsing for resilience (if one block has `${expr}` placeholders, others still work)
 
-**Impact**: Can't analyze styled-jsx styles
+### 14. Context main.json Limitations
 
-**Priority**: High
+**Status:** ❌ **Still unresolved**
 
-### 11. Context main.json Limitations
+**Location**: `src/cli/commands/context/fileWriter.ts` (lines 206-285)
 
 **Missing**: Cross-folder relationships, project-wide statistics
 
@@ -376,17 +531,20 @@ style={{ transformOrigin: 'center' }}
 
 **Priority**: Medium
 
-## Recommendations
+## Roadmap
 
 ### High Priority
 
-1. **Extract inline style values**: Parse `style={{ ... }}` objects and include properties
-2. **Parse styled-jsx**: Extract CSS from `<style jsx>` blocks
-3. **Populate edges**: Build actual dependency graph edges (if not working correctly in practice)
+1. **Hook parameter detection**: Extract function signatures for custom hooks
+2. **Emit detection accuracy**: Distinguish internal handlers from public API emits
+3. **Dynamic class parsing**: Resolve variable-based classes within template literals
+4. ~~**Extract inline style values**: Parse `style={{ ... }}` objects and include properties~~ ✅ **Fixed in v0.3.5**
+5. ~~**Parse styled-jsx**: Extract CSS from `<style jsx>` blocks~~ ✅ **Fixed in v0.3.5**
+6. ~~**Populate edges**: Build actual dependency graph edges~~ ✅ **Implemented**
 
 ### Medium Priority
 
-1. **CSS-in-JS support**: Complete support for remaining libraries (Chakra UI, Ant Design), extract styled-jsx CSS content
+1. **CSS-in-JS support**: Complete support for remaining libraries (Chakra UI, Ant Design)
 2. **Enhanced third-party info**: Include package names, versions, prop types
 3. **TypeScript type extraction**: Capture full type definitions
 4. **Project-level insights**: Add cross-folder analysis to `context_main.json`
@@ -406,7 +564,11 @@ style={{ transformOrigin: 'center' }}
 - Versioning/hashing system is robust
 
 **What needs improvement:**
-- Style metadata extraction completeness (inline style values, styled-jsx CSS content)
+- Hook parameter detection (parameters not captured)
+- Emit detection accuracy (internal handlers vs. actual emits)
 - Dynamic class resolution (variable-based classes within template literals)
 - CSS-in-JS support completeness (remaining libraries like Chakra UI, Ant Design)
+- Third-party component info (package names, versions, prop types)
+- TypeScript type extraction (generics, complex unions/intersections)
+- Context main.json enhancements (cross-folder relationships, project-wide statistics)
 
