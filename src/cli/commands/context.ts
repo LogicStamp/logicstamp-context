@@ -126,7 +126,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   let strict = options.strict;
 
   if (options.profile === 'llm-safe') {
-    depth = userSetDepth ? options.depth : 1;
+    depth = userSetDepth ? options.depth : 2;
     includeCode = userSetIncludeCode ? options.includeCode : 'header';
     hashLock = false;
     options.maxNodes = 30;
@@ -136,7 +136,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
       console.log(`📋 Using profile: llm-safe (depth=${depth}, ${codeMode}, max 30 nodes)`);
     }
   } else if (options.profile === 'llm-chat') {
-    depth = userSetDepth ? options.depth : 1;
+    depth = userSetDepth ? options.depth : 2;
     includeCode = userSetIncludeCode ? options.includeCode : 'header';
     hashLock = false;
     if (!options.quiet) {

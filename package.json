@@ -1,7 +1,7 @@
 {
   "name": "logicstamp-context",
-  "version": "0.3.5",
-  "description": "Generate AI-friendly context bundles from React/Next.js/Vue/TypeScript codebases with LogicStamp contracts",
+  "version": "0.3.6",
+  "description": "Generate structured, deterministic, AI-ready context bundles via static analysis of TypeScript and React codebases",
   "type": "module",
   "main": "./dist/index.js",
   "exports": {
@@ -37,17 +37,20 @@
     "chatgpt",
     "codebase-analysis",
     "ast",
-    "static-analysis"
+    "static-analysis",
+    "mcp",
+    "ai-context",
+    "code-context"
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/LogicStamp/logicstamp-context.git"
+    "url": "https://github.com/LogicStamp/logicstamp-context"
   },
   "bugs": {
     "url": "https://github.com/LogicStamp/logicstamp-context/issues"
   },
   "homepage": "https://github.com/LogicStamp/logicstamp-context#readme",
-  "author": "Amit Levi <amit23082@gmail.com> (https://amitlevi.dev)",
+  "author": "Amit Levi <logicstamp.dev@gmail.com> (https://amitlevi.dev)",
   "contributors": [
     "LogicStamp Contributors"
   ],

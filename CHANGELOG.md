@@ -8,7 +8,10 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Roadmap (not yet implemented)
-- Hook parameter detection - Extract function signatures for custom hooks
+
+For a comprehensive roadmap with detailed status, priorities, and implementation plans, see [ROADMAP.md](ROADMAP.md).
+
+**Highlights:**
 - Emit detection accuracy - Distinguish internal handlers from public API emits
 - Dynamic class parsing - Resolve variable-based classes within template literals
 - CSS-in-JS support - Complete support for remaining libraries (Chakra UI, Ant Design)
@@ -25,12 +28,67 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Known Limitations
 
-See [docs/LIMITATIONS.md](docs/LIMITATIONS.md) for complete details and code evidence.
+See [docs/limitations.md](docs/limitations.md) for complete details and code evidence.
 
-- Hook parameter detection not extracted
 - Emit detection accuracy - internal handlers vs public API not distinguished
 - Dynamic class expressions not resolved (variables in template literals)
 - TypeScript types incomplete (generics, complex unions/intersections)
+
+---
+
+## [0.3.6] - 2026-01-11
+
+### Added
+
+- **Hook parameter detection** - Added comprehensive support for extracting function signatures from custom React hooks. Enables accurate parameter extraction for hook contracts:
+  - Extracts function parameters from exported hook definitions (default or named export)
+  - Includes parameter types from type annotations, default values, or TypeScript type checker inference
+  - Handles optional parameters (with `?` modifier or default values)
+  - Works with function declarations, arrow functions, and default exports
+  - Extracts parameters even when Props interfaces/type aliases exist in the same file
+  - Props take priority on conflicts (Props values override hook parameters when both exist)
+  - Stores parameters in contract `logic.props` field for hooks
+  - Performance optimized with early-exit checks
+  - Comprehensive test coverage included
+
+**Example:**
+
+**Source Code:**
+```typescript
+export function useTypewriter(text: string, speed = 30, pause = 800) {
+  const [displayedText, setDisplayedText] = useState('')
+  // ... implementation
+  return displayedText
+}
+```
+
+**Context Output:**
+```json
+{
+  "version": {
+    "hooks": ["useTypewriter"]
+  },
+  "logic": {
+    "props": {
+      "text": "string",
+      "speed": { "type": "number", "optional": true },
+      "pause": { "type": "number", "optional": true }
+    }
+  }
+}
+```
+
+### Changed
+
+- **Hook contract accuracy** - Hook files now include complete parameter signatures in their contracts, improving AI understanding of hook APIs
+- **Props extraction logic** - Enhanced prop extraction to handle hook parameters separately from component Props interfaces, ensuring both are captured correctly
+- **Default depth changed from 1 to 2** - The default `--depth` parameter is now `2` instead of `1` to ensure proper signature extraction for React/TypeScript projects. This change addresses issues where depth=1 missed nested component signatures (e.g., `App` → `Hero` → `Button` where `Button`'s contract was missing). Depth=2 includes nested components in dependency graphs, providing complete component tree signatures. Users can still override with `--depth 1` if needed. All profiles (`llm-chat`, `llm-safe`) now default to depth=2. See [context.md](docs/cli/context.md#depth-parameter) for detailed explanation.
+
+### Fixed
+
+- **Hook parameter extraction** - Fixed issue where hook parameters were not extracted when Props interfaces existed in the same file. Hook parameters are now extracted independently and Props values take precedence on conflicts.
+
+**Impact:** This release significantly improves hook contract completeness. Hook parameters are now captured for all hook files, regardless of whether Props interfaces exist. This enables better AI understanding of custom hook APIs and their usage patterns. The default depth change from 1 to 2 ensures more complete component tree signatures by including nested components in dependency graphs, addressing cases where depth=1 missed nested component contracts. All changes are backward compatible - existing context files remain valid, the new parameter extraction is additive, and users can still override depth with `--depth 1` if needed.
 
 ---
 
@@ -569,7 +627,8 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 
 ## Version links
 
-- [Unreleased](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.5...HEAD)
+- [Unreleased](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.6...HEAD)
+- [0.3.6](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.5...v0.3.6)
 - [0.3.5](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.4...v0.3.5)
 - [0.3.4](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.3...v0.3.4)
 - [0.3.3](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.2...v0.3.3)

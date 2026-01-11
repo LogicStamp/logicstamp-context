@@ -217,12 +217,12 @@ describe('CLI Context Generation Tests', () => {
       );
 
       expect(stdout).toContain('llm-safe');
-      expect(stdout).toContain('depth=1');
+      expect(stdout).toContain('depth=2');
 
       const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
       const bundles = JSON.parse(await readFile(join(outDir, index.folders[0].contextFile), 'utf-8'));
 
-      expect(bundles[0].depth).toBe(1);
+      expect(bundles[0].depth).toBe(2);
       // llm-safe has max 30 nodes per bundle
       bundles.forEach(bundle => {
         expect(bundle.graph.nodes.length).toBeLessThanOrEqual(30);
@@ -241,7 +241,7 @@ describe('CLI Context Generation Tests', () => {
       const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
       const bundles = JSON.parse(await readFile(join(outDir, index.folders[0].contextFile), 'utf-8'));
 
-      expect(bundles[0].depth).toBe(1);
+      expect(bundles[0].depth).toBe(2);
       // llm-chat has max 100 nodes per bundle
       bundles.forEach(bundle => {
         expect(bundle.graph.nodes.length).toBeLessThanOrEqual(100);

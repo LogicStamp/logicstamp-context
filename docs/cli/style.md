@@ -133,7 +133,7 @@ All options from `stamp context` are supported. The style command accepts the sa
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
-| `--depth <n>` | `-d` | `1` | Dependency traversal depth (`0` = entry only, `1` = direct deps, etc.). |
+| `--depth <n>` | `-d` | `2` | Dependency traversal depth (`0` = entry only, `1` = direct deps, `2` = nested components, etc.). See [context.md](context.md#depth-parameter) for details. |
 | `--include-code <mode>` | `-c` | `header` | Include `none`, `header`, or `full` source snippets. |
 | `--format <fmt>` | `-f` | `json` | Output format: `json`, `pretty`, `ndjson`, `toon`. |
 | `--out <file>` | `-o` | `context.json` | Output directory or file path. |

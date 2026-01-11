@@ -36,12 +36,12 @@ describe('CLI Command Options Tests', () => {
       );
 
       expect(stdout).toContain('llm-safe');
-      expect(stdout).toContain('depth=1');
+      expect(stdout).toContain('depth=2');
 
       const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
       const bundles = JSON.parse(await readFile(join(outDir, index.folders[0].contextFile), 'utf-8'));
 
-      expect(bundles[0].depth).toBe(1);
+      expect(bundles[0].depth).toBe(2);
       bundles.forEach((bundle: any) => {
         expect(bundle.graph.nodes.length).toBeLessThanOrEqual(30);
       });
@@ -58,7 +58,7 @@ describe('CLI Command Options Tests', () => {
       const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
       const bundles = JSON.parse(await readFile(join(outDir, index.folders[0].contextFile), 'utf-8'));
 
-      expect(bundles[0].depth).toBe(1);
+      expect(bundles[0].depth).toBe(2);
       bundles.forEach((bundle: any) => {
         expect(bundle.graph.nodes.length).toBeLessThanOrEqual(100);
       });

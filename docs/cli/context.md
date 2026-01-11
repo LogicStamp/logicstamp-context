@@ -21,7 +21,7 @@ stamp context [path] [options]
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
-| `--depth <n>` | `-d` | `1` | Dependency traversal depth (`0` = entry only, `1` = direct deps, etc.). |
+| `--depth <n>` | `-d` | `2` | Dependency traversal depth (`0` = entry only, `1` = direct deps, `2` = nested components, etc.). |
 | `--include-code <mode>` | `-c` | `header` | Include `none`, `header`, or `full` source snippets. |
 | `--format <fmt>` | `-f` | `json` | Output format: `json`, `pretty`, `ndjson`, `toon`. |
 | `--out <file>` | `-o` | `context.json` | Output directory or file path. If a `.json` file is specified, its directory is used as the output directory. Otherwise, the path is used as the output directory. All context files will be written within this directory structure. |
@@ -38,10 +38,67 @@ stamp context [path] [options]
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors). |
 | `--help` | `-h` | | Print usage help. |
 
+## Depth Parameter
+
+The `--depth` option controls how many levels deep the dependency graph includes. **The default is `2`** to ensure proper signature extraction for React/TypeScript projects.
+
+### Why Depth 2 is the Default
+
+**Problem with Depth 1:**
+- Only includes direct dependencies (components directly imported/used)
+- **Missing nested component signatures**: If `App` uses `Hero`, and `Hero` uses `Button`, depth=1 only includes `Hero` in the bundle—`Button`'s contract and signatures are missing
+- This leads to incomplete signature extraction, making it harder for AI assistants to understand component APIs
+
+**Why Depth 2 Works Better:**
+- Includes nested components (components used by components)
+- **Complete signature extraction**: With depth=2, `App` → `Hero` → `Button` all appear in the bundle with their full contracts
+- Better for React projects with component hierarchies
+- Still efficient: header mode saves ~70% vs raw source even with depth=2
+
+**Example:**
+
+```typescript
+// App.tsx
+import { Hero } from './Hero'
+
+export function App() {
+  return <Hero />
+}
+
+// Hero.tsx  
+import { Button } from './Button'
+
+export function Hero() {
+  return <Button>Click me</Button>
+}
+
+// Button.tsx
+export function Button({ onClick, children }: ButtonProps) {
+  return <button onClick={onClick}>{children}</button>
+}
+```
+
+- **Depth 1**: Bundle includes `App` and `Hero`, but `Button` is missing → no `Button` props/signatures
+- **Depth 2**: Bundle includes `App`, `Hero`, and `Button` → complete component tree with all signatures ✅
+
+### When to Adjust Depth
+
+**Reduce to depth=1 if:**
+- You only need direct dependencies
+- Bundle size is a concern and you're hitting `max-nodes` limits
+- You're analyzing simple projects without component hierarchies
+
+**Increase to depth=3+ if:**
+- You have deeply nested component trees
+- You need to see dependencies 3+ levels deep
+- You're doing comprehensive architecture analysis
+
+**Note:** The `max-nodes` limit (default 100) prevents bundles from growing too large. If you hit this limit with depth=2, consider reducing depth or increasing `max-nodes`.
+
 ## Profiles
 
-- **llm-chat** *(default)* – Depth 1, header-only source, max 100 nodes. Balanced output for AI chat.
-- **llm-safe** – Depth 1, header-only source, max 30 nodes, allows missing dependencies. Smaller footprint.
+- **llm-chat** *(default)* – Depth 2, header-only source, max 100 nodes. Balanced output for AI chat.
+- **llm-safe** – Depth 2, header-only source, max 30 nodes, allows missing dependencies. Smaller footprint.
 - **ci-strict** – No source code, strict dependency checks. Fails when contracts are missing.
 
 ## Example workflows

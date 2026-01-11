@@ -43,7 +43,7 @@ These options are available at the top level (before any subcommand):
 
 **Examples:**
 ```bash
-stamp --version    # Shows: fox mascot + "Version: 0.3.5"
+stamp --version    # Shows: fox mascot + "Version: 0.3.6"
 stamp -v           # Same as --version
 stamp --help       # Shows main help
 stamp -h           # Same as --help
@@ -74,6 +74,8 @@ stamp init ./my-project
 1. **Sets up `.gitignore`** - Adds patterns for LogicStamp-generated files:
    - `context.json` - Per-folder context bundles (large, regenerable)
    - `context_*.json` - Main index and context variants
+   - `context.toon` - Per-folder context bundles in toon format
+   - `context_*.toon` - Main index and context variants in toon format
    - `*.uif.json` - UIF contract sidecar files
    - `logicstamp.manifest.json` - Dependency manifest files
    - `.logicstamp/` - Configuration directory (user preferences)
@@ -180,7 +182,7 @@ If a security report (`stamp_security_report.json`) exists, `stamp context` auto
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
-| `--depth <n>` | `-d` | `1` | Dependency traversal depth (0=self only, 1=direct deps, etc.) |
+| `--depth <n>` | `-d` | `2` | Dependency traversal depth (0=self only, 1=direct deps, 2=nested components, etc.). See [Depth Parameter](#depth-parameter) section below. |
 | `--include-code <mode>` | `-c` | `header` | Code inclusion: `none`, `header`, or `full` |
 | `--format <fmt>` | `-f` | `json` | Output format: `json`, `pretty`, `ndjson`, or `toon` |
 | `--out <file>` | `-o` | `context.json` | Output directory or file path. If a `.json` file is specified, its directory is used as the output directory. Otherwise, the path is used as the output directory. Context files will be written maintaining folder structure within this directory. |
@@ -540,13 +542,70 @@ stamp context clean ./src --all --yes
 
 **See also:** [clean.md](./clean.md) for comprehensive documentation.
 
+## Depth Parameter
+
+The `--depth` option controls how many levels deep the dependency graph includes. **The default is `2`** to ensure proper signature extraction for React/TypeScript projects.
+
+### Why Depth 2 is the Default
+
+**Problem with Depth 1:**
+- Only includes direct dependencies (components directly imported/used)
+- **Missing nested component signatures**: If `App` uses `Hero`, and `Hero` uses `Button`, depth=1 only includes `Hero` in the bundle—`Button`'s contract and signatures are missing
+- This leads to incomplete signature extraction, making it harder for AI assistants to understand component APIs
+
+**Why Depth 2 Works Better:**
+- Includes nested components (components used by components)
+- **Complete signature extraction**: With depth=2, `App` → `Hero` → `Button` all appear in the bundle with their full contracts
+- Better for React projects with component hierarchies
+- Still efficient: header mode saves ~70% vs raw source even with depth=2
+
+**Example:**
+
+```typescript
+// App.tsx
+import { Hero } from './Hero'
+
+export function App() {
+  return <Hero />
+}
+
+// Hero.tsx  
+import { Button } from './Button'
+
+export function Hero() {
+  return <Button>Click me</Button>
+}
+
+// Button.tsx
+export function Button({ onClick, children }: ButtonProps) {
+  return <button onClick={onClick}>{children}</button>
+}
+```
+
+- **Depth 1**: Bundle includes `App` and `Hero`, but `Button` is missing → no `Button` props/signatures
+- **Depth 2**: Bundle includes `App`, `Hero`, and `Button` → complete component tree with all signatures ✅
+
+### When to Adjust Depth
+
+**Reduce to depth=1 if:**
+- You only need direct dependencies
+- Bundle size is a concern and you're hitting `max-nodes` limits
+- You're analyzing simple projects without component hierarchies
+
+**Increase to depth=3+ if:**
+- You have deeply nested component trees
+- You need to see dependencies 3+ levels deep
+- You're doing comprehensive architecture analysis
+
+**Note:** The `max-nodes` limit (default 100) prevents bundles from growing too large. If you hit this limit with depth=2, consider reducing depth or increasing `max-nodes`.
+
 ## Profiles
 
 Profiles apply preset combinations for common use cases:
 
 ### `llm-chat` (Default)
 Balanced mode optimized for AI chat:
-- Depth: 1 (direct dependencies)
+- Depth: 2 (includes nested components)
 - Code: headers only
 - Max nodes: 100
 
@@ -556,7 +615,7 @@ stamp context --profile llm-chat
 
 ### `llm-safe`
 Conservative mode for token-limited contexts:
-- Depth: 1
+- Depth: 2 (includes nested components)
 - Code: headers only
 - Max nodes: 30
 
@@ -603,6 +662,28 @@ stamp context --include-code full --max-nodes 20
 
 **Use when:** AI needs to see or modify implementation details.
 
+### Understanding Structured Context
+
+LogicStamp generates **structured context bundles** rather than raw source files. This approach transforms how AI processes code:
+
+**Raw Source Approach:**
+- Parse code line-by-line
+- Infer relationships from imports and usage
+- Extract patterns manually
+- Reason about structure through implementation
+
+**Structured Approach:**
+- Read pre-categorized metadata (`layout.type`, `visual.colors`, `logicSignature.props`)
+- Traverse explicit dependency graphs (`graph.edges`)
+- Query organized information directly
+- Reason about contracts without reading implementation
+
+**Example:** To find "components using the same color palette":
+- **Raw source:** Scan all className strings, extract colors, group manually
+- **Structured:** Read `visual.colors` arrays from contracts, compare directly
+
+The structured format makes queries faster and more accurate because information is pre-processed, categorized, and relationships are explicit. See [LLM_CONTEXT.md](../LLM_CONTEXT.md#why-structured-data-is-better-than-raw-source) for a detailed explanation.
+
 ### Token Cost Comparison
 
 Use `--compare-modes` to see token estimates across all modes:
@@ -613,6 +694,8 @@ stamp context --compare-modes --stats  # Creates context_compare_modes.json for 
 ```
 
 Shows two comparison tables: savings vs raw source, and mode breakdown vs full context. Automatically regenerates contracts with/without style for accurate comparisons. Optional tokenizers (`@dqbd/tiktoken`, `@anthropic-ai/tokenizer`) provide exact counts if installed; otherwise uses approximations.
+
+**Note:** Token counts vary by technology (Tailwind is already efficient; regular CSS shows larger gains). The real value is in structured processing—faster parsing, explicit relationships, and categorized information make AI assistants more effective.
 
 ## Output Formats
 

@@ -1,6 +1,6 @@
 # TOON Format Support
 
-TOON is an alternative output format for LogicStamp context bundles, providing a compact text-based encoding optimized for AI consumption and efficient storage.
+**TOON** (Token-Oriented Object Notation) is an alternative output format for LogicStamp context bundles, providing a compact text-based encoding optimized for AI consumption and efficient storage.
 
 ```bash
 stamp context --format toon
@@ -8,13 +8,45 @@ stamp context --format toon
 
 ## Overview
 
-TOON format encodes the same LogicStamp bundle structure as JSON, but in a more compact representation. It's designed for:
+TOON combines YAML's indentation-based structure for nested objects with a CSV-style tabular layout for uniform arrays. It encodes the same LogicStamp bundle structure as JSON, but in a more compact representation that uses approximately **40% fewer tokens** than standard JSON.
 
-- **Efficient storage** - Smaller file sizes compared to JSON
-- **AI consumption** - Optimized encoding for LLM processing
-- **Streaming** - Can be decoded incrementally if needed
+### Key Features
+
+- **Token-efficient** - Uses ~40% fewer tokens than JSON while maintaining 74% accuracy (vs JSON's 70%) in LLM benchmarks
+- **JSON data model** - Lossless encoding of the same objects, arrays, and primitives as JSON
+- **LLM-friendly guardrails** - Explicit `[N]` length declarations and `{fields}` headers provide clear schema for models
+- **Tabular arrays** - Uniform arrays of objects collapse into tables that declare fields once and stream row values line by line
+- **Human-readable** - More readable than JSON-compact, though less readable than pretty-printed JSON
 
 **Note:** The main index file (`context_main.json`) is always in JSON format, even when using `--format toon`. Only the folder bundle files use the `.toon` extension.
+
+### Format Example
+
+TOON format uses indentation for nested objects and tabular arrays for uniform data:
+
+```toon
+graph:
+  nodes[2]:
+    -
+      entryId: App.tsx
+      contract:
+        type: UIFContract
+        kind: react:component
+    -
+      entryId: Card.tsx
+      contract:
+        type: UIFContract
+        kind: react:component
+```
+
+For uniform arrays of objects, TOON uses CSV-style tabular format:
+
+```toon
+hikes[3]{id,name,distanceKm,elevationGain}:
+  1,Blue Lake Trail,7.5,320
+  2,Ridge Overlook,9.2,540
+  3,Wildflower Loop,5.1,180
+```
 
 ## Usage
 
@@ -71,10 +103,11 @@ The decoded structure is identical to JSON format bundles - same schema, same co
 
 **Use TOON format when:**
 
-- You need smaller file sizes (especially for large codebases)
+- You need smaller file sizes (especially for large codebases) - **~40% token savings** vs JSON
 - You're building tools that process context files programmatically
 - You want efficient storage for CI/CD artifacts
 - You're working with AI systems that can decode TOON natively
+- Your data contains uniform arrays of objects (TOON's sweet spot)
 
 **Use JSON format when:**
 
@@ -83,17 +116,26 @@ The decoded structure is identical to JSON format bundles - same schema, same co
 - You want to use `stamp context validate`, `compare`, or `clean` commands
 - You're using tools that expect JSON
 - You want to diff context files in git
+- Your data is deeply nested or non-uniform (JSON-compact may use fewer tokens)
+
+**When NOT to use TOON:**
+
+- **Deeply nested structures** - For data with minimal tabular eligibility (~0%), JSON-compact often uses fewer tokens
+- **Semi-uniform arrays** - When only ~40-60% of arrays are tabular, token savings diminish
+- **Latency-critical applications** - Some deployments may process compact JSON faster despite TOON's lower token count (measure TTFT and tokens/sec for your setup)
 
 ## Format Comparison
 
 All formats contain the same bundle data, just encoded differently:
 
-| Format | Extension | Human-readable | File Size | Use Case |
-|--------|-----------|----------------|-----------|----------|
-| `json` | `.json` | ✅ Yes | Medium | Default, human-readable |
-| `pretty` | `.json` | ✅ Yes | Large | Human inspection, debugging |
-| `ndjson` | `.json` | ✅ Yes | Medium | Streaming, line-by-line processing |
-| `toon` | `.toon` | ✅ Yes (less readable) | Small | Compact storage, AI consumption |
+| Format | Extension | Human-readable | Token Efficiency | Use Case |
+|--------|-----------|----------------|-------------------|----------|
+| `json` | `.json` | ✅ Yes | Baseline | Default, human-readable |
+| `pretty` | `.json` | ✅ Yes | Larger | Human inspection, debugging |
+| `ndjson` | `.json` | ✅ Yes | Similar to json | Streaming, line-by-line processing |
+| `toon` | `.toon` | ✅ Yes (less readable) | **~40% fewer tokens** | Compact storage, AI consumption |
+
+**Token Efficiency:** TOON achieves approximately 40% token savings compared to standard JSON (2-space indentation) while maintaining similar or better LLM accuracy. Actual savings vary by data structure - uniform arrays of objects see the greatest benefit.
 
 ## Integration with Other Commands
 
@@ -155,6 +197,18 @@ await writeFile('src/components/context.json', jsonContent);
 - **Tool compatibility** - Some tools may not support TOON format. JSON is more universally supported.
 - **Index file** - The main index (`context_main.json`) is always JSON, even when using TOON format for bundles.
 - **Command support** - Currently, only the `stamp context` command supports TOON format for generation. The `validate`, `compare`, and `clean` commands do not yet support TOON files and will only work with JSON format.
+- **Deeply nested data** - For structures with minimal tabular arrays, JSON-compact may be more token-efficient than TOON.
+
+## TOON Format Specification
+
+LogicStamp uses the official [`@toon-format/toon`](https://github.com/toon-format/toon) package (v1.0.0) for encoding and decoding TOON files. This ensures compatibility with the TOON format specification.
+
+For complete TOON format documentation, syntax reference, and benchmarks, see:
+- **Official TOON Format**: https://toon-format.dev
+- **TOON Specification**: https://github.com/toon-format/toon/blob/main/SPEC.md
+- **TOON Package**: https://www.npmjs.com/package/@toon-format/toon
+
+**Media Type:** TOON files use the `.toon` extension and the `text/toon` media type (UTF-8 encoded).
 
 ## Examples
 

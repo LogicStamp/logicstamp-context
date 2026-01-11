@@ -10,17 +10,33 @@ LogicStamp Context is pretty accurate overall—around 90% of the time it gets t
 - **~100%** - Imports Detection (Imports tracked correctly)
 - **~90%** - Style Metadata (Static classes work well)
 
+---
+
+# Fixed/Resolved Limitations
+
+These items have been implemented and are no longer limitations.
+
 ## Hook Parameter Detection
 
-**Issue**
+**Status:** ✅ **Fixed in v0.3.6**
 
-We can detect custom React hooks and list them in the `version.hooks` array, but we don't capture what parameters they take. The contract will show `props: {}` even if the hook actually accepts parameters.
+Hook parameter detection is now fully implemented! We can extract function signatures for custom React hooks and include their parameters in the contract.
+
+**What Works:**
+- ✅ Extracts parameters from exported hook function declarations
+- ✅ Extracts parameters from exported arrow function hooks
+- ✅ Extracts parameters from default exported hooks
+- ✅ Captures parameter types (from type annotations, default values, or TypeScript type checker)
+- ✅ Handles optional parameters (with `?` or default values)
+- ✅ Stores parameters in `logic.props` field for hooks
+- ✅ Works even when Props interfaces exist in the same file
+- ✅ Props take priority on conflicts
 
 **Example**
 
 **Source Code:**
 ```typescript
-function useTypewriter(text: string, speed = 30, pause = 800) {
+export function useTypewriter(text: string, speed = 30, pause = 800) {
   const [displayedText, setDisplayedText] = useState('')
   // ... implementation
   return displayedText
@@ -34,12 +50,44 @@ function useTypewriter(text: string, speed = 30, pause = 800) {
     "hooks": ["useTypewriter"]
   },
   "logic": {
-    "props": {}
+    "props": {
+      "text": "string",
+      "speed": { "type": "number", "optional": true },
+      "pause": { "type": "number", "optional": true }
+    }
   }
 }
 ```
 
-**Impact:** You'll need to check the source code to see what parameters a hook takes—the context file won't tell you.
+## Hook Classification
+
+**Status:** ✅ **Fixed in v0.3.1**
+
+Custom hooks are now correctly classified as `react:hook` instead of `react:component`. The detection logic checks if the main export (default or named) is a function starting with "use" and has no JSX elements.
+
+**Example**
+
+**Source Code:**
+```typescript
+function useTypewriter(text: string, speed = 30) {
+  const [displayedText, setDisplayedText] = useState('')
+  // ... hook implementation
+  return displayedText
+}
+```
+
+**Context Output (Correct):**
+```json
+{
+  "kind": "react:hook"
+}
+```
+
+---
+
+# Active Limitations
+
+These are current limitations that still need to be addressed.
 
 ## Emit Detection Accuracy
 
@@ -118,43 +166,24 @@ function Button({ variant }: { variant: 'primary' | 'secondary' }) {
 
 **Impact:** Static parts of template literals are extracted, but dynamic expressions (variables, function calls, etc.) within `${}` are not resolved. If you build classes from variables, the style metadata will be incomplete.
 
-## Hook Classification
-
-**Status:** ✅ **Fixed in v0.3.1**
-
-Custom hooks are now correctly classified as `react:hook` instead of `react:component`. The detection logic checks if the main export (default or named) is a function starting with "use" and has no JSX elements.
-
-**Example**
-
-**Source Code:**
-```typescript
-function useTypewriter(text: string, speed = 30) {
-  const [displayedText, setDisplayedText] = useState('')
-  // ... hook implementation
-  return displayedText
-}
-```
-
-**Context Output (Correct):**
-```json
-{
-  "kind": "react:hook"
-}
-```
-
-## Summary
+## Summary of Active Limitations
 
 **What works really well:**
-- Component structure and props
-- State variables and hooks
-- Import tracking
-- Static style metadata
-- Dependency graphs
+- ✅ Component structure and props
+- ✅ State variables and hooks (including hook parameters)
+- ✅ Import tracking
+- ✅ Static style metadata
+- ✅ Dependency graphs
+- ✅ Inline style extraction (property names and values)
+- ✅ Styled JSX CSS extraction
 
-**Areas for improvement:**
-- Hook function signatures (parameters not captured)
-- Emit detection accuracy (internal handlers vs. actual emits)
-- Dynamic style extraction (variable-based classes within template literals)
+**Active areas for improvement:**
+- ❌ Emit detection accuracy (internal handlers vs. actual emits)
+- ❌ Dynamic style extraction (variable-based classes within template literals)
+- ❌ TypeScript type extraction (generics, complex unions/intersections)
+- ❌ CSS-in-JS completeness (Chakra UI, Ant Design missing)
+- ❌ Third-party component info (package names, versions, prop types)
+- ❌ Project-level insights (cross-folder relationships)
 
 **Bottom line:** We're hitting around 90% accuracy overall. Solid foundation, but there's definitely room to improve. These issues are on our roadmap.
 
@@ -214,35 +243,7 @@ This section documents what's currently captured in context files versus what's 
 
 ## What's Missing or Incomplete
 
-### 1. Hook Parameter Detection
-
-**Status:** ❌ **Still unresolved**
-
-**Location**: `src/core/astParser/extractors/componentExtractor.ts` (lines 11-48)
-
-**Verified Implementation**: The `extractHooks()` function only extracts hook names as strings:
-- ✅ Detects hooks via pattern `/^use[A-Z]/`
-- ✅ Adds hook name to set: `hooks.add(text)`
-- ❌ **Never extracts function parameters or signatures**
-- ❌ **Never analyzes the CallExpression arguments**
-
-**Code Evidence**:
-```typescript
-// Lines 16-28: Only extracts identifier name, not parameters
-if (expr.getKind() === SyntaxKind.Identifier) {
-  const text = expr.getText();  // Just the name: "useTypewriter"
-  if (/^use[A-Z]/.test(text)) {
-    hooks.add(text);  // Only stores name, not signature
-  }
-}
-// callExpr.getArguments() is never called
-```
-
-**Impact**: You'll need to check the source code to see what parameters a hook takes—the context file won't tell you.
-
-**Priority**: High
-
-### 2. Emit Detection Accuracy
+### 1. Emit Detection Accuracy
 
 **Status:** ❌ **Still unresolved**
 
@@ -255,7 +256,7 @@ if (expr.getKind() === SyntaxKind.Identifier) {
 - ❌ **No analysis of whether handler is passed as prop vs defined internally**
 - ❌ **All `onXxx` attributes are treated as emits**
 
-**Code Evidence**:
+**Code Evidence** (v0.3.6):
 ```typescript
 // Lines 17-55: Extracts all onXxx without filtering
 source.getDescendantsOfKind(SyntaxKind.JsxAttribute).forEach((attr) => {
@@ -272,7 +273,7 @@ source.getDescendantsOfKind(SyntaxKind.JsxAttribute).forEach((attr) => {
 
 **Priority**: High
 
-### 3. Dynamic Class Parsing
+### 2. Dynamic Class Parsing
 
 **Status:** ❌ **Still unresolved**
 
@@ -284,7 +285,7 @@ The `extractClassesFromExpression()` function in `src/core/styleExtractor/tailwi
 
 **Priority**: High
 
-### 4. CSS-in-JS Partially Supported
+### 3. CSS-in-JS Partially Supported
 
 **Supported**: 
 - styled-components (component names, theme usage, css prop)
@@ -303,20 +304,7 @@ The `extractClassesFromExpression()` function in `src/core/styleExtractor/tailwi
 
 **Priority**: Medium
 
-### 5. Edge Relationships (Status: Implemented)
-
-**Status**: Dependency graph edges ARE built and populated.
-
-**Implementation**: The `buildEdges()` function in `src/core/pack/builder.ts` creates edges between components based on their dependencies. Edges are included in bundle output.
-
-**Note**: If edges appear empty in your output, this may be due to:
-- Components having no dependencies
-- Dependencies not being resolved (missing from manifest)
-- Dependencies being filtered as internal components
-
-**Priority**: ~~High~~ Resolved (edges are implemented and working)
-
-### 6. Third-Party Components Minimal Info
+### 4. Third-Party Components Minimal Info
 
 **Status:** ❌ **Still unresolved**
 
@@ -338,9 +326,15 @@ The `extractClassesFromExpression()` function in `src/core/styleExtractor/tailwi
 
 **Location**: `src/core/pack/collector.ts` - Missing dependency tracking only includes basic info
 
+**Note on Missing Dependency Reasons**: The codebase uses two different reason strings for missing dependencies:
+- `"No contract found (third-party or not scanned)"` - Used when a dependency cannot be resolved (third-party components, external packages, or dependencies outside the scan path)
+- `"Component not found in manifest"` - Used when the entryId itself is not found in the manifest (typically for the root component being processed)
+
+The example above shows the third-party case, which is the most common scenario for this limitation.
+
 **Priority**: Medium
 
-### 7. Code Content Not Captured
+### 5. Code Content Not Captured
 
 **Missing**: Actual source code (by design for token efficiency)
 
@@ -352,11 +346,11 @@ The `extractClassesFromExpression()` function in `src/core/styleExtractor/tailwi
 
 **Priority**: Low
 
-### 8. TypeScript Types Incomplete
+### 6. TypeScript Types Incomplete
 
 **Status:** ❌ **Partially resolved - still incomplete**
 
-**Location**: `src/core/astParser/extractors/propExtractor.ts` (lines 125-172)
+**Location**: `src/core/astParser/extractors/propTypeNormalizer.ts` (`normalizePropType()` function)
 
 **Verified Implementation**:
 - ✅ Captures prop types as strings (`"string"`, `"number"`)
@@ -366,13 +360,13 @@ The `extractClassesFromExpression()` function in `src/core/styleExtractor/tailwi
 - ❌ Does NOT handle complex unions/intersections (e.g., `A & B`, `A | B | C` where not string literals)
 - ❌ Does NOT extract generic type parameters
 
-**Code Evidence**: `normalizePropType()` only has regex for literal unions (`/^("[\w-]+"(\s*\|\s*"[\w-]+")+)$/`) and function detection. No AST-based type analysis for generics or complex types.
+**Code Evidence** (v0.3.6): `normalizePropType()` in `propTypeNormalizer.ts` only has regex for literal unions and function detection. No AST-based type analysis for generics or complex types.
 
 **Impact**: Limited type information for complex types
 
 **Priority**: Medium
 
-### 9. Comments/JSDoc Only in Header Mode
+### 7. Comments/JSDoc Only in Header Mode
 
 **Missing**: Regular comments, TODO notes
 
@@ -382,7 +376,7 @@ The `extractClassesFromExpression()` function in `src/core/styleExtractor/tailwi
 
 **Priority**: Low
 
-### 10. Test Files Excluded
+### 8. Test Files Excluded
 
 **Issue**: Test files are completely excluded from context generation.
 
@@ -396,7 +390,7 @@ The `extractClassesFromExpression()` function in `src/core/styleExtractor/tailwi
 
 **Note**: This is intentional by design - test files are excluded to keep context bundles focused on production code. If test analysis is needed, it would require a separate feature or flag to include test files.
 
-### 11. Runtime Behavior
+### 9. Runtime Behavior
 
 **Missing**: Runtime props, state changes, side effects
 
@@ -408,7 +402,27 @@ The `extractClassesFromExpression()` function in `src/core/styleExtractor/tailwi
 
 **Priority**: Low
 
-### 12. Inline Style Objects Extraction
+### 10. Context main.json Limitations
+
+**Status:** ❌ **Still unresolved**
+
+**Location**: `src/cli/commands/context/fileWriter.ts` (lines 206-285)
+
+**Missing**: Cross-folder relationships, project-wide statistics
+
+**Only**: Folder index with token estimates
+
+**Impact**: Limited project-level insights
+
+**Priority**: Medium
+
+---
+
+# Fixed/Resolved Features
+
+These items were previously limitations but have been fixed.
+
+## Inline Style Objects Extraction
 
 **Status:** ✅ **Fixed in v0.3.5** (Verified)
 
@@ -419,7 +433,7 @@ The `extractClassesFromExpression()` function in `src/core/styleExtractor/tailwi
 - ✅ Extracts literal values for strings, numbers, booleans, null, and template literals
 - ✅ Returns `{ properties: string[], values?: Record<string, string> }`
 
-**Code Evidence**:
+**Code Evidence** (v0.3.5):
 ```typescript
 // Lines 128-156: Extracts both property names and literal values
 if (initializer) {
@@ -454,7 +468,7 @@ style={{ animationDelay: '2s', color: 'blue', padding: '1rem' }}
 
 **Note**: Dynamic values (variables, function calls) are detected as properties but their values are not extracted (static analysis limitation).
 
-### 13. Styled JSX CSS Extraction
+## Styled JSX CSS Extraction
 
 **Status:** ✅ **Fixed in v0.3.5** (Verified)
 
@@ -466,7 +480,7 @@ style={{ animationDelay: '2s', color: 'blue', padding: '1rem' }}
 - ✅ Detects `global` attribute
 - ✅ Returns `{ css: string, global?: boolean, selectors?: string[], properties?: string[] }`
 
-**Code Evidence**:
+**Code Evidence** (v0.3.5):
 ```typescript
 // Lines 99-112: Extracts CSS from JSX expressions
 const css = extractCssFromExpr(expr);  // ✅ Extracts template literal content
@@ -517,58 +531,71 @@ csstree.walk(ast, (node: any) => {
 - Handles complex selectors (`.a:hover > span`, `button[aria-expanded="true"]`, etc.)
 - Per-block parsing for resilience (if one block has `${expr}` placeholders, others still work)
 
-### 14. Context main.json Limitations
+## Hook Classification
 
-**Status:** ❌ **Still unresolved**
+**Status:** ✅ **Fixed in v0.3.1**
 
-**Location**: `src/cli/commands/context/fileWriter.ts` (lines 206-285)
+Custom hooks are now correctly classified as `react:hook` instead of `react:component`. The detection logic checks if the main export (default or named) is a function starting with "use" and has no JSX elements.
 
-**Missing**: Cross-folder relationships, project-wide statistics
+**Example**
 
-**Only**: Folder index with token estimates
+**Source Code:**
+```typescript
+function useTypewriter(text: string, speed = 30) {
+  const [displayedText, setDisplayedText] = useState('')
+  // ... hook implementation
+  return displayedText
+}
+```
 
-**Impact**: Limited project-level insights
+**Context Output (Correct):**
+```json
+{
+  "kind": "react:hook"
+}
+```
 
-**Priority**: Medium
+## Dependency Graph Edges
+
+**Status:** ✅ **Implemented**
+
+Dependency graph edges ARE built and populated. The `buildEdges()` function in `src/core/pack/builder.ts` creates edges between components based on their dependencies. Edges are included in bundle output.
+
+**Note**: If edges appear empty in your output, this may be due to:
+- Components having no dependencies
+- Dependencies not being resolved (missing from manifest)
+- Dependencies being filtered as internal components
+
+---
 
 ## Roadmap
 
-### High Priority
+For the complete roadmap with priorities and implementation plans, see [ROADMAP.md](../../ROADMAP.md).
 
-1. **Hook parameter detection**: Extract function signatures for custom hooks
-2. **Emit detection accuracy**: Distinguish internal handlers from public API emits
-3. **Dynamic class parsing**: Resolve variable-based classes within template literals
-4. ~~**Extract inline style values**: Parse `style={{ ... }}` objects and include properties~~ ✅ **Fixed in v0.3.5**
-5. ~~**Parse styled-jsx**: Extract CSS from `<style jsx>` blocks~~ ✅ **Fixed in v0.3.5**
-6. ~~**Populate edges**: Build actual dependency graph edges~~ ✅ **Implemented**
+**Active High Priority Items:**
+1. **Emit detection accuracy** - Distinguish internal handlers from public API emits
+2. **Dynamic class parsing** - Resolve variable-based classes within template literals
 
-### Medium Priority
+**Active Medium Priority Items:**
+1. **CSS-in-JS support** - Complete support for remaining libraries (Chakra UI, Ant Design)
+2. **Enhanced third-party info** - Include package names, versions, prop types
+3. **TypeScript type extraction** - Capture full type definitions (generics, complex unions/intersections)
+4. **Project-level insights** - Add cross-folder analysis to `context_main.json`
 
-1. **CSS-in-JS support**: Complete support for remaining libraries (Chakra UI, Ant Design)
-2. **Enhanced third-party info**: Include package names, versions, prop types
-3. **TypeScript type extraction**: Capture full type definitions
-4. **Project-level insights**: Add cross-folder analysis to `context_main.json`
-
-### Low Priority
-
-1. **Test file analysis**: Extract test structure and cases
-2. **Comment extraction**: Include regular comments (not just JSDoc)
-3. **Runtime hints**: Add static analysis hints about runtime behavior
-
-## Overall Assessment
+## Summary
 
 **What's working well:**
-- Component contracts are comprehensive
-- Style metadata (when enabled) is detailed and well-structured
-- Project structure indexing is solid
-- Versioning/hashing system is robust
+- ✅ Component contracts are comprehensive (including hook parameters)
+- ✅ Style metadata (when enabled) is detailed and well-structured
+- ✅ Project structure indexing is solid
+- ✅ Versioning/hashing system is robust
+- ✅ Inline styles and Styled JSX fully supported
 
 **What needs improvement:**
-- Hook parameter detection (parameters not captured)
-- Emit detection accuracy (internal handlers vs. actual emits)
-- Dynamic class resolution (variable-based classes within template literals)
-- CSS-in-JS support completeness (remaining libraries like Chakra UI, Ant Design)
-- Third-party component info (package names, versions, prop types)
-- TypeScript type extraction (generics, complex unions/intersections)
-- Context main.json enhancements (cross-folder relationships, project-wide statistics)
+- ❌ Emit detection accuracy (internal handlers vs. actual emits)
+- ❌ Dynamic class resolution (variable-based classes within template literals)
+- ❌ CSS-in-JS support completeness (remaining libraries like Chakra UI, Ant Design)
+- ❌ Third-party component info (package names, versions, prop types)
+- ❌ TypeScript type extraction (generics, complex unions/intersections)
+- ❌ Context main.json enhancements (cross-folder relationships, project-wide statistics)
 
