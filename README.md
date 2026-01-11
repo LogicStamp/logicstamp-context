@@ -19,15 +19,6 @@
    <br/>
 </div>
 
-### Framework support
-
-- **React** - full support (components, hooks, props, styles)
-- **Next.js** - partial support (App / Pages Router analysis)
-- **Vue 3** - partial support (Composition API, `<script setup>`) *Note: Works with `.ts`/`.tsx` files only, not `.vue` SFC files*
-- **UI frameworks** - Material UI, ShadCN/UI, Radix UI, Tailwind CSS, Styled Components, SCSS/CSS Modules
-
-> **Note:** LogicStamp currently analyzes `.ts` and `.tsx` files only. JavaScript files (`.js`, `.jsx`) are not analyzed for context generation.
-
 ![LogicStamp Context in action](./assets/logicstamp-context-demo.gif)
 *Sample stamp context output with generated bundles*
 
@@ -92,6 +83,15 @@ This transforms code analysis from "parse and infer" to "read and reason" - maki
 - **🔒 Built-in security** - Automatic secret detection and sanitization in generated context files
 - **Perfect for Cursor/Claude/GitHub Copilot Chat** - Share context files for instant codebase understanding
 - **CI-friendly** - Detect drift, validate bundles, track changes
+
+### Framework Support
+
+- **React** - full support (components, hooks, props, styles)
+- **Next.js** - partial support (App / Pages Router analysis)
+- **Vue 3** - partial support (Composition API, `<script setup>`)
+- **UI frameworks** - Material UI, ShadCN/UI, Radix UI, Tailwind CSS, Styled Components, SCSS/CSS Modules
+
+> **Note:** LogicStamp currently analyzes `.ts` and `.tsx` files only. JavaScript files (`.js`, `.jsx`) are not analyzed for context generation. Vue 3 support works with `.ts`/`.tsx` files only, not `.vue` SFC files.
 
 ## ⚡ Features
 
