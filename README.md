@@ -263,6 +263,7 @@ For full Documentation see: https://logicstamp.dev/docs
 - **[CI Integration](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md#cicd-integration)** - CI/CD workflows and validation
 - **[Troubleshooting](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md#troubleshooting)** - Common issues and solutions
 - **[UIF Contracts](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/uif_contracts.md)** - Understanding component contracts
+- **[Roadmap](https://github.com/LogicStamp/logicstamp-context/blob/main/ROADMAP.md)** - Planned features, improvements, and future enhancements
 
 ## Known Limitations
 
