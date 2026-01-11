@@ -295,7 +295,7 @@ describe.sequential('Determinism and Ordering Tests', () => {
       const outDir2 = join(testDir, 'depth2');
 
       // Generate with different depths
-      // Note: Default profile (llm-chat) sets depth=1, so we test that vs depth=2
+      // Note: Default profile (llm-chat) sets depth=2, so we test that vs depth=1
       try {
         const result1 = await execAsync(
           `node dist/cli/index.js ${fixturesPath} --out ${outDir1}`

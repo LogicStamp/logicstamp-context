@@ -122,7 +122,7 @@ ARGUMENTS:
   [path]                              Directory to scan (default: current)
 
 OPTIONS:
-  --depth, -d <n>                     Dependency depth (default: 1)
+  --depth, -d <n>                     Dependency depth (default: 2)
   --include-code, -c <mode>           Code inclusion: none|header|full (default: header)
   --format, -f <format>                Output format: json|pretty|ndjson|toon (default: json)
   --out, -o <file>                    Output file (default: context.json)
@@ -174,7 +174,7 @@ ARGUMENTS:
   [path]                              Directory to scan (default: current)
 
 OPTIONS:
-  --depth, -d <n>                     Dependency depth (default: 1)
+  --depth, -d <n>                     Dependency depth (default: 2)
   --include-code, -c <mode>           Code inclusion: none|header|full (default: header)
   --include-style                     Extract style metadata (Tailwind, SCSS, animations, layout)
   --format, -f <format>               Output format: json|pretty|ndjson|toon (default: json)

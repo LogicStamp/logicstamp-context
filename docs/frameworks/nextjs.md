@@ -64,7 +64,9 @@ export default function HomePage() {
 }
 ```
 
-**Detected as:** `page` component kind
+**Detected as:** `react:component` with Next.js metadata (`isInAppDir: true` if in `/app/` directory)
+
+**Note:** All React components (including pages) are classified as `react:component`. Next.js-specific information (directory location, directives) is stored in the `nextjs` metadata field, not as a separate component kind.
 
 #### Layouts
 
@@ -83,7 +85,9 @@ export default function RootLayout({
 }
 ```
 
-**Detected as:** `layout` component kind
+**Detected as:** `react:component` with Next.js metadata (`isInAppDir: true` if in `/app/` directory)
+
+**Note:** All React components (including layouts) are classified as `react:component`. Next.js-specific information (directory location, directives) is stored in the `nextjs` metadata field, not as a separate component kind.
 
 #### API Routes
 
@@ -98,7 +102,9 @@ export async function POST(request: Request) {
 }
 ```
 
-**Detected as:** API route handlers with HTTP methods
+**Detected as:** `react:component` or `ts:module` (based on content) with Next.js metadata (`isInAppDir: true` if in `/app/api/` directory)
+
+**Note:** API routes are classified based on their content (React components vs TypeScript modules). Next.js-specific information (directory location, directives) is stored in the `nextjs` metadata field.
 
 ## Next.js-Specific Features
 

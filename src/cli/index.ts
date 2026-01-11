@@ -37,7 +37,7 @@ async function main() {
 
   // Parse arguments for context command
   const options: ContextOptions = {
-    depth: 1,
+    depth: 2,
     includeCode: 'header',
     format: 'json',
     out: 'context.json',
@@ -155,7 +155,7 @@ ARGUMENTS:
   [path]               Directory to scan (default: current directory)
 
 OPTIONS:
-  -d, --depth <n>           Dependency depth (default: 1)
+  -d, --depth <n>           Dependency depth (default: 2)
   -c, --include-code <mode> Code: none|header|full (default: header)
   -f, --format <format>     Format: json|pretty|ndjson (default: json)
   -o, --out <file>          Output file (default: context.json)
@@ -172,8 +172,8 @@ OPTIONS:
   -h, --help                Show this help
 
 PROFILES:
-  llm-safe    Conservative (depth=1, header, max 30 nodes)
-  llm-chat    Balanced (depth=1, header, max 100 nodes) [default]
+  llm-safe    Conservative (depth=2, header, max 30 nodes)
+  llm-chat    Balanced (depth=2, header, max 100 nodes) [default]
   ci-strict   Strict validation (no code, strict deps)
 
 EXAMPLES:

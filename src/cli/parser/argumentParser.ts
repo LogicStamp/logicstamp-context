@@ -26,7 +26,7 @@ export interface ValidateArgs {
  */
 export function parseContextArgs(args: string[]): ContextOptions {
   const options: ContextOptions = {
-    depth: 1,
+    depth: 2,
     includeCode: 'header',
     format: 'json',
     out: 'context.json',
