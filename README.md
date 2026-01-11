@@ -31,7 +31,7 @@ npx logicstamp-context context
 
 Scans your repo and writes `context.json` files + `context_main.json` for AI tools.
 
-> **Note:** With `npx`, use the package name `logicstamp-context`. After installation, the command is `stamp`.
+> **Note:** With `npx`, run `npx logicstamp-context context`. After global install, use `stamp context`.
 
 **What you'll get:**
 - 📁 `context.json` files (one per folder with components, preserving your directory structure)
@@ -88,7 +88,7 @@ This transforms code analysis from "parse and infer" to "read and reason" - maki
 
 - **React** - full support (components, hooks, props, styles)
 - **Next.js** - partial support (App / Pages Router analysis)
-- **Vue 3** - partial support (Composition API, `<script setup>`)
+- **Vue 3** - partial support (Composition API in TS/TSX files)
 - **UI frameworks** - Material UI, ShadCN/UI, Radix UI, Tailwind CSS, Styled Components, SCSS/CSS Modules
 
 > **Note:** LogicStamp currently analyzes `.ts` and `.tsx` files only. JavaScript files (`.js`, `.jsx`) are not analyzed for context generation. Vue 3 support works with `.ts`/`.tsx` files only, not `.vue` SFC files.
@@ -99,13 +99,13 @@ This transforms code analysis from "parse and infer" to "read and reason" - maki
 - **React/Next.js/Vue/TypeScript awareness** - props, hooks/composables, state, deps
 - **Style metadata** - (Tailwind, SCSS, MUI, shadcn)
 - **Next.js App Router detection** - (client/server, layout/page/etc)
-- **Vue 3 Composition API** - (ref, reactive, computed, composables) *Note: Works with `.ts`/`.tsx` files only, not `.vue` SFC files*
+- **Vue 3 Composition API** - (ref, reactive, computed, composables)
 - **Dependency graph** - (imports, cycles, missing deps)
 - **Per-folder bundles** - organized by your project structure
 - **CI validation** - (drift detection, schema validation)
 - **Accurate token estimates** - (GPT/Claude)
 - **Security-first** - automatic secret detection and sanitization
-- **Fast, zero-config** - works out of the box (no config files needed, sensible defaults)
+- **Fast, one-time setup** - works out of the box (no config files needed, sensible defaults)
 - **MCP-ready** - AI agents can consume context bundles via a standardized MCP interface
 
 ## How it Works
