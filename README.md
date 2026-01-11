@@ -74,7 +74,7 @@ This transforms code analysis from "parse and infer" to "read and reason" - maki
 
 ### Additional Benefits
 
-- **Token efficient** - Structure replaces raw source (varies by technology)
+- **Token efficient** - Structured context replaces the need to ship raw source (varies by technology)
   - When including style metadata (`--include-style`), token savings differ by framework:
     - **CSS / SCSS / CSS Modules / styled-components**: typically ~40-70% fewer tokens than raw styles
     - **Tailwind CSS**: typically ~5-10% fewer tokens (utility classes are already compact)
