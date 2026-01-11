@@ -51,6 +51,8 @@ stamp context
 
 > **Note:** This is a beta release (v0.3.6). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
+📋 **For a detailed step-by-step getting started guide with integration examples, see [Getting Started Guide](https://logicstamp.dev/docs/getting-started).**
+
 ## Why LogicStamp?
 
 LLMs can reason about your project structure without scanning raw source files.
@@ -252,6 +254,7 @@ stamp context clean [path] [options]  # Remove generated files
 
 For full Documentation see: https://logicstamp.dev/docs
 
+- **[Getting Started Guide](https://logicstamp.dev/docs/getting-started)** - Step-by-step installation and quick start guide
 - **[Usage Guide](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md)** - Complete usage documentation with examples
 - **[Example Files](https://github.com/LogicStamp/logicstamp-context/blob/main/examples/README.md)** - Complete example files (context.json, .stampignore, security reports)
 - **[Token Optimization](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md#token-cost-comparison)** - Understand token costs and savings
