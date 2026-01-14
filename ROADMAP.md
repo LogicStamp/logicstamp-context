@@ -4,6 +4,9 @@ This roadmap outlines the planned features, improvements, and known limitations 
 
 ## Recent Achievements
 
+### v0.3.7 (January 2026)
+- ✅ **Emit detection accuracy** - Fixed issue where internal event handlers were incorrectly listed as component emits. Now only includes handlers that are part of the component's public API (props). Uses prop type signatures when available for accurate event signatures.
+
 ### v0.3.6 (January 2026)
 - ✅ **Hook parameter detection** - Comprehensive support for extracting function signatures from custom React hooks, including parameter types, default values, and optional parameters. Works even when Props interfaces exist in the same file.
 - ✅ **Default depth changed from 1 to 2** - Default `--depth` parameter now set to `2` to ensure proper signature extraction for React/TypeScript projects, including nested component signatures in dependency graphs.
@@ -44,23 +47,22 @@ These items address core accuracy and completeness issues that impact the reliab
 ### High Priority
 
 #### 1. Emit Detection Accuracy
-**Status:** 🔴 Not Started
+**Status:** ✅ **Fixed in v0.3.7**
 
-Distinguish internal handlers from public API emits. Currently, all `onXxx` handlers are treated as emits, even internal ones.
+Emit detection now correctly distinguishes between internal handlers and component public API emits. Only handlers that are part of the component's Props interface/type are included in the `emits` object.
 
-**Current Behavior:**
-- ✅ Extracts all `onXxx` handlers
-- ❌ No distinction between props (public API) and internal handlers
-- ❌ All handlers treated as emits
+**What Works:**
+- ✅ Only extracts event handlers that exist in Props interfaces/types
+- ✅ Filters out internal handlers (e.g., `onClick={() => setMenuOpen(!menuOpen)}`)
+- ✅ Filters out inline handlers that are not props
+- ✅ Uses prop type signatures when available for accurate event signatures
+- ✅ Falls back to AST-based arrow function parsing only when prop signature is unavailable
+- ✅ Uses `hasOwnProperty` check to avoid inherited prototype properties
+- ✅ Always includes prop-based handlers even if no initializer or signature available (uses default)
 
-**Planned Implementation:**
-- Analyze whether handler is passed as prop vs defined internally
-- Only include props in `emits` object
-- Filter out internal state handlers
+**Impact:** Internal handlers are no longer incorrectly listed as emits, making it easier for AI assistants to understand what events a component actually exposes.
 
-**Impact:** Internal handlers incorrectly listed as emits, causing confusion about component public API.
-
-**Related:** See [docs/limitations.md](docs/limitations.md#emit-detection-accuracy) for detailed code evidence.
+**Related:** See [docs/limitations.md](docs/limitations.md#fixedresolved-features) for detailed information.
 
 ---
 
@@ -376,7 +378,6 @@ For a complete list of current limitations with code evidence and detailed expla
 ### Summary of Current Limitations
 
 **Active Accuracy Issues:**
-- ❌ Emit detection accuracy - internal handlers vs public API not distinguished
 - ❌ Dynamic class expressions not resolved (variables in template literals)
 
 **Active Coverage Gaps:**
@@ -405,7 +406,6 @@ We welcome contributions! If you'd like to work on any of these roadmap items:
 **Priority Areas for Contributors:**
 
 **Bug Fixes:**
-- Emit detection accuracy - Distinguish internal handlers from public API emits
 - Dynamic class parsing - Resolve variable-based classes in template literals
 - CSS-in-JS library support - Add Chakra UI and Ant Design support
 - Enhanced third-party component info - Include package names, versions, prop types
@@ -421,7 +421,7 @@ We welcome contributions! If you'd like to work on any of these roadmap items:
 
 For detailed release notes and changes, see [CHANGELOG.md](CHANGELOG.md).
 
-**Current Version:** v0.3.6 (Beta)
+**Current Version:** v0.3.7 (Beta)
 
 **Status:** Actively developed - we're working on improving accuracy and expanding feature coverage based on user feedback.
 

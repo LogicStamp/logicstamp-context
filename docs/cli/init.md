@@ -63,7 +63,7 @@ stamp init [path] [options]
 stamp init
 ```
 
-Initializes LogicStamp in the current directory. Creates or updates `.gitignore` with the necessary patterns and runs a security scan by default. **This is non-interactive by default** - all operations are performed automatically without prompts.
+Initializes LogicStamp in the current directory. Creates or updates `.gitignore` with the necessary patterns and runs a security scan by default. **This is non-interactive by default** - informational messages are shown, but no prompts appear and all operations are performed automatically.
 
 ### Initialize a specific directory
 
@@ -138,10 +138,10 @@ Adds LogicStamp patterns to the existing `.gitignore`:
 
 ### When .gitignore already has LogicStamp patterns
 
-No changes are made:
+If all patterns are present, no changes are made:
 
 ```
-ℹ️  .gitignore already contains LogicStamp patterns
+ℹ️  .gitignore already contains all LogicStamp patterns
 
    The following patterns were added/verified:
    - context.json
@@ -150,6 +150,12 @@ No changes are made:
    - context_*.toon
    - *.uif.json
    - logicstamp.manifest.json
+```
+
+If some patterns exist but others are missing (idempotent patch mode), only missing patterns are added:
+
+```
+✅ Updated existing LogicStamp section in .gitignore
 ```
 
 ### LLM_context.md Generation
@@ -228,11 +234,12 @@ Generate LLM_context.md in project root? [Y/n]
 ### Default Behavior (Non-Interactive)
 
 By default, `stamp init` is non-interactive because the security scan runs automatically:
-- No prompts are shown
-- All operations are performed automatically
+- Informational messages are shown (e.g., "The following patterns will be added to .gitignore:")
+- **No prompts are shown** - operations proceed automatically
+- All operations are performed automatically without user input
 - Preferences are saved to config
 
-**To enable interactive mode:** Use `--no-secure` to skip the security scan, which will enable interactive prompts (when running in a TTY environment).
+**To enable interactive mode:** Use `--no-secure` to skip the security scan, which will enable interactive prompts (when running in a TTY environment). In interactive mode, you'll see the same informational messages plus prompts asking for confirmation.
 
 ### Behavior in `stamp context`
 

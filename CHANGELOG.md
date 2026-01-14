@@ -12,7 +12,6 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 For a comprehensive roadmap with detailed status, priorities, and implementation plans, see [ROADMAP.md](ROADMAP.md).
 
 **Highlights:**
-- Emit detection accuracy - Distinguish internal handlers from public API emits
 - Dynamic class parsing - Resolve variable-based classes within template literals
 - CSS-in-JS support - Complete support for remaining libraries (Chakra UI, Ant Design)
 - Enhanced third-party component info - Include package names, versions, prop types
@@ -30,9 +29,69 @@ For a comprehensive roadmap with detailed status, priorities, and implementation
 
 See [docs/limitations.md](docs/limitations.md) for complete details and code evidence.
 
-- Emit detection accuracy - internal handlers vs public API not distinguished
 - Dynamic class expressions not resolved (variables in template literals)
 - TypeScript types incomplete (generics, complex unions/intersections)
+
+---
+
+## [0.3.7] - 2026-01-14
+
+### Fixed
+
+- **Emit detection accuracy** - Fixed issue where internal event handlers were incorrectly listed as component emits. Now only includes handlers that are part of the component's public API (props):
+  - Only extracts event handlers that exist in Props interfaces/types
+  - Filters out internal handlers (e.g., `onClick={() => setMenuOpen(!menuOpen)}`)
+  - Filters out inline handlers that are not props
+  - Uses prop type signatures when available for accurate event signatures
+  - Falls back to AST-based arrow function parsing only when prop signature is unavailable
+  - Uses `hasOwnProperty` check to avoid inherited prototype properties
+  - Always includes prop-based handlers even if no initializer or signature available (uses default)
+
+**Example:**
+
+**Before (Incorrect):**
+```typescript
+function Header() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  return <button onClick={() => setMenuOpen(!menuOpen)}>Toggle</button>;
+}
+// Result: { emits: { onClick: { type: 'function', signature: '() => void' } } }
+```
+
+**After (Correct):**
+```typescript
+function Header() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  return <button onClick={() => setMenuOpen(!menuOpen)}>Toggle</button>;
+}
+// Result: { emits: {} } ✅ (no emits - internal handler)
+
+interface ButtonProps {
+  onClick?: () => void;
+}
+function Button({ onClick }: ButtonProps) {
+  return <button onClick={onClick}>Click</button>;
+}
+// Result: { emits: { onClick: { type: 'function', signature: '() => void' } } } ✅
+```
+
+### Added
+
+- **Code of Conduct** - Added Contributor Covenant Code of Conduct (version 2.1) to establish community standards and guidelines for participation in the project. Includes enforcement guidelines and reporting procedures. See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for details.
+
+### Changed
+
+- **Event signature extraction** - Improved signature extraction to prioritize prop type signatures over JSX parsing. Prop signatures are now always used when available, preventing incorrect signatures from wrapper functions like `onClick={(e) => onClick?.(e)}`
+- **Route extraction** - Enhanced route extraction to only extract routes from JSX attribute values (`path`, `to`, `href`, `as`, `route`, `src`), reducing false positives from config/constants. Added support for JSX-specific literal nodes that aren't standard StringLiteral
+- **AST-based parsing** - Migrated from regex-based arrow function parsing to AST-based parsing using `Node.isArrowFunction()` for more robust and accurate parameter extraction
+
+### Improved
+
+- **Code quality** - Improved type safety by using `Node.isJsxExpression()` and `Node.isStringLiteral()` type guards instead of `as any` casts
+- **Code clarity** - Simplified arrow function signature extraction logic for better readability and maintainability
+- **Version compatibility** - Enhanced compatibility across ts-morph versions by using type guards and fallback handling for JSX attribute values
+
+**Impact:** This release significantly improves the accuracy of component public API contracts. Internal handlers are no longer incorrectly listed as emits, making it easier for AI assistants to understand what events a component actually exposes. The prop signature prioritization ensures accurate event signatures even when wrapper functions are used. Route extraction is now more precise, reducing noise from unrelated string literals. All changes are backward compatible - existing context files remain valid, and the improvements are additive.
 
 ---
 
@@ -626,22 +685,22 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ---
 
 ## Version links
-
-- [Unreleased](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.6...HEAD)
-- [0.3.6](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.5...v0.3.6)
-- [0.3.5](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.4...v0.3.5)
-- [0.3.4](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.3...v0.3.4)
-- [0.3.3](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.2...v0.3.3)
-- [0.3.2](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.1...v0.3.2)
-- [0.3.1](https://github.com/LogicStamp/logicstamp-context/compare/v0.3.0...v0.3.1)
-- [0.3.0](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.7...v0.3.0)
-- [0.2.7](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.6...v0.2.7)
-- [0.2.6](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.5...v0.2.6)
-- [0.2.5](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.4...v0.2.5)
-- [0.2.4](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.3...v0.2.4)
-- [0.2.3](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.2...v0.2.3)
-- [0.2.2](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.1...v0.2.2)
-- [0.2.1](https://github.com/LogicStamp/logicstamp-context/compare/v0.2.0...v0.2.1)
-- [0.2.0](https://github.com/LogicStamp/logicstamp-context/compare/v0.1.1...v0.2.0)
-- [0.1.1](https://github.com/LogicStamp/logicstamp-context/compare/v0.1.0...v0.1.1)
-- [0.1.0](https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.1.0)
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.3.7...HEAD
+[0.3.7]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.7
+[0.3.6]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.6
+[0.3.5]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.5
+[0.3.4]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.4
+[0.3.3]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.3
+[0.3.2]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.2
+[0.3.1]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.1
+[0.3.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.0
+[0.2.7]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.2.7
+[0.2.6]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.2.6
+[0.2.5]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.2.5
+[0.2.4]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.2.4
+[0.2.3]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.2.3
+[0.2.2]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.2.2
+[0.2.1]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.2.1
+[0.2.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.2.0
+[0.1.1]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.1.1
+[0.1.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.1.0

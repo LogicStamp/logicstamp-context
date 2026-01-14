@@ -429,9 +429,12 @@ WHAT IT DOES:
   • Creates or updates .gitignore with LogicStamp patterns:
     - context.json
     - context_*.json
+    - context.toon
+    - context_*.toon
     - *.uif.json
     - logicstamp.manifest.json
     - .logicstamp/
+    - stamp_security_report.json
 
 NOTES:
   • Safe to run multiple times (idempotent)

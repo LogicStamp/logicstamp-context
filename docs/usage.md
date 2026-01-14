@@ -43,7 +43,7 @@ These options are available at the top level (before any subcommand):
 
 **Examples:**
 ```bash
-stamp --version    # Shows: fox mascot + "Version: 0.3.6"
+stamp --version    # Shows: fox mascot + "Version: 0.3.7"
 stamp -v           # Same as --version
 stamp --help       # Shows main help
 stamp -h           # Same as --help

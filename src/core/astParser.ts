@@ -124,7 +124,8 @@ export async function extractFromFile(filePath: string): Promise<AstExtract> {
       components = safeExtract('components', resolvedPath, () => extractComponents(source), []);
       state = safeExtract('state', resolvedPath, () => extractState(source), {});
       props = safeExtract('props', resolvedPath, () => extractProps(source), {});
-      emits = safeExtract('events', resolvedPath, () => extractEvents(source), {});
+      // Pass props to extractEvents to filter out internal handlers
+      emits = safeExtract('events', resolvedPath, () => extractEvents(source, props), {});
     }
 
     const nextjs = safeExtract('nextjs', resolvedPath, () => extractNextJsMetadata(source, filePath), undefined);
