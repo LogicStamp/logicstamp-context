@@ -1,10 +1,10 @@
-# SCSS/CSS Modules Support
+# CSS/SCSS Modules Support
 
-LogicStamp Context provides comprehensive support for SCSS and CSS Modules, extracting style information from your style files and component usage.
+LogicStamp Context provides comprehensive support for CSS and SCSS Modules, extracting style information from your style files and component usage.
 
-## SCSS/CSS Modules Detection
+## CSS/SCSS Modules Detection
 
-LogicStamp automatically detects SCSS and CSS Modules usage by:
+LogicStamp automatically detects CSS and SCSS Modules usage by:
 
 - **File imports**: Detects imports from `.module.scss`, `.module.css`, `.scss`, and `.css` files in TSX/TS component files
 - **Module syntax**: Recognizes CSS Module import patterns
@@ -130,7 +130,7 @@ function Header() {
 
 ## Style Extraction
 
-When using `stamp context --include-style`, SCSS/CSS Module information is included:
+When using `stamp context --include-style`, CSS/SCSS Module information is included:
 
 ```json
 {
@@ -262,7 +262,7 @@ $primary-color: #007bff;
 ## Usage
 
 ```bash
-# Extract SCSS/CSS Module information
+# Extract CSS/SCSS Module information
 stamp context --include-style
 
 # Or use the style command
@@ -271,7 +271,7 @@ stamp context style
 
 ## Project Structure
 
-LogicStamp recognizes common SCSS/CSS Module patterns:
+LogicStamp recognizes common CSS/SCSS Module patterns:
 
 ```
 my-app/
@@ -416,7 +416,7 @@ function HybridComponent() {
 
 The SCSS extractor is designed to be robust and will never crash the CLI, even when encountering:
 
-- **Missing files**: SCSS/CSS module files that don't exist are silently skipped
+- **Missing files**: CSS/SCSS module files that don't exist are silently skipped
 - **Malformed CSS/SCSS**: Invalid syntax, unclosed braces, or parse errors are handled gracefully
 - **Invalid file paths**: Non-existent directories or invalid paths return empty results
 - **AST traversal errors**: Complex or malformed TypeScript that causes AST parsing issues falls back gracefully

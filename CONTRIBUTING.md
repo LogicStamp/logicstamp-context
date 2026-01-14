@@ -2,6 +2,10 @@
 
 Thank you for your interest in contributing! This document provides guidelines for contributing to logicstamp-context.
 
+## Code of Conduct
+
+This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to logicstamp.dev@gmail.com.
+
 ## Getting Started
 
 ### Prerequisites

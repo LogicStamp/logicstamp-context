@@ -5,7 +5,7 @@
 
   <br/>
 
-  ![Version](https://img.shields.io/badge/version-0.3.6-blue.svg)
+  ![Version](https://img.shields.io/badge/version-0.3.7-blue.svg)
   ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
   ![License](https://img.shields.io/badge/license-MIT-green.svg)
   ![Node](https://img.shields.io/badge/node-%3E%3D18.18.0-brightgreen.svg)
@@ -49,7 +49,7 @@ stamp context
 
 > **ℹ️** If you see `"PRIVATE_DATA"` in output, see the **Security** section below.
 
-> **Note:** This is a beta release (v0.3.6). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+> **Note:** This is a beta release (v0.3.7). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 📋 **For a detailed step-by-step getting started guide with integration examples, see [Getting Started Guide](https://logicstamp.dev/docs/getting-started).**
 
@@ -93,7 +93,7 @@ This transforms code analysis from "parse and infer" to "read and reason" - maki
 - **Vue 3** - partial support (Composition API in TS/TSX files)
 - **UI frameworks** - Material UI, ShadCN/UI, Radix UI, Tailwind CSS, Styled Components, SCSS/CSS Modules
 
-> **Note:** LogicStamp currently analyzes `.ts` and `.tsx` files only. JavaScript files (`.js`, `.jsx`) are not analyzed for context generation. Vue 3 support works with `.ts`/`.tsx` files only, not `.vue` SFC files.
+> **Note:** LogicStamp currently analyzes `.ts` and `.tsx` files only. JavaScript files (`.js`, `.jsx`) are not analyzed for context generation. Vue 3 support works with `.ts`/`.tsx` files only, not `.vue` SFC files. CSS and SCSS files imported by your TypeScript/TSX files are also parsed when using `--include-style` (standalone CSS/SCSS files that aren't imported won't be analyzed).
 
 ## ⚡ Features
 
@@ -121,6 +121,8 @@ This transforms code analysis from "parse and infer" to "read and reason" - maki
 7. **Index**: Creates `context_main.json` index with folder metadata and summary statistics
 
 All in one command, no pre-compilation needed!
+
+> **💡 Tip:** Use `stamp context` for basic context generation (component contracts, dependencies, props). Use `stamp context style` (equivalent to `stamp context --include-style`) when you need style metadata extracted (Tailwind classes, SCSS selectors, CSS-in-JS patterns, layout information). Style extraction adds more tokens but provides richer design system context for AI assistants.
 
 ## MCP Server
 
@@ -274,12 +276,12 @@ See the full list here: [docs/limitations.md](https://github.com/LogicStamp/logi
 ## Need Help?
 
 - **Open an issue** → https://github.com/LogicStamp/logicstamp-context/issues
-- **Join our roadmap** → https://logicstamp.dev
+- **Join our roadmap** → https://logicstamp.dev/roadmap
 
 ## Requirements
 
 - Node.js >= 18.18.0 (**Node 20+ recommended**)
-- TypeScript codebase (React, Next.js or Vue)
+- TypeScript codebase (React or Next.js)
 
 ## License
 
@@ -300,6 +302,11 @@ Issues and PRs welcome! This is an open-source project.
 - Branch naming conventions (`feature/*`, `fix/*`, `docs/*`)
 - Commit message format (Conventional Commits)
 - Development workflow and best practices
+
+## Community
+
+This project follows a [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you agree to uphold it.
+
 
 ## Links
 

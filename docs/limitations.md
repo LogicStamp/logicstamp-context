@@ -83,34 +83,57 @@ function useTypewriter(text: string, speed = 30) {
 }
 ```
 
----
-
-# Active Limitations
-
-These are current limitations that still need to be addressed.
-
 ## Emit Detection Accuracy
 
-**Issue**
+**Status:** ✅ **Fixed in v0.3.7**
 
-Sometimes we get confused about what's an internal handler vs. a real component emit. If you have an `onClick` that just updates internal state, it might still show up in the `emits` object even though it's not part of the component's public API.
+Emit detection now correctly distinguishes between internal handlers and component public API emits. Only handlers that are part of the component's Props interface/type are included in the `emits` object.
+
+**What Works:**
+- ✅ Only extracts event handlers that exist in Props interfaces/types
+- ✅ Filters out internal handlers (e.g., `onClick={() => setMenuOpen(!menuOpen)}`)
+- ✅ Filters out inline handlers that are not props
+- ✅ Uses prop type signatures when available for accurate event signatures
+- ✅ Falls back to AST-based arrow function parsing only when prop signature is unavailable
+- ✅ Uses `hasOwnProperty` check to avoid inherited prototype properties
+- ✅ Always includes prop-based handlers even if no initializer or signature available (uses default)
 
 **Example**
 
 **Source Code:**
 ```typescript
 function Header() {
-  const [menuOpen, setMenuOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false);
   
   return (
     <button onClick={() => setMenuOpen(!menuOpen)}>
       Toggle Menu
     </button>
-  )
+  );
 }
 ```
 
-**Context Output (Incorrect):**
+**Context Output (Correct):**
+```json
+{
+  "logic": {
+    "emits": {}
+  }
+}
+```
+
+**Source Code (with Props):**
+```typescript
+interface ButtonProps {
+  onClick?: () => void;
+}
+
+function Button({ onClick }: ButtonProps) {
+  return <button onClick={onClick}>Click</button>;
+}
+```
+
+**Context Output (Correct):**
 ```json
 {
   "logic": {
@@ -124,7 +147,11 @@ function Header() {
 }
 ```
 
-**Impact:** You might see internal handlers listed as emits, which can be confusing when trying to figure out what events the component actually exposes.
+---
+
+# Active Limitations
+
+These are current limitations that still need to be addressed.
 
 ## Dynamic Class Parsing
 
@@ -178,7 +205,6 @@ function Button({ variant }: { variant: 'primary' | 'secondary' }) {
 - ✅ Styled JSX CSS extraction
 
 **Active areas for improvement:**
-- ❌ Emit detection accuracy (internal handlers vs. actual emits)
 - ❌ Dynamic style extraction (variable-based classes within template literals)
 - ❌ TypeScript type extraction (generics, complex unions/intersections)
 - ❌ CSS-in-JS completeness (Chakra UI, Ant Design missing)
@@ -243,37 +269,7 @@ This section documents what's currently captured in context files versus what's 
 
 ## What's Missing or Incomplete
 
-### 1. Emit Detection Accuracy
-
-**Status:** ❌ **Still unresolved**
-
-**Location**: `src/core/astParser/extractors/eventExtractor.ts` (lines 12-74)
-
-**Verified Implementation**: The `extractEvents()` function extracts ALL `onXxx` handlers without any filtering:
-- ✅ Matches pattern `/^on[A-Z]/` to find event handlers
-- ✅ Extracts function signatures from handlers
-- ❌ **No distinction between props (public API) and internal handlers**
-- ❌ **No analysis of whether handler is passed as prop vs defined internally**
-- ❌ **All `onXxx` attributes are treated as emits**
-
-**Code Evidence** (v0.3.6):
-```typescript
-// Lines 17-55: Extracts all onXxx without filtering
-source.getDescendantsOfKind(SyntaxKind.JsxAttribute).forEach((attr) => {
-  const name = attr.getNameNode().getText();
-  if (/^on[A-Z]/.test(name)) {  // Matches ALL onXxx
-    // No check if this is a prop vs internal handler
-    events[name] = { type: 'function', signature };
-  }
-});
-// No analysis of whether onClick is from props or defined in component
-```
-
-**Impact**: You might see internal handlers listed as emits, which can be confusing when trying to figure out what events the component actually exposes.
-
-**Priority**: High
-
-### 2. Dynamic Class Parsing
+### 1. Dynamic Class Parsing
 
 **Status:** ❌ **Still unresolved**
 
@@ -285,7 +281,7 @@ The `extractClassesFromExpression()` function in `src/core/styleExtractor/tailwi
 
 **Priority**: High
 
-### 3. CSS-in-JS Partially Supported
+### 2. CSS-in-JS Partially Supported
 
 **Supported**: 
 - styled-components (component names, theme usage, css prop)
@@ -304,7 +300,7 @@ The `extractClassesFromExpression()` function in `src/core/styleExtractor/tailwi
 
 **Priority**: Medium
 
-### 4. Third-Party Components Minimal Info
+### 3. Third-Party Components Minimal Info
 
 **Status:** ❌ **Still unresolved**
 
@@ -334,19 +330,7 @@ The example above shows the third-party case, which is the most common scenario 
 
 **Priority**: Medium
 
-### 5. Code Content Not Captured
-
-**Missing**: Actual source code (by design for token efficiency)
-
-**Only**: Contracts, JSDoc headers (in header mode)
-
-**Impact**: Can't see implementation details without reading source
-
-**Note**: This is intentional for token efficiency, but worth documenting.
-
-**Priority**: Low
-
-### 6. TypeScript Types Incomplete
+### 4. TypeScript Types Incomplete
 
 **Status:** ❌ **Partially resolved - still incomplete**
 
@@ -366,43 +350,7 @@ The example above shows the third-party case, which is the most common scenario 
 
 **Priority**: Medium
 
-### 7. Comments/JSDoc Only in Header Mode
-
-**Missing**: Regular comments, TODO notes
-
-**Only**: JSDoc in header mode
-
-**Impact**: Loses documentation context
-
-**Priority**: Low
-
-### 8. Test Files Excluded
-
-**Issue**: Test files are completely excluded from context generation.
-
-**Current behavior**: Test files (`.test.ts`, `.test.tsx`, `.spec.ts`, `.spec.tsx`) are explicitly filtered out during file scanning and never analyzed.
-
-**Missing**: Test structure, test cases, test coverage information, test utilities, and test helpers are not included in context bundles.
-
-**Impact**: No test understanding - AI assistants cannot see test files, test patterns, or testing strategies used in the codebase.
-
-**Priority**: Low
-
-**Note**: This is intentional by design - test files are excluded to keep context bundles focused on production code. If test analysis is needed, it would require a separate feature or flag to include test files.
-
-### 9. Runtime Behavior
-
-**Missing**: Runtime props, state changes, side effects
-
-**Only**: Static analysis
-
-**Impact**: No runtime insights
-
-**Note**: This is expected for static analysis tools.
-
-**Priority**: Low
-
-### 10. Context main.json Limitations
+### 5. Context main.json Limitations
 
 **Status:** ❌ **Still unresolved**
 
@@ -416,13 +364,195 @@ The example above shows the third-party case, which is the most common scenario 
 
 **Priority**: Medium
 
+### 6. Code Content Not Captured
+
+**Missing**: Actual source code (by design for token efficiency)
+
+**Only**: Contracts, JSDoc headers (in header mode)
+
+**Impact**: Can't see implementation details without reading source
+
+**Note**: This is intentional for token efficiency, but worth documenting.
+
+**Priority**: Low
+
+### 7. Route Extraction Edge Cases
+
+**Status:** ⚠️ **Minor edge case**
+
+Route extraction may miss routes in edge cases where JSX attribute values have unusual formatting that doesn't match standard patterns.
+
+**Location**: `src/core/astParser/extractors/eventExtractor.ts` (`extractJsxRoutes()` function)
+
+**Current Behavior**:
+- ✅ Extracts routes from standard JSX attributes: `path="/home"`, `href="/about"`
+- ✅ Extracts routes from JSX expressions: `path={"/home"}`
+- ✅ Handles JSX-specific literal nodes that aren't standard StringLiteral
+- ⚠️ May miss routes if `initializer.getText()` returns text with braces (e.g., `{"\/x"}`) that don't match the quoted string pattern
+
+**Impact**: Edge case that may occur with unusual JSX attribute formatting or JSX-specific node types that differ across ts-morph versions. Most common route patterns are correctly extracted.
+
+**Priority**: Low
+
+**Note**: The route extractor intentionally avoids false positives by only matching quoted strings in JSX attributes. This means it won't extract routes from variables like `{route}` or function calls like `router.push("/x")`, which is the desired behavior for a low-noise extractor. The trade-off is that some edge cases with unusual formatting may be missed.
+
+### 8. Comments/JSDoc Only in Header Mode
+
+**Missing**: Regular comments, TODO notes
+
+**Only**: JSDoc in header mode
+
+**Impact**: Loses documentation context
+
+**Priority**: Low
+
+### 9. Test Files Excluded
+
+**Issue**: Test files are completely excluded from context generation.
+
+**Current behavior**: Test files (`.test.ts`, `.test.tsx`, `.spec.ts`, `.spec.tsx`) are explicitly filtered out during file scanning and never analyzed.
+
+**Missing**: Test structure, test cases, test coverage information, test utilities, and test helpers are not included in context bundles.
+
+**Impact**: No test understanding - AI assistants cannot see test files, test patterns, or testing strategies used in the codebase.
+
+**Priority**: Low
+
+**Note**: This is intentional by design - test files are excluded to keep context bundles focused on production code. If test analysis is needed, it would require a separate feature or flag to include test files.
+
+### 10. Runtime Behavior
+
+**Missing**: Runtime props, state changes, side effects
+
+**Only**: Static analysis
+
+**Impact**: No runtime insights
+
+**Note**: This is expected for static analysis tools.
+
+**Priority**: Low
+
+
 ---
 
 # Fixed/Resolved Features
 
-These items were previously limitations but have been fixed.
+These items were previously limitations but have been fixed across all versions.
 
-## Inline Style Objects Extraction
+## v0.3.7 Fixes
+
+### Emit Detection Accuracy
+
+**Status:** ✅ **Fixed in v0.3.7**
+
+Emit detection now correctly distinguishes between internal handlers and component public API emits. Only handlers that are part of the component's Props interface/type are included in the `emits` object.
+
+**What Works:**
+- ✅ Only extracts event handlers that exist in Props interfaces/types
+- ✅ Filters out internal handlers (e.g., `onClick={() => setMenuOpen(!menuOpen)}`)
+- ✅ Filters out inline handlers that are not props
+- ✅ Uses prop type signatures when available for accurate event signatures
+- ✅ Falls back to AST-based arrow function parsing only when prop signature is unavailable
+- ✅ Uses `hasOwnProperty` check to avoid inherited prototype properties
+- ✅ Always includes prop-based handlers even if no initializer or signature available (uses default)
+
+**Example:**
+
+**Source Code:**
+```typescript
+function Header() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  
+  return (
+    <button onClick={() => setMenuOpen(!menuOpen)}>
+      Toggle Menu
+    </button>
+  );
+}
+```
+
+**Context Output (Correct):**
+```json
+{
+  "logic": {
+    "emits": {}
+  }
+}
+```
+
+**Source Code (with Props):**
+```typescript
+interface ButtonProps {
+  onClick?: () => void;
+}
+
+function Button({ onClick }: ButtonProps) {
+  return <button onClick={onClick}>Click</button>;
+}
+```
+
+**Context Output (Correct):**
+```json
+{
+  "logic": {
+    "emits": {
+      "onClick": {
+        "type": "function",
+        "signature": "() => void"
+      }
+    }
+  }
+}
+```
+
+## v0.3.6 Fixes
+
+### Hook Parameter Detection
+
+**Status:** ✅ **Fixed in v0.3.6**
+
+Hook parameter detection is now fully implemented! We can extract function signatures for custom React hooks and include their parameters in the contract.
+
+**What Works:**
+- ✅ Extracts parameters from exported hook function declarations
+- ✅ Extracts parameters from exported arrow function hooks
+- ✅ Extracts parameters from default exported hooks
+- ✅ Captures parameter types (from type annotations, default values, or TypeScript type checker)
+- ✅ Handles optional parameters (with `?` or default values)
+- ✅ Stores parameters in `logic.props` field for hooks
+- ✅ Works even when Props interfaces exist in the same file
+- ✅ Props take priority on conflicts
+
+**Example:**
+
+**Source Code:**
+```typescript
+export function useTypewriter(text: string, speed = 30, pause = 800) {
+  const [displayedText, setDisplayedText] = useState('')
+  // ... implementation
+  return displayedText
+}
+```
+
+**Context Output:**
+```json
+{
+  "version": {
+    "hooks": ["useTypewriter"]
+  },
+  "logic": {
+    "props": {
+      "text": "string",
+      "speed": { "type": "number", "optional": true },
+      "pause": { "type": "number", "optional": true }
+    }
+  }
+}
+```
+
+## v0.3.5 Fixes
+
+### Inline Style Objects Extraction
 
 **Status:** ✅ **Fixed in v0.3.5** (Verified)
 
@@ -468,7 +598,7 @@ style={{ animationDelay: '2s', color: 'blue', padding: '1rem' }}
 
 **Note**: Dynamic values (variables, function calls) are detected as properties but their values are not extracted (static analysis limitation).
 
-## Styled JSX CSS Extraction
+### Styled JSX CSS Extraction
 
 **Status:** ✅ **Fixed in v0.3.5** (Verified)
 
@@ -531,13 +661,35 @@ csstree.walk(ast, (node: any) => {
 - Handles complex selectors (`.a:hover > span`, `button[aria-expanded="true"]`, etc.)
 - Per-block parsing for resilience (if one block has `${expr}` placeholders, others still work)
 
-## Hook Classification
+## v0.3.2 Fixes
+
+### CSS/SCSS AST-Based Parsing
+
+**Status:** ✅ **Fixed in v0.3.2**
+
+CSS and SCSS file parsing migrated from regex-based extraction to deterministic AST walk using `css-tree`. This provides more robust and accurate parsing of CSS/SCSS files.
+
+**What Works:**
+- ✅ AST-based parsing using css-tree (replaces heuristic regex)
+- ✅ Accurate CSS selector extraction (class, ID, and type selectors)
+- ✅ Proper CSS property extraction with filtering of SCSS variables and at-rules
+- ✅ SCSS feature detection (variables, nesting, mixins) as boolean flags
+- ✅ Nested rules inside `@media`, `@supports`, `@container`, and other at-rules
+- ✅ SCSS `//` comments automatically converted to `/* */` for css-tree compatibility
+- ✅ Invalid selector filtering (file extensions, numeric values, keyframe percentages, color values, pixel values)
+- ✅ Better error handling with graceful fallback on parse failures
+
+**Impact:** More accurate and reliable CSS/SCSS parsing, consistent with the AST-based approach used for TypeScript/React files.
+
+## v0.3.1 Fixes
+
+### Hook Classification
 
 **Status:** ✅ **Fixed in v0.3.1**
 
 Custom hooks are now correctly classified as `react:hook` instead of `react:component`. The detection logic checks if the main export (default or named) is a function starting with "use" and has no JSX elements.
 
-**Example**
+**Example:**
 
 **Source Code:**
 ```typescript
@@ -555,7 +707,59 @@ function useTypewriter(text: string, speed = 30) {
 }
 ```
 
-## Dependency Graph Edges
+## v0.2.6 Fixes
+
+### Export Metadata Extraction
+
+**Status:** ✅ **Fixed in v0.2.6**
+
+Export metadata is now automatically extracted from source files, improving dependency tracking accuracy.
+
+**What Works:**
+- ✅ Detects default exports (`export default`)
+- ✅ Detects named exports (`export { ... }`, `export function`, `export class`, `export const`)
+- ✅ Extracts list of exported function names
+- ✅ Stores export metadata in contracts as `exports` field (optional)
+- ✅ Export metadata format: `'default'`, `'named'`, or `{ named: string[] }` for multiple named exports
+- ✅ Used to improve dependency tracking accuracy
+
+### Internal Component Filtering
+
+**Status:** ✅ **Fixed in v0.2.6**
+
+Dependency tracking improved by filtering out internal components, reducing false positives in missing dependency detection.
+
+**What Works:**
+- ✅ Internal components are function components defined in the same file (appear in both `version.functions` and `version.components`)
+- ✅ Internal components are now excluded from dependency graphs and missing dependency lists
+- ✅ Reduces false positives in missing dependency detection
+- ✅ Improves accuracy of dependency analysis for multi-component files
+
+**Impact:** Dependency graphs now only include external dependencies, excluding internal components defined in the same file. Missing dependency lists no longer include internal components, reducing noise in dependency diagnostics.
+
+## v0.2.2 Fixes
+
+### Documentation Accuracy (Tokenizer Dependencies)
+
+**Status:** ✅ **Fixed in v0.2.2**
+
+Fixed documentation to correctly state that `@dqbd/tiktoken` and `@anthropic-ai/tokenizer` are included as optional dependencies in package.json. npm automatically attempts to install them when installing `logicstamp-context`.
+
+**Impact:** Users no longer need to manually install tokenizer packages - they are automatically installed as optional dependencies.
+
+## v0.2.1 Fixes
+
+### Dynamic Version Loading
+
+**Status:** ✅ **Fixed in v0.2.1**
+
+Fixed hardcoded version string in `fileWriter.ts` to dynamically load from `package.json`, ensuring version consistency across all generated context files.
+
+**Impact:** Version information in generated context files now always matches the actual package version.
+
+## Other Implemented Features
+
+### Dependency Graph Edges
 
 **Status:** ✅ **Implemented**
 
@@ -573,8 +777,7 @@ Dependency graph edges ARE built and populated. The `buildEdges()` function in `
 For the complete roadmap with priorities and implementation plans, see [ROADMAP.md](../../ROADMAP.md).
 
 **Active High Priority Items:**
-1. **Emit detection accuracy** - Distinguish internal handlers from public API emits
-2. **Dynamic class parsing** - Resolve variable-based classes within template literals
+1. **Dynamic class parsing** - Resolve variable-based classes within template literals
 
 **Active Medium Priority Items:**
 1. **CSS-in-JS support** - Complete support for remaining libraries (Chakra UI, Ant Design)
@@ -592,7 +795,6 @@ For the complete roadmap with priorities and implementation plans, see [ROADMAP.
 - ✅ Inline styles and Styled JSX fully supported
 
 **What needs improvement:**
-- ❌ Emit detection accuracy (internal handlers vs. actual emits)
 - ❌ Dynamic class resolution (variable-based classes within template literals)
 - ❌ CSS-in-JS support completeness (remaining libraries like Chakra UI, Ant Design)
 - ❌ Third-party component info (package names, versions, prop types)
