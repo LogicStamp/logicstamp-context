@@ -276,7 +276,7 @@ See the full list here: [docs/limitations.md](https://github.com/LogicStamp/logi
 ## Need Help?
 
 - **Open an issue** → https://github.com/LogicStamp/logicstamp-context/issues
-- **Join our roadmap** → https://logicstamp.dev
+- **Join our roadmap** → https://logicstamp.dev/roadmap
 
 ## Requirements
 
