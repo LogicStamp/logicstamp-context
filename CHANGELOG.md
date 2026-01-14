@@ -84,6 +84,7 @@ function Button({ onClick }: ButtonProps) {
 - **Event signature extraction** - Improved signature extraction to prioritize prop type signatures over JSX parsing. Prop signatures are now always used when available, preventing incorrect signatures from wrapper functions like `onClick={(e) => onClick?.(e)}`
 - **Route extraction** - Enhanced route extraction to only extract routes from JSX attribute values (`path`, `to`, `href`, `as`, `route`, `src`), reducing false positives from config/constants. Added support for JSX-specific literal nodes that aren't standard StringLiteral
 - **AST-based parsing** - Migrated from regex-based arrow function parsing to AST-based parsing using `Node.isArrowFunction()` for more robust and accurate parameter extraction
+- **Security documentation clarity** - Clarified non-execution guarantees, `.gitignore` behavior, and `LLM_CONTEXT.md` generation semantics in `SECURITY.md` to better reflect default and `--no-secure` workflows
 
 ### Improved
 
