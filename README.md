@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://logicstamp.dev">
-    <img src="assets/logicstamp-woodmark.png" alt="LogicStamp" width="320" height="auto">
+    <img src="assets/logicstamp-woodmark.png" alt="LogicStamp" width="420" height="auto">
   </a>
 
   <br/>

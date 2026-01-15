@@ -38,6 +38,7 @@ See [docs/limitations.md](docs/limitations.md) for complete details and code evi
 
 ### Added
 
+- **LogicStamp woodmark** - Added LogicStamp woodmark asset (`logicstamp-woodmark.png`) to the project assets and integrated it into the README header
 - **Enhanced third-party component info (Phase 1)** - Missing dependencies now include package names and versions for third-party packages:
   - **Package name extraction** - Automatically extracts package names from import specifiers:
     - Handles scoped packages (e.g., `@mui/material` from `@mui/material/Button`)
