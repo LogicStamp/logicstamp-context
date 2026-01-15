@@ -5,6 +5,7 @@
 import { normalizeEntryId } from '../../utils/fsx.js';
 import type { ProjectManifest } from '../manifest.js';
 import { resolveDependency } from './resolver.js';
+import { isThirdPartyPackage, extractPackageName, getPackageVersion } from './packageInfo.js';
 
 /**
  * Missing dependency information
@@ -13,17 +14,20 @@ export interface MissingDependency {
   name: string;
   reason: string;
   referencedBy?: string;
+  packageName?: string; // Extracted package name for third-party dependencies
+  version?: string; // Version from package.json (if available)
 }
 
 /**
  * Perform BFS traversal to collect dependencies
  */
-export function collectDependencies(
+export async function collectDependencies(
   entryId: string,
   manifest: ProjectManifest,
   depth: number,
-  maxNodes: number
-): { visited: Set<string>; missing: MissingDependency[] } {
+  maxNodes: number,
+  projectRoot?: string
+): Promise<{ visited: Set<string>; missing: MissingDependency[] }> {
   const visited = new Set<string>();
   const missing: MissingDependency[] = [];
   const queue: Array<{ id: string; level: number }> = [{ id: entryId, level: 0 }];
@@ -60,10 +64,24 @@ export function collectDependencies(
     }
     
     if (!node) {
-      missing.push({
+      const missingDep: MissingDependency = {
         name: current.id,
         reason: 'Component not found in manifest',
-      });
+      };
+      
+      // Enhance with package info if it's a third-party package
+      if (projectRoot && isThirdPartyPackage(current.id)) {
+        const packageName = extractPackageName(current.id);
+        if (packageName) {
+          missingDep.packageName = packageName;
+          const version = await getPackageVersion(packageName, projectRoot);
+          if (version) {
+            missingDep.version = version;
+          }
+        }
+      }
+      
+      missing.push(missingDep);
       continue;
     }
 
@@ -82,11 +100,25 @@ export function collectDependencies(
         } else {
           // Track missing dependency
           if (!missing.some((m) => m.name === dep)) {
-            missing.push({
+            const missingDep: MissingDependency = {
               name: dep,
               reason: 'No contract found (third-party or not scanned)',
               referencedBy: componentKey, // Use manifest key, not current.id
-            });
+            };
+            
+            // Enhance with package info if it's a third-party package
+            if (projectRoot && isThirdPartyPackage(dep)) {
+              const packageName = extractPackageName(dep);
+              if (packageName) {
+                missingDep.packageName = packageName;
+                const version = await getPackageVersion(packageName, projectRoot);
+                if (version) {
+                  missingDep.version = version;
+                }
+              }
+            }
+            
+            missing.push(missingDep);
           }
         }
       }

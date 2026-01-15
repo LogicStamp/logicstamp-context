@@ -42,6 +42,7 @@ import type { MissingDependency } from './pack/collector.js';
 import { loadManifest, loadContract, readSourceCode, extractCodeHeader } from './pack/loader.js';
 import { buildEdges, computeBundleHash, stableSort, validateHashLock } from './pack/builder.js';
 import type { BundleNode } from './pack/builder.js';
+import { isThirdPartyPackage, extractPackageName, getPackageVersion } from './pack/packageInfo.js';
 
 // Load package.json to get version
 const require = createRequire(import.meta.url);
@@ -308,11 +309,12 @@ export async function pack(
   const actualEntryId = manifestKey;
 
   // Collect dependencies via BFS
-  const { visited, missing } = collectDependencies(
+  const { visited, missing } = await collectDependencies(
     actualEntryId,
     manifest,
     options.depth,
-    options.maxNodes
+    options.maxNodes,
+    projectRoot
   );
 
   // Load contracts for all visited nodes
@@ -334,10 +336,24 @@ export async function pack(
       }
 
       if (!options.allowMissing) {
-        missing.push({
+        const missingDep: MissingDependency = {
           name: manifestKey,
           reason: `Contract file not found at ${sidecarPath}`,
-        });
+        };
+        
+        // Enhance with package info if it's a third-party package
+        if (isThirdPartyPackage(manifestKey)) {
+          const packageName = extractPackageName(manifestKey);
+          if (packageName) {
+            missingDep.packageName = packageName;
+            const version = await getPackageVersion(packageName, projectRoot);
+            if (version) {
+              missingDep.version = version;
+            }
+          }
+        }
+        
+        missing.push(missingDep);
         continue;
       }
     }

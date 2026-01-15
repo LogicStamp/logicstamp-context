@@ -138,6 +138,14 @@
         "referencedBy": {
           "type": "string",
           "description": "File path of the component that attempted to import this dependency"
+        },
+        "packageName": {
+          "type": "string",
+          "description": "Extracted package name for third-party dependencies (e.g., '@mui/material' from '@mui/material/Button')"
+        },
+        "version": {
+          "type": "string",
+          "description": "Package version from package.json (if available, e.g., '^5.15.0')"
         }
       },
       "additionalProperties": false

@@ -4,6 +4,9 @@ This roadmap outlines the planned features, improvements, and known limitations 
 
 ## Recent Achievements
 
+### v0.3.8 (January 2026)
+- ✅ **Enhanced third-party component info (Phase 1)** - Missing dependencies now include package names and versions for third-party packages. Package name extraction handles scoped packages and subpath imports. Version lookup reads from `package.json` with caching for efficiency.
+
 ### v0.3.7 (January 2026)
 - ✅ **Emit detection accuracy** - Fixed issue where internal event handlers were incorrectly listed as component emits. Now only includes handlers that are part of the component's public API (props). Uses prop type signatures when available for accurate event signatures.
 
@@ -112,21 +115,29 @@ Complete support for remaining CSS-in-JS libraries.
 ---
 
 #### 4. Enhanced Third-Party Component Info
-**Status:** 🔴 Not Started
+**Status:** 🟡 Phase 1 Complete, Phase 2 Pending
 
 Include package names, versions, and prop types for third-party components.
 
 **Current Behavior:**
 - ✅ Basic "missing" info for unresolved dependencies
-- ❌ No package names or versions
-- ❌ No prop type information
+- ✅ Package names extracted from import statements (Phase 1)
+- ✅ Version info from `package.json` (Phase 1)
+- ❌ No prop type information (Phase 2)
 
-**Planned Implementation:**
-- Extract package names from import statements
-- Include version info from `package.json` (if available)
-- Attempt to extract prop types from type definitions
+**Phase 1 Implementation (Complete):**
+- ✅ Extract package names from import statements (handles scoped packages, subpath imports)
+- ✅ Include version info from `package.json` (checks dependencies, devDependencies, peerDependencies)
+- ✅ Caching for efficient package.json reads
+- ✅ Graceful handling of missing package.json or packages
 
-**Impact:** Limited understanding of external dependencies in context files.
+**Phase 2 Implementation (Planned):**
+- Extract prop types from TypeScript declaration files (`.d.ts`) in `node_modules`
+- Handle different package structures and re-exports
+- Support generic types and type aliases
+- Fallback gracefully when type definitions are missing or incomplete
+
+**Impact:** Phase 1 provides immediate value with package names and versions. Phase 2 will add prop type information for better understanding of external component APIs.
 
 ---
 
@@ -421,7 +432,7 @@ We welcome contributions! If you'd like to work on any of these roadmap items:
 
 For detailed release notes and changes, see [CHANGELOG.md](CHANGELOG.md).
 
-**Current Version:** v0.3.7 (Beta)
+**Current Version:** v0.3.8 (Beta)
 
 **Status:** Actively developed - we're working on improving accuracy and expanding feature coverage based on user feedback.
 

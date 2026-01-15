@@ -1,11 +1,11 @@
-# LogicStamp Context
-
 <div align="center">
-  <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="120">
+  <a href="https://logicstamp.dev">
+    <img src="assets/logicstamp-woodmark.png" alt="LogicStamp" width="320">
+  </a>
 
   <br/>
 
-  ![Version](https://img.shields.io/badge/version-0.3.7-blue.svg)
+  ![Version](https://img.shields.io/badge/version-0.3.8-8b5cf6.svg)
   ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
   ![License](https://img.shields.io/badge/license-MIT-green.svg)
   ![Node](https://img.shields.io/badge/node-%3E%3D18.18.0-brightgreen.svg)
@@ -13,14 +13,45 @@
 
   <br/>
 
-  **A CLI for context engineering that statically analyzes TypeScript codebases and produces structured context bundles for AI and CI.**
+  <table>
+    <tr>
+      <td align="center">
+        <a href="https://github.com/LogicStamp">
+          <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="88" style="min-width: 72px;">
+        </a>
+      </td>
+      <td align="left">
+        <strong>AI-ready context bundles for React & TypeScript.</strong><br/>
+        Fast. Deterministic. One-time setup.
+      </td>
+    </tr>
+  </table>
 
-  **Fast. Deterministic. One-time setup.**
    <br/>
 </div>
 
 ![LogicStamp Context in action](./assets/logicstamp-context-demo.gif)
 *Sample stamp context output with generated bundles*
+
+<br/>
+
+<details>
+<summary><strong>📑 Table of Contents</strong></summary>
+
+- [Quick Start](#quick-start)
+- [Why LogicStamp?](#why-logicstamp)
+- [Features](#-features)
+- [How it Works](#how-it-works)
+- [MCP Server](#mcp-server)
+- [Example Output](#example-output)
+- [Installation](#installation)
+- [Security](#security)
+- [Usage](#usage)
+- [Documentation](#documentation)
+- [Known Limitations](#known-limitations)
+- [Requirements](#requirements)
+- [Need Help?](#need-help)
+</details>
 
 ## Quick Start
 
@@ -49,7 +80,7 @@ stamp context
 
 > **ℹ️** If you see `"PRIVATE_DATA"` in output, see the **Security** section below.
 
-> **Note:** This is a beta release (v0.3.7). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+> **Note:** This is a beta release (v0.3.8). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 📋 **For a detailed step-by-step getting started guide with integration examples, see [Getting Started Guide](https://logicstamp.dev/docs/getting-started).**
 
@@ -295,13 +326,7 @@ These assets may not be used for third-party branding, logos, or commercial iden
 
 ## Contributing
 
-Issues and PRs welcome! This is an open-source project.
-
-**See [CONTRIBUTING.md](https://github.com/LogicStamp/logicstamp-context/blob/main/CONTRIBUTING.md) for detailed guidelines**, including:
-- Branching strategy (feature → `main`, no `develop` branch)
-- Branch naming conventions (`feature/*`, `fix/*`, `docs/*`)
-- Commit message format (Conventional Commits)
-- Development workflow and best practices
+Issues and PRs welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## Community
 
