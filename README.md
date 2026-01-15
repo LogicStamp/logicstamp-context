@@ -32,10 +32,8 @@
 
 ![LogicStamp Context in action](./assets/logicstamp-context-demo.gif)
 *Sample stamp context output with generated bundles*
-
-
-<details>
-<summary><strong>Table of Contents</strong></summary>
+## Table of Contents
+<details><summary>Show / hide</summary>
 
 - [Quick Start](#quick-start)
 - [Why LogicStamp?](#why-logicstamp)
@@ -45,6 +43,7 @@
 - [Security](#security)
 - [Usage](#usage)
 - [Documentation](#documentation)
+
 </details>
 
 ## Quick Start
