@@ -43,7 +43,7 @@ These options are available at the top level (before any subcommand):
 
 **Examples:**
 ```bash
-stamp --version    # Shows: fox mascot + "Version: 0.3.7"
+stamp --version    # Shows: fox mascot + "Version: 0.3.8"
 stamp -v           # Same as --version
 stamp --help       # Shows main help
 stamp -h           # Same as --help
@@ -195,15 +195,16 @@ If a security report (`stamp_security_report.json`) exists, `stamp context` auto
 | `--compare-modes` | | `false` | Show detailed token comparison table across all modes (none/header/header+style/full) with accurate style metadata impact. When combined with `--stats`, writes `context_compare_modes.json` for MCP integration. |
 | `--include-style` | | `false` | Extract style metadata (Tailwind, SCSS, Material UI, animations, layout). |
 | `--strict-missing` | | `false` | Exit with error if any missing dependencies found |
-| `--skip-gitignore` | | `false` | Skip `.gitignore` setup (never prompt or modify) |
+| `--skip-gitignore` | | `false` | Skip `.gitignore` setup (never prompt or modify). Default behavior is CI-friendly (skips unless config preference is 'added'). |
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors) |
 
 **CI / automation tips**
 
-- Use `--dry-run` to inspect totals without producing files.
-- Use `--stats` to emit machine-readable summary lines (combine with shell redirection).
-- Use `--skip-gitignore` to prevent any `.gitignore` modifications in CI environments.
-- Use `--quiet` to suppress verbose output in CI pipelines (show only errors).
+- Context files are generated fresh in CI (not committed) - they're gitignored as regenerable artifacts
+- Use `--dry-run` to inspect totals without producing files
+- Use `--stats` to emit machine-readable summary lines (combine with shell redirection)
+- Use `--skip-gitignore` to prevent any `.gitignore` modifications in CI environments
+- Use `--quiet` to suppress verbose output in CI pipelines (show only errors)
 
 ### `stamp context style`
 
@@ -766,12 +767,43 @@ stamp context --depth 3 --include-code full --max-nodes 50
 
 ### CI/CD Integration
 
-```bash
-# Strict mode - fails on missing dependencies
-stamp context --profile ci-strict
+**Typical CI/CD workflow:**
+- Context files are **generated fresh** during CI runs (not committed to git)
+- They're gitignored because they're regenerable artifacts (like build outputs)
+- CI generates them, uses them for validation/comparison, then discards them
+- **If you want to commit context files** (uncommon), skip gitignore setup: `stamp init --skip-gitignore`
 
-# Custom strict configuration
-stamp context --strict --include-code none
+**Default behavior is CI-friendly:**
+- `stamp context` **does not modify `.gitignore` by default** - it respects config preferences or skips if no config exists
+- Use `--skip-gitignore` to explicitly prevent any `.gitignore` modifications
+
+```bash
+# Generate context files fresh in CI (typical workflow)
+stamp context --skip-gitignore --quiet
+
+# Strict mode - fails on missing dependencies
+stamp context --profile ci-strict --skip-gitignore
+
+# Validate generated context files
+stamp context validate
+
+# Compare context files to detect drift
+stamp context compare --approve
+
+# Generate stats for monitoring
+stamp context --stats --quiet
+```
+
+**Example CI pipeline:**
+```bash
+# Install LogicStamp
+npm install -g logicstamp-context
+
+# Generate context files (fresh, not committed)
+stamp context --skip-gitignore --quiet
+
+# Validate or compare as needed
+stamp context validate || exit 1
 ```
 
 ### Validation & QA

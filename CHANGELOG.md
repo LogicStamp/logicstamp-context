@@ -34,6 +34,59 @@ See [docs/limitations.md](docs/limitations.md) for complete details and code evi
 
 ---
 
+## [0.3.8] - 2026-01-15
+
+### Added
+
+- **Enhanced third-party component info (Phase 1)** - Missing dependencies now include package names and versions for third-party packages:
+  - **Package name extraction** - Automatically extracts package names from import specifiers:
+    - Handles scoped packages (e.g., `@mui/material` from `@mui/material/Button`)
+    - Handles subpath imports (e.g., `lodash` from `lodash/debounce`)
+    - Distinguishes third-party packages from relative imports
+  - **Version lookup** - Reads versions from `package.json`:
+    - Checks `dependencies`, `devDependencies`, and `peerDependencies`
+    - Prioritizes `dependencies` over `devDependencies`
+    - Caches `package.json` reads for efficiency
+    - Gracefully handles missing `package.json` or packages
+  - **Schema updates** - Added optional `packageName` and `version` fields to `MissingDependency` type in context schema
+
+**Example:**
+
+**Before:**
+```json
+{
+  "name": "@mui/material",
+  "reason": "external package",
+  "referencedBy": "src/components/Dashboard.tsx"
+}
+```
+
+**After:**
+```json
+{
+  "name": "@mui/material",
+  "reason": "external package",
+  "referencedBy": "src/components/Dashboard.tsx",
+  "packageName": "@mui/material",
+  "version": "^5.15.0"
+}
+```
+
+### Changed
+
+- **`collectDependencies()` function** - Made async to support version lookups from `package.json`. Now accepts optional `projectRoot` parameter for package version resolution
+- **Missing dependency tracking** - Enhanced to automatically populate `packageName` and `version` fields for third-party packages when `projectRoot` is provided
+
+### Improved
+
+- **Package detection** - Improved third-party package detection to handle edge cases (empty strings, invalid scoped packages, absolute paths)
+- **Error handling** - Enhanced error handling for missing or invalid `package.json` files
+- **Performance** - Added caching mechanism to avoid repeated `package.json` file reads
+
+**Impact:** This release provides better visibility into external dependencies by including package names and versions in missing dependency information. This helps AI assistants understand which versions of third-party packages are being used in the project. The implementation is backward compatible - existing context files remain valid, and the new fields are optional. Phase 2 (prop type extraction) is planned for a future release.
+
+---
+
 ## [0.3.7] - 2026-01-14
 
 ### Fixed
@@ -686,7 +739,8 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ---
 
 ## Version links
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.3.7...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.3.8...HEAD
+[0.3.8]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.8
 [0.3.7]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.7
 [0.3.6]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.6
 [0.3.5]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.5
