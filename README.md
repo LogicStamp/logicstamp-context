@@ -38,6 +38,8 @@
 <details>
 <summary><strong>📑 Table of Contents</strong></summary>
 
+<br/>
+
 - [Quick Start](#quick-start)
 - [Why LogicStamp?](#why-logicstamp)
 - [Features](#-features)
@@ -53,6 +55,7 @@
 - [Need Help?](#need-help)
 </details>
 
+<br/>
 ## Quick Start
 
 **Try it in 30 seconds (no install required):**
