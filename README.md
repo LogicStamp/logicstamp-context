@@ -55,7 +55,6 @@
 - [Need Help?](#need-help)
 </details>
 
-<br/>
 ## Quick Start
 
 **Try it in 30 seconds (no install required):**
