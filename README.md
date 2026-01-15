@@ -1,8 +1,9 @@
 <div align="center">
   <a href="https://logicstamp.dev">
-    <img src="assets/logicstamp-woodmark.png" alt="LogicStamp" width="320">
+    <img src="assets/logicstamp-woodmark.png" alt="LogicStamp" width="320" height="auto">
   </a>
 
+  <br/>
   <br/>
 
   ![Version](https://img.shields.io/badge/version-0.3.8-8b5cf6.svg)
@@ -17,7 +18,7 @@
     <tr>
       <td align="center">
         <a href="https://github.com/LogicStamp">
-          <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="88" style="min-width: 72px;">
+          <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="80" style="min-width: 72px;">
         </a>
       </td>
       <td align="left">
