@@ -13,11 +13,11 @@
 
   <br/>
 
-  <div style="display: flex; align-items: center; gap: 16px; justify-content: center;">
-    <div>
+  <div style="display: flex; align-items: center; gap: 16px;">
+    <div style="flex-shrink: 0;">
       <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="96" style="min-width: 64px;">
     </div>
-    <div style="text-align: left;">
+    <div style="flex: 1;">
       <strong>AI-ready context bundles for React & TypeScript.</strong><br/>
       Fast. Deterministic. One-time setup.
     </div>
