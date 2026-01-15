@@ -18,7 +18,7 @@
     <tr>
       <td align="center">
         <a href="https://github.com/LogicStamp">
-          <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="88" style="min-width: 72px;">
+          <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="72" style="min-width: 72px;">
         </a>
       </td>
       <td align="left">
