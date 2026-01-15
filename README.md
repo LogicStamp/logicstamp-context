@@ -1,14 +1,3 @@
-<style>
-  #mascot-fox {
-    width: 64px;
-  }
-  @media (max-width: 768px) {
-    #mascot-fox {
-      width: 120px;
-    }
-  }
-</style>
-
 <div align="center">
   <a href="https://logicstamp.dev">
     <img src="assets/logicstamp-woodmark.png" alt="LogicStamp" width="320">
@@ -23,6 +12,17 @@
   [![CI](https://github.com/LogicStamp/logicstamp-context/workflows/CI/badge.svg)](https://github.com/LogicStamp/logicstamp-context/actions)
 
   <br/>
+
+  <style>
+    #mascot-fox {
+      width: 64px;
+    }
+    @media (max-width: 768px) {
+      #mascot-fox {
+        width: 120px;
+      }
+    }
+  </style>
 
   <table style="border: none;">
     <tr>
