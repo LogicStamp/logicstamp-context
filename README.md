@@ -13,11 +13,13 @@
 
   <br/>
 
-  <div style="display:flex; align-items:center; justify-content:center; gap:16px; margin: 8px 0 0;">
-    <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="88" style="display:block;" />
-    <div style="text-align:left;">
-      <strong>AI-ready context bundles for React &amp; TypeScript.</strong><br/>
-      Fast. Deterministic. One-time setup.
+  <div align="center">
+    <div style="display:inline-flex; align-items:center; gap:16px;">
+      <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="88" style="display:block;" />
+      <div style="text-align:left;">
+        <strong>AI-ready context bundles for React &amp; TypeScript.</strong><br/>
+        Fast. Deterministic. One-time setup.
+      </div>
     </div>
   </div>
 
