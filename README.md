@@ -38,8 +38,6 @@
 <details>
 <summary><strong>📑 Table of Contents</strong></summary>
 
-<br/>
-
 - [Quick Start](#quick-start)
 - [Why LogicStamp?](#why-logicstamp)
 - [Features](#-features)
