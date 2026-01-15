@@ -16,7 +16,9 @@
   <table>
     <tr>
       <td align="center">
-        <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="88" style="min-width: 72px;">
+        <a href="https://github.com/LogicStamp">
+          <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="88" style="min-width: 72px;">
+        </a>
       </td>
       <td align="left">
         <strong>AI-ready context bundles for React & TypeScript.</strong><br/>
