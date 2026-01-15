@@ -16,7 +16,7 @@
   <table style="border: none;">
     <tr>
       <td align="center" style="border: none;">
-        <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="120" style="min-width: 64px;">
+        <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="80" style="min-width: 64px;">
       </td>
       <td align="left" style="border: none;">
         <strong>AI-ready context bundles for React & TypeScript.</strong><br/>
