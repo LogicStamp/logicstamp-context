@@ -1,3 +1,14 @@
+<style>
+  #mascot-fox {
+    width: 64px;
+  }
+  @media (max-width: 768px) {
+    #mascot-fox {
+      width: 120px;
+    }
+  }
+</style>
+
 <div align="center">
   <a href="https://logicstamp.dev">
     <img src="assets/logicstamp-woodmark.png" alt="LogicStamp" width="320">
@@ -16,7 +27,7 @@
   <table style="border: none;">
     <tr>
       <td align="center" style="border: none;">
-        <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="100" style="min-width: 80px;">
+        <img id="mascot-fox" src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox">
       </td>
       <td align="left" style="border: none;">
         <strong>AI-ready context bundles for React & TypeScript.</strong><br/>
