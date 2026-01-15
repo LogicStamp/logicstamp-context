@@ -13,12 +13,12 @@
 
   <br/>
 
-  <table cellpadding="0" cellspacing="0" style="border: 0; border-collapse: collapse;">
-    <tr style="border: 0;">
-      <td align="center" style="border: 0; padding: 0;">
-        <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="96" style="min-width: 64px;">
+  <table style="border: none;">
+    <tr>
+      <td align="center" style="border: none;">
+        <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="88" style="min-width: 64px;">
       </td>
-      <td align="left" style="border: 0; padding-left: 12px;">
+      <td align="left" style="border: none;">
         <strong>AI-ready context bundles for React & TypeScript.</strong><br/>
         Fast. Deterministic. One-time setup.
       </td>
