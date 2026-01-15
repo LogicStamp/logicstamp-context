@@ -13,12 +13,12 @@
 
   <br/>
 
-  <table>
+  <table style="border: none;">
     <tr>
-      <td align="center">
-        <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="60">
+      <td align="center" style="border: none;">
+        <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="100" style="min-width: 80px;">
       </td>
-      <td align="left">
+      <td align="left" style="border: none;">
         <strong>AI-ready context bundles for React & TypeScript.</strong><br/>
         Fast. Deterministic. One-time setup.
       </td>
