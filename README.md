@@ -43,9 +43,14 @@
 - [Features](#-features)
 - [How it Works](#how-it-works)
 - [MCP Server](#mcp-server)
+- [Example Output](#example-output)
+- [Installation](#installation)
 - [Security](#security)
 - [Usage](#usage)
 - [Documentation](#documentation)
+- [Known Limitations](#known-limitations)
+- [Requirements](#requirements)
+- [Need Help?](#need-help)
 </details>
 
 ## Quick Start
