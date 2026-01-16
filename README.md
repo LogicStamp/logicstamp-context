@@ -8,7 +8,9 @@
   </a>
 
  ### Understand your codebase. Generate deterministic context.
-  <small>React • TypeScript</small><br/>
+  <small>Currently: React · TypeScript</small>
+  <br/>
+  <br/>
   <strong>Fast • One-time setup</strong>
   <br/>
   <br/>
