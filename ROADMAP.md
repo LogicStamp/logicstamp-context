@@ -4,6 +4,9 @@ This roadmap outlines the planned features, improvements, and known limitations 
 
 ## Recent Achievements
 
+### v0.3.9 (January 2026)
+- ✅ **Dynamic Tailwind class parsing (Phase 1)** - Enhanced Tailwind CSS extractor to resolve dynamic class expressions within template literals. Resolves const/let variables, object properties, and conditional expressions. Handles ~70-80% of common dynamic class patterns.
+
 ### v0.3.8 (January 2026)
 - ✅ **Enhanced third-party component info (Phase 1)** - Missing dependencies now include package names and versions for third-party packages. Package name extraction handles scoped packages and subpath imports. Version lookup reads from `package.json` with caching for efficiency.
 
@@ -70,23 +73,32 @@ Emit detection now correctly distinguishes between internal handlers and compone
 ---
 
 #### 2. Dynamic Class Parsing
-**Status:** 🔴 Not Started
+**Status:** ✅ Phase 1 Complete (v0.3.9), 🟡 Phase 2 Planned
 
-Resolve variable-based classes within template literals. Currently, only static segments are extracted.
+Resolve variable-based classes within template literals. Phase 1 is complete, handling same-file variable resolution.
 
 **Current Behavior:**
 - ✅ Extracts static Tailwind classes
 - ✅ Extracts static segments from template literals
-- ❌ Does not resolve dynamic expressions within `${}`
+- ✅ Phase 1: Resolves const/let variables, object properties, and conditional expressions
+- ❌ Phase 2: Does not resolve object lookups with variables, cross-file references, or function calls
 
-**Planned Implementation:**
-- Resolve variable references to class strings
-- Extract classes from object lookups (e.g., `variants[variant]`)
-- Support function calls that return class strings
+**Phase 1 Implementation (v0.3.9 - ✅ Complete):**
+- ✅ Resolve const/let declarations with string literals: `const base = 'px-4 py-2'` → extracts classes from variable
+- ✅ Resolve object property access: `variants.primary` → extracts classes from object property value
+- ✅ Handle conditional expressions in template literals: `${isActive ? 'bg-blue-500' : 'bg-gray-500'}` → extracts both branches
+- **Coverage**: ~70-80% of common dynamic class patterns
 
-**Impact:** Dynamic class construction from variables results in incomplete style metadata.
+**Phase 2 Implementation (Future Release):**
+- Resolve object lookups with variables: `variants[variant]` → requires resolving index variable first
+- Cross-file references: `import { baseClasses } from './styles'` → requires import resolution and cross-file analysis
+- Function calls returning class strings: `getClasses('primary')` → requires function body analysis
+- **Coverage**: Additional ~15-20% of edge cases
+- **Estimated Effort**: 8+ hours
 
-**Related:** See [docs/limitations.md](docs/limitations.md#dynamic-class-parsing) for detailed code evidence.
+**Impact:** Dynamic class construction from variables results in incomplete style metadata. Phase 1 addresses the most common patterns, Phase 2 will handle advanced edge cases.
+
+**Related:** See [docs/limitations.md](docs/limitations.md#dynamic-class-parsing) for detailed code evidence and implementation phases.
 
 ---
 
@@ -394,7 +406,7 @@ For a complete list of current limitations with code evidence and detailed expla
 **Active Coverage Gaps:**
 - ❌ TypeScript types incomplete (generics, complex unions/intersections)
 - ❌ CSS-in-JS support incomplete (Chakra UI, Ant Design missing)
-- ❌ Third-party component info minimal (no package names, versions, prop types)
+- ⚠️ Third-party component prop types missing (package names and versions included in v0.3.8)
 - ❌ Project-level insights missing (cross-folder relationships, project-wide statistics)
 - ⚠️ Comments only in header mode (JSDoc only)
 - ⚠️ Test files excluded (by design)
@@ -417,9 +429,9 @@ We welcome contributions! If you'd like to work on any of these roadmap items:
 **Priority Areas for Contributors:**
 
 **Bug Fixes:**
-- Dynamic class parsing - Resolve variable-based classes in template literals
+- Dynamic class parsing - Phase 1 complete (v0.3.9), Phase 2 planned for advanced patterns
 - CSS-in-JS library support - Add Chakra UI and Ant Design support
-- Enhanced third-party component info - Include package names, versions, prop types
+- Enhanced third-party component info (Phase 2) - Include prop types (package names and versions completed in v0.3.8)
 
 **Framework Expansion:**
 - JavaScript & JSX support - Add `.js`/`.jsx` file analysis
@@ -432,7 +444,7 @@ We welcome contributions! If you'd like to work on any of these roadmap items:
 
 For detailed release notes and changes, see [CHANGELOG.md](CHANGELOG.md).
 
-**Current Version:** v0.3.8 (Beta)
+**Current Version:** v0.3.9 (Beta)
 
 **Status:** Actively developed - we're working on improving accuracy and expanding feature coverage based on user feedback.
 

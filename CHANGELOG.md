@@ -29,8 +29,78 @@ For a comprehensive roadmap with detailed status, priorities, and implementation
 
 See [docs/limitations.md](docs/limitations.md) for complete details and code evidence.
 
-- Dynamic class expressions not resolved (variables in template literals)
+- Dynamic class expressions partially resolved (Phase 1 complete in v0.3.9, Phase 2 planned for advanced patterns)
 - TypeScript types incomplete (generics, complex unions/intersections)
+
+---
+
+## [0.3.9] - 2026-01-16
+
+### Added
+
+- **Phase 1: Dynamic Tailwind class parsing** - Enhanced Tailwind CSS extractor to resolve dynamic class expressions within template literals:
+  - **Variable resolution** - Resolves `const` and `let` variable declarations containing Tailwind classes:
+    - Extracts classes from variables referenced in template literals: `` className={`${base} bg-blue-500`} ``
+    - Handles nested variable references and scope shadowing (inner scope takes precedence)
+    - Uses efficient caching to avoid repeated AST traversals
+  - **Object property access** - Resolves object property access patterns:
+    - Extracts classes from object properties: `` className={`px-4 ${variants.primary}`} ``
+    - Handles nested object structures and property assignments
+  - **Conditional expressions** - Resolves ternary and logical operator expressions:
+    - Extracts classes from both branches of ternary expressions: `` className={`${isActive ? 'bg-blue-500' : 'bg-gray-500'}`} ``
+    - Handles logical operators (`&&`, `||`, `??`) used for class toggling
+    - Extracts from both sides of logical expressions for complete coverage
+  - **Enhanced variant support** - Added support for additional Tailwind variants:
+    - Focus variants: `focus-visible:`, `focus-within:`
+    - Group/peer variants: `group-focus-visible:`, `peer-checked:`, `peer-disabled:`
+    - ARIA variants: `aria-expanded:`, `aria-pressed:`, `aria-selected:`, `aria-hidden:`, `aria-disabled:`
+    - Arbitrary selector variants: `[&>p]:`, `[&_span]:`, `supports-[...]:`, `has-[...]:`
+    - Container query variants: `@sm:`, `@md:`, `@lg:`, `@custom:` (Tailwind v4+)
+  - **Improved categorization patterns** - Enhanced Tailwind class categorization:
+    - Expanded layout category to include flex/grid utilities: `flex-`, `grid-cols-`, `grid-rows-`, `col-`, `col-span-`, `row-`, `row-span-`, `items-`, `justify-`, `content-`, `self-`, `place-`, `order-`, `grow`, `shrink`, `basis-`
+    - Improved color detection to distinguish color classes (`text-red-500`) from typography classes (`text-sm`, `text-left`)
+    - Added support for `rounded` without dash (e.g., `rounded` and `rounded-lg`)
+    - Enhanced border category to include `ring-offset-` utilities
+  - **Better template literal parsing** - Improved handling of template literals:
+    - More robust extraction of literal segments after `${}` expressions
+    - Filters out template syntax artifacts (`${`, `}`) from extracted classes
+    - Handles edge cases with nested template expressions
+
+### Changed
+
+- **Tailwind extractor architecture** - Refactored `extractClassesFromExpression()` to support recursive variable resolution:
+  - Function now accepts optional `sourceFile` parameter for variable resolution
+  - Added `resolveVariableDeclaration()` helper with scope-aware variable lookup
+  - Uses WeakMap caching for variable declarations to improve performance
+  - Improved error handling and fallback behavior
+- **Breakpoint extraction** - Enhanced breakpoint pattern matching to include container query variants (`@sm:`, `@md:`, etc.)
+
+### Fixed
+
+- **Dynamic expression handling** - Fixed issue where classes in dynamic template literal expressions were not extracted. Now correctly extracts classes from variables, object properties, and conditional expressions within template literals
+- **Color vs typography classification** - Fixed incorrect categorization where color classes like `text-red-500` were being classified as typography. Now correctly distinguishes color classes from typography utilities
+- **Logical operator extraction** - Fixed issue where only the right side of logical expressions (`&&`, `||`, `??`) was extracted. Now extracts from both sides for complete coverage
+- **Template literal artifacts** - Fixed issue where template syntax artifacts (`${`, `}`) were sometimes included in extracted class lists
+
+### Improved
+
+- **Test coverage** - Added comprehensive test suite for Phase 1 dynamic class parsing:
+  - Tests for variable resolution (const/let, nested variables, scope shadowing)
+  - Tests for object property access and nested structures
+  - Tests for conditional expressions (ternary, logical operators)
+  - Tests for edge cases (! important prefix, arbitrary selectors, container queries)
+  - Tests for improved categorization patterns (flex/grid utilities, rounded without dash)
+  - Smoke tests for critical scenarios
+
+**Impact:** This release significantly improves Tailwind CSS class extraction accuracy by resolving dynamic expressions that were previously ignored. Classes defined in variables, object properties, and conditional expressions are now properly extracted and categorized, providing more complete style metadata for AI context analysis. Phase 1 handles same-file variable resolution; Phase 2 (planned) will add support for cross-file references, dynamic object lookups (`variants[variant]`), and function calls.
+
+**Non-breaking change:** All changes are backward compatible and additive:
+- The `sourceFile` parameter in `extractClassesFromExpression()` is optional - existing code without it continues to work unchanged
+- Falls back to regex-based extraction when AST is unavailable (maintains compatibility with string inputs)
+- Enhanced extraction only adds more classes to the output - no existing classes are removed or changed
+- Improved categorization fixes incorrect classifications but doesn't break existing category structures
+- All API signatures remain compatible - no breaking changes to function parameters or return types
+- Existing context files remain valid - schema changes are additive only
 
 ---
 
@@ -740,7 +810,8 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ---
 
 ## Version links
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.3.8...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.3.9...HEAD
+[0.3.9]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.9
 [0.3.8]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.8
 [0.3.7]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.7
 [0.3.6]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.6
