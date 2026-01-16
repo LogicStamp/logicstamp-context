@@ -6,8 +6,8 @@
 
   <br/>
 
-## Understand your codebase. Generate deterministic context.
-<h3>Fast. One-time setup.</h3>
+### Understand your codebase. Generate deterministic context.
+**Fast • One-time setup**
   <br/>
   <br/>
 
