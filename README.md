@@ -1,4 +1,3 @@
-  <br/>
 <div align="center">
   <a href="https://logicstamp.dev">
     <picture>
@@ -7,8 +6,6 @@
       <img src="assets/logicstamp-woodmark-light.png" alt="LogicStamp" width="400" height="auto">
     </picture>
   </a>
-
-  <br/>
 
 ### Understand your codebase. Generate deterministic context.
 **Fast • One-time setup**
