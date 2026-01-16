@@ -10,6 +10,8 @@
  ### Understand your codebase. Generate deterministic context.
   <strong>Fast • One-time setup</strong>
   <br/>
+  <small>React • TypeScript</small>
+  <br/>
   <br/>
   <a href="https://github.com/LogicStamp">
     <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="100" style="min-width: 80px;">
