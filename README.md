@@ -1,20 +1,22 @@
-  <br/>
 <div align="center">
   <a href="https://logicstamp.dev">
-    <img src="assets/logicstamp-woodmark.png" alt="LogicStamp" width="400" height="auto">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="assets/logicstamp-woodmark-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="assets/logicstamp-woodmark-light.png">
+      <img src="assets/logicstamp-woodmark-light.png" alt="LogicStamp" width="400" height="auto">
+    </picture>
   </a>
 
-  <br/>
-
-### Understand your codebase. Generate deterministic context.
-**Fast • One-time setup**
+ ### Understand your codebase. Generate deterministic context.
+  <small><em>Currently supports React · TypeScript</em></small>
   <br/>
   <br/>
-
+  <strong>Fast • One-time setup</strong>
+  <br/>
+  <br/>
   <a href="https://github.com/LogicStamp">
     <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="100" style="min-width: 80px;">
   </a>
-  <br/>
 
   ![Version](https://img.shields.io/badge/version-0.3.9-8b5cf6.svg)
   ![Beta](https://img.shields.io/badge/status-beta-orange.svg)

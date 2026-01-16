@@ -401,7 +401,7 @@ For a complete list of current limitations with code evidence and detailed expla
 ### Summary of Current Limitations
 
 **Active Accuracy Issues:**
-- ❌ Dynamic class expressions not resolved (variables in template literals)
+- 🟡 Dynamic class expressions partially resolved (Phase 1 complete in v0.3.9, Phase 2 planned for advanced patterns)
 
 **Active Coverage Gaps:**
 - ❌ TypeScript types incomplete (generics, complex unions/intersections)
@@ -414,7 +414,7 @@ For a complete list of current limitations with code evidence and detailed expla
 **Overall Assessment:**
 - **~95%** - Component Contracts (Props, state, hooks detection) ✅ Hook parameters now included
 - **~100%** - Imports Detection (Imports tracked correctly)
-- **~90%** - Style Metadata (Static classes work well, dynamic classes not resolved)
+- **~90%** - Style Metadata (Static classes work well, dynamic classes partially resolved - Phase 1 complete in v0.3.9)
 
 ---
 
