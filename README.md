@@ -1,7 +1,11 @@
   <br/>
 <div align="center">
   <a href="https://logicstamp.dev">
-    <img src="assets/logicstamp-woodmark.png" alt="LogicStamp" width="400" height="auto">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="assets/logicstamp-woodmark-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="assets/logicstamp-woodmark-light.png">
+      <img src="assets/logicstamp-woodmark-light.png" alt="LogicStamp" width="400" height="auto">
+    </picture>
   </a>
 
   <br/>

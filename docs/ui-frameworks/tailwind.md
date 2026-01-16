@@ -409,7 +409,7 @@ This will output error messages to help identify problematic files or expression
 
 5. **Runtime classes**: Dynamic class generation at runtime (e.g., classes stored in variables and concatenated later) is not tracked.
 
-6. **Template literal expressions**: While static segments of template literals are extracted, dynamic expressions within `${}` are ignored (as intended for static analysis).
+6. **Template literal expressions**: Static segments and Phase 1 dynamic expressions (variables, object properties, conditionals) are extracted (v0.3.9+). Phase 2 patterns (object lookups with variables, cross-file references, function calls) are not yet resolved.
 
 ### What's Supported
 

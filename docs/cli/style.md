@@ -129,14 +129,14 @@ Identifies animation and motion usage:
 
 ## Options
 
-All options from `stamp context` are supported. The style command accepts the same flags:
+All options from `stamp context` are supported except `--compare-modes`. The style command accepts the same flags. **Note:** `--compare-modes` is not available for `stamp context style`; use `stamp context --compare-modes` instead to analyze token costs.
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
 | `--depth <n>` | `-d` | `2` | Dependency traversal depth (`0` = entry only, `1` = direct deps, `2` = nested components, etc.). See [context.md](context.md#depth-parameter) for details. |
 | `--include-code <mode>` | `-c` | `header` | Include `none`, `header`, or `full` source snippets. |
 | `--format <fmt>` | `-f` | `json` | Output format: `json`, `pretty`, `ndjson`, `toon`. |
-| `--out <file>` | `-o` | `context.json` | Output directory or file path. |
+| `--out <file>` | `-o` | `context.json` | Output directory or file path. If a `.json` file is specified, its directory is used as the output directory. Otherwise, the path is used as the output directory. All context files will be written within this directory structure. |
 | `--max-nodes <n>` | `-m` | `100` | Maximum graph nodes per bundle. |
 | `--profile <name>` | | `llm-chat` | Preset configuration (`llm-chat`, `llm-safe`, `ci-strict`). |
 | `--strict` | `-s` | `false` | Fail when dependencies are missing. |
@@ -422,7 +422,7 @@ The compare command will detect changes in:
 
 ### Token Impact
 
-Style metadata adds a small token overhead to context bundles. Use `stamp context --compare-modes` to see the token impact across different modes.
+Style metadata adds a small token overhead to context bundles. **Note:** `--compare-modes` is not available for `stamp context style`. Use `stamp context --compare-modes` (without the `style` subcommand) to see the token impact across different modes.
 
 The `--compare-modes` flag automatically regenerates contracts with and without style metadata to provide accurate token counts. This shows you:
 
@@ -510,7 +510,7 @@ This will output detailed error messages to help identify problematic files or e
 - **CSS-in-JS** – Only styled-components and emotion are detected via AST-based extraction; Material UI styled is detected separately; other CSS-in-JS libraries may not be recognized
 - **External stylesheets** – Global CSS files are not analyzed; only CSS/SCSS files imported by TSX/TS component files are parsed. Standalone CSS/SCSS files that aren't imported won't be scanned.
 - **Runtime styles** – Styles applied via JavaScript at runtime are not detected
-- **Template literal dynamic segments** – In `className={`flex ${variable}`}`, only the static "flex" segment is extracted; the dynamic variable value is not analyzed
+- **Template literal dynamic segments** – Phase 1 (v0.3.9+) extracts classes from variables, object properties, and conditionals within template literals. Phase 2 patterns (object lookups with variables like `variants[variant]`, cross-file references, function calls) are not yet resolved.
 
 ## Examples
 

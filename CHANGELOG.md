@@ -12,9 +12,8 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 For a comprehensive roadmap with detailed status, priorities, and implementation plans, see [ROADMAP.md](ROADMAP.md).
 
 **Highlights:**
-- Dynamic class parsing - Resolve variable-based classes within template literals
 - CSS-in-JS support - Complete support for remaining libraries (Chakra UI, Ant Design)
-- Enhanced third-party component info - Include package names, versions, prop types
+- Enhanced third-party component info (Phase 2) - Include prop types for third-party components (package names and versions completed in v0.3.8)
 - TypeScript type extraction - Capture full type definitions (generics, unions, intersections)
 - Project-level insights - Add cross-folder relationships and project-wide statistics to `context_main.json`
 - Vue Single File Component (`.vue`) support - Parse and analyze `.vue` SFC files

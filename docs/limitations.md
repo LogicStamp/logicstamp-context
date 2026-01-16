@@ -321,7 +321,7 @@ export default function BlogPost({ params }: { params: { slug: string } }) {
 - ✅ Styled JSX CSS extraction
 
 **Active areas for improvement:**
-- ❌ Dynamic style extraction (variable-based classes within template literals)
+- 🟡 Dynamic style extraction (Phase 1 complete in v0.3.9, Phase 2 planned for advanced patterns)
 - ❌ TypeScript type extraction (generics, complex unions/intersections)
 - ❌ CSS-in-JS completeness (Chakra UI, Ant Design missing)
 - ⚠️ Third-party component prop types (package names and versions now included in v0.3.8)
@@ -992,7 +992,7 @@ Dependency graph edges ARE built and populated. The `buildEdges()` function in `
 For the complete roadmap with priorities and implementation plans, see [ROADMAP.md](../../ROADMAP.md).
 
 **Active High Priority Items:**
-1. **Dynamic class parsing** - Resolve variable-based classes within template literals
+1. **Dynamic class parsing (Phase 2)** - Advanced patterns (object lookups with variables, cross-file references, function calls). Phase 1 complete in v0.3.9.
 
 **Active Medium Priority Items:**
 1. **CSS-in-JS support** - Complete support for remaining libraries (Chakra UI, Ant Design)
@@ -1011,7 +1011,7 @@ For the complete roadmap with priorities and implementation plans, see [ROADMAP.
 - ✅ Third-party package names and versions included in missing dependencies (v0.3.8)
 
 **What needs improvement:**
-- ❌ Dynamic class resolution (variable-based classes within template literals)
+- 🟡 Dynamic class resolution Phase 2 (Phase 1 complete in v0.3.9 - handles variables, object properties, conditionals)
 - ❌ CSS-in-JS support completeness (remaining libraries like Chakra UI, Ant Design)
 - ⚠️ Third-party component prop types (package names and versions now included in v0.3.8)
 - ❌ TypeScript type extraction (generics, complex unions/intersections)

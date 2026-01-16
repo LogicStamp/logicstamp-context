@@ -220,7 +220,7 @@ Like `stamp context`, the style command also automatically sanitizes secrets in 
 
 **Key options**
 
-All options from `stamp context` are supported. The style command is equivalent to `stamp context --include-style`.
+All options from `stamp context` are supported except `--compare-modes`. The style command is equivalent to `stamp context --include-style`. **Note:** `--compare-modes` is not available for `stamp context style`; use `stamp context --compare-modes` instead to analyze token costs.
 
 **What it extracts**
 
