@@ -6,9 +6,8 @@
       <img src="assets/logicstamp-woodmark-light.png" alt="LogicStamp" width="400" height="auto">
     </picture>
   </a>
-
-### Understand your codebase. Generate deterministic context.
-**Fast • One-time setup**
+  ### Understand your codebase. Generate deterministic context.
+  **Fast • One-time setup**
   <br/>
   <br/>
 
