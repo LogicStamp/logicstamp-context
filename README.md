@@ -8,15 +8,11 @@
 
   <strong>Understand your codebase. Generate deterministic context.</strong><br/>
   Fast. One-time setup.
-
-  <br/>
   <br/>
 
   <a href="https://github.com/LogicStamp">
     <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="80" style="min-width: 72px;">
   </a>
-
-  <br/>
   <br/>
 
   ![Version](https://img.shields.io/badge/version-0.3.9-8b5cf6.svg)
