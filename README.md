@@ -1,34 +1,31 @@
+  <br/>
 <div align="center">
   <a href="https://logicstamp.dev">
-    <img src="assets/logicstamp-woodmark.png" alt="LogicStamp" width="420" height="auto">
+    <img src="assets/logicstamp-woodmark.png" alt="LogicStamp" width="380" height="auto">
+  </a>
+
+  <br/>
+
+  <strong>Understand your codebase. Generate deterministic context.</strong><br/>
+  Fast. One-time setup.
+
+  <br/>
+  <br/>
+
+  <a href="https://github.com/LogicStamp">
+    <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="80" style="min-width: 72px;">
   </a>
 
   <br/>
   <br/>
 
-  ![Version](https://img.shields.io/badge/version-0.3.8-8b5cf6.svg)
+  ![Version](https://img.shields.io/badge/version-0.3.9-8b5cf6.svg)
   ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
   ![License](https://img.shields.io/badge/license-MIT-green.svg)
   ![Node](https://img.shields.io/badge/node-%3E%3D18.18.0-brightgreen.svg)
   [![CI](https://github.com/LogicStamp/logicstamp-context/workflows/CI/badge.svg)](https://github.com/LogicStamp/logicstamp-context/actions)
 
   <br/>
-
-  <table>
-    <tr>
-      <td align="center">
-        <a href="https://github.com/LogicStamp">
-          <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="80" style="min-width: 72px;">
-        </a>
-      </td>
-      <td align="left">
-        <strong>AI-ready context bundles for React & TypeScript.</strong><br/>
-        Fast. Deterministic. One-time setup.
-      </td>
-    </tr>
-  </table>
-
-   <br/>
 </div>
 
 ![LogicStamp Context in action](./assets/logicstamp-context-demo.gif)
@@ -81,7 +78,7 @@ stamp context
 
 > **ℹ️** If you see `"PRIVATE_DATA"` in output, see the **Security** section below.
 
-> **Note:** This is a beta release (v0.3.8). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+> **Note:** This is a beta release (v0.3.9). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 📋 **For a detailed step-by-step getting started guide with integration examples, see [Getting Started Guide](https://logicstamp.dev/docs/getting-started).**
 
