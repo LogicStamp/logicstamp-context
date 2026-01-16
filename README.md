@@ -7,8 +7,8 @@
     </picture>
   </a>
 
-  <h3 style="font-weight: normal;">Understand your codebase. Generate deterministic context.</h3>
-  **Fast • One-time setup**
+ ### Understand your codebase. Generate deterministic context.
+  <strong>Fast • One-time setup</strong>
   <br/>
   <br/>
   <a href="https://github.com/LogicStamp">
