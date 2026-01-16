@@ -8,9 +8,8 @@
   </a>
 
  ### Understand your codebase. Generate deterministic context.
+  <small>React • TypeScript</small><br/>
   <strong>Fast • One-time setup</strong>
-  <br/>
-  <small>React • TypeScript</small>
   <br/>
   <br/>
   <a href="https://github.com/LogicStamp">
