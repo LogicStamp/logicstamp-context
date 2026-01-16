@@ -33,7 +33,7 @@ See [docs/limitations.md](docs/limitations.md) for complete details and code evi
 
 ---
 
-## [0.3.9] - 2026-01-16
+## [0.3.9] - 2026-01-17
 
 ### Added
 
