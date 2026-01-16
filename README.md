@@ -6,11 +6,11 @@
 
   <br/>
 
-## Understand your codebase.
-## Generate deterministic context.
+<h2 style="margin-top: 0; margin-bottom: 0;">Understand your codebase.</h2>
+<h2 style="margin-top: 0; margin-bottom: 0;">Generate deterministic context.</h2>
   <br/>
 
-### Fast. One-time setup.
+<h3 style="margin-top: 0; margin-bottom: 0;">Fast. One-time setup.</h3>
   <br/>
   <br/>
 
