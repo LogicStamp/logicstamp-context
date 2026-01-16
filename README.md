@@ -12,7 +12,7 @@
   <br/>
 
   <a href="https://github.com/LogicStamp">
-    <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="120" style="min-width: 100px;">
+    <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="100" style="min-width: 80px;">
   </a>
   <br/>
 
