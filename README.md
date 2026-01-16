@@ -17,7 +17,6 @@
   <a href="https://github.com/LogicStamp">
     <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="100" style="min-width: 80px;">
   </a>
-  <br/>
 
   ![Version](https://img.shields.io/badge/version-0.3.9-8b5cf6.svg)
   ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
