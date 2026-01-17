@@ -166,8 +166,8 @@
         },
         "kind": {
           "type": "string",
-          "enum": ["react:component", "ts:module", "node:cli"],
-          "description": "Type of component"
+          "pattern": "^[a-z]+:[a-z-]+$",
+          "description": "Component kind in format 'language:type' (e.g., 'react:component', 'python:function', 'java:class', 'node:api'). Extensible to support any language and type combination."
         },
         "entryId": {
           "type": "string",
@@ -261,14 +261,14 @@
           "items": {
             "type": "string"
           },
-          "description": "React hooks used"
+          "description": "React hooks used (empty array [] for non-React files)"
         },
         "components": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "description": "JSX components used"
+          "description": "React/Vue components used (empty array [] for non-React/Vue files)"
         },
         "functions": {
           "type": "array",
@@ -283,6 +283,44 @@
             "type": "string"
           },
           "description": "Import statements"
+        },
+        "languageSpecific": {
+          "$ref": "#/definitions/LanguageSpecificVersion",
+          "description": "Language-specific extensions (e.g., decorators for Python, annotations for Java)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "LanguageSpecificVersion": {
+      "type": "object",
+      "properties": {
+        "decorators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Python decorators (e.g., ['@app.get', '@app.post'])"
+        },
+        "annotations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Java annotations (e.g., ['@RestController', '@GetMapping'])"
+        },
+        "classes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Python/Java classes (e.g., ['UserController', 'UserService'])"
+        },
+        "methods": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Java methods (if different from functions, e.g., ['getUser', 'createUser'])"
         }
       },
       "additionalProperties": false
@@ -296,21 +334,50 @@
           "additionalProperties": {
             "$ref": "#/definitions/PropType"
           },
-          "description": "Component props with types"
+          "description": "Component props with types (empty object {} for backend files)"
         },
         "emits": {
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/EventType"
           },
-          "description": "Event handlers"
+          "description": "Event handlers (empty object {} for backend files)"
         },
         "state": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "Component state variables"
+          "description": "Component state variables (empty object {} for backend files)"
+        },
+        "apiSignature": {
+          "$ref": "#/definitions/ApiSignature",
+          "description": "API signature for backend functions/methods (parameters, return types, etc.)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ApiSignature": {
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Function/method parameters with types (e.g., { user_id: 'int', name: 'str' })"
+        },
+        "returnType": {
+          "type": "string",
+          "description": "Return type (e.g., 'User', 'List[User]', 'void')"
+        },
+        "requestType": {
+          "type": "string",
+          "description": "Request body type for POST/PUT requests (e.g., 'CreateUserRequest')"
+        },
+        "responseType": {
+          "type": "string",
+          "description": "Response type (e.g., 'UserResponse', 'List[UserResponse]')"
         }
       },
       "additionalProperties": false

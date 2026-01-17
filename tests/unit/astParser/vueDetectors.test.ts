@@ -9,7 +9,7 @@ import {
   extractVueEmitsCall,
   extractVueProps,
   extractVueEmits,
-} from '../../../src/core/astParser/extractors/vueComponentExtractor.js';
+} from '../../../src/extractors/vue/index.js';
 
 describe('Vue Detectors and Extractors', () => {
   describe('detectKind - Vue', () => {
@@ -30,7 +30,7 @@ export default {
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile('Component.vue.ts', sourceCode);
 
-      const kind = detectKind([], [], ['vue'], 'Component.vue.ts', sourceFile);
+      const kind = detectKind([], [], ['vue'], sourceFile, 'Component.vue.ts');
 
       expect(kind).toBe('vue:component');
     });
@@ -57,7 +57,7 @@ export default function useCounter() {
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile('useCounter.ts', sourceCode);
 
-      const kind = detectKind([], [], ['vue'], 'useCounter.ts', sourceFile);
+      const kind = detectKind([], [], ['vue'], sourceFile, 'useCounter.ts');
 
       expect(kind).toBe('vue:composable');
     });
@@ -81,7 +81,7 @@ export default function MyComponent() {
       const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { jsx: 1 } });
       const sourceFile = project.createSourceFile('Component.tsx', sourceCode);
 
-      const kind = detectKind([], ['div', 'p', 'button'], ['vue'], 'Component.tsx', sourceFile);
+      const kind = detectKind([], ['div', 'p', 'button'], ['vue'], sourceFile, 'Component.tsx');
 
       expect(kind).toBe('vue:component');
     });
@@ -101,7 +101,7 @@ export default defineComponent({
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile('Component.ts', sourceCode);
 
-      const kind = detectKind([], [], ['vue'], 'Component.ts', sourceFile);
+      const kind = detectKind([], [], ['vue'], sourceFile, 'Component.ts');
 
       expect(kind).toBe('vue:component');
     });

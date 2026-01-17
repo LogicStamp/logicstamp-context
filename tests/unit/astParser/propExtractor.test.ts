@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Project } from 'ts-morph';
-import { extractProps } from '../../../src/core/astParser/extractors/propExtractor.js';
-import { normalizePropType } from '../../../src/core/astParser/extractors/propTypeNormalizer.js';
+import { extractProps, normalizePropType } from '../../../src/extractors/react/index.js';
 
 describe('Prop Extractor', () => {
   describe('extractProps', () => {

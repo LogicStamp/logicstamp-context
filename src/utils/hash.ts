@@ -66,7 +66,7 @@ export function structureHash(astOrVersion: AstExtract | ComponentVersion): stri
 }
 
 /**
- * Generate a hash from logic signature (props, events, state)
+ * Generate a hash from logic signature (props, events, state, apiSignature)
  * This changes only when the component's API contract changes
  */
 export function signatureHash(signature: LogicSignature): string {
@@ -74,6 +74,7 @@ export function signatureHash(signature: LogicSignature): string {
     props: sortObject(signature.props),
     emits: sortObject(signature.emits),
     state: signature.state ? sortObject(signature.state) : undefined,
+    apiSignature: signature.apiSignature ? sortObject(signature.apiSignature as Record<string, unknown>) : undefined,
   };
 
   return sha256Hex(stableStringify(payload));
@@ -100,7 +101,50 @@ export function semanticHashFromAst(ast: AstExtract, signature: LogicSignature):
       props: sortObject(signature.props),
       emits: sortObject(signature.emits),
       state: signature.state ? sortObject(signature.state) : undefined,
+      apiSignature: signature.apiSignature ? sortObject(signature.apiSignature as Record<string, unknown>) : undefined,
     },
+    // Include backend metadata for backend files
+    ...(ast.backend && {
+      backend: {
+        framework: ast.backend.framework,
+        routes: ast.backend.routes
+          ? ast.backend.routes
+              .map(route => ({
+                path: route.path,
+                method: route.method,
+                handler: route.handler,
+                params: route.params ? [...route.params].sort() : undefined,
+              }))
+              .sort((a, b) => {
+                // Sort routes by method, then path for determinism
+                const methodCompare = a.method.localeCompare(b.method);
+                return methodCompare !== 0 ? methodCompare : a.path.localeCompare(b.path);
+              })
+          : undefined,
+        controller: ast.backend.controller
+          ? {
+              name: ast.backend.controller.name,
+              basePath: ast.backend.controller.basePath,
+            }
+          : undefined,
+        languageSpecific: ast.backend.languageSpecific
+          ? {
+              decorators: ast.backend.languageSpecific.decorators
+                ? [...ast.backend.languageSpecific.decorators].sort()
+                : undefined,
+              annotations: ast.backend.languageSpecific.annotations
+                ? [...ast.backend.languageSpecific.annotations].sort()
+                : undefined,
+              classes: ast.backend.languageSpecific.classes
+                ? [...ast.backend.languageSpecific.classes].sort()
+                : undefined,
+              methods: ast.backend.languageSpecific.methods
+                ? [...ast.backend.languageSpecific.methods].sort()
+                : undefined,
+            }
+          : undefined,
+      },
+    }),
   };
 
   return sha256Hex(stableStringify(payload));

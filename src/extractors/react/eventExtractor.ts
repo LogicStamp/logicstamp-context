@@ -3,8 +3,8 @@
  */
 
 import { SourceFile, SyntaxKind, ArrowFunction, JsxExpression, Node } from 'ts-morph';
-import type { EventType, PropType } from '../../../types/UIFContract.js';
-import { debugError } from '../../../utils/debug.js';
+import type { EventType, PropType } from '../../types/UIFContract.js';
+import { debugError } from '../../utils/debug.js';
 
 /**
  * Extract event handlers from JSX attributes
@@ -213,4 +213,3 @@ export function extractJsxRoutes(source: SourceFile): string[] {
 
   return Array.from(routes).sort();
 }
-

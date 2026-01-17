@@ -3,7 +3,7 @@
  */
 
 import { SourceFile, SyntaxKind } from 'ts-morph';
-import { debugError } from '../../../utils/debug.js';
+import { debugError } from '../../utils/debug.js';
 
 /**
  * Extract all React hooks (useState, useEffect, custom hooks)
@@ -114,4 +114,3 @@ export function extractComponents(source: SourceFile): string[] {
 
   return Array.from(components).sort();
 }
-

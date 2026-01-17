@@ -47,6 +47,84 @@ export function buildLogicSignature(
     props: ast.props,
     emits: ast.emits,
     state: Object.keys(ast.state).length > 0 ? ast.state : undefined,
+    // For backend files, aggregate API signatures from all routes
+    ...(ast.backend && ast.backend.routes && ast.backend.routes.length > 0 && {
+      apiSignature: (() => {
+        // Aggregate parameters from all routes
+        const allParameters: Record<string, string> = {};
+        const returnTypes = new Set<string>();
+        const requestTypes = new Set<string>();
+        const responseTypes = new Set<string>();
+
+        for (const route of ast.backend.routes) {
+          // Collect route path parameters (e.g., :id -> id)
+          if (route.params) {
+            for (const param of route.params) {
+              // Use extracted type from API signature if available, otherwise default to 'string'
+              if (route.apiSignature?.parameters?.[param]) {
+                allParameters[param] = route.apiSignature.parameters[param];
+              } else {
+                // Default to 'string' for path parameters if no type extracted
+                allParameters[param] = allParameters[param] || 'string';
+              }
+            }
+          }
+
+          // Collect handler function parameters (from API signature)
+          if (route.apiSignature?.parameters) {
+            for (const [paramName, paramType] of Object.entries(route.apiSignature.parameters)) {
+              // Prefer more specific types over 'string' defaults
+              if (!allParameters[paramName] || allParameters[paramName] === 'string') {
+                allParameters[paramName] = paramType as string;
+              }
+            }
+          }
+
+          // Collect return types
+          if (route.apiSignature?.returnType) {
+            returnTypes.add(route.apiSignature.returnType);
+          }
+
+          // Collect request types (for POST/PUT/PATCH)
+          if (['POST', 'PUT', 'PATCH'].includes(route.method) && route.apiSignature?.requestType) {
+            requestTypes.add(route.apiSignature.requestType);
+          }
+
+          // Collect response types
+          if (route.apiSignature?.responseType) {
+            responseTypes.add(route.apiSignature.responseType);
+          }
+        }
+
+        // Build aggregated API signature
+        const aggregated: import('../types/UIFContract.js').ApiSignature = {};
+
+        if (Object.keys(allParameters).length > 0) {
+          aggregated.parameters = allParameters;
+        }
+
+        // Use most common return type, or first if all different
+        if (returnTypes.size > 0) {
+          const returnTypeArray = Array.from(returnTypes);
+          // If all routes have the same return type, use it; otherwise use first
+          aggregated.returnType = returnTypeArray.length === 1 ? returnTypeArray[0] : returnTypeArray[0];
+        }
+
+        // Use most common request type, or first if all different
+        if (requestTypes.size > 0) {
+          const requestTypeArray = Array.from(requestTypes);
+          aggregated.requestType = requestTypeArray.length === 1 ? requestTypeArray[0] : requestTypeArray[0];
+        }
+
+        // Use most common response type, or first if all different
+        if (responseTypes.size > 0) {
+          const responseTypeArray = Array.from(responseTypes);
+          aggregated.responseType = responseTypeArray.length === 1 ? responseTypeArray[0] : responseTypeArray[0];
+        }
+
+        return Object.keys(aggregated).length > 0 ? aggregated : undefined;
+      })(),
+    }),
   };
 
   const prediction: string[] = [];
