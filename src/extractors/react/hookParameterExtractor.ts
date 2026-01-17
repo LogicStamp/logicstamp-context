@@ -3,9 +3,9 @@
  */
 
 import { SourceFile, Node, SyntaxKind, ArrowFunction, FunctionExpression } from 'ts-morph';
-import type { PropType } from '../../../types/UIFContract.js';
-import { debugError } from '../../../utils/debug.js';
-import { normalizePropType } from './propTypeNormalizer.js';
+import type { PropType } from '../../types/UIFContract.js';
+import { debugError } from '../../utils/debug.js';
+import { normalizePropType } from '../shared/propTypeNormalizer.js';
 
 /**
  * Check if file has any exported hooks using AST traversal
@@ -391,4 +391,3 @@ export function extractHookParameters(source: SourceFile): Record<string, PropTy
 
   return params;
 }
-

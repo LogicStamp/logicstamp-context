@@ -510,12 +510,18 @@ export function detectKind(
   hooks: string[],
   components: string[],
   imports: string[],
+  source: SourceFile,
   filePath: string,
-  source: SourceFile
+  backendFramework?: 'express' | 'nestjs'
 ): ContractKind {
   const resolvedPath = source.getFilePath?.() ?? filePath;
 
   try {
+    // Backend detection (check before Vue/React)
+    if (backendFramework) {
+      return 'node:api';
+    }
+
     // Vue detection (highest priority after hooks)
     const hasVueImport = imports.some(imp => imp === 'vue' || imp.startsWith('vue/'));
 
@@ -647,3 +653,42 @@ export function detectKind(
   return 'ts:module';
 }
 
+/**
+ * Detect backend framework from imports and source code patterns
+ * Returns framework name if detected, undefined otherwise
+ */
+export function detectBackendFramework(
+  imports: string[],
+  source: SourceFile
+): 'express' | 'nestjs' | undefined {
+  const filePath = source.getFilePath?.() ?? 'unknown';
+
+  try {
+    const sourceText = source.getFullText();
+
+    // Express.js detection
+    if (imports.some(imp => imp === 'express' || imp.startsWith('express/'))) {
+      // Additional check: look for app/router usage
+      if (/app\.(get|post|put|delete|patch|all)\(/i.test(sourceText) ||
+          /router\.(get|post|put|delete|patch|all)\(/i.test(sourceText)) {
+        return 'express';
+      }
+    }
+
+    // NestJS detection
+    if (imports.some(imp => imp.includes('@nestjs'))) {
+      if (/@Controller\(/i.test(sourceText) ||
+          /@Get\(|@Post\(|@Put\(|@Delete\(|@Patch\(/i.test(sourceText)) {
+        return 'nestjs';
+      }
+    }
+
+    return undefined;
+  } catch (error) {
+    debugError('detector', 'detectBackendFramework', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return undefined;
+  }
+}

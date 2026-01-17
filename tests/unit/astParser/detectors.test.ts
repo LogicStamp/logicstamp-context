@@ -5,6 +5,7 @@ import {
   isInNextAppDir,
   extractNextJsMetadata,
   detectKind,
+  detectBackendFramework,
 } from '../../../src/core/astParser/detectors.js';
 
 describe('Detectors', () => {
@@ -184,7 +185,7 @@ export function MyComponent() {
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile('test.tsx', sourceCode);
 
-      const kind = detectKind(['useState'], [], ['react'], 'test.tsx', sourceFile);
+      const kind = detectKind(['useState'], [], ['react'], sourceFile, 'test.tsx');
 
       expect(kind).toBe('react:component');
     });
@@ -201,7 +202,7 @@ export function MyComponent() {
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile('test.tsx', sourceCode);
 
-      const kind = detectKind([], ['Button'], ['react'], 'test.tsx', sourceFile);
+      const kind = detectKind([], ['Button'], ['react'], sourceFile, 'test.tsx');
 
       expect(kind).toBe('react:component');
     });
@@ -218,7 +219,7 @@ export function MyComponent() {
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile('test.tsx', sourceCode);
 
-      const kind = detectKind([], [], ['react'], 'test.tsx', sourceFile);
+      const kind = detectKind([], [], ['react'], sourceFile, 'test.tsx');
 
       expect(kind).toBe('react:component');
     });
@@ -235,7 +236,7 @@ export function main() {
 
       // The regex requires /cli/ or \cli\ in the path (directory boundary)
       // Use a path that clearly has /cli/ as a directory
-      const kind = detectKind([], [], [], '/project/cli/stamp.ts', sourceFile);
+      const kind = detectKind([], [], [], sourceFile, '/project/cli/stamp.ts');
 
       expect(kind).toBe('node:cli');
     });
@@ -251,7 +252,7 @@ export function main() {
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile('src/main.ts', sourceCode);
 
-      const kind = detectKind([], [], [], 'src/main.ts', sourceFile);
+      const kind = detectKind([], [], [], sourceFile, 'src/main.ts');
 
       expect(kind).toBe('node:cli');
     });
@@ -266,7 +267,7 @@ export function calculate() {
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile('src/utils.ts', sourceCode);
 
-      const kind = detectKind([], [], [], 'src/utils.ts', sourceFile);
+      const kind = detectKind([], [], [], sourceFile, 'src/utils.ts');
 
       expect(kind).toBe('ts:module');
     });
@@ -284,7 +285,7 @@ export default function useTypewriter(text: string, speed = 30) {
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile('hooks/useTypewriter.ts', sourceCode);
 
-      const kind = detectKind(['useState'], [], ['react'], 'hooks/useTypewriter.ts', sourceFile);
+      const kind = detectKind(['useState'], [], ['react'], sourceFile, 'hooks/useTypewriter.ts');
 
       expect(kind).toBe('react:hook');
     });
@@ -302,7 +303,7 @@ export function useCounter(initialValue = 0) {
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile('hooks/useCounter.ts', sourceCode);
 
-      const kind = detectKind(['useState'], [], ['react'], 'hooks/useCounter.ts', sourceFile);
+      const kind = detectKind(['useState'], [], ['react'], sourceFile, 'hooks/useCounter.ts');
 
       expect(kind).toBe('react:hook');
     });
@@ -320,7 +321,7 @@ export const useDebounce = (value: string, delay: number) => {
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile('hooks/useDebounce.ts', sourceCode);
 
-      const kind = detectKind(['useState'], [], ['react'], 'hooks/useDebounce.ts', sourceFile);
+      const kind = detectKind(['useState'], [], ['react'], sourceFile, 'hooks/useDebounce.ts');
 
       expect(kind).toBe('react:hook');
     });
@@ -338,7 +339,7 @@ export function useCounter(initialValue = 0) {
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile('components/Counter.tsx', sourceCode);
 
-      const kind = detectKind(['useState'], [], ['react'], 'components/Counter.tsx', sourceFile);
+      const kind = detectKind(['useState'], [], ['react'], sourceFile, 'components/Counter.tsx');
 
       expect(kind).toBe('react:component');
     });
@@ -357,7 +358,7 @@ export function useCounter(initialValue = 0) {
       const project = new Project({ useInMemoryFileSystem: true });
       const sourceFile = project.createSourceFile('hooks/useCounter.ts', sourceCode);
 
-      const kind = detectKind(['useState'], ['Button'], ['react'], 'hooks/useCounter.ts', sourceFile);
+      const kind = detectKind(['useState'], ['Button'], ['react'], sourceFile, 'hooks/useCounter.ts');
 
       expect(kind).toBe('react:component');
     });
@@ -410,7 +411,7 @@ export function MyComponent() {
       const sourceFile = project.createSourceFile('test.tsx', sourceCode);
 
       // Should not throw even if there are issues
-      const kind = detectKind(['useState'], [], ['react'], 'test.tsx', sourceFile);
+      const kind = detectKind(['useState'], [], ['react'], sourceFile, 'test.tsx');
       expect(['react:component', 'react:hook', 'node:cli', 'ts:module']).toContain(kind);
     });
 
@@ -424,7 +425,7 @@ export function MyComponent() {
 
       detectNextJsDirective(sourceFile);
       extractNextJsMetadata(sourceFile, 'test.tsx');
-      detectKind([], [], [], 'test.tsx', sourceFile);
+      detectKind([], [], [], sourceFile, 'test.tsx');
 
       // If errors were logged, verify they have the correct format
       const errorCalls = consoleErrorSpy.mock.calls;
@@ -467,8 +468,108 @@ export function MyComponent() {
       const sourceFile = project.createSourceFile('test.tsx', '');
 
       // Should return a valid ContractKind on any error, defaulting to ts:module
-      const kind = detectKind([], [], [], 'test.tsx', sourceFile);
-      expect(['react:component', 'react:hook', 'node:cli', 'ts:module']).toContain(kind);
+      const kind = detectKind([], [], [], sourceFile, 'test.tsx');
+      expect(['react:component', 'react:hook', 'node:cli', 'ts:module', 'node:api']).toContain(kind);
+    });
+  });
+
+  describe('detectKind - Backend frameworks', () => {
+    it('should detect node:api for Express.js backend', () => {
+      const sourceCode = `
+        import express from 'express';
+        const app = express();
+        
+        app.get('/users', (req, res) => {
+          res.json({ users: [] });
+        });
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+
+      const kind = detectKind([], [], ['express'], sourceFile, 'routes.ts', 'express');
+
+      expect(kind).toBe('node:api');
+    });
+
+    it('should detect node:api for NestJS backend', () => {
+      const sourceCode = `
+        import { Controller, Get } from '@nestjs/common';
+        
+        @Controller('users')
+        export class UsersController {
+          @Get()
+          findAll() {
+            return [];
+          }
+        }
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+
+      const kind = detectKind([], [], ['@nestjs/common'], sourceFile, 'users.controller.ts', 'nestjs');
+
+      expect(kind).toBe('node:api');
+    });
+
+    it('should prioritize backend detection over React', () => {
+      const sourceCode = `
+        import express from 'express';
+        import { useState } from 'react';
+        
+        const app = express();
+        
+        app.get('/users', (req, res) => {
+          res.json({ users: [] });
+        });
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+
+      const kind = detectKind(['useState'], [], ['express', 'react'], sourceFile, 'routes.ts', 'express');
+
+      expect(kind).toBe('node:api');
+    });
+
+    it('should prioritize backend detection over Vue', () => {
+      const sourceCode = `
+        import express from 'express';
+        import { ref } from 'vue';
+        
+        const app = express();
+        
+        app.get('/users', (req, res) => {
+          res.json({ users: [] });
+        });
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+
+      const kind = detectKind([], [], ['express', 'vue'], sourceFile, 'routes.ts', 'express');
+
+      expect(kind).toBe('node:api');
+    });
+
+    it('should not detect backend when backendFramework is undefined', () => {
+      const sourceCode = `
+        import express from 'express';
+        const app = express();
+        
+        app.get('/users', (req, res) => {
+          res.json({ users: [] });
+        });
+      `;
+
+      const project = new Project({ useInMemoryFileSystem: true });
+      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+
+      // Without backendFramework parameter, should not detect as node:api
+      const kind = detectKind([], [], ['express'], sourceFile, 'routes.ts');
+
+      expect(kind).not.toBe('node:api');
     });
   });
 });

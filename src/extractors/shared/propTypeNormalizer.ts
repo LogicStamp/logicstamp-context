@@ -2,8 +2,8 @@
  * Prop Type Normalizer - Normalizes TypeScript prop types into rich PropType format
  */
 
-import type { PropType } from '../../../types/UIFContract.js';
-import { debugError } from '../../../utils/debug.js';
+import type { PropType } from '../../types/UIFContract.js';
+import { debugError } from '../../utils/debug.js';
 
 /**
  * Strip undefined from union type text in any position
@@ -83,4 +83,3 @@ export function normalizePropType(typeText: string, isOptional: boolean): PropTy
     return typeText;
   }
 }
-

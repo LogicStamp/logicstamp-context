@@ -3,7 +3,7 @@
  */
 
 import { SourceFile, SyntaxKind } from 'ts-morph';
-import { debugError } from '../../../utils/debug.js';
+import { debugError } from '../../utils/debug.js';
 
 /**
  * Extract all variable declarations (const, let, var)
@@ -112,4 +112,3 @@ export function extractState(source: SourceFile): Record<string, string> {
 
   return state;
 }
-

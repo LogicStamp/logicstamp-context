@@ -110,6 +110,7 @@ export function buildContract(
       components: ast.components,
       functions: ast.functions,
       imports: ast.imports,
+      ...(ast.backend?.languageSpecific && { languageSpecific: ast.backend.languageSpecific }),
     },
     logicSignature: signature,
     exports,

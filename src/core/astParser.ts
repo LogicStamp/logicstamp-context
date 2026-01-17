@@ -31,11 +31,11 @@
 import { Project, SyntaxKind, SourceFile, Node, FunctionDeclaration, ClassDeclaration, VariableStatement, ExportDeclaration } from 'ts-morph';
 import type { LogicSignature, ContractKind, PropType, EventType, NextJSMetadata, ExportMetadata } from '../types/UIFContract.js';
 import { debugError } from '../utils/debug.js';
-import { extractComponents, extractHooks } from './astParser/extractors/componentExtractor.js';
-import { extractProps } from './astParser/extractors/propExtractor.js';
-import { extractState, extractVariables } from './astParser/extractors/stateExtractor.js';
-import { extractEvents, extractJsxRoutes } from './astParser/extractors/eventExtractor.js';
-import { detectKind, extractNextJsMetadata } from './astParser/detectors.js';
+import { extractComponents, extractHooks } from '../extractors/react/index.js';
+import { extractProps } from '../extractors/react/index.js';
+import { extractState, extractVariables } from '../extractors/react/index.js';
+import { extractEvents, extractJsxRoutes } from '../extractors/react/index.js';
+import { detectKind, extractNextJsMetadata, detectBackendFramework } from './astParser/detectors.js';
 import {
   extractVueComposables,
   extractVueComponents,
@@ -44,7 +44,8 @@ import {
   extractVueEmitsCall,
   extractVueProps,
   extractVueEmits
-} from './astParser/extractors/vueComponentExtractor.js';
+} from '../extractors/vue/index.js';
+import { extractBackendMetadata, type BackendMetadata } from '../extractors/shared/backendExtractor.js';
 
 export interface AstExtract {
   kind: ContractKind;
@@ -58,6 +59,7 @@ export interface AstExtract {
   imports: string[];
   jsxRoutes: string[];
   nextjs?: NextJSMetadata;
+  backend?: BackendMetadata;
   exports?: ExportMetadata;
   exportedFunctions?: string[];
 }
@@ -103,23 +105,31 @@ export async function extractFromFile(filePath: string): Promise<AstExtract> {
     // Extract basic data first - wrap each extraction in try-catch for resilience
     const imports = safeExtract('imports', resolvedPath, () => extractImports(source), []);
 
-    // Check if this is a Vue file
+    // Detect framework type EARLY
     const hasVueImport = imports.some(imp => imp === 'vue' || imp.startsWith('vue/'));
+    const backendFramework = safeExtract('backend-framework', resolvedPath, () => detectBackendFramework(imports, source), undefined);
 
-    // Extract hooks and components (use Vue extractors if Vue file, otherwise React)
-    let hooks: string[];
-    let components: string[];
-    let state: Record<string, string>;
-    let props: Record<string, PropType>;
-    let emits: Record<string, EventType>;
+    // CONDITIONAL extraction based on framework
+    let hooks: string[] = [];
+    let components: string[] = [];
+    let state: Record<string, string> = {};
+    let props: Record<string, PropType> = {};
+    let emits: Record<string, EventType> = {};
+    let backend: BackendMetadata | undefined;
 
     if (hasVueImport) {
+      // Vue extraction (existing)
       hooks = safeExtract('vue-composables', resolvedPath, () => extractVueComposables(source), []);
       components = safeExtract('vue-components', resolvedPath, () => extractVueComponents(source), []);
       state = safeExtract('vue-state', resolvedPath, () => extractVueState(source), {});
       props = safeExtract('vue-props', resolvedPath, () => extractVueProps(source), {});
       emits = safeExtract('vue-emits', resolvedPath, () => extractVueEmits(source), {});
+    } else if (backendFramework) {
+      // Backend extraction - SKIP React/Vue extraction
+      backend = safeExtract('backend', resolvedPath, () => extractBackendMetadata(source, filePath, imports, backendFramework), undefined);
+      // hooks/components/props/state/emits remain empty arrays/objects
     } else {
+      // React extraction (existing default)
       hooks = safeExtract('hooks', resolvedPath, () => extractHooks(source), []);
       components = safeExtract('components', resolvedPath, () => extractComponents(source), []);
       state = safeExtract('state', resolvedPath, () => extractState(source), {});
@@ -132,7 +142,7 @@ export async function extractFromFile(filePath: string): Promise<AstExtract> {
     const variables = safeExtract('variables', resolvedPath, () => extractVariables(source), []);
     const functions = safeExtract('functions', resolvedPath, () => extractFunctions(source), []);
     const jsxRoutes = safeExtract('jsxRoutes', resolvedPath, () => extractJsxRoutes(source), []);
-    const kind = safeExtract('kind', resolvedPath, () => detectKind(hooks, components, imports, filePath, source), 'ts:module' as ContractKind);
+    const kind = safeExtract('kind', resolvedPath, () => detectKind(hooks, components, imports, source, filePath, backendFramework), 'ts:module' as ContractKind);
     const { exports: exportMetadata, exportedFunctions } = safeExtract('exports', resolvedPath, () => extractExports(source), { exports: undefined, exportedFunctions: [] });
 
     return {
@@ -147,6 +157,7 @@ export async function extractFromFile(filePath: string): Promise<AstExtract> {
       imports,
       jsxRoutes,
       ...(nextjs && { nextjs }),
+      ...(backend && { backend }),
       ...(exportMetadata && { exports: exportMetadata }),
       ...(exportedFunctions.length > 0 && { exportedFunctions }),
     };
@@ -168,6 +179,7 @@ export async function extractFromFile(filePath: string): Promise<AstExtract> {
       emits: {},
       imports: [],
       jsxRoutes: [],
+      backend: undefined,
       exports: undefined,
       exportedFunctions: [],
     };

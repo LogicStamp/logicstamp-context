@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Project } from 'ts-morph';
-import { extractEvents, extractJsxRoutes } from '../../../src/core/astParser/extractors/eventExtractor.js';
+import { extractEvents, extractJsxRoutes } from '../../../src/extractors/react/index.js';
 
 describe('Event Extractor', () => {
   describe('extractEvents', () => {

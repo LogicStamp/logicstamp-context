@@ -30,14 +30,40 @@
 
 export type ContractPreset = 'submit-only' | 'nav-only' | 'display-only' | 'none';
 
-export type ContractKind = 'react:component' | 'react:hook' | 'vue:component' | 'vue:composable' | 'ts:module' | 'node:cli';
+/**
+ * Component kind identifier in format 'language:type'
+ * Examples: 'react:component', 'python:function', 'java:class', 'node:api'
+ * Extensible to support any language and type combination
+ */
+export type ContractKind = 
+  | 'react:component' 
+  | 'react:hook' 
+  | 'vue:component' 
+  | 'vue:composable' 
+  | 'ts:module' 
+  | 'node:cli'
+  | 'node:api'        // Backend API routes/handlers
+  | string;            // Allow any string matching pattern 'language:type' for extensibility
+
+export interface LanguageSpecificVersion {
+  /** Python decorators (e.g., ['@app.get', '@app.post']) */
+  decorators?: string[];
+  /** Java annotations (e.g., ['@RestController', '@GetMapping']) */
+  annotations?: string[];
+  /** Python/Java classes (e.g., ['UserController', 'UserService']) */
+  classes?: string[];
+  /** Java methods (if different from functions, e.g., ['getUser', 'createUser']) */
+  methods?: string[];
+}
 
 export interface ComponentVersion {
   variables: string[];
-  hooks: string[];
-  components: string[];
+  hooks: string[];        // React hooks (empty [] for non-React files)
+  components: string[];   // React/Vue components (empty [] for non-React/Vue files)
   functions: string[];
   imports?: string[];
+  /** Language-specific extensions (e.g., decorators for Python, annotations for Java) */
+  languageSpecific?: LanguageSpecificVersion;
 }
 
 /**
@@ -64,10 +90,23 @@ export type EventType =
       optional?: boolean;
     };
 
+export interface ApiSignature {
+  /** Function/method parameters with types (e.g., { user_id: 'int', name: 'str' }) */
+  parameters?: Record<string, string>;
+  /** Return type (e.g., 'User', 'List[User]', 'void') */
+  returnType?: string;
+  /** Request body type for POST/PUT requests (e.g., 'CreateUserRequest') */
+  requestType?: string;
+  /** Response type (e.g., 'UserResponse', 'List[UserResponse]') */
+  responseType?: string;
+}
+
 export interface LogicSignature {
-  props: Record<string, PropType>;
-  emits: Record<string, EventType>;
-  state?: Record<string, string>;
+  props: Record<string, PropType>;     // Component props (empty {} for backend files)
+  emits: Record<string, EventType>;    // Component events (empty {} for backend files)
+  state?: Record<string, string>;      // Component state (empty {} for backend files)
+  /** API signature for backend functions/methods (parameters, return types, etc.) */
+  apiSignature?: ApiSignature;
 }
 
 export interface A11yMetrics {

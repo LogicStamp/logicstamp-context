@@ -3,9 +3,9 @@
  */
 
 import { SourceFile, SyntaxKind, Node } from 'ts-morph';
-import type { PropType, EventType } from '../../../types/UIFContract.js';
-import { debugError } from '../../../utils/debug.js';
-import { normalizePropType } from './propTypeNormalizer.js';
+import type { PropType, EventType } from '../../types/UIFContract.js';
+import { debugError } from '../../utils/debug.js';
+import { normalizePropType } from '../shared/propTypeNormalizer.js';
 
 /**
  * Extract all Vue composables (ref, computed, custom composables)

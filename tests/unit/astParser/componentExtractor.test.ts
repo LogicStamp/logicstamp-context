@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Project } from 'ts-morph';
-import { extractHooks, extractComponents } from '../../../src/core/astParser/extractors/componentExtractor.js';
+import { extractHooks, extractComponents } from '../../../src/extractors/react/index.js';
 
 describe('Component Extractor', () => {
   describe('extractHooks', () => {

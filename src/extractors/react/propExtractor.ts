@@ -3,9 +3,9 @@
  */
 
 import { SourceFile, Node, SyntaxKind } from 'ts-morph';
-import type { PropType } from '../../../types/UIFContract.js';
-import { debugError } from '../../../utils/debug.js';
-import { normalizePropType, stripUndefinedFromUnionText } from './propTypeNormalizer.js';
+import type { PropType } from '../../types/UIFContract.js';
+import { debugError } from '../../utils/debug.js';
+import { normalizePropType, stripUndefinedFromUnionText } from '../shared/propTypeNormalizer.js';
 import { hasExportedHooks, extractHookParameters } from './hookParameterExtractor.js';
 
 // TypeScript TypeFlags.Undefined constant (0x4000 = 16384)
@@ -248,4 +248,4 @@ export function extractProps(source: SourceFile): Record<string, PropType> {
 
 // Re-export normalizePropType for backward compatibility
 // Previously exported from this file, now implemented in propTypeNormalizer.ts
-export { normalizePropType } from './propTypeNormalizer.js';
+export { normalizePropType } from '../shared/propTypeNormalizer.js';
