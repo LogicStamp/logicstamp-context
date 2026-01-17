@@ -4,7 +4,7 @@ import {
   extractTailwindClasses,
   categorizeTailwindClasses,
   extractBreakpoints,
-} from '../../../src/core/styleExtractor/tailwind.js';
+} from '../../../src/extractors/styling/tailwind.js';
 
 describe('Tailwind Extractor', () => {
   describe('extractTailwindClasses - AST-based (SourceFile)', () => {

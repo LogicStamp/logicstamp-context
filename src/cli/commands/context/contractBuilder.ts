@@ -4,7 +4,7 @@
 
 import { buildContract } from '../../../core/contractBuilder.js';
 import { extractFromFile } from '../../../core/astParser.js';
-import { extractStyleMetadata } from '../../../core/styleExtractor.js';
+import { extractStyleMetadata } from '../../../extractors/styling/index.js';
 import { readFileWithText } from '../../../utils/fsx.js';
 import type { UIFContract } from '../../../types/UIFContract.js';
 import { Project } from 'ts-morph';

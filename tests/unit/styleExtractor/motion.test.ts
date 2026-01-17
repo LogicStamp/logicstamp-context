@@ -3,7 +3,7 @@ import { Project } from 'ts-morph';
 import {
   extractMotionConfig,
   extractAnimationMetadata,
-} from '../../../src/core/styleExtractor/motion.js';
+} from '../../../src/extractors/styling/motion.js';
 
 describe('Motion Extractor', () => {
   describe('extractMotionConfig', () => {

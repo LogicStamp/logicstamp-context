@@ -3,7 +3,7 @@ import { Project } from 'ts-morph';
 import {
   extractLayoutMetadata,
   extractVisualMetadata,
-} from '../../../src/core/styleExtractor/layout.js';
+} from '../../../src/extractors/styling/layout.js';
 
 describe('Layout Extractor', () => {
   describe('extractLayoutMetadata', () => {

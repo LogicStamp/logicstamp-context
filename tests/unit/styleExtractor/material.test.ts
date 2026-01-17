@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Project } from 'ts-morph';
-import { extractMaterialUI } from '../../../src/core/styleExtractor/material.js';
+import { extractMaterialUI } from '../../../src/extractors/styling/material.js';
 
 describe('Material UI Extractor', () => {
   describe('extractMaterialUI', () => {

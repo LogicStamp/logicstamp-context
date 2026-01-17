@@ -3,7 +3,7 @@ import { Project } from 'ts-morph';
 import { writeFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { extractStyleMetadata } from '../../../src/core/styleExtractor/styleExtractor.js';
+import { extractStyleMetadata } from '../../../src/extractors/styling/styleExtractor.js';
 
 describe('Style Extractor', () => {
   let tempDir: string;

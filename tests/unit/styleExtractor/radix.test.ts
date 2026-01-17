@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Project } from 'ts-morph';
-import { extractRadixUI } from '../../../src/core/styleExtractor/radix.js';
+import { extractRadixUI } from '../../../src/extractors/styling/radix.js';
 
 describe('Radix UI Extractor', () => {
   describe('Primitive Detection', () => {
