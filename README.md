@@ -18,7 +18,7 @@
     <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="100" style="min-width: 80px;">
   </a>
 
-  ![Version](https://img.shields.io/badge/version-0.3.9-8b5cf6.svg)
+  ![Version](https://img.shields.io/badge/version-0.3.10-8b5cf6.svg)
   ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
   ![License](https://img.shields.io/badge/license-MIT-green.svg)
   ![Node](https://img.shields.io/badge/node-%3E%3D18.18.0-brightgreen.svg)
@@ -77,7 +77,7 @@ stamp context
 
 > **ℹ️** If you see `"PRIVATE_DATA"` in output, see the **Security** section below.
 
-> **Note:** This is a beta release (v0.3.9). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+> **Note:** This is a beta release (v0.3.10). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 📋 **For a detailed step-by-step getting started guide with integration examples, see [Getting Started Guide](https://logicstamp.dev/docs/getting-started).**
 
@@ -120,6 +120,7 @@ This transforms code analysis from "parse and infer" to "read and reason" - maki
 - **Next.js** - partial support (App / Pages Router analysis)
 - **Vue 3** - partial support (Composition API in TS/TSX files)
 - **UI frameworks** - Material UI, ShadCN/UI, Radix UI, Tailwind CSS, Styled Components, SCSS/CSS Modules
+- **Backend frameworks** - planned for v0.4.x (Express, NestJS) - see [ROADMAP.md](ROADMAP.md)
 
 > **Note:** LogicStamp currently analyzes `.ts` and `.tsx` files only. JavaScript files (`.js`, `.jsx`) are not analyzed for context generation. Vue 3 support works with `.ts`/`.tsx` files only, not `.vue` SFC files. CSS and SCSS files imported by your TypeScript/TSX files are also parsed when using `--include-style` (standalone CSS/SCSS files that aren't imported won't be analyzed).
 

@@ -8,7 +8,7 @@ LogicStamp Context is pretty accurate overall—around 90% of the time it gets t
 
 - **~95%** - Component Contracts (Props, state, hooks detection)
 - **~100%** - Imports Detection (Imports tracked correctly)
-- **~90%** - Style Metadata (Static classes work well)
+- **~85-90%** - Style Metadata (Static classes ~100%, dynamic classes Phase 1 complete ~70-80% of patterns, CSS-in-JS 7/9 major libraries supported)
 
 ---
 
@@ -254,10 +254,11 @@ Next.js support includes basic detection of App Router patterns, directives, and
 - ✅ App Router directory detection (`isInAppDir: true` for files in `/app/` directory)
 - ✅ Next.js import tracking (`next/link`, `next/image`, `next/navigation`, etc.)
 - ✅ Basic component detection (pages, layouts, API routes as React components)
+- ✅ **Route role detection** - Automatically detects route roles (`page`, `layout`, `loading`, `error`, `not-found`, `template`, `default`, `route`) ✅ **v0.3.10**
+- ✅ **Segment path extraction** - Extracts route paths from file structure (e.g., `/blog/[slug]`) ✅ **v0.3.10**
+- ✅ **Metadata export extraction** - Extracts static metadata (`export const metadata = {...}`) and detects dynamic metadata (`export function generateMetadata()`) ✅ **v0.3.10**
 
 **What Doesn't Work:**
-- ❌ Metadata exports: `export const metadata = {...}` not extracted
-- ❌ Route path extraction: Dynamic routes (`[slug]`, `[...catchAll]`), route segments, and route structure not extracted
 - ❌ Layout hierarchy: Parent-child layout relationships not extracted
 - ❌ Data fetching patterns: `getServerSideProps`, `getStaticProps`, `getStaticPaths` return types not fully extracted
 - ❌ Route handlers: API route handlers (`GET`, `POST`, etc.) detected but request/response types not extracted
@@ -286,24 +287,30 @@ export default function BlogPost({ params }: { params: { slug: string } }) {
 }
 ```
 
-**Context Output (Current):**
+**Context Output (v0.3.10):**
 ```json
 {
   "kind": "react:component",
   "nextjs": {
     "isInAppDir": true,
-    "directive": undefined
+    "directive": undefined,
+    "routeRole": "page",
+    "segmentPath": "/blog/[slug]",
+    "metadata": {
+      "static": {
+        "title": "Blog Post",
+        "description": "A blog post"
+      }
+    }
   }
 }
 ```
 
 **Missing:**
 - `generateStaticParams` function not extracted
-- `metadata` export not extracted
-- Route path (`/blog/[slug]`) not extracted
 - Dynamic route parameter (`params.slug`) type not extracted from route structure
 
-**Impact:** Next.js projects are detected and basic metadata is captured, but advanced App Router features, route structure, and data fetching patterns are not extracted. This limits understanding of Next.js-specific architecture and routing patterns.
+**Impact:** Next.js projects are detected and route roles, segment paths, and metadata exports are now extracted (v0.3.10). However, data fetching patterns, layout hierarchy, and some advanced routing features are not yet extracted. This limits understanding of some Next.js-specific architecture patterns.
 
 **Priority:** Medium
 
@@ -326,7 +333,7 @@ export default function BlogPost({ params }: { params: { slug: string } }) {
 - ❌ CSS-in-JS completeness (Chakra UI, Ant Design missing)
 - ⚠️ Third-party component prop types (package names and versions now included in v0.3.8)
 - ❌ Project-level insights (cross-folder relationships)
-- 🟡 Next.js framework features (metadata exports, route paths, data fetching patterns)
+- 🟡 Next.js framework features (route roles, segment paths, and metadata exports now supported in v0.3.10; data fetching patterns still missing)
 
 **Bottom line:** We're hitting around 90% accuracy overall. Solid foundation, but there's definitely room to improve. These issues are on our roadmap.
 
@@ -610,6 +617,73 @@ Route extraction may miss routes in edge cases where JSX attribute values have u
 
 These items were previously limitations but have been fixed across all versions.
 
+## v0.3.9 Fixes
+
+### Dynamic Tailwind Class Parsing (Phase 1)
+
+**Status:** ✅ **Fixed in v0.3.9** (Phase 1 - Same-file variable resolution)
+
+Dynamic Tailwind class parsing Phase 1 is now complete! The extractor can resolve dynamic class expressions within template literals for same-file variables, object properties, and conditional expressions.
+
+**What Works (Phase 1):**
+- ✅ Resolves const/let declarations with string literals: `const base = 'px-4 py-2'` → extracts classes from variable
+- ✅ Resolves object property access: `variants.primary` → extracts classes from object property value
+- ✅ Handles conditional expressions in template literals: `${isActive ? 'bg-blue-500' : 'bg-gray-500'}` → extracts both branches
+- ✅ Handles logical operators (`&&`, `||`, `??`) used for class toggling
+- ✅ Enhanced variant support (focus-visible, group/peer variants, ARIA variants, container queries)
+- ✅ Improved categorization patterns (flex/grid utilities, color vs typography distinction)
+- ✅ Better template literal parsing (filters out template syntax artifacts)
+
+**Coverage**: ~70-80% of common dynamic class patterns
+
+**Impact:** This release significantly improves Tailwind CSS class extraction accuracy by resolving dynamic expressions that were previously ignored. Classes defined in variables, object properties, and conditional expressions are now properly extracted and categorized, providing more complete style metadata for AI context analysis. Phase 2 (planned) will add support for cross-file references, dynamic object lookups (`variants[variant]`), and function calls.
+
+**Related:** See [Dynamic Class Parsing](#dynamic-class-parsing) in Active Limitations for Phase 2 details.
+
+## v0.3.8 Fixes
+
+### Enhanced Third-Party Component Info (Phase 1)
+
+**Status:** ✅ **Fixed in v0.3.8** (Phase 1 - Package names and versions)
+
+Missing dependencies now include package names and versions for third-party packages, providing better visibility into external dependencies.
+
+**What Works:**
+- ✅ Package name extraction from import specifiers:
+  - Handles scoped packages (e.g., `@mui/material` from `@mui/material/Button`)
+  - Handles subpath imports (e.g., `lodash` from `lodash/debounce`)
+  - Distinguishes third-party packages from relative imports
+- ✅ Version lookup from `package.json`:
+  - Checks `dependencies`, `devDependencies`, and `peerDependencies`
+  - Prioritizes `dependencies` over `devDependencies`
+  - Caches `package.json` reads for efficiency
+  - Gracefully handles missing `package.json` or packages
+- ✅ Schema updates: Added optional `packageName` and `version` fields to `MissingDependency` type
+
+**Example:**
+
+**Before (v0.3.7):**
+```json
+{
+  "name": "@mui/material",
+  "reason": "external package",
+  "referencedBy": "src/components/Dashboard.tsx"
+}
+```
+
+**After (v0.3.8):**
+```json
+{
+  "name": "@mui/material",
+  "reason": "external package",
+  "referencedBy": "src/components/Dashboard.tsx",
+  "packageName": "@mui/material",
+  "version": "^5.15.0"
+}
+```
+
+**Impact:** This release provides better visibility into external dependencies by including package names and versions in missing dependency information. This helps AI assistants understand which versions of third-party packages are being used in the project. The implementation is backward compatible - existing context files remain valid, and the new fields are optional. Phase 2 (prop type extraction) is planned for a future release.
+
 ## v0.3.7 Fixes
 
 ### Emit Detection Accuracy
@@ -675,50 +749,6 @@ function Button({ onClick }: ButtonProps) {
   }
 }
 ```
-
-## v0.3.8 Fixes
-
-### Enhanced Third-Party Component Info (Phase 1)
-
-**Status:** ✅ **Fixed in v0.3.8** (Phase 1 - Package names and versions)
-
-Missing dependencies now include package names and versions for third-party packages, providing better visibility into external dependencies.
-
-**What Works:**
-- ✅ Package name extraction from import specifiers:
-  - Handles scoped packages (e.g., `@mui/material` from `@mui/material/Button`)
-  - Handles subpath imports (e.g., `lodash` from `lodash/debounce`)
-  - Distinguishes third-party packages from relative imports
-- ✅ Version lookup from `package.json`:
-  - Checks `dependencies`, `devDependencies`, and `peerDependencies`
-  - Prioritizes `dependencies` over `devDependencies`
-  - Caches `package.json` reads for efficiency
-  - Gracefully handles missing `package.json` or packages
-- ✅ Schema updates: Added optional `packageName` and `version` fields to `MissingDependency` type
-
-**Example:**
-
-**Before (v0.3.7):**
-```json
-{
-  "name": "@mui/material",
-  "reason": "external package",
-  "referencedBy": "src/components/Dashboard.tsx"
-}
-```
-
-**After (v0.3.8):**
-```json
-{
-  "name": "@mui/material",
-  "reason": "external package",
-  "referencedBy": "src/components/Dashboard.tsx",
-  "packageName": "@mui/material",
-  "version": "^5.15.0"
-}
-```
-
-**Impact:** This release provides better visibility into external dependencies by including package names and versions in missing dependency information. This helps AI assistants understand which versions of third-party packages are being used in the project. The implementation is backward compatible - existing context files remain valid, and the new fields are optional. Phase 2 (prop type extraction) is planned for a future release.
 
 ## v0.3.6 Fixes
 

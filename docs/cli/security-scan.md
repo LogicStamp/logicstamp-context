@@ -99,6 +99,8 @@ The report includes these fields:
 
 Each match shows the file path, line and column numbers, secret type, a code snippet (about 40 characters), and severity level (high, medium, or low).
 
+**Note:** If no secrets are detected, the report contains no sensitive data and is safe to inspect locally.
+
 ## Detected Secret Types
 
 The scanner detects the following types of secrets:
@@ -147,12 +149,12 @@ The following files are automatically excluded from scanning:
 
 ## Automatic .gitignore Protection
 
-🔒 **SECURITY CRITICAL**: **Security reports contain sensitive information** (locations of detected secrets, line numbers, code snippets), so `stamp security scan` automatically ensures the report file is added to `.gitignore` to prevent accidental commits. **This happens automatically and cannot be disabled** - the security report must never be committed to version control.
+🔒 **SECURITY CRITICAL**: **Security reports only contain sensitive information if secrets are actually detected** (locations of detected secrets, line numbers, code snippets). If no secrets are found, the report will have `secretsFound: 0` and an empty `matches: []` array. **Note**: Secrets should not normally be present in TypeScript (`.ts`, `.tsx`), JavaScript (`.js`, `.jsx`), or JSON (`.json`) source files—they should be stored in `.env` files or environment variables. The security scan checks for secrets that may have been accidentally committed to source files. `stamp security scan` automatically ensures the report file is added to `.gitignore` to prevent accidental commits. This behavior is intentional and enforced to prevent accidental leakage of sensitive information into version control.
 
 - For the default report file (`stamp_security_report.json`): Automatically ensures all LogicStamp patterns are in `.gitignore` (including `context.json`, `context_*.json`, etc.)
 - For custom report paths: Automatically adds the specific report file path to `.gitignore`
 
-**Why ignore the report?** The security report contains:
+**Why ignore the report?** If secrets are detected, the security report contains:
 - File paths where secrets were detected
 - Line and column numbers pointing to secret locations
 - Code snippets showing the context around secrets
@@ -161,6 +163,8 @@ The following files are automatically excluded from scanning:
 Even if no secrets are found, the report structure itself reveals which files were scanned, which could be sensitive information in some contexts.
 
 This happens automatically after the report is written, regardless of whether secrets were found. If the report file cannot be added to `.gitignore` (e.g., permission issues), a warning is shown but the scan continues.
+
+**If no secrets are detected, the report contains no sensitive data and is safe to inspect locally.**
 
 
 ## Hard Reset
@@ -336,6 +340,7 @@ If legitimate secrets aren't being detected:
 
 ## See Also
 
+- [Security Policy](../../SECURITY.md) - Complete security policy, best practices, and handling of sensitive information
 - [.stampignore Format](../stampignore.md) - Documentation on `.stampignore` file format (optional, independent of security scan)
 - [`stamp context`](./context.md) - Generate context
 

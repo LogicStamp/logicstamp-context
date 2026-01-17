@@ -2,9 +2,10 @@
  * Detectors - Detect component kind and Next.js metadata
  */
 
-import { SourceFile, SyntaxKind, FunctionDeclaration, VariableStatement, ArrowFunction } from 'ts-morph';
+import { SourceFile, SyntaxKind, FunctionDeclaration, VariableStatement, ArrowFunction, ObjectLiteralExpression, PropertyAssignment } from 'ts-morph';
 import type { ContractKind, NextJSMetadata } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
+import { basename, dirname } from 'node:path';
 
 /**
  * Detect Next.js 'use client' or 'use server' directives
@@ -77,6 +78,191 @@ export function isInNextAppDir(filePath: string): boolean {
 }
 
 /**
+ * Detect Next.js route role based on filename
+ * Next.js App Router uses special filenames: page, layout, loading, error, not-found, template, default, route
+ */
+export function detectNextJsRouteRole(filePath: string): NextJSMetadata['routeRole'] | undefined {
+  try {
+    const fileName = basename(filePath, '.tsx').replace(/\.ts$/, '');
+    
+    // Check for special Next.js route files
+    if (fileName === 'page') return 'page';
+    if (fileName === 'layout') return 'layout';
+    if (fileName === 'loading') return 'loading';
+    if (fileName === 'error') return 'error';
+    if (fileName === 'not-found') return 'not-found';
+    if (fileName === 'template') return 'template';
+    if (fileName === 'default') return 'default';
+    if (fileName === 'route') return 'route';
+    
+    return undefined;
+  } catch (error) {
+    debugError('detector', 'detectNextJsRouteRole', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return undefined;
+  }
+}
+
+/**
+ * Extract Next.js segment path from file path
+ * Converts file structure to route path (e.g., app/blog/[slug]/page.tsx -> /blog/[slug])
+ */
+export function extractNextJsSegmentPath(filePath: string): string | undefined {
+  try {
+    const normalizedPath = filePath.replace(/\\/g, '/');
+    
+    // Find the app directory in the path
+    const appDirMatch = normalizedPath.match(/(?:^|\/)(?:src\/)?app(\/.*)$/);
+    if (!appDirMatch) {
+      return undefined;
+    }
+    
+    const pathAfterApp = appDirMatch[1];
+    
+    // Remove the filename (page.tsx, layout.tsx, etc.) to get the directory path
+    // Handle both /page.tsx and page.tsx formats
+    const dirPath = dirname(pathAfterApp);
+    
+    // Build segment path
+    // If dirPath is '.' or '/', it means the file is directly in app/ directory
+    let segmentPath = dirPath === '.' || dirPath === '/' ? '' : dirPath;
+    
+    // Remove route groups (parentheses) from path
+    // e.g., (auth)/login -> /login
+    segmentPath = segmentPath.replace(/\/\([^)]+\)/g, '');
+    
+    // Normalize: remove leading/trailing slashes
+    segmentPath = segmentPath.replace(/^\/+|\/+$/g, '');
+    
+    // Return root path or normalized path
+    return segmentPath ? `/${segmentPath}` : '/';
+  } catch (error) {
+    debugError('detector', 'extractNextJsSegmentPath', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return undefined;
+  }
+}
+
+/**
+ * Extract Next.js metadata exports
+ * Supports both static metadata (export const metadata) and dynamic metadata (export function generateMetadata)
+ */
+export function extractNextJsMetadataExports(source: SourceFile): NextJSMetadata['metadata'] | undefined {
+  const filePath = source.getFilePath?.() ?? 'unknown';
+  
+  try {
+    let staticMetadata: Record<string, unknown> | undefined;
+    let hasDynamicMetadata = false;
+    
+    const statements = source.getStatements();
+    
+    for (const stmt of statements) {
+      const kind = stmt.getKind();
+      
+      // Check for `export const metadata = {...}`
+      if (kind === SyntaxKind.VariableStatement) {
+        const varStmt = stmt as VariableStatement;
+        const modifiers = varStmt.getModifiers();
+        const isExported = modifiers.some(mod => mod.getKind() === SyntaxKind.ExportKeyword);
+        
+        if (isExported) {
+          const declarations = varStmt.getDeclarationList().getDeclarations();
+          for (const decl of declarations) {
+            const name = decl.getName();
+            if (name === 'metadata') {
+              const initializer = decl.getInitializer();
+              if (initializer && initializer.getKind() === SyntaxKind.ObjectLiteralExpression) {
+                // Parse object literal to extract property names and basic values
+                try {
+                  const objLiteral = initializer.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+                  const properties = objLiteral.getProperties();
+                  const metadataObj: Record<string, unknown> = {};
+                  
+                  for (const prop of properties) {
+                    if (prop.getKind() === SyntaxKind.PropertyAssignment) {
+                      const propAssignment = prop as PropertyAssignment;
+                      const propName = propAssignment.getNameNode();
+                      const propValue = propAssignment.getInitializer();
+                      
+                      if (propName.getKind() === SyntaxKind.Identifier || propName.getKind() === SyntaxKind.StringLiteral) {
+                        const name = propName.getKind() === SyntaxKind.Identifier 
+                          ? propName.getText() 
+                          : (propName as any).getLiteralText?.() ?? propName.getText().slice(1, -1);
+                        
+                        // Extract basic value types
+                        if (propValue) {
+                          const valueKind = propValue.getKind();
+                          if (valueKind === SyntaxKind.StringLiteral) {
+                            metadataObj[name] = (propValue as any).getLiteralText?.() ?? propValue.getText().slice(1, -1);
+                          } else if (valueKind === SyntaxKind.NumericLiteral) {
+                            metadataObj[name] = parseFloat(propValue.getText());
+                          } else if (valueKind === SyntaxKind.TrueKeyword || valueKind === SyntaxKind.FalseKeyword) {
+                            metadataObj[name] = valueKind === SyntaxKind.TrueKeyword;
+                          } else if (valueKind === SyntaxKind.NullKeyword) {
+                            metadataObj[name] = null;
+                          } else {
+                            // For complex values, store the type indicator
+                            metadataObj[name] = `[${valueKind}]`;
+                          }
+                        }
+                      }
+                    }
+                  }
+                  
+                  if (Object.keys(metadataObj).length > 0) {
+                    staticMetadata = metadataObj;
+                  } else {
+                    // Even if empty, mark as having metadata
+                    staticMetadata = { _hasMetadata: true };
+                  }
+                } catch (error) {
+                  // If we can't parse, still mark as having metadata
+                  staticMetadata = { _hasMetadata: true };
+                }
+              } else if (initializer) {
+                // Has metadata but not an object literal (could be a variable reference, function call, etc.)
+                staticMetadata = { _hasMetadata: true };
+              }
+            }
+          }
+        }
+      }
+      
+      // Check for `export function generateMetadata(...) {...}`
+      if (kind === SyntaxKind.FunctionDeclaration) {
+        const func = stmt as FunctionDeclaration;
+        const modifiers = func.getModifiers();
+        const isExported = modifiers.some(mod => mod.getKind() === SyntaxKind.ExportKeyword);
+        const name = func.getName();
+        
+        if (isExported && name === 'generateMetadata') {
+          hasDynamicMetadata = true;
+        }
+      }
+    }
+    
+    if (staticMetadata || hasDynamicMetadata) {
+      return {
+        ...(staticMetadata && { static: staticMetadata }),
+        ...(hasDynamicMetadata && { dynamic: true })
+      };
+    }
+    
+    return undefined;
+  } catch (error) {
+    debugError('detector', 'extractNextJsMetadataExports', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return undefined;
+  }
+}
+
+/**
  * Extract Next.js metadata from the file
  */
 export function extractNextJsMetadata(source: SourceFile, filePath: string): NextJSMetadata | undefined {
@@ -85,12 +271,18 @@ export function extractNextJsMetadata(source: SourceFile, filePath: string): Nex
   try {
     const directive = detectNextJsDirective(source);
     const isInApp = isInNextAppDir(filePath);
+    const routeRole = isInApp ? detectNextJsRouteRole(filePath) : undefined;
+    const segmentPath = isInApp ? extractNextJsSegmentPath(filePath) : undefined;
+    const metadata = isInApp ? extractNextJsMetadataExports(source) : undefined;
 
     // Only return metadata if we have something to report
-    if (directive || isInApp) {
+    if (directive || isInApp || routeRole || segmentPath || metadata) {
       return {
         ...(isInApp && { isInAppDir: true }),
-        ...(directive && { directive })
+        ...(directive && { directive }),
+        ...(routeRole && { routeRole }),
+        ...(segmentPath && { segmentPath }),
+        ...(metadata && { metadata })
       };
     }
   } catch (error) {

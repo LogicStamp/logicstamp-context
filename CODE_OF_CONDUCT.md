@@ -1,4 +1,4 @@
-# Code of Conduct
+# Contributor Covenant Code of Conduct
 
 ## Our Pledge
 
@@ -26,7 +26,7 @@ Examples of unacceptable behavior include:
 
 ## Scope
 
-This Code of Conduct applies to all official community spaces (GitHub issues, pull requests, discussions) and when officially representing the community in public spaces.
+This Code of Conduct applies within all community spaces and also applies when an individual is officially representing the community in public spaces.
 
 ## Enforcement
 
