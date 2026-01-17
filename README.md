@@ -28,7 +28,7 @@
 </div>
 
 ![LogicStamp MCP Workflow](./assets/logicstamp-workflow.gif)
-*MCP server calling the CLI to generate and consume context bundles*
+*Context bundles generated and consumed across MCP-powered AI workflows.*
 
 <br/>
 
@@ -235,7 +235,7 @@ LogicStamp Context automatically protects sensitive data in generated context fi
 ## Usage
 
 ![LogicStamp Context in action](./assets/logicstamp-context-demo.gif)
-*Sample CLI commands usage*
+*Sample CLI usage*
 
 ```bash
 stamp --version                    # Show version number
