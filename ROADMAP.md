@@ -256,7 +256,42 @@ These items expand LogicStamp Context to support additional languages, framework
 
 ### Near-Term (v0.4.x)
 
-#### 1. JavaScript & JSX Support
+#### 1. Backend Framework Support
+**Status:** 🔴 Not Started
+
+Add support for Node.js backend frameworks to extract API routes, HTTP methods, request/response types, and framework-specific metadata.
+
+**Current Behavior:**
+- ✅ Basic TypeScript module detection for backend files
+- ✅ Function extraction and import tracking
+- ❌ No route path extraction (`/api/users`, `/users/:id`)
+- ❌ No HTTP method detection (GET, POST, PUT, DELETE)
+- ❌ No framework-specific metadata (Express routes, NestJS controllers)
+- ❌ No request/response type extraction from handlers
+- ❌ No middleware/guard/interceptor detection
+
+**Planned Implementation:**
+- Framework detection (Express, NestJS, with extensibility for others)
+- Route extraction (paths, HTTP methods, route parameters)
+- Request/response type extraction from handler signatures
+- Middleware/guard/interceptor detection
+- Controller/route grouping and base path detection
+- Framework-agnostic `backend` metadata field (similar to `nextjs` field)
+
+**Initial Targets:**
+- **Express.js** - Route extraction from `app.get()`, `router.post()`, etc.
+- **NestJS** - Controller extraction with decorators (`@Controller`, `@Get`, `@Post`, etc.)
+
+**Future Frameworks:**
+- Fastify, Koa, Hapi (Phase 2+)
+
+**Impact:** Enables AI assistants to understand backend API structure, endpoints, and request/response contracts. Currently, backend files are treated as generic TypeScript modules with minimal value.
+
+**Priority:** High
+
+---
+
+#### 2. JavaScript & JSX Support
 **Status:** 🔴 Not Started
 
 Add support for JavaScript (`.js`) and JSX (`.jsx`) files in addition to TypeScript.
@@ -272,30 +307,6 @@ Add support for JavaScript (`.js`) and JSX (`.jsx`) files in addition to TypeScr
 - Maintain same contract structure for JS/JSX files
 
 **Impact:** Enables LogicStamp Context to work with JavaScript codebases that haven't migrated to TypeScript yet.
-
-**Priority:** High
-
----
-
-#### 2. Complete Vue.js Support
-**Status:** 🟡 Partially Complete
-
-Add full support for Vue Single File Components (`.vue` files).
-
-**Current Behavior:**
-- ✅ Vue 3 Composition API support for `.ts`/`.tsx` files
-- ✅ Vue components and composables detection
-- ✅ Props and emits extraction from JSX/TSX
-- ❌ Vue Single File Components (`.vue` files) not supported
-
-**Planned Implementation:**
-- Parse `.vue` SFC files (template, script, style blocks)
-- Extract template syntax (directives, bindings, slots)
-- Extract script setup and composition API usage
-- Extract scoped styles and CSS modules from style blocks
-- Support both Options API and Composition API
-
-**Impact:** Enables full Vue.js codebase analysis, including projects using `.vue` SFC files.
 
 **Priority:** High
 
@@ -321,7 +332,31 @@ Add a watch mode that automatically regenerates context files when source files 
 
 ### Future (v0.5.x+)
 
-#### 4. Svelte Support
+#### 4. Complete Vue.js Support
+**Status:** 🟡 Partially Complete
+
+Add full support for Vue Single File Components (`.vue` files).
+
+**Current Behavior:**
+- ✅ Vue 3 Composition API support for `.ts`/`.tsx` files
+- ✅ Vue components and composables detection
+- ✅ Props and emits extraction from JSX/TSX
+- ❌ Vue Single File Components (`.vue` files) not supported
+
+**Planned Implementation:**
+- Parse `.vue` SFC files (template, script, style blocks)
+- Extract template syntax (directives, bindings, slots)
+- Extract script setup and composition API usage
+- Extract scoped styles and CSS modules from style blocks
+- Support both Options API and Composition API
+
+**Impact:** Enables full Vue.js codebase analysis, including projects using `.vue` SFC files.
+
+**Priority:** High
+
+---
+
+#### 5. Svelte Support
 **Status:** 🔴 Not Started
 
 Add support for Svelte components (`.svelte` files).
@@ -339,7 +374,7 @@ Add support for Svelte components (`.svelte` files).
 
 ---
 
-#### 5. Python Support
+#### 6. Python Support
 **Status:** 🔴 Not Started
 
 Add support for Python codebases (experimental).
@@ -357,7 +392,7 @@ Add support for Python codebases (experimental).
 
 ---
 
-#### 6. Java Support
+#### 7. Java Support
 **Status:** 🔴 Not Started
 
 Add support for Java codebases (experimental).
@@ -414,7 +449,7 @@ For a complete list of current limitations with code evidence and detailed expla
 **Overall Assessment:**
 - **~95%** - Component Contracts (Props, state, hooks detection) ✅ Hook parameters now included
 - **~100%** - Imports Detection (Imports tracked correctly)
-- **~90%** - Style Metadata (Static classes work well, dynamic classes partially resolved - Phase 1 complete in v0.3.9)
+- **~85-90%** - Style Metadata (Static classes ~100%, dynamic classes Phase 1 complete ~70-80% of patterns, CSS-in-JS 7/9 major libraries supported)
 
 ---
 
@@ -434,6 +469,7 @@ We welcome contributions! If you'd like to work on any of these roadmap items:
 - Enhanced third-party component info (Phase 2) - Include prop types (package names and versions completed in v0.3.8)
 
 **Framework Expansion:**
+- Backend framework support - Extract API routes, HTTP methods, and framework metadata (Express, NestJS)
 - JavaScript & JSX support - Add `.js`/`.jsx` file analysis
 - Complete Vue.js support - Add `.vue` SFC file parsing
 - Watch mode - Automatic context regeneration on file changes
@@ -444,7 +480,7 @@ We welcome contributions! If you'd like to work on any of these roadmap items:
 
 For detailed release notes and changes, see [CHANGELOG.md](CHANGELOG.md).
 
-**Current Version:** v0.3.9 (Beta)
+**Current Version:** v0.3.10 (Beta)
 
 **Status:** Actively developed - we're working on improving accuracy and expanding feature coverage based on user feedback.
 

@@ -99,6 +99,12 @@ export interface ContractLinks {
 export interface NextJSMetadata {
   isInAppDir?: boolean;
   directive?: 'client' | 'server';
+  routeRole?: 'page' | 'layout' | 'loading' | 'error' | 'not-found' | 'template' | 'default' | 'route';
+  segmentPath?: string; // Route path derived from file structure (e.g., '/blog/[slug]', '/api/users')
+  metadata?: {
+    static?: Record<string, unknown>; // From `export const metadata = {...}`
+    dynamic?: boolean; // True if `export function generateMetadata()` exists
+  };
 }
 
 export type ExportMetadata =

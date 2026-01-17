@@ -22,14 +22,62 @@ For a comprehensive roadmap with detailed status, priorities, and implementation
 - Output size optimization
 - Additional output formats
 - Integration examples for popular AI assistants
-- Advanced Next.js App Router features (route roles, segment paths, metadata exports)
-
 ### Known Limitations
 
 See [docs/limitations.md](docs/limitations.md) for complete details and code evidence.
 
 - Dynamic class expressions partially resolved (Phase 1 complete in v0.3.9, Phase 2 planned for advanced patterns)
 - TypeScript types incomplete (generics, complex unions/intersections)
+
+---
+
+## [0.3.10] - 2026-01-17
+
+### Added
+
+- **Advanced Next.js App Router features** - Enhanced Next.js metadata extraction with route roles, segment paths, and metadata exports:
+  - **Route role detection** - Automatically detects Next.js route roles based on special filenames:
+    - `page.tsx` → `routeRole: 'page'`
+    - `layout.tsx` → `routeRole: 'layout'`
+    - `loading.tsx` → `routeRole: 'loading'`
+    - `error.tsx` → `routeRole: 'error'`
+    - `not-found.tsx` → `routeRole: 'not-found'`
+    - `template.tsx` → `routeRole: 'template'`
+    - `default.tsx` → `routeRole: 'default'`
+    - `route.ts` → `routeRole: 'route'` (API route handlers)
+  - **Segment path extraction** - Extracts route paths from file structure:
+    - Converts file paths to route segments (e.g., `app/blog/[slug]/page.tsx` → `/blog/[slug]`)
+    - Automatically removes route groups (parentheses) from paths
+    - Supports both `app/` and `src/app/` directory structures
+    - Handles root routes, nested routes, dynamic segments, and API routes
+  - **Metadata export extraction** - Extracts Next.js metadata exports:
+    - **Static metadata** - Parses `export const metadata = {...}` object literals:
+      - Extracts property names and values (strings, numbers, booleans, null)
+      - Supports basic value types from object literals
+    - **Dynamic metadata** - Detects `export function generateMetadata() {...}` functions
+    - Supports both static and dynamic metadata in the same file
+
+### Changed
+
+- **NextJSMetadata interface** - Extended `NextJSMetadata` type with new optional fields:
+  - `routeRole?: 'page' | 'layout' | 'loading' | 'error' | 'not-found' | 'template' | 'default' | 'route'`
+  - `segmentPath?: string` - Route path derived from file structure
+  - `metadata?: { static?: Record<string, unknown>, dynamic?: boolean }` - Metadata exports
+
+### Improved
+
+- **Next.js documentation** - Updated `docs/frameworks/nextjs.md` with comprehensive examples:
+  - Route roles table with all supported roles
+  - Segment path examples for various route patterns
+  - Metadata extraction examples (static, dynamic, combined)
+  - Updated component examples to show new metadata fields
+
+**Impact:** This release significantly enhances Next.js App Router support by extracting route roles, segment paths, and metadata exports. AI assistants can now better understand Next.js routing structure, identify route types, and access metadata information for improved code analysis and generation.
+
+**Non-breaking change:** All changes are backward compatible and additive:
+- New fields in `NextJSMetadata` are optional - existing code continues to work unchanged
+- Only files in the `app/` directory (or `src/app/`) receive the new metadata fields
+- Existing Next.js detection (directives, `isInAppDir`) remains unchanged
 
 ---
 
@@ -700,7 +748,7 @@ export function useTypewriter(text: string, speed = 30, pause = 800) {
 
 ---
 
-## [0.1.1] - 2025-01-27
+## [0.1.1] - 2025-11-27
 
 ### Changed
 
@@ -729,7 +777,7 @@ export function useTypewriter(text: string, speed = 30, pause = 800) {
 
 ---
 
-## [0.1.0] - 2025-01-25
+## [0.1.0] - 2025-11-27
 
 ### 🎉 Initial Release
 
@@ -809,7 +857,8 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ---
 
 ## Version links
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.3.9...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.3.10...HEAD
+[0.3.10]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.10
 [0.3.9]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.9
 [0.3.8]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.8
 [0.3.7]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.7

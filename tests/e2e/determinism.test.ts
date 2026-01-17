@@ -83,12 +83,22 @@ describe.sequential('Determinism and Ordering Tests', () => {
       for (let i = 0; i < bundles1.length; i++) {
         expect(bundles1[i].entryId).toBe(bundles2[i].entryId);
 
+        // Bundle hashes should match (hash reproducibility)
+        expect(bundles1[i].bundleHash).toBe(bundles2[i].bundleHash);
+
         // Nodes should be in the same order
         expect(bundles1[i].graph.nodes.length).toBe(bundles2[i].graph.nodes.length);
         for (let j = 0; j < bundles1[i].graph.nodes.length; j++) {
-          expect(bundles1[i].graph.nodes[j].entryId).toBe(
-            bundles2[i].graph.nodes[j].entryId
-          );
+          const node1 = bundles1[i].graph.nodes[j];
+          const node2 = bundles2[i].graph.nodes[j];
+          
+          expect(node1.entryId).toBe(node2.entryId);
+          
+          // Contract hashes should match (semanticHash and fileHash reproducibility)
+          if (node1.contract && node2.contract) {
+            expect(node1.contract.semanticHash).toBe(node2.contract.semanticHash);
+            expect(node1.contract.fileHash).toBe(node2.contract.fileHash);
+          }
         }
 
         // Edges should be in the same order
@@ -165,6 +175,78 @@ describe.sequential('Determinism and Ordering Tests', () => {
         }
       });
     }, 30000);
+  });
+
+  describe('Hash reproducibility', () => {
+    it('should produce identical hash values on multiple runs', async () => {
+      const testDir = join(outputPath, 'hash-reproducibility');
+      await mkdir(testDir, { recursive: true });
+
+      const outDir1 = join(testDir, 'run1');
+      const outDir2 = join(testDir, 'run2');
+
+      // Generate context twice
+      await execAsync(
+        `node dist/cli/index.js ${fixturesPath} --out ${outDir1}`
+      );
+      await execAsync(
+        `node dist/cli/index.js ${fixturesPath} --out ${outDir2}`
+      );
+
+      const bundles1 = await readFolderContext(outDir1);
+      const bundles2 = await readFolderContext(outDir2);
+
+      expect(bundles1.length).toBe(bundles2.length);
+
+      // Verify all hash values match across runs
+      for (let i = 0; i < bundles1.length; i++) {
+        const bundle1 = bundles1[i];
+        const bundle2 = bundles2[i];
+
+        // Bundle hash should be identical
+        expect(bundle1.bundleHash).toBe(bundle2.bundleHash);
+        expect(bundle1.bundleHash).toMatch(/^uifb:[a-f0-9]{24}$/);
+
+        // All node contract hashes should match
+        expect(bundle1.graph.nodes.length).toBe(bundle2.graph.nodes.length);
+        for (let j = 0; j < bundle1.graph.nodes.length; j++) {
+          const node1 = bundle1.graph.nodes[j];
+          const node2 = bundle2.graph.nodes[j];
+
+          if (node1.contract && node2.contract) {
+            // Semantic hash should match
+            expect(node1.contract.semanticHash).toBe(node2.contract.semanticHash);
+            expect(node1.contract.semanticHash).toMatch(/^uif:[a-f0-9]{24}$/);
+
+            // File hash should match
+            expect(node1.contract.fileHash).toBe(node2.contract.fileHash);
+            expect(node1.contract.fileHash).toMatch(/^uif:[a-f0-9]{24}$/);
+          }
+        }
+      }
+    }, 60000);
+
+    it('should produce stable hashes regardless of file discovery order', async () => {
+      const testDir = join(outputPath, 'hash-order-independence');
+      await mkdir(testDir, { recursive: true });
+
+      // Generate context multiple times - file discovery order may vary
+      const hashes: string[] = [];
+      for (let run = 1; run <= 3; run++) {
+        const outDir = join(testDir, `run${run}`);
+        await execAsync(
+          `node dist/cli/index.js ${fixturesPath} --out ${outDir}`
+        );
+
+        const bundles = await readFolderContext(outDir);
+        const runHashes = bundles.map(b => b.bundleHash).sort();
+        hashes.push(runHashes.join(','));
+      }
+
+      // All runs should produce the same set of bundle hashes
+      expect(hashes[0]).toBe(hashes[1]);
+      expect(hashes[1]).toBe(hashes[2]);
+    }, 90000);
   });
 
   describe('Schema validation in output', () => {

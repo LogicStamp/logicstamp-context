@@ -32,7 +32,9 @@ app/
 **Detected metadata:**
 - `isInAppDir: true` - File is in `/app/` directory
 - `directive: 'client' | 'server'` - 'use client' or 'use server' directive
-- Note: Route paths, layout hierarchy, page components, API route handlers, and loading/error boundaries are not extracted, only directory location and directives are detected
+- `routeRole: 'page' | 'layout' | 'loading' | 'error' | 'not-found' | 'template' | 'default' | 'route'` - Route role based on filename
+- `segmentPath: string` - Route path derived from file structure (e.g., `/blog/[slug]`, `/api/users`)
+- `metadata` - Metadata exports (static and/or dynamic)
 
 ### Pages Router (Next.js 12 and earlier)
 
@@ -64,9 +66,12 @@ export default function HomePage() {
 }
 ```
 
-**Detected as:** `react:component` with Next.js metadata (`isInAppDir: true` if in `/app/` directory)
+**Detected as:** `react:component` with Next.js metadata:
+- `isInAppDir: true` - File is in `/app/` directory
+- `routeRole: 'page'` - Detected from `page.tsx` filename
+- `segmentPath: '/'` - Root route path (or nested path like `/blog/[slug]`)
 
-**Note:** All React components (including pages) are classified as `react:component`. Next.js-specific information (directory location, directives) is stored in the `nextjs` metadata field, not as a separate component kind.
+**Note:** All React components (including pages) are classified as `react:component`. Next.js-specific information is stored in the `nextjs` metadata field, not as a separate component kind.
 
 #### Layouts
 
@@ -85,9 +90,12 @@ export default function RootLayout({
 }
 ```
 
-**Detected as:** `react:component` with Next.js metadata (`isInAppDir: true` if in `/app/` directory)
+**Detected as:** `react:component` with Next.js metadata:
+- `isInAppDir: true` - File is in `/app/` directory
+- `routeRole: 'layout'` - Detected from `layout.tsx` filename
+- `segmentPath: '/'` - Route path (or nested path)
 
-**Note:** All React components (including layouts) are classified as `react:component`. Next.js-specific information (directory location, directives) is stored in the `nextjs` metadata field, not as a separate component kind.
+**Note:** All React components (including layouts) are classified as `react:component`. Next.js-specific information is stored in the `nextjs` metadata field, not as a separate component kind.
 
 #### API Routes
 
@@ -102,27 +110,80 @@ export async function POST(request: Request) {
 }
 ```
 
-**Detected as:** `react:component` or `ts:module` (based on content) with Next.js metadata (`isInAppDir: true` if in `/app/api/` directory)
+**Detected as:** `react:component` or `ts:module` (based on content) with Next.js metadata:
+- `isInAppDir: true` - File is in `/app/api/` directory
+- `routeRole: 'route'` - Detected from `route.ts` or `route.tsx` filename
+- `segmentPath: '/api/users'` - API route path
 
-**Note:** API routes are classified based on their content (React components vs TypeScript modules). Next.js-specific information (directory location, directives) is stored in the `nextjs` metadata field.
+**Note:** API routes are classified based on their content (React components vs TypeScript modules). Next.js-specific information is stored in the `nextjs` metadata field.
 
 ## Next.js-Specific Features
 
-### Routing
+### Route Roles
 
-LogicStamp extracts routing information:
+LogicStamp detects route roles based on special Next.js filenames:
+
+| Filename | Route Role | Description |
+|----------|-----------|-------------|
+| `page.tsx` | `page` | Page component |
+| `layout.tsx` | `layout` | Layout component |
+| `loading.tsx` | `loading` | Loading UI component |
+| `error.tsx` | `error` | Error boundary component |
+| `not-found.tsx` | `not-found` | Not found page |
+| `template.tsx` | `template` | Template component |
+| `default.tsx` | `default` | Default parallel route |
+| `route.ts` | `route` | API route handler |
+
+### Segment Paths
+
+LogicStamp extracts route paths from file structure:
 
 ```tsx
-// pages/blog/[slug].tsx
+// app/page.tsx
+export default function HomePage() {
+  return <div>Home</div>;
+}
+```
+
+**Detected:** `segmentPath: '/'`
+
+```tsx
+// app/blog/page.tsx
+export default function BlogPage() {
+  return <div>Blog</div>;
+}
+```
+
+**Detected:** `segmentPath: '/blog'`
+
+```tsx
+// app/blog/[slug]/page.tsx
 export default function BlogPost({ params }: { params: { slug: string } }) {
   return <div>Post: {params.slug}</div>;
 }
 ```
 
-**Detected:**
-- File location in `/app/` directory (`isInAppDir: true`)
-- 'use client' or 'use server' directive (`directive: 'client' | 'server'`)
-- Note: Dynamic route parameters, route path structure, and route metadata are not extracted, only directory location and directives are detected
+**Detected:** `segmentPath: '/blog/[slug]'`
+
+```tsx
+// app/(auth)/login/page.tsx
+export default function LoginPage() {
+  return <div>Login</div>;
+}
+```
+
+**Detected:** `segmentPath: '/login'` (route groups are removed)
+
+```tsx
+// app/api/users/route.ts
+export async function GET() {
+  return Response.json({ users: [] });
+}
+```
+
+**Detected:** `segmentPath: '/api/users'`
+
+**Note:** Route groups (parentheses) are automatically removed from segment paths. Both `app/` and `src/app/` directory structures are supported.
 
 ### Next.js Imports
 
@@ -180,7 +241,65 @@ export function ClientComponent() {
 
 ### Metadata
 
-**Note:** Next.js metadata exports (e.g., `export const metadata = {...}`) are not currently extracted. Only the 'use client'/'use server' directives and file location in `/app/` directory are detected.
+LogicStamp extracts Next.js metadata exports:
+
+#### Static Metadata
+
+```tsx
+// app/page.tsx
+export const metadata = {
+  title: 'My Page',
+  description: 'Page description',
+  keywords: ['nextjs', 'react']
+};
+
+export default function Page() {
+  return <div>Page</div>;
+}
+```
+
+**Detected:**
+- `metadata.static` - Object containing extracted metadata properties
+- Supports string, number, boolean, and null values
+- Complex values (objects, arrays, function calls) are marked with their type
+
+#### Dynamic Metadata
+
+```tsx
+// app/blog/[slug]/page.tsx
+export function generateMetadata({ params }: { params: { slug: string } }) {
+  return {
+    title: `Post: ${params.slug}`,
+    description: 'Dynamic description'
+  };
+}
+
+export default function BlogPost() {
+  return <div>Post</div>;
+}
+```
+
+**Detected:**
+- `metadata.dynamic: true` - Indicates `generateMetadata` function exists
+
+#### Combined Metadata
+
+Files can have both static and dynamic metadata:
+
+```tsx
+export const metadata = {
+  title: 'Default Title'
+};
+
+export function generateMetadata() {
+  return {
+    description: 'Dynamic description'
+  };
+}
+```
+
+**Detected:**
+- Both `metadata.static` and `metadata.dynamic: true` are included
 
 ## Usage
 
