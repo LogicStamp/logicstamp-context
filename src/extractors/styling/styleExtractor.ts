@@ -441,4 +441,3 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
 
   return sources;
 }
-

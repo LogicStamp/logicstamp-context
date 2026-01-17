@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Project } from 'ts-morph';
-import { extractShadcnUI } from '../../../src/core/styleExtractor/shadcn.js';
+import { extractShadcnUI } from '../../../src/extractors/styling/shadcn.js';
 
 describe('ShadCN/UI Extractor', () => {
   describe('Component Detection', () => {

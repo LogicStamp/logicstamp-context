@@ -3,7 +3,7 @@ import { Project } from 'ts-morph';
 import { writeFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { extractScssMetadata, parseStyleFile } from '../../../src/core/styleExtractor/scss.js';
+import { extractScssMetadata, parseStyleFile } from '../../../src/extractors/styling/scss.js';
 
 describe('SCSS Extractor', () => {
   let tempDir: string;

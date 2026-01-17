@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Project } from 'ts-morph';
-import { extractStyledComponents } from '../../../src/core/styleExtractor/styled.js';
+import { extractStyledComponents } from '../../../src/extractors/styling/styled.js';
 
 describe('Styled Components Extractor', () => {
   describe('extractStyledComponents', () => {

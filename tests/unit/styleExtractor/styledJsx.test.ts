@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Project } from 'ts-morph';
-import { extractStyledJsx } from '../../../src/core/styleExtractor/styledJsx.js';
+import { extractStyledJsx } from '../../../src/extractors/styling/styledJsx.js';
 
 describe('Styled JSX Extractor', () => {
   it('should extract CSS content, selectors, and properties from <style jsx> blocks', () => {
