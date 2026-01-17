@@ -15,7 +15,7 @@
   <br/>
   <br/>
   <a href="https://github.com/LogicStamp">
-    <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox" width="100" style="min-width: 80px;">
+    <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="100" style="min-width: 80px;">
   </a>
 
   ![Version](https://img.shields.io/badge/version-0.3.10-8b5cf6.svg)
@@ -27,8 +27,8 @@
   <br/>
 </div>
 
-![LogicStamp Context in action](./assets/logicstamp-context-demo.gif)
-*Sample stamp context output with generated bundles*
+![LogicStamp MCP Workflow](./assets/logicstamp-workflow.gif)
+*MCP server calling the CLI to generate and consume context bundles*
 
 <br/>
 
@@ -163,9 +163,6 @@ npm install -g logicstamp-mcp
 
 Then configure your AI assistant to use the LogicStamp MCP Server to analyze your project.
 
-![LogicStamp MCP Workflow](./assets/logicstamp-workflow.gif)
-*MCP server calling the CLI to generate and consume context bundles*
-
 📋 **See [MCP Getting Started Guide](https://logicstamp.dev/docs/mcp/getting-started) for detailed installation instructions for Claude Code, Claude Desktop, Cursor, and other MCP clients.**
 
 ## Example Output
@@ -236,6 +233,9 @@ LogicStamp Context automatically protects sensitive data in generated context fi
 > **ℹ️ Important**: Always review generated context files before sharing. For complete security documentation, see [SECURITY.md](https://github.com/LogicStamp/logicstamp-context/blob/main/SECURITY.md).
 
 ## Usage
+
+![LogicStamp Context in action](./assets/logicstamp-context-demo.gif)
+*Sample CLI commands usage*
 
 ```bash
 stamp --version                    # Show version number
