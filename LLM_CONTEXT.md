@@ -1,21 +1,21 @@
 # LogicStamp Context – LLM Guide
 
 ## Overview
-- Generates AI-friendly context bundles from React/Next.js/Vue/TypeScript projects without build steps.
+- Generates AI-friendly context bundles from React/Next.js/Vue/TypeScript projects and backend frameworks (Express.js, NestJS) without build steps.
 - Ships as a global CLI (install with `npm install -g logicstamp-context`, then use `stamp context` command) that scans `.ts`/`.tsx` files, extracts component contracts, and emits structured JSON.
 - Optimizes output for consumption by assistants such as Claude or ChatGPT to improve code understanding and guidance.
 - Works on Node.js ≥ 18.18.0 and requires access to the project's source tree.
-- **Framework support**: React, Next.js, Vue 3 (Composition API), and TypeScript. Vue support works with `.ts`/`.tsx` files only (JSX/TSX components, composables); Single File Components (`.vue` files) are not currently supported.
+- **Framework support**: React, Next.js, Vue 3 (Composition API), TypeScript, Express.js, and NestJS. Vue support works with `.ts`/`.tsx` files only (JSX/TSX components, composables); Single File Components (`.vue` files) are not currently supported. Backend frameworks (Express.js, NestJS) are automatically detected and their routes, controllers, and API signatures are extracted.
 
 **Note**: "Global CLI" means the tool is installed globally on your system (via `npm install -g`), making the `stamp` command available from any directory in your terminal, not just within a specific project folder.
 
 ## Core Workflow
 - `src/cli/index.ts` and `src/cli/stamp.ts` orchestrate CLI execution: read CLI flags via `src/cli/parser/argumentParser.ts`, route to handlers in `src/cli/handlers/`, and coordinate command execution.
 - `src/cli/commands/compare.ts` implements drift detection for single-file and multi-file comparison modes, including ADDED/ORPHANED/DRIFT/PASS detection.
-- `src/core/astParser.ts` orchestrates AST parsing modules (`astParser/extractors/` and `astParser/detectors.ts`) that use `ts-morph` to parse source files, derive component metadata, and normalize type information. Supports React, Next.js, and Vue 3 (Composition API) component detection.
+- `src/core/astParser.ts` orchestrates AST parsing modules (`astParser/extractors/` and `astParser/detectors.ts`) that use `ts-morph` to parse source files, derive component metadata, and normalize type information. Supports React, Next.js, Vue 3 (Composition API) component detection, and backend framework detection (Express.js, NestJS) for API route and controller extraction.
 - `src/core/contractBuilder.ts` converts raw AST findings into UIF contracts and merges incremental updates.
 - `src/core/manifest.ts` and `src/core/pack.ts` (with modules in `pack/`) assemble dependency graphs, compute bundle hashes, and format final output entries.
-- `src/core/styleExtractor.ts` (with modules in `styleExtractor/`) extracts style metadata from components:
+- `src/extractors/styling/` extracts style metadata from components:
   - **CSS frameworks**: Tailwind CSS (with categorization and breakpoint detection), SCSS/CSS modules (AST-based parsing)
   - **CSS-in-JS**: styled-components/Emotion, Styled JSX (CSS content, selectors, properties extraction)
   - **UI libraries**: Material UI, ShadCN/UI, Radix UI
@@ -94,7 +94,7 @@ The `context_main.json` file serves as a directory index:
     }
   ],
   "meta": {
-      "source": "logicstamp-context@0.3.10"
+      "source": "logicstamp-context@0.4.0"
   }
 }
 ```
@@ -117,7 +117,7 @@ Each folder's `context.json` contains an array of LogicStamp bundles. Each bundl
 - `graph.edges` lists dependency relationships between nodes (empty when analysis depth is 1).
 - `meta` section contains two critical fields:
   - `missing`: Array of unresolved dependencies. Each entry includes `name` (import path), `reason` (why it failed), and `referencedBy` (source component). Empty array indicates complete dependency resolution.
-  - `source`: Generator version string (e.g., `"logicstamp-context@0.3.10"`) for compatibility tracking.
+  - `source`: Generator version string (e.g., `"logicstamp-context@0.4.0"`) for compatibility tracking.
 - Example bundle skeleton:
 
 ```
@@ -151,6 +151,7 @@ LogicStamp Context detects and categorizes components into different kinds:
 - **`vue:composable`** - Vue 3 composables (functions using Vue Composition API like `ref`, `reactive`, `computed`, `watch`)
 - **`ts:module`** - TypeScript modules/utilities (non-React/Vue code)
 - **`node:cli`** - Node.js CLI scripts (files in `/cli/` directory or using `process.argv`)
+- **`node:api`** - Backend API routes/handlers (Express.js routes, NestJS controllers) with API signatures, route metadata, and framework-specific information
 
 **Vue.js Support (v0.3.4+):**
 - Detects Vue components and composables in `.ts`/`.tsx` files

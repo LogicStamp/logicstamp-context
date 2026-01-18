@@ -1,0 +1,63 @@
+[
+  {
+    "$schema": "https://logicstamp.dev/schemas/context/v0.1.json",
+    "position": "1/1",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "src/routes/users.ts",
+    "depth": 1,
+    "createdAt": "2026-01-18T10:30:00.000Z",
+    "bundleHash": "uifb:example1234567890abcdef",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "src/routes/users.ts",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "node:api",
+            "entryId": "src/routes/users.ts",
+            "description": "users - Express route definitions",
+            "version": {
+              "variables": ["router"],
+              "hooks": [],
+              "components": [],
+              "functions": [],
+              "imports": [
+                "../controllers/userController.js",
+                "express"
+              ],
+              "languageSpecific": {
+                "decorators": [
+                  "@router.get",
+                  "@router.get",
+                  "@router.post",
+                  "@router.put",
+                  "@router.delete"
+                ]
+              }
+            },
+            "logicSignature": {
+              "props": {},
+              "emits": {},
+              "apiSignature": {
+                "parameters": {
+                  "id": "string"
+                }
+              }
+            },
+            "exports": "named",
+            "semanticHash": "uif:example1234567890abcdef",
+            "fileHash": "uif:example9876543210fedcba"
+          },
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: users - Express route definitions\n *\n * Version (Component Composition):\n *   variables: [\"router\"]\n *   hooks: []\n *   components: []\n *   functions: []\n *   imports: [\"../controllers/userController.js\",\"express\"]\n *\n * Logic Signature:\n *   props: {}\n *   emits: {}\n *   apiSignature: {\"parameters\":{\"id\":\"string\"}}\n *\n * Hashes:\n *   semantic: uif:example1234567890abcdef\n *   file: uif:example9876543210fedcba\n */"
+        }
+      ],
+      "edges": []
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp-context@0.4.x"
+    }
+  }
+]

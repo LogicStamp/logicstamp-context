@@ -2,13 +2,8 @@
 
 ## Supported Versions
 
-We release patches for security vulnerabilities. Which versions are eligible for receiving such patches depends on the CVSS v3.0 Rating:
-
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.3.x   | :white_check_mark: |
-| 0.2.x   | :white_check_mark: |
-| 0.1.x   | :white_check_mark: |
+Security fixes are provided only for the latest minor release line.
+Older minor releases are not supported.
 
 ## Reporting a Vulnerability
 
@@ -47,6 +42,8 @@ After you submit a security report:
 We appreciate your efforts to responsibly disclose your findings and will make every effort to acknowledge your contributions.
 
 ## Scope of This Policy
+
+This security policy applies starting from LogicStamp v0.4.0.
 
 This security policy currently applies to **LogicStamp Context (CLI / local mode only)**.
 
@@ -115,7 +112,7 @@ When using LogicStamp Context:
 
 LogicStamp Context:
 
-- **Reads source code**: The tool parses your TypeScript/React source files using AST analysis. It does not execute your code.
+- **Reads source code**: The tool parses your TypeScript source files (frontend and backend frameworks) using AST analysis. It does not execute your code.
 
 - **Never modifies source code**: LogicStamp Context never modifies your existing source files. It only generates new output files (`context.json`, etc.) and may modify `.gitignore` (only adds patterns, never removes anything) or create `LLM_CONTEXT.md` automatically (by default) or with your approval (when using `--no-secure` flag).
 

@@ -1,0 +1,82 @@
+[
+  {
+    "$schema": "https://logicstamp.dev/schemas/context/v0.1.json",
+    "position": "1/1",
+    "type": "LogicStampBundle",
+    "schemaVersion": "0.1",
+    "entryId": "src/users/users.controller.ts",
+    "depth": 1,
+    "createdAt": "2026-01-18T10:30:00.000Z",
+    "bundleHash": "uifb:exampleabcdef1234567890",
+    "graph": {
+      "nodes": [
+        {
+          "entryId": "src/users/users.controller.ts",
+          "contract": {
+            "type": "UIFContract",
+            "schemaVersion": "0.3",
+            "kind": "node:api",
+            "entryId": "src/users/users.controller.ts",
+            "description": "users.controller - NestJS controller",
+            "version": {
+              "variables": [],
+              "hooks": [],
+              "components": [],
+              "functions": [
+                "findAll",
+                "findOne",
+                "create",
+                "update",
+                "remove"
+              ],
+              "imports": [
+                "../dto/user.dto.js",
+                "./users.service.js",
+                "@nestjs/common"
+              ],
+              "languageSpecific": {
+                "annotations": [
+                  "@Controller",
+                  "@Get",
+                  "@Get",
+                  "@Param",
+                  "@Post",
+                  "@Body",
+                  "@Put",
+                  "@Param",
+                  "@Body",
+                  "@Delete",
+                  "@Param"
+                ],
+                "classes": [
+                  "UsersController"
+                ]
+              }
+            },
+            "logicSignature": {
+              "props": {},
+              "emits": {},
+              "apiSignature": {
+                "parameters": {
+                  "id": "string",
+                  "createUserDto": "CreateUserDto",
+                  "updateUserDto": "UpdateUserDto"
+                },
+                "returnType": "Promise<User[]>"
+              }
+            },
+            "exports": "named",
+            "semanticHash": "uif:exampleabcdef1234567890",
+            "fileHash": "uif:examplefedcba0987654321"
+          },
+          "codeHeader": "/**\n * @uif Contract 0.3\n *\n * Description: users.controller - NestJS controller\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: []\n *   components: []\n *   functions: [\"findAll\",\"findOne\",\"create\",\"update\",\"remove\"]\n *   imports: [\"../dto/user.dto.js\",\"./users.service.js\",\"@nestjs/common\"]\n *\n * Logic Signature:\n *   props: {}\n *   emits: {}\n *   apiSignature: {\"parameters\":{\"id\":\"string\",\"createUserDto\":\"CreateUserDto\",\"updateUserDto\":\"UpdateUserDto\"},\"returnType\":\"Promise<User[]>\"}\n *\n * Hashes:\n *   semantic: uif:exampleabcdef1234567890\n *   file: uif:examplefedcba0987654321\n */"
+        }
+      ],
+      "edges": []
+    },
+    "meta": {
+      "missing": [],
+      "source": "logicstamp-context@0.4.x"
+    }
+  }
+]
