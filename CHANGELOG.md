@@ -31,6 +31,122 @@ See [docs/limitations.md](docs/limitations.md) for complete details and code evi
 
 ---
 
+## [0.4.0] - 2026-01-18
+
+### Added
+
+- **Backend framework support** - Added comprehensive support for backend Node.js frameworks:
+  - **Express.js support** - Extracts Express.js routes and API metadata:
+    - Route extraction from `app.get()`, `app.post()`, `router.get()`, etc. patterns
+    - HTTP method detection (GET, POST, PUT, DELETE, PATCH, ALL)
+    - Route path extraction with parameter detection (e.g., `/users/:id` → `params: ['id']`)
+    - Handler function name extraction (named functions and anonymous handlers)
+    - API signature extraction (function parameters and return types)
+  - **NestJS support** - Extracts NestJS controllers and API metadata:
+    - Controller class detection via `@Controller()` decorator
+    - Base path extraction from `@Controller('/path')` decorator arguments
+    - Route method extraction from `@Get()`, `@Post()`, `@Put()`, `@Delete()`, `@Patch()` decorators
+    - Route path extraction from decorator arguments
+    - Method parameter and return type extraction
+    - Decorator/annotation extraction for language-specific metadata
+  - **Backend framework detection** - Automatically detects backend frameworks from imports and code patterns:
+    - Express.js detection: checks for `express` imports and `app.get()`/`router.post()` patterns
+    - NestJS detection: checks for `@nestjs` imports and `@Controller()`/`@Get()` decorator patterns
+    - Framework detection runs early in extraction pipeline to skip frontend extraction for backend files
+  - **Language-specific metadata** - Added support for language-specific extensions:
+    - `LanguageSpecificVersion` interface for extensible language metadata
+    - Decorator extraction (e.g., `['@app.get', '@app.post']` for Express patterns)
+    - Annotation extraction (e.g., `['@Controller', '@Get', '@Post']` for NestJS)
+    - Class name extraction (e.g., `['UserController', 'UserService']`)
+    - Method extraction for languages where methods differ from functions
+    - Stored in `version.languageSpecific` field in contracts
+  - **API signature extraction** - New `ApiSignature` interface for backend API contracts:
+    - `parameters`: Function/method parameters with types (e.g., `{ user_id: 'int', name: 'str' }`)
+    - `returnType`: Return type extraction (e.g., `'User'`, `'List[User]'`, `'void'`)
+    - `requestType`: Request body type for POST/PUT requests (e.g., `'CreateUserRequest'`)
+    - `responseType`: Response type (e.g., `'UserResponse'`, `'List[UserResponse]'`)
+    - Stored in `logicSignature.apiSignature` field in contracts
+  - **New contract kind: `node:api`** - Backend API routes/handlers are classified as `node:api` kind
+  - **Extensible contract kind pattern** - `ContractKind` now supports extensible `language:type` pattern (e.g., `'python:function'`, `'java:class'`, `'node:api'`) for future language support
+  - **E2E tests for backend frameworks** - Added comprehensive end-to-end tests for Express.js and NestJS:
+    - Express.js E2E tests (`tests/e2e/express.test.ts`) - Tests AST extraction, contract building, and dependency graphs for Express routes and controllers
+    - NestJS E2E tests (`tests/e2e/nest.test.ts`) - Tests AST extraction, contract building, and dependency graphs for NestJS controllers and services
+    - Express.js fixtures (`tests/fixtures/express-app/`) - Realistic Express app structure with routes, controllers, middleware, and types
+    - NestJS fixtures (`tests/fixtures/nest-app/`) - Realistic NestJS app structure with controllers, services, modules, DTOs, guards, and decorators
+    - Test coverage for route extraction, API signature extraction, framework detection, and dependency graph building
+    - Tests follow the same pattern as existing Vue/React E2E tests for consistency
+
+### Changed
+
+- **Extractor architecture reorganization** - Reorganized extractors into framework-specific directories for better code organization:
+  - **Style extractors** - Moved from `src/core/styleExtractor/` to `src/extractors/styling/`:
+    - All 11 style extractor modules (Tailwind, Material UI, Radix UI, ShadCN, Styled Components, SCSS, etc.) moved to new location
+    - Maintained backward compatibility via re-export in `src/core/styleExtractor.ts` (deprecated but still functional)
+    - Updated CLI command imports to use new location
+    - Improved tree-shaking support - import directly from `extractors/styling/` for better bundle optimization
+  - **Public extractors** - New `src/extractors/` directory structure:
+    - `extractors/react/` - React-specific extractors
+    - `extractors/vue/` - Vue-specific extractors
+    - `extractors/express/` - Express.js extractors
+    - `extractors/nest/` - NestJS extractors
+    - `extractors/styling/` - Style extractors
+    - `extractors/shared/` - Shared utilities
+  - Improved code organization and maintainability for multi-framework support
+- **Conditional extraction logic** - Enhanced AST extraction to conditionally extract based on detected framework:
+  - Backend files skip React/Vue extraction (hooks, components, props, state, emits remain empty)
+  - Frontend files skip backend extraction (routes, controllers remain undefined)
+  - Framework detection runs early to optimize extraction pipeline
+- **Schema updates** - Enhanced context schema with backend support:
+  - `ContractKind` changed from enum to pattern-based string (`^[a-z]+:[a-z-]+$`) for extensibility
+  - Added `LanguageSpecificVersion` definition with decorators, annotations, classes, and methods fields
+  - Added `ApiSignature` definition with parameters, returnType, requestType, and responseType fields
+  - Updated field descriptions to clarify empty arrays/objects for non-frontend files (e.g., `hooks: []` for backend files, `props: {}` for backend files)
+- **Function signature updates** - Updated `detectKind()` function signature:
+  - Parameter order changed: `detectKind(hooks, components, imports, source, filePath, backendFramework?)`
+  - Added optional `backendFramework` parameter for backend detection
+  - Backend detection runs before Vue/React detection for priority
+
+### Fixed
+
+- **Hash calculation for backend files** - Fixed issue where backend API changes were not detected in semantic and signature hashes:
+  - **Semantic hash** - Now includes backend metadata (routes, framework, controller, language-specific data) in hash calculation
+  - **Signature hash** - Now includes `apiSignature` field in hash calculation
+  - Backend route changes, API signature changes, and controller modifications now properly trigger hash updates
+  - Ensures accurate change detection for backend files in context comparison and drift detection
+  - Hash format unchanged (`uif:...` prefix) - only hash values change for backend files when regenerated
+
+### Improved
+
+- **Enhanced API signature extraction** - Significantly improved API signature extraction for backend files:
+  - **Multi-route aggregation** - Now aggregates API signatures from all routes in a file instead of only using the first route
+  - **Actual type extraction** - Extracts actual parameter types, return types, request types, and response types from handler functions instead of defaulting to `'string'`
+  - **Per-route signature extraction** - Each route handler now has its API signature extracted during backend metadata extraction:
+    - Express: Extracts types from named handler functions (skips anonymous handlers)
+    - NestJS: Extracts types from controller method signatures
+  - **Intelligent type aggregation** - When aggregating multiple routes:
+    - Prefers extracted types over `'string'` defaults
+    - Collects return types, request types (for POST/PUT/PATCH), and response types from all routes
+    - Uses the most common type when all routes share the same type, otherwise uses the first
+  - **Better accuracy** - API signatures are now much more accurate for multi-route files, providing complete parameter and type information for AI context analysis
+
+- **Test coverage** - Updated test suite to reflect new function signatures and backend support:
+  - Updated all `detectKind()` calls to match new parameter order
+  - Tests now properly handle backend framework detection
+- **Documentation** - Updated limitations documentation to reflect backend support capabilities
+
+**Impact:** This release significantly expands LogicStamp Context beyond frontend frameworks to support backend Node.js frameworks (Express.js and NestJS). Backend API routes, controllers, and signatures are now extracted and included in context bundles, enabling AI assistants to understand full-stack codebases. The extensible contract kind pattern (`language:type`) and language-specific metadata support pave the way for future language support (Python, Java, etc.). Backend files are automatically detected and skip frontend extraction, optimizing performance and accuracy.
+
+**Non-breaking change:** All changes are backward compatible and additive:
+- New `node:api` contract kind is added - existing React/Vue/TypeScript files continue to work unchanged
+- Backend extraction only runs when backend frameworks are detected - frontend-only projects are unaffected
+- Schema changes are additive - new optional fields (`languageSpecific`, `apiSignature`) only appear when relevant
+- Existing context files remain valid - all new fields are optional
+- Contract kind pattern change maintains backward compatibility - existing enum values (`react:component`, `vue:component`, etc.) still work
+- Extractor reorganization is internal - no API changes for consumers
+- Hash calculation fixes only affect hash values (not format) - existing context files remain valid, regenerated files will have updated hashes for backend files
+
+---
+
 ## [0.3.10] - 2026-01-17
 
 ### Added
@@ -857,7 +973,8 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ---
 
 ## Version links
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.3.10...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.4.0
 [0.3.10]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.10
 [0.3.9]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.9
 [0.3.8]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.8

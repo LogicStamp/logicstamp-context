@@ -334,6 +334,7 @@ export default function BlogPost({ params }: { params: { slug: string } }) {
 - ⚠️ Third-party component prop types (package names and versions now included in v0.3.8)
 - ❌ Project-level insights (cross-folder relationships)
 - 🟡 Next.js framework features (route roles, segment paths, and metadata exports now supported in v0.3.10; data fetching patterns still missing)
+- ✅ Backend framework support (Express.js, NestJS) - Complete in v0.4.0
 
 **Bottom line:** We're hitting around 90% accuracy overall. Solid foundation, but there's definitely room to improve. These issues are on our roadmap.
 
@@ -347,7 +348,7 @@ This section documents what's currently captured in context files versus what's 
 
 ### 1. Component Contracts (UIFContract)
 
-- **Component kind**: `react:component`, `react:hook`, `vue:component`, `vue:composable`, `ts:module`, `node:cli`
+- **Component kind**: `react:component`, `react:hook`, `vue:component`, `vue:composable`, `ts:module`, `node:cli`, `node:api` ✅ **v0.4.0**
 - **Props**: Types and signatures
 - **State variables**: With types
 - **Hooks used**: Listed in `version.hooks`
@@ -388,7 +389,7 @@ This section documents what's currently captured in context files versus what's 
 
 - **Created timestamps**: When context was generated
 - **OS detection**: Platform info (e.g., `win32`)
-- **Source tool version**: `logicstamp-context@0.3.x`
+- **Source tool version**: `logicstamp-context@0.4.0`
 - **Missing dependencies**: Tracked in `missing` array
 
 ## What's Missing or Incomplete
@@ -397,9 +398,9 @@ This section documents what's currently captured in context files versus what's 
 
 **Status:** ✅ **Phase 1 Complete** (v0.3.9), 🟡 Phase 2 Planned
 
-The `extractClassesFromExpression()` function in `src/core/styleExtractor/tailwind.ts` now resolves Phase 1 dynamic expressions (variables, object properties, conditionals) within template literals. Phase 2 (object lookups with variables, cross-file references, function calls) is planned for a future release.
+The `extractClassesFromExpression()` function in `src/extractors/styling/tailwind.ts` now resolves Phase 1 dynamic expressions (variables, object properties, conditionals) within template literals. Phase 2 (object lookups with variables, cross-file references, function calls) is planned for a future release.
 
-**Location**: `src/core/styleExtractor/tailwind.ts` (lines 135-210)
+**Location**: `src/extractors/styling/tailwind.ts` (lines 135-210)
 
 **Impact**: Phase 1 handles ~70-80% of common dynamic class patterns. Phase 2 will handle advanced edge cases like object lookups with variables (`variants[variant]`), cross-file references, and function calls.
 
@@ -581,8 +582,9 @@ Route extraction may miss routes in edge cases where JSX attribute values have u
 **Current Behavior:**
 - ✅ Basic Next.js detection (`'use client'`/`'use server'` directives, App Router directory detection)
 - ✅ Next.js import tracking
-- ❌ Metadata exports (`export const metadata = {...}`) not extracted
-- ❌ Route paths, dynamic routes, route segments not extracted
+- ✅ **Metadata exports** (`export const metadata = {...}`) extracted ✅ **v0.3.10**
+- ✅ **Route paths, dynamic routes, route segments** extracted ✅ **v0.3.10**
+- ✅ **Route role detection** (page, layout, loading, error, not-found, template, default, route) ✅ **v0.3.10**
 - ❌ Layout hierarchy and relationships not extracted
 - ❌ Data fetching patterns (`getServerSideProps`, `getStaticProps`, `getStaticPaths`) not fully extracted
 - ❌ Route handlers (API routes) detected but request/response types not extracted
@@ -590,7 +592,7 @@ Route extraction may miss routes in edge cases where JSX attribute values have u
 - ❌ Middleware files detected but not fully analyzed
 - ❌ Dynamic imports tracked but component resolution not analyzed
 
-**Impact**: Next.js projects are detected and basic metadata is captured, but advanced App Router features, route structure, and data fetching patterns are not extracted. This limits understanding of Next.js-specific architecture and routing patterns.
+**Impact**: Next.js projects are detected and route roles, segment paths, and metadata exports are now extracted (v0.3.10). However, layout hierarchy, data fetching patterns, and some advanced App Router features are still not extracted. This limits understanding of some Next.js-specific architecture patterns.
 
 **Location**: `src/core/astParser/detectors.ts` (`extractNextJsMetadata()` function)
 
@@ -598,7 +600,32 @@ Route extraction may miss routes in edge cases where JSX attribute values have u
 
 **Related**: See [Next.js Framework Limitations](#nextjs-framework-limitations) above for detailed information and examples.
 
-### 10. Runtime Behavior
+### 11. Backend Framework Features
+
+**Status:** ✅ **Complete (v0.4.0)**
+
+Backend framework support has been fully implemented for Express.js and NestJS.
+
+**What Works (v0.4.0):**
+- ✅ Express.js route extraction (`app.get()`, `router.post()`, etc.)
+- ✅ NestJS controller extraction (`@Controller`, `@Get`, `@Post`, etc.)
+- ✅ HTTP method detection (GET, POST, PUT, DELETE, PATCH, ALL)
+- ✅ Route path extraction with parameter detection (`/users/:id` → `params: ['id']`)
+- ✅ API signature extraction (request/response types, parameters)
+- ✅ Framework-specific metadata (decorators, annotations, class names)
+- ✅ Automatic framework detection (skips frontend extraction for backend files)
+
+**What Doesn't Work:**
+- ❌ Middleware/guard/interceptor detection (not yet extracted)
+- ❌ Request validation schemas (not extracted from decorators like `@Body()`, `@Query()`)
+- ❌ Response transformation logic (not analyzed)
+- ❌ Other Node.js frameworks (Fastify, Koa, Hapi) not yet supported
+
+**Impact**: Backend API routes and controllers are now fully extracted, enabling AI assistants to understand backend API structure and endpoints. Middleware and advanced framework features are not yet extracted.
+
+**Priority**: Low (core features complete, advanced features pending)
+
+### 12. Runtime Behavior
 
 **Missing**: Runtime props, state changes, side effects
 
@@ -801,7 +828,7 @@ export function useTypewriter(text: string, speed = 30, pause = 800) {
 
 **Status:** ✅ **Fixed in v0.3.5** (Verified)
 
-**Location**: `src/core/styleExtractor/styleExtractor.ts` (lines 88-191)
+**Location**: `src/extractors/styling/styleExtractor.ts` (lines 88-191)
 
 **Verified Implementation**: The `extractInlineStyles()` function extracts both properties AND values:
 - ✅ Extracts property names from object literals
@@ -847,7 +874,7 @@ style={{ animationDelay: '2s', color: 'blue', padding: '1rem' }}
 
 **Status:** ✅ **Fixed in v0.3.5** (Verified)
 
-**Location**: `src/core/styleExtractor/styledJsx.ts` (lines 59-230)
+**Location**: `src/extractors/styling/styledJsx.ts` (lines 59-230)
 
 **Verified Implementation**: The `extractStyledJsx()` function fully extracts CSS content:
 - ✅ Extracts CSS from `<style jsx>` template literals

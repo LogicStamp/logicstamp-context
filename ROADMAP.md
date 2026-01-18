@@ -4,6 +4,12 @@ This roadmap outlines the planned features, improvements, and known limitations 
 
 ## Recent Achievements
 
+### v0.4.0 (January 2026)
+- ✅ **Backend framework support** - Comprehensive support for Node.js backend frameworks (Express.js, NestJS). Extracts API routes, HTTP methods, route parameters, request/response types, and framework-specific metadata. Automatically detects backend frameworks and skips frontend extraction for backend files. Introduces new `node:api` contract kind and extensible `language:type` pattern for future language support.
+
+### v0.3.10 (January 2026)
+- ✅ **Advanced Next.js App Router features** - Enhanced Next.js metadata extraction with route roles, segment paths, and metadata exports. Automatically detects route roles (`page`, `layout`, `loading`, `error`, `not-found`, `template`, `default`, `route`), extracts segment paths from file structure, and parses both static and dynamic metadata exports.
+
 ### v0.3.9 (January 2026)
 - ✅ **Dynamic Tailwind class parsing (Phase 1)** - Enhanced Tailwind CSS extractor to resolve dynamic class expressions within template literals. Resolves const/let variables, object properties, and conditional expressions. Handles ~70-80% of common dynamic class patterns.
 
@@ -257,37 +263,29 @@ These items expand LogicStamp Context to support additional languages, framework
 ### Near-Term (v0.4.x)
 
 #### 1. Backend Framework Support
-**Status:** 🔴 Not Started
+**Status:** ✅ **Complete in v0.4.0**
 
-Add support for Node.js backend frameworks to extract API routes, HTTP methods, request/response types, and framework-specific metadata.
+Backend framework support has been fully implemented! LogicStamp Context now extracts API routes, HTTP methods, request/response types, and framework-specific metadata for Node.js backend frameworks.
 
-**Current Behavior:**
-- ✅ Basic TypeScript module detection for backend files
-- ✅ Function extraction and import tracking
-- ❌ No route path extraction (`/api/users`, `/users/:id`)
-- ❌ No HTTP method detection (GET, POST, PUT, DELETE)
-- ❌ No framework-specific metadata (Express routes, NestJS controllers)
-- ❌ No request/response type extraction from handlers
-- ❌ No middleware/guard/interceptor detection
+**What Works (v0.4.0):**
+- ✅ Framework detection (Express.js, NestJS)
+- ✅ Route path extraction (`/api/users`, `/users/:id`)
+- ✅ HTTP method detection (GET, POST, PUT, DELETE, PATCH, ALL)
+- ✅ Framework-specific metadata (Express routes, NestJS controllers)
+- ✅ API signature extraction (request/response types, parameters)
+- ✅ Route parameter detection (e.g., `/users/:id` → `params: ['id']`)
+- ✅ Controller class detection and base path extraction (NestJS)
+- ✅ Language-specific metadata (decorators, annotations, class names)
+- ✅ New contract kind: `node:api` for backend API routes/handlers
 
-**Planned Implementation:**
-- Framework detection (Express, NestJS, with extensibility for others)
-- Route extraction (paths, HTTP methods, route parameters)
-- Request/response type extraction from handler signatures
-- Middleware/guard/interceptor detection
-- Controller/route grouping and base path detection
-- Framework-agnostic `backend` metadata field (similar to `nextjs` field)
-
-**Initial Targets:**
+**Supported Frameworks:**
 - **Express.js** - Route extraction from `app.get()`, `router.post()`, etc.
 - **NestJS** - Controller extraction with decorators (`@Controller`, `@Get`, `@Post`, etc.)
 
 **Future Frameworks:**
 - Fastify, Koa, Hapi (Phase 2+)
 
-**Impact:** Enables AI assistants to understand backend API structure, endpoints, and request/response contracts. Currently, backend files are treated as generic TypeScript modules with minimal value.
-
-**Priority:** High
+**Impact:** AI assistants can now understand backend API structure, endpoints, and request/response contracts. Backend files are automatically detected and skip frontend extraction, optimizing performance and accuracy.
 
 ---
 
@@ -421,7 +419,6 @@ These are longer-term features and improvements planned for future releases.
 ### Configuration & Extensibility
 - **Custom profile configuration and overrides** - User-defined profiles beyond preset options
 - **Additional output formats** - More format options for different AI consumption patterns
-- **Advanced Next.js App Router features** - Route roles, segment paths, metadata exports
 
 ### Developer Experience
 - **Integration examples** - Examples for popular AI assistants (Cursor, Claude Desktop, GitHub Copilot Chat)
@@ -469,7 +466,7 @@ We welcome contributions! If you'd like to work on any of these roadmap items:
 - Enhanced third-party component info (Phase 2) - Include prop types (package names and versions completed in v0.3.8)
 
 **Framework Expansion:**
-- Backend framework support - Extract API routes, HTTP methods, and framework metadata (Express, NestJS)
+- ✅ Backend framework support - Extract API routes, HTTP methods, and framework metadata (Express, NestJS) (v0.4.0)
 - JavaScript & JSX support - Add `.js`/`.jsx` file analysis
 - Complete Vue.js support - Add `.vue` SFC file parsing
 - Watch mode - Automatic context regeneration on file changes
@@ -480,7 +477,7 @@ We welcome contributions! If you'd like to work on any of these roadmap items:
 
 For detailed release notes and changes, see [CHANGELOG.md](CHANGELOG.md).
 
-**Current Version:** v0.3.10 (Beta)
+**Current Version:** v0.4.0 (Beta)
 
 **Status:** Actively developed - we're working on improving accuracy and expanding feature coverage based on user feedback.
 

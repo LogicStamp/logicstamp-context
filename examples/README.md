@@ -28,6 +28,36 @@ Example demonstrating missing dependencies:
 - See what different missing dependency reasons look like
 - Learn how to diagnose and fix issues
 
+### `context.backend-express.example.json`
+Example demonstrating Express.js backend API extraction:
+- **Express routes** - Route definitions with HTTP methods (GET, POST, PUT, DELETE)
+- **Route parameters** - Parameter extraction from path patterns (e.g., `:id` → `params: ['id']`)
+- **API signatures** - Function parameter and return type extraction
+- **Language-specific metadata** - Express route patterns captured as decorators (`@router.get`, `@router.post`)
+- **Contract kind: `node:api`** - Backend API routes classified as `node:api` (not `react:component`)
+
+**Use this example to:**
+- Understand how Express.js routes are extracted and structured
+- See backend API signature format (`apiSignature.parameters`, `apiSignature.returnType`)
+- Learn how backend files differ from frontend components (empty `hooks`, `components`, `props`, `emits`)
+- Reference when generating context for Express.js applications
+
+### `context.backend-nestjs.example.json`
+Example demonstrating NestJS backend API extraction:
+- **NestJS controllers** - Controller classes with `@Controller()` decorator
+- **Route decorators** - HTTP method decorators (`@Get()`, `@Post()`, `@Put()`, `@Delete()`)
+- **Method parameters** - Parameter extraction with decorators (`@Param()`, `@Body()`)
+- **API signatures** - Method parameter and return type extraction
+- **Language-specific metadata** - NestJS decorators captured as annotations (`@Controller`, `@Get`, `@Post`)
+- **Class names** - Controller class names extracted (`UsersController`)
+- **Contract kind: `node:api`** - Backend API controllers classified as `node:api`
+
+**Use this example to:**
+- Understand how NestJS controllers are extracted and structured
+- See how decorators and annotations are captured in `languageSpecific.annotations`
+- Learn how class-based backend code differs from function-based Express routes
+- Reference when generating context for NestJS applications
+
 ### `context.with-style.example.json`
 Example demonstrating style metadata extraction:
 - **Tailwind CSS** - Utility classes categorized by type (layout, spacing, colors, typography)
@@ -167,6 +197,12 @@ stamp context style --out examples/my-style-example.json
 
 # Generate TOON format (like context.example.toon)
 stamp context --format toon --out examples/my-example.toon
+
+# Generate backend context (like context.backend-express.example.json)
+stamp context ./src/routes --out examples/my-backend-example.json
+
+# Generate NestJS context (like context.backend-nestjs.example.json)
+stamp context ./src --out examples/my-nestjs-example.json
 ```
 
 ## See Also

@@ -8,7 +8,7 @@
   </a>
 
  ### Understand your codebase. Generate deterministic context.
-  <small><em>Currently supports React · TypeScript</em></small>
+  <small><em>Supports React · Next.js · Vue (TS/TSX) · Express · NestJS · TypeScript</em></small>
   <br/>
   <br/>
   <strong>Fast • One-time setup</strong>
@@ -18,7 +18,7 @@
     <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="100" style="min-width: 80px;">
   </a>
 
-  ![Version](https://img.shields.io/badge/version-0.3.10-8b5cf6.svg)
+  ![Version](https://img.shields.io/badge/version-0.4.0-8b5cf6.svg)
   ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
   ![License](https://img.shields.io/badge/license-MIT-green.svg)
   ![Node](https://img.shields.io/badge/node-%3E%3D18.18.0-brightgreen.svg)
@@ -77,7 +77,7 @@ stamp context
 
 > **ℹ️** If you see `"PRIVATE_DATA"` in output, see the **Security** section below.
 
-> **Note:** This is a beta release (v0.3.10). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+> **Note:** This is a beta release (v0.4.0). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 📋 **For a detailed step-by-step getting started guide with integration examples, see [Getting Started Guide](https://logicstamp.dev/docs/getting-started).**
 
@@ -117,10 +117,10 @@ This transforms code analysis from "parse and infer" to "read and reason" - maki
 ### Framework Support
 
 - **React** - full support (components, hooks, props, styles)
-- **Next.js** - partial support (App / Pages Router analysis)
+- **Next.js** - full support (App Router with route roles, segment paths, metadata exports)
 - **Vue 3** - partial support (Composition API in TS/TSX files)
 - **UI frameworks** - Material UI, ShadCN/UI, Radix UI, Tailwind CSS, Styled Components, SCSS/CSS Modules
-- **Backend frameworks** - planned for v0.4.x (Express, NestJS) - see [ROADMAP.md](ROADMAP.md)
+- **Backend frameworks** - Express.js, NestJS (new in v0.4.0 - core features complete, advanced features like middleware/guards still being refined)
 
 > **Note:** LogicStamp currently analyzes `.ts` and `.tsx` files only. JavaScript files (`.js`, `.jsx`) are not analyzed for context generation. Vue 3 support works with `.ts`/`.tsx` files only, not `.vue` SFC files. CSS and SCSS files imported by your TypeScript/TSX files are also parsed when using `--include-style` (standalone CSS/SCSS files that aren't imported won't be analyzed).
 
@@ -128,6 +128,7 @@ This transforms code analysis from "parse and infer" to "read and reason" - maki
 
 - **AI-ready bundles** - predictable, structured, deterministic
 - **React/Next.js/Vue/TypeScript awareness** - props, hooks/composables, state, deps
+- **Backend framework support** - Express.js and NestJS routes, controllers, API signatures
 - **Style metadata** - (Tailwind, SCSS, MUI, shadcn)
 - **Next.js App Router detection** - (client/server, layout/page/etc)
 - **Vue 3 Composition API** - (ref, reactive, computed, composables)
@@ -142,7 +143,7 @@ This transforms code analysis from "parse and infer" to "read and reason" - maki
 ## How it Works
 
 1. **Scan**: Finds all `.ts` and `.tsx` files in your project
-2. **Analyze**: Parses React/Next.js/Vue components using TypeScript AST
+2. **Analyze**: Parses React/Next.js/Vue components and backend APIs (Express/NestJS) using TypeScript AST
 3. **Extract**: Builds component contracts with structure and signatures
 4. **Graph**: Creates dependency graph showing relationships
 5. **Bundle**: Packages context bundles optimized for AI consumption
@@ -287,6 +288,7 @@ For full Documentation see: https://logicstamp.dev/docs
 
 - **[Getting Started Guide](https://logicstamp.dev/docs/getting-started)** - Step-by-step installation and quick start guide
 - **[Usage Guide](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md)** - Complete usage documentation with examples
+- **[Monorepo Support](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/monorepo.md)** - Working with monorepos (backend + frontend)
 - **[Example Files](https://github.com/LogicStamp/logicstamp-context/blob/main/examples/README.md)** - Complete example files (context.json, .stampignore, security reports)
 - **[Token Optimization](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md#token-cost-comparison)** - Understand token costs and savings
 - **[Mode Comparison](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/compare-modes.md)** - Detailed comparison across all modes
@@ -310,7 +312,7 @@ See the full list here: [docs/limitations.md](https://github.com/LogicStamp/logi
 ## Requirements
 
 - Node.js >= 18.18.0 (**Node 20+ recommended**)
-- TypeScript codebase (React or Next.js)
+- TypeScript codebase (React, Next.js, Express.js, or NestJS)
 
 ## License
 
