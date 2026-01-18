@@ -8,7 +8,7 @@
   </a>
 
  ### Understand your codebase. Generate deterministic context.
-  <small><em>Supports React · Next.js · Vue (TS/TSX) · Express · NestJS · TypeScript</em></small>
+  <small><em>React · Next.js · Vue (TS/TSX) · Express · NestJS · TypeScript</em></small>
   <br/>
   <br/>
   <strong>Fast • One-time setup</strong>
