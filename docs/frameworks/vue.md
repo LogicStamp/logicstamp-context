@@ -343,11 +343,14 @@ components/
 
 ## Framework Detection Priority
 
-When a file imports both React and Vue, LogicStamp prioritizes Vue detection:
+When a file imports multiple frameworks, LogicStamp uses a priority system:
 
-- **Vue takes priority**: If a file has any Vue imports (`vue` or `vue/*`), Vue extractors are used
-- **React fallback**: If no Vue imports are detected, React extractors are used
-- **Mixed frameworks**: Files with both React and Vue imports will be analyzed as Vue components
+1. **Backend** (Express/NestJS detected) → `node:api` (highest priority)
+2. **Vue** (Vue import + Vue component patterns) → `vue:component` or `vue:composable`
+3. **React** (React import or JSX/TSX + React patterns) → `react:component` or `react:hook`
+4. **TypeScript module** (no framework patterns) → `ts:module` (default fallback)
+
+**Note:** React is NOT the default fallback. Files without framework patterns become `ts:module`.
 
 **Example:**
 ```typescript

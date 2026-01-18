@@ -218,6 +218,62 @@ describe('AST Parser Error Handling', () => {
       // At minimum, should have extracted imports
       expect(Array.isArray(result.imports)).toBe(true);
     });
+
+    it('should prioritize backend extraction over Vue extraction', async () => {
+      const mixedFile = join(tempDir, 'mixed-routes.ts');
+      const mixedContent = `
+        import express from 'express';
+        import { ref } from 'vue';
+        
+        const app = express();
+        
+        app.get('/users', (req, res) => {
+          res.json({ users: [] });
+        });
+      `;
+      writeFileSync(mixedFile, mixedContent, 'utf-8');
+
+      const result = await extractFromFile(mixedFile);
+      
+      // Should extract backend (not Vue) because Backend > Vue priority
+      expect(result.kind).toBe('node:api');
+      expect(result.backend).toBeDefined();
+      expect(result.backend?.framework).toBe('express');
+      // Vue extraction should be skipped (hooks/components should be empty)
+      expect(result.hooks).toEqual([]);
+      expect(result.components).toEqual([]);
+      expect(result.props).toEqual({});
+      expect(result.state).toEqual({});
+      expect(result.emits).toEqual({});
+    });
+
+    it('should prioritize backend extraction over React extraction', async () => {
+      const mixedFile = join(tempDir, 'mixed-routes-react.ts');
+      const mixedContent = `
+        import express from 'express';
+        import { useState } from 'react';
+        
+        const app = express();
+        
+        app.get('/users', (req, res) => {
+          res.json({ users: [] });
+        });
+      `;
+      writeFileSync(mixedFile, mixedContent, 'utf-8');
+
+      const result = await extractFromFile(mixedFile);
+      
+      // Should extract backend (not React) because Backend > React priority
+      expect(result.kind).toBe('node:api');
+      expect(result.backend).toBeDefined();
+      expect(result.backend?.framework).toBe('express');
+      // React extraction should be skipped (hooks/components should be empty)
+      expect(result.hooks).toEqual([]);
+      expect(result.components).toEqual([]);
+      expect(result.props).toEqual({});
+      expect(result.state).toEqual({});
+      expect(result.emits).toEqual({});
+    });
   });
 });
 

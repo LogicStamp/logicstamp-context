@@ -6,7 +6,7 @@ LogicStamp Context works seamlessly with monorepos containing both backend and f
 
 LogicStamp analyzes **each file independently**:
 
-1. **Scans** all `.ts` and `.tsx` files recursively
+1. **Scans** all `.ts` and `.tsx` files recursively (Vue `.vue` SFC support is upcoming)
 2. **Detects** framework per file (Express, NestJS, React, Vue, or TypeScript)
 3. **Extracts** appropriate metadata based on detected framework
 4. **Generates** contracts for all files, preserving your directory structure
@@ -19,16 +19,19 @@ Each file is analyzed independently with framework detection:
 
 ### Priority Order
 
-1. **Vue** (if Vue imports detected) → Vue extraction
-2. **Backend** (if Express/NestJS detected) → Backend extraction
-3. **React** (default) → React extraction
+1. **Backend** (Express/NestJS detected) → `node:api`
+2. **Vue** (Vue import + Vue component patterns) → `vue:component` or `vue:composable`
+3. **React** (React import or JSX/TSX + React patterns) → `react:component` or `react:hook`
+4. **TypeScript module** (no framework patterns) → `ts:module`
 
 ### Detection Logic
 
 - **Express.js**: Requires `express` import AND route patterns (`app.get()`, `router.post()`, etc.)
 - **NestJS**: Requires `@nestjs` import AND controller decorators (`@Controller()`, `@Get()`, etc.)
-- **Vue**: Requires `vue` import
-- **React**: Default fallback (or explicit `react` import)
+  - **Note:** Only NestJS controllers/routes are extracted as `node:api`. Providers/services without route decorators are treated as `ts:module`.
+- **Vue**: Requires `vue` import AND Vue component patterns (e.g., `defineComponent`, `createApp`, `setup()`, `computed`, `ref` usage in component context, or exports a component-ish default/object)
+- **React**: Detected by React import OR JSX/TSX + React patterns (hooks, component export, etc.)
+- **TypeScript module**: Fallback when no framework patterns are found (React is NOT the default fallback)
 
 ## Monorepo Structure Examples
 
@@ -228,13 +231,15 @@ Requires **both**:
 1. NestJS import: `import { Controller } from '@nestjs/common'`
 2. Controller decorators: `@Controller()`, `@Get()`, etc.
 
+**Important:** Only NestJS controllers/routes are extracted as `node:api`. Providers/services without route decorators are treated as `ts:module`.
+
 ```typescript
-// ✅ Detected as NestJS
+// ✅ Detected as NestJS (node:api)
 import { Controller } from '@nestjs/common';
 @Controller('users')
 export class UsersController { }
 
-// ❌ Not detected (no controller decorators)
+// ❌ Not detected (no controller decorators) → ts:module
 import { Injectable } from '@nestjs/common';
 @Injectable()
 export class UsersService { }
@@ -242,20 +247,37 @@ export class UsersService { }
 
 ### Vue Detection
 
-Requires Vue import:
+Requires **both**:
+1. Vue import: `import { ref } from 'vue'` or `import { ... } from 'vue/...'`
+2. Vue component patterns: `defineComponent`, `createApp`, `setup()`, `computed`, `ref` usage in component context, OR exports a component-ish default/object
+
 ```typescript
-// ✅ Detected as Vue
+// ✅ Detected as Vue (has import + patterns)
+import { ref, defineComponent } from 'vue';
+export default defineComponent({ ... });
+
+// ❌ Not detected (has import but no component patterns) → ts:module
 import { ref } from 'vue';
+export function useSharedUtil() { return ref(0); } // Shared util, not a component
 ```
 
 ### React Detection
 
-Default fallback or explicit React import:
+Detected by React import OR JSX/TSX + React patterns (hooks, component export, etc.):
+
 ```typescript
-// ✅ Detected as React
+// ✅ Detected as React (has React import + JSX)
 import { useState } from 'react';
-// Or no imports (defaults to React)
+export function Component() { return <div>...</div>; }
+
+// ✅ Detected as React (has JSX even without explicit import)
+export function Component() { return <div>...</div>; }
+
+// ❌ Not detected (no React patterns) → ts:module
+export function utility() { return 'hello'; }
 ```
+
+**Note:** React is NOT the default fallback. Files without framework patterns become `ts:module`.
 
 ## Best Practices
 
@@ -272,7 +294,7 @@ packages/frontend/src/components/App.tsx → Frontend component
 src/mixed.ts                             → Both backend routes and React components
 ```
 
-**Why:** LogicStamp uses priority-based detection. If a file has both backend routes and React components, only one will be extracted (backend takes priority over React).
+**Why:** LogicStamp uses priority-based detection. If a file has multiple framework patterns, only one will be extracted based on priority: Backend > Vue > React. Files without framework patterns become `ts:module`.
 
 ### 2. Use Clear File Organization
 
@@ -331,7 +353,7 @@ my-monorepo/
 │       └── routes.ts           → ✅ node:api
 ```
 
-**Note:** Next.js API routes (`app/api/route.ts`) are detected as React components with Next.js metadata, not as backend routes. Express/NestJS patterns are required for backend extraction.
+**Note:** Next.js route handlers (`app/api/route.ts`) are currently treated as `ts:module` unless Express/NestJS patterns are detected. They may be detected as `react:component` if they contain React patterns (JSX, hooks, etc.), but route handlers without React patterns default to `ts:module`.
 
 ### Full-Stack Monorepo
 

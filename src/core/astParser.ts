@@ -110,6 +110,7 @@ export async function extractFromFile(filePath: string): Promise<AstExtract> {
     const backendFramework = safeExtract('backend-framework', resolvedPath, () => detectBackendFramework(imports, source), undefined);
 
     // CONDITIONAL extraction based on framework
+    // Priority: Backend > Vue > React > TypeScript module
     let hooks: string[] = [];
     let components: string[] = [];
     let state: Record<string, string> = {};
@@ -117,19 +118,19 @@ export async function extractFromFile(filePath: string): Promise<AstExtract> {
     let emits: Record<string, EventType> = {};
     let backend: BackendMetadata | undefined;
 
-    if (hasVueImport) {
-      // Vue extraction (existing)
+    if (backendFramework) {
+      // Backend extraction - SKIP React/Vue extraction (highest priority)
+      backend = safeExtract('backend', resolvedPath, () => extractBackendMetadata(source, filePath, imports, backendFramework), undefined);
+      // hooks/components/props/state/emits remain empty arrays/objects
+    } else if (hasVueImport) {
+      // Vue extraction
       hooks = safeExtract('vue-composables', resolvedPath, () => extractVueComposables(source), []);
       components = safeExtract('vue-components', resolvedPath, () => extractVueComponents(source), []);
       state = safeExtract('vue-state', resolvedPath, () => extractVueState(source), {});
       props = safeExtract('vue-props', resolvedPath, () => extractVueProps(source), {});
       emits = safeExtract('vue-emits', resolvedPath, () => extractVueEmits(source), {});
-    } else if (backendFramework) {
-      // Backend extraction - SKIP React/Vue extraction
-      backend = safeExtract('backend', resolvedPath, () => extractBackendMetadata(source, filePath, imports, backendFramework), undefined);
-      // hooks/components/props/state/emits remain empty arrays/objects
     } else {
-      // React extraction (existing default)
+      // React extraction (default for frontend files)
       hooks = safeExtract('hooks', resolvedPath, () => extractHooks(source), []);
       components = safeExtract('components', resolvedPath, () => extractComponents(source), []);
       state = safeExtract('state', resolvedPath, () => extractState(source), {});
