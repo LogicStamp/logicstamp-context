@@ -628,11 +628,14 @@ export class UsersController {
 
 ## Framework Detection Priority
 
-When a file imports both frontend and backend frameworks, LogicStamp uses a priority system:
+When a file imports multiple frameworks, LogicStamp uses a priority system:
 
-- **Vue takes priority**: If a file has Vue imports, Vue extractors are used
-- **Backend takes priority**: If no Vue imports but NestJS imports AND controller decorators are detected, backend extractors are used
-- **React fallback**: If no Vue or backend patterns are detected, React extractors are used (default)
+1. **Backend** (Express/NestJS detected) → `node:api` (highest priority)
+2. **Vue** (Vue import + Vue component patterns) → `vue:component` or `vue:composable`
+3. **React** (React import or JSX/TSX + React patterns) → `react:component` or `react:hook`
+4. **TypeScript module** (no framework patterns) → `ts:module` (default fallback)
+
+**Note:** React is NOT the default fallback. Files without framework patterns become `ts:module`.
 
 **Example:**
 ```typescript
