@@ -54,6 +54,7 @@ See [docs/limitations.md](docs/limitations.md) for complete details and code evi
 ### Changed
 
 - Refactored internal modules to use barrel exports (`pack/index.js`, `context/index.js`, etc.)
+- Extracted watch mode diffing logic to `watchDiff.ts` (~490 lines) for better maintainability
 
 ### Fixed
 
