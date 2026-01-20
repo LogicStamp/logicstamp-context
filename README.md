@@ -11,16 +11,16 @@
   <small><em>React · Next.js · Vue (TS/TSX) · Express · NestJS · TypeScript</em></small>
   <br/>
   <br/>
-  <strong>Fast • One-time setup</strong>
+  <strong>Fast • One-time setup • Watch mode</strong>
   <br/>
   <br/>
   <a href="https://github.com/LogicStamp">
     <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="100" style="min-width: 80px;">
   </a>
 
-  ![Version](https://img.shields.io/badge/version-0.4.0-8b5cf6.svg)
+  [![Version](https://img.shields.io/badge/version-0.4.1-8b5cf6.svg)](https://www.npmjs.com/package/logicstamp-context)
   ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
-  ![License](https://img.shields.io/badge/license-MIT-green.svg)
+  [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
   ![Node](https://img.shields.io/badge/node-%3E%3D18.18.0-brightgreen.svg)
   [![CI](https://github.com/LogicStamp/logicstamp-context/workflows/CI/badge.svg)](https://github.com/LogicStamp/logicstamp-context/actions)
 
@@ -77,7 +77,7 @@ stamp context
 
 > **ℹ️** If you see `"PRIVATE_DATA"` in output, see the **Security** section below.
 
-> **Note:** This is a beta release (v0.4.0). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+> **Note:** This is a beta release (v0.4.1). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
 
 📋 **For a detailed step-by-step getting started guide with integration examples, see [Getting Started Guide](https://logicstamp.dev/docs/getting-started).**
 
@@ -128,13 +128,15 @@ This transforms code analysis from "parse and infer" to "read and reason" - maki
 
 - **AI-ready bundles** - predictable, structured, deterministic
 - **React/Next.js/Vue/TypeScript awareness** - props, hooks/composables, state, deps
-- **Backend framework support** - Express.js and NestJS routes, controllers, API signatures
+- **Backend framework support** - Express.js and NestJS routes, controllers, API signatures *(new)*
 - **Style metadata** - (Tailwind, SCSS, MUI, shadcn)
 - **Next.js App Router detection** - (client/server, layout/page/etc)
 - **Vue 3 Composition API** - (ref, reactive, computed, composables)
 - **Dependency graph** - (imports, cycles, missing deps)
 - **Per-folder bundles** - organized by your project structure
 - **CI validation** - (drift detection, schema validation)
+- **Watch mode** - auto-regenerate on file changes with incremental rebuilds *(new)*
+  Watch mode is new and is still being validated across diverse project structures and environments.
 - **Accurate token estimates** - (GPT/Claude)
 - **Security-first** - automatic secret detection and sanitization
 - **Fast, one-time setup** - works out of the box (no config files needed, sensible defaults)
@@ -247,6 +249,7 @@ stamp ignore <path> [path2] ...    # Add files/folders to .stampignore
 stamp security scan [path] [options]  # Scan for secrets (API keys, passwords, tokens)
 stamp context [path] [options]     # Generate context bundles
 stamp context style [path] [options]  # Generate with style metadata
+stamp context --watch [options]    # Watch mode - auto-regenerate on changes
 stamp context compare [options]    # Detect context drift
 stamp context validate [file]      # Validate context files
 stamp context clean [path] [options]  # Remove generated files
@@ -262,6 +265,7 @@ stamp context clean [path] [options]  # Remove generated files
 | `stamp security --hard-reset` | Reset security configuration (delete security report) | [security-scan.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/security-scan.md) |
 | `stamp context` | Generate AI-ready context bundles organized by folder | [context.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/context.md) |
 | `stamp context style` | Generate context with style metadata (Tailwind, SCSS, etc.) | [style.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/style.md) |
+| `stamp context --watch` | Watch mode - auto-regenerate on file changes | [watch.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/watch.md) |
 | `stamp context compare` | Compare context files to detect changes (CI-friendly) | [compare.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/compare.md) |
 | `stamp context validate` | Validate context file schema and structure | [validate.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/validate.md) |
 | `stamp context clean` | Remove all generated context artifacts | [clean.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/clean.md) |
@@ -277,6 +281,8 @@ stamp context clean [path] [options]  # Remove generated files
 - `--profile <profile>` - Preset: `llm-chat` (default), `llm-safe`, `ci-strict`
 - `--compare-modes` - Compare token costs across all modes (none/header/header+style/full)
 - `--stats` - Emit JSON stats with token estimates (CI-friendly)
+- `--watch` / `-w` - Watch for file changes and regenerate automatically
+- `--debug` - Show detailed hash information in watch mode
 - `--out <path>` / `-o` - Output directory (default: current directory)
 - `--quiet` / `-q` - Suppress verbose output
 

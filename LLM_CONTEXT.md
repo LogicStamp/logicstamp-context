@@ -94,7 +94,7 @@ The `context_main.json` file serves as a directory index:
     }
   ],
   "meta": {
-      "source": "logicstamp-context@0.4.0"
+      "source": "logicstamp-context@0.4.1"
   }
 }
 ```
@@ -117,7 +117,7 @@ Each folder's `context.json` contains an array of LogicStamp bundles. Each bundl
 - `graph.edges` lists dependency relationships between nodes (empty when analysis depth is 1).
 - `meta` section contains two critical fields:
   - `missing`: Array of unresolved dependencies. Each entry includes `name` (import path), `reason` (why it failed), and `referencedBy` (source component). Empty array indicates complete dependency resolution.
-  - `source`: Generator version string (e.g., `"logicstamp-context@0.4.0"`) for compatibility tracking.
+  - `source`: Generator version string (e.g., `"logicstamp-context@0.4.1"`) for compatibility tracking.
 - Example bundle skeleton:
 
 ```
@@ -451,4 +451,169 @@ $ stamp context compare
 - **Orphaned detection**: Checks disk for files that exist but aren't in the new index
 - **Metadata ignored**: `totalComponents`, `totalBundles` counts are derived stats, not compared for drift
 
+## Watch Mode Integration
+
+Watch mode (`stamp context --watch`) monitors file changes and automatically regenerates context. This section explains how to integrate with watch mode from MCP servers or other tools.
+
+### Detecting Watch Mode
+
+Check if watch mode is active by reading `.logicstamp/context_watch-status.json`:
+
+```json
+{
+  "active": true,
+  "projectRoot": "/path/to/project",
+  "pid": 12345,
+  "startedAt": "2025-01-19T10:30:00.000Z",
+  "outputDir": "/path/to/project"
+}
+```
+
+**Fields:**
+- `active` - Always `true` when file exists (file is deleted on exit)
+- `projectRoot` - Absolute path to the watched project
+- `pid` - Process ID of the watch process (use to verify process is still running)
+- `startedAt` - ISO timestamp when watch mode started
+- `outputDir` - Directory where context files are written
+
+**Important**: The status file is deleted when watch mode exits. If the file exists but the process crashed, validate using the `pid` field:
+
+```typescript
+// Pseudo-code for validating watch mode is truly active
+const status = JSON.parse(readFile('.logicstamp/context_watch-status.json'));
+try {
+  process.kill(status.pid, 0); // Signal 0 checks if process exists
+  // Watch mode is running
+} catch {
+  // Process doesn't exist - stale status file
+}
+```
+
+### MCP Server Integration Patterns
+
+**Pattern 1: Direct Context Reading (Recommended)**
+
+When watch mode is active, `context_main.json` and folder `context.json` files are always up-to-date. Simply read them directly:
+
+```typescript
+// 1. Check if watch mode is active
+const isWatching = await checkWatchStatus(projectRoot);
+
+// 2. Read context (always fresh when watch mode is running)
+const index = JSON.parse(readFile('context_main.json'));
+const bundles = JSON.parse(readFile(index.folders[0].contextFile));
+```
+
+This is the simplest approach - no need to track changes, just read the latest context.
+
+**Pattern 2: Change-Aware Integration (with `--log-file`)**
+
+For MCP servers that need to know *what* changed (not just read fresh context), use the `--log-file` flag:
+
+```bash
+stamp context --watch --log-file
+```
+
+This writes structured change logs to `.logicstamp/context_watch-mode-logs.json`:
+
+```json
+{
+  "entries": [
+    {
+      "timestamp": "2025-01-19T10:30:05.000Z",
+      "changedFiles": ["src/components/Button.tsx"],
+      "fileCount": 1,
+      "durationMs": 234,
+      "modifiedContracts": [
+        {
+          "entryId": "src/components/Button.tsx",
+          "semanticHashChanged": true,
+          "fileHashChanged": true,
+          "semanticHash": { "old": "uif:abc...", "new": "uif:def..." }
+        }
+      ],
+      "modifiedBundles": [
+        {
+          "entryId": "src/components/Button.tsx",
+          "bundleHash": { "old": "hash1...", "new": "hash2..." }
+        }
+      ],
+      "addedContracts": [],
+      "removedContracts": [],
+      "summary": {
+        "modifiedContractsCount": 1,
+        "modifiedBundlesCount": 1,
+        "addedContractsCount": 0,
+        "removedContractsCount": 0
+      }
+    }
+  ]
+}
+```
+
+**Log entry fields:**
+- `timestamp` - When regeneration completed
+- `changedFiles` - Source files that triggered regeneration
+- `fileCount` - Number of changed files
+- `durationMs` - Regeneration time in milliseconds
+- `modifiedContracts` - Contracts with changed hashes (API or content changes)
+- `modifiedBundles` - Bundles with changed dependency graphs
+- `addedContracts` - New components added
+- `removedContracts` - Components removed
+- `summary` - Quick counts for each change type
+- `error` - Error message if regeneration failed
+
+**When to use `--log-file`:**
+- MCP server needs to notify users about specific changes
+- Building a UI that shows "what changed" information
+- Debugging or auditing context regeneration
+- Integration tests that verify specific changes
+
+**When NOT to use `--log-file`:**
+- Just need fresh context (Pattern 1 is simpler)
+- Concerned about disk I/O overhead
+- Log file maintenance is a concern
+
+### Hash Types in Change Logs
+
+When `--log-file` is enabled, change logs include hash information:
+
+| Hash Type | What It Detects | When It Changes |
+|-----------|-----------------|-----------------|
+| `semanticHash` | API/logic changes | Props, events, state, hooks, components, functions change |
+| `fileHash` | Any content change | Any file modification (including comments, formatting) |
+| `bundleHash` | Dependency graph changes | Components added/removed from bundle, edges change |
+
+**Interpreting changes:**
+- `semanticHash` changed → API breaking change likely, consumers may need updates
+- `fileHash` changed but not `semanticHash` → Cosmetic change (comments, formatting)
+- `bundleHash` changed → Dependency structure changed, may affect bundle consumers
+
+### File Locations Summary
+
+| File | Location | Purpose |
+|------|----------|---------|
+| Watch status | `.logicstamp/context_watch-status.json` | Detect if watch mode is running |
+| Watch logs | `.logicstamp/context_watch-mode-logs.json` | Change history (requires `--log-file`) |
+| Main index | `context_main.json` | Project structure and folder index |
+| Folder context | `<folder>/context.json` | Component bundles per folder |
+
+### CLI Reference
+
+```bash
+# Start watch mode (no log file)
+stamp context --watch
+
+# Start watch mode with change logging
+stamp context --watch --log-file
+
+# Watch with style metadata
+stamp context --watch --include-style
+
+# Watch with debug output (shows hash details in console)
+stamp context --watch --debug
+
+# Watch specific directory
+stamp context ./src/components --watch
+```
 

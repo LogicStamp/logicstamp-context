@@ -146,6 +146,9 @@ All options from `stamp context` are supported except `--compare-modes`. The sty
 | `--strict-missing` | | `false` | Exit with error if any missing dependencies found. |
 | `--skip-gitignore` | | `false` | Skip `.gitignore` setup (never prompt or modify). |
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors). |
+| `--watch` | `-w` | `false` | Watch for file changes and regenerate automatically. |
+| `--debug` | | `false` | Show detailed hash information in watch mode. |
+| `--log-file` | | `false` | Write structured change logs to file (watch mode only, for change notifications). |
 | `--help` | `-h` | | Print usage help. |
 
 ## Example Workflows
@@ -165,6 +168,18 @@ stamp context style --include-code full
 
 # Custom output directory
 stamp context style --out ./output
+
+# Watch mode - auto-regenerate on file changes
+stamp context style --watch
+
+# Watch a specific directory for fast incremental rebuilds
+stamp context style ./src/components --watch
+
+# Watch with debug output (shows hash changes)
+stamp context style --watch --debug
+
+# Watch with structured change logs (for change notifications)
+stamp context style --watch --log-file
 
 # Equivalent syntax using flag
 stamp context --include-style
@@ -420,6 +435,38 @@ The compare command will detect changes in:
 - Visual metadata
 - Animation configurations
 
+### Watch Mode
+
+Watch mode works with style metadata extraction, monitoring both code and style files:
+
+```bash
+# Watch with style metadata
+stamp context style --watch
+
+# Watch a specific directory
+stamp context style ./src/components --watch
+```
+
+**Watched file types:**
+- `.ts`, `.tsx` (always)
+- `.css`, `.scss`, `.module.css`, `.module.scss` (with style extraction)
+
+When you edit a style file that's imported by a component, watch mode will:
+1. Detect the change
+2. Re-extract style metadata for affected components
+3. Rebuild only the affected bundles
+4. Show what changed in the style metadata
+
+**Using watch-fast profile:**
+
+For faster rebuilds during development, use the `watch-fast` profile which applies lighter style extraction:
+
+```bash
+stamp context style --watch --profile watch-fast
+```
+
+For comprehensive watch mode documentation, see [watch.md](watch.md).
+
 ### Token Impact
 
 Style metadata adds a small token overhead to context bundles. **Note:** `--compare-modes` is not available for `stamp context style`. Use `stamp context --compare-modes` (without the `style` subcommand) to see the token impact across different modes.
@@ -554,6 +601,7 @@ $ stamp context style ./src --profile llm-safe --out ./style-context
 ## Related Commands
 
 - [`stamp context`](context.md) – Generate context without style metadata
+- [`stamp context --watch`](watch.md) – Watch mode for automatic regeneration
 - [`stamp context validate`](validate.md) – Validate generated context files
 - [`stamp context compare`](compare.md) – Compare context files including style changes
 

@@ -389,7 +389,7 @@ This section documents what's currently captured in context files versus what's 
 
 - **Created timestamps**: When context was generated
 - **OS detection**: Platform info (e.g., `win32`)
-- **Source tool version**: `logicstamp-context@0.4.0`
+- **Source tool version**: `logicstamp-context@0.4.1`
 - **Missing dependencies**: Tracked in `missing` array
 
 ## What's Missing or Incomplete
@@ -637,6 +637,33 @@ Backend framework support has been fully implemented for Express.js and NestJS.
 
 **Priority**: Low
 
+### 13. Watch Mode
+
+**Status:** ✅ **Complete (v0.4.1)**
+
+Watch mode has been fully implemented for automatic context regeneration.
+
+**What Works (v0.4.1):**
+- ✅ `stamp context --watch` command
+- ✅ File system watcher for `.ts`, `.tsx` files
+- ✅ Style file watching (`.css`, `.scss`, `.module.css`, `.module.scss`) with `--include-style`
+- ✅ Incremental rebuilds (only regenerates affected bundles)
+- ✅ Debouncing (500ms) to batch rapid file changes
+- ✅ Change detection showing what changed (props, hooks, state, events, components, functions)
+- ✅ Debug mode (`--debug`) showing semantic/file/bundle hash changes
+- ✅ Status files for tooling integration (`.logicstamp/context_watch-status.json`)
+- ✅ Watch logs (`.logicstamp/context_watch-mode-logs.json`)
+- ✅ Graceful shutdown on Ctrl+C
+- ✅ `watch-fast` profile for lighter style extraction
+
+**What Doesn't Work:**
+- ❌ JavaScript files (`.js`, `.jsx`) are not watched
+- ❌ Configurable watch patterns/exclusions (uses fixed defaults)
+- ❌ Hot reload integration (manual browser refresh still needed)
+
+**Impact**: Improves developer experience by automatically keeping context files in sync with code changes during development.
+
+**Priority**: ~~Medium~~ Complete
 
 ---
 

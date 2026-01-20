@@ -31,6 +31,46 @@ See [docs/limitations.md](docs/limitations.md) for complete details and code evi
 
 ---
 
+## [0.4.1] - 2026-01-20
+
+### Added
+
+- **Watch mode** (`--watch`, `-w`) - Monitor your codebase for file changes and automatically regenerate context bundles:
+  - **Incremental rebuilds** - Only rebuilds affected bundles, not the entire project
+  - **Change detection** - Shows what changed (props, hooks, state, events, components, functions)
+  - **Debouncing** - Waits 500ms after the last change before regenerating (batches rapid changes)
+  - **Style file watching** - When using `--include-style`, also watches `.css`, `.scss`, `.module.css`, `.module.scss` files
+  - **Debug mode** (`--debug`) - Shows detailed hash information (semantic, file, bundle hashes)
+  - **Status file** - Writes `.logicstamp/context_watch-status.json` for tooling integration (always enabled)
+  - **Log file** (`--log-file`) - Opt-in structured change logs to `.logicstamp/context_watch-mode-logs.json` (for change notifications, not required for basic tooling)
+  - **Graceful shutdown** - Clean cleanup on Ctrl+C (closes watcher, deletes status file)
+- **New `watch-fast` profile** - Lighter style extraction optimized for faster watch mode rebuilds
+- **New programmatic API exports** for library consumers:
+  - `validateBundles`, `multiFileValidate` - Validation utilities
+  - `multiFileCompare` - Comparison utilities
+  - `LogicStampIndex`, `FolderInfo` types - Index file types
+  - `isWatchModeActive`, `readWatchStatus`, `readWatchLogs` - Watch mode status utilities
+
+### Changed
+
+- Refactored internal modules to use barrel exports (`pack/index.js`, `context/index.js`, etc.)
+
+### Fixed
+
+- **Framework detection priority order** - Corrected detection priority to Backend > Vue > React > TypeScript module (#65)
+  - Backend frameworks (Express/NestJS) are now correctly detected before Vue/React patterns
+  - Fixed issue where files with mixed patterns could be incorrectly classified
+  - Clarified that `ts:module` is the actual fallback (not React)
+
+**Non-breaking change:** All changes are backward compatible:
+- Watch mode is a new feature - existing CLI commands and workflows are unaffected
+- The `--log-file` flag is opt-in - log files are only created when explicitly requested
+- Framework detection fix corrects a bug - existing React/Vue/TypeScript projects continue to work unchanged
+- All new CLI options (`--watch`, `--debug`, `--log-file`) are optional and additive
+- No schema changes, no API changes, no configuration changes required
+
+---
+
 ## [0.4.0] - 2026-01-18
 
 ### Added
@@ -973,7 +1013,8 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ---
 
 ## Version links
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.4.1
 [0.4.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.4.0
 [0.3.10]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.10
 [0.3.9]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.9

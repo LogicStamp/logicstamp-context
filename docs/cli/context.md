@@ -36,6 +36,9 @@ stamp context [path] [options]
 | `--include-style` | | `false` | Extract style metadata (Tailwind, SCSS, Material UI, animations, layout). |
 | `--skip-gitignore` | | `false` | Skip `.gitignore` setup (never prompt or modify). |
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors). |
+| `--watch` | `-w` | `false` | Watch for file changes and regenerate automatically. |
+| `--debug` | | `false` | Show detailed hash information in watch mode. |
+| `--log-file` | | `false` | Write structured change logs to file (watch mode only, for change notifications). |
 | `--help` | `-h` | | Print usage help. |
 
 ## Depth Parameter
@@ -135,6 +138,18 @@ stamp context --compare-modes
 # Generate comparison data file for MCP integration
 stamp context --compare-modes --stats
 # Creates: context_compare_modes.json with structured comparison data
+
+# Watch mode - auto-regenerate on file changes
+stamp context --watch
+
+# Watch with style metadata
+stamp context style --watch
+
+# Watch a specific directory for fast incremental rebuilds
+stamp context ./src/components --watch
+
+# Watch with debug output (shows hash changes)
+stamp context --watch --debug
 
 # Custom output directory
 stamp context --out ./output
@@ -291,6 +306,34 @@ Use `--strict-missing` in CI to catch unexpected missing dependencies:
 stamp context --strict-missing || exit 1
 ```
 
+## Watch Mode
+
+Watch mode monitors your codebase for file changes and automatically regenerates context bundles with incremental rebuilds.
+
+```bash
+# Start watch mode
+stamp context --watch
+
+# Press Ctrl+C to stop
+```
+
+**Features:**
+- **Incremental rebuilds** - Only rebuilds affected bundles, not the entire project
+- **Change detection** - Shows what changed (props added/removed, hooks, state, etc.)
+- **Debouncing** - Batches rapid changes (500ms delay)
+- **Style support** - Works with `--include-style` for style metadata
+
+**Watched file types:**
+- `.ts`, `.tsx` (always)
+- `.css`, `.scss`, `.module.css`, `.module.scss` (with `--include-style`)
+
+**Debug mode** shows detailed hash information:
+```bash
+stamp context --watch --debug
+```
+
+For comprehensive watch mode documentation, see [watch.md](watch.md).
+
 ## Tips
 
 - Combine `--profile` presets with manual flags for tailored runs (e.g.,
@@ -300,6 +343,7 @@ stamp context --strict-missing || exit 1
 - Use `stamp context clean` to remove all context artifacts when resetting or switching branches.
 - Use `stamp context style` or `--include-style` to extract visual and layout metadata for design-aware context bundles. See [style.md](style.md) for detailed documentation.
 - Use `--compare-modes` to see accurate token estimates across all modes (none/header/header+style/full) and understand the cost impact of including style metadata.
+- Use `--watch` during development for automatic context regeneration on file changes. See [watch.md](watch.md) for details.
 
 ## Token Estimation
 

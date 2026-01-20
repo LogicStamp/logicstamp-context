@@ -4,6 +4,9 @@ This roadmap outlines the planned features, improvements, and known limitations 
 
 ## Recent Achievements
 
+### v0.4.1 (January 2026)
+- ✅ **Watch mode** - Automatic context regeneration when source files change. Incremental rebuilds only regenerate affected bundles. Detects and displays contract changes (props, hooks, state, events). Debounces rapid changes. Watches style files when using `--include-style`. Debug mode shows hash changes. Status files for tooling integration.
+
 ### v0.4.0 (January 2026)
 - ✅ **Backend framework support** - Comprehensive support for Node.js backend frameworks (Express.js, NestJS). Extracts API routes, HTTP methods, route parameters, request/response types, and framework-specific metadata. Automatically detects backend frameworks and skips frontend extraction for backend files. Introduces new `node:api` contract kind and extensible `language:type` pattern for future language support.
 
@@ -311,20 +314,24 @@ Add support for JavaScript (`.js`) and JSX (`.jsx`) files in addition to TypeScr
 ---
 
 #### 3. Watch Mode
-**Status:** 🔴 Not Started
+**Status:** ✅ **Complete (v0.4.1)**
 
-Add a watch mode that automatically regenerates context files when source files change.
+Automatic context regeneration when source files change.
 
-**Planned Implementation:**
+**What Works (v0.4.1):**
 - `stamp context --watch` command
-- File system watcher for `.ts`, `.tsx`, `.js`, `.jsx` files
-- Incremental updates (only regenerate affected bundles)
-- Debouncing to batch multiple file changes
-- Configurable watch patterns and exclusions
+- File system watcher for `.ts`, `.tsx` files (and `.css`, `.scss` with `--include-style`)
+- Incremental updates (only regenerates affected bundles)
+- Debouncing (500ms) to batch multiple file changes
+- Change detection showing what changed (props, hooks, state, events, components, functions)
+- Debug mode (`--debug`) showing hash changes
+- Status file (`.logicstamp/context_watch-status.json`) for tooling integration (always enabled)
+- Log file (`--log-file`) for structured change logs (`.logicstamp/context_watch-mode-logs.json`) - opt-in for change notifications
+- `watch-fast` profile for lighter style extraction
 
 **Impact:** Improves developer experience by automatically keeping context files in sync with code changes.
 
-**Priority:** Medium
+**Priority:** ~~Medium~~ Complete
 
 ---
 
@@ -469,7 +476,7 @@ We welcome contributions! If you'd like to work on any of these roadmap items:
 - ✅ Backend framework support - Extract API routes, HTTP methods, and framework metadata (Express, NestJS) (v0.4.0)
 - JavaScript & JSX support - Add `.js`/`.jsx` file analysis
 - Complete Vue.js support - Add `.vue` SFC file parsing
-- Watch mode - Automatic context regeneration on file changes
+- ✅ Watch mode - Automatic context regeneration on file changes (v0.4.1)
 
 ---
 
@@ -477,7 +484,7 @@ We welcome contributions! If you'd like to work on any of these roadmap items:
 
 For detailed release notes and changes, see [CHANGELOG.md](CHANGELOG.md).
 
-**Current Version:** v0.4.0 (Beta)
+**Current Version:** v0.4.1 (Beta)
 
 **Status:** Actively developed - we're working on improving accuracy and expanding feature coverage based on user feedback.
 
