@@ -8,7 +8,16 @@ This directory contains the comprehensive test suite for LogicStamp Context. The
 tests/
 ├── e2e/              # End-to-end CLI workflow tests
 ├── unit/             # Unit tests for core modules
+│   ├── astParser/    # AST parsing tests
+│   ├── styleExtractor/  # Style extraction tests
+│   ├── pack/         # Bundle generation tests
+│   └── watch/        # Watch mode tests
 ├── fixtures/         # Test fixtures (sample projects)
+│   ├── simple-app/   # Basic React app
+│   ├── nextjs-app/   # Next.js App Router project
+│   ├── vue-app/      # Vue 3 project
+│   ├── express-app/  # Express.js backend
+│   └── nest-app/     # NestJS backend
 ├── setup.ts          # Global test setup
 └── test-helpers.ts   # Shared test utilities
 ```
@@ -63,8 +72,15 @@ End-to-end tests verify complete CLI workflows and command behavior:
 - **`cli.output.test.ts`** - Output formatting
 - **`cli.advanced.test.ts`** - Advanced scenarios
 - **`cli.version.test.ts`** - Version commands
+- **`cli.ignore.test.ts`** - `.stampignore` file handling
+- **`cli.security.test.ts`** - Secret detection and sanitization
+- **`cli.toon.test.ts`** - TOON format output
+- **`cli.watch.test.ts`** - Watch mode functionality
 - **`core.test.ts`** - Core functionality integration
 - **`determinism.test.ts`** - Output consistency across runs
+- **`vue.test.ts`** - Vue.js framework support
+- **`express.test.ts`** - Express.js backend support
+- **`nest.test.ts`** - NestJS backend support
 
 **Characteristics:**
 - Test complete CLI workflows from command invocation to file output
@@ -84,21 +100,40 @@ Unit tests verify individual modules and functions in isolation:
   - `propExtractor.test.ts` - Prop extraction with error handling
   - `stateExtractor.test.ts` - State extraction with error handling
   - `eventExtractor.test.ts` - Event extraction with error handling
+  - `exports.test.ts` - Export extraction tests
+  - `backendDetectors.test.ts` - Backend framework detection (Express/NestJS)
+  - `backendExtractor.test.ts` - Backend metadata extraction
+  - `expressExtractor.test.ts` - Express.js route extraction
+  - `nestjsExtractor.test.ts` - NestJS decorator extraction
+  - `vueDetectors.test.ts` - Vue.js framework detection
 - **`styleExtractor/`** - Style metadata extraction
   - `styleExtractor.test.ts` - Main integration tests
   - `tailwind.test.ts` - Tailwind CSS extraction
   - `scss.test.ts` - SCSS/CSS module extraction
   - `styled.test.ts` - styled-components/Emotion extraction
+  - `styledJsx.test.ts` - styled-jsx extraction
   - `motion.test.ts` - framer-motion extraction
   - `material.test.ts` - Material UI extraction
   - `shadcn.test.ts` - ShadCN/UI extraction
   - `radix.test.ts` - Radix UI extraction
   - `layout.test.ts` - Layout metadata extraction
 - **`pack/`** - Bundle generation
+  - `pack.test.ts` - Main bundle packing tests
+  - `resolver.test.ts` - Dependency resolution
+  - `collector.test.ts` - Bundle collection
+  - `packageInfo.test.ts` - Package.json parsing
+- **`watch/`** - Watch mode
+  - `incrementalWatch.test.ts` - Incremental rebuild logic
+  - `watchHelpers.test.ts` - Watch mode utilities
 - **`tokens.test.ts`** - Token counting utilities
 - **`gitignore.test.ts`** - Gitignore manipulation
 - **`nextjs.test.ts`** - Next.js detection
 - **`exports.test.ts`** - Module exports validation
+- **`manifest.test.ts`** - Dependency manifest building
+- **`stampignore.test.ts`** - `.stampignore` file parsing
+- **`secretDetector.test.ts`** - Secret/credential detection
+- **`codeSanitizer.test.ts`** - Code sanitization
+- **`toonFormat.test.ts`** - TOON format generation
 
 **Characteristics:**
 - Fast, isolated tests
@@ -114,6 +149,9 @@ Sample projects used for testing:
 
 - **`simple-app/`** - Basic React app for testing core functionality
 - **`nextjs-app/`** - Next.js App Router project for framework-specific tests
+- **`vue-app/`** - Vue 3 project for Vue.js framework tests
+- **`express-app/`** - Express.js backend for backend framework tests
+- **`nest-app/`** - NestJS backend for decorator-based backend tests
 
 ## Writing Tests
 
@@ -191,18 +229,23 @@ Check `test-helpers.ts` for available utilities.
 
 ### Current Coverage
 
-The test suite includes **153+ passing tests** covering:
+The test suite includes **1188 passing tests** across **56 test files** covering:
 
 - ✅ All CLI commands and workflows
 - ✅ Core AST parsing functionality
 - ✅ Contract building and validation
-- ✅ Style metadata extraction
+- ✅ Style metadata extraction (Tailwind, SCSS, styled-components, etc.)
 - ✅ Bundle generation and formatting
 - ✅ Token counting and estimation
 - ✅ Dependency resolution
 - ✅ Path normalization (Windows/Unix)
 - ✅ Error handling and edge cases
-- ✅ Output format variations (json/pretty/ndjson)
+- ✅ Output format variations (json/pretty/ndjson/toon)
+- ✅ Vue.js framework support
+- ✅ Backend frameworks (Express.js, NestJS)
+- ✅ Watch mode with incremental rebuilds
+- ✅ Secret detection and code sanitization
+- ✅ `.stampignore` file handling
 
 ### Coverage Goals
 

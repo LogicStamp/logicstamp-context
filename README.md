@@ -11,7 +11,7 @@
   <small><em>React · Next.js · Vue (TS/TSX) · Express · NestJS · TypeScript</em></small>
   <br/>
   <br/>
-  <strong>Fast • One-time setup • Watch mode</strong>
+  <strong>Fast • One-time setup • CI & watch-ready</strong>
   <br/>
   <br/>
   <a href="https://github.com/LogicStamp">
@@ -136,7 +136,7 @@ This transforms code analysis from "parse and infer" to "read and reason" - maki
 - **Per-folder bundles** - organized by your project structure
 - **CI validation** - (drift detection, schema validation)
 - **Watch mode** - auto-regenerate on file changes with incremental rebuilds *(new)*
-  Watch mode is new and is still being validated across diverse project structures and environments.
+  > **Note:** Watch mode is new and is still being validated across different project structures.
 - **Accurate token estimates** - (GPT/Claude)
 - **Security-first** - automatic secret detection and sanitization
 - **Fast, one-time setup** - works out of the box (no config files needed, sensible defaults)
