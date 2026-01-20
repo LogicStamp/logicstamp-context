@@ -6,230 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import type { UIFContract } from '../../../src/types/UIFContract.js';
 import type { LogicStampBundle } from '../../../src/core/pack.js';
-
-/**
- * Test version of compareContracts from watchMode.ts
- * Compares two contracts and returns detailed diff
- */
-function compareContracts(oldContract: UIFContract, newContract: UIFContract): {
-  props: { added: string[]; removed: string[]; changed: Array<{ name: string; old: any; new: any }> };
-  emits: { added: string[]; removed: string[]; changed: Array<{ name: string; old: any; new: any }> };
-  state: { added: string[]; removed: string[]; changed: Array<{ name: string; old: any; new: any }> };
-  hooks: { added: string[]; removed: string[] };
-  components: { added: string[]; removed: string[] };
-  variables: { added: string[]; removed: string[] };
-  functions: { added: string[]; removed: string[] };
-} {
-  const diff = {
-    props: { added: [] as string[], removed: [] as string[], changed: [] as Array<{ name: string; old: any; new: any }> },
-    emits: { added: [] as string[], removed: [] as string[], changed: [] as Array<{ name: string; old: any; new: any }> },
-    state: { added: [] as string[], removed: [] as string[], changed: [] as Array<{ name: string; old: any; new: any }> },
-    hooks: { added: [] as string[], removed: [] as string[] },
-    components: { added: [] as string[], removed: [] as string[] },
-    variables: { added: [] as string[], removed: [] as string[] },
-    functions: { added: [] as string[], removed: [] as string[] },
-  };
-
-  // Compare props
-  const oldProps = oldContract.logicSignature.props || {};
-  const newProps = newContract.logicSignature.props || {};
-  for (const [key, value] of Object.entries(newProps)) {
-    if (!(key in oldProps)) {
-      diff.props.added.push(key);
-    } else if (JSON.stringify(oldProps[key]) !== JSON.stringify(value)) {
-      diff.props.changed.push({ name: key, old: oldProps[key], new: value });
-    }
-  }
-  for (const key of Object.keys(oldProps)) {
-    if (!(key in newProps)) {
-      diff.props.removed.push(key);
-    }
-  }
-
-  // Compare emits
-  const oldEmits = oldContract.logicSignature.emits || {};
-  const newEmits = newContract.logicSignature.emits || {};
-  for (const [key, value] of Object.entries(newEmits)) {
-    if (!(key in oldEmits)) {
-      diff.emits.added.push(key);
-    } else if (JSON.stringify(oldEmits[key]) !== JSON.stringify(value)) {
-      diff.emits.changed.push({ name: key, old: oldEmits[key], new: value });
-    }
-  }
-  for (const key of Object.keys(oldEmits)) {
-    if (!(key in newEmits)) {
-      diff.emits.removed.push(key);
-    }
-  }
-
-  // Compare state
-  const oldState = oldContract.logicSignature.state || {};
-  const newState = newContract.logicSignature.state || {};
-  for (const [key, value] of Object.entries(newState)) {
-    if (!(key in oldState)) {
-      diff.state.added.push(key);
-    } else if (JSON.stringify(oldState[key]) !== JSON.stringify(value)) {
-      diff.state.changed.push({ name: key, old: oldState[key], new: value });
-    }
-  }
-  for (const key of Object.keys(oldState)) {
-    if (!(key in newState)) {
-      diff.state.removed.push(key);
-    }
-  }
-
-  // Compare version arrays
-  const compareArrays = (oldArr: string[], newArr: string[], diffObj: { added: string[]; removed: string[] }) => {
-    const oldSet = new Set(oldArr);
-    const newSet = new Set(newArr);
-    for (const item of newSet) {
-      if (!oldSet.has(item)) {
-        diffObj.added.push(item);
-      }
-    }
-    for (const item of oldSet) {
-      if (!newSet.has(item)) {
-        diffObj.removed.push(item);
-      }
-    }
-  };
-
-  compareArrays(oldContract.version.hooks || [], newContract.version.hooks || [], diff.hooks);
-  compareArrays(oldContract.version.components || [], newContract.version.components || [], diff.components);
-  compareArrays(oldContract.version.variables || [], newContract.version.variables || [], diff.variables);
-  compareArrays(oldContract.version.functions || [], newContract.version.functions || [], diff.functions);
-
-  return diff;
-}
-
-/**
- * Normalize entry ID for comparison
- */
-function normalizeEntryId(id: string): string {
-  return id.replace(/\\/g, '/');
-}
-
-/**
- * Test version of getChanges from watchMode.ts
- * Compares old and new bundles to detect changes
- */
-function getChanges(
-  oldBundles: LogicStampBundle[],
-  newBundles: LogicStampBundle[],
-  compareContractsFn: typeof compareContracts
-): {
-  changed: Array<{
-    entryId: string;
-    semanticHash?: { old: string; new: string };
-    fileHash?: { old: string; new: string };
-    contractDiff?: ReturnType<typeof compareContracts>;
-  }>;
-  added: string[];
-  removed: string[];
-  bundleChanged: Array<{ entryId: string; oldHash: string; newHash: string }>;
-} | null {
-  // Index contracts
-  const indexContracts = (bundles: LogicStampBundle[]): Map<string, {
-    semanticHash: string;
-    fileHash: string;
-    entryId: string;
-    contract: UIFContract;
-  }> => {
-    const m = new Map();
-    for (const b of bundles) {
-      for (const n of b.graph.nodes) {
-        const normalizedId = normalizeEntryId(n.contract.entryId).toLowerCase();
-        m.set(normalizedId, {
-          semanticHash: n.contract.semanticHash,
-          fileHash: n.contract.fileHash,
-          entryId: n.contract.entryId,
-          contract: n.contract,
-        });
-      }
-    }
-    return m;
-  };
-
-  // Index bundles
-  const indexBundles = (bundles: LogicStampBundle[]): Map<string, { bundleHash: string; entryId: string }> => {
-    const m = new Map();
-    for (const b of bundles) {
-      const normalizedId = normalizeEntryId(b.entryId).toLowerCase();
-      m.set(normalizedId, {
-        bundleHash: b.bundleHash,
-        entryId: b.entryId,
-      });
-    }
-    return m;
-  };
-
-  const oldContractIdx = indexContracts(oldBundles);
-  const newContractIdx = indexContracts(newBundles);
-  const oldBundleIdx = indexBundles(oldBundles);
-  const newBundleIdx = indexBundles(newBundles);
-
-  const changed: Array<{
-    entryId: string;
-    semanticHash?: { old: string; new: string };
-    fileHash?: { old: string; new: string };
-    contractDiff?: ReturnType<typeof compareContracts>;
-  }> = [];
-  const added: string[] = [];
-  const removed: string[] = [];
-  const bundleChanged: Array<{ entryId: string; oldHash: string; newHash: string }> = [];
-
-  // Find changed contracts
-  for (const [id, newContract] of newContractIdx.entries()) {
-    const oldContract = oldContractIdx.get(id);
-    if (oldContract) {
-      const changes: {
-        semanticHash?: { old: string; new: string };
-        fileHash?: { old: string; new: string };
-        contractDiff?: ReturnType<typeof compareContracts>;
-      } = {};
-
-      if (oldContract.semanticHash !== newContract.semanticHash) {
-        changes.semanticHash = { old: oldContract.semanticHash, new: newContract.semanticHash };
-        changes.contractDiff = compareContractsFn(oldContract.contract, newContract.contract);
-      }
-
-      if (oldContract.fileHash !== newContract.fileHash) {
-        changes.fileHash = { old: oldContract.fileHash, new: newContract.fileHash };
-      }
-
-      if (Object.keys(changes).length > 0) {
-        changed.push({ entryId: newContract.entryId, ...changes });
-      }
-    } else {
-      added.push(newContract.entryId);
-    }
-  }
-
-  // Find removed contracts
-  for (const [id, oldContract] of oldContractIdx.entries()) {
-    if (!newContractIdx.has(id)) {
-      removed.push(oldContract.entryId);
-    }
-  }
-
-  // Find changed bundles
-  for (const [id, newBundle] of newBundleIdx.entries()) {
-    const oldBundle = oldBundleIdx.get(id);
-    if (oldBundle && oldBundle.bundleHash !== newBundle.bundleHash) {
-      bundleChanged.push({
-        entryId: newBundle.entryId,
-        oldHash: oldBundle.bundleHash,
-        newHash: newBundle.bundleHash,
-      });
-    }
-  }
-
-  if (changed.length === 0 && added.length === 0 && removed.length === 0 && bundleChanged.length === 0) {
-    return null;
-  }
-
-  return { changed, added, removed, bundleChanged };
-}
+import { compareContracts, getChanges } from '../../../src/cli/commands/context/watchDiff.js';
 
 // Helper to create mock contracts and bundles
 const createMockContract = (
@@ -524,7 +301,7 @@ describe('getChanges', () => {
       const oldBundles = [createMockBundle('src/App.tsx', [contract])];
       const newBundles = [createMockBundle('src/App.tsx', [contract])];
 
-      const changes = getChanges(oldBundles, newBundles, compareContracts);
+      const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).toBeNull();
     });
@@ -536,7 +313,7 @@ describe('getChanges', () => {
       const oldBundles = [createMockBundle('src/App.tsx', [oldContract])];
       const newBundles = [createMockBundle('src/App.tsx', [newContract])];
 
-      const changes = getChanges(oldBundles, newBundles, compareContracts);
+      const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
       expect(changes!.changed).toHaveLength(1);
@@ -556,7 +333,7 @@ describe('getChanges', () => {
       const oldBundles = [createMockBundle('src/App.tsx', [oldContract])];
       const newBundles = [createMockBundle('src/App.tsx', [newContract])];
 
-      const changes = getChanges(oldBundles, newBundles, compareContracts);
+      const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
       expect(changes!.changed).toHaveLength(1);
@@ -577,7 +354,7 @@ describe('getChanges', () => {
       const oldBundles = [createMockBundle('src/App.tsx', [oldContract])];
       const newBundles = [createMockBundle('src/App.tsx', [newContract])];
 
-      const changes = getChanges(oldBundles, newBundles, compareContracts);
+      const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
       expect(changes!.changed[0].semanticHash).toBeDefined();
@@ -594,7 +371,7 @@ describe('getChanges', () => {
       const oldBundles = [createMockBundle('src/App.tsx', [oldContract])];
       const newBundles = [createMockBundle('src/App.tsx', [newContract1, newContract2])];
 
-      const changes = getChanges(oldBundles, newBundles, compareContracts);
+      const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
       expect(changes!.added).toContain('src/components/Button.tsx');
@@ -608,7 +385,7 @@ describe('getChanges', () => {
       const oldBundles = [createMockBundle('src/App.tsx', [oldContract1, oldContract2])];
       const newBundles = [createMockBundle('src/App.tsx', [newContract])];
 
-      const changes = getChanges(oldBundles, newBundles, compareContracts);
+      const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
       expect(changes!.removed).toContain('src/components/Button.tsx');
@@ -622,7 +399,7 @@ describe('getChanges', () => {
       const oldBundles = [createMockBundle('src/App.tsx', [contract], 'bundle-hash-1')];
       const newBundles = [createMockBundle('src/App.tsx', [contract], 'bundle-hash-2')];
 
-      const changes = getChanges(oldBundles, newBundles, compareContracts);
+      const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
       expect(changes!.bundleChanged).toHaveLength(1);
@@ -646,7 +423,7 @@ describe('getChanges', () => {
         createMockBundle('src/components/Card.tsx', [contract2], 'card-hash-2'),
       ];
 
-      const changes = getChanges(oldBundles, newBundles, compareContracts);
+      const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
       expect(changes!.bundleChanged).toHaveLength(2);
@@ -661,7 +438,7 @@ describe('getChanges', () => {
       const oldBundles = [createMockBundle('src/App.tsx', [oldContract])];
       const newBundles = [createMockBundle('src/app.tsx', [newContract])];
 
-      const changes = getChanges(oldBundles, newBundles, compareContracts);
+      const changes = getChanges(oldBundles, newBundles);
 
       // Should detect as changed, not added/removed
       expect(changes).not.toBeNull();
@@ -685,7 +462,7 @@ describe('getChanges', () => {
       const oldBundles = [createMockBundle('src/Button.tsx', [oldContract])];
       const newBundles = [createMockBundle('src/Button.tsx', [newContract])];
 
-      const changes = getChanges(oldBundles, newBundles, compareContracts);
+      const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
       expect(changes!.changed[0].contractDiff).toBeDefined();
@@ -705,7 +482,7 @@ describe('getChanges', () => {
       const oldBundles = [createMockBundle('src/Button.tsx', [oldContract])];
       const newBundles = [createMockBundle('src/Button.tsx', [newContract])];
 
-      const changes = getChanges(oldBundles, newBundles, compareContracts);
+      const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
       expect(changes!.changed[0].contractDiff).toBeUndefined();
@@ -723,7 +500,7 @@ describe('getChanges', () => {
       const oldBundles = [createMockBundle('src/App.tsx', [appContract, buttonContract, cardContract])];
       const newBundles = [createMockBundle('src/App.tsx', [appContract, newButtonContract, cardContract])];
 
-      const changes = getChanges(oldBundles, newBundles, compareContracts);
+      const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
       expect(changes!.changed).toHaveLength(1);
