@@ -1,6 +1,6 @@
 {
   "name": "logicstamp-context",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Generate structured, deterministic, AI-ready context bundles via static analysis of TypeScript and React codebases",
   "type": "module",
   "main": "./dist/index.js",
@@ -60,6 +60,7 @@
   },
   "dependencies": {
     "@toon-format/toon": "^1.0.0",
+    "chokidar": "^4.0.3",
     "css-tree": "^3.1.0",
     "glob": "^10.5.0",
     "ts-morph": "^21.0.1"

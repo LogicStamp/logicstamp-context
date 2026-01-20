@@ -43,6 +43,9 @@ export function parseContextArgs(args: string[]): ContextOptions {
     skipGitignore: false,
     quiet: false,
     includeStyle: false, // Default to false
+    watch: false, // Default to false
+    debug: false, // Default to false
+    logFile: false, // Default to false
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -79,7 +82,7 @@ export function parseContextArgs(args: string[]): ContextOptions {
           i++;
           break;
         case 'profile':
-          options.profile = value as 'llm-safe' | 'llm-chat' | 'ci-strict';
+          options.profile = value as 'llm-safe' | 'llm-chat' | 'ci-strict' | 'watch-fast';
           i++;
           break;
         case 'strict':
@@ -110,6 +113,16 @@ export function parseContextArgs(args: string[]): ContextOptions {
           break;
         case 'include-style':
           options.includeStyle = true;
+          break;
+        case 'watch':
+        case 'w':
+          options.watch = true;
+          break;
+        case 'debug':
+          options.debug = true;
+          break;
+        case 'log-file':
+          options.logFile = true;
           break;
         default:
           console.error(`❌ Unknown option: ${arg}`);

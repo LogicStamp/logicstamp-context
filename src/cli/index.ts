@@ -53,6 +53,8 @@ async function main() {
     compareModes: false,
     skipGitignore: false,
     quiet: false,
+    watch: false,
+    debug: false,
   };
 
   // Parse command line arguments
@@ -125,6 +127,13 @@ async function main() {
         case 'q':
           options.quiet = true;
           break;
+        case 'watch':
+        case 'w':
+          options.watch = true;
+          break;
+        case 'debug':
+          options.debug = true;
+          break;
       }
     } else if (!arg.startsWith('-') && !options.entry) {
       options.entry = arg;
@@ -169,6 +178,8 @@ OPTIONS:
   --compare-modes           Show detailed token comparison table
   --skip-gitignore          Skip .gitignore setup (never prompt or modify)
   --quiet, -q               Suppress verbose output (show only errors)
+  --watch, -w               Watch for file changes and regenerate automatically
+  --debug                   Show detailed hash information in watch mode
   -h, --help                Show this help
 
 PROFILES:
@@ -188,6 +199,9 @@ EXAMPLES:
 
   logicstamp-context --depth 2 --include-code full
     Include full source code with deeper traversal
+
+  logicstamp-context --watch
+    Watch for file changes and regenerate context automatically
 
 VALIDATION:
   Use logicstamp-validate to check generated bundles:

@@ -8,17 +8,19 @@
 import { readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { handleInit } from './handlers/initHandler.js';
-import { handleValidate } from './handlers/validateHandler.js';
-import { handleCompare } from './handlers/compareHandler.js';
-import { handleClean } from './handlers/cleanHandler.js';
-import { handleStyle } from './handlers/styleHandler.js';
-import { handleGenerate } from './handlers/contextHandler.js';
-import { handleIgnore } from './handlers/ignoreHandler.js';
-import { handleSecurityScan } from './handlers/securityHandler.js';
+import {
+  handleInit,
+  handleValidate,
+  handleCompare,
+  handleClean,
+  handleStyle,
+  handleGenerate,
+  handleIgnore,
+  handleSecurityScan,
+  printFoxIcon,
+} from './handlers/index.js';
 import { securityHardResetCommand, type SecurityHardResetOptions } from './commands/security.js';
-import { getMainHelp, getSecurityHelp } from './parser/helpText.js';
-import { printFoxIcon } from './handlers/initHandler.js';
+import { getMainHelp, getSecurityHelp } from './parser/index.js';
 
 async function main() {
   const args = process.argv.slice(2);

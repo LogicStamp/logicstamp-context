@@ -3,8 +3,7 @@
  */
 
 import { contextCommand, type ContextOptions } from '../commands/context.js';
-import { parseContextArgs } from '../parser/argumentParser.js';
-import { getGenerateHelp } from '../parser/helpText.js';
+import { parseContextArgs, getGenerateHelp } from '../parser/index.js';
 import { printFoxIcon } from './initHandler.js';
 
 export async function handleGenerate(args: string[]): Promise<void> {

@@ -3,8 +3,7 @@
  */
 
 import { ignoreCommand, type IgnoreOptions } from '../commands/ignore.js';
-import { parseIgnoreArgs } from '../parser/argumentParser.js';
-import { getIgnoreHelp } from '../parser/helpText.js';
+import { parseIgnoreArgs, getIgnoreHelp } from '../parser/index.js';
 import { printFoxIcon } from './initHandler.js';
 
 export async function handleIgnore(args: string[]): Promise<void> {

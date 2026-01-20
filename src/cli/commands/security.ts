@@ -11,7 +11,7 @@ import { scanFileForSecrets, filterFalsePositives, type SecretMatch } from '../.
 import { STAMPIGNORE_FILENAME } from '../../utils/stampignore.js';
 import { ensureGitignorePatterns, ensurePatternInGitignore } from '../../utils/gitignore.js';
 import { debugError } from '../../utils/debug.js';
-import { displayPath } from './context/fileWriter.js';
+import { displayPath } from './context/index.js';
 
 export interface SecurityScanOptions {
   entry?: string;

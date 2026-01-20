@@ -25,6 +25,7 @@ stamp init [path] [options]        # Initialize LogicStamp in project
 stamp ignore <path> [path2] ...     # Add files/folders to .stampignore
 stamp context [path] [options]
 stamp context style [path] [options]  # Generate context with style metadata
+stamp context --watch [path] [options] # Watch mode - auto-regenerate on changes
 stamp context validate [file]
 stamp context compare [oldFile] [newFile] [options]  # Auto-mode (default): omit files to compare all context files
 stamp context clean [path] [options]
@@ -43,7 +44,7 @@ These options are available at the top level (before any subcommand):
 
 **Examples:**
 ```bash
-stamp --version    # Shows: fox mascot + "Version: 0.4.0"
+stamp --version    # Shows: fox mascot + "Version: 0.4.1"
 stamp -v           # Same as --version
 stamp --help       # Shows main help
 stamp -h           # Same as --help
@@ -197,6 +198,9 @@ If a security report (`stamp_security_report.json`) exists, `stamp context` auto
 | `--strict-missing` | | `false` | Exit with error if any missing dependencies found |
 | `--skip-gitignore` | | `false` | Skip `.gitignore` setup (never prompt or modify). Default behavior is CI-friendly (skips unless config preference is 'added'). |
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors) |
+| `--watch` | `-w` | `false` | Watch for file changes and regenerate automatically |
+| `--debug` | | `false` | Show detailed hash information in watch mode |
+| `--log-file` | | `false` | Write structured change logs to file (watch mode only, for change notifications) |
 
 **CI / automation tips**
 
@@ -342,6 +346,56 @@ Style metadata is included in the `style` field of each component's contract:
 **Note:** Style extraction adds a small token overhead to context bundles. Use `stamp context --compare-modes` to see the token impact.
 
 For detailed documentation on the style command, see [docs/cli/style.md](cli/style.md).
+
+### Watch Mode (`--watch`)
+
+Watch mode monitors your codebase for file changes and automatically regenerates context bundles with incremental rebuilds.
+
+```bash
+# Start watch mode
+stamp context --watch
+
+# Watch with style metadata
+stamp context style --watch
+
+# Watch a specific directory
+stamp context ./src/components --watch
+
+# Watch with debug output
+stamp context --watch --debug
+
+# Watch with structured change logs (for change notifications)
+stamp context --watch --log-file
+```
+
+**Features:**
+- **Incremental rebuilds** - Only rebuilds affected bundles, not the entire project
+- **Change detection** - Shows what changed (props added/removed, hooks, state, etc.)
+- **Debouncing** - Batches rapid changes (500ms delay)
+- **Style support** - Works with `--include-style` for style metadata
+
+**Watched file types:**
+- `.ts`, `.tsx` (always)
+- `.css`, `.scss`, `.module.css`, `.module.scss` (with `--include-style`)
+
+**Example output:**
+```
+👀 Watch mode enabled. Watching for file changes...
+   Press Ctrl+C to stop
+
+📝 Changed: src/components/Button.tsx
+
+🔄 Regenerating (1 file changed)...
+
+✏️  Modified contract:
+  src/components/Button.tsx
+   • Added props: `disabled`
+   • Changed hooks: `useCallback`
+
+✅ Regenerated
+```
+
+For comprehensive watch mode documentation, see [docs/cli/watch.md](cli/watch.md).
 
 ### `stamp context validate`
 
@@ -949,7 +1003,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp-context@0.4.0"
+      "source": "logicstamp-context@0.4.1"
     }
   }
 ]
@@ -980,7 +1034,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
     }
   ],
   "meta": {
-            "source": "logicstamp-context@0.4.0"
+            "source": "logicstamp-context@0.4.1"
   }
 }
 ```

@@ -3,7 +3,7 @@
  */
 
 import { securityScanCommand, type SecurityScanOptions } from '../commands/security.js';
-import { getSecurityScanHelp } from '../parser/helpText.js';
+import { getSecurityScanHelp } from '../parser/index.js';
 import { printFoxIcon } from './initHandler.js';
 
 export async function handleSecurityScan(args: string[]): Promise<void> {

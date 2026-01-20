@@ -127,14 +127,19 @@ OPTIONS:
   --format, -f <format>                Output format: json|pretty|ndjson|toon (default: json)
   --out, -o <file>                    Output file (default: context.json)
   --max-nodes, -m <n>                 Max nodes per bundle (default: 100)
-  --profile <profile>                 Preset profile: llm-safe|llm-chat|ci-strict
+  --profile <profile>                 Preset profile: llm-safe|llm-chat|ci-strict|watch-fast
+                                      watch-fast: Fast watch mode (lighter style extraction)
   --strict, -s                        Fail on missing dependencies
   --strict-missing                    Exit with error if any missing dependencies
   --predict-behavior                  Include behavior predictions
   --dry-run                           Skip writing output
   --stats                             Emit JSON stats
+  --compare-modes                     Show detailed mode comparison table
   --skip-gitignore                    Skip .gitignore setup (never prompt or modify)
   --quiet, -q                         Suppress verbose output (show only errors)
+  --watch, -w                         Watch for file changes and regenerate automatically
+                                      Tip: Pass a subdirectory path to watch only that folder
+  --debug                             Show detailed hash information in watch mode
   -h, --help                          Show this help
 
 STYLE METADATA EXTRACTED:
@@ -152,6 +157,15 @@ EXAMPLES:
 
   stamp context style --profile llm-safe
     Use conservative profile with style metadata
+
+  stamp context style --watch
+    Watch for file changes and regenerate context with style metadata
+
+  stamp context style --watch --debug
+    Watch mode with detailed hash information
+
+  stamp context style ./src/components/MyFeature --watch
+    Watch only files in a specific subdirectory (incremental rebuilds are fast!)
 
 NOTES:
   • This is equivalent to: stamp context --include-style
@@ -180,7 +194,8 @@ OPTIONS:
   --format, -f <format>               Output format: json|pretty|ndjson|toon (default: json)
   --out, -o <file>                    Output file (default: context.json)
   --max-nodes, -m <n>                 Max nodes per bundle (default: 100)
-  --profile <profile>                 Preset profile: llm-safe|llm-chat|ci-strict
+  --profile <profile>                 Preset profile: llm-safe|llm-chat|ci-strict|watch-fast
+                                      watch-fast: Fast watch mode (lighter style extraction)
   --strict, -s                        Fail on missing dependencies
   --strict-missing                    Exit with error if any missing dependencies
   --predict-behavior                  Include behavior predictions
@@ -189,6 +204,8 @@ OPTIONS:
   --compare-modes                     Show detailed mode comparison table
   --skip-gitignore                    Skip .gitignore setup (never prompt or modify)
   --quiet, -q                         Suppress verbose output (show only errors)
+  --watch, -w                         Watch for file changes and regenerate automatically
+  --debug                             Show detailed hash information in watch mode
   -h, --help                          Show this help
 
 EXAMPLES:
@@ -209,6 +226,15 @@ EXAMPLES:
 
   stamp context --compare-modes
     Show token cost comparison across modes
+
+  stamp context --watch
+    Watch for file changes and regenerate context automatically
+
+  stamp context --watch --debug
+    Watch mode with detailed hash information
+
+  stamp context ./src/components/MyFeature --watch
+    Watch only files in a specific subdirectory (incremental rebuilds are fast!)
 
   stamp context --quiet
     Suppress verbose output (show only errors)

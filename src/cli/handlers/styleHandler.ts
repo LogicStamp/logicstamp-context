@@ -3,8 +3,7 @@
  */
 
 import { styleCommand, type StyleOptions } from '../commands/style.js';
-import { parseStyleArgs } from '../parser/argumentParser.js';
-import { getStyleHelp } from '../parser/helpText.js';
+import { parseStyleArgs, getStyleHelp } from '../parser/index.js';
 import { printFoxIcon } from './initHandler.js';
 
 export async function handleStyle(args: string[]): Promise<void> {

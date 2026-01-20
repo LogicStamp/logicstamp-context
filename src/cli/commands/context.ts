@@ -16,13 +16,27 @@ import {
 } from '../../core/pack.js';
 import { estimateGPT4Tokens, estimateClaudeTokens } from '../../utils/tokens.js';
 import { validateBundles } from './validate.js';
-import { buildContractsFromFiles } from './context/contractBuilder.js';
-import { formatBundles } from './context/bundleFormatter.js';
-import { calculateTokenEstimates, generateModeComparison, displayModeComparison } from './context/tokenEstimator.js';
-import { calculateStats, generateStatsOutput, generateSummary } from './context/statsCalculator.js';
-import { writeContextFiles, writeMainIndex, groupBundlesByFolder, displayPath } from './context/fileWriter.js';
-import { ensureConfigExists, setupGitignore, setupLLMContext } from './context/configManager.js';
-import { getAndResetSanitizeStats } from '../../core/pack/loader.js';
+import {
+  buildContractsFromFiles,
+  formatBundles,
+  calculateTokenEstimates,
+  generateModeComparison,
+  displayModeComparison,
+  calculateStats,
+  generateStatsOutput,
+  generateSummary,
+  writeContextFiles,
+  writeMainIndex,
+  groupBundlesByFolder,
+  displayPath,
+  ensureConfigExists,
+  setupGitignore,
+  setupLLMContext,
+  initializeWatchCache,
+  type WatchCache,
+} from './context/index.js';
+import { getAndResetSanitizeStats } from '../../core/pack/index.js';
+import { startWatchMode } from './context/watchMode.js';
 
 export interface ContextOptions {
   entry?: string;
@@ -34,7 +48,7 @@ export interface ContextOptions {
   strict: boolean;
   allowMissing: boolean;
   maxNodes: number;
-  profile: 'llm-safe' | 'llm-chat' | 'ci-strict';
+  profile: 'llm-safe' | 'llm-chat' | 'ci-strict' | 'watch-fast';
   predictBehavior: boolean;
   dryRun: boolean;
   stats: boolean;
@@ -44,6 +58,9 @@ export interface ContextOptions {
   quiet?: boolean;
   suppressSuccessIndicator?: boolean; // When true, don't output ✓ even in quiet mode (for internal calls)
   includeStyle?: boolean; // Extract style metadata (Tailwind, SCSS, animations, layout)
+  watch?: boolean; // Watch for file changes and regenerate context automatically
+  debug?: boolean; // Enable debug output (shows hashes in watch mode)
+  logFile?: boolean; // Write watch mode logs to file (default: false)
 }
 
 export async function contextCommand(options: ContextOptions): Promise<void> {
@@ -150,6 +167,15 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     if (!options.quiet) {
       const codeMode = includeCode === 'full' ? 'full code' : includeCode === 'header' ? 'header only' : 'no code';
       console.log(`📋 Using profile: ci-strict (${codeMode}, strict dependencies)`);
+    }
+  } else if (options.profile === 'watch-fast') {
+    depth = userSetDepth ? options.depth : 2;
+    includeCode = userSetIncludeCode ? options.includeCode : 'header';
+    hashLock = false;
+    // For watch-fast, use lighter style extraction (will be handled in style extractor)
+    if (!options.quiet) {
+      const codeMode = includeCode === 'full' ? 'full code' : includeCode === 'none' ? 'no code' : 'header only';
+      console.log(`📋 Using profile: watch-fast (depth=${depth}, ${codeMode}, lighter style extraction)`);
     }
   }
 
@@ -431,8 +457,21 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   }
 
   // Exit with non-zero code if --strict-missing is enabled and there are missing dependencies
-  if (options.strictMissing && stats.totalMissing > 0) {
+  // Skip exit in watch mode to allow continuous watching
+  if (options.strictMissing && stats.totalMissing > 0 && !options.watch) {
     console.error(`\n❌ Strict missing mode: ${stats.totalMissing} missing dependencies found`);
     process.exit(1);
+  }
+
+  // If watch mode is enabled, start watching for file changes
+  // Note: Watch mode is incompatible with --stats and --compare-modes (they return early)
+  if (options.watch) {
+    if (options.stats || options.compareModes) {
+      console.error(`❌ Watch mode is incompatible with --stats and --compare-modes`);
+      process.exit(1);
+    }
+    // Initialize watch cache BEFORE starting watch mode so first change can use incremental rebuild
+    const watchCache = await initializeWatchCache(files, contracts, manifest, bundles, projectRoot);
+    await startWatchMode(options, projectRoot, watchCache);
   }
 }

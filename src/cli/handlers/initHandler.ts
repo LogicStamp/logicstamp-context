@@ -3,8 +3,7 @@
  */
 
 import { init, type InitOptions } from '../commands/init.js';
-import { parseInitArgs } from '../parser/argumentParser.js';
-import { getInitHelp } from '../parser/helpText.js';
+import { parseInitArgs, getInitHelp } from '../parser/index.js';
 
 export function printFoxIcon() {
   console.log(`
