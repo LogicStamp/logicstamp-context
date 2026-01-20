@@ -11,8 +11,7 @@ import {
   displayMultiFileCompareResult,
   cleanOrphanedFiles,
 } from '../commands/compare.js';
-import { parseCompareArgs } from '../parser/argumentParser.js';
-import { getCompareHelp } from '../parser/helpText.js';
+import { parseCompareArgs, getCompareHelp } from '../parser/index.js';
 import { printFoxIcon } from './initHandler.js';
 import { debugError } from '../../utils/debug.js';
 

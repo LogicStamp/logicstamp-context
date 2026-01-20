@@ -3,8 +3,7 @@
  */
 
 import { validateCommand } from '../commands/validate.js';
-import { parseValidateArgs } from '../parser/argumentParser.js';
-import { getValidateHelp } from '../parser/helpText.js';
+import { parseValidateArgs, getValidateHelp } from '../parser/index.js';
 import { printFoxIcon } from './initHandler.js';
 
 export async function handleValidate(args: string[]): Promise<void> {

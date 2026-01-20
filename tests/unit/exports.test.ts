@@ -50,6 +50,19 @@ describe('Main Entry Point Exports', () => {
     expect(typeof pkg.cleanCommand).toBe('function');
   });
 
+  it('should export validation and comparison utilities', async () => {
+    const pkg = await import('../../dist/index.js');
+    
+    expect(pkg.validateBundles).toBeDefined();
+    expect(typeof pkg.validateBundles).toBe('function');
+    
+    expect(pkg.multiFileValidate).toBeDefined();
+    expect(typeof pkg.multiFileValidate).toBe('function');
+    
+    expect(pkg.multiFileCompare).toBeDefined();
+    expect(typeof pkg.multiFileCompare).toBe('function');
+  });
+
   it('should export types (type-only exports)', async () => {
     // Type exports are compile-time only, but we can verify the module loads
     const pkg = await import('../../dist/index.js');

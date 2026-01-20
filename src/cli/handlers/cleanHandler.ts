@@ -3,8 +3,7 @@
  */
 
 import { cleanCommand, type CleanOptions } from '../commands/clean.js';
-import { parseCleanArgs } from '../parser/argumentParser.js';
-import { getCleanHelp } from '../parser/helpText.js';
+import { parseCleanArgs, getCleanHelp } from '../parser/index.js';
 import { printFoxIcon } from './initHandler.js';
 
 export async function handleClean(args: string[]): Promise<void> {
