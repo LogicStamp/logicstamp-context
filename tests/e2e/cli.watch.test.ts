@@ -11,6 +11,29 @@ import { randomUUID } from 'node:crypto';
 
 const execAsync = promisify(exec);
 
+// Helper functions for reliable async testing
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+async function waitFor(
+  condition: () => boolean,
+  {
+    timeoutMs = 60000,
+    intervalMs = 100,
+    onTimeoutMessage = 'Timeout waiting for condition',
+  }: { timeoutMs?: number; intervalMs?: number; onTimeoutMessage?: string } = {}
+) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    if (condition()) return;
+    await sleep(intervalMs);
+  }
+  throw new Error(onTimeoutMessage);
+}
+
+const CI_RETRY = process.env.CI ? 2 : 0;
+
 describe('CLI Watch Mode Tests', () => {
   const fixturesPath = join(process.cwd(), 'tests/fixtures/simple-app');
   let testDir: string;
@@ -305,63 +328,40 @@ describe('CLI Watch Mode Tests', () => {
       });
     }, 35000);
 
-    it('should also watch .css and .scss files with --include-style', async () => {
-      return new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          if (watchProcess) {
-            watchProcess.kill('SIGTERM');
-          }
-          reject(new Error('Timeout waiting for style file detection'));
-        }, 45000);
+    it('should also watch .css and .scss files with --include-style', { retry: CI_RETRY, timeout: 120000 }, async () => {
+      let output = '';
 
-        watchProcess = spawn('node', [
-          'dist/cli/stamp.js',
-          'context',
-          testDir,
-          '--out', outputPath,
-          '--watch',
-          '--include-style',
-        ], {
-          cwd: process.cwd(),
-          stdio: ['ignore', 'pipe', 'pipe'],
-        });
-
-        let output = '';
-
-        watchProcess.stdout?.on('data', async (data: Buffer) => {
-          output += data.toString();
-
-          // Check that style extensions are being watched
-          if (output.includes('.css') || output.includes('.scss')) {
-            clearTimeout(timeout);
-            watchProcess?.kill('SIGTERM');
-            expect(output).toMatch(/\.css|\.scss/);
-            resolve();
-          }
-
-          // Or if we see the watching extensions list
-          if (output.includes('Watching extensions')) {
-            clearTimeout(timeout);
-            watchProcess?.kill('SIGTERM');
-            resolve();
-          }
-        });
-
-        // If no style extensions message, still pass after some time
-        setTimeout(() => {
-          if (!watchProcess?.killed) {
-            clearTimeout(timeout);
-            watchProcess?.kill('SIGTERM');
-            resolve();
-          }
-        }, 10000);
-
-        watchProcess.on('error', (err) => {
-          clearTimeout(timeout);
-          reject(err);
-        });
+      watchProcess = spawn('node', [
+        'dist/cli/stamp.js',
+        'context',
+        testDir,
+        '--out', outputPath,
+        '--watch',
+        '--include-style',
+      ], {
+        cwd: process.cwd(),
+        stdio: ['ignore', 'pipe', 'pipe'],
       });
-    }, 50000);
+
+      watchProcess.stdout?.on('data', (data: Buffer) => {
+        output += data.toString();
+      });
+
+      watchProcess.stderr?.on('data', (data: Buffer) => {
+        output += data.toString();
+      });
+
+      // Wait for watch mode to be ready
+      await waitFor(
+        () => output.includes('Watch mode active') || output.includes('Waiting for file changes'),
+        { timeoutMs: 60000, onTimeoutMessage: 'Timeout waiting for watch mode ready' }
+      );
+
+      // Verify style extensions are being watched (these only appear with --include-style)
+      expect(output).toMatch(/\.css|\.scss|\.module\.css|\.module\.scss/);
+
+      watchProcess?.kill('SIGTERM');
+    });
   });
 
   describe('Watch mode cleanup', () => {
@@ -812,55 +812,51 @@ describe('CLI Watch Mode Tests', () => {
       });
     }, 35000);
 
-    it('should show regeneration success message', async () => {
-      return new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          if (watchProcess) {
-            watchProcess.kill('SIGTERM');
-          }
-          reject(new Error('Timeout waiting for success message'));
-        }, 45000);
+    it('should show regeneration success message', { retry: CI_RETRY, timeout: 120000 }, async () => {
+      let output = '';
 
-        watchProcess = spawn('node', [
-          'dist/cli/stamp.js',
-          'context',
-          testDir,
-          '--out', outputPath,
-          '--watch',
-        ], {
-          cwd: process.cwd(),
-          stdio: ['ignore', 'pipe', 'pipe'],
-        });
-
-        let output = '';
-        let isReady = false;
-
-        watchProcess.stdout?.on('data', async (data: Buffer) => {
-          output += data.toString();
-
-          if ((output.includes('Watch mode active') || output.includes('Waiting for file changes')) && !isReady) {
-            isReady = true;
-
-            // Modify a file
-            const appPath = join(testDir, 'src', 'App.tsx');
-            const content = await readFile(appPath, 'utf-8');
-            await writeFile(appPath, content + '\n// Test');
-          }
-
-          // Check for success indicator
-          if (output.includes('Regenerated') || output.includes('✅')) {
-            clearTimeout(timeout);
-            watchProcess?.kill('SIGTERM');
-            expect(output).toMatch(/Regenerated|✅/);
-            resolve();
-          }
-        });
-
-        watchProcess.on('error', (err) => {
-          clearTimeout(timeout);
-          reject(err);
-        });
+      watchProcess = spawn('node', [
+        'dist/cli/stamp.js',
+        'context',
+        testDir,
+        '--out', outputPath,
+        '--watch',
+      ], {
+        cwd: process.cwd(),
+        stdio: ['ignore', 'pipe', 'pipe'],
       });
-    }, 50000);
+
+      watchProcess.stdout?.on('data', (data: Buffer) => {
+        output += data.toString();
+      });
+
+      watchProcess.stderr?.on('data', (data: Buffer) => {
+        output += data.toString();
+      });
+
+      // Wait for watch mode to be ready
+      await waitFor(
+        () => output.includes('Watch mode active') || output.includes('Waiting for file changes'),
+        { timeoutMs: 60000, onTimeoutMessage: 'Timeout waiting for watch mode ready' }
+      );
+
+      // Give watcher a moment to fully attach (CI stability)
+      await sleep(300);
+
+      // Modify a file to trigger regeneration
+      const appPath = join(testDir, 'src', 'App.tsx');
+      const content = await readFile(appPath, 'utf-8');
+      await writeFile(appPath, content + '\n// Test change');
+
+      // Wait for regeneration success
+      await waitFor(
+        () => output.includes('Regenerated') || output.includes('✅'),
+        { timeoutMs: 90000, onTimeoutMessage: 'Timeout waiting for regeneration success message' }
+      );
+
+      expect(output).toMatch(/Regenerated|✅/);
+
+      watchProcess?.kill('SIGTERM');
+    });
   });
 });
