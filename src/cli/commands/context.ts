@@ -60,6 +60,7 @@ export interface ContextOptions {
   includeStyle?: boolean; // Extract style metadata (Tailwind, SCSS, animations, layout)
   watch?: boolean; // Watch for file changes and regenerate context automatically
   debug?: boolean; // Enable debug output (shows hashes in watch mode)
+  logFile?: boolean; // Write watch mode logs to file (default: false)
 }
 
 export async function contextCommand(options: ContextOptions): Promise<void> {

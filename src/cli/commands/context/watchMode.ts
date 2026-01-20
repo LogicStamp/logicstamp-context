@@ -687,43 +687,45 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
         console.log(`\n✅ Regenerated\n`);
       }
 
-      // Log structured data for MCP server
-      if (changes) {
-        const logEntry: WatchLogEntry = {
-          timestamp: new Date().toISOString(),
-          changedFiles: changedFileList,
-          fileCount: changedFileList.length,
-          durationMs,
-          modifiedContracts: changes.changed.map(c => ({
-            entryId: c.entryId,
-            semanticHashChanged: !!c.semanticHash,
-            fileHashChanged: !!c.fileHash,
-            semanticHash: c.semanticHash,
-            fileHash: c.fileHash,
-          })),
-          modifiedBundles: changes.bundleChanged.map(b => ({
-            entryId: b.entryId,
-            bundleHash: { old: b.oldHash, new: b.newHash },
-          })),
-          addedContracts: changes.added.length > 0 ? changes.added : undefined,
-          removedContracts: changes.removed.length > 0 ? changes.removed : undefined,
-          summary: {
-            modifiedContractsCount: changes.changed.length,
-            modifiedBundlesCount: changes.bundleChanged.length,
-            addedContractsCount: changes.added.length,
-            removedContractsCount: changes.removed.length,
-          },
-        };
-        await appendWatchLog(projectRoot, logEntry);
-      } else if (changedFileList.length > 0) {
-        // Log even if no changes detected (file changed but no contract changes)
-        const logEntry: WatchLogEntry = {
-          timestamp: new Date().toISOString(),
-          changedFiles: changedFileList,
-          fileCount: changedFileList.length,
-          durationMs,
-        };
-        await appendWatchLog(projectRoot, logEntry);
+      // Log structured data for MCP server (only if --log-file flag is set)
+      if (options.logFile) {
+        if (changes) {
+          const logEntry: WatchLogEntry = {
+            timestamp: new Date().toISOString(),
+            changedFiles: changedFileList,
+            fileCount: changedFileList.length,
+            durationMs,
+            modifiedContracts: changes.changed.map(c => ({
+              entryId: c.entryId,
+              semanticHashChanged: !!c.semanticHash,
+              fileHashChanged: !!c.fileHash,
+              semanticHash: c.semanticHash,
+              fileHash: c.fileHash,
+            })),
+            modifiedBundles: changes.bundleChanged.map(b => ({
+              entryId: b.entryId,
+              bundleHash: { old: b.oldHash, new: b.newHash },
+            })),
+            addedContracts: changes.added.length > 0 ? changes.added : undefined,
+            removedContracts: changes.removed.length > 0 ? changes.removed : undefined,
+            summary: {
+              modifiedContractsCount: changes.changed.length,
+              modifiedBundlesCount: changes.bundleChanged.length,
+              addedContractsCount: changes.added.length,
+              removedContractsCount: changes.removed.length,
+            },
+          };
+          await appendWatchLog(projectRoot, logEntry);
+        } else if (changedFileList.length > 0) {
+          // Log even if no changes detected (file changed but no contract changes)
+          const logEntry: WatchLogEntry = {
+            timestamp: new Date().toISOString(),
+            changedFiles: changedFileList,
+            fileCount: changedFileList.length,
+            durationMs,
+          };
+          await appendWatchLog(projectRoot, logEntry);
+        }
       }
 
       previousBundles = newBundles; // Update for next comparison
@@ -735,15 +737,17 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
         console.error(`   ❌ Error: ${errorMessage}\n`);
       }
 
-      // Log error to watch logs
-      const logEntry: WatchLogEntry = {
-        timestamp: new Date().toISOString(),
-        changedFiles: changedFileList,
-        fileCount: changedFileList.length,
-        durationMs,
-        error: errorMessage,
-      };
-      await appendWatchLog(projectRoot, logEntry);
+      // Log error to watch logs (only if --log-file flag is set)
+      if (options.logFile) {
+        const logEntry: WatchLogEntry = {
+          timestamp: new Date().toISOString(),
+          changedFiles: changedFileList,
+          fileCount: changedFileList.length,
+          durationMs,
+          error: errorMessage,
+        };
+        await appendWatchLog(projectRoot, logEntry);
+      }
 
       // Fall back to full rebuild on error
       watchCache = null;

@@ -365,7 +365,7 @@ describe('CLI Watch Mode Tests', () => {
   });
 
   describe('Watch mode cleanup', () => {
-    it('should preserve watch logs file on exit (only status file is removed)', async () => {
+    it('should preserve watch logs file on exit when --log-file is used', async () => {
       return new Promise<void>(async (resolve, reject) => {
         const timeout = setTimeout(() => {
           if (watchProcess) {
@@ -380,6 +380,7 @@ describe('CLI Watch Mode Tests', () => {
           testDir,
           '--out', outputPath,
           '--watch',
+          '--log-file', // Required to enable log file output
         ], {
           cwd: process.cwd(),
           stdio: ['ignore', 'pipe', 'pipe'],
@@ -425,7 +426,7 @@ describe('CLI Watch Mode Tests', () => {
             statusExists = false;
           }
 
-          // Check that logs file was preserved
+          // Check that logs file was preserved (only created with --log-file flag)
           const logsPath = join(testDir, '.logicstamp', 'context_watch-mode-logs.json');
           let logsExist = false;
           try {
@@ -451,6 +452,81 @@ describe('CLI Watch Mode Tests', () => {
           if (logsExist) {
             expect(logsExist).toBe(true);
           }
+
+          resolve();
+        });
+
+        watchProcess.on('error', (err) => {
+          clearTimeout(timeout);
+          reject(err);
+        });
+      });
+    }, 35000);
+
+    it('should not create log file without --log-file flag', async () => {
+      return new Promise<void>(async (resolve, reject) => {
+        const timeout = setTimeout(() => {
+          if (watchProcess) {
+            watchProcess.kill('SIGKILL');
+          }
+          reject(new Error('Timeout waiting for watch mode'));
+        }, 30000);
+
+        watchProcess = spawn('node', [
+          'dist/cli/stamp.js',
+          'context',
+          testDir,
+          '--out', outputPath,
+          '--watch',
+          // Note: --log-file is NOT passed
+        ], {
+          cwd: process.cwd(),
+          stdio: ['ignore', 'pipe', 'pipe'],
+        });
+
+        let output = '';
+        let isReady = false;
+
+        watchProcess.stdout?.on('data', async (data: Buffer) => {
+          output += data.toString();
+
+          if ((output.includes('Watch mode active') || output.includes('Waiting for file changes')) && !isReady) {
+            isReady = true;
+
+            // Modify a file to trigger regeneration
+            const appPath = join(testDir, 'src', 'App.tsx');
+            const content = await readFile(appPath, 'utf-8');
+            await writeFile(appPath, content + '\n// No log test');
+          }
+
+          // Wait for regeneration to complete
+          if (output.includes('Regenerated') || output.includes('✅')) {
+            // Wait a bit
+            await new Promise(r => setTimeout(r, 500));
+
+            // Send SIGINT to trigger exit
+            watchProcess?.kill('SIGINT');
+          }
+        });
+
+        watchProcess.on('exit', async () => {
+          clearTimeout(timeout);
+
+          // Wait a bit for cleanup
+          await new Promise(r => setTimeout(r, 500));
+
+          // Check that logs file was NOT created (--log-file not passed)
+          const logsPath = join(testDir, '.logicstamp', 'context_watch-mode-logs.json');
+          let logsExist = false;
+          try {
+            await access(logsPath);
+            logsExist = true;
+          } catch {
+            logsExist = false;
+          }
+
+          // Logs should NOT exist without --log-file flag
+          expect(logsExist).toBe(false);
 
           resolve();
         });
