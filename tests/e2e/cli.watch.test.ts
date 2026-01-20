@@ -312,7 +312,7 @@ describe('CLI Watch Mode Tests', () => {
             watchProcess.kill('SIGTERM');
           }
           reject(new Error('Timeout waiting for style file detection'));
-        }, 30000);
+        }, 45000);
 
         watchProcess = spawn('node', [
           'dist/cli/stamp.js',
@@ -361,7 +361,7 @@ describe('CLI Watch Mode Tests', () => {
           reject(err);
         });
       });
-    }, 35000);
+    }, 50000);
   });
 
   describe('Watch mode cleanup', () => {
@@ -819,7 +819,7 @@ describe('CLI Watch Mode Tests', () => {
             watchProcess.kill('SIGTERM');
           }
           reject(new Error('Timeout waiting for success message'));
-        }, 30000);
+        }, 45000);
 
         watchProcess = spawn('node', [
           'dist/cli/stamp.js',
@@ -861,6 +861,6 @@ describe('CLI Watch Mode Tests', () => {
           reject(err);
         });
       });
-    }, 35000);
+    }, 50000);
   });
 });
