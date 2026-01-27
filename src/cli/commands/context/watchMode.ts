@@ -10,9 +10,20 @@ import { readStampignore, filterIgnoredFiles } from '../../../utils/stampignore.
 import { buildDependencyGraph } from '../../../core/manifest.js';
 import type { LogicStampBundle } from '../../../core/pack.js';
 import { normalizeEntryId } from '../../../utils/fsx.js';
-import { writeWatchStatus, deleteWatchStatus, appendWatchLog } from '../../../utils/config.js';
-import type { WatchLogEntry } from '../../../utils/config.js';
-import { getChanges, showChanges } from './watchDiff.js';
+import {
+  writeWatchStatus,
+  deleteWatchStatus,
+  appendWatchLog,
+  writeStrictWatchStatus,
+  deleteStrictWatchStatus,
+} from '../../../utils/config.js';
+import type {
+  WatchLogEntry,
+  Violation,
+  ViolationsSummary,
+  StrictWatchStatus,
+} from '../../../utils/config.js';
+import { getChanges, showChanges, type BundleChanges, type ContractDiff } from './watchDiff.js';
 import {
   buildContractsFromFiles,
   writeContextFiles,
@@ -26,11 +37,143 @@ import {
 import { contextCommand, type ContextOptions } from '../context.js';
 
 /**
+ * Detect violations from bundle changes
+ * Breaking changes are treated as errors, additions as info (not violations)
+ */
+function detectViolations(changes: BundleChanges, missingDeps: string[] = []): Violation[] {
+  const violations: Violation[] = [];
+
+  // Check for missing dependencies
+  for (const dep of missingDeps) {
+    violations.push({
+      type: 'missing_dependency',
+      severity: 'warning',
+      entryId: 'project',
+      message: `Missing dependency: ${dep}`,
+      details: { dependencyName: dep },
+    });
+  }
+
+  // Check for removed contracts (breaking change)
+  for (const entryId of changes.removed) {
+    violations.push({
+      type: 'contract_removed',
+      severity: 'error',
+      entryId,
+      message: `Contract removed: ${entryId}`,
+    });
+  }
+
+  // Check for breaking changes in modified contracts
+  for (const change of changes.changed) {
+    const { entryId, contractDiff } = change;
+    if (!contractDiff) continue;
+
+    // Removed props are breaking changes
+    for (const propName of contractDiff.props.removed) {
+      violations.push({
+        type: 'breaking_change_prop_removed',
+        severity: 'error',
+        entryId,
+        message: `Breaking change: prop '${propName}' removed from ${entryId}`,
+        details: { name: propName },
+      });
+    }
+
+    // Changed prop types are breaking changes
+    for (const prop of contractDiff.props.changed) {
+      violations.push({
+        type: 'breaking_change_prop_type',
+        severity: 'warning',
+        entryId,
+        message: `Prop '${prop.name}' type changed in ${entryId}`,
+        details: { name: prop.name, oldValue: prop.old, newValue: prop.new },
+      });
+    }
+
+    // Removed events are breaking changes
+    for (const eventName of contractDiff.emits.removed) {
+      violations.push({
+        type: 'breaking_change_event_removed',
+        severity: 'error',
+        entryId,
+        message: `Breaking change: event '${eventName}' removed from ${entryId}`,
+        details: { name: eventName },
+      });
+    }
+
+    // Removed state is a breaking change
+    for (const stateName of contractDiff.state.removed) {
+      violations.push({
+        type: 'breaking_change_state_removed',
+        severity: 'warning',
+        entryId,
+        message: `State '${stateName}' removed from ${entryId}`,
+        details: { name: stateName },
+      });
+    }
+
+    // Removed functions are breaking changes
+    for (const funcName of contractDiff.functions.removed) {
+      violations.push({
+        type: 'breaking_change_function_removed',
+        severity: 'error',
+        entryId,
+        message: `Breaking change: function '${funcName}' removed from ${entryId}`,
+        details: { name: funcName },
+      });
+    }
+
+    // Removed variables are breaking changes
+    for (const varName of contractDiff.variables.removed) {
+      violations.push({
+        type: 'breaking_change_variable_removed',
+        severity: 'warning',
+        entryId,
+        message: `Variable '${varName}' removed from ${entryId}`,
+        details: { name: varName },
+      });
+    }
+  }
+
+  return violations;
+}
+
+/**
+ * Display violations to console
+ */
+function displayViolations(violations: Violation[], options: { quiet?: boolean } = {}): void {
+  if (violations.length === 0) return;
+
+  const errors = violations.filter(v => v.severity === 'error');
+  const warnings = violations.filter(v => v.severity === 'warning');
+
+  console.log(`\n⚠️  Strict Watch: ${violations.length} violation(s) detected`);
+
+  if (errors.length > 0) {
+    console.log(`\n   ❌ Errors (${errors.length}):`);
+    errors.forEach(v => {
+      console.log(`      ${v.message}`);
+    });
+  }
+
+  if (warnings.length > 0) {
+    console.log(`\n   ⚠️  Warnings (${warnings.length}):`);
+    warnings.forEach(v => {
+      console.log(`      ${v.message}`);
+    });
+  }
+}
+
+/**
  * Start watch mode - monitors file changes and regenerates context
  */
 export async function startWatchMode(options: ContextOptions, projectRoot: string, initialCache: WatchCache | null = null): Promise<void> {
   if (!options.quiet) {
     console.log(`\n👀 Watch mode enabled. Watching for file changes...`);
+    if (options.strictWatch) {
+      console.log(`   🔒 Strict mode: tracking breaking changes and violations`);
+    }
     console.log(`   Press Ctrl+C to stop\n`);
   }
 
@@ -55,11 +198,21 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
   }
 
   let debounceTimer: NodeJS.Timeout | null = null;
-  let isRegenerating = false;
+  let regenerationPromise: Promise<void> | null = null; // Promise-based lock to prevent race conditions
   let changedFiles: Set<string> = new Set();
   let previousBundles: LogicStampBundle[] | null = null;
   let watchCache: WatchCache | null = initialCache;
   let isFirstRun = false; // Set to false since cache is already initialized
+
+  // Strict watch mode state
+  let strictWatchStatus: StrictWatchStatus | null = options.strictWatch ? {
+    active: true,
+    startedAt: new Date().toISOString(),
+    cumulativeViolations: 0,
+    cumulativeErrors: 0,
+    cumulativeWarnings: 0,
+    regenerationCount: 0,
+  } : null;
 
   // Debounce delay in milliseconds (wait 500ms after last change before regenerating)
   const DEBOUNCE_DELAY = 500;
@@ -95,17 +248,25 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
   };
 
   const regenerate = async () => {
-    if (isRegenerating) {
-      return; // Skip if already regenerating
+    // Use Promise-based lock to prevent race conditions
+    // If already regenerating, wait for it to complete then check if more changes came in
+    if (regenerationPromise) {
+      await regenerationPromise;
+      // After waiting, if no new changes accumulated, skip
+      if (changedFiles.size === 0) {
+        return;
+      }
+      // Otherwise, fall through to process new changes
     }
 
-    isRegenerating = true;
     const changedFileList = Array.from(changedFiles);
     changedFiles.clear(); // Clear for next batch
     const startTime = Date.now();
 
-    try {
-      // Determine output directory
+    // Create a promise for this regeneration cycle (used for lock)
+    const doRegenerate = async () => {
+      try {
+        // Determine output directory
       const outPath = resolve(options.out);
       const outputDir = outPath.endsWith('.json') ? dirname(outPath) : outPath;
 
@@ -197,6 +358,53 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
         console.log(`\n✅ Regenerated\n`);
       }
 
+      // Strict watch mode: detect and report violations
+      if (options.strictWatch && strictWatchStatus && changes) {
+        // Get missing dependencies from bundles
+        const missingDeps: string[] = [];
+        for (const bundle of newBundles) {
+          if (bundle.meta?.missing) {
+            // Extract names from MissingDependency objects
+            for (const dep of bundle.meta.missing) {
+              missingDeps.push(typeof dep === 'string' ? dep : dep.name);
+            }
+          }
+        }
+
+        const violations = detectViolations(changes, [...new Set(missingDeps)]);
+        const errors = violations.filter(v => v.severity === 'error');
+        const warnings = violations.filter(v => v.severity === 'warning');
+
+        // Update cumulative stats
+        strictWatchStatus.regenerationCount++;
+        strictWatchStatus.cumulativeViolations += violations.length;
+        strictWatchStatus.cumulativeErrors += errors.length;
+        strictWatchStatus.cumulativeWarnings += warnings.length;
+
+        // Store last check summary
+        strictWatchStatus.lastCheck = {
+          timestamp: new Date().toISOString(),
+          totalViolations: violations.length,
+          errors: errors.length,
+          warnings: warnings.length,
+          violations,
+          changedFiles: changedFileList,
+        };
+
+        // Display violations to console
+        if (!options.quiet && violations.length > 0) {
+          displayViolations(violations, { quiet: options.quiet });
+        }
+
+        // Write strict watch status to disk
+        await writeStrictWatchStatus(projectRoot, strictWatchStatus);
+
+        // Show cumulative summary
+        if (!options.quiet && strictWatchStatus.cumulativeViolations > 0) {
+          console.log(`   📊 Session total: ${strictWatchStatus.cumulativeErrors} error(s), ${strictWatchStatus.cumulativeWarnings} warning(s)`);
+        }
+      }
+
       // Log structured data for MCP server (only if --log-file flag is set)
       if (options.logFile) {
         if (changes) {
@@ -262,9 +470,14 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
       // Fall back to full rebuild on error
       watchCache = null;
       isFirstRun = true;
-    } finally {
-      isRegenerating = false;
     }
+    };
+
+    // Execute and track the regeneration promise
+    regenerationPromise = doRegenerate().finally(() => {
+      regenerationPromise = null;
+    });
+    await regenerationPromise;
   };
 
   const debouncedRegenerate = () => {
@@ -408,8 +621,28 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
       }
       if (!options.quiet) {
         console.log(`\n👋 Watch mode stopped`);
+
+        // Show final strict watch summary
+        if (options.strictWatch && strictWatchStatus && strictWatchStatus.cumulativeViolations > 0) {
+          console.log(`\n📋 Strict Watch Session Summary:`);
+          console.log(`   Regenerations: ${strictWatchStatus.regenerationCount}`);
+          console.log(`   Total violations: ${strictWatchStatus.cumulativeViolations}`);
+          console.log(`   Errors: ${strictWatchStatus.cumulativeErrors}`);
+          console.log(`   Warnings: ${strictWatchStatus.cumulativeWarnings}`);
+          console.log(`   Report saved to: .logicstamp/strict_watch_violations.json`);
+        } else if (options.strictWatch) {
+          console.log(`\n✅ Strict Watch: No violations detected during session`);
+          // Clean up the violations file if no violations
+          try {
+            await deleteStrictWatchStatus(projectRoot);
+          } catch {
+            // Ignore
+          }
+        }
       }
-      process.exit(0);
+      // Exit with non-zero if there were errors in strict mode
+      const exitCode = options.strictWatch && strictWatchStatus && strictWatchStatus.cumulativeErrors > 0 ? 1 : 0;
+      process.exit(exitCode);
     });
 
     // Also clean up on other termination signals
@@ -417,6 +650,9 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
       try {
         await watcher.close();
         await deleteWatchStatus(projectRoot);
+        if (!options.strictWatch || !strictWatchStatus || strictWatchStatus.cumulativeViolations === 0) {
+          await deleteStrictWatchStatus(projectRoot);
+        }
       } catch {
         // Ignore errors during cleanup
       }

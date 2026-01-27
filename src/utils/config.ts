@@ -375,3 +375,148 @@ export async function clearWatchLogs(projectRoot: string): Promise<void> {
     // File doesn't exist or can't be deleted - ignore
   }
 }
+
+/**
+ * Violation types for strict watch mode
+ */
+export type ViolationType =
+  | 'missing_dependency'
+  | 'breaking_change_prop_removed'
+  | 'breaking_change_prop_type'
+  | 'breaking_change_event_removed'
+  | 'breaking_change_state_removed'
+  | 'breaking_change_function_removed'
+  | 'breaking_change_variable_removed'
+  | 'contract_removed';
+
+/**
+ * Single violation entry
+ */
+export interface Violation {
+  /** Type of violation */
+  type: ViolationType;
+  /** Severity level */
+  severity: 'error' | 'warning';
+  /** Entry ID of the affected contract */
+  entryId: string;
+  /** Human-readable message */
+  message: string;
+  /** Details about the violation */
+  details?: {
+    /** Name of the removed/changed item */
+    name?: string;
+    /** Old value (for type changes) */
+    oldValue?: unknown;
+    /** New value (for type changes) */
+    newValue?: unknown;
+    /** Missing dependency name */
+    dependencyName?: string;
+  };
+}
+
+/**
+ * Violations summary for a watch regeneration cycle
+ */
+export interface ViolationsSummary {
+  /** Timestamp of the check */
+  timestamp: string;
+  /** Total number of violations */
+  totalViolations: number;
+  /** Number of errors */
+  errors: number;
+  /** Number of warnings */
+  warnings: number;
+  /** Array of violations */
+  violations: Violation[];
+  /** Files that triggered this check */
+  changedFiles: string[];
+}
+
+/**
+ * Strict watch mode status with cumulative violations
+ */
+export interface StrictWatchStatus {
+  /** Whether strict watch mode is active */
+  active: boolean;
+  /** Session start timestamp */
+  startedAt: string;
+  /** Cumulative violations count since session start */
+  cumulativeViolations: number;
+  /** Cumulative errors count */
+  cumulativeErrors: number;
+  /** Cumulative warnings count */
+  cumulativeWarnings: number;
+  /** Number of regeneration cycles */
+  regenerationCount: number;
+  /** Most recent violations summary */
+  lastCheck?: ViolationsSummary;
+}
+
+/**
+ * Get the strict watch violations report file path
+ */
+export function getStrictWatchReportPath(projectRoot: string): string {
+  return join(getConfigDir(projectRoot), 'strict_watch_violations.json');
+}
+
+/**
+ * Read strict watch status from disk
+ */
+export async function readStrictWatchStatus(projectRoot: string): Promise<StrictWatchStatus | null> {
+  try {
+    const reportPath = getStrictWatchReportPath(projectRoot);
+    const content = await readFile(reportPath, 'utf-8');
+    return JSON.parse(content) as StrictWatchStatus;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Write strict watch status to disk
+ */
+export async function writeStrictWatchStatus(projectRoot: string, status: StrictWatchStatus): Promise<void> {
+  const configDir = getConfigDir(projectRoot);
+  const reportPath = getStrictWatchReportPath(projectRoot);
+
+  // Ensure config directory exists
+  try {
+    await mkdir(configDir, { recursive: true });
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    debugError('config', 'writeStrictWatchStatus', {
+      configDir,
+      operation: 'mkdir',
+      message: err.message,
+      code: err.code,
+    });
+    // Non-fatal - continue even if directory can't be created
+    return;
+  }
+
+  try {
+    await writeFile(reportPath, JSON.stringify(status, null, 2), 'utf-8');
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    debugError('config', 'writeStrictWatchStatus', {
+      reportPath,
+      operation: 'writeFile',
+      message: err.message,
+      code: err.code,
+    });
+    // Non-fatal - continue even if report can't be written
+  }
+}
+
+/**
+ * Delete strict watch status file
+ */
+export async function deleteStrictWatchStatus(projectRoot: string): Promise<void> {
+  try {
+    const reportPath = getStrictWatchReportPath(projectRoot);
+    const { unlink } = await import('node:fs/promises');
+    await unlink(reportPath);
+  } catch {
+    // File doesn't exist or can't be deleted - ignore
+  }
+}

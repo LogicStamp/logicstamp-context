@@ -61,6 +61,7 @@ export interface ContextOptions {
   watch?: boolean; // Watch for file changes and regenerate context automatically
   debug?: boolean; // Enable debug output (shows hashes in watch mode)
   logFile?: boolean; // Write watch mode logs to file (default: false)
+  strictWatch?: boolean; // Enable strict watch mode - track violations and report them
 }
 
 export async function contextCommand(options: ContextOptions): Promise<void> {
