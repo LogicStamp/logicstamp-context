@@ -31,7 +31,7 @@ import { createHash } from 'node:crypto';
 import type { AstExtract } from '../core/astParser.js';
 import type { LogicSignature, ComponentVersion } from '../types/UIFContract.js';
 
-const SCHEMA_VERSION = '0.3';
+const SCHEMA_VERSION = '0.4';
 
 /**
  * Generate a hash from raw file content

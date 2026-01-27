@@ -191,12 +191,12 @@ describe('CLI Advanced Features Tests', () => {
               "entryId": "src/test.tsx",
               "contract": {
                 "type": "UIFContract",
-                "schemaVersion": "0.3",
+                "schemaVersion": "0.4",
                 "kind": "react:component",
                 "entryId": "src/test.tsx",
                 "semanticHash": "uif:test",
-                "version": { imports: [], hooks: [], components: [], functions: [] },
-                "logicSignature": { props: {}, emits: {} },
+                "composition": { imports: [], hooks: [], components: [], functions: [] },
+                "interface": { props: {}, emits: {} },
                 "exports": "default"
               }
             }],
@@ -257,12 +257,12 @@ describe('CLI Advanced Features Tests', () => {
               "entryId": "src/test.tsx",
               "contract": {
                 "type": "UIFContract",
-                "schemaVersion": "0.3",
+                "schemaVersion": "0.4",
                 "kind": "react:component",
                 "entryId": "src/test.tsx",
                 "semanticHash": "uif:test",
-                "version": { imports: [], hooks: [], components: [], functions: [] },
-                "logicSignature": { props: {}, emits: {} },
+                "composition": { imports: [], hooks: [], components: [], functions: [] },
+                "interface": { props: {}, emits: {} },
                 "exports": "default"
               }
             }],
@@ -503,7 +503,7 @@ export function ComponentA() {
         bundle.graph.nodes.forEach((node: any) => {
           if (node.entryId.endsWith('.tsx')) {
             // Only check if it has React imports
-            const hasReactImport = node.contract.version?.imports?.some(
+            const hasReactImport = node.contract.composition?.imports?.some(
               (imp: string) => imp === 'react' || imp.startsWith('react/')
             );
 
