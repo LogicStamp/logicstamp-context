@@ -24,6 +24,9 @@ stamp context --watch --debug
 
 # Watch with structured change logs written to .logicstamp/context_watch-mode-logs.json (for change notifications)
 stamp context --watch --log-file
+
+# Strict watch mode - track breaking changes and violations
+stamp context --watch --strict-watch
 ```
 
 ## How It Works
@@ -114,6 +117,7 @@ Watch mode automatically ignores:
 | Option | Alias | Description |
 |--------|-------|-------------|
 | `--watch` | `-w` | Enable watch mode |
+| `--strict-watch` | | Enable strict watch mode - track breaking changes and violations |
 | `--debug` | | Show detailed hash information on changes |
 | `--quiet` | `-q` | Suppress verbose output (show only errors) |
 | `--include-style` | | Watch style files and include style metadata |
@@ -198,6 +202,152 @@ stamp context --watch --log-file
 ```
 
 By default, watch mode does not write log files. Use `--log-file` when you need structured change notifications (e.g., to display "what changed" in a UI or for debugging).
+
+## Strict Watch Mode
+
+Strict watch mode (`--strict-watch`) tracks breaking changes and violations during development. It's designed for CI-friendly workflows where you want to detect API changes in real-time.
+
+```bash
+# Enable strict watch mode
+stamp context --watch --strict-watch
+
+# Combine with style metadata
+stamp context style --watch --strict-watch
+```
+
+### What It Detects
+
+Strict watch mode identifies **breaking changes** that could affect consumers of your components:
+
+| Violation Type | Severity | Description |
+|---------------|----------|-------------|
+| `contract_removed` | Error | A component/contract was deleted |
+| `breaking_change_prop_removed` | Error | A prop was removed from a component |
+| `breaking_change_event_removed` | Error | An event callback was removed |
+| `breaking_change_function_removed` | Error | An exported function was removed |
+| `breaking_change_variable_removed` | Warning | A module-level variable was removed |
+| `breaking_change_state_removed` | Warning | A state variable was removed |
+| `breaking_change_prop_type` | Warning | A prop's type signature changed |
+| `missing_dependency` | Warning | A dependency couldn't be resolved |
+
+### Output
+
+When violations are detected, strict watch mode displays them after each regeneration:
+
+```
+🔄 Regenerating (1 file changed)...
+
+✏️  Modified contract:
+  src/components/Button.tsx
+   • Removed props: `loading`
+
+✅ Regenerated
+
+⚠️  Strict Watch: 1 violation(s) detected
+
+   ❌ Errors (1):
+      Breaking change: prop 'loading' removed from src/components/Button.tsx
+
+   📊 Session total: 1 error(s), 0 warning(s)
+```
+
+### Violations Report File
+
+Strict watch mode writes a structured JSON report to `.logicstamp/strict_watch_violations.json`:
+
+```json
+{
+  "active": true,
+  "startedAt": "2025-01-22T10:30:00.000Z",
+  "cumulativeViolations": 3,
+  "cumulativeErrors": 2,
+  "cumulativeWarnings": 1,
+  "regenerationCount": 5,
+  "lastCheck": {
+    "timestamp": "2025-01-22T10:35:00.000Z",
+    "totalViolations": 1,
+    "errors": 1,
+    "warnings": 0,
+    "violations": [
+      {
+        "type": "breaking_change_prop_removed",
+        "severity": "error",
+        "entryId": "src/components/Button.tsx",
+        "message": "Breaking change: prop 'loading' removed from src/components/Button.tsx",
+        "details": { "name": "loading" }
+      }
+    ],
+    "changedFiles": ["src/components/Button.tsx"]
+  }
+}
+```
+
+### Exit Codes
+
+When you stop watch mode (Ctrl+C), it exits with:
+- **Exit code 0** - No errors detected during the session
+- **Exit code 1** - One or more errors detected during the session
+
+This makes strict watch mode CI-friendly:
+
+```bash
+# In a CI script - will fail if breaking changes occurred
+stamp context --watch --strict-watch &
+WATCH_PID=$!
+# ... run tests or other checks ...
+kill -SIGINT $WATCH_PID
+wait $WATCH_PID || echo "Breaking changes detected!"
+```
+
+### Non-blocking Mode (Awareness Only)
+
+If you want strict watch to report violations without failing (awareness mode), append `|| true` to ignore the exit code:
+
+```bash
+# Report violations but don't fail - useful during active refactoring
+stamp context --watch --strict-watch || true
+```
+
+This lets you see breaking changes during development without blocking your workflow.
+
+### Session Summary
+
+When exiting, strict watch mode displays a session summary:
+
+```
+^C
+👋 Watch mode stopped
+
+📋 Strict Watch Session Summary:
+   Regenerations: 12
+   Total violations: 5
+   Errors: 3
+   Warnings: 2
+   Report saved to: .logicstamp/strict_watch_violations.json
+```
+
+If no violations were detected:
+
+```
+^C
+👋 Watch mode stopped
+
+✅ Strict Watch: No violations detected during session
+```
+
+### Use Cases
+
+**1. Pre-commit validation**
+Run strict watch mode while making changes to catch breaking changes before committing.
+
+**2. PR review workflows**
+Track API changes during code review to understand impact.
+
+**3. Design system maintenance**
+Monitor component contract stability across changes.
+
+**4. CI preview environments**
+Run in CI to generate violation reports for review.
 
 ## Examples
 
