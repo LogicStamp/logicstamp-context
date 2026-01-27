@@ -14,11 +14,11 @@
           "entryId": "src/components/LoginForm.tsx",
           "contract": {
             "type": "UIFContract",
-            "schemaVersion": "0.3",
+            "schemaVersion": "0.4",
             "kind": "react:component",
             "entryId": "src/components/LoginForm.tsx",
             "description": "LoginForm - Form component with validation",
-            "version": {
+            "composition": {
               "variables": [],
               "hooks": [
                 "useEffect",
@@ -36,7 +36,7 @@
                 "react"
               ]
             },
-            "logicSignature": {
+            "interface": {
               "props": {
                 "onSubmit": {
                   "type": "function",
@@ -65,11 +65,11 @@
           "entryId": "src/components/Button.tsx",
           "contract": {
             "type": "UIFContract",
-            "schemaVersion": "0.3",
+            "schemaVersion": "0.4",
             "kind": "react:component",
             "entryId": "src/components/Button.tsx",
             "description": "Button - Interactive button component",
-            "version": {
+            "composition": {
               "variables": [],
               "hooks": [
                 "useState"
@@ -82,7 +82,7 @@
                 "react"
               ]
             },
-            "logicSignature": {
+            "interface": {
               "props": {
                 "variant": {
                   "type": "literal-union",

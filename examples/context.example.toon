@@ -14,17 +14,17 @@
           entryId: App.tsx
           contract:
             type: UIFContract
-            schemaVersion: "0.3"
+            schemaVersion: "0.4"
             kind: "react:component"
             entryId: App.tsx
             description: App - Interactive component
-            version:
+            composition:
               variables[0]:
               hooks[0]:
               components[1]: Card
               functions[1]: App
               imports[2]: ./components/Card,react
-            logicSignature:
+            interface:
               props:
               emits:
                 onAction:
@@ -44,17 +44,17 @@
           entryId: components/Card.tsx
           contract:
             type: UIFContract
-            schemaVersion: "0.3"
+            schemaVersion: "0.4"
             kind: "react:component"
             entryId: components/Card.tsx
             description: Card - Card display component
-            version:
+            composition:
               variables[0]:
               hooks[1]: useState
               components[1]: Button
               functions[1]: Card
               imports[2]: ./Button,react
-            logicSignature:
+            interface:
               props:
                 title: string
                 description: string

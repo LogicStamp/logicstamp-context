@@ -72,7 +72,7 @@ describe('Core Modules End-to-End Tests', () => {
       expect(result.contract).toBeDefined();
       if (result.contract) {
         expect(result.contract.type).toBe('UIFContract');
-        expect(result.contract.schemaVersion).toBe('0.3');
+        expect(result.contract.schemaVersion).toBe('0.4');
         // entryId may be normalized differently on Windows
         expect(result.contract.entryId).toContain('Button.tsx');
       }
@@ -90,10 +90,10 @@ describe('Core Modules End-to-End Tests', () => {
 
       expect(result.contract).toBeDefined();
       if (result.contract) {
-        expect(result.contract.logicSignature).toBeDefined();
-        expect(result.contract.logicSignature.props).toBeDefined();
+        expect(result.contract.interface).toBeDefined();
+        expect(result.contract.interface.props).toBeDefined();
 
-        const props = result.contract.logicSignature.props;
+        const props = result.contract.interface.props;
         expect(props.onClick).toBeDefined();
         expect(props.children).toBeDefined();
       }
@@ -111,15 +111,15 @@ describe('Core Modules End-to-End Tests', () => {
 
       expect(result.contract).toBeDefined();
       if (result.contract) {
-        expect(result.contract.version).toBeDefined();
-        expect(result.contract.version.hooks).toBeDefined();
-        expect(result.contract.version.components).toBeDefined();
-        expect(result.contract.version.functions).toBeDefined();
+        expect(result.contract.composition).toBeDefined();
+        expect(result.contract.composition.hooks).toBeDefined();
+        expect(result.contract.composition.components).toBeDefined();
+        expect(result.contract.composition.functions).toBeDefined();
 
         // Card uses useState hook
-        expect(result.contract.version.hooks).toContain('useState');
+        expect(result.contract.composition.hooks).toContain('useState');
         // Card uses Button component
-        expect(result.contract.version.components).toContain('Button');
+        expect(result.contract.composition.components).toContain('Button');
       }
     });
 

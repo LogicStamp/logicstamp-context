@@ -91,12 +91,12 @@ function index(bundles: LogicStampBundle[]): Map<string, LiteSig> {
       const c = n.contract;
       m.set(c.entryId.toLowerCase(), {
         semanticHash: c.semanticHash,
-        imports: c.version?.imports ?? [],
-        hooks: c.version?.hooks ?? [],
-        functions: c.version?.functions ?? [],
-        components: c.version?.components ?? [],
-        props: Object.keys(c.logicSignature?.props ?? {}),
-        emits: Object.keys(c.logicSignature?.emits ?? {}),
+        imports: c.composition?.imports ?? [],
+        hooks: c.composition?.hooks ?? [],
+        functions: c.composition?.functions ?? [],
+        components: c.composition?.components ?? [],
+        props: Object.keys(c.interface?.props ?? {}),
+        emits: Object.keys(c.interface?.emits ?? {}),
         exportKind: typeof c.exports === 'string' ? 'default'
                    : c.exports?.named?.length ? 'named' : 'none',
       });

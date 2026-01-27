@@ -143,7 +143,7 @@
           "type": "string",
           "description": "Extracted package name for third-party dependencies (e.g., '@mui/material' from '@mui/material/Button')"
         },
-        "version": {
+        "packageVersion": {
           "type": "string",
           "description": "Package version from package.json (if available, e.g., '^5.15.0')"
         }
@@ -152,7 +152,7 @@
     },
     "UIFContract": {
       "type": "object",
-      "required": ["type", "schemaVersion", "kind", "entryId", "description", "version", "logicSignature", "semanticHash", "fileHash"],
+      "required": ["type", "schemaVersion", "kind", "entryId", "description", "composition", "interface", "semanticHash", "fileHash"],
       "properties": {
         "type": {
           "type": "string",
@@ -161,7 +161,7 @@
         },
         "schemaVersion": {
           "type": "string",
-          "const": "0.3",
+          "const": "0.4",
           "description": "Schema version for UIF contracts"
         },
         "kind": {
@@ -184,10 +184,10 @@
           },
           "description": "Components that depend on this one"
         },
-        "version": {
+        "composition": {
           "$ref": "#/definitions/ComponentVersion"
         },
-        "logicSignature": {
+        "interface": {
           "$ref": "#/definitions/LogicSignature"
         },
         "prediction": {

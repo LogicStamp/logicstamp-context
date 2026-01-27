@@ -25,7 +25,7 @@
 
 /**
  * Core type definition for UI Forge Contract
- * Schema version 0.3
+ * Schema version 0.4
  */
 
 export type ContractPreset = 'submit-only' | 'nav-only' | 'display-only' | 'none';
@@ -302,13 +302,13 @@ export interface StyleMetadata {
 
 export interface UIFContract {
   type: 'UIFContract';
-  schemaVersion: '0.3';
+  schemaVersion: '0.4';
   kind: ContractKind;
   entryId: string;  // Relative normalized path (e.g., src/App.tsx) - always uses forward slashes
   description: string;
   usedIn?: string[];  // Optional: only persisted when non-empty
-  version: ComponentVersion;
-  logicSignature: LogicSignature;
+  composition: ComponentVersion;
+  interface: LogicSignature;
   exports?: ExportMetadata;  // Export type: default, named, or list of named exports
   prediction?: string[];
   metrics?: ContractMetrics;
@@ -335,6 +335,6 @@ export function isUIFContract(obj: unknown): obj is UIFContract {
     'type' in obj &&
     obj.type === 'UIFContract' &&
     'schemaVersion' in obj &&
-    obj.schemaVersion === '0.3'
+    obj.schemaVersion === '0.4'
   );
 }

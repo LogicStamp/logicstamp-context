@@ -110,7 +110,7 @@ describe('NestJS End-to-End Tests', () => {
       expect(result.contract).toBeDefined();
       if (result.contract) {
         expect(result.contract.kind).toBe('node:api');
-        expect(result.contract.logicSignature.apiSignature).toBeDefined();
+        expect(result.contract.interface.apiSignature).toBeDefined();
       }
     });
 
@@ -125,8 +125,8 @@ describe('NestJS End-to-End Tests', () => {
       });
 
       if (result.contract) {
-        expect(result.contract.version.languageSpecific).toBeDefined();
-        const langSpecific = result.contract.version.languageSpecific;
+        expect(result.contract.composition.languageSpecific).toBeDefined();
+        const langSpecific = result.contract.composition.languageSpecific;
         expect(langSpecific?.annotations).toBeDefined();
         expect(langSpecific?.classes).toBeDefined();
       }
@@ -144,8 +144,8 @@ describe('NestJS End-to-End Tests', () => {
 
       expect(result.contract).toBeDefined();
       if (result.contract) {
-        expect(result.contract.version.functions).toContain('findAll');
-        expect(result.contract.version.functions).toContain('create');
+        expect(result.contract.composition.functions).toContain('findAll');
+        expect(result.contract.composition.functions).toContain('create');
       }
     });
   });

@@ -481,7 +481,7 @@ describe('CLI Validate Command Tests', () => {
             entryId: 'test.tsx',
             contract: {
               type: 'WrongContractType',
-              schemaVersion: '0.3'
+              schemaVersion: '0.4'
             }
           }],
           edges: []
@@ -702,8 +702,8 @@ describe('CLI Validate Command Tests', () => {
         entryId: 'test.tsx',
         graph: {
           nodes: [
-            { entryId: 'node1.tsx', contract: { type: 'UIFContract', schemaVersion: '0.3' } },
-            { entryId: 'node2.tsx', contract: { type: 'UIFContract', schemaVersion: '0.3' } }
+            { entryId: 'node1.tsx', contract: { type: 'UIFContract', schemaVersion: '0.4' } },
+            { entryId: 'node2.tsx', contract: { type: 'UIFContract', schemaVersion: '0.4' } }
           ],
           edges: [
             ['node1.tsx', 'node2.tsx']

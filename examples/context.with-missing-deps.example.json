@@ -14,11 +14,11 @@
           "entryId": "src/components/Dashboard.tsx",
           "contract": {
             "type": "UIFContract",
-            "schemaVersion": "0.3",
+            "schemaVersion": "0.4",
             "kind": "react:component",
             "entryId": "src/components/Dashboard.tsx",
             "description": "Dashboard - Main dashboard component",
-            "version": {
+            "composition": {
               "variables": [],
               "hooks": [
                 "useEffect",
@@ -40,7 +40,7 @@
                 "react"
               ]
             },
-            "logicSignature": {
+            "interface": {
               "props": {
                 "userId": "string"
               },

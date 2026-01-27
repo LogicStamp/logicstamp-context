@@ -64,8 +64,8 @@ export function compareContracts(oldContract: UIFContract, newContract: UIFContr
   };
 
   // Compare props
-  const oldProps = oldContract.logicSignature.props || {};
-  const newProps = newContract.logicSignature.props || {};
+  const oldProps = oldContract.interface.props || {};
+  const newProps = newContract.interface.props || {};
   for (const [key, value] of Object.entries(newProps)) {
     if (!(key in oldProps)) {
       diff.props.added.push(key);
@@ -80,8 +80,8 @@ export function compareContracts(oldContract: UIFContract, newContract: UIFContr
   }
 
   // Compare emits
-  const oldEmits = oldContract.logicSignature.emits || {};
-  const newEmits = newContract.logicSignature.emits || {};
+  const oldEmits = oldContract.interface.emits || {};
+  const newEmits = newContract.interface.emits || {};
   for (const [key, value] of Object.entries(newEmits)) {
     if (!(key in oldEmits)) {
       diff.emits.added.push(key);
@@ -96,8 +96,8 @@ export function compareContracts(oldContract: UIFContract, newContract: UIFContr
   }
 
   // Compare state
-  const oldState = oldContract.logicSignature.state || {};
-  const newState = newContract.logicSignature.state || {};
+  const oldState = oldContract.interface.state || {};
+  const newState = newContract.interface.state || {};
   for (const [key, value] of Object.entries(newState)) {
     if (!(key in oldState)) {
       diff.state.added.push(key);
@@ -127,10 +127,10 @@ export function compareContracts(oldContract: UIFContract, newContract: UIFContr
     }
   };
 
-  compareArrays(oldContract.version.hooks || [], newContract.version.hooks || [], diff.hooks);
-  compareArrays(oldContract.version.components || [], newContract.version.components || [], diff.components);
-  compareArrays(oldContract.version.variables || [], newContract.version.variables || [], diff.variables);
-  compareArrays(oldContract.version.functions || [], newContract.version.functions || [], diff.functions);
+  compareArrays(oldContract.composition.hooks || [], newContract.composition.hooks || [], diff.hooks);
+  compareArrays(oldContract.composition.components || [], newContract.composition.components || [], diff.components);
+  compareArrays(oldContract.composition.variables || [], newContract.composition.variables || [], diff.variables);
+  compareArrays(oldContract.composition.functions || [], newContract.composition.functions || [], diff.functions);
 
   return diff;
 }

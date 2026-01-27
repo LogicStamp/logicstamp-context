@@ -59,18 +59,18 @@ import { buildContract } from '../../../src/core/contractBuilder.js';
 describe('initializeWatchCache', () => {
   const createMockContract = (entryId: string, fileHashValue: string): UIFContract => ({
     type: 'UIFContract',
-    schemaVersion: '0.3',
+    schemaVersion: '0.4',
     kind: 'react:component',
     entryId,
     description: `Mock ${entryId}`,
-    version: {
+    composition: {
       variables: [],
       hooks: [],
       components: [],
       functions: [],
       imports: [],
     },
-    logicSignature: {
+    interface: {
       props: {},
       emits: {},
     },
@@ -189,18 +189,18 @@ describe('initializeWatchCache', () => {
 describe('incrementalRebuild', () => {
   const createMockContract = (entryId: string, fileHashValue: string, semanticHashValue?: string): UIFContract => ({
     type: 'UIFContract',
-    schemaVersion: '0.3',
+    schemaVersion: '0.4',
     kind: 'react:component',
     entryId,
     description: `Mock ${entryId}`,
-    version: {
+    composition: {
       variables: [],
       hooks: [],
       components: [],
       functions: [],
       imports: [],
     },
-    logicSignature: {
+    interface: {
       props: {},
       emits: {},
     },

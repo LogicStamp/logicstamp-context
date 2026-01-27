@@ -89,17 +89,17 @@ function filterInternalComponents(
 
   // Only filter if we have an explicit exports list
   // A component is internal if:
-  // 1. It appears in version.functions (defined in this file as a function component), AND
+  // 1. It appears in composition.functions (defined in this file as a function component), AND
   // 2. It's not in the exported names list
   if (!hasExportsList) {
     // Can't determine internal components without explicit exports list
-    return contract.version.components;
+    return contract.composition.components;
   }
 
   const internalComponents = new Set<string>();
-  const functionsSet = new Set(contract.version.functions);
-  
-  for (const component of contract.version.components) {
+  const functionsSet = new Set(contract.composition.functions);
+
+  for (const component of contract.composition.components) {
     // If component name matches a function in this file, it's likely a function component
     if (functionsSet.has(component)) {
       // If it's not in the exported names list, it's internal
@@ -110,7 +110,7 @@ function filterInternalComponents(
   }
 
   // Return only external components (those not in internalComponents)
-  return contract.version.components.filter(comp => !internalComponents.has(comp));
+  return contract.composition.components.filter(comp => !internalComponents.has(comp));
 }
 
 /**
@@ -127,8 +127,8 @@ export function buildDependencyGraph(
     // Compute structure and signature hashes from contract data
     // These are computed on-demand rather than stored in contracts
     // Note: structureHash() and signatureHash() already return hashes with uif: prefix
-    const structHash = structureHash(contract.version);
-    const sigHash = signatureHash(contract.logicSignature);
+    const structHash = structureHash(contract.composition);
+    const sigHash = signatureHash(contract.interface);
 
     // Filter out internal components from dependencies
     const externalDependencies = filterInternalComponents(contract);
@@ -138,7 +138,7 @@ export function buildDependencyGraph(
       description: contract.description,
       dependencies: externalDependencies,
       usedBy: [],
-      imports: contract.version.imports || [],
+      imports: contract.composition.imports || [],
       routes: contract.usedIn || [],
       semanticHash: contract.semanticHash,
       structureHash: structHash,
