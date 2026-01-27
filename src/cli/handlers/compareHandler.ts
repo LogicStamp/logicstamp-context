@@ -287,7 +287,14 @@ async function handleAutoCompareMode(options: {
     // Try to clean up temp directory even on error
     try {
       await rm(tempDir, { recursive: true, force: true });
-    } catch {}
+    } catch (cleanupError) {
+      // Log cleanup failures (non-fatal but useful for debugging)
+      debugError('compareHandler', 'handleAutoCompareMode', {
+        tempDir,
+        operation: 'cleanup',
+        message: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+      });
+    }
 
     console.error('❌ Compare failed:', (error as Error).message);
     process.exit(1);
