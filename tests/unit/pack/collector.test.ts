@@ -193,7 +193,7 @@ describe('Pack Collector', () => {
     });
 
     describe('package info enhancement', () => {
-      it('should populate packageName and version for third-party packages', async () => {
+      it('should populate packageName and packageVersion for third-party packages', async () => {
         // Create a package.json with dependencies
         const packageJson = {
           dependencies: {
@@ -234,12 +234,12 @@ describe('Pack Collector', () => {
         const reactDep = result.missing.find(m => m.name === 'react');
         expect(reactDep).toBeDefined();
         expect(reactDep?.packageName).toBe('react');
-        expect(reactDep?.version).toBe('^18.2.0');
+        expect(reactDep?.packageVersion).toBe('^18.2.0');
 
         const muiDep = result.missing.find(m => m.name === '@mui/material');
         expect(muiDep).toBeDefined();
         expect(muiDep?.packageName).toBe('@mui/material');
-        expect(muiDep?.version).toBe('^5.15.0');
+        expect(muiDep?.packageVersion).toBe('^5.15.0');
       });
 
       it('should not populate package info for relative imports', async () => {
@@ -281,7 +281,7 @@ describe('Pack Collector', () => {
         const relativeDep = result.missing.find(m => m.name === './Component');
         expect(relativeDep).toBeDefined();
         expect(relativeDep?.packageName).toBeUndefined();
-        expect(relativeDep?.version).toBeUndefined();
+        expect(relativeDep?.packageVersion).toBeUndefined();
       });
 
       it('should handle subpath imports correctly', async () => {
@@ -321,7 +321,7 @@ describe('Pack Collector', () => {
         const muiDep = result.missing.find(m => m.name === '@mui/material/Button');
         expect(muiDep).toBeDefined();
         expect(muiDep?.packageName).toBe('@mui/material');
-        expect(muiDep?.version).toBe('^5.15.0');
+        expect(muiDep?.packageVersion).toBe('^5.15.0');
       });
 
       it('should handle missing package.json gracefully', async () => {
@@ -352,7 +352,7 @@ describe('Pack Collector', () => {
         const reactDep = result.missing.find(m => m.name === 'react');
         expect(reactDep).toBeDefined();
         expect(reactDep?.packageName).toBe('react');
-        expect(reactDep?.version).toBeUndefined(); // No package.json, so no version
+        expect(reactDep?.packageVersion).toBeUndefined(); // No package.json, so no version
       });
 
       it('should not populate package info when projectRoot is not provided', async () => {
@@ -383,7 +383,7 @@ describe('Pack Collector', () => {
         const reactDep = result.missing.find(m => m.name === 'react');
         expect(reactDep).toBeDefined();
         expect(reactDep?.packageName).toBeUndefined();
-        expect(reactDep?.version).toBeUndefined();
+        expect(reactDep?.packageVersion).toBeUndefined();
       });
 
       it('should handle entry point as third-party package', async () => {
@@ -417,7 +417,7 @@ describe('Pack Collector', () => {
         const reactDep = result.missing.find(m => m.name === 'react');
         expect(reactDep).toBeDefined();
         expect(reactDep?.packageName).toBe('react');
-        expect(reactDep?.version).toBe('^18.2.0');
+        expect(reactDep?.packageVersion).toBe('^18.2.0');
       });
 
       it('should check devDependencies and peerDependencies', async () => {
@@ -458,10 +458,10 @@ describe('Pack Collector', () => {
         const result = await collectDependencies('src/App.tsx', manifest, 2, 100, testProjectRoot);
 
         const tsDep = result.missing.find(m => m.name === 'typescript');
-        expect(tsDep?.version).toBe('^5.3.0');
+        expect(tsDep?.packageVersion).toBe('^5.3.0');
 
         const reactDep = result.missing.find(m => m.name === 'react');
-        expect(reactDep?.version).toBe('^18.0.0');
+        expect(reactDep?.packageVersion).toBe('^18.0.0');
       });
     });
   });

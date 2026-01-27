@@ -286,11 +286,11 @@ describe('CLI Compare Command Tests', () => {
       const content = JSON.parse(await readFile(contextFile1, 'utf-8'));
       if (content.length > 0 && content[0].graph.nodes.length > 0) {
         const node = content[0].graph.nodes[0];
-        if (!node.contract.version) {
-          node.contract.version = { imports: [], hooks: [] };
+        if (!node.contract.composition) {
+          node.contract.composition = { imports: [], hooks: [] };
         }
         // Add and remove imports
-        node.contract.version.imports = ['./new-import', './another-import'];
+        node.contract.composition.imports = ['./new-import', './another-import'];
       }
       const contextFile2 = join(outDir2, 'src', 'context.json');
       await mkdir(dirname(contextFile2), { recursive: true });
@@ -374,11 +374,11 @@ describe('CLI Compare Command Tests', () => {
       const content = JSON.parse(await readFile(contextFile1, 'utf-8'));
       if (content.length > 0 && content[0].graph.nodes.length > 0) {
         const node = content[0].graph.nodes[0];
-        if (!node.contract.version) {
-          node.contract.version = { imports: [], hooks: [] };
+        if (!node.contract.composition) {
+          node.contract.composition = { imports: [], hooks: [] };
         }
         // Change hooks
-        node.contract.version.hooks = ['useState', 'useEffect', 'useCallback'];
+        node.contract.composition.hooks = ['useState', 'useEffect', 'useCallback'];
       }
       const contextFile2 = join(outDir2, 'src', 'context.json');
       await mkdir(dirname(contextFile2), { recursive: true });
@@ -416,11 +416,11 @@ describe('CLI Compare Command Tests', () => {
       const content = JSON.parse(await readFile(contextFile1, 'utf-8'));
       if (content.length > 0 && content[0].graph.nodes.length > 0) {
         const node = content[0].graph.nodes[0];
-        if (!node.contract.version) {
-          node.contract.version = { imports: [], hooks: [], components: [], functions: [] };
+        if (!node.contract.composition) {
+          node.contract.composition = { imports: [], hooks: [], components: [], functions: [] };
         }
         // Change functions
-        node.contract.version.functions = ['handleSubmit', 'validateForm', 'processData'];
+        node.contract.composition.functions = ['handleSubmit', 'validateForm', 'processData'];
       }
       const contextFile2 = join(outDir2, 'src', 'context.json');
       await mkdir(dirname(contextFile2), { recursive: true });
@@ -457,11 +457,11 @@ describe('CLI Compare Command Tests', () => {
       const content = JSON.parse(await readFile(contextFile1, 'utf-8'));
       if (content.length > 0 && content[0].graph.nodes.length > 0) {
         const node = content[0].graph.nodes[0];
-        if (!node.contract.version) {
-          node.contract.version = { imports: [], hooks: [], components: [], functions: [] };
+        if (!node.contract.composition) {
+          node.contract.composition = { imports: [], hooks: [], components: [], functions: [] };
         }
         // Change components used
-        node.contract.version.components = ['Modal', 'Dialog', 'Button'];
+        node.contract.composition.components = ['Modal', 'Dialog', 'Button'];
       }
       const contextFile2 = join(outDir2, 'src', 'context.json');
       await mkdir(dirname(contextFile2), { recursive: true });
@@ -497,11 +497,11 @@ describe('CLI Compare Command Tests', () => {
       const content = JSON.parse(await readFile(contextFile1, 'utf-8'));
       if (content.length > 0 && content[0].graph.nodes.length > 0) {
         const node = content[0].graph.nodes[0];
-        if (!node.contract.logicSignature) {
-          node.contract.logicSignature = { props: {}, emits: {} };
+        if (!node.contract.interface) {
+          node.contract.interface = { props: {}, emits: {} };
         }
         // Add new props
-        node.contract.logicSignature.props = {
+        node.contract.interface.props = {
           variant: 'string',
           size: 'string',
           disabled: 'boolean',
@@ -541,11 +541,11 @@ describe('CLI Compare Command Tests', () => {
       const content = JSON.parse(await readFile(contextFile1, 'utf-8'));
       if (content.length > 0 && content[0].graph.nodes.length > 0) {
         const node = content[0].graph.nodes[0];
-        if (!node.contract.logicSignature) {
-          node.contract.logicSignature = { props: {}, emits: {} };
+        if (!node.contract.interface) {
+          node.contract.interface = { props: {}, emits: {} };
         }
         // Add new emits
-        node.contract.logicSignature.emits = {
+        node.contract.interface.emits = {
           onClick: 'function',
           onChange: 'function',
           onSubmit: 'function',

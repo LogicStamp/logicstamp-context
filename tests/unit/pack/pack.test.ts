@@ -10,21 +10,21 @@ import type { MissingDependency } from '../../../src/core/pack/collector.js';
 describe('Pack - Internal Component Filtering', () => {
   const createMockContract = (overrides?: Partial<UIFContract>): UIFContract => ({
     type: 'UIFContract',
-    schemaVersion: '0.3',
+    schemaVersion: '0.4',
     kind: 'react:component',
     entryId: 'src/components/Card.tsx',
     entryPathAbs: '/project/src/components/Card.tsx',
     entryPathRel: 'src/components/Card.tsx',
     os: 'posix',
     description: 'Card component',
-    version: {
+    composition: {
       variables: [],
       hooks: [],
       components: [],
       functions: [],
       imports: [],
     },
-    logicSignature: {
+    interface: {
       props: {},
       emits: {},
     },
@@ -45,7 +45,7 @@ describe('Pack - Internal Component Filtering', () => {
       
       const contract = createMockContract({
         entryId: 'src/components/Card.tsx',
-        version: {
+        composition: {
           variables: [],
           hooks: [],
           components: ['Button', 'InternalHelper'],
@@ -80,16 +80,16 @@ describe('Pack - Internal Component Filtering', () => {
       // It should be filtered out from missing dependencies
       // This is tested indirectly - the actual filtering happens in pack() function
       // We verify the contract structure supports the filtering logic
-      expect(contract.version.functions).toContain('InternalHelper');
-      expect(contract.version.components).toContain('InternalHelper');
-      expect(contract.version.functions).not.toContain('Button');
-      expect(contract.version.components).toContain('Button');
+      expect(contract.composition.functions).toContain('InternalHelper');
+      expect(contract.composition.components).toContain('InternalHelper');
+      expect(contract.composition.functions).not.toContain('Button');
+      expect(contract.composition.components).toContain('Button');
     });
 
     it('should identify internal components correctly', () => {
       // Internal component: appears in both functions and components arrays
       const contractWithInternal = createMockContract({
-        version: {
+        composition: {
           variables: [],
           hooks: [],
           components: ['Button', 'InternalHelper'],
@@ -100,7 +100,7 @@ describe('Pack - Internal Component Filtering', () => {
 
       // External component: only in components, not in functions
       const contractWithExternal = createMockContract({
-        version: {
+        composition: {
           variables: [],
           hooks: [],
           components: ['Button', 'ExternalComponent'],
@@ -111,20 +111,20 @@ describe('Pack - Internal Component Filtering', () => {
 
       // Verify internal component detection logic
       const internalHelperIsInternal = 
-        contractWithInternal.version.functions.includes('InternalHelper') &&
-        contractWithInternal.version.components.includes('InternalHelper');
+        contractWithInternal.composition.functions.includes('InternalHelper') &&
+        contractWithInternal.composition.components.includes('InternalHelper');
       
       const buttonIsInternal = 
-        contractWithInternal.version.functions.includes('Button') &&
-        contractWithInternal.version.components.includes('Button');
+        contractWithInternal.composition.functions.includes('Button') &&
+        contractWithInternal.composition.components.includes('Button');
 
       expect(internalHelperIsInternal).toBe(true);
       expect(buttonIsInternal).toBe(false);
 
       // External component should not be considered internal
       const externalIsInternal = 
-        contractWithExternal.version.functions.includes('ExternalComponent') &&
-        contractWithExternal.version.components.includes('ExternalComponent');
+        contractWithExternal.composition.functions.includes('ExternalComponent') &&
+        contractWithExternal.composition.components.includes('ExternalComponent');
       
       expect(externalIsInternal).toBe(false);
     });
@@ -173,7 +173,7 @@ describe('Pack - Internal Component Filtering', () => {
       // Test that contracts from contractsMap are also checked
       const contract = createMockContract({
         entryId: 'src/components/Card.tsx',
-        version: {
+        composition: {
           variables: [],
           hooks: [],
           components: ['InternalHelper'],
@@ -202,8 +202,8 @@ describe('Pack - Internal Component Filtering', () => {
       // InternalHelper should be identified as internal
       if (contractFromMap) {
         const isInternal = 
-          contractFromMap.version.functions.includes('InternalHelper') &&
-          contractFromMap.version.components.includes('InternalHelper');
+          contractFromMap.composition.functions.includes('InternalHelper') &&
+          contractFromMap.composition.components.includes('InternalHelper');
         expect(isInternal).toBe(true);
       }
     });
@@ -211,7 +211,7 @@ describe('Pack - Internal Component Filtering', () => {
     it('should handle mixed internal and external missing dependencies', () => {
       const contract = createMockContract({
         entryId: 'src/components/Card.tsx',
-        version: {
+        composition: {
           variables: [],
           hooks: [],
           components: ['Button', 'InternalHelper', 'ExternalComponent'],
@@ -244,16 +244,16 @@ describe('Pack - Internal Component Filtering', () => {
 
       // Verify structure: InternalHelper should be internal, others should not
       const internalHelperIsInternal = 
-        contract.version.functions.includes('InternalHelper') &&
-        contract.version.components.includes('InternalHelper');
+        contract.composition.functions.includes('InternalHelper') &&
+        contract.composition.components.includes('InternalHelper');
       
       const buttonIsInternal = 
-        contract.version.functions.includes('Button') &&
-        contract.version.components.includes('Button');
+        contract.composition.functions.includes('Button') &&
+        contract.composition.components.includes('Button');
       
       const externalIsInternal = 
-        contract.version.functions.includes('ExternalComponent') &&
-        contract.version.components.includes('ExternalComponent');
+        contract.composition.functions.includes('ExternalComponent') &&
+        contract.composition.components.includes('ExternalComponent');
 
       expect(internalHelperIsInternal).toBe(true);
       expect(buttonIsInternal).toBe(false);

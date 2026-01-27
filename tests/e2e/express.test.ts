@@ -94,7 +94,7 @@ describe('Express.js End-to-End Tests', () => {
       expect(result.contract).toBeDefined();
       if (result.contract) {
         expect(result.contract.kind).toBe('node:api');
-        expect(result.contract.logicSignature.apiSignature).toBeDefined();
+        expect(result.contract.interface.apiSignature).toBeDefined();
       }
     });
 
@@ -109,8 +109,8 @@ describe('Express.js End-to-End Tests', () => {
       });
 
       if (result.contract) {
-        expect(result.contract.version.languageSpecific).toBeDefined();
-        const langSpecific = result.contract.version.languageSpecific;
+        expect(result.contract.composition.languageSpecific).toBeDefined();
+        const langSpecific = result.contract.composition.languageSpecific;
         expect(langSpecific?.decorators).toBeDefined();
       }
     });
@@ -129,8 +129,8 @@ describe('Express.js End-to-End Tests', () => {
       if (result.contract) {
         // Controllers are TypeScript modules, not route files
         expect(result.contract.kind).toBe('ts:module');
-        expect(result.contract.version.functions).toContain('getUsers');
-        expect(result.contract.version.functions).toContain('createUser');
+        expect(result.contract.composition.functions).toContain('getUsers');
+        expect(result.contract.composition.functions).toContain('createUser');
       }
     });
   });

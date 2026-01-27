@@ -14,18 +14,18 @@ const createMockContract = (
   overrides: Partial<UIFContract> = {}
 ): UIFContract => ({
   type: 'UIFContract',
-  schemaVersion: '0.3',
+  schemaVersion: '0.4',
   kind: 'react:component',
   entryId,
   description: `Mock ${entryId}`,
-  version: {
+  composition: {
     variables: [],
     hooks: [],
     components: [],
     functions: [],
     imports: [],
   },
-  logicSignature: {
+  interface: {
     props: {},
     emits: {},
   },
@@ -59,10 +59,10 @@ describe('compareContracts', () => {
   describe('props comparison', () => {
     it('should detect added props', () => {
       const oldContract = createMockContract('src/Button.tsx', {
-        logicSignature: { props: { onClick: 'function' }, emits: {} },
+        interface: { props: { onClick: 'function' }, emits: {} },
       });
       const newContract = createMockContract('src/Button.tsx', {
-        logicSignature: { props: { onClick: 'function', disabled: 'boolean' }, emits: {} },
+        interface: { props: { onClick: 'function', disabled: 'boolean' }, emits: {} },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -74,10 +74,10 @@ describe('compareContracts', () => {
 
     it('should detect removed props', () => {
       const oldContract = createMockContract('src/Button.tsx', {
-        logicSignature: { props: { onClick: 'function', disabled: 'boolean' }, emits: {} },
+        interface: { props: { onClick: 'function', disabled: 'boolean' }, emits: {} },
       });
       const newContract = createMockContract('src/Button.tsx', {
-        logicSignature: { props: { onClick: 'function' }, emits: {} },
+        interface: { props: { onClick: 'function' }, emits: {} },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -88,10 +88,10 @@ describe('compareContracts', () => {
 
     it('should detect changed props', () => {
       const oldContract = createMockContract('src/Button.tsx', {
-        logicSignature: { props: { variant: 'string' }, emits: {} },
+        interface: { props: { variant: 'string' }, emits: {} },
       });
       const newContract = createMockContract('src/Button.tsx', {
-        logicSignature: { props: { variant: { type: 'literal-union', literals: ['primary', 'secondary'] } }, emits: {} },
+        interface: { props: { variant: { type: 'literal-union', literals: ['primary', 'secondary'] } }, emits: {} },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -102,10 +102,10 @@ describe('compareContracts', () => {
 
     it('should handle identical props', () => {
       const oldContract = createMockContract('src/Button.tsx', {
-        logicSignature: { props: { onClick: 'function' }, emits: {} },
+        interface: { props: { onClick: 'function' }, emits: {} },
       });
       const newContract = createMockContract('src/Button.tsx', {
-        logicSignature: { props: { onClick: 'function' }, emits: {} },
+        interface: { props: { onClick: 'function' }, emits: {} },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -119,10 +119,10 @@ describe('compareContracts', () => {
   describe('emits comparison', () => {
     it('should detect added events', () => {
       const oldContract = createMockContract('src/Button.tsx', {
-        logicSignature: { props: {}, emits: {} },
+        interface: { props: {}, emits: {} },
       });
       const newContract = createMockContract('src/Button.tsx', {
-        logicSignature: { props: {}, emits: { onClick: 'function' } },
+        interface: { props: {}, emits: { onClick: 'function' } },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -132,10 +132,10 @@ describe('compareContracts', () => {
 
     it('should detect removed events', () => {
       const oldContract = createMockContract('src/Button.tsx', {
-        logicSignature: { props: {}, emits: { onClick: 'function', onHover: 'function' } },
+        interface: { props: {}, emits: { onClick: 'function', onHover: 'function' } },
       });
       const newContract = createMockContract('src/Button.tsx', {
-        logicSignature: { props: {}, emits: { onClick: 'function' } },
+        interface: { props: {}, emits: { onClick: 'function' } },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -147,10 +147,10 @@ describe('compareContracts', () => {
   describe('state comparison', () => {
     it('should detect added state', () => {
       const oldContract = createMockContract('src/Counter.tsx', {
-        logicSignature: { props: {}, emits: {}, state: {} },
+        interface: { props: {}, emits: {}, state: {} },
       });
       const newContract = createMockContract('src/Counter.tsx', {
-        logicSignature: { props: {}, emits: {}, state: { count: 'number' } },
+        interface: { props: {}, emits: {}, state: { count: 'number' } },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -160,10 +160,10 @@ describe('compareContracts', () => {
 
     it('should detect removed state', () => {
       const oldContract = createMockContract('src/Counter.tsx', {
-        logicSignature: { props: {}, emits: {}, state: { count: 'number', isLoading: 'boolean' } },
+        interface: { props: {}, emits: {}, state: { count: 'number', isLoading: 'boolean' } },
       });
       const newContract = createMockContract('src/Counter.tsx', {
-        logicSignature: { props: {}, emits: {}, state: { count: 'number' } },
+        interface: { props: {}, emits: {}, state: { count: 'number' } },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -173,10 +173,10 @@ describe('compareContracts', () => {
 
     it('should detect changed state types', () => {
       const oldContract = createMockContract('src/Counter.tsx', {
-        logicSignature: { props: {}, emits: {}, state: { count: 'number' } },
+        interface: { props: {}, emits: {}, state: { count: 'number' } },
       });
       const newContract = createMockContract('src/Counter.tsx', {
-        logicSignature: { props: {}, emits: {}, state: { count: 'string' } },
+        interface: { props: {}, emits: {}, state: { count: 'string' } },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -189,10 +189,10 @@ describe('compareContracts', () => {
   describe('version arrays comparison', () => {
     it('should detect added hooks', () => {
       const oldContract = createMockContract('src/App.tsx', {
-        version: { variables: [], hooks: ['useState'], components: [], functions: [], imports: [] },
+        composition: { variables: [], hooks: ['useState'], components: [], functions: [], imports: [] },
       });
       const newContract = createMockContract('src/App.tsx', {
-        version: { variables: [], hooks: ['useState', 'useEffect'], components: [], functions: [], imports: [] },
+        composition: { variables: [], hooks: ['useState', 'useEffect'], components: [], functions: [], imports: [] },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -203,10 +203,10 @@ describe('compareContracts', () => {
 
     it('should detect removed hooks', () => {
       const oldContract = createMockContract('src/App.tsx', {
-        version: { variables: [], hooks: ['useState', 'useEffect'], components: [], functions: [], imports: [] },
+        composition: { variables: [], hooks: ['useState', 'useEffect'], components: [], functions: [], imports: [] },
       });
       const newContract = createMockContract('src/App.tsx', {
-        version: { variables: [], hooks: ['useState'], components: [], functions: [], imports: [] },
+        composition: { variables: [], hooks: ['useState'], components: [], functions: [], imports: [] },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -216,10 +216,10 @@ describe('compareContracts', () => {
 
     it('should detect added components', () => {
       const oldContract = createMockContract('src/App.tsx', {
-        version: { variables: [], hooks: [], components: ['Header'], functions: [], imports: [] },
+        composition: { variables: [], hooks: [], components: ['Header'], functions: [], imports: [] },
       });
       const newContract = createMockContract('src/App.tsx', {
-        version: { variables: [], hooks: [], components: ['Header', 'Footer'], functions: [], imports: [] },
+        composition: { variables: [], hooks: [], components: ['Header', 'Footer'], functions: [], imports: [] },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -229,10 +229,10 @@ describe('compareContracts', () => {
 
     it('should detect added/removed functions', () => {
       const oldContract = createMockContract('src/utils.ts', {
-        version: { variables: [], hooks: [], components: [], functions: ['formatDate'], imports: [] },
+        composition: { variables: [], hooks: [], components: [], functions: ['formatDate'], imports: [] },
       });
       const newContract = createMockContract('src/utils.ts', {
-        version: { variables: [], hooks: [], components: [], functions: ['formatDate', 'formatCurrency'], imports: [] },
+        composition: { variables: [], hooks: [], components: [], functions: ['formatDate', 'formatCurrency'], imports: [] },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -242,10 +242,10 @@ describe('compareContracts', () => {
 
     it('should detect added/removed variables', () => {
       const oldContract = createMockContract('src/constants.ts', {
-        version: { variables: ['API_URL'], hooks: [], components: [], functions: [], imports: [] },
+        composition: { variables: ['API_URL'], hooks: [], components: [], functions: [], imports: [] },
       });
       const newContract = createMockContract('src/constants.ts', {
-        version: { variables: ['API_URL', 'API_KEY'], hooks: [], components: [], functions: [], imports: [] },
+        composition: { variables: ['API_URL', 'API_KEY'], hooks: [], components: [], functions: [], imports: [] },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -270,7 +270,7 @@ describe('compareContracts', () => {
 
     it('should handle complex prop types', () => {
       const oldContract = createMockContract('src/Complex.tsx', {
-        logicSignature: {
+        interface: {
           props: {
             config: { type: 'object', optional: true },
           },
@@ -278,7 +278,7 @@ describe('compareContracts', () => {
         },
       });
       const newContract = createMockContract('src/Complex.tsx', {
-        logicSignature: {
+        interface: {
           props: {
             config: { type: 'object', optional: false },
           },
@@ -452,11 +452,11 @@ describe('getChanges', () => {
     it('should include contract diff when semantic hash changes', () => {
       const oldContract = createMockContract('src/Button.tsx', {
         semanticHash: 'semantic-1',
-        logicSignature: { props: { onClick: 'function' }, emits: {} },
+        interface: { props: { onClick: 'function' }, emits: {} },
       });
       const newContract = createMockContract('src/Button.tsx', {
         semanticHash: 'semantic-2',
-        logicSignature: { props: { onClick: 'function', disabled: 'boolean' }, emits: {} },
+        interface: { props: { onClick: 'function', disabled: 'boolean' }, emits: {} },
       });
 
       const oldBundles = [createMockBundle('src/Button.tsx', [oldContract])];

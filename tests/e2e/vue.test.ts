@@ -110,7 +110,7 @@ describe('Vue.js End-to-End Tests', () => {
       expect(result.contract).toBeDefined();
       if (result.contract) {
         expect(result.contract.type).toBe('UIFContract');
-        expect(result.contract.schemaVersion).toBe('0.3');
+        expect(result.contract.schemaVersion).toBe('0.4');
         expect(result.contract.entryId).toContain('Button.tsx');
         expect(result.contract.kind).toBe('vue:component');
       }
@@ -128,13 +128,13 @@ describe('Vue.js End-to-End Tests', () => {
 
       expect(result.contract).toBeDefined();
       if (result.contract) {
-        expect(result.contract.logicSignature).toBeDefined();
-        expect(result.contract.logicSignature.props).toBeDefined();
+        expect(result.contract.interface).toBeDefined();
+        expect(result.contract.interface.props).toBeDefined();
 
         // Vue prop extractor looks for defineProps, not interface-based props
         // For function components with interface props, props may be empty
         // This test verifies the structure exists, even if props aren't extracted
-        const props = result.contract.logicSignature.props;
+        const props = result.contract.interface.props;
         expect(typeof props).toBe('object');
       }
     });
@@ -151,17 +151,17 @@ describe('Vue.js End-to-End Tests', () => {
 
       expect(result.contract).toBeDefined();
       if (result.contract) {
-        expect(result.contract.version).toBeDefined();
-        expect(result.contract.version.hooks).toBeDefined();
-        expect(result.contract.version.components).toBeDefined();
-        expect(result.contract.version.functions).toBeDefined();
+        expect(result.contract.composition).toBeDefined();
+        expect(result.contract.composition.hooks).toBeDefined();
+        expect(result.contract.composition.components).toBeDefined();
+        expect(result.contract.composition.functions).toBeDefined();
 
         // Card uses Vue composables
-        expect(result.contract.version.hooks).toContain('ref');
-        expect(result.contract.version.hooks).toContain('computed');
-        expect(result.contract.version.hooks).toContain('watch');
+        expect(result.contract.composition.hooks).toContain('ref');
+        expect(result.contract.composition.hooks).toContain('computed');
+        expect(result.contract.composition.hooks).toContain('watch');
         // Card uses Button component
-        expect(result.contract.version.components).toContain('Button');
+        expect(result.contract.composition.components).toContain('Button');
       }
     });
 
@@ -177,8 +177,8 @@ describe('Vue.js End-to-End Tests', () => {
 
       expect(result.contract).toBeDefined();
       if (result.contract) {
-        expect(result.contract.logicSignature.state).toBeDefined();
-        const state = result.contract.logicSignature.state;
+        expect(result.contract.interface.state).toBeDefined();
+        const state = result.contract.interface.state;
 
         // Card should have ref state
         if (state) {
@@ -202,8 +202,8 @@ describe('Vue.js End-to-End Tests', () => {
       expect(result.contract).toBeDefined();
       if (result.contract) {
         expect(result.contract.kind).toBe('vue:composable');
-        expect(result.contract.logicSignature.state).toBeDefined();
-        const state = result.contract.logicSignature.state;
+        expect(result.contract.interface.state).toBeDefined();
+        const state = result.contract.interface.state;
 
         // useCounter should have ref state
         if (state) {
@@ -226,9 +226,9 @@ describe('Vue.js End-to-End Tests', () => {
       expect(result.contract).toBeDefined();
       if (result.contract) {
         expect(result.contract.kind).toBe('vue:component');
-        expect(result.contract.version.components).toContain('Card');
-        expect(result.contract.version.hooks).toContain('ref');
-        expect(result.contract.version.hooks).toContain('computed');
+        expect(result.contract.composition.components).toContain('Card');
+        expect(result.contract.composition.hooks).toContain('ref');
+        expect(result.contract.composition.hooks).toContain('computed');
       }
     });
   });
@@ -392,7 +392,7 @@ describe('Vue.js End-to-End Tests', () => {
 
       expect(result.contract).toBeDefined();
       if (result.contract) {
-        const state = result.contract.logicSignature.state;
+        const state = result.contract.interface.state;
         // Should extract ref state
         if (state) {
           expect(state.expanded).toBeDefined();
@@ -413,7 +413,7 @@ describe('Vue.js End-to-End Tests', () => {
 
       expect(result.contract).toBeDefined();
       if (result.contract) {
-        const state = result.contract.logicSignature.state;
+        const state = result.contract.interface.state;
         // Should extract computed state
         if (state) {
           expect(state.displayCount).toBeDefined();

@@ -14,11 +14,11 @@
           "entryId": "src/components/HeroSection.tsx",
           "contract": {
             "type": "UIFContract",
-            "schemaVersion": "0.3",
+            "schemaVersion": "0.4",
             "kind": "react:component",
             "entryId": "src/components/HeroSection.tsx",
             "description": "HeroSection - Landing page hero with animated content",
-            "version": {
+            "composition": {
               "variables": [],
               "hooks": [
                 "useInView"
@@ -36,7 +36,7 @@
                 "react"
               ]
             },
-            "logicSignature": {
+            "interface": {
               "props": {
                 "title": "string",
                 "subtitle": {
@@ -163,11 +163,11 @@
           "entryId": "src/components/Button.tsx",
           "contract": {
             "type": "UIFContract",
-            "schemaVersion": "0.3",
+            "schemaVersion": "0.4",
             "kind": "react:component",
             "entryId": "src/components/Button.tsx",
             "description": "Button - Styled button component with hover effects",
-            "version": {
+            "composition": {
               "variables": [],
               "hooks": [
                 "useState"
@@ -181,7 +181,7 @@
                 "react"
               ]
             },
-            "logicSignature": {
+            "interface": {
               "props": {
                 "variant": {
                   "type": "literal-union",
@@ -269,11 +269,11 @@
           "entryId": "src/components/FeatureCard.tsx",
           "contract": {
             "type": "UIFContract",
-            "schemaVersion": "0.3",
+            "schemaVersion": "0.4",
             "kind": "react:component",
             "entryId": "src/components/FeatureCard.tsx",
             "description": "FeatureCard - Grid card component with Tailwind styling",
-            "version": {
+            "composition": {
               "variables": [],
               "hooks": [],
               "components": [],
@@ -284,7 +284,7 @@
                 "react"
               ]
             },
-            "logicSignature": {
+            "interface": {
               "props": {
                 "icon": {
                   "type": "ReactNode"

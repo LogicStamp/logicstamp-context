@@ -14,11 +14,11 @@
           "entryId": "src/users/users.controller.ts",
           "contract": {
             "type": "UIFContract",
-            "schemaVersion": "0.3",
+            "schemaVersion": "0.4",
             "kind": "node:api",
             "entryId": "src/users/users.controller.ts",
             "description": "users.controller - NestJS controller",
-            "version": {
+            "composition": {
               "variables": [],
               "hooks": [],
               "components": [],
@@ -53,7 +53,7 @@
                 ]
               }
             },
-            "logicSignature": {
+            "interface": {
               "props": {},
               "emits": {},
               "apiSignature": {

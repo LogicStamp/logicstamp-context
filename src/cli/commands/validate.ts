@@ -93,7 +93,7 @@ export function validateBundles(bundles: LogicStampBundle[]): ValidationResult {
           result.errors++;
           result.messages.push(`${bundleLabel}: Node ${node.entryId} has invalid contract type`);
         }
-        if (contract?.schemaVersion !== '0.3') {
+        if (contract?.schemaVersion !== '0.4') {
           result.warnings++;
           result.messages.push(`${bundleLabel}: Node ${node.entryId} has unexpected contract version ${contract?.schemaVersion}`);
         }
@@ -476,7 +476,7 @@ export async function validateCommand(filePath?: string, quiet?: boolean): Promi
             console.error(`❌ ${bundleLabel}: Node ${node.entryId} has invalid contract type`);
             errors++;
           }
-          if (contract?.schemaVersion !== '0.3') {
+          if (contract?.schemaVersion !== '0.4') {
             console.warn(`⚠️  ${bundleLabel}: Node ${node.entryId} has unexpected contract version ${contract?.schemaVersion}`);
             warnings++;
           }

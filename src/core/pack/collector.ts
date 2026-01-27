@@ -15,7 +15,7 @@ export interface MissingDependency {
   reason: string;
   referencedBy?: string;
   packageName?: string; // Extracted package name for third-party dependencies
-  version?: string; // Version from package.json (if available)
+  packageVersion?: string; // Version from package.json (if available)
 }
 
 /**
@@ -30,28 +30,32 @@ export async function collectDependencies(
 ): Promise<{ visited: Set<string>; missing: MissingDependency[] }> {
   const visited = new Set<string>();
   const missing: MissingDependency[] = [];
+  const missingNames = new Set<string>(); // Track already-added missing deps for O(1) lookup
   const queue: Array<{ id: string; level: number }> = [{ id: entryId, level: 0 }];
+
+  // Build normalized ID index for O(1) lookups (instead of O(n) linear search)
+  const normalizedIdIndex = new Map<string, string>();
+  for (const [key, comp] of Object.entries(manifest.components)) {
+    const normalizedKey = normalizeEntryId(key);
+    const normalizedEntryId = normalizeEntryId(comp.entryId);
+    // Map both the key and the entryId to the component key
+    if (!normalizedIdIndex.has(normalizedKey)) {
+      normalizedIdIndex.set(normalizedKey, key);
+    }
+    if (!normalizedIdIndex.has(normalizedEntryId)) {
+      normalizedIdIndex.set(normalizedEntryId, key);
+    }
+  }
 
   while (queue.length > 0) {
     const current = queue.shift()!;
 
     // Normalize the ID for lookup
     const normalizedId = normalizeEntryId(current.id);
-    
-    // Try to find component by normalized ID
-    let node = manifest.components[normalizedId];
-    let componentKey = normalizedId;
-    
-    // If not found, try to find by matching normalized entryIds
-    if (!node) {
-      for (const [key, comp] of Object.entries(manifest.components)) {
-        if (normalizeEntryId(key) === normalizedId || normalizeEntryId(comp.entryId) === normalizedId) {
-          node = comp;
-          componentKey = key;
-          break;
-        }
-      }
-    }
+
+    // O(1) lookup using the index
+    const componentKey = normalizedIdIndex.get(normalizedId) || normalizedId;
+    const node = manifest.components[componentKey];
 
     // Skip if already visited or exceeded depth
     if (visited.has(componentKey) || current.level > depth) {
@@ -76,7 +80,7 @@ export async function collectDependencies(
           missingDep.packageName = packageName;
           const version = await getPackageVersion(packageName, projectRoot);
           if (version) {
-            missingDep.version = version;
+            missingDep.packageVersion = version;
           }
         }
       }
@@ -98,14 +102,15 @@ export async function collectDependencies(
             queue.push({ id: resolvedId, level: current.level + 1 });
           }
         } else {
-          // Track missing dependency
-          if (!missing.some((m) => m.name === dep)) {
+          // Track missing dependency (O(1) lookup using Set)
+          if (!missingNames.has(dep)) {
+            missingNames.add(dep);
             const missingDep: MissingDependency = {
               name: dep,
               reason: 'No contract found (third-party or not scanned)',
               referencedBy: componentKey, // Use manifest key, not current.id
             };
-            
+
             // Enhance with package info if it's a third-party package
             if (projectRoot && isThirdPartyPackage(dep)) {
               const packageName = extractPackageName(dep);
@@ -113,11 +118,11 @@ export async function collectDependencies(
                 missingDep.packageName = packageName;
                 const version = await getPackageVersion(packageName, projectRoot);
                 if (version) {
-                  missingDep.version = version;
+                  missingDep.packageVersion = version;
                 }
               }
             }
-            
+
             missing.push(missingDep);
           }
         }

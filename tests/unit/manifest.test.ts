@@ -8,21 +8,21 @@ describe('Manifest - Internal Component Filtering', () => {
       const contracts: UIFContract[] = [
         {
           type: 'UIFContract',
-          schemaVersion: '0.3',
+          schemaVersion: '0.4',
           kind: 'react:component',
           entryId: 'src/components/Card.tsx',
           entryPathAbs: '/project/src/components/Card.tsx',
           entryPathRel: 'src/components/Card.tsx',
           os: 'posix',
           description: 'Card component',
-          version: {
+          composition: {
             variables: [],
             hooks: [],
             components: ['Button', 'InternalHelper'], // InternalHelper is internal
             functions: ['InternalHelper'], // Defined as function in same file
             imports: [],
           },
-          logicSignature: {
+          interface: {
             props: {},
             emits: {},
           },
@@ -45,21 +45,21 @@ describe('Manifest - Internal Component Filtering', () => {
       const contracts: UIFContract[] = [
         {
           type: 'UIFContract',
-          schemaVersion: '0.3',
+          schemaVersion: '0.4',
           kind: 'react:component',
           entryId: 'src/components/Card.tsx',
           entryPathAbs: '/project/src/components/Card.tsx',
           entryPathRel: 'src/components/Card.tsx',
           os: 'posix',
           description: 'Card component',
-          version: {
+          composition: {
             variables: [],
             hooks: [],
             components: ['Button', 'ExportedHelper'],
             functions: ['ExportedHelper'], // Defined as function
             imports: [],
           },
-          logicSignature: {
+          interface: {
             props: {},
             emits: {},
           },
@@ -81,21 +81,21 @@ describe('Manifest - Internal Component Filtering', () => {
       const contracts: UIFContract[] = [
         {
           type: 'UIFContract',
-          schemaVersion: '0.3',
+          schemaVersion: '0.4',
           kind: 'react:component',
           entryId: 'src/components/Card.tsx',
           entryPathAbs: '/project/src/components/Card.tsx',
           entryPathRel: 'src/components/Card.tsx',
           os: 'posix',
           description: 'Card component',
-          version: {
+          composition: {
             variables: [],
             hooks: [],
             components: ['Button', 'InternalHelper'],
             functions: ['InternalHelper'],
             imports: [],
           },
-          logicSignature: {
+          interface: {
             props: {},
             emits: {},
           },
@@ -118,21 +118,21 @@ describe('Manifest - Internal Component Filtering', () => {
       const contracts: UIFContract[] = [
         {
           type: 'UIFContract',
-          schemaVersion: '0.3',
+          schemaVersion: '0.4',
           kind: 'react:component',
           entryId: 'src/components/Card.tsx',
           entryPathAbs: '/project/src/components/Card.tsx',
           entryPathRel: 'src/components/Card.tsx',
           os: 'posix',
           description: 'Card component',
-          version: {
+          composition: {
             variables: [],
             hooks: [],
             components: ['Button', 'InternalHelper'],
             functions: ['InternalHelper'],
             imports: [],
           },
-          logicSignature: {
+          interface: {
             props: {},
             emits: {},
           },
@@ -155,21 +155,21 @@ describe('Manifest - Internal Component Filtering', () => {
       const contracts: UIFContract[] = [
         {
           type: 'UIFContract',
-          schemaVersion: '0.3',
+          schemaVersion: '0.4',
           kind: 'react:component',
           entryId: 'src/components/Card.tsx',
           entryPathAbs: '/project/src/components/Card.tsx',
           entryPathRel: 'src/components/Card.tsx',
           os: 'posix',
           description: 'Card component',
-          version: {
+          composition: {
             variables: [],
             hooks: [],
             components: ['Button', 'ExternalComponent'],
             functions: [], // ExternalComponent is not a function
             imports: [],
           },
-          logicSignature: {
+          interface: {
             props: {},
             emits: {},
           },
@@ -192,21 +192,21 @@ describe('Manifest - Internal Component Filtering', () => {
       const contracts: UIFContract[] = [
         {
           type: 'UIFContract',
-          schemaVersion: '0.3',
+          schemaVersion: '0.4',
           kind: 'react:component',
           entryId: 'src/components/Card.tsx',
           entryPathAbs: '/project/src/components/Card.tsx',
           entryPathRel: 'src/components/Card.tsx',
           os: 'posix',
           description: 'Card component',
-          version: {
+          composition: {
             variables: [],
             hooks: [],
             components: ['Button', 'InternalHelper'],
             functions: ['InternalHelper'],
             imports: [],
           },
-          logicSignature: {
+          interface: {
             props: {},
             emits: {},
           },
@@ -229,21 +229,21 @@ describe('Manifest - Internal Component Filtering', () => {
       const contracts: UIFContract[] = [
         {
           type: 'UIFContract',
-          schemaVersion: '0.3',
+          schemaVersion: '0.4',
           kind: 'react:component',
           entryId: 'src/App.tsx',
           entryPathAbs: '/project/src/App.tsx',
           entryPathRel: 'src/App.tsx',
           os: 'posix',
           description: 'App component',
-          version: {
+          composition: {
             variables: [],
             hooks: [],
             components: ['Card'],
             functions: [],
             imports: [],
           },
-          logicSignature: {
+          interface: {
             props: {},
             emits: {},
           },
@@ -253,21 +253,21 @@ describe('Manifest - Internal Component Filtering', () => {
         },
         {
           type: 'UIFContract',
-          schemaVersion: '0.3',
+          schemaVersion: '0.4',
           kind: 'react:component',
           entryId: 'src/components/Card.tsx',
           entryPathAbs: '/project/src/components/Card.tsx',
           entryPathRel: 'src/components/Card.tsx',
           os: 'posix',
           description: 'Card component',
-          version: {
+          composition: {
             variables: [],
             hooks: [],
             components: ['Button', 'InternalHelper'],
             functions: ['InternalHelper'],
             imports: [],
           },
-          logicSignature: {
+          interface: {
             props: {},
             emits: {},
           },

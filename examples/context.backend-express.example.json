@@ -14,11 +14,11 @@
           "entryId": "src/routes/users.ts",
           "contract": {
             "type": "UIFContract",
-            "schemaVersion": "0.3",
+            "schemaVersion": "0.4",
             "kind": "node:api",
             "entryId": "src/routes/users.ts",
             "description": "users - Express route definitions",
-            "version": {
+            "composition": {
               "variables": ["router"],
               "hooks": [],
               "components": [],
@@ -37,7 +37,7 @@
                 ]
               }
             },
-            "logicSignature": {
+            "interface": {
               "props": {},
               "emits": {},
               "apiSignature": {
