@@ -100,11 +100,11 @@ export function buildContract(
   // Note: entryPathAbs and entryPathRel are omitted - entryId is already relative and normalized
   const contract: UIFContract = {
     type: 'UIFContract',
-    schemaVersion: '0.3',
+    schemaVersion: '0.4',
     kind: ast.kind,
     entryId: normalizeEntryId(entryId),
     description: params.description || inferDescription(entryId, ast),
-    version: {
+    composition: {
       variables: ast.variables,
       hooks: ast.hooks,
       components: ast.components,
@@ -112,7 +112,7 @@ export function buildContract(
       imports: ast.imports,
       ...(ast.backend?.languageSpecific && { languageSpecific: ast.backend.languageSpecific }),
     },
-    logicSignature: signature,
+    interface: signature,
     exports,
     prediction: allPredictions.length > 0 ? allPredictions : undefined,
     metrics: undefined,

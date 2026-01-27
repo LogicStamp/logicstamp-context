@@ -63,11 +63,11 @@ const PACKAGE_VERSION = `${pkg.name}@${pkg.version}`;
 
 /**
  * Check if a component name is an internal component (function defined in the same file)
- * Internal components appear in both version.functions and version.components of a contract
+ * Internal components appear in both composition.functions and composition.components of a contract
  */
 function isInternalComponent(contract: UIFContract, componentName: string): boolean {
-  const functionsSet = new Set(contract.version.functions);
-  const componentsSet = new Set(contract.version.components);
+  const functionsSet = new Set(contract.composition.functions);
+  const componentsSet = new Set(contract.composition.components);
   
   // A component is internal if it appears in both functions and components arrays
   // This means it's a function component defined in the same file
@@ -360,7 +360,7 @@ export async function pack(
             missingDep.packageName = packageName;
             const version = await getPackageVersion(packageName, projectRoot);
             if (version) {
-              missingDep.version = version;
+              missingDep.packageVersion = version;
             }
           }
         }
