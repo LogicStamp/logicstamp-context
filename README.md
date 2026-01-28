@@ -7,43 +7,55 @@
     </picture>
   </a>
 
- ### Understand your codebase. Generate deterministic context.
-  <small><em>React · Next.js · Vue (TS/TSX) · Express · NestJS · TypeScript</em></small>
+### Deterministic codebase context for AI assistants.
+
+  <small><em>TypeScript · React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
   <br/>
   <br/>
-  <strong>Fast • One-time setup • CI & watch-ready</strong>
-  <br/>
+
+  **Structured component contracts for AI - props, hooks, dependencies extracted and organized.**
+
   <br/>
   <a href="https://github.com/LogicStamp">
     <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="100" style="min-width: 80px;">
   </a>
 
-  [![Version](https://img.shields.io/badge/version-0.4.1-8b5cf6.svg)](https://www.npmjs.com/package/logicstamp-context)
+  [![Version](https://img.shields.io/badge/version-0.5.0-8b5cf6.svg)](https://www.npmjs.com/package/logicstamp-context)
   ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
   [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
   ![Node](https://img.shields.io/badge/node-%3E%3D18.18.0-brightgreen.svg)
   [![CI](https://github.com/LogicStamp/logicstamp-context/workflows/CI/badge.svg)](https://github.com/LogicStamp/logicstamp-context/actions)
 
-  <br/>
 </div>
+
+## The Problem
+
+AI coding assistants read your source code but don't understand your architecture. They hallucinate prop names, invent dependencies, and miss breaking changes - because raw source code isn't structured context.
+
+**LogicStamp generates deterministic component contracts that:**
+- Stay in sync with your code (watch mode auto-regenerates)
+- Expose what matters (props, hooks, dependencies) without implementation noise
+- Work with any MCP-compatible AI assistant (Claude, Cursor, etc.)
 
 ![LogicStamp MCP Workflow](./assets/logicstamp-workflow.gif)
 *Context bundles generated and consumed across MCP-powered AI workflows.*
 
 <br/>
-
 <details>
 <summary><strong>📑 Table of Contents</strong></summary>
 
 - [Quick Start](#quick-start)
-- [Why LogicStamp?](#why-logicstamp)
-- [Features](#-features)
+- [Drift Detection](#drift-detection)
+- [Why Structured Context?](#why-structured-context)
+- [Features](#features)
+- [Watch Mode](#watch-mode)
 - [How it Works](#how-it-works)
 - [MCP Server](#mcp-server)
 - [Example Output](#example-output)
 - [Installation](#installation)
 - [Security](#security)
 - [Usage](#usage)
+- [Framework Support](#framework-support)
 - [Documentation](#documentation)
 - [Known Limitations](#known-limitations)
 - [Requirements](#requirements)
@@ -59,102 +71,137 @@ npx logicstamp-context context
 
 Scans your repo and writes `context.json` files + `context_main.json` for AI tools.
 
-> **Note:** With `npx`, run `npx logicstamp-context context`. After global install, use `stamp context`.
-
-**What you'll get:**
-- 📁 `context.json` files (one per folder with components, preserving your directory structure)
-- 📋 `context_main.json` index file with project overview and folder metadata
-- All files written to current directory (or use `--out <path>` to specify a different location)
+**What you get:**
+- 📁 `context.json` files - one per folder with components, preserving your directory structure
+- 📋 `context_main.json` - index file with project overview and folder metadata
 
 **For a complete setup (recommended):**
 ```bash
 npm install -g logicstamp-context
-stamp init        # security scan by default
+stamp init        # sets up .gitignore, scans for secrets
 stamp context
 ```
 
-> **💡 First time?** Run `stamp init` to set up `.gitignore` patterns and scan for secrets. You can skip this step, but it's recommended to prevent committing generated files and detect secrets.
+> **ℹ️ Note:** With `npx`, run `npx logicstamp-context context`. After global install, use `stamp context`.
 
-> **ℹ️** If you see `"PRIVATE_DATA"` in output, see the **Security** section below.
+## Drift Detection
 
-> **Note:** This is a beta release (v0.4.1). We're actively improving the tool based on user feedback. If you encounter any issues or have suggestions, please [open an issue on GitHub](https://github.com/LogicStamp/logicstamp-context/issues).
+Compare regenerated context against existing context files:
 
-📋 **For a detailed step-by-step getting started guide with integration examples, see [Getting Started Guide](https://logicstamp.dev/docs/getting-started).**
+```bash
+stamp context compare          # detect changes
+stamp context compare --approve  # update (like jest -u)
+```
 
-## Why LogicStamp?
+Useful during development to see what changed. Shows added/removed components, changed props, hooks, dependencies.
 
-LLMs can reason about your project structure without scanning raw source files.
+> **Note:** Context files are gitignored by default. For CI-based drift detection (comparing against git refs like `main` or `HEAD~1`), see the [roadmap](https://logicstamp.dev/roadmap) - this feature is planned for a future release.
 
-### Structured Data vs Raw Source
+## Why Structured Context?
 
-Instead of parsing raw source code line-by-line, LogicStamp provides **pre-processed, categorized information** that's immediately actionable:
+| Without LogicStamp | With LogicStamp |
+|-------------------|-----------------|
+| AI reads 200 lines to understand a component | AI reads a 20-line contract |
+| Props/hooks inferred (often wrong) | Props/hooks explicit and verified |
+| No way to know if context is stale | Watch mode catches changes in real-time |
+| Different prompts = different understanding | Deterministic: same code = same contract |
 
-- **Semantic density** - Information is grouped by meaning (layout, colors, spacing) rather than scattered in code
-- **Pre-processed relationships** - Dependency graphs are explicit (`graph.edges`) rather than requiring inference
-- **Contract-based APIs** - Component interfaces (`logicSignature.props`) are explicit, no need to read implementation
-- **Categorized metadata** - Style patterns, dependencies, and structure are organized for direct querying
+**The key insight:** AI assistants don't need your implementation - they need your *interfaces*. LogicStamp extracts what matters and discards the noise.
 
-**Example:** To answer "What design patterns does the Hero component use?":
-- **Raw source**: Read 200+ lines, parse className strings, identify patterns manually
-- **Structured**: Read `style.layout.hasHeroPattern: true`, `style.visual.colors: [...]` - answer in seconds
+### What "Structured" Means
 
-This transforms code analysis from "parse and infer" to "read and reason" - making AI assistants faster and more accurate.
+Instead of shipping raw source code to AI:
 
-### Additional Benefits
+```typescript
+// Raw: AI must parse and infer
+export const Button = ({ variant = 'primary', disabled, onClick, children }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  // ... 150 more lines of implementation
+}
+```
 
-- **Token efficient** - Structured context replaces the need to ship raw source (varies by technology)
-  - When including style metadata (`--include-style`), token savings differ by framework:
-    - **CSS / SCSS / CSS Modules / styled-components**: typically ~40-70% fewer tokens than raw styles
-    - **Tailwind CSS**: typically ~5-10% fewer tokens (utility classes are already compact)
-  - *Observed during beta testing; actual results vary by project structure and usage*
-  
-  > Token savings are a side effect - the primary gain is deterministic, inspectable context.
-- **Deterministic, structured contracts** - Help AI avoid hallucinations by only referencing the true architecture
-- **🔒 Built-in security** - Automatic secret detection and sanitization in generated context files
-- **Perfect for Cursor/Claude/GitHub Copilot Chat** - Share context files for instant codebase understanding
-- **CI-friendly** - Detect drift, validate bundles, track changes
+LogicStamp generates:
 
-### Framework Support
+```json
+{
+  "kind": "react:component",
+  "interface": {
+    "props": {
+      "variant": { "type": "literal-union", "literals": ["primary", "secondary"] },
+      "disabled": { "type": "boolean" },
+      "onClick": { "type": "function", "signature": "() => void" }
+    }
+  },
+  "composition": { "hooks": ["useState"], "components": ["./Icon"] }
+}
+```
 
-- **React** - full support (components, hooks, props, styles)
-- **Next.js** - full support (App Router with route roles, segment paths, metadata exports)
-- **Vue 3** - partial support (Composition API in TS/TSX files)
-- **UI frameworks** - Material UI, ShadCN/UI, Radix UI, Tailwind CSS, Styled Components, SCSS/CSS Modules
-- **Backend frameworks** - Express.js, NestJS (new in v0.4.0 - core features complete, advanced features like middleware/guards still being refined)
-
-> **Note:** LogicStamp currently analyzes `.ts` and `.tsx` files only. JavaScript files (`.js`, `.jsx`) are not analyzed for context generation. Vue 3 support works with `.ts`/`.tsx` files only, not `.vue` SFC files. CSS and SCSS files imported by your TypeScript/TSX files are also parsed when using `--include-style` (standalone CSS/SCSS files that aren't imported won't be analyzed).
+Pre-parsed. Categorized. Deterministic. The AI reads contracts, not implementations.
 
 ## ⚡ Features
 
-- **AI-ready bundles** - predictable, structured, deterministic
-- **React/Next.js/Vue/TypeScript awareness** - props, hooks/composables, state, deps
-- **Backend framework support** - Express.js and NestJS routes, controllers, API signatures *(new)*
-- **Style metadata** - (Tailwind, SCSS, MUI, shadcn)
-- **Next.js App Router detection** - (client/server, layout/page/etc)
-- **Vue 3 Composition API** - (ref, reactive, computed, composables)
-- **Dependency graph** - (imports, cycles, missing deps)
-- **Per-folder bundles** - organized by your project structure
-- **CI validation** - (drift detection, schema validation)
-- **Watch mode** - auto-regenerate on file changes with incremental rebuilds *(new)*
-  > **Note:** Watch mode is new and is still being validated across different project structures.
-- **Accurate token estimates** - (GPT/Claude)
-- **Security-first** - automatic secret detection and sanitization
-- **Fast, one-time setup** - works out of the box (no config files needed, sensible defaults)
-- **MCP-ready** - AI agents can consume context bundles via a standardized MCP interface
+**Core:**
+- **Deterministic contracts** - Same input = same output, auditable in version control
+- **Watch mode** - Auto-regenerate on file changes with incremental rebuilds
+- **Breaking change detection** - Strict watch mode catches removed props, events, functions in real-time
+- **MCP-ready** - AI agents consume context via standardized MCP interface
+
+**Analysis:**
+- React/Next.js/Vue component extraction (props, hooks, state, deps)
+- Backend API extraction (Express.js, NestJS routes and controllers)
+- Dependency graphs with cycle detection
+- Style metadata extraction (Tailwind, SCSS, MUI, shadcn)
+- Next.js App Router detection (client/server, layouts, pages)
+
+**Developer experience:**
+- Per-folder bundles matching your project structure
+- Accurate token estimates (GPT/Claude)
+- Security-first: automatic secret detection and sanitization
+- Zero config required - sensible defaults, works out of the box
+
+## Watch Mode
+
+For development, run watch mode to keep context fresh as you code:
+
+```bash
+# Basic watch - regenerate on changes
+stamp context --watch
+
+# Strict watch - also detect breaking changes in real-time
+stamp context --watch --strict-watch
+```
+
+Strict watch catches breaking changes that affect consumers:
+
+| Violation | Example |
+|-----------|---------|
+| `prop_removed` | Removed `disabled` prop from Button |
+| `event_removed` | Removed `onSubmit` callback |
+| `function_removed` | Deleted exported `formatDate()` |
+| `contract_removed` | Deleted entire component |
+
+**Recommended workflow:**
+
+```
+stamp context --watch --strict-watch
+         ↓
+Real-time breaking change detection
+Context always fresh as you code
+```
 
 ## How it Works
 
-1. **Scan**: Finds all `.ts` and `.tsx` files in your project
-2. **Analyze**: Parses React/Next.js/Vue components and backend APIs (Express/NestJS) using TypeScript AST
-3. **Extract**: Builds component contracts with structure and signatures
-4. **Graph**: Creates dependency graph showing relationships
-5. **Bundle**: Packages context bundles optimized for AI consumption
-6. **Organize**: Groups bundles by folder and writes `context.json` files maintaining directory structure
-7. **Index**: Creates `context_main.json` index with folder metadata and summary statistics
+1. **Scan** - Finds all `.ts` and `.tsx` files in your project
+2. **Analyze** - Parses components and APIs using TypeScript AST
+3. **Extract** - Builds contracts with props, hooks, state, signatures
+4. **Graph** - Creates dependency graph showing relationships
+5. **Bundle** - Packages context optimized for AI consumption
+6. **Organize** - Groups by folder, writes `context.json` files
+7. **Index** - Creates `context_main.json` with metadata and statistics
 
-All in one command, no pre-compilation needed!
+No pre-compilation needed. One command.
 
-> **💡 Tip:** Use `stamp context` for basic context generation (component contracts, dependencies, props). Use `stamp context style` (equivalent to `stamp context --include-style`) when you need style metadata extracted (Tailwind classes, SCSS selectors, CSS-in-JS patterns, layout information). Style extraction adds more tokens but provides richer design system context for AI assistants.
+> **Tip:** Use `stamp context` for basic contracts. Use `stamp context style` when you need style metadata (Tailwind classes, SCSS selectors, layout patterns).
 
 ## MCP Server
 
@@ -164,13 +211,13 @@ For AI assistants with MCP support (Claude Desktop, Cursor, etc.):
 npm install -g logicstamp-mcp
 ```
 
-Then configure your AI assistant to use the LogicStamp MCP Server to analyze your project.
+Then configure your AI assistant to use the LogicStamp MCP Server.
 
-📋 **See [MCP Getting Started Guide](https://logicstamp.dev/docs/mcp/getting-started) for detailed installation instructions for Claude Code, Claude Desktop, Cursor, and other MCP clients.**
+📋 **See [MCP Getting Started Guide](https://logicstamp.dev/docs/mcp/getting-started)** for setup instructions.
 
 ## Example Output
 
-LogicStamp Context generates structured JSON bundles organized by folder. Each bundle contains a dependency graph with component contracts:
+LogicStamp generates structured JSON bundles organized by folder:
 
 ```json
 {
@@ -182,13 +229,13 @@ LogicStamp Context generates structured JSON bundles organized by folder. Each b
         "entryId": "src/components/Button.tsx",
         "contract": {
           "kind": "react:component",
-          "logicSignature": {
+          "interface": {
             "props": {
               "variant": { "type": "literal-union", "literals": ["primary", "secondary"] },
               "onClick": { "type": "function", "signature": "() => void" }
             }
           },
-          "version": {
+          "composition": {
             "hooks": ["useState"],
             "components": ["./Icon"]
           }
@@ -200,7 +247,7 @@ LogicStamp Context generates structured JSON bundles organized by folder. Each b
 }
 ```
 
-📋 **See [docs/schema.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/schema.md) for complete output format documentation**
+📋 **See [docs/schema.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/schema.md)** for complete format documentation.
 
 ## Installation
 
@@ -208,141 +255,117 @@ LogicStamp Context generates structured JSON bundles organized by folder. Each b
 npm install -g logicstamp-context
 ```
 
-After installation, the `stamp` command will be available globally.
-
-**Note**: "Global CLI" means the tool is installed globally on your system (via `npm install -g`), making the `stamp` command available from any directory in your terminal, not just within a specific project folder.
-- **Local install**: `npm install logicstamp-context` → only available in that project
-- **Global install**: `npm install -g logicstamp-context` → available everywhere via `stamp` command
+After installation, the `stamp` command is available globally.
 
 ## Security
 
-**Automatic Secret Protection (v0.3.0+)**
+**Automatic Secret Protection**
 
-LogicStamp Context automatically protects sensitive data in generated context files:
+LogicStamp protects sensitive data in generated context:
 
-- **Security scanning by default** - `stamp init` automatically scans for secrets (API keys, passwords, tokens)
-- **Automatic sanitization** - Detected secrets are replaced with `"PRIVATE_DATA"` in generated context files (source files are never modified)
-- **Manual exclusions** - Use `stamp ignore <file>` to manually exclude files with secrets from context generation via `.stampignore`
-- **Safe by default** - Only metadata is included in default modes; credentials only appear in `--include-code full` mode
+- **Security scanning by default** - `stamp init` scans for secrets (API keys, passwords, tokens)
+- **Automatic sanitization** - Detected secrets replaced with `"PRIVATE_DATA"` in output
+- **Manual exclusions** - Use `stamp ignore <file>` to exclude files via `.stampignore`
+- **Safe by default** - Only metadata included; credentials only appear in `--include-code full` mode
 
-> **⚠️ Seeing `"PRIVATE_DATA"` in your context files?** This means secrets were detected in your codebase during scanning. The security scan examines `.ts`, `.tsx`, `.js`, `.jsx`, and `.json` files for secret patterns. **Action required:**
-> 1. Review `stamp_security_report.json` to see what was found
-> 2. Remove hard-coded secrets from your source code
-> 3. Use environment variables or secret management tools instead
-> 4. Run `stamp ignore <file>` to exclude files with secrets from context generation
-> 
-> **Best practice:** Never commit secrets to version control. Use `.env` files (in `.gitignore`) or secret management services.
+> **⚠️ Seeing `"PRIVATE_DATA"` in output?** Review `stamp_security_report.json`, remove hardcoded secrets from source, use environment variables instead.
 
-> **ℹ️ Important**: Always review generated context files before sharing. For complete security documentation, see [SECURITY.md](https://github.com/LogicStamp/logicstamp-context/blob/main/SECURITY.md).
+🔒 **See [SECURITY.md](https://github.com/LogicStamp/logicstamp-context/blob/main/SECURITY.md)** for complete security documentation.
 
 ## Usage
 
-![LogicStamp Context in action](./assets/logicstamp-context-demo.gif)
-*Sample CLI usage*
-
 ```bash
-stamp --version                    # Show version number
+stamp --version                    # Show version
 stamp --help                       # Show help
-stamp init [path] [options]        # Initialize project preferences (security scan runs by default)
-stamp init --no-secure             # Initialize without security scan
-stamp ignore <path> [path2] ...    # Add files/folders to .stampignore
-stamp security scan [path] [options]  # Scan for secrets (API keys, passwords, tokens)
-stamp context [path] [options]     # Generate context bundles
-stamp context style [path] [options]  # Generate with style metadata
-stamp context --watch [options]    # Watch mode - auto-regenerate on changes
-stamp context compare [options]    # Detect context drift
+stamp init [path]                  # Initialize project (security scan by default)
+stamp ignore <path>                # Add to .stampignore
+stamp context [path]               # Generate context bundles
+stamp context style [path]         # Generate with style metadata
+stamp context --watch              # Watch mode
+stamp context --watch --strict-watch  # Watch with breaking change detection
+stamp context compare              # Detect changes vs existing context
 stamp context validate [file]      # Validate context files
-stamp context clean [path] [options]  # Remove generated files
+stamp context clean [path]         # Remove generated files
 ```
-
-### Quick Command Reference
-
-| Command | Description | Docs |
-|---------|-------------|------|
-| `stamp init` | Initialize project (`.gitignore`, `LLM_CONTEXT.md`, config) | [init.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/init.md) |
-| `stamp ignore` | Add files/folders to `.stampignore` to exclude from context | [ignore.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/ignore.md) |
-| `stamp security scan` | Scan for secrets (API keys, passwords, tokens) | [security-scan.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/security-scan.md) |
-| `stamp security --hard-reset` | Reset security configuration (delete security report) | [security-scan.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/security-scan.md) |
-| `stamp context` | Generate AI-ready context bundles organized by folder | [context.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/context.md) |
-| `stamp context style` | Generate context with style metadata (Tailwind, SCSS, etc.) | [style.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/style.md) |
-| `stamp context --watch` | Watch mode - auto-regenerate on file changes | [watch.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/watch.md) |
-| `stamp context compare` | Compare context files to detect changes (CI-friendly) | [compare.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/compare.md) |
-| `stamp context validate` | Validate context file schema and structure | [validate.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/validate.md) |
-| `stamp context clean` | Remove all generated context artifacts | [clean.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/clean.md) |
 
 ### Common Options
 
-**`stamp context` options:**
-- `--depth <n>` / `-d` - Dependency traversal depth (default: `2`)
-- `--include-code <mode>` / `-c` - Code inclusion: `none|header|full` (default: `header`)
-- `--include-style` - Extract style metadata (Tailwind, SCSS, animations, layout)
-- `--format <fmt>` / `-f` - Output format: `json|pretty|ndjson|toon` (default: `json`)
-- `--max-nodes <n>` / `-m` - Maximum nodes per bundle (default: `100`)
-- `--profile <profile>` - Preset: `llm-chat` (default), `llm-safe`, `ci-strict`
-- `--compare-modes` - Compare token costs across all modes (none/header/header+style/full)
-- `--stats` - Emit JSON stats with token estimates (CI-friendly)
-- `--watch` / `-w` - Watch for file changes and regenerate automatically
-- `--debug` - Show detailed hash information in watch mode
-- `--out <path>` / `-o` - Output directory (default: current directory)
-- `--quiet` / `-q` - Suppress verbose output
+| Option | Description |
+|--------|-------------|
+| `--depth <n>` | Dependency traversal depth (default: 2) |
+| `--include-code <mode>` | Code inclusion: `none\|header\|full` (default: header) |
+| `--include-style` | Extract style metadata (Tailwind, SCSS, animations) |
+| `--format <fmt>` | Output format: `json\|pretty\|ndjson\|toon` (default: json) |
+| `--max-nodes <n>` | Maximum nodes per bundle (default: 100) |
+| `--profile <p>` | Preset: `llm-chat`, `llm-safe`, `ci-strict`, `watch-fast` |
+| `--compare-modes` | Show token cost comparison across all modes |
+| `--stats` | Emit JSON stats with token estimates |
+| `--out <path>` | Output directory |
+| `--quiet` | Suppress verbose output |
+| `--debug` | Show detailed hash info (watch mode) |
+| `--log-file` | Write change logs to `.logicstamp/` (watch mode) |
 
-📋 **See [docs/cli/commands.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/commands.md) for complete option reference**
+📋 **See [docs/cli/commands.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/commands.md)** for complete reference.
+
+## Framework Support
+
+| Framework | Support Level | What's Extracted |
+|-----------|--------------|------------------|
+| **React** | Full | Components, hooks, props, styles |
+| **Next.js** | Full | App Router roles, segment paths, metadata |
+| **Vue 3** | Partial | Composition API (TS/TSX only, not .vue SFC) |
+| **Express.js** | Full | Routes, middleware, API signatures |
+| **NestJS** | Full | Controllers, decorators, API signatures |
+| **UI Libraries** | Full | Material UI, ShadCN, Radix, Tailwind, Styled Components, SCSS |
+
+> **ℹ️ Note:** LogicStamp analyzes `.ts` and `.tsx` files only. JavaScript files are not analyzed.
 
 ## Documentation
 
-For full Documentation see: https://logicstamp.dev/docs
+**[Full documentation at logicstamp.dev/docs](https://logicstamp.dev/docs)**
 
-- **[Getting Started Guide](https://logicstamp.dev/docs/getting-started)** - Step-by-step installation and quick start guide
-- **[Usage Guide](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md)** - Complete usage documentation with examples
-- **[Monorepo Support](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/monorepo.md)** - Working with monorepos (backend + frontend)
-- **[Example Files](https://github.com/LogicStamp/logicstamp-context/blob/main/examples/README.md)** - Complete example files (context.json, .stampignore, security reports)
-- **[Token Optimization](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md#token-cost-comparison)** - Understand token costs and savings
-- **[Mode Comparison](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/compare-modes.md)** - Detailed comparison across all modes
-- **[Output Format](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/schema.md)** - Complete schema documentation
-- **[CI Integration](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md#cicd-integration)** - CI/CD workflows and validation
-- **[Troubleshooting](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md#troubleshooting)** - Common issues and solutions
-- **[UIF Contracts](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/uif_contracts.md)** - Understanding component contracts
-- **[Roadmap](https://github.com/LogicStamp/logicstamp-context/blob/main/ROADMAP.md)** - Planned features, improvements, and future enhancements
+- [Getting Started Guide](https://logicstamp.dev/docs/getting-started)
+- [Usage Guide](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md)
+- [Monorepo Support](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/monorepo.md)
+- [Output Schema](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/schema.md)
+- [UIF Contracts](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/uif_contracts.md)
+- [Watch Mode](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/watch.md)
+- [Troubleshooting](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md#troubleshooting)
 
 ## Known Limitations
 
-LogicStamp Context is still in beta. A few edge cases are not fully supported yet.
+LogicStamp is in beta. Some edge cases are not fully supported.
 
-See the full list here: [docs/limitations.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/limitations.md)
-
-## Need Help?
-
-- **Open an issue** → https://github.com/LogicStamp/logicstamp-context/issues
-- **Join our roadmap** → https://logicstamp.dev/roadmap
+📋 **See [docs/limitations.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/limitations.md)** for the full list.
 
 ## Requirements
 
-- Node.js >= 18.18.0 (**Node 20+ recommended**)
-- TypeScript codebase (React, Next.js, Express.js, or NestJS)
+- Node.js >= 18.18.0 (Node 20+ recommended)
+- TypeScript codebase (React, Next.js, Vue, Express, or NestJS)
+
+## Need Help?
+
+- **Issues** - [github.com/LogicStamp/logicstamp-context/issues](https://github.com/LogicStamp/logicstamp-context/issues)
+- **Roadmap** - [logicstamp.dev/roadmap](https://logicstamp.dev/roadmap)
 
 ## License
 
 MIT
 
-## Branding & Attribution
+---
 
-The LogicStamp Fox mascot and related brand assets are © 2025 Amit Levi.
+<details>
+<summary>Branding & Attribution</summary>
 
-These assets may not be used for third-party branding, logos, or commercial identity without permission. They are included in this repository for documentation and non-commercial use within the LogicStamp ecosystem only.
+The LogicStamp Fox mascot and related brand assets are © 2025 Amit Levi. These assets may not be used for third-party branding without permission.
+</details>
 
-## Contributing
+<details>
+<summary>Contributing</summary>
 
 Issues and PRs welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## Community
+This project follows a [Code of Conduct](CODE_OF_CONDUCT.md).
+</details>
 
-This project follows a [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you agree to uphold it.
-
-
-## Links
-
-- [LogicStamp Main Project](https://logicstamp.dev)
-- [GitHub Repository](https://github.com/LogicStamp/logicstamp-context)
-- [MCP Server Repository](https://github.com/LogicStamp/logicstamp-mcp)
-- [Changelog](https://github.com/LogicStamp/logicstamp-context/blob/main/CHANGELOG.md)
-- [Report Issues](https://github.com/LogicStamp/logicstamp-context/issues)
+**Links:** [Website](https://logicstamp.dev) · [GitHub](https://github.com/LogicStamp/logicstamp-context) · [MCP Server](https://github.com/LogicStamp/logicstamp-mcp) · [Changelog](https://github.com/LogicStamp/logicstamp-context/blob/main/CHANGELOG.md)

@@ -7,11 +7,90 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+---
+
+## [0.5.0] - 2026-01-28
+
+### Added
+
+- **Strict watch mode** (`--strict-watch`) - Track breaking changes and violations during watch mode:
+  - **Violation detection** - Automatically detects breaking changes when files are modified:
+    - Removed props, events, state, functions, or variables (errors)
+    - Changed prop types (warnings)
+    - Removed contracts (errors)
+    - Missing dependencies (warnings)
+  - **Real-time reporting** - Displays violations immediately after each regeneration
+  - **Cumulative tracking** - Tracks violations across the entire watch session with running totals
+  - **Session summary** - Shows final violation count when exiting watch mode
+  - **Violations report** - Writes structured JSON report to `.logicstamp/strict_watch_violations.json`
+  - **CI-friendly exit codes** - Exits with code 1 if errors detected during session (on Ctrl+C)
+  - **New violation types**: `missing_dependency`, `breaking_change_prop_removed`, `breaking_change_prop_type`, `breaking_change_event_removed`, `breaking_change_state_removed`, `breaking_change_function_removed`, `breaking_change_variable_removed`, `contract_removed`
+
+### Changed
+
+- **BREAKING: `MissingDependency.version` → `packageVersion`** - Renamed field in `MissingDependency` for clarity:
+  - Old: `{ name, reason, packageName, version }`
+  - New: `{ name, reason, packageName, packageVersion }`
+  - Rationale: Avoids confusion with `UIFContract.version` (component composition). Now pairs naturally with `packageName`.
+  - Migration: Update any code parsing `meta.missing[].version` to use `meta.missing[].packageVersion`
+
+- **BREAKING: `UIFContract.version` → `composition`** - Renamed to accurately describe the field's purpose:
+  - Old: `version: { variables, hooks, components, functions }`
+  - New: `composition: { variables, hooks, components, functions }`
+  - Rationale: This field describes structural composition (what a component is built from), not a version number. The old name was consistently confusing.
+  - Migration: Update any code accessing `contract.version` to use `contract.composition`
+
+- **BREAKING: `UIFContract.logicSignature` → `interface`** - Renamed for clarity:
+  - Old: `logicSignature: { props, emits, state, apiSignature }`
+  - New: `interface: { props, emits, state, apiSignature }`
+  - Rationale: "interface" is a well-understood concept describing the external API/contract. Pairs naturally with `composition` (internal structure vs external interface).
+  - Migration: Update any code accessing `contract.logicSignature` to use `contract.interface`
+
+### Fixed
+
+- **Documentation: `events` → `emits`** - Fixed inconsistency in `docs/schema.md` and `docs/uif_contracts.md` where examples showed `events` but the actual schema uses `emits`. Documentation now matches the schema and implementation.
+
+- **Watch mode race condition** - Fixed potential race condition where concurrent file changes could trigger overlapping regenerations. Now uses Promise-based locking to ensure only one regeneration runs at a time, with queued changes processed after completion.
+
+- **Silent error swallowing in compare handler** - Empty `catch {}` block in `compareHandler.ts` now properly logs cleanup errors using `debugError()` instead of silently ignoring them.
+
+### Improved
+
+- **O(1) dependency collection lookups** - Replaced O(n) linear search through manifest components with O(1) Map-based index lookup. Significantly improves performance for large projects during context generation.
+
+- **O(1) missing dependency tracking** - Replaced O(n) array search for duplicate detection with O(1) Set-based lookup in `collectDependencies()`.
+
+**⚠️ Breaking changes in this release:**
+- `MissingDependency.version` → `packageVersion` - Field renamed ✅
+- `UIFContract.version` → `composition` - Field renamed ✅
+- `UIFContract.logicSignature` → `interface` - Field renamed ✅
+
+**Migration required:** Any code parsing context bundles that accesses these fields must be updated. Schema version bumped to reflect breaking changes.
+
+**Non-breaking additions:**
+- `--strict-watch` is a new optional flag - existing watch mode behavior unchanged
+- Race condition fix is internal - external behavior improves but API unchanged
+- Performance optimizations are internal - same output, faster execution
+- New types (`Violation`, `ViolationType`, `StrictWatchStatus`) are additive exports
+
 ### Roadmap (not yet implemented)
 
 For a comprehensive roadmap with detailed status, priorities, and implementation plans, see [ROADMAP.md](ROADMAP.md).
 
-**Highlights:**
+**Next up (0.6.0):**
+
+- **Git baseline for compare** - Compare current context against a git ref (`git:HEAD`, `git:main`, etc.):
+  - Generates context from source at both current state and baseline ref (context files are gitignored, so must generate at both points)
+  - Uses git worktree for clean isolation
+  - Enables meaningful drift detection against known reference points
+  - Use cases: PR reviews, CI integration, pre-commit checks, release validation
+
+- **Breaking change detection for compare** (`--fail-on-breaking`) - Fail on breaking changes (requires git baseline):
+  - Detect breaking changes: removed props, removed events, removed contracts
+  - Exit with non-zero code when violations detected
+  - Designed for CI pipelines
+
+**Other planned features:**
 - CSS-in-JS support - Complete support for remaining libraries (Chakra UI, Ant Design)
 - Enhanced third-party component info (Phase 2) - Include prop types for third-party components (package names and versions completed in v0.3.8)
 - TypeScript type extraction - Capture full type definitions (generics, unions, intersections)
@@ -1014,7 +1093,8 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ---
 
 ## Version links
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.0
 [0.4.1]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.4.1
 [0.4.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.4.0
 [0.3.10]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.3.10

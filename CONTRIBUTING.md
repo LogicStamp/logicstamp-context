@@ -327,9 +327,9 @@ For manual verification, you can also test manually:
 
 - [ ] Basic context generation: `stamp context`
 - [ ] Custom directory: `stamp context ./src`
-- [ ] All profiles: `--profile llm-safe/llm-chat/ci-strict`
+- [ ] All profiles: `--profile llm-safe/llm-chat/ci-strict/watch-fast`
 - [ ] Code modes: `--include-code none/header/full`
-- [ ] Output formats: `--format json/pretty/ndjson`
+- [ ] Output formats: `--format json/pretty/ndjson/toon`
 - [ ] Depth traversal: `--depth 0/1/2`
 - [ ] Help command: `--help`
 - [ ] Error cases: Empty directory, invalid paths

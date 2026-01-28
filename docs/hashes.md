@@ -74,7 +74,7 @@ Derived from the AST and logic signature:
 - emits/events
 - state
 
-A stable `schemaVersion` (e.g., "0.3")
+A stable `schemaVersion` (e.g., "0.4")
 
 All arrays/objects are sorted deterministically for order-independence, via `stableStringify` and `sortObject`.
 
@@ -85,7 +85,7 @@ All arrays/objects are sorted deterministically for order-independence, via `sta
 
 ```json
 {
-  "schemaVersion": "0.3",
+  "schemaVersion": "0.4",
   "structure": { "...": "..." },
   "signature": { "...": "..." }
 }

@@ -28,9 +28,9 @@
 - Install globally: `npm install -g logicstamp-context`.
 - Show version: `stamp --version` or `stamp -v` displays the version number.
 - Default command `stamp context [target]` scans the current directory (or supplied path) and emits multiple `context.json` files (one per folder containing components) plus a `context_main.json` index file at the output root.
-- Key flags: `--depth` (dependency traversal), `--include-code none|header|full`, `--profile llm-chat|llm-safe|ci-strict`, `--out <file>` (output directory or file path), `--max-nodes <n>`, `--quiet` or `-q` (suppress verbose output, show only errors).
-- Profiles tune defaults: `llm-chat` (balanced), `llm-safe` (token-conservative), `ci-strict` (validation-first).
-- Supports pretty and NDJSON formats via `--format`.
+- Key flags: `--depth` (dependency traversal), `--include-code none|header|full`, `--profile llm-chat|llm-safe|ci-strict|watch-fast`, `--out <file>` (output directory or file path), `--max-nodes <n>`, `--quiet` or `-q` (suppress verbose output, show only errors).
+- Profiles tune defaults: `llm-chat` (balanced), `llm-safe` (token-conservative), `ci-strict` (validation-first), `watch-fast` (lighter style extraction for watch mode).
+- Supports multiple output formats via `--format`: `json` (default), `pretty`, `ndjson`, `toon`.
 - Compare command: `stamp context compare` compares all context files (multi-file mode) to detect drift, ADDED/ORPHANED folders, and component changes. Supports `--approve` for auto-updates, `--clean-orphaned` for cleanup, `--stats` for per-folder token deltas, and `--quiet` or `-q` to show only diffs.
 - Validate command: `stamp context validate [file]` checks context files for schema compliance. Supports `--quiet` or `-q` to show only errors.
 - Clean command: `stamp context clean [path]` removes context artifacts. Supports `--quiet` or `-q` to suppress verbose output.
@@ -94,7 +94,7 @@ The `context_main.json` file serves as a directory index:
     }
   ],
   "meta": {
-      "source": "logicstamp-context@0.4.1"
+      "source": "logicstamp-context@0.5.0"
   }
 }
 ```
@@ -117,7 +117,7 @@ Each folder's `context.json` contains an array of LogicStamp bundles. Each bundl
 - `graph.edges` lists dependency relationships between nodes (empty when analysis depth is 1).
 - `meta` section contains two critical fields:
   - `missing`: Array of unresolved dependencies. Each entry includes `name` (import path), `reason` (why it failed), and `referencedBy` (source component). Empty array indicates complete dependency resolution.
-  - `source`: Generator version string (e.g., `"logicstamp-context@0.4.1"`) for compatibility tracking.
+  - `source`: Generator version string (e.g., `"logicstamp-context@0.5.0"`) for compatibility tracking.
 - Example bundle skeleton:
 
 ```
@@ -133,7 +133,7 @@ Each folder's `context.json` contains an array of LogicStamp bundles. Each bundl
         {
           "contract": {
             "kind": "node:cli",
-            "version": {
+            "composition": {
               "functions": ["generateContext", "main", "printHelp"],
               "imports": ["../core/astParser.js", "..."]
             }
@@ -213,8 +213,8 @@ The structured form groups related concepts together. You can immediately answer
 
 **Structured approach:**
 - `graph.edges` explicitly shows `[ComponentA, ComponentB]` relationships
-- `logicSignature.props` lists all inputs with types
-- `logicSignature.state` shows reactive state
+- `interface.props` lists all inputs with types
+- `interface.state` shows reactive state
 - Dependency graph is pre-computed and traversable
 
 This eliminates inference work. You don't need to "figure out" relationships—they're already documented.
@@ -256,7 +256,7 @@ function Button({ onClick, children, variant }) {
 **Structured:**
 ```json
 {
-  "logicSignature": {
+  "interface": {
     "props": [
       { "name": "onClick", "type": "() => void", "required": true },
       { "name": "children", "type": "ReactNode", "required": true },
@@ -332,7 +332,7 @@ Even when token counts are similar, structured data is **significantly faster to
 
 ### Bundle Analysis
 
-- Use `version.functions` and `logicSignature` to reason about available APIs without scanning full source.
+- Use `composition.functions` and `interface` to reason about available APIs without scanning full source.
 - Combine multiple bundles when a task spans related modules; respect `max-nodes` constraints to stay within token budgets.
 - For deeper understanding, rerun the CLI with `--include-code full` or higher `--depth` before querying the assistant.
 - **Always inspect `meta.missing`** in each bundle to understand analysis completeness before providing architectural guidance.

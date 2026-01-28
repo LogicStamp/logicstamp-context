@@ -1,6 +1,8 @@
 # `stamp context compare` Command
 
-The `compare` command detects drift between context files. It works like **Jest snapshots**—automatically comparing your current code against a baseline context.
+The `compare` command detects drift between context files. It compares regenerated context against existing context files on disk.
+
+> **Note:** Context files are gitignored by default (`stamp init` sets this up). The compare command is primarily useful for **local development** - comparing your current code against previously generated context files. For CI-based comparison against git refs (e.g., `git:main`), see the [roadmap](https://logicstamp.dev/roadmap).
 
 ### Quick Start
 
@@ -417,7 +419,15 @@ Token stats show the delta for each folder with changes.
 
 ### CI/CD Integration
 
+> **Important:** By default, context files are gitignored and won't exist in CI. The examples below require either:
+> 1. **Committing context files** - Remove them from `.gitignore` (not recommended)
+> 2. **Manual baseline generation** - Generate context at two points and compare (shown in second example)
+>
+> **Coming soon:** Native git baseline support (`git:main`, `git:HEAD~1`) will simplify CI workflows without requiring committed context files.
+
 #### GitHub Actions Example (Auto-Mode Multi-File)
+
+> ⚠️ This example only works if context files are committed to git (not the default setup).
 
 ```yaml
 name: Context Drift Check
@@ -459,6 +469,8 @@ jobs:
 ```
 
 #### GitHub Actions Example (Manual Multi-File Comparison)
+
+> This workaround generates context at two git refs manually. Native git baseline support is planned.
 
 ```yaml
 name: Context Drift Check (Multi-File)
@@ -667,9 +679,10 @@ chmod +x .git/hooks/pre-commit
 The compare command detects context drift with multi-file support:
 
 - **Local dev**: auto-detects changes across all folders and prompts to update
-- **CI/CD**: detects drift across the entire project and fails builds automatically
 - **Jest-style**: familiar `--approve` flag workflow
 - **Zero config**: just run `stamp context compare`
 - **Three-tier output**: folder summary → component summary → detailed changes
 - **Orphaned file cleanup**: automatically clean up stale files with `--clean-orphaned`
+
+> **Note:** For real-time breaking change detection during development, use `stamp context --watch --strict-watch` instead. For CI-based comparison against git refs, see the [roadmap](https://logicstamp.dev/roadmap).
 

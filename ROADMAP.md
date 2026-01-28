@@ -419,8 +419,68 @@ Add support for Java codebases (experimental).
 
 These are longer-term features and improvements planned for future releases.
 
+### Comparison & Drift Detection
+
+#### Git Baseline for Compare
+**Status:** 🔴 Not Started
+
+Add git-based baseline support for context comparison, enabling meaningful drift detection against known reference points.
+
+**Current Behavior:**
+- ✅ Watch mode compares against previous state (rolling baseline)
+- ✅ `stamp context compare` compares disk files vs freshly generated
+- ❌ No git baseline support
+
+**Why This Is Non-Trivial:**
+Context files are gitignored by design - they don't exist in git history. So git baseline can't simply "checkout context files from a ref". Instead, it must:
+1. Generate context from source code at the current state
+2. Generate context from source code at the baseline git ref
+3. Compare the two generated contexts
+
+**Planned Implementation:**
+- `--baseline git:HEAD` - Compare against last commit
+- `--baseline git:main` - Compare against main branch
+- `--baseline git:<ref>` - Compare against any git ref (branch, tag, commit)
+
+**Under the hood:**
+```
+stamp context compare --baseline git:main
+
+1. Generate context for current working tree → temp/current/
+2. Create git worktree at ref (or stash + checkout)
+3. Generate context for baseline ref → temp/baseline/
+4. Restore working directory
+5. Compare temp/baseline/ vs temp/current/
+6. Report drift/violations
+7. Cleanup temp directories
+```
+
+**Implementation Considerations:**
+- Use `git worktree` for clean isolation (avoids disrupting working directory)
+- Fallback to stash/checkout if worktrees unavailable
+- Cache baseline context if ref hasn't changed (optimization)
+- Handle uncommitted changes gracefully
+
+**Use Cases:**
+- PR review: "What changed in this branch vs main?"
+- CI integration: "Did this PR introduce breaking changes?"
+- Pre-commit: "Am I about to push breaking changes?"
+- Release validation: "What changed since last release tag?"
+
+**Enables:**
+- `--fail-on-breaking` flag for `stamp context compare` (exit non-zero on breaking changes)
+
+**Note:** Can't use `--strict` as it already exists for missing dependency checking. No need for a `--no-fail` flag - without `--fail-on-breaking`, compare just shows drift without breaking change detection.
+- Meaningful CI integration for contract drift detection
+
+**Impact:** Enables meaningful drift detection against stable reference points. This is the prerequisite for CI-friendly strict mode.
+
+**Priority:** High
+
+---
+
 ### Performance & Optimization
-- **Incremental bundle caching** - Only regenerate changed bundles
+- ✅ **Incremental bundle caching** - Only regenerate changed bundles (implemented in watch mode v0.4.1)
 - **Output size optimization** - Further reduce token counts while maintaining accuracy
 
 ### Configuration & Extensibility
@@ -484,7 +544,7 @@ We welcome contributions! If you'd like to work on any of these roadmap items:
 
 For detailed release notes and changes, see [CHANGELOG.md](CHANGELOG.md).
 
-**Current Version:** v0.4.1 (Beta)
+**Current Version:** v0.5.0 (Beta)
 
 **Status:** Actively developed - we're working on improving accuracy and expanding feature coverage based on user feedback.
 

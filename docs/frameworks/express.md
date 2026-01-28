@@ -367,13 +367,13 @@ export default router;
 ```json
 {
   "kind": "node:api",
-  "version": {
+  "composition": {
     "variables": [],
     "hooks": [],
     "components": [],
     "functions": ["getAllUsers", "getUserById", "createUser"]
   },
-  "logicSignature": {
+  "interface": {
     "props": {},
     "emits": {},
     "apiSignature": {

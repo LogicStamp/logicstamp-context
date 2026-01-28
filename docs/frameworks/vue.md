@@ -461,13 +461,13 @@ export default function UserProfile() {
 ```json
 {
   "kind": "vue:component",
-  "version": {
+  "composition": {
     "variables": [],
     "hooks": ["ref", "computed", "onMounted"],
     "components": [],
     "functions": ["UserProfile", "fetchUser"]
   },
-  "logicSignature": {
+  "interface": {
     "props": {},
     "emits": {},
     "state": {
@@ -502,13 +502,13 @@ export function useLocalStorage<T>(key: string, defaultValue: T) {
 ```json
 {
   "kind": "vue:composable",
-  "version": {
+  "composition": {
     "variables": ["stored"],
     "hooks": ["ref", "watch"],
     "components": [],
     "functions": ["useLocalStorage"]
   },
-  "logicSignature": {
+  "interface": {
     "props": {},
     "emits": {},
     "state": {

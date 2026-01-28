@@ -8,7 +8,7 @@ LogicStamp uses semantic versioning for schemas:
 
 | Schema | Current Version | Purpose |
 |--------|----------------|---------|
-| `UIFContract` | `0.3` | Component contract structure |
+| `UIFContract` | `0.4` | Component contract structure |
 | `LogicStampBundle` | `0.1` | LLM context bundle format |
 | `LogicStampIndex` | `0.2` | Main index for multi-file context |
 
@@ -16,23 +16,23 @@ LogicStamp uses semantic versioning for schemas:
 
 Component contract structure embedded in bundles.
 
-### Schema Version: `0.3`
+### Schema Version: `0.4`
 
 ```typescript
 interface UIFContract {
   type: "UIFContract";
-  schemaVersion: "0.3";
+  schemaVersion: "0.4";
   kind: "react:component" | "react:hook" | "vue:component" | "vue:composable" | "ts:module" | "node:cli";
   description?: string;
-  version: {
+  composition: {
     variables: string[];
     hooks: string[];
     components: string[];
     functions: string[];
   };
-  logicSignature: {
+  interface: {
     props: Record<string, PropSignature>;
-    events: Record<string, EventSignature>;
+    emits: Record<string, EventSignature>;
     state: Record<string, StateSignature>;
   };
   exports?: "default" | "named" | { named: string[] };  // Optional export metadata
@@ -155,16 +155,16 @@ interface PageLayoutMetadata {
 ```json
 {
   "type": "UIFContract",
-  "schemaVersion": "0.3",
+  "schemaVersion": "0.4",
   "kind": "react:component",
   "description": "Button component for user interactions",
-  "version": {
+  "composition": {
     "variables": ["count"],
     "hooks": ["useState"],
     "components": ["Icon"],
     "functions": ["handleClick"]
   },
-  "logicSignature": {
+  "interface": {
     "props": {
       "onClick": {
         "type": "function",
@@ -175,7 +175,7 @@ interface PageLayoutMetadata {
         "optional": false
       }
     },
-    "events": {},
+    "emits": {},
     "state": {
       "isLoading": {
         "type": "boolean"
@@ -192,18 +192,18 @@ interface PageLayoutMetadata {
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `type` | `"UIFContract"` | ✅ | Contract type identifier |
-| `schemaVersion` | `"0.3"` | ✅ | Schema version for compatibility |
+| `schemaVersion` | `"0.4"` | ✅ | Schema version for compatibility |
 | `kind` | `string` | ✅ | Component type (react:component, react:hook, etc.) |
 | `description` | `string` | ❌ | Human-readable description |
-| `version` | `object` | ✅ | Structural composition |
-| `version.variables` | `string[]` | ✅ | Named variables in component |
-| `version.hooks` | `string[]` | ✅ | React hooks used |
-| `version.components` | `string[]` | ✅ | Child components used |
-| `version.functions` | `string[]` | ✅ | Named functions defined |
-| `logicSignature` | `object` | ✅ | Public API contract |
-| `logicSignature.props` | `object` | ✅ | Component props |
-| `logicSignature.events` | `object` | ✅ | Component events |
-| `logicSignature.state` | `object` | ✅ | Component state |
+| `composition` | `object` | ✅ | Structural composition |
+| `composition.variables` | `string[]` | ✅ | Named variables in component |
+| `composition.hooks` | `string[]` | ✅ | React hooks used |
+| `composition.components` | `string[]` | ✅ | Child components used |
+| `composition.functions` | `string[]` | ✅ | Named functions defined |
+| `interface` | `object` | ✅ | Public API contract |
+| `interface.props` | `object` | ✅ | Component props |
+| `interface.emits` | `object` | ✅ | Component events |
+| `interface.state` | `object` | ✅ | Component state |
 | `exports` | `string \| object` | ❌ | Export metadata: `"default"`, `"named"`, or `{ named: string[] }` |
 | `style` | `StyleMetadata` | ❌ | Style metadata (only when `--include-style` is used) |
 | `semanticHash` | `string` | ✅ | Logic-based hash (uif:...) |
@@ -311,7 +311,9 @@ interface BundleEdge {
 interface MissingDependency {
   name: string;
   reason: "external package" | "file not found" | "outside scan path" | "max depth exceeded" | "circular dependency";
-  referencedBy: string; // Component that imports it
+  referencedBy?: string; // Component that imports it
+  packageName?: string; // Extracted package name for third-party dependencies
+  packageVersion?: string; // Version from package.json (if available)
 }
 ```
 
@@ -333,23 +335,23 @@ interface MissingDependency {
         "entryId": "src/components/Button.tsx",
         "contract": {
           "type": "UIFContract",
-          "schemaVersion": "0.3",
+          "schemaVersion": "0.4",
           "kind": "react:component",
           "description": "Button component",
-          "version": {
+          "composition": {
             "variables": [],
             "hooks": ["useState"],
             "components": [],
             "functions": ["Button"]
           },
-          "logicSignature": {
+          "interface": {
             "props": {
               "onClick": {
                 "type": "function",
                 "signature": "() => void"
               }
             },
-            "events": {},
+            "emits": {},
             "state": {}
           },
           "exports": "default",
@@ -399,7 +401,7 @@ interface MissingDependency {
         "referencedBy": "src/components/Button.tsx"
       }
     ],
-      "source": "logicstamp-context@0.4.x"
+      "source": "logicstamp-context@0.5.x"
   }
 }
 ```
@@ -493,7 +495,7 @@ interface FolderEntry {
     }
   ],
   "meta": {
-      "source": "logicstamp-context@0.4.x"
+      "source": "logicstamp-context@0.5.x"
   }
 }
 ```
