@@ -15,21 +15,21 @@ Contracts are extracted automatically from your TypeScript/React/Vue files and e
 
 ## Contract Structure
 
-Each UIF contract follows the `UIFContract` schema (version `0.3`):
+Each UIF contract follows the `UIFContract` schema (version `0.4`):
 
 ```json
 {
   "type": "UIFContract",
-  "schemaVersion": "0.3",
+  "schemaVersion": "0.4",
   "kind": "react:component",
   "description": "Component description from JSDoc",
-  "version": {
+  "composition": {
     "variables": ["count", "isOpen"],
     "hooks": ["useState", "useEffect"],
     "components": ["Button", "Card"],
     "functions": ["handleClick", "validate"]
   },
-  "logicSignature": {
+  "interface": {
     "props": {
       "onClick": {
         "type": "function",
@@ -40,7 +40,7 @@ Each UIF contract follows the `UIFContract` schema (version `0.3`):
         "optional": false
       }
     },
-    "events": {
+    "emits": {
       "onSubmit": {
         "type": "function",
         "signature": "(data: FormData) => void"
@@ -78,7 +78,7 @@ Component type identifier:
 ### `description`
 Human-readable description extracted from JSDoc comments or inferred from the component name.
 
-### `version`
+### `composition`
 Structural composition of the component:
 
 | Field | Type | Description |
@@ -88,9 +88,9 @@ Structural composition of the component:
 | `components` | `string[]` | Child components imported and used |
 | `functions` | `string[]` | Named functions defined in the component |
 
-**Note:** This captures the structural footprint, not implementation details. Adding a new hook or function changes the version.
+**Note:** This captures the structural footprint, not implementation details. Adding a new hook or function changes the composition.
 
-### `logicSignature`
+### `interface`
 The public API contract of the component:
 
 #### `props`
@@ -99,7 +99,7 @@ Object mapping prop names to their type information:
 - `signature` – Function signature for function props (e.g., `"() => void"`)
 - `optional` – Boolean indicating if the prop is optional
 
-#### `events`
+#### `emits`
 Object mapping event names to their signatures. For React components, these are typically callback props that represent events.
 
 #### `state`
@@ -313,7 +313,7 @@ When generating context with `--include-code header`, LogicStamp includes the `@
   "entryId": "src/components/Button.tsx",
   "contract": {
     "type": "UIFContract",
-    "schemaVersion": "0.3",
+    "schemaVersion": "0.4",
     "kind": "react:component",
     "description": "Button component for user interactions",
     // ... rest of contract
@@ -386,7 +386,7 @@ stamp context validate src/components/context.json
 
 The validator checks:
 - Contract structure matches `UIFContract` schema
-- Schema version is `0.3`
+- Schema version is `0.4`
 - Required fields are present
 - Hash formats are correct
 
@@ -422,7 +422,7 @@ Contracts are embedded within LogicStamp bundles:
         "entryId": "src/components/Button.tsx",
         "contract": {
           "type": "UIFContract",
-          "schemaVersion": "0.3",
+          "schemaVersion": "0.4",
           // ... contract data
         }
       }

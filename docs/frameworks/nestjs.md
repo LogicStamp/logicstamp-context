@@ -511,7 +511,7 @@ export class UsersController {
 ```json
 {
   "kind": "node:api",
-  "version": {
+  "composition": {
     "variables": [],
     "hooks": [],
     "components": [],
@@ -531,7 +531,7 @@ export class UsersController {
       "methods": ["findAll", "findOne", "create", "update", "remove"]
     }
   },
-  "logicSignature": {
+  "interface": {
     "props": {},
     "emits": {},
     "apiSignature": {

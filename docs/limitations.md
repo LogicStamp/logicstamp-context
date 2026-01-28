@@ -46,10 +46,10 @@ export function useTypewriter(text: string, speed = 30, pause = 800) {
 **Context Output:**
 ```json
 {
-  "version": {
+  "composition": {
     "hooks": ["useTypewriter"]
   },
-  "logic": {
+  "interface": {
     "props": {
       "text": "string",
       "speed": { "type": "number", "optional": true },
@@ -836,10 +836,10 @@ export function useTypewriter(text: string, speed = 30, pause = 800) {
 **Context Output:**
 ```json
 {
-  "version": {
+  "composition": {
     "hooks": ["useTypewriter"]
   },
-  "logic": {
+  "interface": {
     "props": {
       "text": "string",
       "speed": { "type": "number", "optional": true },

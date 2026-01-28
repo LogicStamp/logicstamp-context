@@ -50,7 +50,9 @@ This makes rebuilds significantly faster than full regeneration.
 
 ### Change Detection
 
-Watch mode detects and displays different types of changes:
+Watch mode detects and displays what changed in your components (informational):
+
+> **Note:** Regular watch mode shows changes but doesn't classify them as "breaking". Use `--strict-watch` to detect breaking changes (removed props, events, etc.) with violation tracking and exit codes.
 
 ```
 📝 Changed: src/components/Button.tsx
@@ -205,7 +207,7 @@ By default, watch mode does not write log files. Use `--log-file` when you need 
 
 ## Strict Watch Mode
 
-Strict watch mode (`--strict-watch`) tracks breaking changes and violations during development. It's designed for CI-friendly workflows where you want to detect API changes in real-time.
+Strict watch mode (`--strict-watch`) tracks breaking changes and violations during development. It detects API changes in real-time as you code.
 
 ```bash
 # Enable strict watch mode
@@ -288,16 +290,7 @@ When you stop watch mode (Ctrl+C), it exits with:
 - **Exit code 0** - No errors detected during the session
 - **Exit code 1** - One or more errors detected during the session
 
-This makes strict watch mode CI-friendly:
-
-```bash
-# In a CI script - will fail if breaking changes occurred
-stamp context --watch --strict-watch &
-WATCH_PID=$!
-# ... run tests or other checks ...
-kill -SIGINT $WATCH_PID
-wait $WATCH_PID || echo "Breaking changes detected!"
-```
+This enables workflows where you want to track violations across a development session.
 
 ### Non-blocking Mode (Awareness Only)
 
@@ -337,17 +330,17 @@ If no violations were detected:
 
 ### Use Cases
 
-**1. Pre-commit validation**
-Run strict watch mode while making changes to catch breaking changes before committing.
+**1. Active development**
+Run strict watch mode while coding to catch breaking changes in real-time.
 
-**2. PR review workflows**
-Track API changes during code review to understand impact.
+**2. Refactoring sessions**
+Track API changes during refactoring to understand impact.
 
 **3. Design system maintenance**
 Monitor component contract stability across changes.
 
-**4. CI preview environments**
-Run in CI to generate violation reports for review.
+**4. Pre-commit review**
+Check the violations report before committing to understand what changed.
 
 ## Examples
 

@@ -138,7 +138,7 @@ All options from `stamp context` are supported except `--compare-modes`. The sty
 | `--format <fmt>` | `-f` | `json` | Output format: `json`, `pretty`, `ndjson`, `toon`. |
 | `--out <file>` | `-o` | `context.json` | Output directory or file path. If a `.json` file is specified, its directory is used as the output directory. Otherwise, the path is used as the output directory. All context files will be written within this directory structure. |
 | `--max-nodes <n>` | `-m` | `100` | Maximum graph nodes per bundle. |
-| `--profile <name>` | | `llm-chat` | Preset configuration (`llm-chat`, `llm-safe`, `ci-strict`). |
+| `--profile <name>` | | `llm-chat` | Preset configuration (`llm-chat`, `llm-safe`, `ci-strict`, `watch-fast`). |
 | `--strict` | `-s` | `false` | Fail when dependencies are missing. |
 | `--predict-behavior` | | `false` | Include experimental behavioral predictions. |
 | `--dry-run` | | `false` | Skip writing the output; display summary only. |
@@ -147,6 +147,7 @@ All options from `stamp context` are supported except `--compare-modes`. The sty
 | `--skip-gitignore` | | `false` | Skip `.gitignore` setup (never prompt or modify). |
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors). |
 | `--watch` | `-w` | `false` | Watch for file changes and regenerate automatically. |
+| `--strict-watch` | | `false` | Enable strict watch mode - track breaking changes and violations. |
 | `--debug` | | `false` | Show detailed hash information in watch mode. |
 | `--log-file` | | `false` | Write structured change logs to file (watch mode only, for change notifications). |
 | `--help` | `-h` | | Print usage help. |
@@ -180,6 +181,9 @@ stamp context style --watch --debug
 
 # Watch with structured change logs (for change notifications)
 stamp context style --watch --log-file
+
+# Strict watch mode - track breaking changes
+stamp context style --watch --strict-watch
 
 # Equivalent syntax using flag
 stamp context --include-style

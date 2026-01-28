@@ -44,7 +44,7 @@ These options are available at the top level (before any subcommand):
 
 **Examples:**
 ```bash
-stamp --version    # Shows: fox mascot + "Version: 0.4.1"
+stamp --version    # Shows: fox mascot + "Version: 0.5.0"
 stamp -v           # Same as --version
 stamp --help       # Shows main help
 stamp -h           # Same as --help
@@ -199,6 +199,7 @@ If a security report (`stamp_security_report.json`) exists, `stamp context` auto
 | `--skip-gitignore` | | `false` | Skip `.gitignore` setup (never prompt or modify). Default behavior is CI-friendly (skips unless config preference is 'added'). |
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors) |
 | `--watch` | `-w` | `false` | Watch for file changes and regenerate automatically |
+| `--strict-watch` | | `false` | Enable strict watch mode - track breaking changes and violations |
 | `--debug` | | `false` | Show detailed hash information in watch mode |
 | `--log-file` | | `false` | Write structured change logs to file (watch mode only, for change notifications) |
 
@@ -366,6 +367,9 @@ stamp context --watch --debug
 
 # Watch with structured change logs (for change notifications)
 stamp context --watch --log-file
+
+# Strict watch mode - track breaking changes and violations
+stamp context --watch --strict-watch
 ```
 
 **Features:**
@@ -373,6 +377,7 @@ stamp context --watch --log-file
 - **Change detection** - Shows what changed (props added/removed, hooks, state, etc.)
 - **Debouncing** - Batches rapid changes (500ms delay)
 - **Style support** - Works with `--include-style` for style metadata
+- **Strict mode** - Track breaking changes with `--strict-watch` (exits with code 1 if errors)
 
 **Watched file types:**
 - `.ts`, `.tsx` (always)
@@ -538,20 +543,22 @@ $ stamp context compare
 Update all context files? (y/N)
 ```
 
-**CI Integration**
+**Local development usage:**
 
 ```bash
-# Fail build if drift detected
-stamp context compare || exit 1
+# Compare regenerated context vs existing files
+stamp context compare
 
-# Auto-approve in CI (like jest -u)
+# Auto-approve updates (like jest -u)
 stamp context compare --approve
 
 # Show token impact
 stamp context compare --stats
 ```
 
-**See also:** [compare.md](./compare.md) for comprehensive documentation.
+> **Note:** Context files are gitignored by default, so `stamp context compare` is primarily useful for local development. CI-based comparison against git refs is planned for a future release.
+
+**See also:** [compare.md](cli/compare.md) for comprehensive documentation.
 
 ### `stamp context clean`
 
@@ -728,7 +735,7 @@ LogicStamp generates **structured context bundles** rather than raw source files
 - Reason about structure through implementation
 
 **Structured Approach:**
-- Read pre-categorized metadata (`layout.type`, `visual.colors`, `logicSignature.props`)
+- Read pre-categorized metadata (`layout.type`, `visual.colors`, `interface.props`)
 - Traverse explicit dependency graphs (`graph.edges`)
 - Query organized information directly
 - Reason about contracts without reading implementation
@@ -821,18 +828,13 @@ stamp context --depth 3 --include-code full --max-nodes 50
 
 ### CI/CD Integration
 
-**Typical CI/CD workflow:**
-- Context files are **generated fresh** during CI runs (not committed to git)
-- They're gitignored because they're regenerable artifacts (like build outputs)
-- CI generates them, uses them for validation/comparison, then discards them
-- **If you want to commit context files** (uncommon), skip gitignore setup: `stamp init --skip-gitignore`
-
-**Default behavior is CI-friendly:**
-- `stamp context` **does not modify `.gitignore` by default** - it respects config preferences or skips if no config exists
-- Use `--skip-gitignore` to explicitly prevent any `.gitignore` modifications
+**Current CI support:**
+- Context files are gitignored by default (regenerable artifacts)
+- CI can generate context files fresh and validate them
+- Useful for: validation, stats collection, ensuring generation succeeds
 
 ```bash
-# Generate context files fresh in CI (typical workflow)
+# Generate context files fresh in CI
 stamp context --skip-gitignore --quiet
 
 # Strict mode - fails on missing dependencies
@@ -840,9 +842,6 @@ stamp context --profile ci-strict --skip-gitignore
 
 # Validate generated context files
 stamp context validate
-
-# Compare context files to detect drift
-stamp context compare --approve
 
 # Generate stats for monitoring
 stamp context --stats --quiet
@@ -853,12 +852,14 @@ stamp context --stats --quiet
 # Install LogicStamp
 npm install -g logicstamp-context
 
-# Generate context files (fresh, not committed)
+# Generate context files (validates code is parseable)
 stamp context --skip-gitignore --quiet
 
-# Validate or compare as needed
+# Validate schema compliance
 stamp context validate || exit 1
 ```
+
+> **Note:** CI-based drift detection (comparing against git refs like `main` or `HEAD~1`) is planned for a future release. Currently, `stamp context compare` compares against existing context files on disk, which is useful for local development but not CI (since context files are gitignored). See the [roadmap](https://logicstamp.dev/roadmap) for planned features.
 
 ### Validation & QA
 
@@ -974,23 +975,23 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
           "entryId": "src/components/Button.tsx",
           "contract": {
             "type": "UIFContract",
-            "schemaVersion": "0.3",
+            "schemaVersion": "0.4",
             "kind": "react:component",
             "description": "Button - Interactive component",
-            "version": {
+            "composition": {
               "variables": [],
               "hooks": ["useState"],
               "components": [],
               "functions": ["Button"]
             },
-            "logicSignature": {
+            "interface": {
               "props": {
                 "onClick": {
                   "type": "function",
                   "signature": "() => void"
                 }
               },
-              "events": {},
+              "emits": {},
               "state": {}
             },
             "semanticHash": "uif:...",
@@ -1003,7 +1004,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp-context@0.4.1"
+      "source": "logicstamp-context@0.5.0"
     }
   }
 ]
@@ -1034,7 +1035,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
     }
   ],
   "meta": {
-            "source": "logicstamp-context@0.4.1"
+            "source": "logicstamp-context@0.5.0"
   }
 }
 ```
@@ -1044,7 +1045,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
 ### Contract Structure
 Each component contract includes:
 - **version**: Structural composition (hooks, components, functions)
-- **logicSignature**: API contract (props, events, state)
+- **interface**: API contract (props, events, state)
 - **semanticHash**: Unique hash based on logic (detects changes)
 - **fileHash**: Content hash (tracks modifications)
 
