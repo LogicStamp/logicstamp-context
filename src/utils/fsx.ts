@@ -202,8 +202,8 @@ export function resolvePath(...paths: string[]): string {
  */
 export async function fileExists(filePath: string): Promise<boolean> {
   try {
-    await stat(filePath);
-    return true;
+    const stats = await stat(filePath);
+    return stats.isFile();
   } catch (error) {
     const err = error as Error;
     debugError('fsx', 'fileExists', {

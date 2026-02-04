@@ -322,6 +322,38 @@ Even when token counts are similar, structured data is **significantly faster to
 3. **Filter by `entryId`**: Within a folder's context file, filter bundles by `entryId` to focus on relevant modules.
 4. **Combine multiple folders**: When a task spans multiple folders, load the relevant folder context files and combine their bundles.
 
+### Finding Components: Root vs Dependencies
+
+LogicStamp organizes components into two categories:
+
+- **Root components** - Components that have their own bundles (listed in `context_main.json` under each folder's `components` array). These are entry points that other components import.
+- **Dependencies** - Components that are imported by root components. They appear in the importing component's bundle as nodes in `graph.nodes[]`, not as separate root bundles.
+
+**Workflow for finding a component:**
+
+1. **Check `context_main.json` first** - Look in the `folders[]` array for the component's file name in the `components` list. If found, it's a root component with its own bundle.
+2. **If not found as a root** - The component is likely a dependency. Find which root component imports it:
+   - Search for import statements in source code, or
+   - Check bundles in the same folder (dependencies are typically in the same folder as their importing component)
+3. **Read the importing root's bundle** - The dependency's contract will be in `graph.nodes[]` of that bundle.
+
+**Example:**
+
+```
+FAQ.tsx is imported by src/app/page.tsx (line 7)
+→ FAQ is NOT in src/components/sections/context.json (not a root)
+→ FAQ IS in src/app/page.tsx bundle (as a dependency node)
+→ To access FAQ: read src/app/context.json with rootComponent: "page"
+```
+
+**Why this matters:**
+
+- Root components = own bundles (e.g., `Features.tsx`, `Stats.tsx` in `src/components/sections/context.json`)
+- Dependencies = included in importing root component's bundle graph (e.g., `FAQ.tsx` in `src/app/page.tsx` bundle)
+- This structure matches how developers think: pages/features are entry points, their dependencies are included automatically
+
+**Common mistake:** Looking for a component as a root when it's actually a dependency. Always check `context_main.json` first to see if it's listed as a root component.
+
 ### Working with the Index
 
 - Use `context_main.json` to:
