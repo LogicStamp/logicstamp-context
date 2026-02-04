@@ -11,6 +11,9 @@ coverage/
 tests/e2e/output/
 stamp_security_report.json
 
+# LogicStamp config and runtime files
+.logicstamp/
+
 # IDE
 .vscode/
 .idea/

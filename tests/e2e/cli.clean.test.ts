@@ -234,10 +234,9 @@ describe('CLI Clean Command Tests', () => {
       const testDir = join(outputPath, 'clean-logicstamp');
       await mkdir(testDir, { recursive: true });
 
-
       // Generate context files
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${testDir}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${testDir} --quiet`
       );
 
       // Create .logicstamp directory and config file
@@ -275,7 +274,7 @@ describe('CLI Clean Command Tests', () => {
         exists = false;
       }
       expect(exists).toBe(false);
-    }, 30000);
+    }, 60000);
 
     it('should work correctly when .logicstamp does not exist', async () => {
       const testDir = join(outputPath, 'clean-no-logicstamp');

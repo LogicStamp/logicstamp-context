@@ -37,7 +37,7 @@ export default defineConfig({
     globalSetup: ['./tests/setup.ts'],
 
     // Reporter
-    reporter: ['verbose'],
+    reporters: ['verbose'],
 
     // Globals
     globals: true,
