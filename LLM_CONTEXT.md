@@ -94,7 +94,7 @@ The `context_main.json` file serves as a directory index:
     }
   ],
   "meta": {
-      "source": "logicstamp-context@0.5.0"
+      "source": "logicstamp-context@0.5.1"
   }
 }
 ```
@@ -117,7 +117,7 @@ Each folder's `context.json` contains an array of LogicStamp bundles. Each bundl
 - `graph.edges` lists dependency relationships between nodes (empty when analysis depth is 1).
 - `meta` section contains two critical fields:
   - `missing`: Array of unresolved dependencies. Each entry includes `name` (import path), `reason` (why it failed), and `referencedBy` (source component). Empty array indicates complete dependency resolution.
-  - `source`: Generator version string (e.g., `"logicstamp-context@0.5.0"`) for compatibility tracking.
+  - `source`: Generator version string (e.g., `"logicstamp-context@0.5.1"`) for compatibility tracking.
 - Example bundle skeleton:
 
 ```
@@ -326,24 +326,28 @@ Even when token counts are similar, structured data is **significantly faster to
 
 LogicStamp organizes components into two categories:
 
-- **Root components** - Components that have their own bundles (listed in `context_main.json` under each folder's `components` array). These are entry points that other components import.
-- **Dependencies** - Components that are imported by root components. They appear in the importing component's bundle as nodes in `graph.nodes[]`, not as separate root bundles.
+- **Root components** - Components that have their own bundles (listed in `context_main.json` under each folder's `components` array). These are entry points that are **not imported by any other components** in the project. Each root component gets its own bundle.
+- **Dependencies** - Components that are imported by root components. They appear in the importing component's bundle as nodes in `graph.nodes[]`, not as separate root bundles. A dependency can appear in multiple bundles if it's imported by multiple root components.
 
 **Workflow for finding a component:**
 
-1. **Check `context_main.json` first** - Look in the `folders[]` array for the component's file name in the `components` list. If found, it's a root component with its own bundle.
-2. **If not found as a root** - The component is likely a dependency. Find which root component imports it:
-   - Search for import statements in source code, or
-   - Check bundles in the same folder (dependencies are typically in the same folder as their importing component)
-3. **Read the importing root's bundle** - The dependency's contract will be in `graph.nodes[]` of that bundle.
+1. **Check `context_main.json` first** - Look in the `folders[]` array for the component's file name in the `components` list. If found, it's a root component with its own bundle in that folder's `context.json`.
+2. **If not found as a root** - The component is likely a dependency. Find which root component(s) import it:
+   - Search for import statements in source code to identify importing components
+   - Check bundles in the same folder (dependencies are often in the same folder as their importing component)
+   - Search through bundle `graph.nodes[]` arrays to find which bundles include the dependency
+3. **Read the importing root's bundle** - The dependency's contract will be in `graph.nodes[]` of that bundle. Each bundle in a folder's `context.json` is an array - find the bundle whose `entryId` matches the importing root component.
 
 **Example:**
 
 ```
-FAQ.tsx is imported by src/app/page.tsx (line 7)
-→ FAQ is NOT in src/components/sections/context.json (not a root)
-→ FAQ IS in src/app/page.tsx bundle (as a dependency node)
-→ To access FAQ: read src/app/context.json with rootComponent: "page"
+FAQ.tsx is imported by src/app/page.tsx
+→ FAQ is NOT listed in context_main.json folders[].components (not a root)
+→ FAQ IS in src/app/page.tsx bundle (as a dependency node in graph.nodes[])
+→ To access FAQ: 
+   1. Read src/app/context.json (array of bundles)
+   2. Find bundle with entryId: "src/app/page.tsx"
+   3. Look in that bundle's graph.nodes[] for FAQ.tsx contract
 ```
 
 **Why this matters:**
@@ -351,6 +355,7 @@ FAQ.tsx is imported by src/app/page.tsx (line 7)
 - Root components = own bundles (e.g., `Features.tsx`, `Stats.tsx` in `src/components/sections/context.json`)
 - Dependencies = included in importing root component's bundle graph (e.g., `FAQ.tsx` in `src/app/page.tsx` bundle)
 - This structure matches how developers think: pages/features are entry points, their dependencies are included automatically
+- A component can be a dependency in multiple bundles if imported by multiple root components
 
 **Common mistake:** Looking for a component as a root when it's actually a dependency. Always check `context_main.json` first to see if it's listed as a root component.
 

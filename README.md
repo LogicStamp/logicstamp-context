@@ -7,30 +7,49 @@
     </picture>
   </a>
 
-### Deterministic codebase context for AI assistants.
+### Deterministic architectural context for TypeScript codebases.
+
+  Understand your codebase through explicit component contracts and relationships.
 
   <small><em>TypeScript · React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
   <br/>
   <br/>
 
-  **Structured component contracts for AI - props, hooks, dependencies extracted and organized.**
+  **Structured component contracts: props, hooks, deps, composition.**
+  
+  <small>Props, hooks, dependencies, and composition relationships extracted and modeled.</small>
+  <br/>
+  <small><em>Designed to work alongside Claude, Cursor, Copilot Chat, and MCP-based agents (via JSON/TOON context bundles).</em></small>
 
   <br/>
   <a href="https://github.com/LogicStamp">
     <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="100" style="min-width: 80px;">
   </a>
 
-  [![Version](https://img.shields.io/badge/version-0.5.0-8b5cf6.svg)](https://www.npmjs.com/package/logicstamp-context)
+  [![Version](https://img.shields.io/badge/version-0.5.1-8b5cf6.svg)](https://www.npmjs.com/package/logicstamp-context)
   ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
   [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
   ![Node](https://img.shields.io/badge/node-%3E%3D18.18.0-brightgreen.svg)
   [![CI](https://github.com/LogicStamp/logicstamp-context/workflows/CI/badge.svg)](https://github.com/LogicStamp/logicstamp-context/actions)
 
 </div>
+<br/>
+
+<details>
+<summary><strong>📌 TL;DR</strong></summary>
+
+**What it does:** Uses AST parsing to extract deterministic component contracts from your TypeScript codebase.
+
+**What you get:** Structured JSON bundles (props, hooks, dependencies, APIs) optimized for AI consumption.
+
+**Why it matters:** Gives AI assistants explicit architectural context without reading implementations - no more hallucinated prop names or missed dependencies.
+
+</details>
+<br/>
 
 ## The Problem
 
-AI coding assistants read your source code but don't understand your architecture. They hallucinate prop names, invent dependencies, and miss breaking changes - because raw source code isn't structured context.
+AI coding assistants can read your source code, but they lack explicit architectural context. They often infer prop names, invent dependencies, and miss breaking changes - because raw source code isn't structured context.
 
 **LogicStamp generates deterministic component contracts that:**
 - Stay in sync with your code (watch mode auto-regenerates)
@@ -40,12 +59,46 @@ AI coding assistants read your source code but don't understand your architectur
 ![LogicStamp MCP Workflow](./assets/logicstamp-workflow.gif)
 *Context bundles generated and consumed across MCP-powered AI workflows.*
 
+**Same commit ⇒ same context output.** Compare outputs to detect architectural drift.
+
+```
+TypeScript Code  →  AST Parsing  →  Deterministic Contracts  →  AI Assistant
+   (.ts/.tsx)        (ts-morph)      (context.json bundles)      (Claude, Cursor)
+```
+
+## What LogicStamp Is (and Isn't)
+
+LogicStamp is intentionally narrow in scope. It focuses on architectural context extraction and avoids overlapping with build, linting, or code generation tools.
+
+**LogicStamp IS:**
+- ✅ **An AST-based static analysis tool** - Uses the TypeScript compiler AST (via ts-morph) to extract component contracts, props, hooks, and dependencies. Not regex or text parsing. Extraction is type-aware and deterministic
+- ✅ **A deterministic context generator** - Produces structured architectural contract bundles optimized for AI consumption
+- ✅ **A replacement for manual context gathering** - Contracts provide immediate architectural understanding for AI assistants
+- ✅ **Local and offline-first** - Runs entirely on your machine, no cloud services or network calls
+- ✅ **Deterministic** - Same code always produces the same contracts (auditable in version control)
+- ✅ **Framework-aware** - Understands React, Next.js, Vue, Express, NestJS patterns and extracts relevant metadata
+- ✅ **Non-opinionated** - Describes what exists in your codebase without enforcing patterns, architectures, or best practices
+- ✅ **Designed for AI-assisted development workflows** - Enables AI assistants to reason about component architecture, dependencies, and composition accurately
+
+**LogicStamp IS NOT:**
+- ❌ **A code generator** - It doesn't write or modify your source code
+- ❌ **A linter or formatter** - It doesn't check code quality or enforce style rules
+- ❌ **A build tool** - It doesn't compile, bundle, or transform your code
+- ❌ **A runtime tool** - It analyzes static source code rather than executing applications
+- ❌ **A replacement for TypeScript** - It extracts type information but does not perform type checking
+- ❌ **A testing framework** - It doesn't run tests or generate test code
+- ❌ **A cloud service** - All processing happens locally on your machine
+- ❌ **An AI behavior controller** - It does not instruct, constrain, or modify AI responses. It only provides structured context
+
+⚙️ **Think of it as:** A compiler for your codebase that emits deterministic, machine-readable architectural contracts instead of bytecode or documentation.
+
 <br/>
 <details>
 <summary><strong>📑 Table of Contents</strong></summary>
 
 - [Quick Start](#quick-start)
 - [Drift Detection](#drift-detection)
+- [What LogicStamp Is (and Isn't)](#what-logicstamp-is-and-isnt)
 - [Why Structured Context?](#why-structured-context)
 - [Features](#features)
 - [Watch Mode](#watch-mode)
@@ -86,16 +139,18 @@ stamp context
 
 ## Drift Detection
 
-Compare regenerated context against existing context files:
+Compare regenerated context against existing context files (useful for one-time checks and CI workflows):
 
 ```bash
 stamp context compare          # detect changes
 stamp context compare --approve  # update (like jest -u)
 ```
 
-Useful during development to see what changed. Shows added/removed components, changed props, hooks, dependencies.
+Shows added/removed components, changed props, hooks, dependencies.
 
-> **Note:** Context files are gitignored by default. For CI-based drift detection (comparing against git refs like `main` or `HEAD~1`), see the [roadmap](https://logicstamp.dev/roadmap) - this feature is planned for a future release.
+> **💡 Tip:** If you're using [watch mode](#watch-mode), context files are automatically regenerated and changes are shown in real-time. Use `compare` for one-time checks or CI workflows.
+
+> **ℹ️ Note:** Context files are gitignored by default. For CI-based drift detection (comparing against git refs like `main` or `HEAD~1`), see the [roadmap](https://logicstamp.dev/roadmap) - this feature is planned for a future release and will use `stamp context compare --baseline git:<ref>`.
 
 ## Why Structured Context?
 
@@ -105,6 +160,7 @@ Useful during development to see what changed. Shows added/removed components, c
 | Props/hooks inferred (often wrong) | Props/hooks explicit and verified |
 | No way to know if context is stale | Watch mode catches changes in real-time |
 | Different prompts = different understanding | Deterministic: same code = same contract |
+| Manual context gathering: "Here's my Button component..." | Structured contracts: AI understands architecture automatically |
 
 **The key insight:** AI assistants don't need your implementation - they need your *interfaces*. LogicStamp extracts what matters and discards the noise.
 
@@ -136,7 +192,7 @@ LogicStamp generates:
 }
 ```
 
-Pre-parsed. Categorized. Deterministic. The AI reads contracts, not implementations.
+Pre-parsed. Categorized. Stable. The AI reads contracts, not implementations.
 
 ## ⚡ Features
 
@@ -149,7 +205,7 @@ Pre-parsed. Categorized. Deterministic. The AI reads contracts, not implementati
 **Analysis:**
 - React/Next.js/Vue component extraction (props, hooks, state, deps)
 - Backend API extraction (Express.js, NestJS routes and controllers)
-- Dependency graphs with cycle detection
+- Dependency graphs (handles circular dependencies)
 - Style metadata extraction (Tailwind, SCSS, MUI, shadcn)
 - Next.js App Router detection (client/server, layouts, pages)
 
@@ -175,9 +231,9 @@ Strict watch catches breaking changes that affect consumers:
 
 | Violation | Example |
 |-----------|---------|
-| `prop_removed` | Removed `disabled` prop from Button |
-| `event_removed` | Removed `onSubmit` callback |
-| `function_removed` | Deleted exported `formatDate()` |
+| `breaking_change_prop_removed` | Removed `disabled` prop from Button |
+| `breaking_change_event_removed` | Removed `onSubmit` callback |
+| `breaking_change_function_removed` | Deleted exported `formatDate()` |
 | `contract_removed` | Deleted entire component |
 
 **Recommended workflow:**
@@ -192,16 +248,18 @@ Context always fresh as you code
 ## How it Works
 
 1. **Scan** - Finds all `.ts` and `.tsx` files in your project
-2. **Analyze** - Parses components and APIs using TypeScript AST
+2. **Analyze** - Parses components and APIs using TypeScript AST (Abstract Syntax Tree) via `ts-morph`
 3. **Extract** - Builds contracts with props, hooks, state, signatures
 4. **Graph** - Creates dependency graph showing relationships
 5. **Bundle** - Packages context optimized for AI consumption
 6. **Organize** - Groups by folder, writes `context.json` files
 7. **Index** - Creates `context_main.json` with metadata and statistics
 
+**Why AST parsing matters:** Unlike text-based parsing (regex, string matching), AST parsing understands TypeScript's syntax structure, type information, and code semantics. This enables LogicStamp to accurately extract prop types, detect hooks, understand component composition, and handle complex patterns reliably - making contracts deterministic and trustworthy.
+
 No pre-compilation needed. One command.
 
-> **Tip:** Use `stamp context` for basic contracts. Use `stamp context style` when you need style metadata (Tailwind classes, SCSS selectors, layout patterns).
+> **💡Tip:** Use `stamp context` for basic contracts. Use `stamp context style` when you need style metadata (Tailwind classes, SCSS selectors, layout patterns).
 
 ## MCP Server
 
@@ -266,7 +324,7 @@ LogicStamp protects sensitive data in generated context:
 - **Security scanning by default** - `stamp init` scans for secrets (API keys, passwords, tokens)
 - **Automatic sanitization** - Detected secrets replaced with `"PRIVATE_DATA"` in output
 - **Manual exclusions** - Use `stamp ignore <file>` to exclude files via `.stampignore`
-- **Safe by default** - Only metadata included; credentials only appear in `--include-code full` mode
+- **Safe by default** - Only metadata included. Credentials only appear in `--include-code full` mode
 
 > **⚠️ Seeing `"PRIVATE_DATA"` in output?** Review `stamp_security_report.json`, remove hardcoded secrets from source, use environment variables instead.
 
@@ -316,13 +374,13 @@ stamp context clean [path]         # Remove generated files
 | **Vue 3** | Partial | Composition API (TS/TSX only, not .vue SFC) |
 | **Express.js** | Full | Routes, middleware, API signatures |
 | **NestJS** | Full | Controllers, decorators, API signatures |
-| **UI Libraries** | Full | Material UI, ShadCN, Radix, Tailwind, Styled Components, SCSS |
+| **UI Libraries** | Full | Material UI, ShadCN, Radix, Tailwind, Styled Components, SCSS, Chakra UI, Ant Design (component usage, props, composition; not raw CSS) |
 
 > **ℹ️ Note:** LogicStamp analyzes `.ts` and `.tsx` files only. JavaScript files are not analyzed.
 
 ## Documentation
 
-**[Full documentation at logicstamp.dev/docs](https://logicstamp.dev/docs)**
+**Full documentation at [logicstamp.dev/docs](https://logicstamp.dev/docs)**
 
 - [Getting Started Guide](https://logicstamp.dev/docs/getting-started)
 - [Usage Guide](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md)

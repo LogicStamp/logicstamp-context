@@ -181,6 +181,25 @@ Identifies which styling approaches are used in the component:
     - `usesMakeStyles` – Boolean if makeStyles (legacy) is used
     - `usesSystemProps` – Boolean if system props are used on Box/Stack components
 
+- **`antd`** – Ant Design component library information:
+  - `components` – Array of Ant Design component names used (e.g., `["Button", "Card", "Form", "Input", "Table"]`)
+  - `packages` – Array of Ant Design packages imported (e.g., `["antd", "@ant-design/icons"]`)
+  - `features` – Object indicating Ant Design features:
+    - `usesTheme` – Boolean if theme is used (useToken, ConfigProvider, getDesignToken)
+    - `usesConfigProvider` – Boolean if ConfigProvider is used
+    - `usesForm` – Boolean if Form components are used
+    - `usesLocale` – Boolean if locale/internationalization features are used
+    - `usesIcons` – Boolean if @ant-design/icons are used
+
+- **`chakra`** – Chakra UI component library information:
+  - `components` – Array of Chakra UI component names used (e.g., `["Button", "Card", "Box", "Stack", "Input"]`)
+  - `packages` – Array of Chakra UI packages imported (e.g., `["@chakra-ui/react"]`)
+  - `features` – Object indicating Chakra UI features:
+    - `usesTheme` – Boolean if theme is used (useTheme, ChakraProvider, extendTheme)
+    - `usesColorMode` – Boolean if color mode (dark/light) is used
+    - `usesResponsiveProps` – Boolean if responsive props (array syntax) are used
+    - `usesSystemProps` – Boolean if system props are used on layout components
+
 #### `layout`
 Structural layout information:
 - `type` – Layout type: `"flex"`, `"grid"`, `"relative"`, or `"absolute"`
@@ -238,6 +257,27 @@ Page-level layout metadata:
         "features": {
           "usesTheme": true,
           "usesSxProp": true,
+          "usesSystemProps": true
+        }
+      },
+      "antd": {
+        "components": ["Button", "Card", "Form", "Input", "Table"],
+        "packages": ["antd", "@ant-design/icons"],
+        "features": {
+          "usesTheme": true,
+          "usesConfigProvider": true,
+          "usesForm": true,
+          "usesLocale": true,
+          "usesIcons": true
+        }
+      },
+      "chakra": {
+        "components": ["Button", "Card", "Box", "Stack", "Input"],
+        "packages": ["@chakra-ui/react"],
+        "features": {
+          "usesTheme": true,
+          "usesColorMode": true,
+          "usesResponsiveProps": true,
           "usesSystemProps": true
         }
       }
