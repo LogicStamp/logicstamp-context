@@ -13,13 +13,7 @@
 
   <small><em>TypeScript · React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
   <br/>
-  <br/>
-
-  **Structured component contracts: props, hooks, deps, composition.**
-  
-  <small>Props, hooks, dependencies, and composition relationships extracted and modeled.</small>
-  <br/>
-  <small><em>Designed to work alongside Claude, Cursor, Copilot Chat, and MCP-based agents (via JSON/TOON context bundles).</em></small>
+  <small><em>Designed to work alongside Claude, Cursor, Copilot Chat, and MCP-based agents (via JSON context bundles).</em></small>
 
   <br/>
   <a href="https://github.com/LogicStamp">
