@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Project } from 'ts-morph';
 import {
   extractMotionConfig,
   extractAnimationMetadata,
 } from '../../../src/extractors/styling/motion.js';
+import { createTestSourceFile } from './test-helpers.js';
 
 describe('Motion Extractor', () => {
   describe('extractMotionConfig', () => {
@@ -20,8 +20,7 @@ describe('Motion Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractMotionConfig(sourceFile);
 
@@ -44,8 +43,7 @@ describe('Motion Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractMotionConfig(sourceFile);
 
@@ -65,8 +63,7 @@ describe('Motion Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractMotionConfig(sourceFile);
 
@@ -82,8 +79,7 @@ describe('Motion Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractMotionConfig(sourceFile);
 
@@ -101,8 +97,7 @@ describe('Motion Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractMotionConfig(sourceFile);
 
@@ -116,8 +111,7 @@ describe('Motion Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractMotionConfig(sourceFile);
 
@@ -131,8 +125,7 @@ describe('Motion Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractMotionConfig(sourceFile);
 
@@ -148,8 +141,7 @@ describe('Motion Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractMotionConfig(sourceFile);
 
@@ -157,8 +149,7 @@ describe('Motion Extractor', () => {
     });
 
     it('should handle empty file', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('');
 
       const result = extractMotionConfig(sourceFile);
 
@@ -180,8 +171,7 @@ describe('Motion Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractAnimationMetadata(sourceFile);
 
@@ -197,8 +187,7 @@ describe('Motion Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractAnimationMetadata(sourceFile);
 
@@ -215,8 +204,7 @@ describe('Motion Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractAnimationMetadata(sourceFile);
 
@@ -230,8 +218,7 @@ describe('Motion Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractAnimationMetadata(sourceFile);
 
@@ -246,8 +233,7 @@ describe('Motion Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractAnimationMetadata(sourceFile);
 
@@ -262,8 +248,7 @@ describe('Motion Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractAnimationMetadata(sourceFile);
 
@@ -277,8 +262,7 @@ describe('Motion Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractAnimationMetadata(sourceFile);
 
@@ -294,8 +278,7 @@ describe('Motion Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractAnimationMetadata(sourceFile);
 
@@ -311,8 +294,7 @@ describe('Motion Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractAnimationMetadata(sourceFile);
 
@@ -320,8 +302,7 @@ describe('Motion Extractor', () => {
     });
 
     it('should handle empty file', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('');
 
       const result = extractAnimationMetadata(sourceFile);
 

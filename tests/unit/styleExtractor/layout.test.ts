@@ -4,6 +4,7 @@ import {
   extractLayoutMetadata,
   extractVisualMetadata,
 } from '../../../src/extractors/styling/layout.js';
+import { createTestSourceFile } from './test-helpers.js';
 
 describe('Layout Extractor', () => {
   describe('extractLayoutMetadata', () => {
@@ -14,8 +15,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractLayoutMetadata(sourceFile);
 
@@ -29,8 +29,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractLayoutMetadata(sourceFile);
 
@@ -44,8 +43,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractLayoutMetadata(sourceFile);
 
@@ -65,8 +63,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractLayoutMetadata(sourceFile);
 
@@ -85,8 +82,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractLayoutMetadata(sourceFile);
 
@@ -94,8 +90,7 @@ describe('Layout Extractor', () => {
     });
 
     it('should handle empty file', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('');
 
       const result = extractLayoutMetadata(sourceFile);
 
@@ -111,8 +106,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractLayoutMetadata(sourceFile);
 
@@ -127,8 +121,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractLayoutMetadata(sourceFile);
 
@@ -145,8 +138,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractLayoutMetadata(sourceFile);
 
@@ -160,8 +152,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractLayoutMetadata(sourceFile);
 
@@ -175,8 +166,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractLayoutMetadata(sourceFile);
 
@@ -195,8 +185,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractLayoutMetadata(sourceFile);
 
@@ -210,8 +199,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractLayoutMetadata(sourceFile);
 
@@ -235,8 +223,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractVisualMetadata(sourceFile);
 
@@ -252,8 +239,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractVisualMetadata(sourceFile);
 
@@ -269,8 +255,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractVisualMetadata(sourceFile);
 
@@ -284,8 +269,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractVisualMetadata(sourceFile);
 
@@ -304,8 +288,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractVisualMetadata(sourceFile);
 
@@ -319,8 +302,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractVisualMetadata(sourceFile);
 
@@ -330,8 +312,7 @@ describe('Layout Extractor', () => {
     });
 
     it('should handle empty file', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('');
 
       const result = extractVisualMetadata(sourceFile);
 
@@ -347,8 +328,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractVisualMetadata(sourceFile);
 
@@ -366,8 +346,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractVisualMetadata(sourceFile);
 
@@ -385,8 +364,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractVisualMetadata(sourceFile);
 
@@ -404,8 +382,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractVisualMetadata(sourceFile);
 
@@ -423,8 +400,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractVisualMetadata(sourceFile);
 
@@ -440,8 +416,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractVisualMetadata(sourceFile);
 
@@ -459,8 +434,7 @@ describe('Layout Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractVisualMetadata(sourceFile);
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { Project } from 'ts-morph';
 import { extractStyledComponents } from '../../../src/extractors/styling/styled.js';
+import { createTestSourceFile } from './test-helpers.js';
 
 describe('Styled Components Extractor', () => {
   describe('extractStyledComponents', () => {
@@ -18,8 +18,7 @@ describe('Styled Components Extractor', () => {
         \`;
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractStyledComponents(sourceFile);
 
@@ -36,8 +35,7 @@ describe('Styled Components Extractor', () => {
         \`;
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractStyledComponents(sourceFile);
 
@@ -57,8 +55,7 @@ describe('Styled Components Extractor', () => {
         \`;
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractStyledComponents(sourceFile);
 
@@ -75,8 +72,7 @@ describe('Styled Components Extractor', () => {
         \`;
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractStyledComponents(sourceFile);
 
@@ -93,8 +89,7 @@ describe('Styled Components Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractStyledComponents(sourceFile);
 
@@ -110,8 +105,7 @@ describe('Styled Components Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractStyledComponents(sourceFile);
 
@@ -125,8 +119,7 @@ describe('Styled Components Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractStyledComponents(sourceFile);
 
@@ -142,8 +135,7 @@ describe('Styled Components Extractor', () => {
         ).join('\n')}
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractStyledComponents(sourceFile);
 
@@ -159,8 +151,7 @@ describe('Styled Components Extractor', () => {
         const StyledM = styled.m\`\`;
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = extractStyledComponents(sourceFile);
 
@@ -168,8 +159,7 @@ describe('Styled Components Extractor', () => {
     });
 
     it('should handle empty file', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('');
 
       const result = extractStyledComponents(sourceFile);
 

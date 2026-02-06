@@ -85,29 +85,36 @@ TypeScript Code  →  AST Parsing  →  Deterministic Contracts  →  AI Assista
 
 ## What LogicStamp Is (and Isn't)
 
-LogicStamp is intentionally narrow in scope. It focuses on architectural context extraction and avoids overlapping with build, linting, or code generation tools.
+⚙️ **Think of it as:** A compiler-like static analyzer that emits deterministic, machine-readable architectural contracts instead of bytecode.
+
+<details>
+<summary><strong>📋 Detailed breakdown</strong></summary>
 
 **LogicStamp IS:**
-- ✅ **An AST-based static analysis tool** - Uses the TypeScript compiler AST (via ts-morph) to extract component contracts, props, hooks, and dependencies. Not regex or text parsing. Extraction is type-aware and deterministic
-- ✅ **A deterministic context generator** - Produces structured architectural contract bundles optimized for AI consumption
-- ✅ **A replacement for manual context gathering** - Contracts provide immediate architectural understanding for AI assistants
-- ✅ **Local and offline-first** - Runs entirely on your machine, no cloud services or network calls
-- ✅ **Deterministic** - Same code always produces the same contracts (auditable in version control)
-- ✅ **Framework-aware** - Understands React, Next.js, Vue, Express, NestJS patterns and extracts relevant metadata
-- ✅ **Non-opinionated** - Describes what exists in your codebase without enforcing patterns, architectures, or best practices
-- ✅ **Designed for AI-assisted development workflows** - Enables AI assistants to reason about component architecture, dependencies, and composition accurately
+
+✅ **An AST-based static analysis tool** - Uses the TypeScript compiler AST (via ts-morph) to extract component contracts, props, hooks, and dependencies. Deterministic and type-aware.
+
+✅ **A deterministic context generator** - Produces structured architectural contract bundles optimized for AI assistants and agents.
+
+✅ **Local and offline-first** - Runs entirely on your machine (no cloud services, no network calls).
+
+✅ **Framework-aware** - Understands React, Next.js, Vue, Express, and NestJS patterns and extracts relevant metadata.
+
+✅ **Non-opinionated** - Describes what exists without enforcing patterns or architectural decisions.
 
 **LogicStamp IS NOT:**
-- ❌ **A code generator** - It doesn't write or modify your source code
-- ❌ **A linter or formatter** - It doesn't check code quality or enforce style rules
-- ❌ **A build tool** - It doesn't compile, bundle, or transform your code
-- ❌ **A runtime tool** - It analyzes static source code rather than executing applications
-- ❌ **A replacement for TypeScript** - It extracts type information but does not perform type checking
-- ❌ **A testing framework** - It doesn't run tests or generate test code
-- ❌ **A cloud service** - All processing happens locally on your machine
-- ❌ **An AI behavior controller** - It does not instruct, constrain, or modify AI responses. It only provides structured context
 
-⚙️ **Think of it as:** A compiler for your codebase that emits deterministic, machine-readable architectural contracts instead of bytecode or documentation.
+❌ **A code generator** - It doesn't write or modify your source code.
+
+❌ **A build or runtime tool** - It analyzes static source code; it doesn't compile or execute.
+
+❌ **A linter, formatter, or testing framework** - It doesn't check code quality or run tests.
+
+❌ **An AI behavior controller** - It provides structured context; it does not alter AI responses.
+
+❌ **A replacement for reading code** - It accelerates understanding; it doesn't eliminate the need for engineering judgment.
+
+</details>
 
 ## Quick Start
 
@@ -354,6 +361,7 @@ stamp context clean [path]         # Remove generated files
 | `--stats` | Emit JSON stats with token estimates |
 | `--out <path>` | Output directory |
 | `--quiet` | Suppress verbose output |
+| `--strict-missing` | Exit with error if any missing dependencies found (CI-friendly) |
 | `--debug` | Show detailed hash info (watch mode) |
 | `--log-file` | Write change logs to `.logicstamp/` (watch mode) |
 

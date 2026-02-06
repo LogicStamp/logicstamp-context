@@ -4,6 +4,7 @@ import { writeFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { extractScssMetadata, parseStyleFile } from '../../../src/extractors/styling/scss.js';
+import { createTestSourceFile } from './test-helpers.js';
 
 describe('SCSS Extractor', () => {
   let tempDir: string;
@@ -451,8 +452,7 @@ describe('SCSS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       // Create a mock SCSS file
       const scssFile = join(tempDir, 'styles.module.scss');
@@ -474,8 +474,7 @@ describe('SCSS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = await extractScssMetadata(sourceFile, tempDir);
 
@@ -503,8 +502,7 @@ describe('SCSS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = await extractScssMetadata(sourceFile, tempDir);
 
@@ -524,8 +522,7 @@ describe('SCSS Extractor', () => {
         import styles from './empty.module.scss';
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = await extractScssMetadata(sourceFile, tempDir);
 
@@ -540,8 +537,7 @@ describe('SCSS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = await extractScssMetadata(sourceFile, tempDir);
 
@@ -565,8 +561,7 @@ describe('SCSS Extractor', () => {
         import styles from './styles.module.scss';
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = await extractScssMetadata(sourceFile, tempDir);
 
@@ -581,8 +576,7 @@ describe('SCSS Extractor', () => {
         import styles2 from './styles2.module.scss';
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const result = await extractScssMetadata(sourceFile, tempDir);
 
@@ -693,9 +687,7 @@ describe('SCSS Extractor', () => {
       });
 
       it('should handle SourceFile with invalid import declarations gracefully', async () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           import styles from './styles.module.scss';
           function Component() {

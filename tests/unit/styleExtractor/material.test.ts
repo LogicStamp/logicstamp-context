@@ -1,9 +1,18 @@
 import { describe, it, expect } from 'vitest';
-import { Project } from 'ts-morph';
 import { extractMaterialUI } from '../../../src/extractors/styling/material.js';
+import {
+  createTestSourceFile,
+  expectComponents,
+  expectPackages,
+  expectSortedPackages,
+  expectComponentLimit,
+  expectEmptyResult,
+  runExtractorTests,
+  type StyleExtractorTestCase,
+} from './test-helpers.js';
 
 describe('Material UI Extractor', () => {
-  describe('extractMaterialUI', () => {
+  describe('Component Detection', () => {
     it('should extract Material UI components from imports', () => {
       const sourceCode = `
         import { Button, TextField, Card } from '@mui/material';
@@ -18,15 +27,11 @@ describe('Material UI Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
+      const sourceFile = createTestSourceFile(sourceCode);
       const result = extractMaterialUI(sourceFile);
 
-      expect(result.components).toContain('Button');
-      expect(result.components).toContain('TextField');
-      expect(result.components).toContain('Card');
-      expect(result.packages).toContain('@mui/material');
+      expectComponents(result, ['Button', 'TextField', 'Card']);
+      expectPackages(result, ['@mui/material']);
     });
 
     it('should extract Material UI components from JSX usage', () => {
@@ -44,16 +49,79 @@ describe('Material UI Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
+      const sourceFile = createTestSourceFile(sourceCode);
       const result = extractMaterialUI(sourceFile);
 
-      expect(result.components).toContain('Button');
-      expect(result.components).toContain('TextField');
-      expect(result.components).toContain('Card');
+      expectComponents(result, ['Button', 'TextField', 'Card']);
     });
 
+    it('should detect components with aliased imports', () => {
+      const sourceCode = `
+        import { Button as MUIButton, Card as ContainerCard } from '@mui/material';
+        
+        function MyComponent() {
+          return (
+            <ContainerCard>
+              <MUIButton>Click</MUIButton>
+            </ContainerCard>
+          );
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode);
+      const result = extractMaterialUI(sourceFile);
+
+      // Should detect the canonical component names, not just the aliases
+      expectComponents(result, ['Button', 'Card']);
+    });
+
+    it('should detect default imports from individual packages', () => {
+      const sourceCode = `
+        import Button from '@mui/material/Button';
+        import TextField from '@mui/material/TextField';
+        
+        function MyComponent() {
+          return (
+            <>
+              <Button>Click</Button>
+              <TextField />
+            </>
+          );
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode);
+      const result = extractMaterialUI(sourceFile);
+
+      expectComponents(result, ['Button', 'TextField']);
+      expectPackages(result, ['@mui/material/Button', '@mui/material/TextField']);
+    });
+
+    it('should detect default imports with aliases (derives canonical name from module path)', () => {
+      const sourceCode = `
+        import Btn from '@mui/material/Button';
+        import CustomTextField from '@mui/material/TextField';
+        
+        function MyComponent() {
+          return (
+            <>
+              <Btn>Click</Btn>
+              <CustomTextField label="Name" />
+            </>
+          );
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode);
+      const result = extractMaterialUI(sourceFile);
+
+      // Should detect canonical component names, not the aliases
+      expectComponents(result, ['Button', 'TextField']);
+      expectPackages(result, ['@mui/material/Button', '@mui/material/TextField']);
+    });
+  });
+
+  describe('Package Detection', () => {
     it('should detect multiple Material UI packages', () => {
       const sourceCode = `
         import { Button } from '@mui/material';
@@ -66,13 +134,10 @@ describe('Material UI Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
+      const sourceFile = createTestSourceFile(sourceCode);
       const result = extractMaterialUI(sourceFile);
 
-      expect(result.packages).toContain('@mui/material');
-      expect(result.packages).toContain('@mui/icons-material');
+      expectPackages(result, ['@mui/material', '@mui/icons-material']);
     });
 
     it('should detect legacy @material-ui/core package', () => {
@@ -84,84 +149,184 @@ describe('Material UI Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
+      const sourceFile = createTestSourceFile(sourceCode);
       const result = extractMaterialUI(sourceFile);
 
-      expect(result.packages).toContain('@material-ui/core');
-      expect(result.components).toContain('Button');
+      expectPackages(result, ['@material-ui/core']);
+      expectComponents(result, ['Button']);
     });
 
-    it('should detect theme usage via useTheme hook', () => {
+    it('should return sorted packages', () => {
       const sourceCode = `
-        import { useTheme } from '@mui/material/styles';
-        
-        function MyComponent() {
-          const theme = useTheme();
-          return <div>Hello</div>;
-        }
+        import { Button } from '@mui/material';
+        import { Add } from '@mui/icons-material';
+        import { ThemeProvider } from '@mui/system';
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
+      const sourceFile = createTestSourceFile(sourceCode);
       const result = extractMaterialUI(sourceFile);
 
-      expect(result.features.usesTheme).toBe(true);
+      expectSortedPackages(result);
     });
+  });
 
-    it('should detect theme usage via ThemeProvider', () => {
-      const sourceCode = `
-        import { ThemeProvider } from '@mui/material/styles';
-        
-        function MyComponent() {
-          return <ThemeProvider theme={theme}>Hello</ThemeProvider>;
-        }
-      `;
+  describe('Theme Detection', () => {
+    const themeTestCases: StyleExtractorTestCase<ReturnType<typeof extractMaterialUI>>[] = [
+      {
+        description: 'should detect theme usage via useTheme hook',
+        sourceCode: `
+          import { useTheme } from '@mui/material/styles';
+          
+          function MyComponent() {
+            const theme = useTheme();
+            return <div>Hello</div>;
+          }
+        `,
+        assertions: result => {
+          expect(result.features.usesTheme).toBe(true);
+        },
+      },
+      {
+        description: 'should detect theme usage via ThemeProvider',
+        sourceCode: `
+          import { ThemeProvider } from '@mui/material/styles';
+          
+          function MyComponent() {
+            return <ThemeProvider theme={theme}>Hello</ThemeProvider>;
+          }
+        `,
+        assertions: result => {
+          expect(result.features.usesTheme).toBe(true);
+        },
+      },
+      {
+        description: 'should detect theme usage via createTheme',
+        sourceCode: `
+          import { createTheme } from '@mui/material/styles';
+          
+          const theme = createTheme({
+            palette: { primary: { main: '#1976d2' } }
+          });
+        `,
+        assertions: result => {
+          expect(result.features.usesTheme).toBe(true);
+        },
+      },
+      {
+        description: 'should detect theme usage via template literal',
+        sourceCode: `
+          import styled from '@mui/material/styles';
+          
+          const StyledDiv = styled.div\`
+            color: \${props => props.theme.palette.primary.main};
+          \`;
+        `,
+        assertions: result => {
+          expect(result.features.usesTheme).toBe(true);
+        },
+      },
+      {
+        description: 'should detect theme usage via property access',
+        sourceCode: `
+          import { useTheme } from '@mui/material/styles';
+          
+          function MyComponent() {
+            const theme = useTheme();
+            const primaryColor = theme.palette.primary.main;
+            const spacing = theme.spacing(2);
+            return <div style={{ color: primaryColor, padding: spacing }}>Hello</div>;
+          }
+        `,
+        assertions: result => {
+          expect(result.features.usesTheme).toBe(true);
+        },
+      },
+    ];
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+    runExtractorTests(extractMaterialUI, themeTestCases);
+  });
 
-      const result = extractMaterialUI(sourceFile);
+  describe('Styled Detection', () => {
+    const styledTestCases: StyleExtractorTestCase<ReturnType<typeof extractMaterialUI>>[] = [
+      {
+        description: 'should detect styled from @mui/material/styles',
+        sourceCode: `
+          import { styled } from '@mui/material/styles';
+          
+          const StyledButton = styled(Button)\`
+            padding: 1rem;
+          \`;
+        `,
+        assertions: result => {
+          expect(result.features.usesStyled).toBe(true);
+        },
+      },
+      {
+        description: 'should detect styled from legacy @material-ui/core/styles',
+        sourceCode: `
+          import { styled } from '@material-ui/core/styles';
+          
+          const StyledButton = styled(Button)\`
+            padding: 1rem;
+          \`;
+        `,
+        assertions: result => {
+          expect(result.features.usesStyled).toBe(true);
+        },
+      },
+      {
+        description: 'should detect styled from @mui/system package',
+        sourceCode: `
+          import { styled } from '@mui/system';
+          
+          const StyledDiv = styled('div')\`
+            padding: 1rem;
+          \`;
+        `,
+        assertions: result => {
+          expect(result.features.usesStyled).toBe(true);
+          expectPackages(result, ['@mui/system']);
+        },
+      },
+    ];
 
-      expect(result.features.usesTheme).toBe(true);
-    });
+    runExtractorTests(extractMaterialUI, styledTestCases);
+  });
 
-    it('should detect theme usage via createTheme', () => {
-      const sourceCode = `
-        import { createTheme } from '@mui/material/styles';
-        
-        const theme = createTheme({
-          palette: { primary: { main: '#1976d2' } }
-        });
-      `;
+  describe('makeStyles Detection', () => {
+    const makeStylesTestCases: StyleExtractorTestCase<ReturnType<typeof extractMaterialUI>>[] = [
+      {
+        description: 'should detect makeStyles usage',
+        sourceCode: `
+          import { makeStyles } from '@mui/styles';
+          
+          const useStyles = makeStyles((theme) => ({
+            root: { padding: theme.spacing(2) }
+          }));
+        `,
+        assertions: result => {
+          expect(result.features.usesMakeStyles).toBe(true);
+        },
+      },
+      {
+        description: 'should detect makeStyles from legacy package',
+        sourceCode: `
+          import { makeStyles } from '@material-ui/styles';
+          
+          const useStyles = makeStyles((theme) => ({
+            root: { padding: theme.spacing(2) }
+          }));
+        `,
+        assertions: result => {
+          expect(result.features.usesMakeStyles).toBe(true);
+        },
+      },
+    ];
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+    runExtractorTests(extractMaterialUI, makeStylesTestCases);
+  });
 
-      const result = extractMaterialUI(sourceFile);
-
-      expect(result.features.usesTheme).toBe(true);
-    });
-
-    it('should detect theme usage via template literal', () => {
-      const sourceCode = `
-        import styled from '@mui/material/styles';
-        
-        const StyledDiv = styled.div\`
-          color: \${props => props.theme.palette.primary.main};
-        \`;
-      `;
-
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
-      const result = extractMaterialUI(sourceFile);
-
-      expect(result.features.usesTheme).toBe(true);
-    });
-
+  describe('Sx Prop Detection', () => {
     it('should detect sx prop usage', () => {
       const sourceCode = `
         import { Button } from '@mui/material';
@@ -175,125 +340,90 @@ describe('Material UI Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
+      const sourceFile = createTestSourceFile(sourceCode);
       const result = extractMaterialUI(sourceFile);
 
       expect(result.features.usesSxProp).toBe(true);
     });
+  });
 
-    it('should detect styled from @mui/material/styles', () => {
-      const sourceCode = `
-        import { styled } from '@mui/material/styles';
-        
-        const StyledButton = styled(Button)\`
-          padding: 1rem;
-        \`;
-      `;
+  describe('System Props Detection', () => {
+    const systemPropsTestCases: StyleExtractorTestCase<ReturnType<typeof extractMaterialUI>>[] = [
+      {
+        description: 'should detect system props on Box component',
+        sourceCode: `
+          import { Box } from '@mui/material';
+          
+          function MyComponent() {
+            return (
+              <Box spacing={2} color="primary.main" p={2}>
+                Hello
+              </Box>
+            );
+          }
+        `,
+        assertions: result => {
+          expect(result.features.usesSystemProps).toBe(true);
+        },
+      },
+      {
+        description: 'should detect system props on Stack component',
+        sourceCode: `
+          import { Stack } from '@mui/material';
+          
+          function MyComponent() {
+            return (
+              <Stack spacing={2} direction="row" p={2}>
+                <div>Item 1</div>
+                <div>Item 2</div>
+              </Stack>
+            );
+          }
+        `,
+        assertions: result => {
+          expect(result.features.usesSystemProps).toBe(true);
+        },
+      },
+      {
+        description: 'should detect system props on Grid component',
+        sourceCode: `
+          import { Grid } from '@mui/material';
+          
+          function MyComponent() {
+            return (
+              <Grid container spacing={2} p={2}>
+                <Grid item xs={12}>Content</Grid>
+              </Grid>
+            );
+          }
+        `,
+        assertions: result => {
+          expect(result.features.usesSystemProps).toBe(true);
+        },
+      },
+      {
+        description: 'should detect system props on Container component',
+        sourceCode: `
+          import { Container } from '@mui/material';
+          
+          function MyComponent() {
+            return (
+              <Container maxWidth="lg" p={2} spacing={2}>
+                Content
+              </Container>
+            );
+          }
+        `,
+        assertions: result => {
+          expect(result.features.usesSystemProps).toBe(true);
+        },
+      },
+    ];
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+    runExtractorTests(extractMaterialUI, systemPropsTestCases);
+  });
 
-      const result = extractMaterialUI(sourceFile);
-
-      expect(result.features.usesStyled).toBe(true);
-    });
-
-    it('should detect styled from legacy @material-ui/core/styles', () => {
-      const sourceCode = `
-        import { styled } from '@material-ui/core/styles';
-        
-        const StyledButton = styled(Button)\`
-          padding: 1rem;
-        \`;
-      `;
-
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
-      const result = extractMaterialUI(sourceFile);
-
-      expect(result.features.usesStyled).toBe(true);
-    });
-
-    it('should detect makeStyles usage', () => {
-      const sourceCode = `
-        import { makeStyles } from '@mui/styles';
-        
-        const useStyles = makeStyles((theme) => ({
-          root: { padding: theme.spacing(2) }
-        }));
-      `;
-
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
-      const result = extractMaterialUI(sourceFile);
-
-      expect(result.features.usesMakeStyles).toBe(true);
-    });
-
-    it('should detect makeStyles from legacy package', () => {
-      const sourceCode = `
-        import { makeStyles } from '@material-ui/styles';
-        
-        const useStyles = makeStyles((theme) => ({
-          root: { padding: theme.spacing(2) }
-        }));
-      `;
-
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
-      const result = extractMaterialUI(sourceFile);
-
-      expect(result.features.usesMakeStyles).toBe(true);
-    });
-
-    it('should detect system props on Box component', () => {
-      const sourceCode = `
-        import { Box } from '@mui/material';
-        
-        function MyComponent() {
-          return (
-            <Box spacing={2} color="primary.main" p={2}>
-              Hello
-            </Box>
-          );
-        }
-      `;
-
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
-      const result = extractMaterialUI(sourceFile);
-
-      expect(result.features.usesSystemProps).toBe(true);
-    });
-
-    it('should detect system props on Stack component', () => {
-      const sourceCode = `
-        import { Stack } from '@mui/material';
-        
-        function MyComponent() {
-          return (
-            <Stack spacing={2} direction="row" p={2}>
-              <div>Item 1</div>
-              <div>Item 2</div>
-            </Stack>
-          );
-        }
-      `;
-
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
-      const result = extractMaterialUI(sourceFile);
-
-      expect(result.features.usesSystemProps).toBe(true);
-    });
-
+  describe('Component Sorting and Limits', () => {
     it('should limit components to 20', () => {
       const sourceCode = `
         import {
@@ -304,12 +434,10 @@ describe('Material UI Extractor', () => {
         } from '@mui/material';
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
+      const sourceFile = createTestSourceFile(sourceCode);
       const result = extractMaterialUI(sourceFile);
 
-      expect(result.components.length).toBeLessThanOrEqual(20);
+      expectComponentLimit(result, 20);
     });
 
     it('should sort components by usage frequency, then alphabetically', () => {
@@ -329,9 +457,7 @@ describe('Material UI Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
+      const sourceFile = createTestSourceFile(sourceCode);
       const result = extractMaterialUI(sourceFile);
 
       // Button: import (+1) + 3 JSX uses (+3) = 4 total
@@ -340,216 +466,15 @@ describe('Material UI Extractor', () => {
       // Button should appear first due to higher frequency
       // Card and TextField should be sorted alphabetically when tied
       expect(result.components[0]).toBe('Button');
-      expect(result.components).toContain('Card');
-      expect(result.components).toContain('TextField');
+      expectComponents(result, ['Card', 'TextField']);
       // Alphabetically, Card comes before TextField
       const cardIndex = result.components.indexOf('Card');
       const textFieldIndex = result.components.indexOf('TextField');
       expect(cardIndex).toBeLessThan(textFieldIndex);
     });
+  });
 
-    it('should return sorted packages', () => {
-      const sourceCode = `
-        import { Button } from '@mui/material';
-        import { Add } from '@mui/icons-material';
-        import { ThemeProvider } from '@mui/system';
-      `;
-
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
-      const result = extractMaterialUI(sourceFile);
-
-      expect(result.packages).toEqual(result.packages.sort());
-    });
-
-    it('should handle empty file', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
-
-      const result = extractMaterialUI(sourceFile);
-
-      expect(result.components).toEqual([]);
-      expect(result.packages).toEqual([]);
-      expect(result.features.usesTheme).toBeUndefined();
-      expect(result.features.usesSxProp).toBeUndefined();
-      expect(result.features.usesStyled).toBeUndefined();
-      expect(result.features.usesMakeStyles).toBeUndefined();
-      expect(result.features.usesSystemProps).toBeUndefined();
-    });
-
-    it('should not detect Material UI when no imports present', () => {
-      const sourceCode = `
-        function MyComponent() {
-          return <div>Hello</div>;
-        }
-      `;
-
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
-      const result = extractMaterialUI(sourceFile);
-
-      expect(result.components).toEqual([]);
-      expect(result.packages).toEqual([]);
-    });
-
-    it('should detect components with aliased imports', () => {
-      const sourceCode = `
-        import { Button as MUIButton, Card as ContainerCard } from '@mui/material';
-        
-        function MyComponent() {
-          return (
-            <ContainerCard>
-              <MUIButton>Click</MUIButton>
-            </ContainerCard>
-          );
-        }
-      `;
-
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
-      const result = extractMaterialUI(sourceFile);
-
-      // Should detect the canonical component names, not just the aliases
-      expect(result.components).toContain('Button');
-      expect(result.components).toContain('Card');
-    });
-
-    it('should detect default imports from individual packages', () => {
-      const sourceCode = `
-        import Button from '@mui/material/Button';
-        import TextField from '@mui/material/TextField';
-        
-        function MyComponent() {
-          return (
-            <>
-              <Button>Click</Button>
-              <TextField />
-            </>
-          );
-        }
-      `;
-
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
-      const result = extractMaterialUI(sourceFile);
-
-      expect(result.components).toContain('Button');
-      expect(result.components).toContain('TextField');
-      expect(result.packages).toContain('@mui/material/Button');
-      expect(result.packages).toContain('@mui/material/TextField');
-    });
-
-    it('should detect default imports with aliases (derives canonical name from module path)', () => {
-      const sourceCode = `
-        import Btn from '@mui/material/Button';
-        import CustomTextField from '@mui/material/TextField';
-        
-        function MyComponent() {
-          return (
-            <>
-              <Btn>Click</Btn>
-              <CustomTextField label="Name" />
-            </>
-          );
-        }
-      `;
-
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
-      const result = extractMaterialUI(sourceFile);
-
-      // Should detect canonical component names, not the aliases
-      expect(result.components).toContain('Button');
-      expect(result.components).toContain('TextField');
-      expect(result.packages).toContain('@mui/material/Button');
-      expect(result.packages).toContain('@mui/material/TextField');
-    });
-
-    it('should detect theme usage via property access', () => {
-      const sourceCode = `
-        import { useTheme } from '@mui/material/styles';
-        
-        function MyComponent() {
-          const theme = useTheme();
-          const primaryColor = theme.palette.primary.main;
-          const spacing = theme.spacing(2);
-          return <div style={{ color: primaryColor, padding: spacing }}>Hello</div>;
-        }
-      `;
-
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
-      const result = extractMaterialUI(sourceFile);
-
-      expect(result.features.usesTheme).toBe(true);
-    });
-
-    it('should detect system props on Grid component', () => {
-      const sourceCode = `
-        import { Grid } from '@mui/material';
-        
-        function MyComponent() {
-          return (
-            <Grid container spacing={2} p={2}>
-              <Grid item xs={12}>Content</Grid>
-            </Grid>
-          );
-        }
-      `;
-
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
-      const result = extractMaterialUI(sourceFile);
-
-      expect(result.features.usesSystemProps).toBe(true);
-    });
-
-    it('should detect system props on Container component', () => {
-      const sourceCode = `
-        import { Container } from '@mui/material';
-        
-        function MyComponent() {
-          return (
-            <Container maxWidth="lg" p={2} spacing={2}>
-              Content
-            </Container>
-          );
-        }
-      `;
-
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
-      const result = extractMaterialUI(sourceFile);
-
-      expect(result.features.usesSystemProps).toBe(true);
-    });
-
-    it('should detect styled from @mui/system package', () => {
-      const sourceCode = `
-        import { styled } from '@mui/system';
-        
-        const StyledDiv = styled('div')\`
-          padding: 1rem;
-        \`;
-      `;
-
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
-      const result = extractMaterialUI(sourceFile);
-
-      expect(result.features.usesStyled).toBe(true);
-      expect(result.packages).toContain('@mui/system');
-    });
-
+  describe('Feature Combinations', () => {
     it('should detect multiple features simultaneously', () => {
       const sourceCode = `
         import { Button, Box, useTheme } from '@mui/material';
@@ -569,9 +494,7 @@ describe('Material UI Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
-
+      const sourceFile = createTestSourceFile(sourceCode);
       const result = extractMaterialUI(sourceFile);
 
       expect(result.features.usesTheme).toBe(true);
@@ -580,5 +503,31 @@ describe('Material UI Extractor', () => {
       expect(result.features.usesSystemProps).toBe(true);
     });
   });
-});
 
+  describe('Edge Cases', () => {
+    it('should handle empty file', () => {
+      const sourceFile = createTestSourceFile('');
+      const result = extractMaterialUI(sourceFile);
+
+      expectEmptyResult(result);
+      expect(result.features.usesTheme).toBeUndefined();
+      expect(result.features.usesSxProp).toBeUndefined();
+      expect(result.features.usesStyled).toBeUndefined();
+      expect(result.features.usesMakeStyles).toBeUndefined();
+      expect(result.features.usesSystemProps).toBeUndefined();
+    });
+
+    it('should not detect Material UI when no imports present', () => {
+      const sourceCode = `
+        function MyComponent() {
+          return <div>Hello</div>;
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode);
+      const result = extractMaterialUI(sourceFile);
+
+      expectEmptyResult(result);
+    });
+  });
+});

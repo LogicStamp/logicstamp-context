@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { Project } from 'ts-morph';
 import { extractStyledJsx } from '../../../src/extractors/styling/styledJsx.js';
+import { createTestSourceFile } from './test-helpers.js';
 
 describe('Styled JSX Extractor', () => {
   it('should extract CSS content, selectors, and properties from <style jsx> blocks', () => {
@@ -19,8 +19,7 @@ describe('Styled JSX Extractor', () => {
       }
     `;
 
-    const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+    const sourceFile = createTestSourceFile(sourceCode);
 
     const result = extractStyledJsx(sourceFile);
 
@@ -58,8 +57,7 @@ describe('Styled JSX Extractor', () => {
       }
     `;
 
-    const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+    const sourceFile = createTestSourceFile(sourceCode);
 
     const result = extractStyledJsx(sourceFile);
 
@@ -77,8 +75,7 @@ describe('Styled JSX Extractor', () => {
       }
     `;
 
-    const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+    const sourceFile = createTestSourceFile(sourceCode);
 
     const result = extractStyledJsx(sourceFile);
 
@@ -92,8 +89,7 @@ describe('Styled JSX Extractor', () => {
       }
     `;
 
-    const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+    const sourceFile = createTestSourceFile(sourceCode);
 
     const result = extractStyledJsx(sourceFile);
 
@@ -112,8 +108,7 @@ describe('Styled JSX Extractor', () => {
       }
     `;
 
-    const project = new Project({ useInMemoryFileSystem: true });
-    const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+    const sourceFile = createTestSourceFile(sourceCode);
 
     const result = extractStyledJsx(sourceFile);
 
