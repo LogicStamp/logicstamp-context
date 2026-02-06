@@ -43,9 +43,10 @@
 <details>
 <summary><strong>📑 Table of Contents</strong></summary>
 
+- [The Problem](#the-problem)
+- [What LogicStamp Is (and Isn't)](#what-logicstamp-is-and-isnt)
 - [Quick Start](#quick-start)
 - [Drift Detection](#drift-detection)
-- [What LogicStamp Is (and Isn't)](#what-logicstamp-is-and-isnt)
 - [Why Structured Context?](#why-structured-context)
 - [Features](#features)
 - [Watch Mode](#watch-mode)
@@ -60,6 +61,7 @@
 - [Known Limitations](#known-limitations)
 - [Requirements](#requirements)
 - [Need Help?](#need-help)
+- [License](#license)
 </details>
 
 ## The Problem
