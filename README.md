@@ -13,7 +13,7 @@
 
   <small><em>TypeScript · React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
 
-  <small><em>Designed to work alongside Claude, Cursor, Copilot Chat, and MCP-based agents.</em></small>
+  **Designed to work alongside Claude, Cursor, Copilot Chat, and MCP-based agents.**
 
   <br/>
   <a href="https://github.com/LogicStamp">
