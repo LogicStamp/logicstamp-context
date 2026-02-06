@@ -388,38 +388,49 @@ Add support for Svelte components (`.svelte` files).
 ---
 
 #### 6. Python Support
-**Status:** 🔴 Not Started
+**Status:** 🔴 Planned for v0.9.x
 
 Add support for Python codebases (experimental).
+
+**Prerequisites:**
+- ✅ Conditional schema by language (v0.8.x development, v0.9.x stabilization)
+- ✅ JS/JSX support (for multi-language feedback)
 
 **Planned Implementation:**
 - Parse Python AST using `ast` module
 - Extract function signatures, classes, and modules
 - Extract type hints and docstrings
 - Support popular frameworks (FastAPI, Django, Flask)
-- Generate Python-specific contracts
+- Generate Python-specific contracts with `python:function` or `python:class` kind
+- Use `languageSpecific.decorators` for framework decorators (e.g., `@app.get`, `@app.post`)
 
 **Impact:** Expands LogicStamp Context beyond JavaScript/TypeScript ecosystems.
 
-**Priority:** Low (Future consideration)
+**Priority:** Medium (Targeted for v0.9.x release candidate, depends on conditional schema stabilization)
 
 ---
 
 #### 7. Java Support
-**Status:** 🔴 Not Started
+**Status:** 🔴 Planned for v0.9.x
 
 Add support for Java codebases (experimental).
+
+**Prerequisites:**
+- ✅ Conditional schema by language (v0.8.x development, v0.9.x stabilization)
+- ✅ JS/JSX support (for multi-language feedback)
 
 **Planned Implementation:**
 - Parse Java source files
 - Extract class definitions, methods, and interfaces
 - Extract annotations and Javadoc
 - Support Spring Boot and other popular frameworks
-- Generate Java-specific contracts
+- Generate Java-specific contracts with `java:class` kind
+- Use `languageSpecific.annotations` for framework annotations (e.g., `@RestController`, `@GetMapping`)
+- Use `languageSpecific.classes` and `languageSpecific.methods` for class/method extraction
 
 **Impact:** Expands LogicStamp Context to enterprise Java codebases.
 
-**Priority:** Low (Future consideration)
+**Priority:** Medium (Targeted for v0.9.x release candidate, depends on conditional schema stabilization)
 
 ---
 
@@ -484,6 +495,112 @@ stamp context compare --baseline git:main
 **Impact:** Enables meaningful drift detection against stable reference points. This is the prerequisite for CI-friendly strict mode.
 
 **Priority:** High
+
+---
+
+### Schema & Architecture
+
+#### Conditional Schema by Language
+**Status:** 🔴 Planned for v0.8.x
+
+Make the UIFContract schema conditional based on the `kind` field, ensuring that language-specific fields are only present when relevant and properly validated.
+
+**Current Behavior:**
+- ✅ Flat schema with all fields optional or empty by default
+- ✅ Works for all languages (React, Vue, Backend) but allows invalid combinations
+- ⚠️ No validation that `style` shouldn't exist on backend contracts
+- ⚠️ No validation that `hooks` should be empty for backend contracts
+- ⚠️ No validation that `apiSignature` is required for backend contracts
+
+**Why This Matters:**
+The current schema is language-agnostic but allows invalid field combinations. For example, a `node:api` contract could theoretically have `style` metadata or `hooks`, which doesn't make sense. While the tool doesn't generate these invalid combinations, the schema doesn't enforce correctness.
+
+**Planned Implementation (v0.8.x):**
+
+**1. TypeScript Discriminated Unions:**
+```typescript
+// React-specific contract
+type ReactUIFContract = BaseUIFContract & {
+  kind: 'react:component' | 'react:hook';
+  composition: {
+    hooks: string[];  // Required for React
+    components: string[];  // Required for React
+    // ...
+  };
+  interface: {
+    props: Record<string, PropType>;  // Required for React
+    emits: Record<string, EventType>;  // Required for React
+    // ...
+  };
+  style?: StyleMetadata;  // Only for frontend
+  nextjs?: NextJSMetadata;  // Only for Next.js
+};
+
+// Backend API contract
+type BackendUIFContract = BaseUIFContract & {
+  kind: 'node:api' | 'python:function' | 'java:class';
+  composition: {
+    hooks: [];  // Must be empty for backend
+    components: [];  // Must be empty for backend
+    languageSpecific?: LanguageSpecificVersion;  // Required for Python/Java
+    // ...
+  };
+  interface: {
+    props: {};  // Must be empty for backend
+    emits: {};  // Must be empty for backend
+    apiSignature: ApiSignature;  // Required for backend
+  };
+  // No style, no nextjs
+};
+
+// Union type
+export type UIFContract = ReactUIFContract | BackendUIFContract | VueUIFContract | ...;
+```
+
+**2. JSON Schema Conditional Validation:**
+- Use `if/then/else` or `oneOf` patterns based on `kind` pattern matching
+- Enforce that `style` only exists for frontend contracts (`react:*`, `vue:*`)
+- Enforce that `nextjs` only exists for React contracts
+- Enforce that `apiSignature` is required for backend contracts (`node:*`, `python:*`, `java:*`)
+- Enforce that `hooks` and `components` are empty arrays for backend contracts
+- Enforce that `props` and `emits` are empty objects for backend contracts
+
+**3. Runtime Validation:**
+- Update validation logic to check field combinations based on `kind`
+- Provide clear error messages for invalid combinations
+- Add warnings during contract building for invalid field usage
+
+**4. Backward Compatibility:**
+- Provide migration guide for existing contracts
+- Support reading old flat schema format (with warnings)
+- Auto-migrate contracts when possible (add defaults, remove invalid fields)
+
+**Why v0.8.x:**
+- **Breaking change** - Schema structure changes require migration, better to do in minor version series
+- **Prerequisite for Python/Java** - Conditional schema must be in place before adding Python and Java support in v1.0.0
+- **Better timing** - After gathering feedback from multi-language usage (JS/JSX support)
+- **Iterative development** - v0.8.x allows for multiple releases to refine and stabilize the schema
+- **Migration support** - Can provide proper migration tooling and documentation across v0.8.x releases
+
+**Dependencies:**
+- Must be completed before Python/Java support (v1.0.0)
+- JS/JSX support should be completed first to gather multi-language feedback
+
+**Implementation Timeline:**
+- **v0.8.x:** Conditional schema development, testing, and refinement with migration support
+- **v0.9.x:** Schema stabilization and finalization + Python/Java support (release candidate phase)
+- **v1.0.0:** Stable release with multi-language support fully tested and validated
+
+**Impact:**
+- **Type Safety:** Better TypeScript type checking prevents invalid contracts at compile time
+- **Validation:** JSON Schema validation catches invalid field combinations
+- **Clarity:** Clearer contract structure makes it obvious what fields are valid for each language
+- **Future-proofing:** Easier to add new languages with their own field requirements
+- **Enables Python/Java:** Required foundation for adding Python and Java support
+
+**Priority:** High (Planned for v0.8.x, prerequisite for Python/Java support in v0.9.x)
+
+**Note:** Conditional schema is planned for v0.8.x development series, with stabilization in v0.9.x release candidate phase. Python and Java support will be added in v0.9.x to allow testing alongside the schema before the stable v1.0.0 release.
 
 ---
 
@@ -562,5 +679,5 @@ For detailed release notes and changes, see [CHANGELOG.md](CHANGELOG.md).
 Have suggestions for the roadmap? We'd love to hear from you:
 
 - **Open an issue** → https://github.com/LogicStamp/logicstamp-context/issues
-- **Join our roadmap** → https://logicstamp.dev
+- **Join our roadmap** → https://logicstamp.dev/roadmap
 

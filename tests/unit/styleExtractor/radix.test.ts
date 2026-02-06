@@ -1,13 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { Project } from 'ts-morph';
 import { extractRadixUI } from '../../../src/extractors/styling/radix.js';
+import { createTestSourceFile } from './test-helpers.js';
 
 describe('Radix UI Extractor', () => {
   describe('Primitive Detection', () => {
     it('should detect Dialog primitives from @radix-ui/react-dialog', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Dialog, DialogTrigger, DialogContent, DialogTitle } from '@radix-ui/react-dialog';
 
@@ -33,9 +32,7 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should detect Popover primitives from @radix-ui/react-popover', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Popover, PopoverTrigger, PopoverContent } from '@radix-ui/react-popover';
 
@@ -58,9 +55,7 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should detect multiple Radix packages in same file', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Dialog, DialogContent } from '@radix-ui/react-dialog';
         import { Tooltip, TooltipTrigger, TooltipContent } from '@radix-ui/react-tooltip';
@@ -94,9 +89,7 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should detect namespace imports', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import * as Dialog from '@radix-ui/react-dialog';
 
@@ -117,9 +110,7 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should handle empty primitive list', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         export function App() {
           return <div>No Radix primitives</div>;
@@ -136,9 +127,7 @@ describe('Radix UI Extractor', () => {
 
   describe('Control Pattern Detection', () => {
     it('should detect controlled components with multi-line JSX', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Dialog, DialogContent } from '@radix-ui/react-dialog';
         import { Tabs, TabsContent } from '@radix-ui/react-tabs';
@@ -174,9 +163,7 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should detect controlled components', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Dialog, DialogContent } from '@radix-ui/react-dialog';
         import { Tabs, TabsContent } from '@radix-ui/react-tabs';
@@ -206,9 +193,7 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should detect uncontrolled components', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Dialog, DialogContent } from '@radix-ui/react-dialog';
         import { Accordion, AccordionItem } from '@radix-ui/react-accordion';
@@ -235,9 +220,7 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should detect asChild composition pattern', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Dialog, DialogTrigger } from '@radix-ui/react-dialog';
 
@@ -259,9 +242,7 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should count Portal usage', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Dialog, DialogPortal, DialogContent } from '@radix-ui/react-dialog';
         import { Popover, PopoverPortal, PopoverContent } from '@radix-ui/react-popover';
@@ -293,9 +274,7 @@ describe('Radix UI Extractor', () => {
 
   describe('Accessibility Detection', () => {
     it('should detect direction support (RTL/LTR)', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Dialog, DialogContent } from '@radix-ui/react-dialog';
 
@@ -315,9 +294,7 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should detect focus management', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Dialog, DialogContent } from '@radix-ui/react-dialog';
 
@@ -339,9 +316,7 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should detect keyboard navigation features', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { RadioGroup, RadioGroupItem } from '@radix-ui/react-radio-group';
 
@@ -362,9 +337,7 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should detect modal usage', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Dialog, DialogContent } from '@radix-ui/react-dialog';
 
@@ -386,9 +359,7 @@ describe('Radix UI Extractor', () => {
 
   describe('Composition Depth', () => {
     it('should identify simple composition', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Label } from '@radix-ui/react-label';
 
@@ -404,9 +375,7 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should identify moderate composition', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Tabs, TabsList, TabsTrigger, TabsContent } from '@radix-ui/react-tabs';
         import { Select, SelectTrigger, SelectContent } from '@radix-ui/react-select';
@@ -435,9 +404,7 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should identify complex composition', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Dialog, DialogPortal, DialogContent, DialogTitle } from '@radix-ui/react-dialog';
         import { Tabs, TabsList, TabsTrigger, TabsContent } from '@radix-ui/react-tabs';
@@ -491,9 +458,7 @@ describe('Radix UI Extractor', () => {
 
   describe('Form Controls', () => {
     it('should detect Checkbox primitives', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Checkbox, CheckboxIndicator } from '@radix-ui/react-checkbox';
 
@@ -514,9 +479,7 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should detect RadioGroup primitives', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { RadioGroup, RadioGroupItem } from '@radix-ui/react-radio-group';
 
@@ -538,9 +501,7 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should detect Select primitives', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Select, SelectTrigger, SelectContent, SelectItem } from '@radix-ui/react-select';
 
@@ -566,9 +527,7 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should detect Slider primitives', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Slider, SliderTrack, SliderRange, SliderThumb } from '@radix-ui/react-slider';
 
@@ -596,9 +555,7 @@ describe('Radix UI Extractor', () => {
 
   describe('Integration', () => {
     it('should extract complete Radix metadata from realistic component', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { useState } from 'react';
         import { Dialog, DialogPortal, DialogContent, DialogTitle } from '@radix-ui/react-dialog';
@@ -717,9 +674,7 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should handle SourceFile with invalid import declarations gracefully', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import * as Dialog from '@radix-ui/react-dialog';
         function Component() {

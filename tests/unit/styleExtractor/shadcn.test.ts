@@ -1,13 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { Project } from 'ts-morph';
 import { extractShadcnUI } from '../../../src/extractors/styling/shadcn.js';
+import { createTestSourceFile } from './test-helpers.js';
 
 describe('ShadCN/UI Extractor', () => {
   describe('Component Detection', () => {
     it('should detect ShadCN components from @/components/ui imports', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button } from '@/components/ui/button';
         import { Card, CardHeader, CardContent } from '@/components/ui/card';
@@ -34,9 +33,7 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should detect ShadCN components from ~/components/ui imports', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Dialog, DialogContent } from '~/components/ui/dialog';
 
@@ -57,9 +54,7 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should detect ShadCN components from relative imports', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Sheet, SheetContent } from '../components/ui/sheet';
 
@@ -80,9 +75,7 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should detect components from JSX usage even without explicit imports', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button } from '@/components/ui/button';
 
@@ -109,9 +102,7 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should handle empty component list', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         export function App() {
           return <div>No ShadCN components</div>;
@@ -127,9 +118,7 @@ describe('ShadCN/UI Extractor', () => {
 
   describe('Variant Detection', () => {
     it('should extract variant prop values', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button } from '@/components/ui/button';
 
@@ -156,9 +145,7 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should categorize variants by component type', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button } from '@/components/ui/button';
         import { Badge } from '@/components/ui/badge';
@@ -181,9 +168,7 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should handle no variants', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button } from '@/components/ui/button';
 
@@ -201,9 +186,7 @@ describe('ShadCN/UI Extractor', () => {
 
   describe('Size Detection', () => {
     it('should extract size prop values', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button } from '@/components/ui/button';
 
@@ -229,9 +212,7 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should filter out non-standard sizes', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button } from '@/components/ui/button';
 
@@ -253,9 +234,7 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should handle no sizes', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button } from '@/components/ui/button';
 
@@ -273,9 +252,7 @@ describe('ShadCN/UI Extractor', () => {
 
   describe('Feature Detection', () => {
     it('should detect form usage', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { useForm } from 'react-hook-form';
         import { Form, FormField } from '@/components/ui/form';
@@ -297,9 +274,7 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should detect theme usage', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { useTheme } from 'next-themes';
         import { Button } from '@/components/ui/button';
@@ -317,9 +292,7 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should detect icon usage', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Check, X } from 'lucide-react';
         import { Button } from '@/components/ui/button';
@@ -341,9 +314,7 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should calculate component density - low', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button } from '@/components/ui/button';
 
@@ -359,9 +330,7 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should calculate component density - medium', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button } from '@/components/ui/button';
         import { Card, CardHeader, CardContent } from '@/components/ui/card';
@@ -387,9 +356,7 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should calculate component density - high', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button } from '@/components/ui/button';
         import { Card, CardHeader, CardContent } from '@/components/ui/card';
@@ -429,9 +396,7 @@ describe('ShadCN/UI Extractor', () => {
 
   describe('Integration', () => {
     it('should extract complete ShadCN metadata from realistic component', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { useForm } from 'react-hook-form';
         import { useTheme } from 'next-themes';
@@ -494,9 +459,7 @@ describe('ShadCN/UI Extractor', () => {
 
   describe('Import Aliases', () => {
     it('should detect components with aliased imports', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button as UIPrimaryButton } from '@/components/ui/button';
         import { Card as ContainerCard } from '@/components/ui/card';
@@ -519,9 +482,7 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should track variant usage with aliased components', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button as PrimaryButton } from '@/components/ui/button';
 
@@ -542,9 +503,7 @@ describe('ShadCN/UI Extractor', () => {
 
   describe('Component Usage Frequency', () => {
     it('should sort components by usage frequency, not alphabetically', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button } from '@/components/ui/button';
         import { Card } from '@/components/ui/card';
@@ -581,9 +540,7 @@ describe('ShadCN/UI Extractor', () => {
 
   describe('Card Variant Handling', () => {
     it('should accept custom Card variants without filtering', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Card } from '@/components/ui/card';
 
@@ -606,9 +563,7 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should still filter other component variants strictly', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button } from '@/components/ui/button';
 
@@ -633,9 +588,7 @@ describe('ShadCN/UI Extractor', () => {
 
   describe('Theme Detection', () => {
     it('should detect ThemeProvider import', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { ThemeProvider } from '@/components/theme-provider';
         import { Button } from '@/components/ui/button';
@@ -656,9 +609,7 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should detect ThemeProvider from next-themes', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { ThemeProvider } from 'next-themes';
         import { Button } from '@/components/ui/button';
@@ -737,9 +688,7 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should handle SourceFile with invalid import declarations gracefully', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button } from '@/components/ui/button';
         function Component() {

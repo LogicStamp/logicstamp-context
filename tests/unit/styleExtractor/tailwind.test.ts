@@ -5,13 +5,12 @@ import {
   categorizeTailwindClasses,
   extractBreakpoints,
 } from '../../../src/extractors/styling/tailwind.js';
+import { createTestSourceFile } from './test-helpers.js';
 
 describe('Tailwind Extractor', () => {
   describe('extractTailwindClasses - AST-based (SourceFile)', () => {
     it('should extract classes from string literals', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         export function Component() {
           return (
@@ -32,9 +31,7 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should extract classes from single quotes', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         export function Component() {
           return (
@@ -54,9 +51,7 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should extract static segments from template literals', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         export function Component() {
           const isActive = true;
@@ -82,9 +77,7 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should extract classes from NoSubstitutionTemplateLiteral (backticks with no ${})', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         export function Component() {
           return (
@@ -104,9 +97,7 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should extract classes from conditional expressions', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         export function Component() {
           const isActive = true;
@@ -125,9 +116,7 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should extract classes from cn() function calls', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { cn } from '@/lib/utils';
         
@@ -149,9 +138,7 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should extract classes from cn() with conditional arguments', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { cn } from '@/lib/utils';
         
@@ -174,9 +161,7 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should extract classes from cn() with template literal arguments', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { cn } from '@/lib/utils';
         
@@ -199,9 +184,7 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should extract classes from clsx() function calls', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import clsx from 'clsx';
         
@@ -222,9 +205,7 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should extract classes from classnames() function calls', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import classnames from 'classnames';
         
@@ -245,9 +226,7 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should support both className and class attributes', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         export function Component() {
           return (
@@ -269,9 +248,7 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should deduplicate classes', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         export function Component() {
           return (
@@ -295,9 +272,7 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should handle multiple className attributes across elements', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         export function Component() {
           return (
@@ -319,9 +294,7 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should handle empty className', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         '<div className=""></div>'
       );
 
@@ -331,9 +304,7 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should handle no className attributes', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         '<div>No classes</div>'
       );
 
@@ -343,9 +314,7 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should handle self-closing elements', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         export function Component() {
           return <img className="w-full h-auto" src="/image.jpg" />;
