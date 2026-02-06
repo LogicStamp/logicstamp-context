@@ -12,8 +12,7 @@
   Understand your codebase through explicit component contracts and relationships.
 
   <small><em>TypeScript · React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
-  <br/>
-  <br/>
+
   <small><em>Designed to work alongside Claude, Cursor, Copilot Chat, and MCP-based agents.</em></small>
 
   <br/>
@@ -52,7 +51,7 @@ AI coding assistants can read your source code, but they lack explicit architect
 
 ![LogicStamp MCP Workflow](./assets/logicstamp-workflow.gif)
 *Context bundles generated and consumed across MCP-powered AI workflows.*
-<br/>
+
 **Same commit ⇒ same context output.** Compare outputs to detect architectural drift.
 
 ```
