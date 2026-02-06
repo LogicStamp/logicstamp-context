@@ -40,6 +40,28 @@
 
 </details>
 
+<details>
+<summary><strong>📑 Table of Contents</strong></summary>
+
+- [Quick Start](#quick-start)
+- [Drift Detection](#drift-detection)
+- [What LogicStamp Is (and Isn't)](#what-logicstamp-is-and-isnt)
+- [Why Structured Context?](#why-structured-context)
+- [Features](#features)
+- [Watch Mode](#watch-mode)
+- [How it Works](#how-it-works)
+- [MCP Server](#mcp-server)
+- [Example Output](#example-output)
+- [Installation](#installation)
+- [Security](#security)
+- [Usage](#usage)
+- [Framework Support](#framework-support)
+- [Documentation](#documentation)
+- [Known Limitations](#known-limitations)
+- [Requirements](#requirements)
+- [Need Help?](#need-help)
+</details>
+
 ## The Problem
 
 AI coding assistants can read your source code, but they lack explicit architectural context. They often infer prop names, invent dependencies, and miss breaking changes - because raw source code isn't structured context.
@@ -84,29 +106,6 @@ LogicStamp is intentionally narrow in scope. It focuses on architectural context
 - ❌ **An AI behavior controller** - It does not instruct, constrain, or modify AI responses. It only provides structured context
 
 ⚙️ **Think of it as:** A compiler for your codebase that emits deterministic, machine-readable architectural contracts instead of bytecode or documentation.
-
-<br/>
-<details>
-<summary><strong>📑 Table of Contents</strong></summary>
-
-- [Quick Start](#quick-start)
-- [Drift Detection](#drift-detection)
-- [What LogicStamp Is (and Isn't)](#what-logicstamp-is-and-isnt)
-- [Why Structured Context?](#why-structured-context)
-- [Features](#features)
-- [Watch Mode](#watch-mode)
-- [How it Works](#how-it-works)
-- [MCP Server](#mcp-server)
-- [Example Output](#example-output)
-- [Installation](#installation)
-- [Security](#security)
-- [Usage](#usage)
-- [Framework Support](#framework-support)
-- [Documentation](#documentation)
-- [Known Limitations](#known-limitations)
-- [Requirements](#requirements)
-- [Need Help?](#need-help)
-</details>
 
 ## Quick Start
 
