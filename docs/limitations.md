@@ -330,11 +330,11 @@ export default function BlogPost({ params }: { params: { slug: string } }) {
 **Active areas for improvement:**
 - 🟡 Dynamic style extraction (Phase 1 complete in v0.3.9, Phase 2 planned for advanced patterns)
 - ❌ TypeScript type extraction (generics, complex unions/intersections)
-- ❌ CSS-in-JS completeness (Chakra UI, Ant Design missing)
 - ⚠️ Third-party component prop types (package names and versions now included in v0.3.8)
 - ❌ Project-level insights (cross-folder relationships)
 - 🟡 Next.js framework features (route roles, segment paths, and metadata exports now supported in v0.3.10; data fetching patterns still missing)
 - ✅ Backend framework support (Express.js, NestJS) - Complete in v0.4.0
+- ✅ CSS-in-JS completeness - All major libraries supported including Chakra UI and Ant Design (v0.5.1)
 
 **Bottom line:** We're hitting around 90% accuracy overall. Solid foundation, but there's definitely room to improve. These issues are on our roadmap.
 
@@ -426,24 +426,24 @@ The `extractClassesFromExpression()` function in `src/extractors/styling/tailwin
 - Function calls that return class strings are not analyzed
 - Complex nested expressions may not be fully resolved
 
-### 2. CSS-in-JS Partially Supported
+### 2. CSS-in-JS Support
+
+**Status:** ✅ **Complete in v0.5.1**
 
 **Supported**: 
 - styled-components (component names, theme usage, css prop)
 - Emotion (@emotion/styled)
 - Material UI (@mui/material) - components, packages, features
+- Ant Design (antd) - components, packages, features (theme, ConfigProvider, form, locale, icons)
+- Chakra UI (@chakra-ui/*) - components, packages, features (theme, color mode, responsive props, system props)
 - ShadCN/UI - components, variants, sizes
 - Radix UI - primitives, patterns, accessibility
 - Framer Motion - components, variants, animation features
 - Styled JSX - CSS content extraction, selectors, properties, global attribute detection ✅ **v0.3.5**
+- Chakra UI - components, packages, theme, color mode, responsive props, system props ✅ **v0.5.1**
+- Ant Design - components, packages, theme, ConfigProvider, Form, locale, icons ✅ **v0.5.1**
 
-**Missing/Incomplete**: 
-- Chakra UI - not yet detected (no code found)
-- Ant Design - not yet detected (no code found)
-
-**Impact**: Most major CSS-in-JS libraries are supported. Remaining gaps are primarily for smaller/less common libraries.
-
-**Priority**: Medium
+**Impact**: All major CSS-in-JS libraries are now supported. Complete coverage for popular component libraries.
 
 ### 3. Third-Party Components Minimal Info
 
@@ -1079,7 +1079,7 @@ For the complete roadmap with priorities and implementation plans, see [ROADMAP.
 1. **Dynamic class parsing (Phase 2)** - Advanced patterns (object lookups with variables, cross-file references, function calls). Phase 1 complete in v0.3.9.
 
 **Active Medium Priority Items:**
-1. **CSS-in-JS support** - Complete support for remaining libraries (Chakra UI, Ant Design)
+1. ✅ **CSS-in-JS support** - Complete support for all major libraries (Chakra UI and Ant Design added in v0.5.1)
 2. **Enhanced third-party info (Phase 2)** - Include prop types for third-party components (package names and versions completed in v0.3.8)
 3. **TypeScript type extraction** - Capture full type definitions (generics, complex unions/intersections)
 4. **Project-level insights** - Add cross-folder analysis to `context_main.json`
@@ -1096,8 +1096,8 @@ For the complete roadmap with priorities and implementation plans, see [ROADMAP.
 
 **What needs improvement:**
 - 🟡 Dynamic class resolution Phase 2 (Phase 1 complete in v0.3.9 - handles variables, object properties, conditionals)
-- ❌ CSS-in-JS support completeness (remaining libraries like Chakra UI, Ant Design)
 - ⚠️ Third-party component prop types (package names and versions now included in v0.3.8)
 - ❌ TypeScript type extraction (generics, complex unions/intersections)
 - ❌ Context main.json enhancements (cross-folder relationships, project-wide statistics)
+- ✅ CSS-in-JS support completeness - All major libraries supported including Chakra UI and Ant Design (v0.5.1)
 

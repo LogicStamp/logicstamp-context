@@ -4,6 +4,16 @@ This roadmap outlines the planned features, improvements, and known limitations 
 
 ## Recent Achievements
 
+### v0.5.1 (February 2026)
+- ✅ **Chakra UI support** - Complete style metadata extraction for Chakra UI components. Extracts Chakra UI component props (`colorScheme`, `size`, `variant`, etc.), responsive props, and style system tokens. Handles Chakra UI's component composition patterns and theme-aware styling.
+- ✅ **Ant Design support** - Complete style metadata extraction for Ant Design components. Extracts Ant Design component props (`type`, `size`, `shape`, `ghost`, etc.), theme tokens, and component-specific styling patterns. Supports Ant Design's design system and component API patterns.
+
+### v0.5.0 (January 2026)
+- ✅ **Strict watch mode** (`--strict-watch`) - Track breaking changes and violations during watch mode. Automatically detects breaking changes when files are modified (removed props, events, state, functions, variables; changed prop types; removed contracts; missing dependencies). Real-time violation reporting with cumulative tracking across watch sessions. Writes structured JSON violation reports and provides CI-friendly exit codes.
+- ✅ **Schema improvements** - Renamed fields for clarity: `MissingDependency.version` → `packageVersion`, `UIFContract.version` → `composition`, `UIFContract.logicSignature` → `interface`. These changes improve clarity and avoid confusion between component composition and version numbers.
+- ✅ **Performance optimizations** - O(1) dependency collection lookups and missing dependency tracking. Replaced O(n) linear searches with Map-based and Set-based lookups for significantly improved performance on large projects.
+- ✅ **Watch mode improvements** - Fixed race condition in watch mode using Promise-based locking. Fixed silent error swallowing in compare handler.
+
 ### v0.4.1 (January 2026)
 - ✅ **Watch mode** - Automatic context regeneration when source files change. Incremental rebuilds only regenerate affected bundles. Detects and displays contract changes (props, hooks, state, events). Debounces rapid changes. Watches style files when using `--include-style`. Debug mode shows hash changes. Status files for tooling integration.
 
@@ -114,9 +124,9 @@ Resolve variable-based classes within template literals. Phase 1 is complete, ha
 ### Medium Priority
 
 #### 3. CSS-in-JS Support Completeness
-**Status:** 🟡 Partially Complete
+**Status:** ✅ **Complete in v0.5.1**
 
-Complete support for remaining CSS-in-JS libraries.
+Complete support for all major CSS-in-JS libraries.
 
 **Currently Supported:**
 - ✅ styled-components
@@ -126,12 +136,10 @@ Complete support for remaining CSS-in-JS libraries.
 - ✅ Radix UI
 - ✅ Framer Motion
 - ✅ Styled JSX
+- ✅ Chakra UI ✅ **v0.5.1**
+- ✅ Ant Design ✅ **v0.5.1**
 
-**Missing:**
-- ❌ Chakra UI
-- ❌ Ant Design
-
-**Impact:** Most major libraries are supported. Remaining gaps are primarily for smaller/less common libraries.
+**Impact:** All major CSS-in-JS libraries are now supported. Complete coverage for popular component libraries.
 
 ---
 
@@ -504,7 +512,6 @@ For a complete list of current limitations with code evidence and detailed expla
 
 **Active Coverage Gaps:**
 - ❌ TypeScript types incomplete (generics, complex unions/intersections)
-- ❌ CSS-in-JS support incomplete (Chakra UI, Ant Design missing)
 - ⚠️ Third-party component prop types missing (package names and versions included in v0.3.8)
 - ❌ Project-level insights missing (cross-folder relationships, project-wide statistics)
 - ⚠️ Comments only in header mode (JSDoc only)
@@ -513,7 +520,7 @@ For a complete list of current limitations with code evidence and detailed expla
 **Overall Assessment:**
 - **~95%** - Component Contracts (Props, state, hooks detection) ✅ Hook parameters now included
 - **~100%** - Imports Detection (Imports tracked correctly)
-- **~85-90%** - Style Metadata (Static classes ~100%, dynamic classes Phase 1 complete ~70-80% of patterns, CSS-in-JS 7/9 major libraries supported)
+- **~90-95%** - Style Metadata (Static classes ~100%, dynamic classes Phase 1 complete ~70-80% of patterns, CSS-in-JS 9/9 major libraries supported ✅ v0.5.1)
 
 ---
 
@@ -529,7 +536,7 @@ We welcome contributions! If you'd like to work on any of these roadmap items:
 
 **Bug Fixes:**
 - Dynamic class parsing - Phase 1 complete (v0.3.9), Phase 2 planned for advanced patterns
-- CSS-in-JS library support - Add Chakra UI and Ant Design support
+- ✅ CSS-in-JS library support - Chakra UI and Ant Design support added (v0.5.1)
 - Enhanced third-party component info (Phase 2) - Include prop types (package names and versions completed in v0.3.8)
 
 **Framework Expansion:**
@@ -544,7 +551,7 @@ We welcome contributions! If you'd like to work on any of these roadmap items:
 
 For detailed release notes and changes, see [CHANGELOG.md](CHANGELOG.md).
 
-**Current Version:** v0.5.0 (Beta)
+**Current Version:** v0.5.1 (Beta)
 
 **Status:** Actively developed - we're working on improving accuracy and expanding feature coverage based on user feedback.
 

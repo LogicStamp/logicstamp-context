@@ -9,6 +9,46 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.5.1] - 2026-02-06
+
+### Added
+
+- **Chakra UI support** - Added comprehensive support for Chakra UI component library:
+  - Component detection (Box, Button, Input, FormControl, etc.)
+  - Package tracking (@chakra-ui/react, @chakra-ui/icons, etc.)
+  - Feature detection: theme usage, color mode (dark/light), responsive props, system props
+  - Extracts up to 20 most frequently used components ranked by usage frequency
+  - Integrated into style metadata extraction when using `--include-style` or `stamp context style`
+
+- **Ant Design support** - Added comprehensive support for Ant Design component library:
+  - Component detection (Button, Input, Form, Table, etc.)
+  - Package tracking (antd, @ant-design/icons, etc.)
+  - Feature detection: theme customization, ConfigProvider usage, Form component, locale/internationalization, icons
+  - Handles both default imports and subpath imports (e.g., `antd/es/button`)
+  - Extracts up to 20 most frequently used components ranked by usage frequency
+  - Integrated into style metadata extraction when using `--include-style` or `stamp context style`
+
+### Fixed
+
+- **`fileExists` function** - Fixed issue where `fileExists()` incorrectly returned `true` for directories. Now correctly checks `stats.isFile()` to ensure the path is actually a file, not a directory.
+- **Vitest configuration** - Fixed typo in `vitest.config.ts`: changed `reporter` to `reporters` (correct Vitest API). This ensures test reporters are properly configured.
+
+### Changed
+
+- **CSS-in-JS support completeness** - CSS-in-JS library support is now complete with the addition of Chakra UI and Ant Design. All major CSS-in-JS libraries are now supported:
+  - styled-components, Emotion, Material UI, ShadCN/UI, Radix UI, Framer Motion, Styled JSX, Chakra UI, Ant Design
+
+### Tests
+
+- **Comprehensive unit test coverage** - Added extensive unit tests for previously untested modules:
+  - **CLI commands** - Unit tests for `ignore` and `style` commands
+  - **CLI handlers** - Unit tests for all command handlers (`cleanHandler`, `compareHandler`, `contextHandler`, `ignoreHandler`, `initHandler`, `securityHandler`, `styleHandler`, `validateHandler`)
+  - **CLI parser** - Unit tests for argument parsing and help text generation
+  - **Core utilities** - Unit tests for `fsx`, `config`, and `llmContext` utilities
+  - **CLI entry points** - E2E tests for CLI entry point behavior (`stamp.ts` and `index.ts`)
+
+---
+
 ## [0.5.0] - 2026-01-28
 
 ### Added
@@ -1093,7 +1133,8 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ---
 
 ## Version links
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.1
 [0.5.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.0
 [0.4.1]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.4.1
 [0.4.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.4.0

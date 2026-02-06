@@ -13,3 +13,5 @@ export { extractMaterialUI } from './material.js';
 export { extractShadcnUI } from './shadcn.js';
 export { extractRadixUI } from './radix.js';
 export { extractStyledJsx } from './styledJsx.js';
+export { extractChakraUI } from './chakra.js';
+export { extractAntDesign } from './antd.js';

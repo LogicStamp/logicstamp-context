@@ -80,6 +80,12 @@ function MyComponent() {
 - `Toast`, `Toaster`
 - `Command`, `CommandDialog`, `CommandInput`, `CommandList`, `CommandItem`
 
+**Component Ranking:**
+
+Components are ranked by usage frequency (most used first), then alphabetically when tied. Up to 30 components are returned to keep context bundles focused while accommodating ShadCN's composable nature.
+
+**How ranking works:** Each component occurrence (imports + JSX usage) increments its count. Components are sorted by count (descending), then alphabetically when tied. Only the top 30 most frequently used components are included. See [Component Ranking and Limits](../../cli/style.md#component-ranking-and-limits) for detailed explanation.
+
 ### Component Variants
 
 ShadCN's variant system is detected:

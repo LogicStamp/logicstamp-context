@@ -44,7 +44,7 @@ These options are available at the top level (before any subcommand):
 
 **Examples:**
 ```bash
-stamp --version    # Shows: fox mascot + "Version: 0.5.0"
+stamp --version    # Shows: fox mascot + "Version: 0.5.1"
 stamp -v           # Same as --version
 stamp --help       # Shows main help
 stamp -h           # Same as --help
@@ -238,6 +238,8 @@ The style command analyzes components and extracts:
    - styled-components/emotion usage
    - framer-motion animation components
    - Material UI components, packages, and styling features (theme, sx prop, styled, makeStyles, system props)
+   - Ant Design components, packages, and features (theme, ConfigProvider, form, locale, icons)
+   - Chakra UI components, packages, and features (theme, color mode, responsive props, system props)
 
 2. **Layout Metadata** (AST-based)
    - Layout type (flex, grid) - grid takes precedence if both present
@@ -314,6 +316,24 @@ Style metadata is included in the `style` field of each component's contract:
         "features": {
           "usesTheme": true,
           "usesSxProp": true
+        }
+      },
+      "antd": {
+        "components": ["Button", "Card", "Form", "Input"],
+        "packages": ["antd", "@ant-design/icons"],
+        "features": {
+          "usesTheme": true,
+          "usesConfigProvider": true,
+          "usesForm": true
+        }
+      },
+      "chakra": {
+        "components": ["Button", "Box", "Stack"],
+        "packages": ["@chakra-ui/react"],
+        "features": {
+          "usesTheme": true,
+          "usesColorMode": true,
+          "usesSystemProps": true
         }
       }
     },
@@ -1004,7 +1024,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp-context@0.5.0"
+      "source": "logicstamp-context@0.5.1"
     }
   }
 ]
@@ -1035,7 +1055,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
     }
   ],
   "meta": {
-            "source": "logicstamp-context@0.5.0"
+            "source": "logicstamp-context@0.5.1"
   }
 }
 ```

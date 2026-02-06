@@ -259,6 +259,31 @@ export interface StyleSources {
       compositionDepth?: 'simple' | 'moderate' | 'complex'; // Composition complexity
     };
   };
+
+  // Chakra UI with component and feature analysis
+  chakraUI?: {
+    components?: string[]; // Box, Button, Input, FormControl, etc.
+    packages?: string[]; // @chakra-ui/react, @chakra-ui/icons, etc.
+    features: {
+      usesTheme?: boolean; // useTheme, extendTheme, createTheme
+      usesColorMode?: boolean; // useColorMode, useColorModeValue, dark/light mode
+      usesResponsiveProps?: boolean; // Array syntax for responsive props [base, md, lg]
+      usesSystemProps?: boolean; // System props on Box/Stack/Flex
+    };
+  };
+
+  // Ant Design with component and feature analysis
+  antd?: {
+    components?: string[]; // Button, Input, Form, Table, etc.
+    packages?: string[]; // antd, @ant-design/icons, etc.
+    features: {
+      usesTheme?: boolean; // theme, useToken, getDesignToken
+      usesConfigProvider?: boolean; // ConfigProvider for global configuration
+      usesForm?: boolean; // Form component with validation
+      usesLocale?: boolean; // useLocale, getLocale, internationalization
+      usesIcons?: boolean; // @ant-design/icons usage
+    };
+  };
 }
 
 export interface LayoutMetadata {

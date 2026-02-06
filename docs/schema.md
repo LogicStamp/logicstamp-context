@@ -120,6 +120,27 @@ interface StyleSources {
       usesSystemProps?: boolean;
     };
   };
+  antd?: {
+    components?: string[];
+    packages?: string[];
+    features: {
+      usesTheme?: boolean;
+      usesConfigProvider?: boolean;
+      usesForm?: boolean;
+      usesLocale?: boolean;
+      usesIcons?: boolean;
+    };
+  };
+  chakra?: {
+    components?: string[];
+    packages?: string[];
+    features: {
+      usesTheme?: boolean;
+      usesColorMode?: boolean;
+      usesResponsiveProps?: boolean;
+      usesSystemProps?: boolean;
+    };
+  };
 }
 
 interface LayoutMetadata {
@@ -231,6 +252,8 @@ Identifies which styling approaches are used:
 - **`styledComponents`** - Styled-components/Emotion usage with component names and theme information
 - **`motion`** - Framer Motion usage with components, variants, and feature flags
 - **`materialUI`** - Material UI usage with components, packages, and styling features (theme, sx prop, styled, makeStyles, system props)
+- **`antd`** - Ant Design usage with components, packages, and features (theme, ConfigProvider, form, locale, icons)
+- **`chakra`** - Chakra UI usage with components, packages, and features (theme, color mode, responsive props, system props)
 
 #### Layout Metadata (`style.layout`)
 

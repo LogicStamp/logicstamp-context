@@ -15,6 +15,8 @@ import { extractMaterialUI } from './material.js';
 import { extractShadcnUI } from './shadcn.js';
 import { extractRadixUI } from './radix.js';
 import { extractStyledJsx } from './styledJsx.js';
+import { extractChakraUI } from './chakra.js';
+import { extractAntDesign } from './antd.js';
 
 /**
  * Extract style metadata from a source file
@@ -436,6 +438,52 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
       filePath,
       error: error instanceof Error ? error.message : String(error),
       context: 'extractRadixUI',
+    });
+  }
+
+  // Check for Chakra UI
+  try {
+    const hasChakraUI = source.getImportDeclarations().some(imp => {
+      const moduleSpecifier = imp.getModuleSpecifierValue();
+      return /^@chakra-ui\//.test(moduleSpecifier);
+    });
+
+    if (hasChakraUI) {
+      const chakraInfo = extractChakraUI(source);
+      sources.chakraUI = {
+        ...(chakraInfo.components.length > 0 && { components: chakraInfo.components }),
+        ...(chakraInfo.packages.length > 0 && { packages: chakraInfo.packages }),
+        features: chakraInfo.features,
+      };
+    }
+  } catch (error) {
+    debugError('styleExtractor', 'extractStyleSources', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+      context: 'extractChakraUI',
+    });
+  }
+
+  // Check for Ant Design
+  try {
+    const hasAntDesign = source.getImportDeclarations().some(imp => {
+      const moduleSpecifier = imp.getModuleSpecifierValue();
+      return moduleSpecifier === 'antd' || /^@ant-design\//.test(moduleSpecifier);
+    });
+
+    if (hasAntDesign) {
+      const antdInfo = extractAntDesign(source);
+      sources.antd = {
+        ...(antdInfo.components.length > 0 && { components: antdInfo.components }),
+        ...(antdInfo.packages.length > 0 && { packages: antdInfo.packages }),
+        features: antdInfo.features,
+      };
+    }
+  } catch (error) {
+    debugError('styleExtractor', 'extractStyleSources', {
+      filePath,
+      error: error instanceof Error ? error.message : String(error),
+      context: 'extractAntDesign',
     });
   }
 

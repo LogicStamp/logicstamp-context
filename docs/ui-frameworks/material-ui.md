@@ -48,6 +48,8 @@ Components are detected from:
 
 Components are ranked by usage frequency (most used first), then alphabetically when tied. Up to 20 components are returned to keep context bundles focused.
 
+**How ranking works:** Each component occurrence (imports + JSX usage) increments its count. Components are sorted by count (descending), then alphabetically when tied. Only the top 20 most frequently used components are included. See [Component Ranking and Limits](../../cli/style.md#component-ranking-and-limits) for detailed explanation.
+
 **Detected components include:**
 
 #### Layout Components

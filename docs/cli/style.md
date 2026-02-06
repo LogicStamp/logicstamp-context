@@ -82,6 +82,24 @@ Identifies which styling approaches are used in each component:
   - makeStyles (legacy styling)
   - System props on Box/Stack components
 
+- **Ant Design** – Detects:
+  - Ant Design components used (Button, Card, Form, Input, Table, etc.)
+  - Ant Design packages imported (antd, @ant-design/*)
+  - Theme usage (useToken, ConfigProvider, getDesignToken)
+  - ConfigProvider usage for app-wide configuration
+  - Form usage (Form, Form.Item, Form.List)
+  - Locale/internationalization usage (useLocale, getLocale)
+  - Icons usage (@ant-design/icons)
+  - Subpath imports (antd/es/*)
+
+- **Chakra UI** – Detects:
+  - Chakra UI components used (Button, Card, Box, Stack, Input, etc.)
+  - Chakra UI packages imported (@chakra-ui/*)
+  - Theme usage (useTheme, ChakraProvider, extendTheme)
+  - Color mode usage (useColorMode, useColorModeValue, ColorModeScript)
+  - Responsive props (array syntax: [base, md, lg])
+  - System props on layout components (Box, Stack, Flex, Grid, etc.)
+
 - **ShadCN/UI** – Detects:
   - ShadCN/UI components used (Button, Card, Dialog, Sheet, etc.)
   - Component imports from typical ShadCN paths (@/components/ui/*, ~/components/ui/*, etc.)
@@ -100,6 +118,49 @@ Identifies which styling approaches are used in each component:
   - asChild composition pattern
   - Accessibility features (RTL/LTR support, focus management, keyboard navigation, modal dialogs)
   - Composition depth (simple, moderate, complex)
+
+#### Component Ranking and Limits
+
+Component libraries (Material UI, Chakra UI, Ant Design, ShadCN) extract components using a **frequency-based ranking system**:
+
+**How it works:**
+
+1. **Detection**: Components are detected from:
+   - Import statements: `import { Button, Box } from '@chakra-ui/react'` (always counted)
+   - JSX usage: `<Button>`, `<Box>`, etc. (only counted if imports from the library are detected first)
+
+2. **Counting**: Each component occurrence increments its count:
+   ```tsx
+   import { Button, Box, Text } from '@chakra-ui/react';
+   
+   function MyComponent() {
+     return (
+       <>
+         <Button>1</Button>  // Button: +1 (import) + 1 (JSX) = 2
+         <Button>2</Button>  // Button: +1 = 3
+         <Button>3</Button>  // Button: +1 = 4
+         <Box p={4} />        // Box: +1 (import) + 1 (JSX) = 2
+         <Text>Hello</Text>   // Text: +1 (import) + 1 (JSX) = 2
+       </>
+     );
+   }
+   ```
+   Final counts: `Button: 4`, `Box: 2`, `Text: 2`
+
+3. **Ranking**: Components are sorted by:
+   - **Usage frequency** (highest count first)
+   - **Alphabetically** (when counts are tied)
+   
+   Result: `['Button', 'Box', 'Text']` (Button has highest count; Box comes before Text alphabetically)
+
+4. **Limiting**: Only the top N components are returned:
+   - **Material UI, Chakra UI, Ant Design**: Top 20 components
+   - **ShadCN**: Top 30 components (accommodates composable nature)
+   - **Styled Components**: Top 10 styled component declarations
+
+**Why limits?** Component lists are limited to keep context bundles focused and token-efficient. The most frequently used components are typically the most important for understanding the codebase, so limiting to the top N ensures you get the most relevant information without token bloat.
+
+**Note:** Only components from predefined lists (e.g., `CHAKRA_COMPONENTS`, `ANT_COMPONENTS`) that are actually used in the file are extracted. Unused imports or non-library components are not included.
 
 ### 2. Layout Metadata
 
@@ -238,6 +299,27 @@ Style metadata is included in the `style` field of each component's contract wit
           "usesSystemProps": true
         }
       },
+      "antd": {
+        "components": ["Button", "Card", "Form", "Input", "Table"],
+        "packages": ["antd", "@ant-design/icons"],
+        "features": {
+          "usesTheme": true,
+          "usesConfigProvider": true,
+          "usesForm": true,
+          "usesLocale": true,
+          "usesIcons": true
+        }
+      },
+      "chakra": {
+        "components": ["Button", "Card", "Box", "Stack", "Input"],
+        "packages": ["@chakra-ui/react"],
+        "features": {
+          "usesTheme": true,
+          "usesColorMode": true,
+          "usesResponsiveProps": true,
+          "usesSystemProps": true
+        }
+      },
       "shadcnUI": {
         "components": ["Button", "Card", "Dialog"],
         "variants": {
@@ -306,6 +388,8 @@ Object containing detected styling approaches:
 - `styledComponents` – Object with component names and theme usage
 - `motion` – Object with framer-motion components and features
 - `materialUI` – Object with Material UI components, packages, and styling features
+- `antd` – Object with Ant Design components, packages, and features (theme, ConfigProvider, form, locale, icons)
+- `chakra` – Object with Chakra UI components, packages, and features (theme, color mode, responsive props, system props)
 - `shadcnUI` – Object with ShadCN/UI components, variants, sizes, and features (form integration, theme, icons, component density)
 - `radixUI` – Object with Radix UI primitives (organized by package), patterns (controlled/uncontrolled, portals, asChild), accessibility features, and composition depth
 
@@ -585,6 +669,8 @@ $ stamp context style
      - SCSS modules: 3 components
      - framer-motion: 2 components
      - Material UI: 5 components
+     - Ant Design: 4 components
+     - Chakra UI: 3 components
      - ShadCN/UI: 8 components
      - Radix UI: 4 components
 ```

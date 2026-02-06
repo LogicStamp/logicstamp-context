@@ -268,9 +268,12 @@ When using `stamp context --include-style`, Tailwind classes are included in the
 **Output format:**
 - All categories return **arrays** of class names (JSON-ready)
 - Arrays are **sorted** alphabetically
+- Up to **15 classes per category** are returned to keep context bundles focused
 - Classes include their full variant prefixes (e.g., `md:hover:bg-blue-500`)
 - Breakpoints are extracted separately as an array of breakpoint names
 - Uncategorized classes go into the `other` category
+
+**Note:** Unlike component libraries that limit total components, Tailwind limits classes per category (layout, spacing, colors, etc.). This means you can have up to 15 layout classes, 15 spacing classes, 15 color classes, etc., providing comprehensive coverage while maintaining token efficiency.
 
 ## Usage
 
