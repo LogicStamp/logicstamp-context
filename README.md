@@ -13,7 +13,8 @@
 
   <small><em>TypeScript · React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
   <br/>
-  <small><em>Designed to work alongside Claude, Cursor, Copilot Chat, and MCP-based agents (via JSON context bundles).</em></small>
+  <br/>
+  <small><em>Designed to work alongside Claude, Cursor, Copilot Chat, and MCP-based agents via deterministic JSON context bundles.</em></small>
 
   <br/>
   <a href="https://github.com/LogicStamp">
@@ -39,7 +40,6 @@
 **Why it matters:** Gives AI assistants explicit architectural context without reading implementations - no more hallucinated prop names or missed dependencies.
 
 </details>
-<br/>
 
 ## The Problem
 
