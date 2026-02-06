@@ -52,7 +52,7 @@ AI coding assistants can read your source code, but they lack explicit architect
 
 ![LogicStamp MCP Workflow](./assets/logicstamp-workflow.gif)
 *Context bundles generated and consumed across MCP-powered AI workflows.*
-
+<br/>
 **Same commit ⇒ same context output.** Compare outputs to detect architectural drift.
 
 ```
