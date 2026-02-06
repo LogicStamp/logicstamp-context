@@ -85,16 +85,16 @@ TypeScript Code  →  AST Parsing  →  Deterministic Contracts  →  AI Assista
 
 ## What LogicStamp Is (and Isn't)
 
-⚙️ **Think of it as:** A compiler-like static analyzer that emits deterministic, machine-readable architectural contracts instead of bytecode.
+⚙️ **Think of it as** a compiler-like static analyzer that emits deterministic architectural contracts instead of bytecode.
 
 <details>
 <summary><strong>📋 Detailed breakdown</strong></summary>
 
 **LogicStamp IS:**
 
-✅ **An AST-based static analysis tool** - Uses the TypeScript compiler AST (via ts-morph) to extract component contracts, props, hooks, and dependencies. Deterministic and type-aware.
+✅ **An AST-based static analysis tool** - Uses the TypeScript compiler API (via ts-morph) to extract component contracts, props, hooks, and dependencies in a deterministic, type-aware way.
 
-✅ **A deterministic context generator** - Produces structured architectural contract bundles optimized for AI assistants and agents.
+✅ **A deterministic context generator** - Produces structured architectural contract bundles for tooling and AI workflows.
 
 ✅ **Local and offline-first** - Runs entirely on your machine (no cloud services, no network calls).
 
@@ -104,15 +104,15 @@ TypeScript Code  →  AST Parsing  →  Deterministic Contracts  →  AI Assista
 
 **LogicStamp IS NOT:**
 
-❌ **A code generator** - It doesn't write or modify your source code.
+❌ **A code generator** - It never writes or modifies your source code.
 
-❌ **A build or runtime tool** - It analyzes static source code; it doesn't compile or execute.
+❌ **A build or runtime tool** - It analyzes static source code only; it does not execute or bundle your application.
 
-❌ **A linter, formatter, or testing framework** - It doesn't check code quality or run tests.
+❌ **A linter, formatter, or testing framework** - It does not check code quality or run tests.
 
 ❌ **An AI behavior controller** - It provides structured context; it does not alter AI responses.
 
-❌ **A replacement for reading code** - It accelerates understanding; it doesn't eliminate the need for engineering judgment.
+❌ **A replacement for reading code** - It accelerates understanding without replacing engineering judgment.
 
 </details>
 
