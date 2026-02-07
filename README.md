@@ -82,7 +82,9 @@ TypeScript Code  →  AST Parsing  →  Deterministic Contracts  →  AI Assista
    (.ts/.tsx)        (ts-morph)      (context.json bundles)      (Claude, Cursor)
 ```
 
-⚙️ **LogicStamp is a compiler-like static analyzer that emits deterministic architectural contracts from your TypeScript source code.**
+> ⚙️ **LogicStamp is a compiler-like static analyzer that emits deterministic architectural contracts from your TypeScript source code.**
+
+---
 
 ## Quick Start
 
