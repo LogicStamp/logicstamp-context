@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { Project } from 'ts-morph';
 import { extractState, extractVariables } from '../../../src/extractors/react/index.js';
+import { createTestSourceFile } from '../test-helpers.js';
 
 describe('State Extractor', () => {
   describe('extractState', () => {
@@ -17,8 +17,7 @@ describe('State Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const state = extractState(sourceFile);
 
@@ -39,8 +38,7 @@ describe('State Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const state = extractState(sourceFile);
 
@@ -64,8 +62,7 @@ describe('State Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const state = extractState(sourceFile);
 
@@ -78,8 +75,7 @@ describe('State Extractor', () => {
     });
 
     it('should handle empty file', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('');
 
       const state = extractState(sourceFile);
 
@@ -96,8 +92,7 @@ describe('State Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const state = extractState(sourceFile);
 
@@ -119,8 +114,7 @@ describe('State Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const variables = extractVariables(sourceFile);
 
@@ -146,8 +140,7 @@ describe('State Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const variables = extractVariables(sourceFile);
 
@@ -162,8 +155,7 @@ describe('State Extractor', () => {
     });
 
     it('should handle empty file', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('');
 
       const variables = extractVariables(sourceFile);
 
@@ -180,8 +172,7 @@ describe('State Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const variables = extractVariables(sourceFile);
 
@@ -200,8 +191,7 @@ describe('State Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       // Should not throw even if there are issues
       const state = extractState(sourceFile);
@@ -218,8 +208,7 @@ describe('State Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       // Should not throw even if there are issues
       const variables = extractVariables(sourceFile);
@@ -231,8 +220,7 @@ describe('State Extractor', () => {
       process.env.LOGICSTAMP_DEBUG = '1';
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', 'const [x, setX] = useState(0);');
+      const sourceFile = createTestSourceFile('const [x, setX] = useState(0);');
 
       extractState(sourceFile);
       extractVariables(sourceFile);

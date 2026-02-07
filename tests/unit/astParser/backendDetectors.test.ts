@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { Project } from 'ts-morph';
 import { detectBackendFramework } from '../../../src/core/astParser/detectors.js';
+import { createTestSourceFile } from '../test-helpers.js';
 
 describe('Backend Framework Detection', () => {
   describe('detectBackendFramework', () => {
@@ -14,8 +14,7 @@ describe('Backend Framework Detection', () => {
         });
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const framework = detectBackendFramework(['express'], sourceFile);
 
@@ -32,8 +31,7 @@ describe('Backend Framework Detection', () => {
         });
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const framework = detectBackendFramework(['express'], sourceFile);
 
@@ -50,8 +48,7 @@ describe('Backend Framework Detection', () => {
         });
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const framework = detectBackendFramework(['express'], sourceFile);
 
@@ -68,8 +65,7 @@ describe('Backend Framework Detection', () => {
         });
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const framework = detectBackendFramework(['express'], sourceFile);
 
@@ -86,8 +82,7 @@ describe('Backend Framework Detection', () => {
         });
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const framework = detectBackendFramework(['express'], sourceFile);
 
@@ -104,8 +99,7 @@ describe('Backend Framework Detection', () => {
         });
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const framework = detectBackendFramework(['express'], sourceFile);
 
@@ -120,8 +114,7 @@ describe('Backend Framework Detection', () => {
         app.use(express.json());
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('app.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'app.ts');
 
       const framework = detectBackendFramework(['express'], sourceFile);
 
@@ -137,8 +130,7 @@ describe('Backend Framework Detection', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const framework = detectBackendFramework(['@nestjs/common'], sourceFile);
 
@@ -157,8 +149,7 @@ describe('Backend Framework Detection', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const framework = detectBackendFramework(['@nestjs/common'], sourceFile);
 
@@ -177,8 +168,7 @@ describe('Backend Framework Detection', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const framework = detectBackendFramework(['@nestjs/common'], sourceFile);
 
@@ -197,8 +187,7 @@ describe('Backend Framework Detection', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const framework = detectBackendFramework(['@nestjs/common'], sourceFile);
 
@@ -217,8 +206,7 @@ describe('Backend Framework Detection', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const framework = detectBackendFramework(['@nestjs/common'], sourceFile);
 
@@ -237,8 +225,7 @@ describe('Backend Framework Detection', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const framework = detectBackendFramework(['@nestjs/common'], sourceFile);
 
@@ -254,8 +241,7 @@ describe('Backend Framework Detection', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.service.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.service.ts');
 
       const framework = detectBackendFramework(['@nestjs/common'], sourceFile);
 
@@ -272,8 +258,7 @@ describe('Backend Framework Detection', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('component.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'component.tsx');
 
       const framework = detectBackendFramework(['react'], sourceFile);
 
@@ -287,8 +272,7 @@ describe('Backend Framework Detection', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('utils.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'utils.ts');
 
       const framework = detectBackendFramework([], sourceFile);
 
@@ -305,8 +289,7 @@ describe('Backend Framework Detection', () => {
         });
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const framework = detectBackendFramework(['express'], sourceFile);
 
@@ -323,8 +306,7 @@ describe('Backend Framework Detection', () => {
         });
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const framework = detectBackendFramework(['express/router'], sourceFile);
 
@@ -341,8 +323,7 @@ describe('Backend Framework Detection', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const framework = detectBackendFramework(['@nestjs/core'], sourceFile);
 

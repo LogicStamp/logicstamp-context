@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Project } from 'ts-morph';
 import { writeFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -641,14 +640,13 @@ describe('SCSS Extractor', () => {
 
     describe('extractScssMetadata', () => {
       it('should handle malformed SourceFile gracefully', async () => {
-        const project = new Project({ useInMemoryFileSystem: true });
         // Malformed TypeScript - unclosed import
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           import styles from './styles.module.scss'
           // Missing semicolon and closing
-        `
+        `,
+          'test.tsx'
         );
 
         // Should not throw, should return empty object
@@ -658,16 +656,15 @@ describe('SCSS Extractor', () => {
       });
 
       it('should handle SourceFile with syntax errors gracefully', async () => {
-        const project = new Project({ useInMemoryFileSystem: true });
         // Invalid TypeScript syntax
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           import styles from './styles.module.scss';
           function Component() {
             return <div
           // Missing closing
-        `
+        `,
+          'test.tsx'
         );
 
         // Should not throw, should return empty object or partial results
@@ -677,8 +674,7 @@ describe('SCSS Extractor', () => {
       });
 
       it('should handle empty SourceFile gracefully', async () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile('test.tsx', '');
+        const sourceFile = createTestSourceFile('', 'test.tsx');
 
         const result = await extractScssMetadata(sourceFile, tempDir);
         expect(typeof result).toBe('object');
@@ -705,17 +701,16 @@ describe('SCSS Extractor', () => {
       });
 
       it('should handle AST traversal errors gracefully', async () => {
-        const project = new Project({ useInMemoryFileSystem: true });
         // Code that might cause AST traversal issues
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           import styles from './styles.module.scss';
           function Component() {
             const invalid = (() => { throw new Error('test'); })();
             return <div className={invalid}>Content</div>;
           }
-        `
+        `,
+          'test.tsx'
         );
 
         // Should not throw, should handle gracefully

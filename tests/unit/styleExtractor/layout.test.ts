@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { Project } from 'ts-morph';
 import {
   extractLayoutMetadata,
   extractVisualMetadata,
@@ -448,10 +447,8 @@ describe('Layout Extractor', () => {
 
   describe('Error handling', () => {
     it('should handle malformed JSX gracefully in extractLayoutMetadata', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
       // Malformed JSX - unclosed tag
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         export function Component() {
           return (
@@ -468,10 +465,8 @@ describe('Layout Extractor', () => {
     });
 
     it('should handle malformed JSX gracefully in extractVisualMetadata', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
       // Malformed JSX - unclosed tag
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         export function Component() {
           return (
@@ -488,8 +483,7 @@ describe('Layout Extractor', () => {
     });
 
     it('should handle empty SourceFile gracefully in extractLayoutMetadata', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('', 'test.tsx');
 
       const result = extractLayoutMetadata(sourceFile);
       expect(typeof result).toBe('object');
@@ -497,8 +491,7 @@ describe('Layout Extractor', () => {
     });
 
     it('should handle empty SourceFile gracefully in extractVisualMetadata', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('', 'test.tsx');
 
       const result = extractVisualMetadata(sourceFile);
       expect(typeof result).toBe('object');
@@ -506,16 +499,15 @@ describe('Layout Extractor', () => {
     });
 
     it('should handle SourceFile with syntax errors in extractLayoutMetadata', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
       // Invalid TypeScript syntax
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         export function Component() {
           return (
             <div className="flex" 
           // Missing closing brace and parenthesis
-        `
+        `,
+        'test.tsx'
       );
 
       // Should not throw, should return empty object
@@ -525,16 +517,15 @@ describe('Layout Extractor', () => {
     });
 
     it('should handle SourceFile with syntax errors in extractVisualMetadata', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
       // Invalid TypeScript syntax
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         export function Component() {
           return (
             <div className="bg-blue-500" 
           // Missing closing brace and parenthesis
-        `
+        `,
+        'test.tsx'
       );
 
       // Should not throw, should return empty object
@@ -544,10 +535,8 @@ describe('Layout Extractor', () => {
     });
 
     it('should handle SourceFile with complex AST traversal errors in extractLayoutMetadata', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
       // Code that might cause AST traversal issues
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         export function Component() {
           return (
@@ -566,10 +555,8 @@ describe('Layout Extractor', () => {
     });
 
     it('should handle SourceFile with complex AST traversal errors in extractVisualMetadata', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
       // Code that might cause AST traversal issues
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         export function Component() {
           return (

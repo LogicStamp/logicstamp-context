@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Project } from 'ts-morph';
 import {
   extractExpressRoutes,
   extractExpressApiSignature,
 } from '../../../src/extractors/express/expressExtractor.js';
+import { createTestSourceFile } from '../test-helpers.js';
 
 describe('Express Extractor', () => {
   describe('extractExpressRoutes', () => {
@@ -19,8 +19,7 @@ describe('Express Extractor', () => {
         app.get('/users', getUsers);
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const routes = extractExpressRoutes(sourceFile);
 
@@ -42,8 +41,7 @@ describe('Express Extractor', () => {
         });
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const routes = extractExpressRoutes(sourceFile);
 
@@ -67,8 +65,7 @@ describe('Express Extractor', () => {
         app.get('/users/:id', getUser);
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const routes = extractExpressRoutes(sourceFile);
 
@@ -91,8 +88,7 @@ describe('Express Extractor', () => {
         });
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const routes = extractExpressRoutes(sourceFile);
 
@@ -117,8 +113,7 @@ describe('Express Extractor', () => {
         app.put('/users/:id', updateUser);
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const routes = extractExpressRoutes(sourceFile);
 
@@ -141,8 +136,7 @@ describe('Express Extractor', () => {
         });
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const routes = extractExpressRoutes(sourceFile);
 
@@ -167,8 +161,7 @@ describe('Express Extractor', () => {
         app.patch('/users/:id', patchUser);
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const routes = extractExpressRoutes(sourceFile);
 
@@ -191,8 +184,7 @@ describe('Express Extractor', () => {
         });
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const routes = extractExpressRoutes(sourceFile);
 
@@ -218,8 +210,7 @@ describe('Express Extractor', () => {
         });
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const routes = extractExpressRoutes(sourceFile);
 
@@ -254,8 +245,7 @@ describe('Express Extractor', () => {
         app.get('/users/:id', getUsers);
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const routes = extractExpressRoutes(sourceFile);
 
@@ -290,8 +280,7 @@ describe('Express Extractor', () => {
         app.get('/users', getUsers);
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const routes = extractExpressRoutes(sourceFile);
 
@@ -311,8 +300,7 @@ describe('Express Extractor', () => {
         app.use(express.json());
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('app.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'app.ts');
 
       const routes = extractExpressRoutes(sourceFile);
 
@@ -330,8 +318,7 @@ describe('Express Extractor', () => {
         });
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const routes = extractExpressRoutes(sourceFile);
 
@@ -348,8 +335,7 @@ describe('Express Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('handlers.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'handlers.ts');
 
       const signature = extractExpressApiSignature(sourceFile, 'getUser');
 
@@ -366,8 +352,7 @@ describe('Express Extractor', () => {
         };
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('handlers.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'handlers.ts');
 
       const signature = extractExpressApiSignature(sourceFile, 'getUser');
 
@@ -384,8 +369,7 @@ describe('Express Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('handlers.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'handlers.ts');
 
       const signature = extractExpressApiSignature(sourceFile, 'getUser');
 
@@ -400,8 +384,7 @@ describe('Express Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('handlers.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'handlers.ts');
 
       const signature = extractExpressApiSignature(sourceFile, 'getUsers');
 
@@ -417,8 +400,7 @@ describe('Express Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('handlers.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'handlers.ts');
 
       const signature = extractExpressApiSignature(sourceFile, 'getUser');
 
@@ -432,8 +414,7 @@ describe('Express Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('handlers.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'handlers.ts');
 
       const signature = extractExpressApiSignature(sourceFile, 'getUser');
 

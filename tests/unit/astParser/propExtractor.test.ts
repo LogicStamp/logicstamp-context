@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { Project } from 'ts-morph';
 import { extractProps, normalizePropType } from '../../../src/extractors/react/index.js';
+import { createTestSourceFile } from '../test-helpers.js';
 
 describe('Prop Extractor', () => {
   describe('extractProps', () => {
@@ -17,8 +17,7 @@ describe('Prop Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const props = extractProps(sourceFile);
 
@@ -39,8 +38,7 @@ describe('Prop Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const props = extractProps(sourceFile);
 
@@ -63,8 +61,7 @@ describe('Prop Extractor', () => {
         };
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const props = extractProps(sourceFile);
 
@@ -87,8 +84,7 @@ describe('Prop Extractor', () => {
         };
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const props = extractProps(sourceFile);
 
@@ -97,8 +93,7 @@ describe('Prop Extractor', () => {
     });
 
     it('should handle empty file', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('');
 
       const props = extractProps(sourceFile);
 
@@ -114,8 +109,7 @@ describe('Prop Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const props = extractProps(sourceFile);
 
@@ -141,8 +135,7 @@ describe('Prop Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const props = extractProps(sourceFile);
 
@@ -163,8 +156,7 @@ describe('Prop Extractor', () => {
         };
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const props = extractProps(sourceFile);
 
@@ -184,8 +176,7 @@ describe('Prop Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const props = extractProps(sourceFile);
 
@@ -209,8 +200,7 @@ describe('Prop Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const props = extractProps(sourceFile);
 
@@ -231,8 +221,7 @@ describe('Prop Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const props = extractProps(sourceFile);
 
@@ -255,8 +244,7 @@ describe('Prop Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const props = extractProps(sourceFile);
 
@@ -279,8 +267,7 @@ describe('Prop Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const props = extractProps(sourceFile);
 
@@ -302,8 +289,7 @@ describe('Prop Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const props = extractProps(sourceFile);
 
@@ -321,8 +307,7 @@ describe('Prop Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const props = extractProps(sourceFile);
 
@@ -339,8 +324,7 @@ describe('Prop Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const props = extractProps(sourceFile);
 
@@ -361,8 +345,7 @@ describe('Prop Extractor', () => {
           }
         `;
 
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+        const sourceFile = createTestSourceFile(sourceCode);
 
         const props = extractProps(sourceFile);
 
@@ -394,8 +377,7 @@ describe('Prop Extractor', () => {
           };
         `;
 
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+        const sourceFile = createTestSourceFile(sourceCode);
 
         const props = extractProps(sourceFile);
 
@@ -426,8 +408,7 @@ describe('Prop Extractor', () => {
           }
         `;
 
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+        const sourceFile = createTestSourceFile(sourceCode);
 
         const props = extractProps(sourceFile);
 
@@ -455,8 +436,7 @@ describe('Prop Extractor', () => {
           export { useCounter };
         `;
 
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile('test.ts', sourceCode);
+        const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
         const props = extractProps(sourceFile);
 
@@ -474,8 +454,7 @@ describe('Prop Extractor', () => {
           export { useCounterInternal as useCounter };
         `;
 
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile('test.ts', sourceCode);
+        const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
         const props = extractProps(sourceFile);
 
@@ -491,8 +470,7 @@ describe('Prop Extractor', () => {
           export { useToggle as useSwitch } from './other';
         `;
 
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile('test.ts', sourceCode);
+        const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
         const props = extractProps(sourceFile);
 
@@ -513,8 +491,7 @@ describe('Prop Extractor', () => {
           export { useCounter, useToggle };
         `;
 
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile('test.ts', sourceCode);
+        const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
         const props = extractProps(sourceFile);
 
@@ -533,8 +510,7 @@ describe('Prop Extractor', () => {
           }
         `;
 
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile('test.ts', sourceCode);
+        const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
         const props = extractProps(sourceFile);
 
@@ -552,8 +528,7 @@ describe('Prop Extractor', () => {
           }
         `;
 
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile('test.ts', sourceCode);
+        const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
         const props = extractProps(sourceFile);
 
@@ -580,8 +555,7 @@ describe('Prop Extractor', () => {
           };
         `;
 
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+        const sourceFile = createTestSourceFile(sourceCode);
 
         const props = extractProps(sourceFile);
 
@@ -606,8 +580,7 @@ describe('Prop Extractor', () => {
           };
         `;
 
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+        const sourceFile = createTestSourceFile(sourceCode);
 
         const props = extractProps(sourceFile);
 
@@ -636,8 +609,7 @@ describe('Prop Extractor', () => {
           };
         `;
 
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile('test.ts', sourceCode);
+        const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
         const props = extractProps(sourceFile);
 
@@ -654,8 +626,7 @@ describe('Prop Extractor', () => {
           };
         `;
 
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile('test.ts', sourceCode);
+        const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
         const props = extractProps(sourceFile);
 
@@ -676,8 +647,7 @@ describe('Prop Extractor', () => {
           }
         `;
 
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile('test.ts', sourceCode);
+        const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
         const props = extractProps(sourceFile);
 
@@ -696,8 +666,7 @@ describe('Prop Extractor', () => {
           }
         `;
 
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile('test.ts', sourceCode);
+        const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
         const props = extractProps(sourceFile);
 
@@ -721,8 +690,7 @@ describe('Prop Extractor', () => {
           }
         `;
 
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile('test.ts', sourceCode);
+        const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
         const props = extractProps(sourceFile);
 
@@ -746,8 +714,7 @@ describe('Prop Extractor', () => {
           }
         `;
 
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile('test.ts', sourceCode);
+        const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
         const props = extractProps(sourceFile);
 
@@ -763,8 +730,7 @@ describe('Prop Extractor', () => {
           }
         `;
 
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile('test.ts', sourceCode);
+        const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
         const props = extractProps(sourceFile);
 
@@ -1060,8 +1026,7 @@ describe('Prop Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       // Should not throw even if there are issues
       const props = extractProps(sourceFile);
@@ -1082,8 +1047,7 @@ describe('Prop Extractor', () => {
       process.env.LOGICSTAMP_DEBUG = '1';
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', 'interface TestProps { x: string; }');
+      const sourceFile = createTestSourceFile('interface TestProps { x: string; }');
 
       extractProps(sourceFile);
 

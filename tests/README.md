@@ -2,6 +2,20 @@
 
 This directory contains the comprehensive test suite for LogicStamp Context. The test suite ensures reliability, correctness, and consistency across all features.
 
+## Table of Contents
+
+- [Test Structure](#test-structure)
+- [Running Tests](#running-tests)
+- [Test Categories](#test-categories)
+- [Writing Tests](#writing-tests)
+- [Test Helpers](#test-helpers)
+- [Common Test Patterns](#common-test-patterns)
+- [Test Coverage](#test-coverage)
+- [Debugging Tests](#debugging-tests)
+- [Continuous Integration](#continuous-integration)
+- [Best Practices](#best-practices)
+- [Related Documentation](#related-documentation)
+
 ## Test Structure
 
 ```
@@ -161,19 +175,34 @@ Sample projects used for testing:
 - Unit tests: `*.test.ts` in `unit/` directory
 - Follow the pattern: `feature.test.ts` or `module.test.ts`
 
-### Basic Test Structure
+### Unit Test Pattern
+
+Unit tests verify individual functions and modules in isolation:
 
 ```typescript
 import { describe, it, expect } from 'vitest';
-import { someFunction } from '../../src/core/module';
+import { createTestSourceFile } from '../test-helpers.js';
+import { extractComponents } from '../../../src/extractors/react/index.js';
 
-describe('Module Name', () => {
-  it('should do something', () => {
-    const result = someFunction(input);
-    expect(result).toBe(expected);
+describe('Component Extractor', () => {
+  it('should extract component names', () => {
+    const sourceFile = createTestSourceFile(`
+      function MyComponent() {
+        return <div>Hello</div>;
+      }
+    `);
+    
+    const result = extractComponents(sourceFile);
+    expect(result).toContain('MyComponent');
   });
 });
 ```
+
+**Key Points:**
+- Use `createTestSourceFile()` from test helpers (see [Test Helpers](#test-helpers))
+- Mock external dependencies when needed
+- Test one function or module at a time
+- Keep tests fast and isolated
 
 ### E2E Test Pattern
 
@@ -205,6 +234,7 @@ describe('CLI Command', () => {
 ```typescript
 import { resolve } from 'path';
 import { readFile } from 'fs/promises';
+import { join } from 'path';
 
 const fixturePath = resolve(__dirname, '../fixtures/simple-app');
 
@@ -216,74 +246,149 @@ it('should process fixture correctly', async () => {
 
 ## Test Helpers
 
-The `test-helpers.ts` file provides utilities for common test operations:
+### Unit Test Helpers (`tests/unit/test-helpers.ts`)
+
+All unit tests that work with TypeScript AST parsing should use the centralized test helpers to ensure consistency and avoid direct `ts-morph` instantiation.
+
+#### Available Helpers
+
+**`createTestProject()`**
+- Creates a new `ts-morph` Project instance with in-memory file system
+- Use when you need a Project instance for multiple files
+
+**`createTestProjectWithJSX()`**
+- Creates a Project instance with JSX support enabled
+- Use for React/TSX component tests
+
+**`createTestSourceFile(sourceCode, fileName?, project?, options?)`**
+- Creates a SourceFile from source code string
+- Automatically creates a new Project if not provided
+- Default filename: `'test.tsx'`
+- Supports JSX via options: `{ jsx: 1 }`
+
+**`runExtractorTests<T>(extractor, testCases)`**
+- Runs multiple test cases with the same extractor function
+- Reduces boilerplate for parameterized tests
+- Each test case includes `description`, `sourceCode`, and `assertions`
+
+**Style Extractor Assertion Helpers:**
+- `expectEmptyResult(result)` - Asserts empty components and packages arrays
+- `expectComponents(result, expectedComponents)` - Asserts specific components exist
+- `expectPackages(result, expectedPackages)` - Asserts specific packages exist
+- `expectSortedPackages(result)` - Asserts packages array is sorted
+- `expectComponentLimit(result, limit?)` - Asserts components count is within limit
+
+#### Usage Examples
+
+**Basic SourceFile Creation:**
+```typescript
+import { createTestSourceFile } from '../test-helpers.js';
+
+it('should extract components', () => {
+  const sourceFile = createTestSourceFile(`
+    function MyComponent() {
+      return <div>Hello</div>;
+    }
+  `);
+  
+  const result = extractComponents(sourceFile);
+  expect(result).toContain('MyComponent');
+});
+```
+
+**With Custom Filename:**
+```typescript
+const sourceFile = createTestSourceFile(sourceCode, 'Component.vue.ts');
+```
+
+**With JSX Support:**
+```typescript
+const sourceFile = createTestSourceFile(sourceCode, 'test.tsx', undefined, { jsx: 1 });
+```
+
+**Using runExtractorTests for Parameterized Tests:**
+```typescript
+import { runExtractorTests, type StyleExtractorTestCase } from '../test-helpers.js';
+
+runExtractorTests(extractTailwindClasses, [
+  {
+    description: 'should extract basic classes',
+    sourceCode: `<div className="flex p-4">Content</div>`,
+    assertions: (result) => {
+      expect(result).toContain('flex');
+      expect(result).toContain('p-4');
+    }
+  },
+  {
+    description: 'should extract responsive classes',
+    sourceCode: `<div className="md:flex lg:grid">Content</div>`,
+    assertions: (result) => {
+      expect(result).toContain('md:flex');
+      expect(result).toContain('lg:grid');
+    }
+  }
+]);
+```
+
+**Using Style Extractor Assertions:**
+```typescript
+import { expectComponents, expectPackages, expectSortedPackages } from './test-helpers.js';
+
+it('should extract Ant Design components', () => {
+  const sourceFile = createTestSourceFile(`
+    import { Button, Card } from 'antd';
+    function App() {
+      return <Card><Button>Click</Button></Card>;
+    }
+  `);
+  
+  const result = extractAntDesign(sourceFile);
+  
+  expectComponents(result, ['Button', 'Card']);
+  expectPackages(result, ['antd']);
+  expectSortedPackages(result);
+});
+```
+
+#### Import Pattern
+
+For unit tests in subdirectories, import from the parent `test-helpers.ts`:
+```typescript
+// In tests/unit/astParser/componentExtractor.test.ts
+import { createTestSourceFile } from '../test-helpers.js';
+
+// In tests/unit/styleExtractor/antd.test.ts
+import { createTestSourceFile, expectComponents } from './test-helpers.js';
+// (which re-exports from ../test-helpers.js)
+```
+
+#### Best Practices
+
+✅ **DO:**
+- Always use `createTestSourceFile()` instead of directly instantiating `Project`
+- Use assertion helpers for common checks
+- Use `runExtractorTests()` for similar test cases
+- Import from `test-helpers.js` (or subdirectory re-exports)
+
+❌ **DON'T:**
+- Don't use `new Project({ useInMemoryFileSystem: true })` directly
+- Don't call `project.createSourceFile()` directly
+- Don't import `Project` or `SourceFile` from `ts-morph` unless absolutely necessary
+
+### E2E Test Helpers (`tests/test-helpers.ts`)
+
+The root-level `test-helpers.ts` provides utilities for E2E tests:
 
 - File system operations
 - Temporary directory management
 - Content comparison
 - Output validation
 
-Check `test-helpers.ts` for available utilities.
-
-## Test Coverage
-
-### Current Coverage
-
-The test suite includes **1188 passing tests** across **56 test files** covering:
-
-- ✅ All CLI commands and workflows
-- ✅ Core AST parsing functionality
-- ✅ Contract building and validation
-- ✅ Style metadata extraction (Tailwind, SCSS, styled-components, etc.)
-- ✅ Bundle generation and formatting
-- ✅ Token counting and estimation
-- ✅ Dependency resolution
-- ✅ Path normalization (Windows/Unix)
-- ✅ Error handling and edge cases
-- ✅ Output format variations (json/pretty/ndjson/toon)
-- ✅ Vue.js framework support
-- ✅ Backend frameworks (Express.js, NestJS)
-- ✅ Watch mode with incremental rebuilds
-- ✅ Secret detection and code sanitization
-- ✅ `.stampignore` file handling
-
-### Understanding Coverage Metrics
-
-**Important:** The reported unit test coverage (~54%) doesn't reflect the full picture:
-
-- **Unit Tests** (~54%): Test core logic, extractors, utilities, and parsers in isolation
-- **E2E Tests** (not counted in coverage): Test CLI workflows end-to-end, exercising:
-  - CLI entry points (`src/cli/index.ts`, `stamp.ts`)
-  - CLI commands (`context.ts`, `compare.ts`, `init.ts`, etc.)
-  - CLI handlers (via command execution)
-  - Complete integration workflows
-
-**Why the split?**
-- E2E tests run CLI commands as subprocesses, so coverage instrumentation doesn't track them
-- This is a common pattern for CLI tools: unit tests for core logic, e2e tests for CLI workflows
-- Many files showing "0% coverage" are actually well-tested via e2e tests
-
-**Effective Coverage:** Combined unit + e2e coverage is estimated at **70-80%+** for critical paths.
-
-### Coverage Goals
-
-- **Unit tests**: Maintain >70% coverage for core modules (extractors, parsers, utilities)
-- **E2E tests**: Cover all CLI commands and workflows
-- Cover all public APIs
-- Test error paths and edge cases
-- Verify cross-platform compatibility
-
-### Viewing Coverage
-
-```bash
-# Generate coverage report
-npm run test:coverage
-
-# View HTML report (opens in browser)
-open coverage/index.html
-```
+Check `tests/test-helpers.ts` for available E2E utilities.
 
 ## Common Test Patterns
+
+This section covers common patterns and examples for writing tests in this codebase.
 
 ### Testing CLI Commands
 
@@ -402,6 +507,64 @@ describe('Error Handling', () => {
 - Always restore the original environment variable in `afterEach`
 - Use `vi.spyOn(console, 'error')` to capture debug logs
 - Verify graceful fallbacks (empty arrays/objects) when errors occur
+
+## Test Coverage
+
+### Current Coverage
+
+The test suite includes **1188 passing tests** across **56 test files** covering:
+
+- ✅ All CLI commands and workflows
+- ✅ Core AST parsing functionality
+- ✅ Contract building and validation
+- ✅ Style metadata extraction (Tailwind, SCSS, styled-components, etc.)
+- ✅ Bundle generation and formatting
+- ✅ Token counting and estimation
+- ✅ Dependency resolution
+- ✅ Path normalization (Windows/Unix)
+- ✅ Error handling and edge cases
+- ✅ Output format variations (json/pretty/ndjson/toon)
+- ✅ Vue.js framework support
+- ✅ Backend frameworks (Express.js, NestJS)
+- ✅ Watch mode with incremental rebuilds
+- ✅ Secret detection and code sanitization
+- ✅ `.stampignore` file handling
+
+### Understanding Coverage Metrics
+
+**Important:** The reported unit test coverage (~54%) doesn't reflect the full picture:
+
+- **Unit Tests** (~54%): Test core logic, extractors, utilities, and parsers in isolation
+- **E2E Tests** (not counted in coverage): Test CLI workflows end-to-end, exercising:
+  - CLI entry points (`src/cli/index.ts`, `stamp.ts`)
+  - CLI commands (`context.ts`, `compare.ts`, `init.ts`, etc.)
+  - CLI handlers (via command execution)
+  - Complete integration workflows
+
+**Why the split?**
+- E2E tests run CLI commands as subprocesses, so coverage instrumentation doesn't track them
+- This is a common pattern for CLI tools: unit tests for core logic, e2e tests for CLI workflows
+- Many files showing "0% coverage" are actually well-tested via e2e tests
+
+**Effective Coverage:** Combined unit + e2e coverage is estimated at **70-80%+** for critical paths.
+
+### Coverage Goals
+
+- **Unit tests**: Maintain >70% coverage for core modules (extractors, parsers, utilities)
+- **E2E tests**: Cover all CLI commands and workflows
+- Cover all public APIs
+- Test error paths and edge cases
+- Verify cross-platform compatibility
+
+### Viewing Coverage
+
+```bash
+# Generate coverage report
+npm run test:coverage
+
+# View HTML report (opens in browser)
+open coverage/index.html
+```
 
 ## Debugging Tests
 
