@@ -44,7 +44,6 @@
 <summary><strong>📑 Table of Contents</strong></summary>
 
 - [The Problem](#the-problem)
-- [What LogicStamp Is (and Isn't)](#what-logicstamp-is-and-isnt)
 - [Quick Start](#quick-start)
 - [Drift Detection](#drift-detection)
 - [Why Structured Context?](#why-structured-context)
@@ -83,38 +82,7 @@ TypeScript Code  →  AST Parsing  →  Deterministic Contracts  →  AI Assista
    (.ts/.tsx)        (ts-morph)      (context.json bundles)      (Claude, Cursor)
 ```
 
-## What LogicStamp Is (and Isn't)
-
-⚙️ **Think of it as** a compiler-like static analyzer that emits deterministic architectural contracts instead of bytecode.
-
-<details>
-<summary><strong>📋 Detailed breakdown</strong></summary>
-
-**LogicStamp IS:**
-
-✅ **An AST-based static analysis tool** - Uses the TypeScript compiler API (via ts-morph) to extract component contracts, props, hooks, and dependencies in a deterministic, type-aware way.
-
-✅ **A deterministic context generator** - Produces structured architectural contract bundles for tooling and AI workflows.
-
-✅ **Local and offline-first** - Runs entirely on your machine (no cloud services, no network calls).
-
-✅ **Framework-aware** - Understands React, Next.js, Vue, Express, and NestJS patterns and extracts relevant metadata.
-
-✅ **Non-opinionated** - Describes what exists without enforcing patterns or architectural decisions.
-
-**LogicStamp IS NOT:**
-
-❌ **A code generator** - It never writes or modifies your source code.
-
-❌ **A build or runtime tool** - It analyzes static source code only; it does not execute or bundle your application.
-
-❌ **A linter, formatter, or testing framework** - It does not check code quality or run tests.
-
-❌ **An AI behavior controller** - It provides structured context; it does not alter AI responses.
-
-❌ **A replacement for reading code** - It accelerates understanding without replacing engineering judgment.
-
-</details>
+⚙️ **LogicStamp is a compiler-like static analyzer that emits deterministic architectural contracts from your TypeScript source code.**
 
 ## Quick Start
 
@@ -261,6 +229,37 @@ Context always fresh as you code
 No pre-compilation needed. One command.
 
 > **💡Tip:** Use `stamp context` for basic contracts. Use `stamp context style` when you need style metadata (Tailwind classes, SCSS selectors, layout patterns).
+
+<details>
+<summary><strong>📋 What LogicStamp Is (and Isn't)</strong></summary>
+
+**LogicStamp IS:**
+
+✅ **An AST-based static analysis tool** - Uses the TypeScript compiler API (via ts-morph) to extract component contracts, props, hooks, and dependencies in a deterministic, type-aware way.
+
+✅ **A deterministic context generator** - Produces structured architectural contract bundles for tooling and AI workflows.
+
+✅ **Local and offline-first** - Runs entirely on your machine (no cloud services, no network calls).
+
+✅ **Framework-aware** - Understands React, Next.js, Vue, Express, and NestJS patterns and extracts relevant metadata.
+
+✅ **Non-opinionated** - Describes what exists without enforcing patterns or architectural decisions.
+
+**LogicStamp IS NOT:**
+
+❌ **A code generator** - It never writes or modifies your source code.
+
+❌ **A documentation generator** - It produces structured contracts, not documentation.
+
+❌ **A build or runtime tool** - It analyzes static source code only; it does not execute or bundle your application.
+
+❌ **A linter, formatter, or testing framework** - It does not check code quality or run tests.
+
+❌ **An AI behavior controller** - It provides structured context; it does not alter AI responses.
+
+❌ **A replacement for reading code** - It accelerates understanding without replacing engineering judgment.
+
+</details>
 
 ## MCP Server
 

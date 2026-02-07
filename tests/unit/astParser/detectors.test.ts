@@ -1,5 +1,4 @@
 import { describe, it, expect, vi } from 'vitest';
-import { Project } from 'ts-morph';
 import {
   detectNextJsDirective,
   isInNextAppDir,
@@ -7,6 +6,7 @@ import {
   detectKind,
   detectBackendFramework,
 } from '../../../src/core/astParser/detectors.js';
+import { createTestSourceFile } from '../test-helpers.js';
 
 describe('Detectors', () => {
   describe('detectNextJsDirective', () => {
@@ -20,8 +20,7 @@ export function MyComponent() {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const directive = detectNextJsDirective(sourceFile);
 
@@ -36,8 +35,7 @@ export async function serverAction() {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const directive = detectNextJsDirective(sourceFile);
 
@@ -53,8 +51,7 @@ export function MyComponent() {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const directive = detectNextJsDirective(sourceFile);
 
@@ -69,8 +66,7 @@ export function MyComponent() {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const directive = detectNextJsDirective(sourceFile);
 
@@ -84,8 +80,7 @@ import { useState } from 'react';
 'use client'; // Too late, directive must be at top
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const directive = detectNextJsDirective(sourceFile);
 
@@ -128,8 +123,7 @@ export function MyComponent() {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('app/page.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'app/page.tsx');
 
       const metadata = extractNextJsMetadata(sourceFile, 'app/page.tsx');
 
@@ -145,8 +139,7 @@ export function Layout() {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('app/layout.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'app/layout.tsx');
 
       const metadata = extractNextJsMetadata(sourceFile, 'app/layout.tsx');
 
@@ -162,8 +155,7 @@ export function MyComponent() {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('src/components/Button.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'src/components/Button.tsx');
 
       const metadata = extractNextJsMetadata(sourceFile, 'src/components/Button.tsx');
 
@@ -182,8 +174,7 @@ export function MyComponent() {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const kind = detectKind(['useState'], [], ['react'], sourceFile, 'test.tsx');
 
@@ -199,8 +190,7 @@ export function MyComponent() {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const kind = detectKind([], ['Button'], ['react'], sourceFile, 'test.tsx');
 
@@ -216,8 +206,7 @@ export function MyComponent() {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const kind = detectKind([], [], ['react'], sourceFile, 'test.tsx');
 
@@ -231,8 +220,7 @@ export function main() {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('cli/stamp.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'cli/stamp.ts');
 
       // The regex requires /cli/ or \cli\ in the path (directory boundary)
       // Use a path that clearly has /cli/ as a directory
@@ -249,8 +237,7 @@ export function main() {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('src/main.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'src/main.ts');
 
       const kind = detectKind([], [], [], sourceFile, 'src/main.ts');
 
@@ -264,8 +251,7 @@ export function calculate() {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('src/utils.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'src/utils.ts');
 
       const kind = detectKind([], [], [], sourceFile, 'src/utils.ts');
 
@@ -282,8 +268,7 @@ export default function useTypewriter(text: string, speed = 30) {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('hooks/useTypewriter.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'hooks/useTypewriter.ts');
 
       const kind = detectKind(['useState'], [], ['react'], sourceFile, 'hooks/useTypewriter.ts');
 
@@ -300,8 +285,7 @@ export function useCounter(initialValue = 0) {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('hooks/useCounter.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'hooks/useCounter.ts');
 
       const kind = detectKind(['useState'], [], ['react'], sourceFile, 'hooks/useCounter.ts');
 
@@ -318,8 +302,7 @@ export const useDebounce = (value: string, delay: number) => {
 };
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('hooks/useDebounce.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'hooks/useDebounce.ts');
 
       const kind = detectKind(['useState'], [], ['react'], sourceFile, 'hooks/useDebounce.ts');
 
@@ -336,8 +319,7 @@ export function useCounter(initialValue = 0) {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('components/Counter.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'components/Counter.tsx');
 
       const kind = detectKind(['useState'], [], ['react'], sourceFile, 'components/Counter.tsx');
 
@@ -355,8 +337,7 @@ export function useCounter(initialValue = 0) {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('hooks/useCounter.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'hooks/useCounter.ts');
 
       const kind = detectKind(['useState'], ['Button'], ['react'], sourceFile, 'hooks/useCounter.ts');
 
@@ -373,8 +354,7 @@ export function MyComponent() {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       // Should not throw even if there are issues
       const directive = detectNextJsDirective(sourceFile);
@@ -389,8 +369,7 @@ export function MyComponent() {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('app/page.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'app/page.tsx');
 
       // Should not throw even if there are issues
       const metadata = extractNextJsMetadata(sourceFile, 'app/page.tsx');
@@ -407,8 +386,7 @@ export function MyComponent() {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       // Should not throw even if there are issues
       const kind = detectKind(['useState'], [], ['react'], sourceFile, 'test.tsx');
@@ -420,8 +398,7 @@ export function MyComponent() {
       process.env.LOGICSTAMP_DEBUG = '1';
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', 'export function test() {}');
+      const sourceFile = createTestSourceFile('export function test() {}');
 
       detectNextJsDirective(sourceFile);
       extractNextJsMetadata(sourceFile, 'test.tsx');
@@ -446,8 +423,7 @@ export function MyComponent() {
     });
 
     it('should return undefined on error in detectNextJsDirective', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('');
 
       // Should return undefined on any error, not throw
       const directive = detectNextJsDirective(sourceFile);
@@ -455,8 +431,7 @@ export function MyComponent() {
     });
 
     it('should return undefined on error in extractNextJsMetadata', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('');
 
       // Should return undefined on any error, not throw
       const metadata = extractNextJsMetadata(sourceFile, 'test.tsx');
@@ -464,8 +439,7 @@ export function MyComponent() {
     });
 
     it('should return ts:module as fallback on error in detectKind', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('');
 
       // Should return a valid ContractKind on any error, defaulting to ts:module
       const kind = detectKind([], [], [], sourceFile, 'test.tsx');
@@ -484,8 +458,7 @@ export function MyComponent() {
         });
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const kind = detectKind([], [], ['express'], sourceFile, 'routes.ts', 'express');
 
@@ -505,8 +478,7 @@ export function MyComponent() {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const kind = detectKind([], [], ['@nestjs/common'], sourceFile, 'users.controller.ts', 'nestjs');
 
@@ -525,8 +497,7 @@ export function MyComponent() {
         });
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const kind = detectKind(['useState'], [], ['express', 'react'], sourceFile, 'routes.ts', 'express');
 
@@ -545,8 +516,7 @@ export function MyComponent() {
         });
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const kind = detectKind([], [], ['express', 'vue'], sourceFile, 'routes.ts', 'express');
 
@@ -563,8 +533,7 @@ export function MyComponent() {
         });
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       // Without backendFramework parameter, should not detect as node:api
       const kind = detectKind([], [], ['express'], sourceFile, 'routes.ts');

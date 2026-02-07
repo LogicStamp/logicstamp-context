@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Project } from 'ts-morph';
 import {
   extractNestJSController,
   extractNestJSApiSignature,
 } from '../../../src/extractors/nest/nestjsExtractor.js';
+import { createTestSourceFile } from '../test-helpers.js';
 
 describe('NestJS Extractor', () => {
   describe('extractNestJSController', () => {
@@ -16,8 +16,7 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const controller = extractNestJSController(sourceFile);
 
@@ -36,8 +35,7 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const controller = extractNestJSController(sourceFile);
 
@@ -59,8 +57,7 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const controller = extractNestJSController(sourceFile);
 
@@ -86,8 +83,7 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const controller = extractNestJSController(sourceFile);
 
@@ -114,8 +110,7 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const controller = extractNestJSController(sourceFile);
 
@@ -141,8 +136,7 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const controller = extractNestJSController(sourceFile);
 
@@ -169,8 +163,7 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const controller = extractNestJSController(sourceFile);
 
@@ -197,8 +190,7 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const controller = extractNestJSController(sourceFile);
 
@@ -245,8 +237,7 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const controller = extractNestJSController(sourceFile);
 
@@ -295,8 +286,7 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const controller = extractNestJSController(sourceFile);
 
@@ -319,8 +309,7 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.service.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.service.ts');
 
       const controller = extractNestJSController(sourceFile);
 
@@ -336,8 +325,7 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const controller = extractNestJSController(sourceFile);
 
@@ -362,8 +350,7 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const controller = extractNestJSController(sourceFile);
 
@@ -387,8 +374,7 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const signature = extractNestJSApiSignature(sourceFile, 'UsersController', 'findOne');
 
@@ -411,8 +397,7 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const signature = extractNestJSApiSignature(sourceFile, 'UsersController', 'findAll');
 
@@ -433,8 +418,7 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const signature = extractNestJSApiSignature(sourceFile, 'UsersController', 'findAll');
 
@@ -456,8 +440,7 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const signature = extractNestJSApiSignature(sourceFile, 'NonExistentController', 'findAll');
 
@@ -477,8 +460,7 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const signature = extractNestJSApiSignature(sourceFile, 'UsersController', 'nonExistent');
 
@@ -498,8 +480,7 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const signature = extractNestJSApiSignature(sourceFile, 'UsersController', 'findOne');
 

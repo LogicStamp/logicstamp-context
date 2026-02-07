@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { Project } from 'ts-morph';
 import { extractEvents, extractJsxRoutes } from '../../../src/extractors/react/index.js';
+import { createTestSourceFile } from '../test-helpers.js';
 
 describe('Event Extractor', () => {
   describe('extractEvents', () => {
@@ -21,8 +21,7 @@ describe('Event Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const props = { onClick: { type: 'function', signature: '() => void', optional: true }, onEdit: { type: 'function', signature: '(id: string) => void', optional: true } };
       const events = extractEvents(sourceFile, props);
@@ -51,8 +50,7 @@ describe('Event Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const events = extractEvents(sourceFile, {});
 
@@ -79,8 +77,7 @@ describe('Event Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const props = {
         onClick: { type: 'function', signature: '() => void', optional: true },
@@ -111,8 +108,7 @@ describe('Event Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const props = {
         onClick: { type: 'function', signature: '() => void', optional: true },
@@ -136,8 +132,7 @@ describe('Event Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const events = extractEvents(sourceFile, {});
 
@@ -158,8 +153,7 @@ describe('Event Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const events = extractEvents(sourceFile, {});
 
@@ -181,8 +175,7 @@ describe('Event Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const props = {
         onClick: { type: 'function', signature: '() => void', optional: true }
@@ -206,8 +199,7 @@ describe('Event Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const props = {
         onClick: { type: 'function', signature: '() => void', optional: true }
@@ -232,8 +224,7 @@ describe('Event Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       // Prop without signature field (edge case)
       const props = {
@@ -247,8 +238,7 @@ describe('Event Extractor', () => {
     });
 
     it('should handle empty file', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('');
 
       const events = extractEvents(sourceFile);
 
@@ -270,8 +260,7 @@ describe('Event Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const routes = extractJsxRoutes(sourceFile);
 
@@ -291,8 +280,7 @@ describe('Event Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const routes = extractJsxRoutes(sourceFile);
 
@@ -310,8 +298,7 @@ describe('Event Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const routes = extractJsxRoutes(sourceFile);
 
@@ -320,8 +307,7 @@ describe('Event Extractor', () => {
     });
 
     it('should handle empty file', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('');
 
       const routes = extractJsxRoutes(sourceFile);
 
@@ -341,8 +327,7 @@ describe('Event Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const routes = extractJsxRoutes(sourceFile);
 
@@ -362,8 +347,7 @@ describe('Event Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       // Should not throw even if there are issues
       const events = extractEvents(sourceFile, {});
@@ -379,8 +363,7 @@ describe('Event Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       // Should not throw even if there are issues
       const routes = extractJsxRoutes(sourceFile);
@@ -392,8 +375,7 @@ describe('Event Extractor', () => {
       process.env.LOGICSTAMP_DEBUG = '1';
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '<button onClick={() => {}} />');
+      const sourceFile = createTestSourceFile('<button onClick={() => {}} />');
 
       extractEvents(sourceFile, {});
       extractJsxRoutes(sourceFile);

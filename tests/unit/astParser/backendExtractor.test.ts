@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { Project } from 'ts-morph';
 import {
   extractBackendMetadata,
   extractBackendApiSignature,
 } from '../../../src/extractors/shared/backendExtractor.js';
+import { createTestSourceFile } from '../test-helpers.js';
 
 describe('Backend Extractor', () => {
   describe('extractBackendMetadata - Express', () => {
@@ -19,8 +19,7 @@ describe('Backend Extractor', () => {
         app.get('/users', getUsers);
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const metadata = extractBackendMetadata(sourceFile, 'routes.ts', ['express'], 'express');
 
@@ -56,8 +55,7 @@ describe('Backend Extractor', () => {
         });
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('routes.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
       const metadata = extractBackendMetadata(sourceFile, 'routes.ts', ['express'], 'express');
 
@@ -76,8 +74,7 @@ describe('Backend Extractor', () => {
         app.use(express.json());
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('app.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'app.ts');
 
       const metadata = extractBackendMetadata(sourceFile, 'app.ts', ['express'], 'express');
 
@@ -104,8 +101,7 @@ describe('Backend Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const metadata = extractBackendMetadata(
         sourceFile,
@@ -141,8 +137,7 @@ describe('Backend Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const metadata = extractBackendMetadata(
         sourceFile,
@@ -169,8 +164,7 @@ describe('Backend Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.service.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.service.ts');
 
       const metadata = extractBackendMetadata(
         sourceFile,
@@ -193,8 +187,7 @@ describe('Backend Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('handlers.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'handlers.ts');
 
       const signature = extractBackendApiSignature(sourceFile, 'express', 'getUser');
 
@@ -213,8 +206,7 @@ describe('Backend Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('handlers.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'handlers.ts');
 
       const signature = extractBackendApiSignature(sourceFile, 'express', 'getUser');
 
@@ -236,8 +228,7 @@ describe('Backend Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const signature = extractBackendApiSignature(
         sourceFile,
@@ -266,8 +257,7 @@ describe('Backend Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const signature = extractBackendApiSignature(
         sourceFile,
@@ -292,8 +282,7 @@ describe('Backend Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('users.controller.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
 
       const signature = extractBackendApiSignature(sourceFile, 'nestjs', 'findAll');
 
@@ -305,8 +294,7 @@ describe('Backend Extractor', () => {
     it('should handle errors gracefully', () => {
       const sourceCode = `invalid syntax {`;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('invalid.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'invalid.ts');
 
       // Should not throw, but might return undefined or empty result
       const metadata = extractBackendMetadata(

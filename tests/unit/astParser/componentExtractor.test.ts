@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { Project } from 'ts-morph';
 import { extractHooks, extractComponents } from '../../../src/extractors/react/index.js';
+import { createTestSourceFile } from '../test-helpers.js';
 
 describe('Component Extractor', () => {
   describe('extractHooks', () => {
@@ -22,8 +22,7 @@ describe('Component Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const hooks = extractHooks(sourceFile);
 
@@ -43,8 +42,7 @@ describe('Component Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const hooks = extractHooks(sourceFile);
 
@@ -52,8 +50,7 @@ describe('Component Extractor', () => {
     });
 
     it('should handle empty file', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('');
 
       const hooks = extractHooks(sourceFile);
 
@@ -72,8 +69,7 @@ describe('Component Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const hooks = extractHooks(sourceFile);
 
@@ -91,8 +87,7 @@ describe('Component Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const hooks = extractHooks(sourceFile);
 
@@ -120,8 +115,7 @@ describe('Component Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const components = extractComponents(sourceFile);
 
@@ -143,8 +137,7 @@ describe('Component Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const components = extractComponents(sourceFile);
 
@@ -164,8 +157,7 @@ describe('Component Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const components = extractComponents(sourceFile);
 
@@ -175,8 +167,7 @@ describe('Component Extractor', () => {
     });
 
     it('should handle empty file', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('');
 
       const components = extractComponents(sourceFile);
 
@@ -196,8 +187,7 @@ describe('Component Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       const components = extractComponents(sourceFile);
 
@@ -216,8 +206,7 @@ describe('Component Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       // Should not throw even if there are issues
       const hooks = extractHooks(sourceFile);
@@ -235,8 +224,7 @@ describe('Component Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode);
 
       // Should not throw even if there are issues
       const components = extractComponents(sourceFile);
@@ -248,8 +236,7 @@ describe('Component Extractor', () => {
       process.env.LOGICSTAMP_DEBUG = '1';
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', 'const x = useState(0);');
+      const sourceFile = createTestSourceFile('const x = useState(0);');
 
       extractHooks(sourceFile);
       extractComponents(sourceFile);

@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { Project } from 'ts-morph';
 import { extractRadixUI } from '../../../src/extractors/styling/radix.js';
 import { createTestSourceFile } from './test-helpers.js';
 
@@ -614,10 +613,8 @@ describe('Radix UI Extractor', () => {
 
   describe('Error handling', () => {
     it('should handle malformed JSX gracefully', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
       // Malformed JSX - unclosed tag
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import * as Dialog from '@radix-ui/react-dialog';
         
@@ -626,7 +623,8 @@ describe('Radix UI Extractor', () => {
             <Dialog.Root open={true}
           );
         }
-        `
+        `,
+        'test.tsx'
       );
 
       // Should not throw, should return empty object or partial results
@@ -638,10 +636,8 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should handle SourceFile with syntax errors gracefully', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
       // Invalid TypeScript syntax
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import * as Dialog from '@radix-ui/react-dialog';
         function Component() {
@@ -658,8 +654,7 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should handle empty SourceFile gracefully', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('', 'test.tsx');
 
       const result = extractRadixUI(sourceFile);
       expect(typeof result).toBe('object');
@@ -690,17 +685,16 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should handle AST traversal errors gracefully', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
       // Code that might cause AST traversal issues
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import * as Dialog from '@radix-ui/react-dialog';
         function Component() {
           const invalid = (() => { throw new Error('test'); })();
           return <Dialog.Root className={invalid}>Content</Dialog.Root>;
         }
-        `
+        `,
+        'test.tsx'
       );
 
       // Should not throw, should handle gracefully
@@ -710,10 +704,8 @@ describe('Radix UI Extractor', () => {
     });
 
     it('should handle complex AST traversal errors in attribute processing', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
       // Code that might cause issues in attribute processing
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import * as Dialog from '@radix-ui/react-dialog';
         function Component() {

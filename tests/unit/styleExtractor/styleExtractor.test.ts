@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Project } from 'ts-morph';
 import { writeFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { extractStyleMetadata } from '../../../src/extractors/styling/styleExtractor.js';
+import { createTestSourceFile } from './test-helpers.js';
 
 describe('Style Extractor', () => {
   let tempDir: string;
@@ -25,8 +25,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -47,8 +46,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -68,8 +66,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -90,8 +87,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -116,8 +112,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -141,8 +136,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -162,8 +156,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -201,8 +194,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -247,8 +239,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -280,8 +271,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -299,8 +289,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -320,8 +309,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -339,8 +327,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -356,8 +343,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -382,8 +368,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -411,8 +396,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -432,8 +416,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -457,8 +440,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -480,8 +462,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -499,8 +480,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -519,8 +499,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -541,8 +520,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -559,8 +537,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -580,8 +557,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -600,8 +576,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       // Should not throw, should return partial results
       const result = await extractStyleMetadata(sourceFile, tempDir);
@@ -619,8 +594,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       // Should not throw
       const result = await extractStyleMetadata(sourceFile, tempDir);
@@ -636,8 +610,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -647,17 +620,16 @@ describe('Style Extractor', () => {
     });
 
     it('should handle malformed JSX gracefully', async () => {
-      const project = new Project({ useInMemoryFileSystem: true });
       // Malformed JSX - unclosed tag
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         export function Component() {
           return (
             <div className="flex p-4"
           );
         }
-        `
+        `,
+        'test.tsx'
       );
 
       // Should not throw
@@ -666,8 +638,7 @@ describe('Style Extractor', () => {
     });
 
     it('should handle empty SourceFile gracefully', async () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('', 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -682,8 +653,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       // Use an invalid path - should not crash
       const invalidPath = join(tempDir, 'nonexistent', 'subdir');
@@ -710,8 +680,7 @@ describe('Style Extractor', () => {
         }
       `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
@@ -724,8 +693,7 @@ describe('Style Extractor', () => {
     it('should return undefined instead of throwing on critical errors', async () => {
       // Test that the main function catches errors and returns undefined
       // rather than throwing
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('', 'test.tsx');
 
       // Should not throw
       const result = await extractStyleMetadata(sourceFile, tempDir);

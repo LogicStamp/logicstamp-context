@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { Project } from 'ts-morph';
 import { detectKind } from '../../../src/core/astParser/detectors.js';
 import {
   extractVueComposables,
@@ -10,6 +9,7 @@ import {
   extractVueProps,
   extractVueEmits,
 } from '../../../src/extractors/vue/index.js';
+import { createTestSourceFile } from '../test-helpers.js';
 
 describe('Vue Detectors and Extractors', () => {
   describe('detectKind - Vue', () => {
@@ -27,8 +27,7 @@ export default {
 };
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('Component.vue.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'Component.vue.ts');
 
       const kind = detectKind([], [], ['vue'], sourceFile, 'Component.vue.ts');
 
@@ -54,8 +53,7 @@ export default function useCounter() {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('useCounter.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'useCounter.ts');
 
       const kind = detectKind([], [], ['vue'], sourceFile, 'useCounter.ts');
 
@@ -78,8 +76,7 @@ export default function MyComponent() {
 }
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { jsx: 1 } });
-      const sourceFile = project.createSourceFile('Component.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'Component.tsx', undefined, { jsx: 1 });
 
       const kind = detectKind([], ['div', 'p', 'button'], ['vue'], sourceFile, 'Component.tsx');
 
@@ -98,8 +95,7 @@ export default defineComponent({
 });
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('Component.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'Component.ts');
 
       const kind = detectKind([], [], ['vue'], sourceFile, 'Component.ts');
 
@@ -118,8 +114,7 @@ watch(count, () => console.log('changed'));
 onMounted(() => console.log('mounted'));
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const composables = extractVueComposables(sourceFile);
 
@@ -136,8 +131,7 @@ import { useCounter } from './composables';
 const { count, increment } = useCounter();
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const composables = extractVueComposables(sourceFile);
 
@@ -150,8 +144,7 @@ const props = defineProps<{ name: string }>();
 const emit = defineEmits<{ (e: 'update'): void }>();
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const composables = extractVueComposables(sourceFile);
 
@@ -165,8 +158,7 @@ import { watchEffect } from 'vue';
 watchEffect(() => console.log('effect'));
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const composables = extractVueComposables(sourceFile);
 
@@ -194,8 +186,7 @@ onRenderTracked(() => {});
 onRenderTriggered(() => {});
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const composables = extractVueComposables(sourceFile);
 
@@ -220,8 +211,7 @@ provide('key', 'value');
 const value = inject('key');
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const composables = extractVueComposables(sourceFile);
 
@@ -239,8 +229,7 @@ const isRefValue = isRef(value);
 const unrefValue = unref(ref);
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const composables = extractVueComposables(sourceFile);
 
@@ -258,8 +247,7 @@ const shallow = shallowRef(0);
 const shallowObj = shallowReactive({ count: 0 });
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const composables = extractVueComposables(sourceFile);
 
@@ -278,8 +266,7 @@ const raw = toRaw(obj);
 markRaw(obj);
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const composables = extractVueComposables(sourceFile);
 
@@ -299,8 +286,7 @@ const current = getCurrentScope();
 onScopeDispose(() => {});
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const composables = extractVueComposables(sourceFile);
 
@@ -319,8 +305,7 @@ const cssModule = useCssModule();
 useCssVars(() => ({}));
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const composables = extractVueComposables(sourceFile);
 
@@ -336,8 +321,7 @@ defineExpose({ method: () => {} });
 const props = withDefaults(defineProps<{ name?: string }>(), { name: 'default' });
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const composables = extractVueComposables(sourceFile);
 
@@ -361,8 +345,7 @@ export default () => (
 );
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { jsx: 1 } });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx', undefined, { jsx: 1 });
 
       const components = extractVueComponents(sourceFile);
 
@@ -383,8 +366,7 @@ export default {
 };
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const components = extractVueComponents(sourceFile);
 
@@ -403,8 +385,7 @@ const message = ref('hello');
 const user = ref<User | null>(null);
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const state = extractVueState(sourceFile);
 
@@ -426,8 +407,7 @@ const state = reactive({
 });
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const state = extractVueState(sourceFile);
 
@@ -443,8 +423,7 @@ const count = ref(0);
 const doubled = computed(() => count.value * 2);
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const state = extractVueState(sourceFile);
 
@@ -460,8 +439,7 @@ const count = shallowRef(0);
 const user = shallowRef<User | null>(null);
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const state = extractVueState(sourceFile);
 
@@ -481,8 +459,7 @@ const state = shallowReactive({
 });
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const state = extractVueState(sourceFile);
 
@@ -500,8 +477,7 @@ const props = defineProps<{
 }>();
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const propsCall = extractVuePropsCall(sourceFile);
 
@@ -517,8 +493,7 @@ const props = defineProps({
 });
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const propsCall = extractVuePropsCall(sourceFile);
 
@@ -532,8 +507,7 @@ import { ref } from 'vue';
 const count = ref(0);
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const propsCall = extractVuePropsCall(sourceFile);
 
@@ -551,8 +525,7 @@ const props = withDefaults(defineProps<{
 });
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const propsCall = extractVuePropsCall(sourceFile);
 
@@ -570,8 +543,7 @@ const emit = defineEmits<{
 }>();
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const emits = extractVueEmitsCall(sourceFile);
 
@@ -583,8 +555,7 @@ const emit = defineEmits<{
 const emit = defineEmits(['update', 'close', 'submit']);
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const emits = extractVueEmitsCall(sourceFile);
 
@@ -599,8 +570,7 @@ import { ref } from 'vue';
 const count = ref(0);
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const emits = extractVueEmitsCall(sourceFile);
 
@@ -618,8 +588,7 @@ const props = defineProps<{
 }>();
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const props = extractVueProps(sourceFile);
 
@@ -645,8 +614,7 @@ const props = defineProps({
 });
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const props = extractVueProps(sourceFile);
 
@@ -666,8 +634,7 @@ const props = withDefaults(defineProps<{
 });
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const props = extractVueProps(sourceFile);
 
@@ -681,8 +648,7 @@ import { ref } from 'vue';
 const count = ref(0);
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const props = extractVueProps(sourceFile);
 
@@ -700,8 +666,7 @@ const emit = defineEmits<{
 }>();
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const emits = extractVueEmits(sourceFile);
 
@@ -720,8 +685,7 @@ const emit = defineEmits<{
 const emit = defineEmits(['update', 'close', 'submit']);
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const emits = extractVueEmits(sourceFile);
 
@@ -740,8 +704,7 @@ import { ref } from 'vue';
 const count = ref(0);
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const emits = extractVueEmits(sourceFile);
 
@@ -763,8 +726,7 @@ export default () => (
 );
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { jsx: 1 } });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx', undefined, { jsx: 1 });
 
       const components = extractVueComponents(sourceFile);
 
@@ -788,8 +750,7 @@ export default {
 };
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.ts', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
 
       const components = extractVueComponents(sourceFile);
 
@@ -807,8 +768,7 @@ export default () => (
 );
 `;
 
-      const project = new Project({ useInMemoryFileSystem: true, compilerOptions: { jsx: 1 } });
-      const sourceFile = project.createSourceFile('test.tsx', sourceCode);
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx', undefined, { jsx: 1 });
 
       const components = extractVueComponents(sourceFile);
 

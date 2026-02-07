@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { Project } from 'ts-morph';
 import { extractShadcnUI } from '../../../src/extractors/styling/shadcn.js';
 import { createTestSourceFile } from './test-helpers.js';
 
@@ -632,10 +631,8 @@ describe('ShadCN/UI Extractor', () => {
 
   describe('Error handling', () => {
     it('should handle malformed JSX gracefully', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
       // Malformed JSX - unclosed tag
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button } from '@/components/ui/button';
         
@@ -644,7 +641,8 @@ describe('ShadCN/UI Extractor', () => {
             <Button variant="default"
           );
         }
-        `
+        `,
+        'test.tsx'
       );
 
       // Should not throw, should return empty object or partial results
@@ -655,16 +653,15 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should handle SourceFile with syntax errors gracefully', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
       // Invalid TypeScript syntax
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button } from '@/components/ui/button';
         function Component() {
           return <Button
         // Missing closing
-        `
+        `,
+        'test.tsx'
       );
 
       // Should not throw, should return empty object or partial results
@@ -675,8 +672,7 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should handle empty SourceFile gracefully', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('', 'test.tsx');
 
       const result = extractShadcnUI(sourceFile);
       expect(typeof result).toBe('object');
@@ -704,17 +700,16 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should handle AST traversal errors gracefully', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
       // Code that might cause AST traversal issues
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button } from '@/components/ui/button';
         function Component() {
           const invalid = (() => { throw new Error('test'); })();
           return <Button className={invalid}>Content</Button>;
         }
-        `
+        `,
+        'test.tsx'
       );
 
       // Should not throw, should handle gracefully
@@ -724,10 +719,8 @@ describe('ShadCN/UI Extractor', () => {
     });
 
     it('should handle complex AST traversal errors in feature detection', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
       // Code that might cause issues in feature detection
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         import { Button } from '@/components/ui/button';
         function Component() {

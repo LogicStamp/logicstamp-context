@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { Project } from 'ts-morph';
 import {
   extractTailwindClasses,
   categorizeTailwindClasses,
@@ -605,17 +604,16 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should handle malformed JSX gracefully', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
       // Malformed JSX - unclosed tag
-      const sourceFile = project.createSourceFile(
-        'test.tsx',
+      const sourceFile = createTestSourceFile(
         `
         export function Component() {
           return (
             <div className="flex p-4"
           );
         }
-        `
+        `,
+        'test.tsx'
       );
 
       // Should not throw, should return empty array or fallback gracefully
@@ -624,8 +622,7 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should handle empty or invalid SourceFile gracefully', () => {
-      const project = new Project({ useInMemoryFileSystem: true });
-      const sourceFile = project.createSourceFile('test.tsx', '');
+      const sourceFile = createTestSourceFile('', 'test.tsx');
 
       const classes = extractTailwindClasses(sourceFile);
       expect(Array.isArray(classes)).toBe(true);
@@ -651,9 +648,7 @@ describe('Tailwind Extractor', () => {
 
     describe('Phase 1: Dynamic Class Parsing (v0.3.9)', () => {
       it('should resolve const variable declarations in template literals', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component() {
             const base = 'px-4 py-2 rounded-lg font-semibold';
@@ -677,9 +672,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should resolve let variable declarations in template literals', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component() {
             let spacing = 'p-4 m-2';
@@ -701,9 +694,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should resolve object property access in template literals', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component() {
             const variants = {
@@ -730,9 +721,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should resolve conditional expressions (ternary) in template literals', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component({ isActive }: { isActive: boolean }) {
             return (
@@ -755,9 +744,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should resolve nested variable references', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component() {
             const base = 'px-4 py-2';
@@ -782,9 +769,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should resolve object property access with nested variables', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component() {
             const base = 'px-4 py-2';
@@ -811,9 +796,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should resolve conditional expressions with object properties', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component({ variant }: { variant: 'primary' | 'secondary' }) {
             const variants = {
@@ -839,9 +822,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should handle variables in cn() function calls', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           import { cn } from '@/lib/utils';
           
@@ -867,9 +848,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should not resolve object lookups with variables (Phase 2 limitation)', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component({ variant }: { variant: 'primary' | 'secondary' }) {
             const variants = {
@@ -896,9 +875,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should handle binary expression with && operator', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component() {
             const isActive = true;
@@ -918,9 +895,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should handle binary expression with || operator', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component() {
             const fallback = 'bg-gray-500';
@@ -940,9 +915,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should handle binary expression with ?? operator', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component() {
             const base = null;
@@ -962,9 +935,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should NOT extract from non-logical binary operators (+, ===, etc.)', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component() {
             const a = 'p-4';
@@ -992,9 +963,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should resolve scope shadowing correctly (inner scope wins)', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           const base = 'p-2';
           export function Component() {
@@ -1016,9 +985,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should handle ! important prefix in classes', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component() {
             return (
@@ -1050,9 +1017,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should handle arbitrary selector variants', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component() {
             return (
@@ -1081,9 +1046,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should categorize flex utilities correctly', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component() {
             return (
@@ -1106,9 +1069,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should categorize grid utilities correctly', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component() {
             return (
@@ -1131,9 +1092,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should handle rounded without dash', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component() {
             return (
@@ -1157,9 +1116,7 @@ describe('Tailwind Extractor', () => {
 
     describe('Smoke tests - critical scenarios', () => {
       it('should extract and categorize sm:!p-4 hover:bg-blue-500 text-sm text-red-500', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component() {
             return (
@@ -1190,9 +1147,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should handle className={isActive && "bg-blue-500"}', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component() {
             const isActive = true;
@@ -1210,9 +1165,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should handle className={isActive ? "bg-blue-500" : "bg-gray-500"}', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component() {
             const isActive = true;
@@ -1231,9 +1184,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should handle className={`p-4 ${base} text-sm`} with const base = \'px-2\'', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           export function Component() {
             const base = 'px-2';
@@ -1253,9 +1204,7 @@ describe('Tailwind Extractor', () => {
       });
 
       it('should handle shadowing: outer base="p-2", inner base="p-4" used in JSX', () => {
-        const project = new Project({ useInMemoryFileSystem: true });
-        const sourceFile = project.createSourceFile(
-          'test.tsx',
+        const sourceFile = createTestSourceFile(
           `
           const base = 'p-2';
           export function Component() {
