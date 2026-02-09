@@ -19,7 +19,7 @@ See [docs/limitations.md](docs/limitations.md).
 
 ---
 
-## [0.5.2] - 2026-02-07
+## [0.5.2] - 2026-02-09
 
 ### Fixed
 
@@ -32,7 +32,7 @@ See [docs/limitations.md](docs/limitations.md).
 
 ### Changed
 
-- Schema validation now correctly validates all generated fields, eliminating false validation errors in IDEs
+- Schema validation now correctly validates all generated fields.
 
 ---
 
@@ -1125,7 +1125,8 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ---
 
 ## Version links
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.2
 [0.5.1]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.1
 [0.5.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.0
 [0.4.1]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.4.1

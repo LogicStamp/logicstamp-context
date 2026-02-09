@@ -172,17 +172,6 @@ interface StyleSources {
       compositionDepth?: "simple" | "moderate" | "complex";
     };
   };
-  antd?: {
-    components?: string[];
-    packages?: string[];
-    features: {
-      usesTheme?: boolean;
-      usesConfigProvider?: boolean;
-      usesForm?: boolean;
-      usesLocale?: boolean;
-      usesIcons?: boolean;
-    };
-  };
 }
 
 interface LayoutMetadata {
@@ -516,6 +505,10 @@ interface MissingDependency {
 | `bundleHash` | `string` | ✅ | Bundle-level hash (uifb:...) |
 | `graph` | `object` | ✅ | Dependency graph |
 | `graph.nodes` | `BundleNode[]` | ✅ | Components in bundle |
+| `graph.nodes[].entryId` | `string` | ✅ | Component identifier |
+| `graph.nodes[].contract` | `UIFContract` | ✅ | Component contract |
+| `graph.nodes[].codeHeader` | `string \| null` | ❌ | Header comment (when `--include-code header`) |
+| `graph.nodes[].code` | `string \| null` | ❌ | Full source code (when `--include-code full`) |
 | `graph.edges` | `BundleEdge[]` | ✅ | Dependencies between components |
 | `meta` | `object` | ✅ | Bundle metadata |
 | `meta.missing` | `MissingDependency[]` | ✅ | Unresolved dependencies |

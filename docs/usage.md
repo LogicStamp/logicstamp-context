@@ -1070,7 +1070,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
 
 ### Contract Structure
 Each component contract includes:
-- **version**: Structural composition (hooks, components, functions)
+- **composition**: Structural composition (hooks, components, functions)
 - **interface**: API contract (props, events, state)
 - **semanticHash**: Unique hash based on logic (detects changes)
 - **fileHash**: Content hash (tracks modifications)

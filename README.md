@@ -13,7 +13,7 @@
 
   <small><em>TypeScript · React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
 
-  **Works alongside Claude, Cursor, Copilot Chat, and MCP-based agents.**
+  **Designed to work alongside Claude, Cursor, Copilot Chat, and MCP-based agents.**
 
   <br/>
   <a href="https://github.com/LogicStamp">
@@ -67,7 +67,7 @@
 
 AI coding assistants can read your source code, but they lack explicit structural context. They often infer prop names, invent dependencies, and miss breaking changes - because raw source code isn't machine-structured context.
 
-⚙️ **LogicStamp Context** is a compiler-like static analyzer that emits deterministic architectural contracts from your TypeScript source code.
+**LogicStamp Context** is a compiler-like static analyzer that emits deterministic architectural contracts from your TypeScript source code.
 
 **LogicStamp Context generates deterministic component contracts that:**
 - Stay in sync with your code (watch mode auto-regenerates)
