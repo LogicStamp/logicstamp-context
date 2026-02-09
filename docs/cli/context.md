@@ -295,7 +295,7 @@ The `context_main.json` file provides a complete directory index:
 Each folder entry includes: `path`, `contextFile`, `bundles`, `components`, `isRoot`, `rootLabel`, and `tokenEstimate`.
 
 Each folder's `context.json` contains bundles with:
-- Contracts (UIFContract schema v0.3)
+- Contracts (UIFContract schema v0.4)
 - Dependency graph (`nodes` and `edges`)
 - `meta.missing` for unresolved dependencies: `file not found`, `external package`, `outside scan path`, `max depth exceeded`, `circular dependency`
 

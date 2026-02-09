@@ -33,7 +33,7 @@ Validates a specific context file:
 - Top-level value is an array of `LogicStampBundle` objects
 - Each bundle has the required fields (`type`, `schemaVersion`, `entryId`,
   `graph`, `meta`, etc.)
-- Contracts stored within nodes are `UIFContract` with schema version `0.3`
+- Contracts stored within nodes are `UIFContract` with schema version `0.4`
 - Warns when bundle hashes or schema versions diverge from expected values
 
 #### For Main Index File (`context_main.json`)
