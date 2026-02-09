@@ -32,7 +32,7 @@ See [docs/limitations.md](docs/limitations.md).
 
 ### Changed
 
-- Schema validation now correctly validates all generated fields, eliminating false validation errors in IDEs
+- Schema validation now correctly validates all generated fields.
 
 ---
 
