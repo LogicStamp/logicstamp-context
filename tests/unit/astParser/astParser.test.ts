@@ -220,17 +220,16 @@ describe('AST Parser Error Handling', () => {
     });
 
     it('should prioritize backend extraction over Vue extraction', async () => {
-      const mixedFile = join(tempDir, 'mixed-routes.ts');
-      const mixedContent = `
-        import express from 'express';
-        import { ref } from 'vue';
-        
-        const app = express();
-        
-        app.get('/users', (req, res) => {
-          res.json({ users: [] });
-        });
-      `;
+      const mixedFile = join(tempDir, `mixed-routes-vue-${Date.now()}.ts`);
+      const mixedContent = `import express from 'express';
+import { ref } from 'vue';
+
+const app = express();
+
+app.get('/users', (req, res) => {
+  res.json({ users: [] });
+});
+`;
       writeFileSync(mixedFile, mixedContent, 'utf-8');
 
       const result = await extractFromFile(mixedFile);
@@ -248,17 +247,16 @@ describe('AST Parser Error Handling', () => {
     });
 
     it('should prioritize backend extraction over React extraction', async () => {
-      const mixedFile = join(tempDir, 'mixed-routes-react.ts');
-      const mixedContent = `
-        import express from 'express';
-        import { useState } from 'react';
-        
-        const app = express();
-        
-        app.get('/users', (req, res) => {
-          res.json({ users: [] });
-        });
-      `;
+      const mixedFile = join(tempDir, `mixed-routes-react-${Date.now()}.ts`);
+      const mixedContent = `import express from 'express';
+import { useState } from 'react';
+
+const app = express();
+
+app.get('/users', (req, res) => {
+  res.json({ users: [] });
+});
+`;
       writeFileSync(mixedFile, mixedContent, 'utf-8');
 
       const result = await extractFromFile(mixedFile);
