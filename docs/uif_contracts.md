@@ -64,7 +64,7 @@ Each UIF contract follows the `UIFContract` schema (version `0.4`):
 Always `"UIFContract"` to identify the contract type.
 
 ### `schemaVersion`
-Schema version string (currently `"0.3"`). Used for compatibility checking and validation.
+Schema version string (currently `"0.4"`). Used for compatibility checking and validation.
 
 ### `kind`
 Component type identifier:
@@ -191,7 +191,7 @@ Identifies which styling approaches are used in the component:
     - `usesLocale` – Boolean if locale/internationalization features are used
     - `usesIcons` – Boolean if @ant-design/icons are used
 
-- **`chakra`** – Chakra UI component library information:
+- **`chakraUI`** – Chakra UI component library information:
   - `components` – Array of Chakra UI component names used (e.g., `["Button", "Card", "Box", "Stack", "Input"]`)
   - `packages` – Array of Chakra UI packages imported (e.g., `["@chakra-ui/react"]`)
   - `features` – Object indicating Chakra UI features:
@@ -199,6 +199,32 @@ Identifies which styling approaches are used in the component:
     - `usesColorMode` – Boolean if color mode (dark/light) is used
     - `usesResponsiveProps` – Boolean if responsive props (array syntax) are used
     - `usesSystemProps` – Boolean if system props are used on layout components
+
+- **`shadcnUI`** – ShadCN/UI component library information:
+  - `components` – Array of ShadCN component names used (e.g., `["Button", "Card", "Dialog", "Sheet"]`)
+  - `variants` – Record of variant usage per component type (e.g., `{ button: ["default", "outline"], badge: ["secondary"] }`)
+  - `sizes` – Array of size prop values used (e.g., `["sm", "lg", "icon"]`)
+  - `features` – Object indicating ShadCN features:
+    - `usesForm` – Boolean if react-hook-form integration is used
+    - `usesTheme` – Boolean if theme is used (next-themes or dark mode)
+    - `usesIcons` – Boolean if icons are used (lucide-react or radix icons)
+    - `componentDensity` – String indicating component density: `"low"`, `"medium"`, or `"high"`
+
+- **`radixUI`** – Radix UI primitive component library information:
+  - `primitives` – Record of primitive components by package (e.g., `{ "react-dialog": ["Dialog", "DialogContent"], "react-popover": ["Popover", "PopoverTrigger"] }`)
+  - `patterns` – Object indicating usage patterns:
+    - `controlled` – Array of components using controlled pattern
+    - `uncontrolled` – Array of components using uncontrolled pattern
+    - `portals` – Number indicating portal usage count
+    - `asChild` – Number indicating asChild composition pattern count
+  - `accessibility` – Object indicating accessibility features:
+    - `usesDirection` – Boolean if RTL/LTR support is used
+    - `usesFocusManagement` – Boolean if focus trapping is used
+    - `usesKeyboardNav` – Boolean if keyboard navigation is used (loop, orientation, etc.)
+    - `usesModal` – Boolean if modal dialogs are used
+  - `features` – Object indicating Radix UI features:
+    - `primitiveCount` – Number indicating total unique primitives used
+    - `compositionDepth` – String indicating composition complexity: `"simple"`, `"moderate"`, or `"complex"`
 
 #### `layout`
 Structural layout information:
@@ -271,7 +297,7 @@ Page-level layout metadata:
           "usesIcons": true
         }
       },
-      "chakra": {
+      "chakraUI": {
         "components": ["Button", "Card", "Box", "Stack", "Input"],
         "packages": ["@chakra-ui/react"],
         "features": {
@@ -279,6 +305,39 @@ Page-level layout metadata:
           "usesColorMode": true,
           "usesResponsiveProps": true,
           "usesSystemProps": true
+        }
+      },
+      "shadcnUI": {
+        "components": ["Button", "Card", "Dialog"],
+        "variants": {
+          "button": ["default", "outline"],
+          "badge": ["secondary"]
+        },
+        "sizes": ["sm", "lg"],
+        "features": {
+          "usesForm": true,
+          "usesTheme": true,
+          "usesIcons": true,
+          "componentDensity": "medium"
+        }
+      },
+      "radixUI": {
+        "primitives": {
+          "react-dialog": ["Dialog", "DialogTrigger", "DialogContent"],
+          "react-popover": ["Popover", "PopoverTrigger"]
+        },
+        "patterns": {
+          "controlled": ["Dialog"],
+          "portals": 2,
+          "asChild": 1
+        },
+        "accessibility": {
+          "usesFocusManagement": true,
+          "usesModal": true
+        },
+        "features": {
+          "primitiveCount": 5,
+          "compositionDepth": "moderate"
         }
       }
     },

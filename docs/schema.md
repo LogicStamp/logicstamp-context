@@ -22,7 +22,7 @@ Component contract structure embedded in bundles.
 interface UIFContract {
   type: "UIFContract";
   schemaVersion: "0.4";
-  kind: "react:component" | "react:hook" | "vue:component" | "vue:composable" | "ts:module" | "node:cli";
+  kind: "react:component" | "react:hook" | "vue:component" | "vue:composable" | "ts:module" | "node:cli" | "node:api";
   description?: string;
   composition: {
     variables: string[];
@@ -37,6 +37,7 @@ interface UIFContract {
   };
   exports?: "default" | "named" | { named: string[] };  // Optional export metadata
   style?: StyleMetadata;  // Optional style metadata (when --include-style is used)
+  nextjs?: NextJSMetadata;  // Optional Next.js App Router metadata
   semanticHash: string; // Format: "uif:..." (24 hex chars)
   fileHash: string;     // Format: "uif:..." (24 hex chars)
 }
@@ -131,7 +132,7 @@ interface StyleSources {
       usesIcons?: boolean;
     };
   };
-  chakra?: {
+  chakraUI?: {
     components?: string[];
     packages?: string[];
     features: {
@@ -139,6 +140,47 @@ interface StyleSources {
       usesColorMode?: boolean;
       usesResponsiveProps?: boolean;
       usesSystemProps?: boolean;
+    };
+  };
+  shadcnUI?: {
+    components?: string[];
+    variants?: Record<string, string[]>;
+    sizes?: string[];
+    features: {
+      usesForm?: boolean;
+      usesTheme?: boolean;
+      usesIcons?: boolean;
+      componentDensity?: "low" | "medium" | "high";
+    };
+  };
+  radixUI?: {
+    primitives?: Record<string, string[]>;
+    patterns?: {
+      controlled?: string[];
+      uncontrolled?: string[];
+      portals?: number;
+      asChild?: number;
+    };
+    accessibility?: {
+      usesDirection?: boolean;
+      usesFocusManagement?: boolean;
+      usesKeyboardNav?: boolean;
+      usesModal?: boolean;
+    };
+    features?: {
+      primitiveCount?: number;
+      compositionDepth?: "simple" | "moderate" | "complex";
+    };
+  };
+  antd?: {
+    components?: string[];
+    packages?: string[];
+    features: {
+      usesTheme?: boolean;
+      usesConfigProvider?: boolean;
+      usesForm?: boolean;
+      usesLocale?: boolean;
+      usesIcons?: boolean;
     };
   };
 }
@@ -168,6 +210,17 @@ interface PageLayoutMetadata {
   pageRole?: string;
   sections?: string[];
   ctaCount?: number;
+}
+
+interface NextJSMetadata {
+  isInAppDir?: boolean;
+  directive?: "client" | "server";
+  routeRole?: "page" | "layout" | "loading" | "error" | "not-found" | "template" | "default" | "route";
+  segmentPath?: string; // Route path derived from file structure (e.g., "/blog/[slug]", "/api/users")
+  metadata?: {
+    static?: Record<string, unknown>; // From `export const metadata = {...}`
+    dynamic?: boolean; // True if `export function generateMetadata()` exists
+  };
 }
 ```
 
@@ -227,6 +280,7 @@ interface PageLayoutMetadata {
 | `interface.state` | `object` | ✅ | Component state |
 | `exports` | `string \| object` | ❌ | Export metadata: `"default"`, `"named"`, or `{ named: string[] }` |
 | `style` | `StyleMetadata` | ❌ | Style metadata (only when `--include-style` is used) |
+| `nextjs` | `NextJSMetadata` | ❌ | Next.js App Router metadata (route roles, segment paths, metadata exports) |
 | `semanticHash` | `string` | ✅ | Logic-based hash (uif:...) |
 | `fileHash` | `string` | ✅ | Content-based hash (uif:...) |
 
@@ -253,7 +307,9 @@ Identifies which styling approaches are used:
 - **`motion`** - Framer Motion usage with components, variants, and feature flags
 - **`materialUI`** - Material UI usage with components, packages, and styling features (theme, sx prop, styled, makeStyles, system props)
 - **`antd`** - Ant Design usage with components, packages, and features (theme, ConfigProvider, form, locale, icons)
-- **`chakra`** - Chakra UI usage with components, packages, and features (theme, color mode, responsive props, system props)
+- **`chakraUI`** - Chakra UI usage with components, packages, and features (theme, color mode, responsive props, system props)
+- **`shadcnUI`** - ShadCN/UI usage with components, variants, sizes, and features (form integration, theme, icons, component density)
+- **`radixUI`** - Radix UI usage with primitives, patterns, accessibility features, and composition complexity
 
 #### Layout Metadata (`style.layout`)
 
@@ -294,6 +350,22 @@ Page-level layout information:
 
 See [style.md](./cli/style.md) for comprehensive documentation on style metadata extraction.
 
+### Next.js Metadata (Optional)
+
+The `nextjs` field is only included for Next.js App Router files. It provides Next.js-specific information:
+
+- **`isInAppDir`** - Whether the file is in the `/app/` directory
+- **`directive`** - `'use client'` or `'use server'` directive
+- **`routeRole`** - Route role: `page`, `layout`, `loading`, `error`, `not-found`, `template`, `default`, or `route`
+- **`segmentPath`** - Route path derived from file structure (e.g., `/blog/[slug]`, `/api/users`)
+- **`metadata`** - Next.js metadata exports:
+  - `static` - Static metadata from `export const metadata = {...}`
+  - `dynamic` - Boolean indicating if `export function generateMetadata()` exists
+
+**Note:** Next.js metadata is only included for files in Next.js projects. Non-Next.js files will not have a `nextjs` field.
+
+See [nextjs.md](./frameworks/nextjs.md) for comprehensive documentation on Next.js support.
+
 ## LogicStampBundle Schema
 
 LLM context bundle containing a dependency graph and contracts.
@@ -324,6 +396,7 @@ interface BundleNode {
   entryId: string;
   contract: UIFContract;
   codeHeader?: string; // @uif header block (if --include-code header)
+  code?: string; // Full source code (if --include-code full)
 }
 
 interface BundleEdge {

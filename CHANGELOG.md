@@ -5,7 +5,34 @@ All notable changes to `logicstamp-context` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+---
+
 ## [Unreleased]
+
+### Roadmap
+
+For a comprehensive roadmap with detailed status, priorities, and implementation plans, see [ROADMAP.md](ROADMAP.md).
+
+### Known Limitations
+
+See [docs/limitations.md](docs/limitations.md).
+
+---
+
+## [0.5.2] - 2026-02-07
+
+### Fixed
+
+- **JSON Schema completeness** - Fixed missing fields in JSON schema that were causing validation errors:
+  - Added `nextjs` field and `NextJSMetadata` definition to schema
+  - Added missing style metadata fields (`antd`, `chakraUI`, `shadcnUI`, `radixUI`) to `StyleSources` definition
+  - These fields were already being generated in context files but were missing from the schema, causing IDE validation errors
+- **Documentation** - Fixed missing `nextjs` field documentation in schema reference
+- **Documentation** - Fixed missing `BundleNode.code` field documentation
+
+### Changed
+
+- Schema validation now correctly validates all generated fields, eliminating false validation errors in IDEs
 
 ---
 
@@ -112,41 +139,6 @@ and adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Race condition fix is internal - external behavior improves but API unchanged
 - Performance optimizations are internal - same output, faster execution
 - New types (`Violation`, `ViolationType`, `StrictWatchStatus`) are additive exports
-
-### Roadmap (not yet implemented)
-
-For a comprehensive roadmap with detailed status, priorities, and implementation plans, see [ROADMAP.md](ROADMAP.md).
-
-**Next up (0.6.0):**
-
-- **Git baseline for compare** - Compare current context against a git ref (`git:HEAD`, `git:main`, etc.):
-  - Generates context from source at both current state and baseline ref (context files are gitignored, so must generate at both points)
-  - Uses git worktree for clean isolation
-  - Enables meaningful drift detection against known reference points
-  - Use cases: PR reviews, CI integration, pre-commit checks, release validation
-
-- **Breaking change detection for compare** (`--fail-on-breaking`) - Fail on breaking changes (requires git baseline):
-  - Detect breaking changes: removed props, removed events, removed contracts
-  - Exit with non-zero code when violations detected
-  - Designed for CI pipelines
-
-**Other planned features:**
-- CSS-in-JS support - Complete support for remaining libraries (Chakra UI, Ant Design)
-- Enhanced third-party component info (Phase 2) - Include prop types for third-party components (package names and versions completed in v0.3.8)
-- TypeScript type extraction - Capture full type definitions (generics, unions, intersections)
-- Project-level insights - Add cross-folder relationships and project-wide statistics to `context_main.json`
-- Vue Single File Component (`.vue`) support - Parse and analyze `.vue` SFC files
-- Custom profile configuration and overrides
-- Incremental bundle caching
-- Output size optimization
-- Additional output formats
-- Integration examples for popular AI assistants
-### Known Limitations
-
-See [docs/limitations.md](docs/limitations.md) for complete details and code evidence.
-
-- Dynamic class expressions partially resolved (Phase 1 complete in v0.3.9, Phase 2 planned for advanced patterns)
-- TypeScript types incomplete (generics, complex unions/intersections)
 
 ---
 

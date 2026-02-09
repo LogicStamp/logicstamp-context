@@ -44,7 +44,7 @@ These options are available at the top level (before any subcommand):
 
 **Examples:**
 ```bash
-stamp --version    # Shows: fox mascot + "Version: 0.5.1"
+stamp --version    # Shows: fox mascot + "Version: 0.5.2"
 stamp -v           # Same as --version
 stamp --help       # Shows main help
 stamp -h           # Same as --help
@@ -576,7 +576,7 @@ stamp context compare --approve
 stamp context compare --stats
 ```
 
-> **Note:** Context files are gitignored by default, so `stamp context compare` is primarily useful for local development. CI-based comparison against git refs is planned for a future release.
+> ⚠️ **Note:** Context files are gitignored by default, so `stamp context compare` is primarily useful for local development. CI-based comparison against git refs using `--baseline git:<ref>` is **not yet implemented** - use the manual workflow shown in the [CI/CD Integration](#cicd-integration) section.
 
 **See also:** [compare.md](cli/compare.md) for comprehensive documentation.
 
@@ -706,10 +706,12 @@ stamp context --profile llm-safe
 ```
 
 ### `ci-strict`
-Strict validation mode for CI/CD:
+Strict validation mode:
 - Code: none (contracts only)
 - Strict dependencies enabled
 - Fails on missing deps
+
+Useful for validation workflows. ⚠️ **Note:** Git baseline automation (`--baseline git:<ref>`) for CI/CD workflows is **not yet implemented** - use the manual workflow shown in the CI/CD Integration section.
 
 ```bash
 stamp context --profile ci-strict
@@ -848,10 +850,14 @@ stamp context --depth 3 --include-code full --max-nodes 50
 
 ### CI/CD Integration
 
+> ⚠️ **Git Baseline Automation Not Yet Implemented:** The `--baseline git:<ref>` option (e.g., `--baseline git:main`) is **not yet implemented**. Until automation is available, CI/CD workflows require either committing context files (not recommended) or using the manual baseline generation workflow shown below. See the [roadmap](https://logicstamp.dev/roadmap) for planned features.
+
 **Current CI support:**
 - Context files are gitignored by default (regenerable artifacts)
 - CI can generate context files fresh and validate them
 - Useful for: validation, stats collection, ensuring generation succeeds
+- **Contract verification** — works, but only against disk snapshots
+- **Change detection** — works, but only against disk snapshots
 
 ```bash
 # Generate context files fresh in CI
@@ -879,7 +885,7 @@ stamp context --skip-gitignore --quiet
 stamp context validate || exit 1
 ```
 
-> **Note:** CI-based drift detection (comparing against git refs like `main` or `HEAD~1`) is planned for a future release. Currently, `stamp context compare` compares against existing context files on disk, which is useful for local development but not CI (since context files are gitignored). See the [roadmap](https://logicstamp.dev/roadmap) for planned features.
+> ⚠️ **Note:** CI-based drift detection using `--baseline git:<ref>` (e.g., `--baseline git:main`) is **not yet implemented**. Currently, `stamp context compare` compares against existing context files on disk, which is useful for local development but not CI (since context files are gitignored). Use the manual workflow shown above until automation is available. See the [roadmap](https://logicstamp.dev/roadmap) for planned features.
 
 ### Validation & QA
 
@@ -1024,7 +1030,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
     },
     "meta": {
       "missing": [],
-      "source": "logicstamp-context@0.5.1"
+      "source": "logicstamp-context@0.5.2"
     }
   }
 ]
@@ -1055,7 +1061,7 @@ Per-component files would be useful for advanced use cases (granular Git diffs, 
     }
   ],
   "meta": {
-            "source": "logicstamp-context@0.5.1"
+            "source": "logicstamp-context@0.5.2"
   }
 }
 ```
