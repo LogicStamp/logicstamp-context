@@ -164,11 +164,14 @@ Warnings example (still exits 0):
 
 ## CI/CD Usage
 
+> ⚠️ **Git Baseline Automation Not Yet Implemented:** The `--baseline git:<ref>` option (e.g., `--baseline git:main`) for `stamp context compare` is **not yet implemented**. Until automation is available, CI/CD workflows require either committing context files (not recommended) or using the manual baseline generation workflow. See the [roadmap](https://logicstamp.dev/roadmap) for planned features.
+
 - Use with `stamp context` to block merges when context files become invalid
 - Use multi-file mode (no arguments) to validate **all** context files in one command
 - Combine with `npm run` scripts or Git hooks for automated checks
 - Use the exit code to fail pipelines and prompt regeneration of context files
 - Multi-file mode validates everything across the entire project
+- **Contract verification** — works, but only against disk snapshots
 
 **Example CI validation:**
 ```bash

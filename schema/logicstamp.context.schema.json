@@ -207,6 +207,10 @@
           "$ref": "#/definitions/StyleMetadata",
           "description": "Optional style metadata (only when --include-style is used)"
         },
+        "nextjs": {
+          "$ref": "#/definitions/NextJSMetadata",
+          "description": "Optional Next.js App Router metadata (route roles, segment paths, metadata exports)"
+        },
         "exports": {
           "oneOf": [
             {
@@ -811,6 +815,231 @@
           },
           "required": ["features"],
           "additionalProperties": false
+        },
+        "antd": {
+          "type": "object",
+          "properties": {
+            "components": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Ant Design component names used (e.g., ['Button', 'Input', 'Form', 'Table'])"
+            },
+            "packages": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Ant Design packages imported (e.g., ['antd', '@ant-design/icons'])"
+            },
+            "features": {
+              "type": "object",
+              "properties": {
+                "usesTheme": {
+                  "type": "boolean",
+                  "description": "Uses theme (theme, useToken, getDesignToken)"
+                },
+                "usesConfigProvider": {
+                  "type": "boolean",
+                  "description": "Uses ConfigProvider for global configuration"
+                },
+                "usesForm": {
+                  "type": "boolean",
+                  "description": "Uses Form component with validation"
+                },
+                "usesLocale": {
+                  "type": "boolean",
+                  "description": "Uses internationalization (useLocale, getLocale)"
+                },
+                "usesIcons": {
+                  "type": "boolean",
+                  "description": "Uses @ant-design/icons"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["features"],
+          "additionalProperties": false
+        },
+        "chakraUI": {
+          "type": "object",
+          "properties": {
+            "components": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Chakra UI component names used (e.g., ['Box', 'Button', 'Input', 'FormControl'])"
+            },
+            "packages": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Chakra UI packages imported (e.g., ['@chakra-ui/react', '@chakra-ui/icons'])"
+            },
+            "features": {
+              "type": "object",
+              "properties": {
+                "usesTheme": {
+                  "type": "boolean",
+                  "description": "Uses theme (useTheme, extendTheme, createTheme)"
+                },
+                "usesColorMode": {
+                  "type": "boolean",
+                  "description": "Uses color mode (useColorMode, useColorModeValue, dark/light mode)"
+                },
+                "usesResponsiveProps": {
+                  "type": "boolean",
+                  "description": "Uses responsive props (array syntax [base, md, lg])"
+                },
+                "usesSystemProps": {
+                  "type": "boolean",
+                  "description": "Uses system props on Box/Stack/Flex components"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["features"],
+          "additionalProperties": false
+        },
+        "shadcnUI": {
+          "type": "object",
+          "properties": {
+            "components": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "ShadCN/UI component names used (e.g., ['Button', 'Card', 'Dialog', 'Sheet'])"
+            },
+            "variants": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "description": "Variant usage per component type (e.g., { button: ['default', 'outline'], badge: ['secondary'] })"
+            },
+            "sizes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Size prop values used (e.g., ['sm', 'lg', 'icon'])"
+            },
+            "features": {
+              "type": "object",
+              "properties": {
+                "usesForm": {
+                  "type": "boolean",
+                  "description": "Uses react-hook-form integration"
+                },
+                "usesTheme": {
+                  "type": "boolean",
+                  "description": "Uses theme (next-themes or dark mode)"
+                },
+                "usesIcons": {
+                  "type": "boolean",
+                  "description": "Uses icons (lucide-react or radix icons)"
+                },
+                "componentDensity": {
+                  "type": "string",
+                  "enum": ["low", "medium", "high"],
+                  "description": "Number of ShadCN components used"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": ["features"],
+          "additionalProperties": false
+        },
+        "radixUI": {
+          "type": "object",
+          "properties": {
+            "primitives": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "description": "Primitive components by package (e.g., { 'react-dialog': ['Dialog', 'DialogContent'], 'react-popover': ['Popover', 'PopoverTrigger'] })"
+            },
+            "patterns": {
+              "type": "object",
+              "properties": {
+                "controlled": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Components using controlled pattern"
+                },
+                "uncontrolled": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Components using uncontrolled pattern"
+                },
+                "portals": {
+                  "type": "number",
+                  "description": "Portal usage count"
+                },
+                "asChild": {
+                  "type": "number",
+                  "description": "asChild composition pattern count"
+                }
+              },
+              "additionalProperties": false
+            },
+            "accessibility": {
+              "type": "object",
+              "properties": {
+                "usesDirection": {
+                  "type": "boolean",
+                  "description": "Uses RTL/LTR support"
+                },
+                "usesFocusManagement": {
+                  "type": "boolean",
+                  "description": "Uses focus trapping"
+                },
+                "usesKeyboardNav": {
+                  "type": "boolean",
+                  "description": "Uses keyboard navigation (loop, orientation, etc.)"
+                },
+                "usesModal": {
+                  "type": "boolean",
+                  "description": "Uses modal dialogs"
+                }
+              },
+              "additionalProperties": false
+            },
+            "features": {
+              "type": "object",
+              "properties": {
+                "primitiveCount": {
+                  "type": "number",
+                  "description": "Total unique primitives used"
+                },
+                "compositionDepth": {
+                  "type": "string",
+                  "enum": ["simple", "moderate", "complex"],
+                  "description": "Composition complexity"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
@@ -912,6 +1141,46 @@
         "ctaCount": {
           "type": "number",
           "description": "Number of call-to-action elements"
+        }
+      },
+      "additionalProperties": false
+    },
+    "NextJSMetadata": {
+      "type": "object",
+      "properties": {
+        "isInAppDir": {
+          "type": "boolean",
+          "description": "Whether the file is in the Next.js App Router directory (/app/)"
+        },
+        "directive": {
+          "type": "string",
+          "enum": ["client", "server"],
+          "description": "Next.js directive ('use client' or 'use server')"
+        },
+        "routeRole": {
+          "type": "string",
+          "enum": ["page", "layout", "loading", "error", "not-found", "template", "default", "route"],
+          "description": "Route role in Next.js App Router (page, layout, loading, error, not-found, template, default, route)"
+        },
+        "segmentPath": {
+          "type": "string",
+          "description": "Route path derived from file structure (e.g., '/blog/[slug]', '/api/users')"
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "static": {
+              "type": "object",
+              "additionalProperties": true,
+              "description": "Static metadata from `export const metadata = {...}`"
+            },
+            "dynamic": {
+              "type": "boolean",
+              "description": "True if `export function generateMetadata()` exists"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Next.js metadata exports (static and dynamic)"
         }
       },
       "additionalProperties": false

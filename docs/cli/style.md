@@ -310,7 +310,7 @@ Style metadata is included in the `style` field of each component's contract wit
           "usesIcons": true
         }
       },
-      "chakra": {
+      "chakraUI": {
         "components": ["Button", "Card", "Box", "Stack", "Input"],
         "packages": ["@chakra-ui/react"],
         "features": {
@@ -389,7 +389,7 @@ Object containing detected styling approaches:
 - `motion` – Object with framer-motion components and features
 - `materialUI` – Object with Material UI components, packages, and styling features
 - `antd` – Object with Ant Design components, packages, and features (theme, ConfigProvider, form, locale, icons)
-- `chakra` – Object with Chakra UI components, packages, and features (theme, color mode, responsive props, system props)
+- `chakraUI` – Object with Chakra UI components, packages, and features (theme, color mode, responsive props, system props)
 - `shadcnUI` – Object with ShadCN/UI components, variants, sizes, and features (form integration, theme, icons, component density)
 - `radixUI` – Object with Radix UI primitives (organized by package), patterns (controlled/uncontrolled, portals, asChild), accessibility features, and composition depth
 
@@ -642,7 +642,7 @@ This will output detailed error messages to help identify problematic files or e
 ## Limitations
 
 - **Dynamic class values** – While AST extraction handles `cn()`, `clsx()`, and template literals, classes generated from runtime variables (e.g., `className={styles[someVar]}`) are not detected
-- **CSS-in-JS** – Only styled-components and emotion are detected via AST-based extraction; Material UI styled is detected separately; other CSS-in-JS libraries may not be recognized
+- **CSS-in-JS** – All major CSS-in-JS libraries are supported: styled-components, Emotion, Material UI, ShadCN/UI, Radix UI, Framer Motion, Styled JSX, Chakra UI, and Ant Design (v0.5.1+). Schema validation fixes for these fields included in v0.5.2. Detection uses AST-based extraction for accurate pattern matching.
 - **External stylesheets** – Global CSS files are not analyzed; only CSS/SCSS files imported by TSX/TS component files are parsed. Standalone CSS/SCSS files that aren't imported won't be scanned.
 - **Runtime styles** – Styles applied via JavaScript at runtime are not detected
 - **Template literal dynamic segments** – Phase 1 (v0.3.9+) extracts classes from variables, object properties, and conditionals within template literals. Phase 2 patterns (object lookups with variables like `variants[variant]`, cross-file references, function calls) are not yet resolved.

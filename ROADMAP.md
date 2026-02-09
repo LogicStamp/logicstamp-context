@@ -607,6 +607,12 @@ export type UIFContract = ReactUIFContract | BackendUIFContract | VueUIFContract
 ### Performance & Optimization
 - ✅ **Incremental bundle caching** - Only regenerate changed bundles (implemented in watch mode v0.4.1)
 - **Output size optimization** - Further reduce token counts while maintaining accuracy
+- **Style metadata verbosity reduction** - Reduce style extraction verbosity for nested components (depth >= 1) when using `depth=2`:
+  - **Default behavior (less verbose)**: For nested components, reduce Tailwind classes (15 → 5 per category), component library lists (20-30 → 5-10), remove SCSS/CSS details (selectors/properties), simplify layout/visual metadata
+  - **Full extraction preserved**: Entry components (depth 0) always get full extraction; use `--full-style` flag to restore current behavior (full extraction for all components)
+  - **Impact**: ~30-40% reduction in style metadata tokens with depth=2, while maintaining full detail for entry components
+  - **Backward compatible**: Existing context files remain valid; old behavior available via `--full-style` flag
+  - **Status**: 🔴 Planned for v0.5.3
 
 ### Configuration & Extensibility
 - **Custom profile configuration and overrides** - User-defined profiles beyond preset options

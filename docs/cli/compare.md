@@ -2,7 +2,9 @@
 
 The `compare` command detects drift between context files. It compares regenerated context against existing context files on disk.
 
-> **Note:** Context files are gitignored by default (`stamp init` sets this up). The compare command is primarily useful for **local development** - comparing your current code against previously generated context files. For CI-based comparison against git refs (e.g., `git:main`), see the [roadmap](https://logicstamp.dev/roadmap).
+> ⚠️ **Git Baseline Automation:** The `--baseline git:<ref>` option (e.g., `--baseline git:main`) is **not yet implemented**. Currently, `stamp context compare` only compares against context files on disk. For CI workflows comparing against git refs, use the manual workflow shown in the [CI/CD Integration](#cicd-integration) section below. See the [roadmap](https://logicstamp.dev/roadmap) for planned automation.
+
+> **Note:** Context files are gitignored by default (`stamp init` sets this up). The compare command is primarily useful for **local development** - comparing your current code against previously generated context files.
 
 ### Quick Start
 
@@ -419,11 +421,20 @@ Token stats show the delta for each folder with changes.
 
 ### CI/CD Integration
 
-> **Important:** By default, context files are gitignored and won't exist in CI. The examples below require either:
+> ⚠️ **Git Baseline Automation Not Yet Implemented:** The `--baseline git:<ref>` option (e.g., `--baseline git:main`) is not yet implemented. Until automation is available, CI/CD workflows require either committing context files (not recommended) or using the manual baseline generation workflow shown below.
+>
+> **What works:**
+> - Contract verification — works, but only against disk snapshots
+> - Change detection — works, but only against disk snapshots
+>
+> **What's missing:**
+> - Native git baseline automation (`--baseline git:main`, `--baseline git:HEAD~1`) — not yet implemented
+>
+> **Current workarounds:**
 > 1. **Committing context files** - Remove them from `.gitignore` (not recommended)
 > 2. **Manual baseline generation** - Generate context at two points and compare (shown in second example)
 >
-> **Coming soon:** Native git baseline support (`git:main`, `git:HEAD~1`) will simplify CI workflows without requiring committed context files.
+> See the [roadmap](https://logicstamp.dev/roadmap) for planned features.
 
 #### GitHub Actions Example (Auto-Mode Multi-File)
 
@@ -470,7 +481,7 @@ jobs:
 
 #### GitHub Actions Example (Manual Multi-File Comparison)
 
-> This workaround generates context at two git refs manually. Native git baseline support is planned.
+> **Manual workflow (required until automation is implemented):** This example generates context at two git refs manually. The automated `--baseline git:<ref>` option is not yet implemented.
 
 ```yaml
 name: Context Drift Check (Multi-File)
@@ -684,5 +695,5 @@ The compare command detects context drift with multi-file support:
 - **Three-tier output**: folder summary → component summary → detailed changes
 - **Orphaned file cleanup**: automatically clean up stale files with `--clean-orphaned`
 
-> **Note:** For real-time breaking change detection during development, use `stamp context --watch --strict-watch` instead. For CI-based comparison against git refs, see the [roadmap](https://logicstamp.dev/roadmap).
+> ⚠️ **Note:** For real-time breaking change detection during development, use `stamp context --watch --strict-watch` instead. For CI-based comparison against git refs, the `--baseline git:<ref>` option is **not yet implemented** - use the manual workflow shown in the CI/CD Integration section above.
 

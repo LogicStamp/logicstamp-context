@@ -8,7 +8,7 @@ LogicStamp Context is pretty accurate overall—around 90% of the time it gets t
 
 - **~95%** - Component Contracts (Props, state, hooks detection)
 - **~100%** - Imports Detection (Imports tracked correctly)
-- **~85-90%** - Style Metadata (Static classes ~100%, dynamic classes Phase 1 complete ~70-80% of patterns, CSS-in-JS 7/9 major libraries supported)
+- **~90-95%** - Style Metadata (Static classes ~100%, dynamic classes Phase 1 complete ~70-80% of patterns, CSS-in-JS 9/9 major libraries supported ✅ v0.5.1)
 
 ---
 
@@ -351,7 +351,7 @@ This section documents what's currently captured in context files versus what's 
 - **Component kind**: `react:component`, `react:hook`, `vue:component`, `vue:composable`, `ts:module`, `node:cli`, `node:api` ✅ **v0.4.0**
 - **Props**: Types and signatures
 - **State variables**: With types
-- **Hooks used**: Listed in `version.hooks`
+- **Hooks used**: Listed in `composition.hooks`
 - **Functions**: Signatures captured
 - **Imports and dependencies**: Tracked
 - **Exports**: Default/named exports
@@ -712,7 +712,7 @@ Missing dependencies now include package names and versions for third-party pack
   - Prioritizes `dependencies` over `devDependencies`
   - Caches `package.json` reads for efficiency
   - Gracefully handles missing `package.json` or packages
-- ✅ Schema updates: Added optional `packageName` and `version` fields to `MissingDependency` type
+- ✅ Schema updates: Added optional `packageName` and `version` fields to `MissingDependency` type (renamed to `packageVersion` in v0.5.0)
 
 **Example:**
 
@@ -725,16 +725,18 @@ Missing dependencies now include package names and versions for third-party pack
 }
 ```
 
-**After (v0.3.8):**
+**After (v0.3.8, current field name as of v0.5.0):**
 ```json
 {
   "name": "@mui/material",
   "reason": "external package",
   "referencedBy": "src/components/Dashboard.tsx",
   "packageName": "@mui/material",
-  "version": "^5.15.0"
+  "packageVersion": "^5.15.0"
 }
 ```
+
+**Note:** The `version` field was renamed to `packageVersion` in v0.5.0 to avoid confusion with component composition fields.
 
 **Impact:** This release provides better visibility into external dependencies by including package names and versions in missing dependency information. This helps AI assistants understand which versions of third-party packages are being used in the project. The implementation is backward compatible - existing context files remain valid, and the new fields are optional. Phase 2 (prop type extraction) is planned for a future release.
 
@@ -1029,7 +1031,7 @@ Export metadata is now automatically extracted from source files, improving depe
 Dependency tracking improved by filtering out internal components, reducing false positives in missing dependency detection.
 
 **What Works:**
-- ✅ Internal components are function components defined in the same file (appear in both `version.functions` and `version.components`)
+- ✅ Internal components are function components defined in the same file (appear in both `composition.functions` and `composition.components`)
 - ✅ Internal components are now excluded from dependency graphs and missing dependency lists
 - ✅ Reduces false positives in missing dependency detection
 - ✅ Improves accuracy of dependency analysis for multi-component files
