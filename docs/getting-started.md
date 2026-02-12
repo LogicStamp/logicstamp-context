@@ -73,7 +73,7 @@ TypeScript Code  →  AST Parsing  →  Deterministic Contracts  →  AI Assista
 2. **Analyze** - Parses components and APIs using TypeScript AST (via `ts-morph`)
 3. **Extract** - Builds contracts with props, hooks, state, signatures
 4. **Graph** - Creates dependency graph showing relationships
-5. **Bundle** - Packages context optimized for AI consumption
+5. **Bundle** - Packages context optimized for AI workflows
 6. **Organize** - Groups by folder, writes `context.json` files
 7. **Index** - Creates `context_main.json` with metadata and statistics
 

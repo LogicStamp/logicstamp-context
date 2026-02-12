@@ -980,7 +980,7 @@ CSS and SCSS file parsing migrated from regex-based extraction to deterministic 
 - ✅ Invalid selector filtering (file extensions, numeric values, keyframe percentages, color values, pixel values)
 - ✅ Better error handling with graceful fallback on parse failures
 
-**Impact:** More accurate and reliable CSS/SCSS parsing, consistent with the AST-based approach used for TypeScript/React files.
+**Impact:** More accurate and reliable CSS/SCSS parsing, consistent with the AST-based approach used for TypeScript files.
 
 ## v0.3.1 Fixes
 
