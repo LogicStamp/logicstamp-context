@@ -626,7 +626,7 @@ stamp context clean ./src --all --yes
 
 ## Depth Parameter
 
-The `--depth` option controls how many levels deep the dependency graph includes. **The default is `2`** to ensure proper signature extraction for React/TypeScript projects.
+The `--depth` option controls how many levels deep the dependency graph includes. **The default is `2`** to ensure proper signature extraction for TypeScript projects.
 
 ### Why Depth 2 is the Default
 

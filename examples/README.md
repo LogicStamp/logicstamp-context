@@ -79,7 +79,7 @@ Example demonstrating style metadata extraction:
 - Reference when generating context with `stamp context style` or `--include-style`
 
 ### `context.example.toon`
-Example demonstrating the TOON format - a compact text-based format optimized for AI consumption:
+Example demonstrating the TOON format - a compact text-based format optimized for AI workflows:
 - **TOON format** - Compact text-based bundle format (smaller file size than JSON)
 - **Same structure** - Contains identical data to JSON format, just encoded differently
 - **Human-readable** - Text-based format that's readable but more compact than JSON

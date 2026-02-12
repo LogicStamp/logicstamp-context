@@ -1,6 +1,6 @@
 # TOON Format Support
 
-**TOON** (Token-Oriented Object Notation) is an alternative output format for LogicStamp context bundles, providing a compact text-based encoding optimized for AI consumption and efficient storage.
+**TOON** (Token-Oriented Object Notation) is an alternative output format for LogicStamp context bundles, providing a compact text-based encoding optimized for AI workflows and efficient storage.
 
 ```bash
 stamp context --format toon
@@ -133,7 +133,7 @@ All formats contain the same bundle data, just encoded differently:
 | `json` | `.json` | ✅ Yes | Baseline | Default, human-readable |
 | `pretty` | `.json` | ✅ Yes | Larger | Human inspection, debugging |
 | `ndjson` | `.json` | ✅ Yes | Similar to json | Streaming, line-by-line processing |
-| `toon` | `.toon` | ✅ Yes (less readable) | **~40% fewer tokens** | Compact storage, AI consumption |
+| `toon` | `.toon` | ✅ Yes (less readable) | **~40% fewer tokens** | Compact storage, AI workflows |
 
 **Token Efficiency:** TOON achieves approximately 40% token savings compared to standard JSON (2-space indentation) while maintaining similar or better LLM accuracy. Actual savings vary by data structure - uniform arrays of objects see the greatest benefit.
 

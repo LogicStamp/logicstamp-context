@@ -9,7 +9,7 @@
 
 ### Deterministic architectural context for TypeScript codebases.
 
-  Understand your codebase through explicit component contracts and relationships.
+  Explicit component contracts and dependency graphs for AI workflows.
 
   <small><em>TypeScript · React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
 
@@ -34,7 +34,7 @@
 
 **What it does:** Uses AST parsing to extract deterministic component contracts from your TypeScript codebase.
 
-**What you get:** Structured JSON bundles (props, hooks, dependencies, APIs) optimized for AI consumption.
+**What you get:** Structured JSON bundles (props, hooks, dependencies, APIs) optimized for AI workflows.
 
 **Why it matters:** Gives AI assistants explicit architectural context without reading implementations - prevents inferred prop names and missed dependencies by making contracts explicit.
 
@@ -224,7 +224,7 @@ Context always fresh as you code
 2. **Analyze** - Parses components and APIs using TypeScript AST (Abstract Syntax Tree) via `ts-morph`
 3. **Extract** - Builds contracts with props, hooks, state, signatures
 4. **Graph** - Creates dependency graph showing relationships
-5. **Bundle** - Packages context optimized for AI consumption
+5. **Bundle** - Packages context optimized for AI workflows
 6. **Organize** - Groups by folder, writes `context.json` files
 7. **Index** - Creates `context_main.json` with metadata and statistics
 
