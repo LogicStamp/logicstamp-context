@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { estimateGPT4Tokens, estimateClaudeTokens, formatTokenCount } from '../../src/utils/tokens.js';
+import { estimateGPT4Tokens, estimateClaudeTokens, formatTokenCount, clearTokenizerCache } from '../../src/utils/tokens.js';
 
 describe('Token Estimation Utilities', () => {
   describe('formatTokenCount', () => {
@@ -144,9 +144,59 @@ Line 2
 Line 3`;
       const gpt4Tokens = await estimateGPT4Tokens(text);
       const claudeTokens = await estimateClaudeTokens(text);
-      
+
       expect(gpt4Tokens).toBeGreaterThan(0);
       expect(claudeTokens).toBeGreaterThan(0);
+    });
+  });
+
+  describe('clearTokenizerCache', () => {
+    it('should clear tokenizer cache without throwing', () => {
+      // First, ensure tokenizers are loaded
+      // Then clear cache - should not throw
+      expect(() => clearTokenizerCache()).not.toThrow();
+    });
+
+    it('should allow tokenizers to work after cache is cleared', async () => {
+      // Load tokenizers
+      const text = 'Test string for tokenization';
+      await estimateGPT4Tokens(text);
+      await estimateClaudeTokens(text);
+
+      // Clear cache
+      clearTokenizerCache();
+
+      // Tokenizers should reload and work again
+      const gpt4Tokens = await estimateGPT4Tokens(text);
+      const claudeTokens = await estimateClaudeTokens(text);
+
+      expect(gpt4Tokens).toBeGreaterThan(0);
+      expect(claudeTokens).toBeGreaterThan(0);
+    });
+
+    it('should produce consistent results after cache clear', async () => {
+      const text = 'Consistent tokenization test';
+
+      // Get tokens before clear
+      const tokensBefore = await estimateGPT4Tokens(text);
+
+      // Clear and reload
+      clearTokenizerCache();
+
+      // Get tokens after clear
+      const tokensAfter = await estimateGPT4Tokens(text);
+
+      // Should produce the same result
+      expect(tokensAfter).toBe(tokensBefore);
+    });
+
+    it('should be safe to call multiple times', () => {
+      // Multiple clears should not cause issues
+      expect(() => {
+        clearTokenizerCache();
+        clearTokenizerCache();
+        clearTokenizerCache();
+      }).not.toThrow();
     });
   });
 });

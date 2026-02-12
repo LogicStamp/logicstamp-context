@@ -54,6 +54,8 @@ import {
   isThirdPartyPackage,
   extractPackageName,
   getPackageVersion,
+  recordSanitizationBatch,
+  type SanitizeInfo,
 } from './pack/index.js';
 
 // Load package.json to get version
@@ -333,6 +335,9 @@ export async function pack(
   // visited contains manifest keys (canonical identifiers, now project-relative)
   const nodes: BundleNode[] = [];
 
+  // Collect sanitization info to record once after processing (avoids race conditions)
+  const sanitizationInfos: SanitizeInfo[] = [];
+
   for (const manifestKey of Array.from(visited)) {
     // Try to get contract from in-memory map first (standalone mode), then from sidecar file
     const contract = options.contractsMap?.get(manifestKey) || await loadContract(manifestKey, projectRoot);
@@ -352,7 +357,7 @@ export async function pack(
           name: manifestKey,
           reason: `Contract file not found at ${sidecarPath}`,
         };
-        
+
         // Enhance with package info if it's a third-party package
         if (isThirdPartyPackage(manifestKey)) {
           const packageName = extractPackageName(manifestKey);
@@ -364,7 +369,7 @@ export async function pack(
             }
           }
         }
-        
+
         missing.push(missingDep);
         continue;
       }
@@ -388,10 +393,20 @@ export async function pack(
     let code: string | null | undefined = undefined;
 
     if (options.includeCode === 'header') {
-      codeHeader = await extractCodeHeader(manifestKey, projectRoot);
+      const headerResult = await extractCodeHeader(manifestKey, projectRoot);
+      codeHeader = headerResult.header;
+      if (headerResult.sanitizeInfo) {
+        sanitizationInfos.push(headerResult.sanitizeInfo);
+      }
     } else if (options.includeCode === 'full') {
-      code = await readSourceCode(manifestKey, projectRoot);
-      codeHeader = await extractCodeHeader(manifestKey, projectRoot);
+      const codeResult = await readSourceCode(manifestKey, projectRoot);
+      code = codeResult.code;
+      if (codeResult.sanitizeInfo) {
+        sanitizationInfos.push(codeResult.sanitizeInfo);
+      }
+      const headerResult = await extractCodeHeader(manifestKey, projectRoot);
+      codeHeader = headerResult.header;
+      // Note: sanitization info from header is already captured by readSourceCode for the same file
     }
 
     if (contract) {
@@ -407,6 +422,11 @@ export async function pack(
         ...(code !== undefined && { code }),
       });
     }
+  }
+
+  // Record sanitization stats once after batch processing (thread-safe)
+  if (sanitizationInfos.length > 0) {
+    recordSanitizationBatch(sanitizationInfos);
   }
 
   // DX & guardrails: If no nodes were packed, provide helpful error

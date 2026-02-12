@@ -11,10 +11,32 @@
  */
 
 // Lazy-loaded tokenizers (only loaded if available)
+// Note: Tokenizers are intentionally cached as singletons - they're expensive to load
+// Use clearTokenizerCache() to free memory if needed in long-running processes
 let tiktokenEncoder: any = null;
 let anthropicTokenizer: any = null;
 let tiktokenLoaded = false;
 let anthropicLoaded = false;
+
+/**
+ * Clear tokenizer caches to free memory
+ * Note: Tokenizers will be reloaded on next use (expensive operation)
+ * Only call this in long-running processes that need to minimize memory
+ */
+export function clearTokenizerCache(): void {
+  // Free the encoder if it has a free() method (tiktoken does)
+  if (tiktokenEncoder && typeof tiktokenEncoder.free === 'function') {
+    try {
+      tiktokenEncoder.free();
+    } catch {
+      // Ignore errors during cleanup
+    }
+  }
+  tiktokenEncoder = null;
+  anthropicTokenizer = null;
+  tiktokenLoaded = false;
+  anthropicLoaded = false;
+}
 
 /**
  * Try to load tiktoken encoder (lazy, only once)
