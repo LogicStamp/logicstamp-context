@@ -2,7 +2,7 @@
  * Framer Motion extractor - Extracts animation configurations
  */
 
-import { SourceFile, SyntaxKind, JsxAttribute, PropertyAccessExpression, CallExpression, VariableDeclaration } from 'ts-morph';
+import { SourceFile, SyntaxKind, JsxAttribute, JsxExpression, PropertyAccessExpression, CallExpression, VariableDeclaration, NumericLiteral, PropertyAssignment } from 'ts-morph';
 import type { AnimationMetadata } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
 
@@ -101,14 +101,16 @@ export function extractMotionConfig(source: SourceFile): {
         if (attrName === 'variants') {
           const initializer = jsxAttr.getInitializer();
           if (initializer && initializer.getKind() === SyntaxKind.JsxExpression) {
-            const expr = (initializer as any).getExpression();
+            const jsxExpr = initializer as JsxExpression;
+            const expr = jsxExpr.getExpression();
             if (expr && expr.getKind() === SyntaxKind.ObjectLiteralExpression) {
               // Extract property names from inline object literal
               const objLiteral = expr.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
               const properties = objLiteral.getProperties();
               for (const prop of properties) {
                 if (prop.getKind() === SyntaxKind.PropertyAssignment) {
-                  const name = prop.getNameNode();
+                  const propAssignment = prop as PropertyAssignment;
+                  const name = propAssignment.getNameNode();
                   if (name.getKind() === SyntaxKind.Identifier) {
                     variants.add(name.getText());
                   }
@@ -321,17 +323,19 @@ export function extractAnimationMetadata(source: SourceFile): AnimationMetadata 
           if (attr.getNameNode().getText() === 'animate') {
             const animateInitializer = attr.getInitializer();
             if (animateInitializer && animateInitializer.getKind() === SyntaxKind.JsxExpression) {
-              const expr = (animateInitializer as any).getExpression();
+              const animateJsxExpr = animateInitializer as JsxExpression;
+              const expr = animateJsxExpr.getExpression();
               if (expr && expr.getKind() === SyntaxKind.ObjectLiteralExpression) {
                 const objLiteral = expr.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
                 const properties = objLiteral.getProperties();
                 for (const prop of properties) {
                   if (prop.getKind() === SyntaxKind.PropertyAssignment) {
-                    const name = prop.getNameNode();
+                    const propAssignment = prop as PropertyAssignment;
+                    const name = propAssignment.getNameNode();
                     if (name.getKind() === SyntaxKind.Identifier && name.getText() === 'opacity') {
-                      const opacityInitializer = prop.getInitializer();
+                      const opacityInitializer = propAssignment.getInitializer();
                       if (opacityInitializer && opacityInitializer.getKind() === SyntaxKind.NumericLiteral) {
-                        const value = (opacityInitializer as any).getLiteralValue?.() ?? parseFloat(opacityInitializer.getText());
+                        const value = (opacityInitializer as NumericLiteral).getLiteralValue();
                         if (value === 1) {
                           animation.type = 'fade-in';
                           break;

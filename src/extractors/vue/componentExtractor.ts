@@ -420,7 +420,14 @@ export function extractVueProps(source: SourceFile): Record<string, PropType> {
                     } else {
                       const declarations = prop.getDeclarations();
                       isOptional = declarations.some((decl) => {
-                        return (decl as any).hasQuestionToken?.() === true;
+                        // PropertySignature and PropertyDeclaration have hasQuestionToken()
+                        if (Node.isPropertySignature(decl)) {
+                          return decl.hasQuestionToken();
+                        }
+                        if (Node.isPropertyDeclaration(decl)) {
+                          return decl.hasQuestionToken();
+                        }
+                        return false;
                       });
                     }
 

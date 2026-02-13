@@ -2,7 +2,7 @@
 
 /**
  * LogicStamp Context CLI - Standalone context generator
- * Scans React/TypeScript files and generates AI-friendly context bundles
+ * Scans TypeScript files and generates AI-friendly context bundles
  */
 
 import { contextCommand, type ContextOptions } from './commands/context.js';

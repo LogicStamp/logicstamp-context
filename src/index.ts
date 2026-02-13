@@ -2,7 +2,7 @@
  * LogicStamp Context - Main entry point
  * 
  * This package provides tools for generating AI-friendly context bundles
- * from React/TypeScript codebases.
+ * from TypeScript codebases.
  * 
  * @example
  * ```typescript
@@ -47,3 +47,7 @@ export { cleanCommand } from './cli/commands/clean.js';
 // Watch mode status (for MCP server integration)
 export { isWatchModeActive, readWatchStatus, getWatchStatusPath, readWatchLogs, appendWatchLog, clearWatchLogs, getWatchLogsPath } from './utils/config.js';
 export type { WatchStatus, WatchLogEntry, WatchLogs } from './utils/config.js';
+
+// Cache management (for long-running processes)
+export { clearSecurityReportCache } from './core/pack/loader.js';
+export { clearTokenizerCache } from './utils/tokens.js';

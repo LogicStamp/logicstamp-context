@@ -2,7 +2,7 @@
  * Detectors - Detect component kind and Next.js metadata
  */
 
-import { SourceFile, SyntaxKind, FunctionDeclaration, VariableStatement, ArrowFunction, ObjectLiteralExpression, PropertyAssignment } from 'ts-morph';
+import { SourceFile, SyntaxKind, FunctionDeclaration, VariableStatement, ArrowFunction, ObjectLiteralExpression, PropertyAssignment, StringLiteral, ClassDeclaration } from 'ts-morph';
 import type { ContractKind, NextJSMetadata } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
 import { basename, dirname } from 'node:path';
@@ -189,15 +189,15 @@ export function extractNextJsMetadataExports(source: SourceFile): NextJSMetadata
                       const propValue = propAssignment.getInitializer();
                       
                       if (propName.getKind() === SyntaxKind.Identifier || propName.getKind() === SyntaxKind.StringLiteral) {
-                        const name = propName.getKind() === SyntaxKind.Identifier 
-                          ? propName.getText() 
-                          : (propName as any).getLiteralText?.() ?? propName.getText().slice(1, -1);
-                        
+                        const name = propName.getKind() === SyntaxKind.Identifier
+                          ? propName.getText()
+                          : (propName as StringLiteral).getLiteralText();
+
                         // Extract basic value types
                         if (propValue) {
                           const valueKind = propValue.getKind();
                           if (valueKind === SyntaxKind.StringLiteral) {
-                            metadataObj[name] = (propValue as any).getLiteralText?.() ?? propValue.getText().slice(1, -1);
+                            metadataObj[name] = (propValue as StringLiteral).getLiteralText();
                           } else if (valueKind === SyntaxKind.NumericLiteral) {
                             metadataObj[name] = parseFloat(propValue.getText());
                           } else if (valueKind === SyntaxKind.TrueKeyword || valueKind === SyntaxKind.FalseKeyword) {
@@ -309,7 +309,14 @@ function isMainExportAVueComposable(source: SourceFile, imports: string[]): bool
 
     for (const stmt of statements) {
       const kind = stmt.getKind();
-      const modifiers = (stmt as any).getModifiers?.() || [];
+      // Only check statements that can have modifiers
+      if (kind !== SyntaxKind.FunctionDeclaration &&
+          kind !== SyntaxKind.VariableStatement &&
+          kind !== SyntaxKind.ClassDeclaration) {
+        continue;
+      }
+      const modifierableStmt = stmt as FunctionDeclaration | VariableStatement | ClassDeclaration;
+      const modifiers = modifierableStmt.getModifiers();
 
       let hasExport = false;
       let isDefault = false;
@@ -427,20 +434,27 @@ function hasVueComponentRegistration(source: SourceFile): boolean {
 function isMainExportAHook(source: SourceFile): boolean {
   try {
     const statements = source.getStatements();
-    
+
     for (const stmt of statements) {
       const kind = stmt.getKind();
-      const modifiers = (stmt as any).getModifiers?.() || [];
-      
+      // Only check statements that can have modifiers
+      if (kind !== SyntaxKind.FunctionDeclaration &&
+          kind !== SyntaxKind.VariableStatement &&
+          kind !== SyntaxKind.ClassDeclaration) {
+        continue;
+      }
+      const modifierableStmt = stmt as FunctionDeclaration | VariableStatement | ClassDeclaration;
+      const modifiers = modifierableStmt.getModifiers();
+
       let hasExport = false;
       let isDefault = false;
-      
+
       for (const mod of modifiers) {
         const modKind = mod.getKind();
         if (modKind === SyntaxKind.ExportKeyword) hasExport = true;
         if (modKind === SyntaxKind.DefaultKeyword) isDefault = true;
       }
-      
+
       // Check default export first (highest priority)
       if (isDefault && hasExport) {
         if (kind === SyntaxKind.FunctionDeclaration) {
