@@ -124,24 +124,27 @@ export async function generateModeComparison(
   
   // Calculate actual source size tokens using tokenizers when available
   // Read all source files and concatenate to get accurate token counts
+  // Cache file contents to avoid redundant file reads later
   let actualSourceTokensGPT4: number;
   let actualSourceTokensClaude: number;
-  
+  const fileContentCache = new Map<string, string>();
+
   try {
-    // Read all source files and concatenate
+    // Read all source files, cache them, and concatenate
     const sourceTexts: string[] = [];
     for (const file of files) {
       try {
         // Resolve relative path to absolute for file operations
         const absoluteFilePath = isAbsolute(file) ? file : join(projectRoot, file);
         const { text } = await readFileWithText(absoluteFilePath);
+        fileContentCache.set(absoluteFilePath, text);
         sourceTexts.push(text);
       } catch (error) {
         // Skip files that can't be read
       }
     }
     const concatenatedSource = sourceTexts.join('\n\n');
-    
+
     // Use actual tokenizers if available, otherwise fall back to approximation
     actualSourceTokensGPT4 = await estimateGPT4Tokens(concatenatedSource);
     actualSourceTokensClaude = await estimateClaudeTokens(concatenatedSource);
@@ -173,8 +176,10 @@ export async function generateModeComparison(
         // Resolve relative path to absolute for file operations
         const absoluteFilePath = isAbsolute(file) ? file : join(projectRoot, file);
         const ast = await extractFromFile(absoluteFilePath);
-        const { text } = await readFileWithText(absoluteFilePath);
-        
+        // Use cached file content instead of re-reading from disk
+        const text = fileContentCache.get(absoluteFilePath);
+        if (!text) continue; // Skip if file wasn't cached (couldn't be read earlier)
+
         // Use relative path for contract entryId (file is relative)
         const result = buildContract(file, ast, {
           preset: 'none',
@@ -182,7 +187,7 @@ export async function generateModeComparison(
           enablePredictions: options.predictBehavior,
           styleMetadata: undefined, // Explicitly no style
         });
-        
+
         if (result.contract) {
           noStyleContracts.push(result.contract);
         }
@@ -241,8 +246,10 @@ export async function generateModeComparison(
         // Resolve relative path to absolute for file operations
         const absoluteFilePath = isAbsolute(file) ? file : join(projectRoot, file);
         const ast = await extractFromFile(absoluteFilePath);
-        const { text } = await readFileWithText(absoluteFilePath);
-        
+        // Use cached file content instead of re-reading from disk
+        const text = fileContentCache.get(absoluteFilePath);
+        if (!text) continue; // Skip if file wasn't cached (couldn't be read earlier)
+
         let styleMetadata;
         try {
           const sourceFile = styleProject.addSourceFileAtPath(absoluteFilePath);
@@ -250,7 +257,7 @@ export async function generateModeComparison(
         } catch (styleError) {
           // Style extraction is optional
         }
-        
+
         // Use relative path for contract entryId (file is relative)
         const result = buildContract(file, ast, {
           preset: 'none',
@@ -258,7 +265,7 @@ export async function generateModeComparison(
           enablePredictions: options.predictBehavior,
           styleMetadata,
         });
-        
+
         if (result.contract) {
           styleContracts.push(result.contract);
         }

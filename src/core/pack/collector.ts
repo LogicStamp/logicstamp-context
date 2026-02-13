@@ -47,8 +47,9 @@ export async function collectDependencies(
     }
   }
 
-  while (queue.length > 0) {
-    const current = queue.shift()!;
+  let queueIndex = 0;
+  while (queueIndex < queue.length) {
+    const current = queue[queueIndex++];
 
     // Normalize the ID for lookup
     const normalizedId = normalizeEntryId(current.id);

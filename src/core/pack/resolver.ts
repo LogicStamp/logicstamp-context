@@ -2,7 +2,7 @@
  * Resolver module - Resolve component names and paths to manifest keys
  */
 
-import { normalizeEntryId } from '../../utils/fsx.js';
+import { normalizeEntryId, getFolderPath } from '../../utils/fsx.js';
 import type { ProjectManifest, ComponentNode } from '../manifest.js';
 
 /**
@@ -74,8 +74,9 @@ export function resolveDependency(
 
   // First, try relative path resolution based on parent directory
   // This ensures we resolve to components in the same directory tree first
-  // parentId is a manifest key (normalized path), extract directory
-  const parentDir = parentId.substring(0, parentId.lastIndexOf('/'));
+  // parentId is a manifest key - use getFolderPath which normalizes path separators
+  // This fixes Windows compatibility where parentId might contain backslashes
+  const parentDir = getFolderPath(parentId);
   const possiblePaths = [
     `${parentDir}/${depName}.tsx`,
     `${parentDir}/${depName}.ts`,
