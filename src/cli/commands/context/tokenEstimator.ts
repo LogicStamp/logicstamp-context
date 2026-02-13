@@ -363,7 +363,7 @@ export async function displayModeComparison(
   console.log('\n📊 Mode Comparison\n');
   console.log(`   Token estimation: GPT-4o (${gpt4Method}) | Claude (${claudeMethod})`);
   console.log(`   Files analyzed: ${totalFiles} total (${tsFiles} .ts, ${tsxFiles} .tsx)`);
-  console.log(`   Scope: TypeScript/React source files only (test files excluded)`);
+  console.log(`   Scope: TypeScript source files only (test files excluded)`);
   if (!tokenizerStatus.gpt4 || !tokenizerStatus.claude) {
     const missing: string[] = [];
     if (!tokenizerStatus.gpt4) {

@@ -1,5 +1,5 @@
 /**
- * Context command - Generates context bundles from React/TypeScript codebases
+ * Context command - Generates context bundles from TypeScript codebases
  */
 
 import { resolve, dirname, join } from 'node:path';
@@ -75,7 +75,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     console.log(`🔍 Scanning ${displayPath(projectRoot)}...`);
   }
 
-  // Step 1: Find all React/TS files
+  // Step 1: Find all TypeScript files
   let files = await globFiles(projectRoot);
 
   // Step 1.5: Filter files based on .stampignore
@@ -89,7 +89,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   }
 
   if (files.length === 0) {
-    console.error(`❌ No React/TypeScript modules found under ${displayPath(projectRoot)}`);
+    console.error(`❌ No TypeScript modules found under ${displayPath(projectRoot)}`);
     console.error(`   Try: logicstamp-context ./src or --depth 0 to scan all directories`);
     process.exit(1);
   }
@@ -114,7 +114,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
 
   if (contracts.length === 0) {
     console.error('❌ No components found to analyze');
-    console.error(`   Files were found but could not be analyzed as React/TypeScript components`);
+    console.error(`   Files were found but could not be analyzed as TypeScript components`);
     console.error(`   Ensure your files contain valid React components or TypeScript modules`);
     process.exit(1);
   }
