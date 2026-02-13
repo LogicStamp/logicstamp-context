@@ -19,7 +19,7 @@ See [docs/limitations.md](docs/limitations.md).
 
 ---
 
-## [0.5.3] - 2026-02-13
+## [0.5.3] - 2026-02-14
 
 ### Fixed
 
