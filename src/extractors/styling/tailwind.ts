@@ -2,7 +2,7 @@
  * Tailwind CSS extractor - Extracts and categorizes Tailwind utility classes
  */
 
-import { SourceFile, SyntaxKind, Node, JsxExpression, NoSubstitutionTemplateLiteral, VariableDeclaration } from 'ts-morph';
+import { SourceFile, SyntaxKind, Node, JsxAttribute, JsxExpression, StringLiteral, NoSubstitutionTemplateLiteral, VariableDeclaration, ArrowFunction } from 'ts-morph';
 import { debugError } from '../../utils/debug.js';
 
 /**
@@ -111,7 +111,7 @@ export function extractTailwindClasses(source: SourceFile | string): string[] {
       for (const attr of attributes) {
         if (attr.getKind() !== SyntaxKind.JsxAttribute) continue;
         
-        const jsxAttr = attr as any;
+        const jsxAttr = attr as JsxAttribute;
         const attrName = jsxAttr.getNameNode().getText();
         // Support both className (React/Preact) and class (Vue, Svelte, etc.)
         if (attrName !== 'className' && attrName !== 'class') continue;
@@ -159,13 +159,13 @@ function extractClassesFromExpression(node: Node, sourceFile?: SourceFile): stri
 
     // String literal: className="flex p-4"
     if (node.getKind() === SyntaxKind.StringLiteral) {
-      const text = (node as any).getLiteralText?.() ?? (node as any).getText().slice(1, -1);
+      const text = (node as StringLiteral).getLiteralText();
       const cleanClasses = text.split(/\s+/).filter((cls: string) => cls && cls !== '${' && cls !== '}');
       classes.push(...cleanClasses);
     }
     // Backtick literal with no interpolations: `flex p-4`
     else if (node.getKind() === SyntaxKind.NoSubstitutionTemplateLiteral) {
-      const text = (node as NoSubstitutionTemplateLiteral).getLiteralText?.() ?? (node as any).getText().slice(1, -1);
+      const text = (node as NoSubstitutionTemplateLiteral).getLiteralText();
       const cleanClasses = text.split(/\s+/).filter((cls: string) => cls && cls !== '${' && cls !== '}');
       classes.push(...cleanClasses);
     }
@@ -193,15 +193,8 @@ function extractClassesFromExpression(node: Node, sourceFile?: SourceFile): stri
         // Extract literal part (static text after each ${})
         const literal = span.getLiteral();
         // getLiteralText() returns the raw text content without quotes/backticks
-        let litText: string;
-        if ((literal as any).getLiteralText) {
-          litText = (literal as any).getLiteralText();
-        } else {
-          // Fallback: parse getText() which includes backticks
-          const rawText = literal.getText();
-          // Remove leading backtick and any template syntax, remove trailing backtick
-          litText = rawText.replace(/^[^`]*`/, '').replace(/`$/, '');
-        }
+        // Both TemplateMiddle and TemplateTail have this method
+        const litText = literal.getLiteralText();
         
         if (litText && litText.trim()) {
           // Split and filter out template syntax artifacts and empty strings
@@ -386,7 +379,7 @@ function resolveVariableDeclaration(sourceFile: SourceFile, identifierNode: Node
         }
         // For ArrowFunction, check if it has a block body
         if (kind === SyntaxKind.ArrowFunction) {
-          const arrow = current as any;
+          const arrow = current as ArrowFunction;
           const body = arrow.getBody();
           // If body is a Block, prefer the Block; otherwise use ArrowFunction as scope
           if (body && body.getKind() === SyntaxKind.Block) {
@@ -439,7 +432,7 @@ function resolveVariableDeclaration(sourceFile: SourceFile, identifierNode: Node
                  kind === SyntaxKind.Constructor) {
         identifierScopeChain.push(current);
       } else if (kind === SyntaxKind.ArrowFunction) {
-        const arrow = current as any;
+        const arrow = current as ArrowFunction;
         const body = arrow.getBody();
         // If body is a Block, we'll find it in next iteration
         if (!body || body.getKind() !== SyntaxKind.Block) {

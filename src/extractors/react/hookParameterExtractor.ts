@@ -64,8 +64,8 @@ export function hasExportedHooks(source: SourceFile): boolean {
     for (const exportDecl of exportDeclarations) {
       try {
         // Skip re-exports (export { useX } from "./x") - params can't be extracted anyway
-        // Use getModuleSpecifierValue() for unambiguous check (returns string or undefined)
-        if ((exportDecl as any).getModuleSpecifierValue?.()) {
+        // getModuleSpecifierValue() returns the module path or undefined
+        if (exportDecl.getModuleSpecifierValue()) {
           continue;
         }
         const namedExports = exportDecl.getNamedExports();
@@ -241,8 +241,8 @@ function isExported(source: SourceFile, name: string): boolean {
     const exportDeclarations = source.getExportDeclarations();
     for (const exportDecl of exportDeclarations) {
       // Skip re-exports (export { useX } from "./x") - can't extract params anyway
-      // Use getModuleSpecifierValue() for unambiguous check (returns string or undefined)
-      if ((exportDecl as any).getModuleSpecifierValue?.()) {
+      // getModuleSpecifierValue() returns the module path or undefined
+      if (exportDecl.getModuleSpecifierValue()) {
         continue;
       }
       const namedExports = exportDecl.getNamedExports();

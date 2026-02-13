@@ -2,7 +2,7 @@
  * Prop Extractor - Extracts component props from TypeScript interfaces/types
  */
 
-import { SourceFile, Node, SyntaxKind } from 'ts-morph';
+import { SourceFile, Node, SyntaxKind, Type } from 'ts-morph';
 import type { PropType } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
 import { normalizePropType, stripUndefinedFromUnionText } from '../shared/propTypeNormalizer.js';
@@ -11,6 +11,23 @@ import { hasExportedHooks, extractHookParameters } from './hookParameterExtracto
 // TypeScript TypeFlags.Undefined constant (0x4000 = 16384)
 // Used for checking if a union type includes undefined
 const TYPEFLAG_UNDEFINED = 16384; // ts.TypeFlags.Undefined
+
+/**
+ * Safely get TypeScript type flags from a ts-morph Type
+ * Accesses the underlying TypeScript compiler type to get flags
+ */
+function getTypeFlags(type: Type): number {
+  try {
+    // Access the underlying TypeScript compiler type
+    const compilerType = type.compilerType;
+    if (compilerType && typeof compilerType.flags === 'number') {
+      return compilerType.flags;
+    }
+  } catch {
+    // Fallback if compiler type not accessible
+  }
+  return 0;
+}
 
 /**
  * Extract component props from TypeScript interfaces/types
@@ -41,8 +58,8 @@ export function extractProps(source: SourceFile): Record<string, PropType> {
                       const unionTypes = propType.getUnionTypes();
                       const hasUndefined = unionTypes.some(ut => {
                         try {
-                          const flags = (ut as any).getFlags?.();
-                          if (flags && (flags & TYPEFLAG_UNDEFINED) !== 0) {
+                          const flags = getTypeFlags(ut);
+                          if ((flags & TYPEFLAG_UNDEFINED) !== 0) {
                             return true;
                           }
                         } catch {
@@ -57,13 +74,9 @@ export function extractProps(source: SourceFile): Record<string, PropType> {
                         // Normalize type text by removing undefined from union (handles any position)
                         type = unionTypes
                           .filter(ut => {
-                            try {
-                              const flags = (ut as any).getFlags?.();
-                              if (flags && (flags & TYPEFLAG_UNDEFINED) !== 0) {
-                                return false;
-                              }
-                            } catch {
-                              // Fallback to string check
+                            const flags = getTypeFlags(ut);
+                            if ((flags & TYPEFLAG_UNDEFINED) !== 0) {
+                              return false;
                             }
                             return ut.getText() !== 'undefined';
                           })
@@ -136,32 +149,24 @@ export function extractProps(source: SourceFile): Record<string, PropType> {
                     const unionTypes = propTypeObj.getUnionTypes();
                     const hasUndefined = unionTypes.some(ut => {
                       // Check type flags for undefined (more robust than string matching)
-                      try {
-                        const flags = (ut as any).getFlags?.();
-                        if (flags && (flags & TYPEFLAG_UNDEFINED) !== 0) {
-                          return true;
-                        }
-                      } catch {
-                        // Fallback to string check if flags not available
+                      const flags = getTypeFlags(ut);
+                      if ((flags & TYPEFLAG_UNDEFINED) !== 0) {
+                        return true;
                       }
                       // Fallback: exact string match only (avoid false positives like SomeUndefinedType)
                       const text = ut.getText();
                       return text === 'undefined';
                     });
-                    
+
                     if (hasUndefined) {
                       isOptional = true;
                       // Normalize type text by removing undefined from union (handles any position)
                       // This ensures consistent output: undefined | string and string | undefined both become string
                       propType = unionTypes
                         .filter(ut => {
-                          try {
-                            const flags = (ut as any).getFlags?.();
-                            if (flags && (flags & TYPEFLAG_UNDEFINED) !== 0) {
-                              return false;
-                            }
-                          } catch {
-                            // Fallback to string check
+                          const flags = getTypeFlags(ut);
+                          if ((flags & TYPEFLAG_UNDEFINED) !== 0) {
+                            return false;
                           }
                           return ut.getText() !== 'undefined';
                         })
@@ -179,10 +184,14 @@ export function extractProps(source: SourceFile): Record<string, PropType> {
                   const declarations = prop.getDeclarations();
                   isOptional = declarations.some((decl) => {
                     // Use AST method to check for question token
+                    // PropertySignature and PropertyDeclaration both have hasQuestionToken()
                     if (Node.isPropertySignature(decl)) {
                       return decl.hasQuestionToken();
                     }
-                    return (decl as any).hasQuestionToken?.() === true;
+                    if (Node.isPropertyDeclaration(decl)) {
+                      return decl.hasQuestionToken();
+                    }
+                    return false;
                   });
                 }
 

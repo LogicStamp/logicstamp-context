@@ -2,7 +2,7 @@
  * Chakra UI extractor - Extracts Chakra UI component library usage
  */
 
-import { SourceFile, SyntaxKind, JsxAttribute, JsxElement, JsxSelfClosingElement } from 'ts-morph';
+import { SourceFile, SyntaxKind, JsxAttribute, JsxElement, JsxSelfClosingElement, JsxExpression } from 'ts-morph';
 import { debugError } from '../../utils/debug.js';
 
 /**
@@ -244,7 +244,8 @@ export function extractChakraUI(source: SourceFile): {
             
             // Check for array syntax in prop values (responsive props)
             if (initializer && initializer.getKind() === SyntaxKind.JsxExpression) {
-              const expr = (initializer as any).getExpression();
+              const jsxExpr = initializer as JsxExpression;
+              const expr = jsxExpr.getExpression();
               return expr && expr.getKind() === SyntaxKind.ArrayLiteralExpression;
             }
             return false;

@@ -2,7 +2,7 @@
  * Express Extractor - Extracts Express.js routes and API metadata
  */
 
-import { SourceFile, SyntaxKind, Node, CallExpression } from 'ts-morph';
+import { SourceFile, SyntaxKind, Node, CallExpression, FunctionDeclaration, ArrowFunction, FunctionExpression } from 'ts-morph';
 import type { ApiSignature } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
 
@@ -113,9 +113,12 @@ export function extractExpressApiSignature(
   const filePath = source.getFilePath?.() ?? 'unknown';
 
   try {
-    // Find the handler function
+    // Find the handler function - can be FunctionDeclaration, ArrowFunction, or FunctionExpression
+    let handlerFunc: FunctionDeclaration | ArrowFunction | FunctionExpression | undefined;
+
+    // Check function declarations first
     const functions = source.getFunctions();
-    let handlerFunc = functions.find(f => f.getName() === handlerName);
+    handlerFunc = functions.find(f => f.getName() === handlerName);
 
     // Also check arrow functions assigned to variables
     if (!handlerFunc) {
@@ -123,8 +126,11 @@ export function extractExpressApiSignature(
       for (const varDecl of variables) {
         if (varDecl.getName() === handlerName) {
           const initializer = varDecl.getInitializer();
-          if (Node.isArrowFunction(initializer) || Node.isFunctionExpression(initializer)) {
-            handlerFunc = initializer as any;
+          if (Node.isArrowFunction(initializer)) {
+            handlerFunc = initializer;
+            break;
+          } else if (Node.isFunctionExpression(initializer)) {
+            handlerFunc = initializer;
             break;
           }
         }
@@ -135,8 +141,9 @@ export function extractExpressApiSignature(
       return undefined;
     }
 
+    // handlerFunc is now FunctionDeclaration | ArrowFunction | FunctionExpression
     const parameters: Record<string, string> = {};
-    const params = (handlerFunc as any).getParameters?.() || [];
+    const params = handlerFunc.getParameters();
 
     for (const param of params) {
       const paramName = param.getName();
@@ -160,7 +167,7 @@ export function extractExpressApiSignature(
     // Try to extract return type
     let returnType: string | undefined;
     try {
-      returnType = (handlerFunc as any).getReturnType?.()?.getText();
+      returnType = handlerFunc.getReturnType()?.getText();
     } catch {
       // Return type extraction failed
     }

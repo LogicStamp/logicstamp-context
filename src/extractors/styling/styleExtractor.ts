@@ -1,9 +1,9 @@
 /**
  * Style Extractor - Main coordination logic
- * Orchestrates extraction of style metadata from React/TypeScript components
+ * Orchestrates extraction of style metadata from TypeScript components
  */
 
-import { SourceFile, SyntaxKind, JsxAttribute } from 'ts-morph';
+import { SourceFile, SyntaxKind, JsxAttribute, JsxExpression, StringLiteral, NoSubstitutionTemplateLiteral } from 'ts-morph';
 import type { StyleMetadata, StyleSources } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
 import { extractTailwindClasses, categorizeTailwindClasses, extractBreakpoints } from './tailwind.js';
@@ -103,7 +103,8 @@ function extractInlineStyles(source: SourceFile): { properties: string[]; values
         if (attrName === 'style') {
           const initializer = jsxAttr.getInitializer();
           if (initializer && initializer.getKind() === SyntaxKind.JsxExpression) {
-            const expr = (initializer as any).getExpression();
+            const jsxExpr = initializer as JsxExpression;
+            const expr = jsxExpr.getExpression();
             
             // Handle object literal: style={{ color: 'blue', padding: '1rem' }}
             if (expr && expr.getKind() === SyntaxKind.ObjectLiteralExpression) {
@@ -121,7 +122,7 @@ function extractInlineStyles(source: SourceFile): { properties: string[]; values
                   if (nameNode.getKind() === SyntaxKind.Identifier) {
                     propName = nameNode.getText();
                   } else if (nameNode.getKind() === SyntaxKind.StringLiteral) {
-                    propName = (nameNode as any).getLiteralText?.() ?? nameNode.getText().slice(1, -1);
+                    propName = (nameNode as StringLiteral).getLiteralText();
                   }
                   
                   if (propName) {
@@ -133,7 +134,7 @@ function extractInlineStyles(source: SourceFile): { properties: string[]; values
                       
                       // String literal: 'blue', "1rem"
                       if (initKind === SyntaxKind.StringLiteral) {
-                        const value = (initializer as any).getLiteralText?.() ?? initializer.getText().slice(1, -1);
+                        const value = (initializer as StringLiteral).getLiteralText();
                         values[propName] = value;
                       }
                       // Numeric literal: 10, 1.5
@@ -150,7 +151,7 @@ function extractInlineStyles(source: SourceFile): { properties: string[]; values
                       }
                       // Template literal (no substitutions): `2s`
                       else if (initKind === SyntaxKind.NoSubstitutionTemplateLiteral) {
-                        const value = (initializer as any).getLiteralText?.() ?? initializer.getText().slice(1, -1);
+                        const value = (initializer as NoSubstitutionTemplateLiteral).getLiteralText();
                         values[propName] = value;
                       }
                       // For other expressions (variables, function calls, etc.), we skip the value

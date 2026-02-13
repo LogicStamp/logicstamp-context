@@ -11,6 +11,7 @@ import {
   JsxSelfClosingElement,
   CallExpression,
   ImportDeclaration,
+  StringLiteral,
 } from 'ts-morph';
 import { debugError } from '../../utils/debug.js';
 
@@ -221,8 +222,7 @@ export function extractShadcnUI(source: SourceFile): {
           if (attrName === 'variant') {
             const initializer = jsxAttr.getInitializer();
             if (initializer && initializer.getKind() === SyntaxKind.StringLiteral) {
-              const variantValue = (initializer as any).getLiteralText?.() ?? 
-                initializer.getText().slice(1, -1);
+              const variantValue = (initializer as StringLiteral).getLiteralText();
 
               // Determine component type
               let componentType = 'other';
@@ -248,8 +248,7 @@ export function extractShadcnUI(source: SourceFile): {
           if (attrName === 'size') {
             const initializer = jsxAttr.getInitializer();
             if (initializer && initializer.getKind() === SyntaxKind.StringLiteral) {
-              const sizeValue = (initializer as any).getLiteralText?.() ?? 
-                initializer.getText().slice(1, -1);
+              const sizeValue = (initializer as StringLiteral).getLiteralText();
               if (SHADCN_SIZES.includes(sizeValue)) {
                 sizes.add(sizeValue);
               }

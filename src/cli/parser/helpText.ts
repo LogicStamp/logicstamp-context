@@ -6,7 +6,7 @@ export function getMainHelp(): string {
   return `
 ╭─────────────────────────────────────────────────╮
 │  Stamp - LogicStamp Context CLI                 │
-│  AI-ready context generation for React/TS       │
+│  AI-ready context generation for TypeScript     │
 ╰─────────────────────────────────────────────────╯
 
 USAGE:
@@ -184,7 +184,7 @@ export function getGenerateHelp(): string {
   return `
 ╭─────────────────────────────────────────────────╮
 │  Stamp Context - Generate AI Context            │
-│  Scan and analyze React/TS codebase             │
+│  Scan and analyze TypeScript codebase           │
 ╰─────────────────────────────────────────────────╯
 
 USAGE:

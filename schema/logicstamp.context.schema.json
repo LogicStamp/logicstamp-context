@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://logicstamp.dev/schemas/context/v0.1.json",
   "title": "LogicStamp Context Bundle",
-  "description": "JSON Schema for LogicStamp Context bundles - AI-ready documentation of React/TypeScript codebases. Each bundle represents component contracts, dependency graphs, and metadata. For detailed documentation on the meta.missing field and dependency resolution, see README.md 'Understanding the Meta Field' section.",
+  "description": "JSON Schema for LogicStamp Context bundles - AI-ready documentation of TypeScript codebases. Each bundle represents component contracts, dependency graphs, and metadata. For detailed documentation on the meta.missing field and dependency resolution, see README.md 'Understanding the Meta Field' section.",
   "type": "array",
   "items": {
     "$ref": "#/definitions/LogicStampBundle"
@@ -705,7 +705,6 @@
               "description": "CSS properties found in the extracted CSS"
             }
           },
-          "required": ["css"],
           "additionalProperties": false
         },
         "styledComponents": {
@@ -762,7 +761,6 @@
                   "description": "Uses viewport-triggered animations (useInView, viewport)"
                 }
               },
-              "required": ["gestures", "layoutAnimations", "viewportAnimations"],
               "additionalProperties": false
             }
           },

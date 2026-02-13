@@ -24,11 +24,11 @@
  */
 
 /**
- * AST Parser - Extracts structural information from TypeScript/React files
+ * AST Parser - Extracts structural information from TypeScript files
  * Uses ts-morph for robust AST traversal
  */
 
-import { Project, SyntaxKind, SourceFile, Node, FunctionDeclaration, ClassDeclaration, VariableStatement, ExportDeclaration } from 'ts-morph';
+import { Project, SyntaxKind, SourceFile, Node, FunctionDeclaration, ClassDeclaration, VariableStatement, ExportDeclaration, type ModifierableNode } from 'ts-morph';
 import type { LogicSignature, ContractKind, PropType, EventType, NextJSMetadata, ExportMetadata } from '../types/UIFContract.js';
 import { debugError } from '../utils/debug.js';
 import { extractComponents, extractHooks } from '../extractors/react/index.js';
@@ -86,7 +86,7 @@ function safeExtract<T>(
 }
 
 /**
- * Extract all structural information from a TypeScript/React file
+ * Extract all structural information from a TypeScript file
  * Returns empty AST on parsing errors to prevent crashes
  */
 export async function extractFromFile(filePath: string): Promise<AstExtract> {
@@ -264,7 +264,9 @@ function extractExports(source: SourceFile): { exports: ExportMetadata | undefin
     }
 
     // Check modifiers once for declarations that can be exported
-    const modifiers = (stmt as any).getModifiers?.() || [];
+    // All three types (FunctionDeclaration, ClassDeclaration, VariableStatement) implement ModifierableNode
+    const modifierableStmt = stmt as FunctionDeclaration | ClassDeclaration | VariableStatement;
+    const modifiers = modifierableStmt.getModifiers();
     let hasExport = false;
     let isDefault = false;
 
