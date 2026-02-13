@@ -7,13 +7,13 @@
     </picture>
   </a>
 
-### Deterministic architectural context for TypeScript codebases.
+### Deterministic architectural context for TypeScript.
 
-  Explicit component contracts and dependency graphs for AI workflows.
+  Turn your codebase into structured, AI-ready contracts.
 
-  <small><em>TypeScript · React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
+  <small><em>Supports: React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
 
-  **Designed to work alongside Claude, Cursor, Copilot Chat, and MCP-based agents.**
+  **Works with Claude, Cursor, Copilot Chat, and any MCP-compatible agent.**
 
   <br/>
   <a href="https://github.com/LogicStamp">

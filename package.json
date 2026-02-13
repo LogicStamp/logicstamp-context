@@ -1,7 +1,7 @@
 {
   "name": "logicstamp-context",
-  "version": "0.5.2",
-  "description": "Generate structured, deterministic, AI-ready context bundles via static analysis of TypeScript and React codebases",
+  "version": "0.5.3",
+ "description": "Deterministic architectural context for TypeScript codebases. Generates explicit component contracts and dependency graphs for AI workflows.",
   "type": "module",
   "main": "./dist/index.js",
   "exports": {

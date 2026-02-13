@@ -4,6 +4,14 @@ This roadmap outlines the planned features, improvements, and known limitations 
 
 ## Recent Achievements
 
+### v0.5.3 (February 2026)
+- ✅ **Bug fixes** - Fixed JSON schema validation (removed incorrect required fields), race condition in sanitization stats, memory leak in global caches, and Windows path separator bug in dependency resolution.
+- ✅ **Performance improvements** - O(n²) to O(n) in dependency collection (replaced `array.shift()` with index-based iteration), eliminated redundant file reads in token estimation via caching.
+- ✅ **Type safety** - Replaced unsafe `as any` casts with proper ts-morph type guards across 10+ files.
+
+### v0.5.2 (February 2026)
+- ✅ **JSON Schema completeness** - Added missing fields to JSON schema (`nextjs`, `antd`, `chakraUI`, `shadcnUI`, `radixUI`) that were causing IDE validation errors.
+
 ### v0.5.1 (February 2026)
 - ✅ **Chakra UI support** - Complete style metadata extraction for Chakra UI components. Extracts Chakra UI component props (`colorScheme`, `size`, `variant`, etc.), responsive props, and style system tokens. Handles Chakra UI's component composition patterns and theme-aware styling.
 - ✅ **Ant Design support** - Complete style metadata extraction for Ant Design components. Extracts Ant Design component props (`type`, `size`, `shape`, `ghost`, etc.), theme tokens, and component-specific styling patterns. Supports Ant Design's design system and component API patterns.
@@ -34,7 +42,7 @@ This roadmap outlines the planned features, improvements, and known limitations 
 
 ### v0.3.6 (January 2026)
 - ✅ **Hook parameter detection** - Comprehensive support for extracting function signatures from custom React hooks, including parameter types, default values, and optional parameters. Works even when Props interfaces exist in the same file.
-- ✅ **Default depth changed from 1 to 2** - Default `--depth` parameter now set to `2` to ensure proper signature extraction for React/TypeScript projects, including nested component signatures in dependency graphs.
+- ✅ **Default depth changed from 1 to 2** - Default `--depth` parameter now set to `2` to ensure proper signature extraction, including nested component signatures in dependency graphs.
 
 ### v0.3.5 (January 2026)
 - ✅ **Styled JSX support** - Full CSS extraction from `<style jsx>` blocks with selector and property parsing
@@ -44,7 +52,7 @@ This roadmap outlines the planned features, improvements, and known limitations 
 - ✅ **Vue.js TypeScript/TSX support** - Comprehensive Vue 3 Composition API support (components, composables, props, emits)
 
 ### v0.3.3 (December 2025)
-- ✅ **TOON output format** - New `--format toon` option for alternative AI consumption format
+- ✅ **TOON output format** - New `--format toon` option for alternative format optimized for AI workflows
 
 ### v0.3.2 (December 2025)
 - ✅ **CSS/SCSS AST-based parsing** - Migrated from regex to deterministic AST walk using `css-tree`
@@ -271,7 +279,7 @@ Add static analysis hints about runtime behavior.
 
 These items expand LogicStamp Context to support additional languages, frameworks, and development workflows.
 
-### Near-Term (v0.4.x)
+### Near-Term
 
 #### 1. Backend Framework Support
 **Status:** ✅ **Complete in v0.4.0**
@@ -343,7 +351,7 @@ Automatic context regeneration when source files change.
 
 ---
 
-### Future (v0.5.x+)
+### Future
 
 #### 4. Complete Vue.js Support
 **Status:** 🟡 Partially Complete
@@ -612,11 +620,11 @@ export type UIFContract = ReactUIFContract | BackendUIFContract | VueUIFContract
   - **Full extraction preserved**: Entry components (depth 0) always get full extraction; use `--full-style` flag to restore current behavior (full extraction for all components)
   - **Impact**: ~30-40% reduction in style metadata tokens with depth=2, while maintaining full detail for entry components
   - **Backward compatible**: Existing context files remain valid; old behavior available via `--full-style` flag
-  - **Status**: 🔴 Planned for v0.5.3
+  - **Status**: 🔴 Planned
 
 ### Configuration & Extensibility
 - **Custom profile configuration and overrides** - User-defined profiles beyond preset options
-- **Additional output formats** - More format options for different AI consumption patterns
+- **Additional output formats** - More format options for different AI workflow patterns
 
 ### Developer Experience
 - **Integration examples** - Examples for popular AI assistants (Cursor, Claude Desktop, GitHub Copilot Chat)
@@ -674,7 +682,7 @@ We welcome contributions! If you'd like to work on any of these roadmap items:
 
 For detailed release notes and changes, see [CHANGELOG.md](CHANGELOG.md).
 
-**Current Version:** v0.5.1 (Beta)
+**Current Version:** v0.5.3 (Beta)
 
 **Status:** Actively developed - we're working on improving accuracy and expanding feature coverage based on user feedback.
 
