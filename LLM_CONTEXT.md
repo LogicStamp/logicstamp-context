@@ -94,7 +94,7 @@ The `context_main.json` file serves as a directory index:
     }
   ],
   "meta": {
-      "source": "logicstamp-context@0.5.1"
+      "source": "logicstamp-context@0.5.3"
   }
 }
 ```
@@ -111,7 +111,7 @@ The `context_main.json` file serves as a directory index:
 ### Folder Context Files (`context.json`)
 
 Each folder's `context.json` contains an array of LogicStamp bundles. Each bundle represents one entry point (component/module) plus its immediate dependency graph.
-- **Design note**: LogicStamp Context uses per-root bundles (one bundle per entry point) rather than per-component files. This means each bundle contains the root component plus its complete dependency graph—all related components and their relationships in one self-contained unit. This design is optimized for AI consumption: when you need help with a specific page or feature, share that root bundle and the AI has complete context.
+- **Design note**: LogicStamp Context uses per-root bundles (one bundle per entry point) rather than per-component files. This means each bundle contains the root component plus its complete dependency graph—all related components and their relationships in one self-contained unit. This design is optimized for AI workflows: when you need help with a specific page or feature, share that root bundle and the AI has complete context.
 - Top-level fields: `position`, `type`, `schemaVersion`, `entryId`, `depth`, `createdAt`, `bundleHash`, `graph`, `meta`.
 - `graph.nodes` holds UIF contracts describing functions, props, events, imports, and semantic/file hashes. Optional `codeHeader` stores contract headers or code snippets when requested.
 - `graph.edges` lists dependency relationships between nodes (empty when analysis depth is 1).
@@ -180,7 +180,7 @@ When `meta.missing` is non-empty, it signals incomplete dependency resolution:
 
 ## Why Structured Data Is Better Than Raw Source
 
-LogicStamp generates **structured context bundles** rather than raw source files. This approach provides significant advantages for AI consumption:
+LogicStamp generates **structured context bundles** rather than raw source files. This approach provides significant advantages for AI workflows:
 
 ### Semantic Density
 

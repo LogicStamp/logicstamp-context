@@ -19,6 +19,75 @@ See [docs/limitations.md](docs/limitations.md).
 
 ---
 
+## [0.5.3] - 2026-02-14
+
+### Fixed
+
+- **JSON Schema validation**
+  - Removed `required: ["gestures", "layoutAnimations", "viewportAnimations"]` from `motion.features` - these fields are conditionally included only when `true`, so an empty `features: {}` object is valid
+  - Removed `required: ["css"]` from `styledJsx` - the `css` field is optional in the TypeScript types and implementation
+
+- **Race condition in sanitization stats**
+  - Eliminated potential corruption of `sanitizeStats` during concurrent file processing
+  - `extractCodeHeader` and `readSourceCode` now return sanitization info instead of mutating global state
+  - Callers aggregate results locally and record them in a single batch operation
+  - Improves reliability in watch mode and future concurrent scenarios
+
+- **Memory leak in global caches**
+  - Security report cache now has automatic expiration (5-minute TTL)
+  - Added `clearSecurityReportCache()` for explicit cache clearing when switching projects
+  - Added `clearTokenizerCache()` to free tokenizer memory in long-running processes (tokenizers reload on next use)
+
+- **Windows path separator bug in dependency resolution**
+  - `resolveDependency()` in `resolver.ts` now uses `getFolderPath()` which properly normalizes path separators
+  - Previously, hardcoded `/` separator caused `lastIndexOf('/')` to return -1 on Windows when paths contained backslashes
+  - This could cause silent failures in dependency resolution on Windows systems
+  - Added test case for Windows-style backslash paths in `resolver.test.ts`
+
+### Improved
+
+- **O(n²) to O(n) performance in dependency collection**
+  - Replaced `array.shift()` (O(n) per call) with index-based iteration (O(1) per call) in `collectDependencies()`
+  - For large projects with 1000+ components and deep dependency trees, this eliminates quadratic performance degradation
+  - Also removes the non-null assertion (`!`) on `shift()` result, improving code clarity
+
+- **Eliminated redundant file reads in token estimation**
+  - File contents are now cached on first read in `generateModeComparison()`
+  - Subsequent contract rebuilding loops use cached content instead of re-reading from disk
+  - For large codebases (500+ files), this halves I/O operations during `--compare-modes`
+
+### Changed
+
+- **Sanitization API (internal)**
+  - `extractCodeHeader` now returns `CodeHeaderResult`
+  - `readSourceCode` now returns `SourceCodeResult`
+  - Added `recordSanitization()` and `recordSanitizationBatch()` helpers
+  - `getAndResetSanitizeStats()` continues to work for consumers
+  - No breaking changes for CLI users
+
+- **Cache management**
+  - Security report cache now uses structured entries with timestamp-based TTL validation
+  - `isCacheValid()` validates both project match and expiration time
+
+- **Type safety improvements**
+  - Replaced unsafe `as any` casts with proper ts-morph type guards across multiple extractors:
+    - `astParser.ts`
+    - `propExtractor.ts`
+    - `detectors.ts`
+    - Styling extractors (`styleExtractor.ts`, `chakra.ts`, `motion.ts`, `shadcn.ts`, `tailwind.ts`)
+    - `expressExtractor.ts`
+    - `componentExtractor.ts`, `hookParameterExtractor.ts`
+
+- **Terminology**
+  - Replaced "react/typescript" with "typescript" in help texts and documentation:
+    - `helpText.ts`
+    - `astParser.ts`
+    - `context.ts`
+    - `src/index.ts`
+    - `src/cli/index.ts`
+
+---
+
 ## [0.5.2] - 2026-02-09
 
 ### Fixed
@@ -1125,7 +1194,8 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ---
 
 ## Version links
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.5.2...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.5.3...HEAD
+[0.5.3]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.3
 [0.5.2]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.2
 [0.5.1]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.1
 [0.5.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.0
