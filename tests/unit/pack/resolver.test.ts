@@ -184,6 +184,14 @@ describe('Pack Resolver', () => {
 
       expect(result).toBe('src/components/Button.tsx');
     });
+
+    it('should handle Windows-style backslash path separators in parentId', () => {
+      const manifest = createMockManifest();
+      // On Windows, parentId might contain backslashes - should still resolve correctly
+      const result = resolveDependency(manifest, 'Button', 'src\\components\\Card.tsx');
+
+      expect(result).toBe('src/components/Button.tsx');
+    });
   });
 });
 
