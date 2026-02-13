@@ -9,7 +9,7 @@
 
 ### Deterministic architectural context for TypeScript.
 
-  Turn your codebase into structured, AI-ready contracts.
+  Turn your codebase into deterministic, AI-ready contracts.
 
   <small><em>Supports: React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
 
