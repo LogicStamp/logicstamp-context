@@ -9,7 +9,7 @@
 
 ### Deterministic architectural context for TypeScript.
 
-  Turn your codebase into deterministic, AI-ready contracts.
+  Turn your codebase into architectural contracts you can diff and trust.
 
   <small><em>Supports: React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
 
@@ -29,7 +29,8 @@
 </div>
 <br/>
 
-**LogicStamp Context** is an AST-based static analysis engine that emits deterministic architectural contracts from TypeScript codebases. Designed for AI assistants and modern developer workflows.
+**LogicStamp Context** is an AST-based static analysis engine that emits deterministic architectural contracts from TypeScript codebases.  
+Provides structured, verifiable context you can diff and trust.
 
 <details>
 <summary><strong>📑 Table of Contents</strong></summary>
