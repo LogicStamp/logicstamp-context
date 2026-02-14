@@ -32,11 +32,9 @@
 
 ## Overview
 
-LogicStamp Context uses TypeScript AST parsing to extract deterministic architectural contracts from your codebase.
+LogicStamp Context is an AST-based static analyzer that emits deterministic architectural contracts from TypeScript codebases.
 
-It emits structured JSON bundles describing interfaces, props, hooks, routes, and dependencies - optimized for AI workflows and tooling.
-
-By giving AI assistants explicit architectural context instead of raw implementation, LogicStamp Context prevents inferred props, missed dependencies, and architectural drift.
+Structured JSON output. Same code ⇒ same context.
 
 <details>
 <summary><strong>📑 Table of Contents</strong></summary>
