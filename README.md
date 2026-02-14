@@ -20,7 +20,7 @@
     <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="100" style="min-width: 80px;">
   </a>
 
-  [![Version](https://img.shields.io/badge/version-0.5.3-8b5cf6.svg)](https://www.npmjs.com/package/logicstamp-context)
+  [![Version](https://img.shields.io/badge/version-0.5.4-8b5cf6.svg)](https://www.npmjs.com/package/logicstamp-context)
   ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
   [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
   ![Node](https://img.shields.io/badge/node-%3E%3D18.18.0-brightgreen.svg)
@@ -29,12 +29,7 @@
 </div>
 <br/>
 
-
-## Overview
-
-LogicStamp Context is an AST-based static analyzer that emits deterministic architectural contracts from TypeScript codebases.
-
-Structured JSON output. Same code ⇒ same context.
+**LogicStamp Context** is an AST-based static analysis engine that emits deterministic architectural contracts from TypeScript codebases.
 
 <details>
 <summary><strong>📑 Table of Contents</strong></summary>
@@ -106,7 +101,7 @@ stamp context
 
 📋 **For detailed setup instructions, see the [Getting Started Guide](https://logicstamp.dev/docs/getting-started).**
 
-## Drift Detection
+## Drift Detection (Compare Mode)
 
 Compare regenerated context against existing context files (useful for one-time checks and CI workflows):
 
@@ -405,7 +400,7 @@ LogicStamp Context is in beta. Some edge cases are not fully supported.
 ## Requirements
 
 - Node.js >= 18.18.0 (Node 20+ recommended)
-- TypeScript codebase (React, Next.js, Vue, Express, or NestJS)
+- TypeScript codebase (React, Next.js, Vue (TS/TSX), Express, or NestJS)
 
 ## Need Help?
 
