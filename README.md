@@ -59,9 +59,9 @@ Provides structured, verifiable context you can diff and trust.
 
 AI coding assistants can read your source code, but they lack explicit structural context. They infer prop names, invent dependencies, and miss breaking changes - because raw source code is not structured context.
 
-**LogicStamp Context** is a compiler-like static analyzer that emits deterministic architectural contracts from your TypeScript codebase.
+**LogicStamp Context** is a compiler-like static analyzer that emits architectural contracts from your TypeScript codebase.
 
-**LogicStamp Context generates deterministic architectural contracts that:**
+These contracts:
 - Stay in sync with your code (watch mode auto-regenerates)
 - Expose what matters (props, hooks, dependencies) without implementation noise
 - Work with any MCP-compatible AI assistant (Claude, Cursor, etc.)
