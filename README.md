@@ -9,7 +9,7 @@
 
 ### Deterministic architectural context for TypeScript.
 
-  Turn your codebase into AI-ready contracts.
+  Turn your codebase into deterministic, AI-ready contracts.
 
   <small><em>Supports: React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
 
@@ -20,7 +20,7 @@
     <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="100" style="min-width: 80px;">
   </a>
 
-  [![Version](https://img.shields.io/badge/version-0.5.2-8b5cf6.svg)](https://www.npmjs.com/package/logicstamp-context)
+  [![Version](https://img.shields.io/badge/version-0.5.3-8b5cf6.svg)](https://www.npmjs.com/package/logicstamp-context)
   ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
   [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
   ![Node](https://img.shields.io/badge/node-%3E%3D18.18.0-brightgreen.svg)
@@ -29,16 +29,12 @@
 </div>
 <br/>
 
-<details>
-<summary><strong>📌 TL;DR</strong></summary>
 
-**What it does:** Uses AST parsing to extract deterministic component contracts from your TypeScript codebase.
+## Overview
 
-**What you get:** Structured JSON bundles (props, hooks, dependencies, APIs) optimized for AI workflows.
+LogicStamp Context is an AST-based static analyzer that emits deterministic architectural contracts from TypeScript codebases.
 
-**Why it matters:** Gives AI assistants explicit architectural context without reading implementations - prevents inferred prop names and missed dependencies by making contracts explicit.
-
-</details>
+Structured JSON output. Same code ⇒ same context.
 
 <details>
 <summary><strong>📑 Table of Contents</strong></summary>
@@ -65,11 +61,11 @@
 
 ## The Problem
 
-AI coding assistants can read your source code, but they lack explicit structural context. They often infer prop names, invent dependencies, and miss breaking changes - because raw source code isn't machine-structured context.
+AI coding assistants can read your source code, but they lack explicit structural context. They infer prop names, invent dependencies, and miss breaking changes - because raw source code is not structured context.
 
-**LogicStamp Context** is a compiler-like static analyzer that emits deterministic architectural contracts from your TypeScript source code.
+**LogicStamp Context** is a compiler-like static analyzer that emits deterministic architectural contracts from your TypeScript codebase.
 
-**LogicStamp Context generates deterministic component contracts that:**
+**LogicStamp Context generates deterministic architectural contracts that:**
 - Stay in sync with your code (watch mode auto-regenerates)
 - Expose what matters (props, hooks, dependencies) without implementation noise
 - Work with any MCP-compatible AI assistant (Claude, Cursor, etc.)
@@ -336,6 +332,9 @@ LogicStamp Context protects sensitive data in generated context:
 
 ## Usage
 
+<details>
+<summary><strong>💻 CLI Usage Reference</strong></summary>
+
 ```bash
 stamp --version                    # Show version
 stamp --help                       # Show help
@@ -367,6 +366,8 @@ stamp context clean [path]         # Remove generated files
 | `--strict-missing` | Exit with error if any missing dependencies found (CI-friendly) |
 | `--debug` | Show detailed hash info (watch mode) |
 | `--log-file` | Write change logs to `.logicstamp/` (watch mode) |
+
+</details>
 
 📋 **See [docs/cli/commands.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/commands.md)** for complete reference.
 
