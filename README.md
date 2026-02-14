@@ -30,7 +30,7 @@
 <br/>
 
 
-## ⚡ Overview
+## 🔍 Overview
 
 LogicStamp Context uses TypeScript AST parsing to extract deterministic architectural contracts from your codebase.
 
