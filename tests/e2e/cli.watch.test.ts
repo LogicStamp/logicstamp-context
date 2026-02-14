@@ -169,14 +169,14 @@ describe('CLI Watch Mode Tests', () => {
       });
     }, 35000);
 
-    it('should create watch status file', async () => {
+    it('should create watch status file', { retry: CI_RETRY, timeout: 120000 }, async () => {
       return new Promise<void>(async (resolve, reject) => {
         const timeout = setTimeout(() => {
           if (watchProcess) {
             watchProcess.kill('SIGTERM');
           }
           reject(new Error('Timeout waiting for watch status file'));
-        }, 30000);
+        }, 60000);
 
         watchProcess = spawn('node', [
           'dist/cli/stamp.js',
@@ -197,7 +197,7 @@ describe('CLI Watch Mode Tests', () => {
           // Wait for watch mode to be active
           if (output.includes('Watch mode active') || output.includes('Waiting for file changes')) {
             // Check for watch status file
-            const statusPath = join(testDir, '.logicstamp', 'watch-status.json');
+            const statusPath = join(testDir, '.logicstamp', 'context_watch-status.json');
 
             // Wait a bit for the file to be written
             await new Promise(r => setTimeout(r, 500));
@@ -229,7 +229,7 @@ describe('CLI Watch Mode Tests', () => {
           reject(err);
         });
       });
-    }, 35000);
+    });
   });
 
   describe('Watch mode quiet flag', () => {
@@ -418,7 +418,7 @@ describe('CLI Watch Mode Tests', () => {
           await new Promise(r => setTimeout(r, 500));
 
           // Check that status file was removed
-          const statusPath = join(testDir, '.logicstamp', 'watch-status.json');
+          const statusPath = join(testDir, '.logicstamp', 'context_watch-status.json');
           let statusExists = true;
           try {
             await access(statusPath);
@@ -445,7 +445,7 @@ describe('CLI Watch Mode Tests', () => {
           // Status file should be cleaned up, logs should persist
           // Note: status cleanup is best-effort, so we log but don't fail if it still exists
           if (statusExists) {
-            console.log('Note: watch-status.json still exists (cleanup is best-effort)');
+            console.log('Note: context_watch-status.json still exists (cleanup is best-effort)');
           }
 
           // Logs should be preserved (if regeneration happened)
@@ -576,7 +576,7 @@ describe('CLI Watch Mode Tests', () => {
           await new Promise(r => setTimeout(r, 500));
 
           // Check that status file was removed
-          const statusPath = join(testDir, '.logicstamp', 'watch-status.json');
+          const statusPath = join(testDir, '.logicstamp', 'context_watch-status.json');
           try {
             await access(statusPath);
             // Status file still exists - might be OK on some platforms

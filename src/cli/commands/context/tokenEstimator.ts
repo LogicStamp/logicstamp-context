@@ -16,6 +16,41 @@ import { Project } from 'ts-morph';
 import { formatBundles } from './bundleFormatter.js';
 import { join, isAbsolute } from 'node:path';
 
+/**
+ * Check if all bundle generations failed and handle appropriately
+ * @returns true if bundles exist, false if all failed (with warning logged)
+ */
+function checkBundleResults<T>(
+  results: PromiseSettledResult<T>[],
+  context: string,
+  quiet?: boolean
+): { successful: T[]; allFailed: boolean } {
+  const successful = results
+    .filter((r): r is PromiseFulfilledResult<T> => r.status === 'fulfilled')
+    .map(r => r.value);
+
+  if (successful.length === 0 && results.length > 0) {
+    const errors = results
+      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+      .map(r => r.reason instanceof Error ? r.reason.message : String(r.reason));
+
+    if (!quiet) {
+      console.warn(`\n⚠️  All ${context} bundle generations failed:`);
+      errors.forEach(e => console.warn(`   - ${e}`));
+    }
+
+    return { successful: [], allFailed: true };
+  }
+
+  // Log partial failures as warnings
+  const failedCount = results.length - successful.length;
+  if (failedCount > 0 && !quiet) {
+    console.warn(`   ⚠️  ${failedCount}/${results.length} ${context} bundles failed to generate`);
+  }
+
+  return { successful, allFailed: false };
+}
+
 export interface TokenEstimates {
   currentGPT4: number;
   currentClaude: number;
@@ -198,7 +233,7 @@ export async function generateModeComparison(
     
     // Generate bundles with no-style contracts
     const noStyleContractsMap = new Map(noStyleContracts.map(c => [c.entryId, c]));
-    const noStyleBundles = await Promise.allSettled(
+    const noStyleBundleResults = await Promise.allSettled(
       manifest.graph.roots.map(rootId =>
         pack(rootId, manifest, {
           depth: options.depth,
@@ -212,14 +247,18 @@ export async function generateModeComparison(
         }, projectRoot)
       )
     );
-    // Filter out failed bundles, keep only successful ones
-    const successfulNoStyleBundles = noStyleBundles
-      .filter((result): result is PromiseFulfilledResult<LogicStampBundle> => result.status === 'fulfilled')
-      .map(result => result.value);
-    
+
+    // Check for failures and extract successful bundles
+    const { successful: successfulNoStyleBundles, allFailed: noStyleAllFailed } =
+      checkBundleResults(noStyleBundleResults, 'no-style', options.quiet);
+
+    if (noStyleAllFailed) {
+      throw new Error('Failed to generate any no-style bundles for token comparison');
+    }
+
     // Format no-style bundles to get token count
     const noStyleOutput = formatBundles(successfulNoStyleBundles, options.format);
-    
+
     headerNoStyleGPT4 = await estimateGPT4Tokens(noStyleOutput);
     headerNoStyleClaude = await estimateClaudeTokens(noStyleOutput);
   } else if (isHeaderMode && !hasStyle) {
@@ -276,7 +315,7 @@ export async function generateModeComparison(
     
     // Generate bundles with style-enabled contracts
     const styleContractsMap = new Map(styleContracts.map(c => [c.entryId, c]));
-    const styleBundles = await Promise.allSettled(
+    const styleBundleResults = await Promise.allSettled(
       manifest.graph.roots.map(rootId =>
         pack(rootId, manifest, {
           depth: options.depth,
@@ -290,14 +329,18 @@ export async function generateModeComparison(
         }, projectRoot)
       )
     );
-    // Filter out failed bundles, keep only successful ones
-    const successfulStyleBundles = styleBundles
-      .filter((result): result is PromiseFulfilledResult<LogicStampBundle> => result.status === 'fulfilled')
-      .map(result => result.value);
-    
+
+    // Check for failures and extract successful bundles
+    const { successful: successfulStyleBundles, allFailed: styleAllFailed } =
+      checkBundleResults(styleBundleResults, 'style', options.quiet);
+
+    if (styleAllFailed) {
+      throw new Error('Failed to generate any style bundles for token comparison');
+    }
+
     // Format style bundles to get token count
     const styleOutput = formatBundles(successfulStyleBundles, options.format);
-    
+
     headerWithStyleGPT4 = await estimateGPT4Tokens(styleOutput);
     headerWithStyleClaude = await estimateClaudeTokens(styleOutput);
   } else {

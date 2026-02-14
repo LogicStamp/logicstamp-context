@@ -9,7 +9,7 @@
 
 ### Deterministic architectural context for TypeScript.
 
-  Turn your codebase into deterministic, AI-ready contracts.
+  Turn your codebase into architectural contracts you can diff and trust.
 
   <small><em>Supports: React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
 
@@ -20,7 +20,7 @@
     <img src="./assets/logicstamp-fox.svg" alt="LogicStamp Fox Mascot" width="100" style="min-width: 80px;">
   </a>
 
-  [![Version](https://img.shields.io/badge/version-0.5.3-8b5cf6.svg)](https://www.npmjs.com/package/logicstamp-context)
+  [![Version](https://img.shields.io/badge/version-0.5.4-8b5cf6.svg)](https://www.npmjs.com/package/logicstamp-context)
   ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
   [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
   ![Node](https://img.shields.io/badge/node-%3E%3D18.18.0-brightgreen.svg)
@@ -29,12 +29,8 @@
 </div>
 <br/>
 
-
-## Overview
-
-LogicStamp Context is an AST-based static analyzer that emits deterministic architectural contracts from TypeScript codebases.
-
-Structured JSON output. Same code ⇒ same context.
+**LogicStamp Context** is an AST-based static analysis engine that emits deterministic architectural contracts from TypeScript codebases.  
+Provides structured, verifiable context you can diff and trust.
 
 <details>
 <summary><strong>📑 Table of Contents</strong></summary>
@@ -63,9 +59,9 @@ Structured JSON output. Same code ⇒ same context.
 
 AI coding assistants can read your source code, but they lack explicit structural context. They infer prop names, invent dependencies, and miss breaking changes - because raw source code is not structured context.
 
-**LogicStamp Context** is a compiler-like static analyzer that emits deterministic architectural contracts from your TypeScript codebase.
+**LogicStamp Context** is a compiler-like static analyzer that emits architectural contracts from your TypeScript codebase.
 
-**LogicStamp Context generates deterministic architectural contracts that:**
+These contracts:
 - Stay in sync with your code (watch mode auto-regenerates)
 - Expose what matters (props, hooks, dependencies) without implementation noise
 - Work with any MCP-compatible AI assistant (Claude, Cursor, etc.)
@@ -106,7 +102,7 @@ stamp context
 
 📋 **For detailed setup instructions, see the [Getting Started Guide](https://logicstamp.dev/docs/getting-started).**
 
-## Drift Detection
+## Drift Detection (Compare Mode)
 
 Compare regenerated context against existing context files (useful for one-time checks and CI workflows):
 
@@ -405,7 +401,7 @@ LogicStamp Context is in beta. Some edge cases are not fully supported.
 ## Requirements
 
 - Node.js >= 18.18.0 (Node 20+ recommended)
-- TypeScript codebase (React, Next.js, Vue, Express, or NestJS)
+- TypeScript codebase (React, Next.js, Vue (TS/TSX), Express, or NestJS)
 
 ## Need Help?
 

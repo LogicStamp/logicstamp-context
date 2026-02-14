@@ -17,6 +17,7 @@ import {
   writeStrictWatchStatus,
   deleteStrictWatchStatus,
 } from '../../../utils/config.js';
+import { registerCleanup, gracefulShutdown } from '../../../utils/cleanup.js';
 import type {
   WatchLogEntry,
   Violation,
@@ -595,10 +596,10 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
     });
 
     // Handle watcher errors
-    watcher.on('error', (error: unknown) => {
+    watcher.on('error', async (error: unknown) => {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error(`❌ Watch error: ${errorMessage}`);
-      process.exit(1);
+      await gracefulShutdown(1);
     });
 
     // Handle watcher ready (only show once)
@@ -610,19 +611,23 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
       }
     });
 
-    // Keep the process alive
-    process.on('SIGINT', async () => {
+    // Register cleanup handler with the central cleanup registry
+    // This ensures cleanup runs on any exit (SIGINT, SIGTERM, errors, etc.)
+    registerCleanup('watch-mode', async () => {
+      // Close the file watcher
       await watcher.close();
+
       // Clean up watch status file
       try {
         await deleteWatchStatus(projectRoot);
       } catch {
         // Ignore errors during cleanup
       }
+
+      // Show final summary and clean up strict watch status
       if (!options.quiet) {
         console.log(`\n👋 Watch mode stopped`);
 
-        // Show final strict watch summary
         if (options.strictWatch && strictWatchStatus && strictWatchStatus.cumulativeViolations > 0) {
           console.log(`\n📋 Strict Watch Session Summary:`);
           console.log(`   Regenerations: ${strictWatchStatus.regenerationCount}`);
@@ -632,44 +637,23 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
           console.log(`   Report saved to: .logicstamp/strict_watch_violations.json`);
         } else if (options.strictWatch) {
           console.log(`\n✅ Strict Watch: No violations detected during session`);
-          // Clean up the violations file if no violations
-          try {
-            await deleteStrictWatchStatus(projectRoot);
-          } catch {
-            // Ignore
-          }
         }
       }
-      // Exit with non-zero if there were errors in strict mode
-      const exitCode = options.strictWatch && strictWatchStatus && strictWatchStatus.cumulativeErrors > 0 ? 1 : 0;
-      process.exit(exitCode);
-    });
 
-    // Also clean up on other termination signals
-    const cleanup = async () => {
-      try {
-        await watcher.close();
-        await deleteWatchStatus(projectRoot);
-        if (!options.strictWatch || !strictWatchStatus || strictWatchStatus.cumulativeViolations === 0) {
+      // Clean up strict watch status file if no violations
+      if (!options.strictWatch || !strictWatchStatus || strictWatchStatus.cumulativeViolations === 0) {
+        try {
           await deleteStrictWatchStatus(projectRoot);
+        } catch {
+          // Ignore errors during cleanup
         }
-      } catch {
-        // Ignore errors during cleanup
       }
-    };
-    process.on('SIGTERM', cleanup);
-    process.on('SIGHUP', cleanup);
+    }, 1); // Priority 1 - run early since other cleanup might depend on watch being stopped
 
     // Keep process alive indefinitely
     await new Promise(() => {}); // Never resolves, keeps process running
   } catch (error) {
-    // Clean up watch status file on error
-    try {
-      await deleteWatchStatus(projectRoot);
-    } catch {
-      // Ignore errors during cleanup
-    }
     console.error(`❌ Failed to start watch mode: ${(error as Error).message}`);
-    process.exit(1);
+    await gracefulShutdown(1);
   }
 }
