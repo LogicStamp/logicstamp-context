@@ -29,7 +29,7 @@
 </div>
 <br/>
 
-**LogicStamp Context** is an AST-based static analysis engine that emits deterministic architectural contracts from TypeScript codebases.
+**LogicStamp Context** is an AST-based static analysis engine that emits deterministic architectural contracts from TypeScript codebases. Designed for AI assistants and modern developer workflows.
 
 <details>
 <summary><strong>📑 Table of Contents</strong></summary>
