@@ -6,6 +6,49 @@ import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { debugError } from './debug.js';
 
+/**
+ * Ensure config directory exists with consistent error handling
+ * @param configDir - Directory path to create
+ * @param context - Context for debug logging (e.g., 'writeConfig', 'writeWatchStatus')
+ * @throws Error if directory cannot be created
+ */
+async function ensureConfigDir(configDir: string, context: string): Promise<void> {
+  try {
+    await mkdir(configDir, { recursive: true });
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    debugError('config', context, {
+      configDir,
+      operation: 'mkdir',
+      message: err.message,
+      code: err.code,
+    });
+    throw new Error(
+      `Failed to create config directory "${configDir}": ${err.code === 'EACCES' ? 'Permission denied' : err.message}`
+    );
+  }
+}
+
+/**
+ * Format a file write error into a user-friendly message
+ * @param err - The error from writeFile
+ * @param filePath - Path to the file that failed to write
+ * @param fileType - Human-readable file type (e.g., 'config file', 'watch status file')
+ * @returns User-friendly error message
+ */
+function formatWriteError(err: NodeJS.ErrnoException, filePath: string, fileType: string): string {
+  switch (err.code) {
+    case 'ENOENT':
+      return `Parent directory not found for: "${filePath}"`;
+    case 'EACCES':
+      return `Permission denied writing to: "${filePath}"`;
+    case 'ENOSPC':
+      return `No space left on device. Cannot write: "${filePath}"`;
+    default:
+      return `Failed to write ${fileType} "${filePath}": ${err.message}`;
+  }
+}
+
 export interface LogicStampConfig {
   /** User's preference for .gitignore management: "added" | "skipped" */
   gitignorePreference?: 'added' | 'skipped';
@@ -59,21 +102,8 @@ export async function writeConfig(projectRoot: string, config: LogicStampConfig)
   const configDir = getConfigDir(projectRoot);
   const configPath = getConfigPath(projectRoot);
 
-  // Ensure config directory exists
-  try {
-    await mkdir(configDir, { recursive: true });
-  } catch (error) {
-    const err = error as NodeJS.ErrnoException;
-    debugError('config', 'writeConfig', {
-      configDir,
-      operation: 'mkdir',
-      message: err.message,
-      code: err.code,
-    });
-    throw new Error(`Failed to create config directory "${configDir}": ${err.code === 'EACCES' ? 'Permission denied' : err.message}`);
-  }
+  await ensureConfigDir(configDir, 'writeConfig');
 
-  // Write config file
   try {
     await writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
   } catch (error) {
@@ -84,22 +114,7 @@ export async function writeConfig(projectRoot: string, config: LogicStampConfig)
       message: err.message,
       code: err.code,
     });
-    
-    let userMessage: string;
-    switch (err.code) {
-      case 'ENOENT':
-        userMessage = `Parent directory not found for: "${configPath}"`;
-        break;
-      case 'EACCES':
-        userMessage = `Permission denied writing to: "${configPath}"`;
-        break;
-      case 'ENOSPC':
-        userMessage = `No space left on device. Cannot write: "${configPath}"`;
-        break;
-      default:
-        userMessage = `Failed to write config file "${configPath}": ${err.message}`;
-    }
-    throw new Error(userMessage);
+    throw new Error(formatWriteError(err, configPath, 'config file'));
   }
 }
 
@@ -185,21 +200,8 @@ export async function writeWatchStatus(projectRoot: string, status: WatchStatus)
   const configDir = getConfigDir(projectRoot);
   const statusPath = getWatchStatusPath(projectRoot);
 
-  // Ensure config directory exists
-  try {
-    await mkdir(configDir, { recursive: true });
-  } catch (error) {
-    const err = error as NodeJS.ErrnoException;
-    debugError('config', 'writeWatchStatus', {
-      configDir,
-      operation: 'mkdir',
-      message: err.message,
-      code: err.code,
-    });
-    throw new Error(`Failed to create config directory "${configDir}": ${err.code === 'EACCES' ? 'Permission denied' : err.message}`);
-  }
+  await ensureConfigDir(configDir, 'writeWatchStatus');
 
-  // Write status file
   try {
     await writeFile(statusPath, JSON.stringify(status, null, 2), 'utf-8');
   } catch (error) {
@@ -210,22 +212,7 @@ export async function writeWatchStatus(projectRoot: string, status: WatchStatus)
       message: err.message,
       code: err.code,
     });
-    
-    let userMessage: string;
-    switch (err.code) {
-      case 'ENOENT':
-        userMessage = `Parent directory not found for: "${statusPath}"`;
-        break;
-      case 'EACCES':
-        userMessage = `Permission denied writing to: "${statusPath}"`;
-        break;
-      case 'ENOSPC':
-        userMessage = `No space left on device. Cannot write: "${statusPath}"`;
-        break;
-      default:
-        userMessage = `Failed to write watch status file "${statusPath}": ${err.message}`;
-    }
-    throw new Error(userMessage);
+    throw new Error(formatWriteError(err, statusPath, 'watch status file'));
   }
 }
 
@@ -315,24 +302,36 @@ export async function readWatchLogs(projectRoot: string): Promise<WatchLogs> {
 }
 
 /**
+ * Ensure config directory exists, logging errors but not throwing (non-fatal)
+ * @param configDir - Directory path to create
+ * @param context - Context for debug logging
+ * @returns true if directory exists/created, false if failed
+ */
+async function ensureConfigDirSilent(configDir: string, context: string): Promise<boolean> {
+  try {
+    await mkdir(configDir, { recursive: true });
+    return true;
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    debugError('config', context, {
+      configDir,
+      operation: 'mkdir',
+      message: err.message,
+      code: err.code,
+    });
+    return false;
+  }
+}
+
+/**
  * Append a log entry to watch logs
  */
 export async function appendWatchLog(projectRoot: string, entry: WatchLogEntry): Promise<void> {
   const configDir = getConfigDir(projectRoot);
   const logsPath = getWatchLogsPath(projectRoot);
 
-  // Ensure config directory exists
-  try {
-    await mkdir(configDir, { recursive: true });
-  } catch (error) {
-    const err = error as NodeJS.ErrnoException;
-    debugError('config', 'appendWatchLog', {
-      configDir,
-      operation: 'mkdir',
-      message: err.message,
-      code: err.code,
-    });
-    // Non-fatal - continue even if directory can't be created
+  // Non-fatal - continue even if directory can't be created
+  if (!await ensureConfigDirSilent(configDir, 'appendWatchLog')) {
     return;
   }
 
@@ -479,18 +478,8 @@ export async function writeStrictWatchStatus(projectRoot: string, status: Strict
   const configDir = getConfigDir(projectRoot);
   const reportPath = getStrictWatchReportPath(projectRoot);
 
-  // Ensure config directory exists
-  try {
-    await mkdir(configDir, { recursive: true });
-  } catch (error) {
-    const err = error as NodeJS.ErrnoException;
-    debugError('config', 'writeStrictWatchStatus', {
-      configDir,
-      operation: 'mkdir',
-      message: err.message,
-      code: err.code,
-    });
-    // Non-fatal - continue even if directory can't be created
+  // Non-fatal - continue even if directory can't be created
+  if (!await ensureConfigDirSilent(configDir, 'writeStrictWatchStatus')) {
     return;
   }
 
