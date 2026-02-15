@@ -9,7 +9,7 @@
 
 ### Structured context for AI coding assistants.
 
-  Make AI coding assistants understand your architecture - not just your code.<br/>
+  Make AI coding assistants understand your architecture, not just your code.<br/>
   Extract deterministic component contracts from your TypeScript codebase.
 
   <small><em>Supports: React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
