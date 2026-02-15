@@ -31,7 +31,7 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { UIFContract } from '../types/UIFContract.js';
 import { structureHash, signatureHash } from '../utils/hash.js';
-import { debugError } from '../utils/debug.js';
+import { debugError, debugLog } from '../utils/debug.js';
 
 export interface ComponentNode {
   entryId: string;
@@ -163,6 +163,12 @@ export function buildDependencyGraph(
         if (!depNode.usedBy.includes(componentId)) {
           depNode.usedBy.push(componentId);
         }
+      } else {
+        // Dependency not found in manifest - likely external package or untracked file
+        debugLog('manifest', `Unresolved dependency: ${dependency}`, {
+          from: componentId,
+          dependency,
+        });
       }
     }
   }
