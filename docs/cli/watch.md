@@ -422,8 +422,18 @@ Press `Ctrl+C` to stop watch mode gracefully:
 
 Watch mode cleans up:
 - Closes file watcher
-- Deletes watch status file
+- Deletes watch status file (`.logicstamp/watch_status.json`)
 - Flushes any pending logs
+
+### Graceful Shutdown (v0.5.4+)
+
+Watch mode uses a centralized cleanup registry to ensure resources are properly cleaned up on any exit:
+
+- **Signal handlers** - SIGINT (Ctrl+C), SIGTERM, and SIGHUP all trigger graceful shutdown
+- **Error exits** - Even when errors occur, cleanup handlers run before the process exits
+- **Priority ordering** - Cleanup handlers run in priority order (watch mode cleanup runs first)
+
+This prevents orphaned resources (file watchers, status files) that could occur if the process exits unexpectedly. The cleanup is automatic—no user action required.
 
 ## Troubleshooting
 
