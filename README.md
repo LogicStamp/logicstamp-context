@@ -7,9 +7,9 @@
     </picture>
   </a>
 
-### Deterministic architectural context for TypeScript.
+### Structured context for AI coding assistants.
 
-  Turn your codebase into architectural contracts you can diff and trust.
+  Make AI tools understand your architecture - not just your code. Extract deterministic component contracts from your TypeScript codebase.
 
   <small><em>Supports: React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
 
@@ -29,18 +29,17 @@
 </div>
 <br/>
 
-**LogicStamp Context** is an AST-based static analysis engine that emits deterministic architectural contracts from TypeScript codebases.  
-Provides structured, verifiable context you can diff and trust.
+**LogicStamp Context** is a static analyzer that extracts deterministic component contracts from TypeScript codebases - giving AI assistants structured architectural context instead of raw source code.
 
 <details>
 <summary><strong>📑 Table of Contents</strong></summary>
 
 - [The Problem](#the-problem)
 - [Quick Start](#quick-start)
-- [Drift Detection](#drift-detection)
 - [Why Structured Context?](#why-structured-context)
 - [Features](#features)
 - [Watch Mode](#watch-mode)
+- [One-time Comparison](#one-time-comparison)
 - [How it Works](#how-it-works)
 - [MCP Server](#mcp-server)
 - [Example Output](#example-output)
@@ -57,9 +56,11 @@ Provides structured, verifiable context you can diff and trust.
 
 ## The Problem
 
-AI coding assistants can read your source code, but they lack explicit structural context. They infer prop names, invent dependencies, and miss breaking changes - because raw source code is not structured context.
+AI coding assistants read your source code, but they don't *understand* it structurally. They hallucinate props that don't exist, miss dependencies, and can't tell when a breaking change affects downstream components.
 
-**LogicStamp Context** is a compiler-like static analyzer that emits architectural contracts from your TypeScript codebase.
+For example: your `Button` component accepts `variant` and `disabled` - but the AI suggests `isLoading` because it saw that pattern elsewhere. No structured contract means no source of truth.
+
+**LogicStamp Context** is a static analyzer that extracts deterministic component contracts from TypeScript - giving AI assistants structured architectural context instead of raw source code.
 
 These contracts:
 - Stay in sync with your code (watch mode auto-regenerates)
@@ -101,21 +102,6 @@ stamp context
 > **ℹ️ Note:** With `npx`, run `npx logicstamp-context context`. After global install, use `stamp context`.
 
 📋 **For detailed setup instructions, see the [Getting Started Guide](https://logicstamp.dev/docs/getting-started).**
-
-## Drift Detection (Compare Mode)
-
-Compare regenerated context against existing context files (useful for one-time checks and CI workflows):
-
-```bash
-stamp context compare          # detect changes
-stamp context compare --approve  # update (like jest -u)
-```
-
-Shows added/removed components, changed props, hooks, dependencies.
-
-> **💡 Tip:** If you're using [watch mode](#watch-mode), context files are automatically regenerated and changes are shown in real-time. Use `compare` for one-time checks or CI workflows.
-
-> ⚠️ **Note:** Context files are gitignored by default. For CI-based drift detection, the `--baseline git:<ref>` option (e.g., `--baseline git:main`) is **not yet implemented**. Until automation is available, use the manual workflow: generate context from current code, checkout baseline branch, generate context from baseline, then compare. See the [roadmap](https://logicstamp.dev/roadmap) for planned automation.
 
 ## Why Structured Context?
 
@@ -185,11 +171,8 @@ Pre-parsed. Categorized. Stable. The AI reads contracts, not implementations.
 For development, run watch mode to keep context fresh as you code:
 
 ```bash
-# Basic watch - regenerate on changes
-stamp context --watch
-
-# Strict watch - also detect breaking changes in real-time
-stamp context --watch --strict-watch
+stamp context --watch                  # regenerate on changes
+stamp context --watch --strict-watch   # also detect breaking changes
 ```
 
 Strict watch catches breaking changes that affect consumers:
@@ -201,14 +184,18 @@ Strict watch catches breaking changes that affect consumers:
 | `breaking_change_function_removed` | Deleted exported `formatDate()` |
 | `contract_removed` | Deleted entire component |
 
-**Recommended workflow:**
+### One-time Comparison
 
+Compare regenerated context against existing files:
+
+```bash
+stamp context compare            # detect changes
+stamp context compare --approve  # update (like jest -u)
 ```
-stamp context --watch --strict-watch
-         ↓
-Real-time breaking change detection
-Context always fresh as you code
-```
+
+Useful for reviewing changes before committing or validating context is up-to-date.
+
+> ⚠️ **Note:** Context files are gitignored by default. For CI-based drift detection, the `--baseline git:<ref>` option (e.g., `--baseline git:main`) is **not yet implemented**. Until automation is available, use the manual workflow: generate context from current code, checkout baseline branch, generate context from baseline, then compare. See the [roadmap](https://logicstamp.dev/roadmap) for planned automation.
 
 ## How it Works
 

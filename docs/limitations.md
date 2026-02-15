@@ -639,11 +639,11 @@ Backend framework support has been fully implemented for Express.js and NestJS.
 
 ### 13. Watch Mode
 
-**Status:** ✅ **Complete (v0.4.1)**
+**Status:** ✅ **Complete (v0.4.1, enhanced in v0.5.4)**
 
 Watch mode has been fully implemented for automatic context regeneration.
 
-**What Works (v0.4.1):**
+**What Works:**
 - ✅ `stamp context --watch` command
 - ✅ File system watcher for `.ts`, `.tsx` files
 - ✅ Style file watching (`.css`, `.scss`, `.module.css`, `.module.scss`) with `--include-style`
@@ -653,7 +653,8 @@ Watch mode has been fully implemented for automatic context regeneration.
 - ✅ Debug mode (`--debug`) showing semantic/file/bundle hash changes
 - ✅ Status files for tooling integration (`.logicstamp/context_watch-status.json`)
 - ✅ Watch logs (`.logicstamp/context_watch-mode-logs.json`)
-- ✅ Graceful shutdown on Ctrl+C
+- ✅ Graceful shutdown on Ctrl+C, SIGTERM, SIGHUP (v0.5.4)
+- ✅ Centralized cleanup registry ensures no orphaned resources (v0.5.4)
 - ✅ `watch-fast` profile for lighter style extraction
 
 **What Doesn't Work:**
@@ -669,394 +670,45 @@ Watch mode has been fully implemented for automatic context regeneration.
 
 # Fixed/Resolved Features
 
-These items were previously limitations but have been fixed across all versions.
-
-## v0.3.9 Fixes
-
-### Dynamic Tailwind Class Parsing (Phase 1)
-
-**Status:** ✅ **Fixed in v0.3.9** (Phase 1 - Same-file variable resolution)
-
-Dynamic Tailwind class parsing Phase 1 is now complete! The extractor can resolve dynamic class expressions within template literals for same-file variables, object properties, and conditional expressions.
-
-**What Works (Phase 1):**
-- ✅ Resolves const/let declarations with string literals: `const base = 'px-4 py-2'` → extracts classes from variable
-- ✅ Resolves object property access: `variants.primary` → extracts classes from object property value
-- ✅ Handles conditional expressions in template literals: `${isActive ? 'bg-blue-500' : 'bg-gray-500'}` → extracts both branches
-- ✅ Handles logical operators (`&&`, `||`, `??`) used for class toggling
-- ✅ Enhanced variant support (focus-visible, group/peer variants, ARIA variants, container queries)
-- ✅ Improved categorization patterns (flex/grid utilities, color vs typography distinction)
-- ✅ Better template literal parsing (filters out template syntax artifacts)
-
-**Coverage**: ~70-80% of common dynamic class patterns
-
-**Impact:** This release significantly improves Tailwind CSS class extraction accuracy by resolving dynamic expressions that were previously ignored. Classes defined in variables, object properties, and conditional expressions are now properly extracted and categorized, providing more complete style metadata for AI context analysis. Phase 2 (planned) will add support for cross-file references, dynamic object lookups (`variants[variant]`), and function calls.
-
-**Related:** See [Dynamic Class Parsing](#dynamic-class-parsing) in Active Limitations for Phase 2 details.
-
-## v0.3.8 Fixes
-
-### Enhanced Third-Party Component Info (Phase 1)
-
-**Status:** ✅ **Fixed in v0.3.8** (Phase 1 - Package names and versions)
-
-Missing dependencies now include package names and versions for third-party packages, providing better visibility into external dependencies.
-
-**What Works:**
-- ✅ Package name extraction from import specifiers:
-  - Handles scoped packages (e.g., `@mui/material` from `@mui/material/Button`)
-  - Handles subpath imports (e.g., `lodash` from `lodash/debounce`)
-  - Distinguishes third-party packages from relative imports
-- ✅ Version lookup from `package.json`:
-  - Checks `dependencies`, `devDependencies`, and `peerDependencies`
-  - Prioritizes `dependencies` over `devDependencies`
-  - Caches `package.json` reads for efficiency
-  - Gracefully handles missing `package.json` or packages
-- ✅ Schema updates: Added optional `packageName` and `version` fields to `MissingDependency` type (renamed to `packageVersion` in v0.5.0)
-
-**Example:**
-
-**Before (v0.3.7):**
-```json
-{
-  "name": "@mui/material",
-  "reason": "external package",
-  "referencedBy": "src/components/Dashboard.tsx"
-}
-```
-
-**After (v0.3.8, current field name as of v0.5.0):**
-```json
-{
-  "name": "@mui/material",
-  "reason": "external package",
-  "referencedBy": "src/components/Dashboard.tsx",
-  "packageName": "@mui/material",
-  "packageVersion": "^5.15.0"
-}
-```
-
-**Note:** The `version` field was renamed to `packageVersion` in v0.5.0 to avoid confusion with component composition fields.
-
-**Impact:** This release provides better visibility into external dependencies by including package names and versions in missing dependency information. This helps AI assistants understand which versions of third-party packages are being used in the project. The implementation is backward compatible - existing context files remain valid, and the new fields are optional. Phase 2 (prop type extraction) is planned for a future release.
-
-## v0.3.7 Fixes
-
-### Emit Detection Accuracy
-
-**Status:** ✅ **Fixed in v0.3.7**
-
-Emit detection now correctly distinguishes between internal handlers and component public API emits. Only handlers that are part of the component's Props interface/type are included in the `emits` object.
-
-**What Works:**
-- ✅ Only extracts event handlers that exist in Props interfaces/types
-- ✅ Filters out internal handlers (e.g., `onClick={() => setMenuOpen(!menuOpen)}`)
-- ✅ Filters out inline handlers that are not props
-- ✅ Uses prop type signatures when available for accurate event signatures
-- ✅ Falls back to AST-based arrow function parsing only when prop signature is unavailable
-- ✅ Uses `hasOwnProperty` check to avoid inherited prototype properties
-- ✅ Always includes prop-based handlers even if no initializer or signature available (uses default)
-
-**Example:**
-
-**Source Code:**
-```typescript
-function Header() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  
-  return (
-    <button onClick={() => setMenuOpen(!menuOpen)}>
-      Toggle Menu
-    </button>
-  );
-}
-```
-
-**Context Output (Correct):**
-```json
-{
-  "logic": {
-    "emits": {}
-  }
-}
-```
-
-**Source Code (with Props):**
-```typescript
-interface ButtonProps {
-  onClick?: () => void;
-}
-
-function Button({ onClick }: ButtonProps) {
-  return <button onClick={onClick}>Click</button>;
-}
-```
-
-**Context Output (Correct):**
-```json
-{
-  "logic": {
-    "emits": {
-      "onClick": {
-        "type": "function",
-        "signature": "() => void"
-      }
-    }
-  }
-}
-```
-
-## v0.3.6 Fixes
-
-### Hook Parameter Detection
-
-**Status:** ✅ **Fixed in v0.3.6**
-
-Hook parameter detection is now fully implemented! We can extract function signatures for custom React hooks and include their parameters in the contract.
-
-**What Works:**
-- ✅ Extracts parameters from exported hook function declarations
-- ✅ Extracts parameters from exported arrow function hooks
-- ✅ Extracts parameters from default exported hooks
-- ✅ Captures parameter types (from type annotations, default values, or TypeScript type checker)
-- ✅ Handles optional parameters (with `?` or default values)
-- ✅ Stores parameters in `logic.props` field for hooks
-- ✅ Works even when Props interfaces exist in the same file
-- ✅ Props take priority on conflicts
-
-**Example:**
-
-**Source Code:**
-```typescript
-export function useTypewriter(text: string, speed = 30, pause = 800) {
-  const [displayedText, setDisplayedText] = useState('')
-  // ... implementation
-  return displayedText
-}
-```
-
-**Context Output:**
-```json
-{
-  "composition": {
-    "hooks": ["useTypewriter"]
-  },
-  "interface": {
-    "props": {
-      "text": "string",
-      "speed": { "type": "number", "optional": true },
-      "pause": { "type": "number", "optional": true }
-    }
-  }
-}
-```
-
-## v0.3.5 Fixes
-
-### Inline Style Objects Extraction
-
-**Status:** ✅ **Fixed in v0.3.5** (Verified)
-
-**Location**: `src/extractors/styling/styleExtractor.ts` (lines 88-191)
-
-**Verified Implementation**: The `extractInlineStyles()` function extracts both properties AND values:
-- ✅ Extracts property names from object literals
-- ✅ Extracts literal values for strings, numbers, booleans, null, and template literals
-- ✅ Returns `{ properties: string[], values?: Record<string, string> }`
-
-**Code Evidence** (v0.3.5):
-```typescript
-// Lines 128-156: Extracts both property names and literal values
-if (initializer) {
-  const initKind = initializer.getKind();
-  if (initKind === SyntaxKind.StringLiteral) {
-    const value = (initializer as any).getLiteralText?.() ?? initializer.getText().slice(1, -1);
-    values[propName] = value;  // ✅ Value extracted
-  }
-  else if (initKind === SyntaxKind.NumericLiteral) {
-    values[propName] = initializer.getText();  // ✅ Value extracted
-  }
-  // ... handles booleans, null, template literals
-}
-// Returns: { properties: [...], values: {...} }  // ✅ Both included
-```
-
-**Example**:
-```tsx
-// Source code has:
-style={{ animationDelay: '2s', color: 'blue', padding: '1rem' }}
-
-// Context.json now shows:
-"inlineStyles": {
-  "properties": ["animationDelay", "color", "padding"],
-  "values": {
-    "animationDelay": "2s",
-    "color": "blue",
-    "padding": "1rem"
-  }
-}
-```
-
-**Note**: Dynamic values (variables, function calls) are detected as properties but their values are not extracted (static analysis limitation).
-
-### Styled JSX CSS Extraction
-
-**Status:** ✅ **Fixed in v0.3.5** (Verified)
-
-**Location**: `src/extractors/styling/styledJsx.ts` (lines 59-230)
-
-**Verified Implementation**: The `extractStyledJsx()` function fully extracts CSS content:
-- ✅ Extracts CSS from `<style jsx>` template literals
-- ✅ Parses CSS using css-tree AST for selectors and properties
-- ✅ Detects `global` attribute
-- ✅ Returns `{ css: string, global?: boolean, selectors?: string[], properties?: string[] }`
-
-**Code Evidence** (v0.3.5):
-```typescript
-// Lines 99-112: Extracts CSS from JSX expressions
-const css = extractCssFromExpr(expr);  // ✅ Extracts template literal content
-if (css?.trim()) {
-  cssBlocks.push(css);
-}
-
-// Lines 160-194: Parses CSS using css-tree AST
-const ast = csstree.parse(cssBlock, {...});  // ✅ Full CSS parsing
-csstree.walk(ast, (node: any) => {
-  if (node.type === 'Rule' && node.prelude) {
-    selectors.add(generate(node.prelude));  // ✅ Selectors extracted
-  }
-  if (node.type === 'Declaration') {
-    properties.add(node.property);  // ✅ Properties extracted
-  }
-});
-// Returns: { css, global, selectors, properties }  // ✅ All fields included
-```
-
-**Example**:
-```tsx
-// Source has:
-<style jsx global>{`
-  body {
-    margin: 0;
-    font-family: sans-serif;
-  }
-  .container {
-    padding: 1rem;
-    color: blue;
-  }
-`}</style>
-
-// Context.json now shows:
-"styledJsx": {
-  "css": "body {\n  margin: 0;\n  font-family: sans-serif;\n}\n.container {\n  padding: 1rem;\n  color: blue;\n}",
-  "global": true,
-  "selectors": ["body", ".container"],
-  "properties": ["color", "font-family", "margin", "padding"]
-}
-```
-
-**Features**:
-- Extracts full CSS content from template literals
-- Parses CSS using AST (css-tree) for accurate selector/property extraction
-- Detects `global` attribute (`<style jsx global>`)
-- Handles complex selectors (`.a:hover > span`, `button[aria-expanded="true"]`, etc.)
-- Per-block parsing for resilience (if one block has `${expr}` placeholders, others still work)
-
-## v0.3.2 Fixes
-
-### CSS/SCSS AST-Based Parsing
-
-**Status:** ✅ **Fixed in v0.3.2**
-
-CSS and SCSS file parsing migrated from regex-based extraction to deterministic AST walk using `css-tree`. This provides more robust and accurate parsing of CSS/SCSS files.
-
-**What Works:**
-- ✅ AST-based parsing using css-tree (replaces heuristic regex)
-- ✅ Accurate CSS selector extraction (class, ID, and type selectors)
-- ✅ Proper CSS property extraction with filtering of SCSS variables and at-rules
-- ✅ SCSS feature detection (variables, nesting, mixins) as boolean flags
-- ✅ Nested rules inside `@media`, `@supports`, `@container`, and other at-rules
-- ✅ SCSS `//` comments automatically converted to `/* */` for css-tree compatibility
-- ✅ Invalid selector filtering (file extensions, numeric values, keyframe percentages, color values, pixel values)
-- ✅ Better error handling with graceful fallback on parse failures
-
-**Impact:** More accurate and reliable CSS/SCSS parsing, consistent with the AST-based approach used for TypeScript files.
-
-## v0.3.1 Fixes
-
-### Hook Classification
-
-**Status:** ✅ **Fixed in v0.3.1**
-
-Custom hooks are now correctly classified as `react:hook` instead of `react:component`. The detection logic checks if the main export (default or named) is a function starting with "use" and has no JSX elements.
-
-**Example:**
-
-**Source Code:**
-```typescript
-function useTypewriter(text: string, speed = 30) {
-  const [displayedText, setDisplayedText] = useState('')
-  // ... hook implementation
-  return displayedText
-}
-```
-
-**Context Output (Correct):**
-```json
-{
-  "kind": "react:hook"
-}
-```
-
-## v0.2.6 Fixes
-
-### Export Metadata Extraction
-
-**Status:** ✅ **Fixed in v0.2.6**
-
-Export metadata is now automatically extracted from source files, improving dependency tracking accuracy.
-
-**What Works:**
-- ✅ Detects default exports (`export default`)
-- ✅ Detects named exports (`export { ... }`, `export function`, `export class`, `export const`)
-- ✅ Extracts list of exported function names
-- ✅ Stores export metadata in contracts as `exports` field (optional)
-- ✅ Export metadata format: `'default'`, `'named'`, or `{ named: string[] }` for multiple named exports
-- ✅ Used to improve dependency tracking accuracy
-
-### Internal Component Filtering
-
-**Status:** ✅ **Fixed in v0.2.6**
-
-Dependency tracking improved by filtering out internal components, reducing false positives in missing dependency detection.
-
-**What Works:**
-- ✅ Internal components are function components defined in the same file (appear in both `composition.functions` and `composition.components`)
-- ✅ Internal components are now excluded from dependency graphs and missing dependency lists
-- ✅ Reduces false positives in missing dependency detection
-- ✅ Improves accuracy of dependency analysis for multi-component files
-
-**Impact:** Dependency graphs now only include external dependencies, excluding internal components defined in the same file. Missing dependency lists no longer include internal components, reducing noise in dependency diagnostics.
-
-## v0.2.2 Fixes
-
-### Documentation Accuracy (Tokenizer Dependencies)
-
-**Status:** ✅ **Fixed in v0.2.2**
-
-Fixed documentation to correctly state that `@dqbd/tiktoken` and `@anthropic-ai/tokenizer` are included as optional dependencies in package.json. npm automatically attempts to install them when installing `logicstamp-context`.
-
-**Impact:** Users no longer need to manually install tokenizer packages - they are automatically installed as optional dependencies.
-
-## v0.2.1 Fixes
-
-### Dynamic Version Loading
-
-**Status:** ✅ **Fixed in v0.2.1**
-
-Fixed hardcoded version string in `fileWriter.ts` to dynamically load from `package.json`, ensuring version consistency across all generated context files.
-
-**Impact:** Version information in generated context files now always matches the actual package version.
+These items were previously limitations but have been fixed. For detailed release notes, see the [CHANGELOG](../CHANGELOG.md).
+
+## Recent Fixes (v0.5.x)
+
+| Version | Fix | Description |
+|---------|-----|-------------|
+| v0.5.4 | Graceful shutdown | Centralized cleanup registry ensures watch mode resources are cleaned up on any exit |
+| v0.5.4 | Empty bundle handling | `--compare-modes` now reports errors when all bundle generations fail |
+| v0.5.3 | Race condition fix | Sanitization stats no longer corrupted during concurrent file processing |
+| v0.5.3 | Memory leak fix | Security report cache has 5-minute TTL; tokenizer cache can be cleared |
+| v0.5.3 | Windows paths | Dependency resolution works correctly with Windows backslash paths |
+| v0.5.3 | O(n²) → O(n) | Dependency collection uses index-based iteration for large codebases |
+| v0.5.3 | Type safety | Replaced unsafe `as any` casts with proper ts-morph type guards |
+| v0.5.1 | CSS-in-JS | Complete support for all major libraries (Chakra UI, Ant Design added) |
+
+## Earlier Fixes (v0.3.x - v0.4.x)
+
+| Version | Fix | Description |
+|---------|-----|-------------|
+| v0.4.1 | Watch mode | Full watch mode with incremental rebuilds and change detection |
+| v0.4.0 | Backend support | Express.js and NestJS route/controller extraction |
+| v0.3.10 | Next.js routes | Route roles, segment paths, and metadata exports |
+| v0.3.9 | Dynamic Tailwind | Phase 1: Variables, object properties, conditionals in template literals |
+| v0.3.8 | Third-party info | Package names and versions in missing dependencies |
+| v0.3.7 | Emit accuracy | Only extracts handlers from Props interface (filters internal handlers) |
+| v0.3.6 | Hook parameters | Full parameter extraction for custom React hooks |
+| v0.3.5 | Styled JSX | CSS extraction from `<style jsx>` blocks |
+| v0.3.5 | Inline styles | Extracts both property names and literal values |
+| v0.3.2 | CSS/SCSS parsing | AST-based parsing using css-tree |
+| v0.3.1 | Hook classification | Custom hooks correctly classified as `react:hook` |
+
+## Foundation Fixes (v0.2.x)
+
+| Version | Fix | Description |
+|---------|-----|-------------|
+| v0.2.6 | Export metadata | Automatic extraction of default/named exports |
+| v0.2.6 | Internal filtering | Internal components excluded from dependency graphs |
+| v0.2.2 | Tokenizer docs | Clarified optional dependency installation |
+| v0.2.1 | Dynamic version | Version loaded from package.json |
 
 ## Other Implemented Features
 

@@ -19,6 +19,42 @@ See [docs/limitations.md](docs/limitations.md).
 
 ---
 
+## [0.5.4] - 2026-02-15
+
+### Fixed
+
+- **Graceful shutdown on process exit** ([#84](https://github.com/LogicStamp/logicstamp-context/pull/84))
+  - Added centralized cleanup registry (`src/utils/cleanup.ts`) for consistent resource cleanup
+  - Watch mode file watchers and status files are now cleaned up on any exit (errors, SIGINT, SIGTERM)
+  - Replaced direct `process.exit()` paths with `gracefulShutdown()` so resources aren’t left orphaned
+  - `registerCleanup()` supports async cleanup handlers with priority ordering
+  - Signal handlers (SIGINT, SIGTERM, SIGHUP) now route through `gracefulShutdown()`
+
+- **Token comparison now fails loudly when all bundle generations fail** ([#84](https://github.com/LogicStamp/logicstamp-context/pull/84))
+  - Added `checkBundleResults()` helper to detect and report complete failure across `Promise.allSettled`
+  - Throws a descriptive error when all bundles fail, and logs warnings for partial failures
+  - Affects `--compare-modes` in `stamp context`
+
+- **Debug logging for unresolved dependencies in manifest** ([#85](https://github.com/LogicStamp/logicstamp-context/pull/85))
+  - Added `debugLog()` helper to `debug.ts` (complements `debugError()`)
+  - Manifest building now logs unresolved dependencies when `LOGICSTAMP_DEBUG=1`
+  - Missing dependencies during `usedBy` relationship building are no longer silently ignored
+
+### Improved
+
+- **Reduced duplicate error handling in config.ts** ([#86](https://github.com/LogicStamp/logicstamp-context/pull/86))
+  - Extracted `ensureConfigDir()` for mkdir with consistent error handling
+  - Extracted `ensureConfigDirSilent()` for non-fatal mkdir operations (used by logging functions)
+  - Extracted `formatWriteError()` for consistent write error messages
+  - Removes ~80 lines of duplicated error handling across `writeConfig`, `writeWatchStatus`, `appendWatchLog`, and `writeStrictWatchStatus`
+
+### Tests
+
+- **Add unit tests for context command modules** ([#87](https://github.com/LogicStamp/logicstamp-context/pull/87)) (`bundleFormatter`, `configManager`, `contractBuilder`,
+  `fileWriter`, `statsCalculator`, `tokenEstimator`, `watchDiff`) 
+
+---
+
 ## [0.5.3] - 2026-02-14
 
 ### Fixed
@@ -1194,7 +1230,8 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ---
 
 ## Version links
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.5.3...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.5.4...HEAD
+[0.5.4]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.4
 [0.5.3]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.3
 [0.5.2]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.2
 [0.5.1]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.1
