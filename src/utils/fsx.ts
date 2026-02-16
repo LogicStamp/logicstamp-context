@@ -39,6 +39,12 @@ export interface FileWithText {
 
 /**
  * Find files matching glob patterns
+ *
+ * Resilient behavior:
+ * - Processes all patterns even if some fail
+ * - Returns partial results from successful patterns
+ * - Only throws if ALL patterns fail
+ * - Logs warnings for partial failures (via debugError)
  */
 export async function globFiles(
   searchPath: string,
@@ -55,53 +61,68 @@ export async function globFiles(
   });
 
   const files: string[] = [];
+  const errors: { pattern: string; message: string }[] = [];
 
-  try {
   for (const pattern of patterns) {
-      try {
-    const matches = await glob(pattern, {
-      cwd: searchPath,
-      absolute: false,
-      ignore: [
-        '**/node_modules/**',
-        '**/dist/**',
-        '**/build/**',
-        '**/.next/**',
-        '**/coverage/**',
-        '**/*.test.ts',
-        '**/*.test.tsx',
-        '**/*.spec.ts',
-        '**/*.spec.tsx',
-      ],
-    });
+    try {
+      const matches = await glob(pattern, {
+        cwd: searchPath,
+        absolute: false,
+        ignore: [
+          '**/node_modules/**',
+          '**/dist/**',
+          '**/build/**',
+          '**/.next/**',
+          '**/coverage/**',
+          '**/*.test.ts',
+          '**/*.test.tsx',
+          '**/*.spec.ts',
+          '**/*.spec.tsx',
+        ],
+      });
 
-    // Convert to relative paths (normalize for consistency)
-    const relativeMatches = matches.map(match => normalizeEntryId(match));
-    files.push(...relativeMatches);
-      } catch (error) {
-        const err = error as Error;
-        debugError('fsx', 'globFiles inner pattern', {
-          pattern,
-          searchPath,
-          message: err.message,
-        });
-        throw new Error(
-          `Failed to glob pattern "${pattern}" in "${searchPath}": ${err.message}`
-        );
-      }
+      // Convert to relative paths (normalize for consistency)
+      const relativeMatches = matches.map(match => normalizeEntryId(match));
+      files.push(...relativeMatches);
+    } catch (error) {
+      const err = error as Error;
+      errors.push({ pattern, message: err.message });
+      debugError('fsx', 'globFiles pattern failed', {
+        pattern,
+        searchPath,
+        message: err.message,
+      });
+      // Continue with remaining patterns instead of throwing immediately
+    }
+  }
+
+  // If ALL patterns failed, throw an aggregate error
+  if (errors.length === patterns.length) {
+    const errorMessages = errors.map(e => `Pattern "${e.pattern}": ${e.message}`);
+    const aggregateMessage = `All glob patterns failed in "${searchPath}":\n  - ${errorMessages.join('\n  - ')}`;
+    debugError('fsx', 'globFiles all patterns failed', {
+      searchPath,
+      extensions,
+      patternCount: patterns.length,
+      errors,
+    });
+    throw new Error(aggregateMessage);
+  }
+
+  // If some patterns failed but others succeeded, log a warning
+  if (errors.length > 0) {
+    debugError('fsx', 'globFiles partial failure', {
+      searchPath,
+      extensions,
+      successCount: patterns.length - errors.length,
+      failCount: errors.length,
+      failedPatterns: errors.map(e => e.pattern),
+    });
+    // Continue with partial results - this is intentional resilient behavior
   }
 
   // Remove duplicates and sort
   return [...new Set(files)].sort();
-  } catch (error) {
-    const err = error as Error;
-    debugError('fsx', 'globFiles', {
-      searchPath,
-      extensions,
-      message: err.message,
-    });
-    throw err;
-  }
 }
 
 /**
