@@ -1,7 +1,28 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdtemp, writeFile, rm, mkdir } from 'node:fs/promises';
 import { join, isAbsolute, resolve } from 'node:path';
 import { tmpdir, platform } from 'node:os';
+import type { GlobOptions } from 'glob';
+
+// Capture the real glob before mocking (vi.hoisted runs before vi.mock)
+const { realGlob, mockGlobBehavior } = vi.hoisted(() => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { glob } = require('glob') as { glob: typeof import('glob').glob };
+  return {
+    realGlob: glob,
+    mockGlobBehavior: { current: null as ((pattern: string, options: GlobOptions) => Promise<string[]>) | null },
+  };
+});
+
+vi.mock('glob', () => ({
+  glob: vi.fn(async (pattern: string, options: GlobOptions) => {
+    if (mockGlobBehavior.current) {
+      return mockGlobBehavior.current(pattern, options);
+    }
+    return realGlob(pattern, options) as Promise<string[]>;
+  }),
+}));
+
 import {
   globFiles,
   normalizeEntryId,
@@ -15,6 +36,7 @@ import {
   getFolderPath,
   groupFilesByFolder,
 } from '../../../src/utils/fsx.js';
+
 
 describe('fsx utilities', () => {
   let testDir: string;
@@ -210,46 +232,67 @@ describe('fsx utilities', () => {
       expect(files).toEqual(sorted);
     });
 
-    it('should throw aggregate error when all patterns fail', async () => {
-      // Use a path that doesn't exist to force glob failure
-      const nonExistentPath = join(testDir, 'nonexistent-subdir-that-does-not-exist');
+    describe('resilient failure handling', () => {
+      afterEach(() => {
+        // Reset mock behavior to default (use real glob)
+        mockGlobBehavior.current = null;
+      });
 
-      // This should throw because the search path doesn't exist
-      // Note: glob actually succeeds with empty results for non-existent paths,
-      // but if we mock glob to throw, we can test the behavior
-      // For now, let's test with valid path but verify normal behavior works
-      const files = await globFiles(testDir, '.ts,.tsx');
+      it('should throw aggregate error when all patterns fail', async () => {
+        // Configure mock to throw for all patterns
+        mockGlobBehavior.current = async () => {
+          throw new Error('EACCES: permission denied');
+        };
 
-      // Should return empty array (not throw) since path exists but has no files
-      expect(files).toEqual([]);
-    });
+        await expect(globFiles(testDir, '.ts,.tsx')).rejects.toThrow(
+          /All glob patterns failed/
+        );
+      });
 
-    it('should return partial results when some patterns succeed and others fail', async () => {
-      // Create test files
-      await writeFile(join(testDir, 'file.ts'), 'content');
-      await writeFile(join(testDir, 'file.tsx'), 'content');
+      it('should return partial results when some patterns succeed and others fail', async () => {
+        // Create test file for successful pattern
+        await writeFile(join(testDir, 'file.ts'), 'content');
 
-      // Both patterns should succeed
-      const files = await globFiles(testDir, '.ts,.tsx');
+        let callCount = 0;
+        mockGlobBehavior.current = async (pattern: string, options: GlobOptions) => {
+          callCount++;
+          if (pattern === '**/*.tsx') {
+            throw new Error('EACCES: permission denied');
+          }
+          // Use real glob for other patterns
+          return realGlob(pattern, options) as Promise<string[]>;
+        };
 
-      expect(files.length).toBe(2);
-      expect(files.some(f => f.includes('file.ts'))).toBe(true);
-      expect(files.some(f => f.includes('file.tsx'))).toBe(true);
-    });
+        const files = await globFiles(testDir, '.ts,.tsx');
 
-    it('should continue processing remaining patterns after one succeeds', async () => {
-      // Create files matching multiple patterns
-      await writeFile(join(testDir, 'a.ts'), 'content');
-      await writeFile(join(testDir, 'b.tsx'), 'content');
-      await writeFile(join(testDir, 'c.js'), 'content');
+        // Should have results from successful .ts pattern only
+        expect(files.length).toBe(1);
+        expect(files.some(f => f.includes('file.ts'))).toBe(true);
+        expect(callCount).toBe(2);
+      });
 
-      const files = await globFiles(testDir, '.ts,.tsx,.js');
+      it('should continue processing remaining patterns after one fails', async () => {
+        // Create files for patterns that will succeed
+        await writeFile(join(testDir, 'a.ts'), 'content');
+        await writeFile(join(testDir, 'c.js'), 'content');
 
-      // All three should be found
-      expect(files.length).toBe(3);
-      expect(files.some(f => f.endsWith('a.ts'))).toBe(true);
-      expect(files.some(f => f.endsWith('b.tsx'))).toBe(true);
-      expect(files.some(f => f.endsWith('c.js'))).toBe(true);
+        const patternsAttempted: string[] = [];
+        mockGlobBehavior.current = async (pattern: string, options: GlobOptions) => {
+          patternsAttempted.push(pattern);
+          if (pattern === '**/*.tsx') {
+            throw new Error('EACCES: permission denied');
+          }
+          return realGlob(pattern, options) as Promise<string[]>;
+        };
+
+        const files = await globFiles(testDir, '.ts,.tsx,.js');
+
+        expect(files.length).toBe(2);
+        expect(files.some(f => f.endsWith('a.ts'))).toBe(true);
+        expect(files.some(f => f.endsWith('c.js'))).toBe(true);
+        // Verify all three patterns were attempted
+        expect(patternsAttempted).toEqual(['**/*.ts', '**/*.tsx', '**/*.js']);
+      });
     });
   });
 

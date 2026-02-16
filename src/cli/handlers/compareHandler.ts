@@ -44,13 +44,13 @@ export async function handleCompare(args: string[]): Promise<void> {
   if (args[0] === '--help' || args[0] === '-h') {
     printFoxIcon();
     console.log(getCompareHelp());
-    process.exit(0);
+    return process.exit(0);
   }
 
   // Explicitly reject --compare-modes (only available in stamp context, not stamp context compare)
   if (args.includes('--compare-modes')) {
     console.error('❌ --compare-modes is not available for "stamp context compare". Use "stamp context --compare-modes" instead.');
-    process.exit(1);
+    return process.exit(1);
   }
 
   const { stats, approve, cleanOrphaned, quiet, skipGitignore, positionalArgs } = parseCompareArgs(args);
@@ -65,7 +65,7 @@ export async function handleCompare(args: string[]): Promise<void> {
   if (positionalArgs.length < 2) {
     printFoxIcon();
     console.log(getCompareHelp());
-    process.exit(1);
+    return process.exit(1);
   }
 
   const oldFile = positionalArgs[0];
@@ -97,7 +97,7 @@ async function handleAutoCompareMode(options: {
   // Check if context_main.json exists
   if (!existsSync('context_main.json')) {
     console.error('❌ context_main.json not found. Run "stamp context" first to generate context files.');
-    process.exit(1);
+    return process.exit(1);
   }
 
   if (!quiet) {
@@ -269,19 +269,19 @@ async function handleAutoCompareMode(options: {
 
         // Clean up temp directory
         await rm(tempDir, { recursive: true, force: true });
-        process.exit(0); // Success: drift approved and updated
+        return process.exit(0); // Success: drift approved and updated
       } else {
         // Clean up temp directory
         await rm(tempDir, { recursive: true, force: true });
         if (isTTY() && !approve) {
           console.log('❌ Update declined\n');
         }
-        process.exit(1); // Drift detected but not approved
+        return process.exit(1); // Drift detected but not approved
       }
     } else {
       // No drift - clean up and exit success
       await rm(tempDir, { recursive: true, force: true });
-      process.exit(0);
+      return process.exit(0);
     }
   } catch (error) {
     // Try to clean up temp directory even on error
@@ -297,7 +297,7 @@ async function handleAutoCompareMode(options: {
     }
 
     console.error('❌ Compare failed:', (error as Error).message);
-    process.exit(1);
+    return process.exit(1);
   }
 }
 
@@ -432,20 +432,20 @@ async function handleMultiFileCompareMode(options: {
         if (!quiet) {
           console.log(`\n✅ ${copiedFiles + 1} context files updated successfully`);
         }
-        process.exit(0); // Success: drift approved and updated
+        return process.exit(0); // Success: drift approved and updated
       } else {
         if (isTTY() && !approve) {
           console.log('❌ Update declined\n');
         }
-        process.exit(1); // Drift detected but not approved
+        return process.exit(1); // Drift detected but not approved
       }
     } else {
       // No drift
-      process.exit(0);
+      return process.exit(0);
     }
   } catch (error) {
     console.error('❌ Compare failed:', (error as Error).message);
-    process.exit(1);
+    return process.exit(1);
   }
 }
 
@@ -491,20 +491,20 @@ async function handleSingleFileCompareMode(options: {
         if (!quiet) {
           console.log(`✅ ${oldFile} updated successfully\n`);
         }
-        process.exit(0); // Success: drift approved and updated
+        return process.exit(0); // Success: drift approved and updated
       } else {
         if (isTTY() && !approve) {
           console.log('❌ Update declined\n');
         }
-        process.exit(1); // Drift detected but not approved
+        return process.exit(1); // Drift detected but not approved
       }
     } else {
       // No drift
-      process.exit(0);
+      return process.exit(0);
     }
   } catch (error) {
     console.error('❌ Compare failed:', (error as Error).message);
-    process.exit(1);
+    return process.exit(1);
   }
 }
 

@@ -214,12 +214,13 @@ describe('fileLock utils', () => {
       await writeFile(filePath, JSON.stringify({ count: 0 }));
 
       // Run 10 concurrent increments
+      // Use generous timeout since all 10 must run sequentially (each waits for previous)
       const increments = Array.from({ length: 10 }, () =>
         withLock(filePath, async () => {
           const content = JSON.parse(await readFile(filePath, 'utf-8'));
           content.count += 1;
           await writeFile(filePath, JSON.stringify(content));
-        })
+        }, { timeout: 30000 })
       );
 
       await Promise.all(increments);
