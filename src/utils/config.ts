@@ -2,9 +2,11 @@
  * Utilities for managing LogicStamp configuration
  */
 
-import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, access, rename, unlink } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { debugError } from './debug.js';
+import { withLock } from './fileLock.js';
 
 /**
  * Ensure config directory exists with consistent error handling
@@ -96,17 +98,28 @@ export async function readConfig(projectRoot: string): Promise<LogicStampConfig>
 }
 
 /**
- * Write config to disk
+ * Write config to disk using atomic write (temp file + rename)
+ * This prevents corruption if the process crashes mid-write
  */
 export async function writeConfig(projectRoot: string, config: LogicStampConfig): Promise<void> {
   const configDir = getConfigDir(projectRoot);
   const configPath = getConfigPath(projectRoot);
+  const tempPath = `${configPath}.${randomUUID()}.tmp`;
 
   await ensureConfigDir(configDir, 'writeConfig');
 
   try {
-    await writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
+    // Write to temp file first
+    await writeFile(tempPath, JSON.stringify(config, null, 2), 'utf-8');
+    // Atomic rename (prevents partial writes on crash)
+    await rename(tempPath, configPath);
   } catch (error) {
+    // Clean up temp file if it exists
+    try {
+      await unlink(tempPath);
+    } catch {
+      // Ignore cleanup errors
+    }
     const err = error as NodeJS.ErrnoException;
     debugError('config', 'writeConfig', {
       configPath,
@@ -120,11 +133,20 @@ export async function writeConfig(projectRoot: string, config: LogicStampConfig)
 
 /**
  * Update config with new values (merges with existing)
+ * Uses file locking to prevent race conditions when multiple processes update config
  */
 export async function updateConfig(projectRoot: string, updates: Partial<LogicStampConfig>): Promise<void> {
-  const existing = await readConfig(projectRoot);
-  const merged = { ...existing, ...updates };
-  await writeConfig(projectRoot, merged);
+  const configDir = getConfigDir(projectRoot);
+  const configPath = getConfigPath(projectRoot);
+
+  // Ensure directory exists before acquiring lock (lock file needs parent directory)
+  await ensureConfigDir(configDir, 'updateConfig');
+
+  await withLock(configPath, async () => {
+    const existing = await readConfig(projectRoot);
+    const merged = { ...existing, ...updates };
+    await writeConfig(projectRoot, merged);
+  });
 }
 
 /**
@@ -194,17 +216,24 @@ export async function readWatchStatus(projectRoot: string): Promise<WatchStatus 
 }
 
 /**
- * Write watch status to disk
+ * Write watch status to disk using atomic write (temp file + rename)
  */
 export async function writeWatchStatus(projectRoot: string, status: WatchStatus): Promise<void> {
   const configDir = getConfigDir(projectRoot);
   const statusPath = getWatchStatusPath(projectRoot);
+  const tempPath = `${statusPath}.${randomUUID()}.tmp`;
 
   await ensureConfigDir(configDir, 'writeWatchStatus');
 
   try {
-    await writeFile(statusPath, JSON.stringify(status, null, 2), 'utf-8');
+    await writeFile(tempPath, JSON.stringify(status, null, 2), 'utf-8');
+    await rename(tempPath, statusPath);
   } catch (error) {
+    try {
+      await unlink(tempPath);
+    } catch {
+      // Ignore cleanup errors
+    }
     const err = error as NodeJS.ErrnoException;
     debugError('config', 'writeWatchStatus', {
       statusPath,
@@ -325,10 +354,13 @@ async function ensureConfigDirSilent(configDir: string, context: string): Promis
 
 /**
  * Append a log entry to watch logs
+ * Uses file locking to prevent race conditions when multiple processes append logs
+ * Uses atomic write (temp file + rename) to prevent corruption on crash
  */
 export async function appendWatchLog(projectRoot: string, entry: WatchLogEntry): Promise<void> {
   const configDir = getConfigDir(projectRoot);
   const logsPath = getWatchLogsPath(projectRoot);
+  const tempPath = `${logsPath}.${randomUUID()}.tmp`;
 
   // Non-fatal - continue even if directory can't be created
   if (!await ensureConfigDirSilent(configDir, 'appendWatchLog')) {
@@ -336,21 +368,29 @@ export async function appendWatchLog(projectRoot: string, entry: WatchLogEntry):
   }
 
   try {
-    // Read existing logs
-    const logs = await readWatchLogs(projectRoot);
-    const maxEntries = logs.maxEntries || 100;
+    await withLock(logsPath, async () => {
+      // Read existing logs
+      const logs = await readWatchLogs(projectRoot);
+      const maxEntries = logs.maxEntries || 100;
 
-    // Add new entry at the beginning (most recent first)
-    logs.entries.unshift(entry);
+      // Add new entry at the beginning (most recent first)
+      logs.entries.unshift(entry);
 
-    // Trim to max entries
-    if (logs.entries.length > maxEntries) {
-      logs.entries = logs.entries.slice(0, maxEntries);
-    }
+      // Trim to max entries
+      if (logs.entries.length > maxEntries) {
+        logs.entries = logs.entries.slice(0, maxEntries);
+      }
 
-    // Write back to disk
-    await writeFile(logsPath, JSON.stringify(logs, null, 2), 'utf-8');
+      // Atomic write: temp file + rename
+      await writeFile(tempPath, JSON.stringify(logs, null, 2), 'utf-8');
+      await rename(tempPath, logsPath);
+    });
   } catch (error) {
+    try {
+      await unlink(tempPath);
+    } catch {
+      // Ignore cleanup errors
+    }
     const err = error as NodeJS.ErrnoException;
     debugError('config', 'appendWatchLog', {
       logsPath,
@@ -472,11 +512,12 @@ export async function readStrictWatchStatus(projectRoot: string): Promise<Strict
 }
 
 /**
- * Write strict watch status to disk
+ * Write strict watch status to disk using atomic write (temp file + rename)
  */
 export async function writeStrictWatchStatus(projectRoot: string, status: StrictWatchStatus): Promise<void> {
   const configDir = getConfigDir(projectRoot);
   const reportPath = getStrictWatchReportPath(projectRoot);
+  const tempPath = `${reportPath}.${randomUUID()}.tmp`;
 
   // Non-fatal - continue even if directory can't be created
   if (!await ensureConfigDirSilent(configDir, 'writeStrictWatchStatus')) {
@@ -484,8 +525,14 @@ export async function writeStrictWatchStatus(projectRoot: string, status: Strict
   }
 
   try {
-    await writeFile(reportPath, JSON.stringify(status, null, 2), 'utf-8');
+    await writeFile(tempPath, JSON.stringify(status, null, 2), 'utf-8');
+    await rename(tempPath, reportPath);
   } catch (error) {
+    try {
+      await unlink(tempPath);
+    } catch {
+      // Ignore cleanup errors
+    }
     const err = error as NodeJS.ErrnoException;
     debugError('config', 'writeStrictWatchStatus', {
       reportPath,
