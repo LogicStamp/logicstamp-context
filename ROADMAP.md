@@ -4,6 +4,24 @@ This roadmap outlines the planned features, improvements, and known limitations 
 
 ## Recent Achievements
 
+### v0.5.5 (February 2026)
+- ✅ **State-based strict watch diffing** - Strict watch mode now compares current state vs the original baseline (like `git diff`), not cumulative history. Violations reflect current drift only and are automatically cleared when changes are reverted.
+- ✅ **Removed missing dependencies from strict watch violations** - Third-party packages are no longer treated as breaking changes in strict watch mode.
+- ✅ **Watch mode cleanup on exit (Windows/Cursor reliability)** - Signal handlers register at watch startup, watch status paths resolve to absolute paths, synchronous cleanup runs on `process.on('exit')`, and MCP tools remove stale status files when PID validation fails.
+- ✅ **Watch mode revert correctness** - If `pack()` fails during incremental rebuild, bundles/contracts/manifest now revert consistently: old bundle contracts are restored, reverse index entries preserved, and final contracts + manifest rebuilt from actual bundle contents.
+- ✅ **Resilient glob pattern failure handling** - `globFiles()` now continues across pattern failures, returns partial results when possible, and only throws an aggregate error if *all* patterns fail (with debug warnings for partial failures).
+- ✅ **Config read/write race condition (TOCTOU) fixed** - Added lightweight file locking using exclusive lockfiles + PID tracking; `updateConfig()` and `appendWatchLog()` acquire locks; conservative stale detection (ESRCH vs EPERM); configurable timeout/retry/stale thresholds; no new dependencies.
+- ✅ **Atomic writes to prevent crash corruption** - Config + status writes now use temp-file + rename pattern (`writeConfig()`, `writeWatchStatus()`, `writeStrictWatchStatus()`, `appendWatchLog()`), with temp cleanup on error.
+- ✅ **Compare handler control-flow fix** - Added explicit `return` before `process.exit()` calls to prevent unintended execution after exit.
+- ✅ **Test coverage expansion** - Added comprehensive unit tests for cleanup utilities, file locking, CLI routing/entry points, commands, watch mode behavior, compare handler modes, and glob resilience.
+
+### v0.5.4 (February 2026)
+- ✅ **Graceful shutdown on process exit** - Introduced a centralized cleanup registry (`src/utils/cleanup.ts`) so watchers/status files are reliably cleaned up on errors and signals (SIGINT/SIGTERM/SIGHUP), routing shutdown through `gracefulShutdown()` with priority-ordered async handlers.
+- ✅ **Token comparison fails loudly when all bundles fail** - Added `checkBundleResults()` to detect complete failure across `Promise.allSettled`, throwing a descriptive error (and logging warnings for partial failures) for `--compare-modes`.
+- ✅ **Improved debug logging for unresolved dependencies** - Added `debugLog()` and surfaced unresolved dependency details in manifest building when `LOGICSTAMP_DEBUG=1`.
+- ✅ **Reduced duplicated error handling in config writes** - Refactored config/status/log write helpers (`ensureConfigDir*`, `formatWriteError()`) to remove duplicated error paths and improve consistency.
+- ✅ **New unit tests for context command modules** - Added coverage for `bundleFormatter`, `configManager`, `contractBuilder`, `fileWriter`, `statsCalculator`, `tokenEstimator`, and `watchDiff`.
+
 ### v0.5.3 (February 2026)
 - ✅ **Bug fixes** - Fixed JSON schema validation (removed incorrect required fields), race condition in sanitization stats, memory leak in global caches, and Windows path separator bug in dependency resolution.
 - ✅ **Performance improvements** - O(n²) to O(n) in dependency collection (replaced `array.shift()` with index-based iteration), eliminated redundant file reads in token estimation via caching.
