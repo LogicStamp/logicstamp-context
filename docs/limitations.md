@@ -639,7 +639,7 @@ Backend framework support has been fully implemented for Express.js and NestJS.
 
 ### 13. Watch Mode
 
-**Status:** ✅ **Complete (v0.4.1, enhanced in v0.5.4)**
+**Status:** ✅ **Complete (v0.4.1, enhanced in v0.5.4 and v0.5.5)**
 
 Watch mode has been fully implemented for automatic context regeneration.
 
@@ -652,7 +652,7 @@ Watch mode has been fully implemented for automatic context regeneration.
 - ✅ Change detection showing what changed (props, hooks, state, events, components, functions)
 - ✅ Debug mode (`--debug`) showing semantic/file/bundle hash changes
 - ✅ Status files for tooling integration (`.logicstamp/context_watch-status.json`)
-- ✅ Watch logs (`.logicstamp/context_watch-mode-logs.json`)
+- ✅ Watch logs with `--log-file` (`.logicstamp/context_watch-mode-logs.json`) - append-based event history
 - ✅ Graceful shutdown on Ctrl+C, SIGTERM, SIGHUP (v0.5.4)
 - ✅ Centralized cleanup registry ensures no orphaned resources (v0.5.4)
 - ✅ `watch-fast` profile for lighter style extraction
@@ -663,6 +663,30 @@ Watch mode has been fully implemented for automatic context regeneration.
 - ❌ Hot reload integration (manual browser refresh still needed)
 
 **Impact**: Improves developer experience by automatically keeping context files in sync with code changes during development.
+
+**Priority**: ~~Medium~~ Complete
+
+### 14. Strict Watch Mode
+
+**Status:** ✅ **Complete (v0.5.5)**
+
+Strict watch mode (`--strict-watch`) tracks breaking changes during development with state-based diffing.
+
+**What Works:**
+- ✅ Detects breaking changes: removed props, events, functions, contracts
+- ✅ Detects warnings: changed prop types, removed state/variables
+- ✅ State-based diffing like `git diff` (v0.5.5) - violations show current state vs baseline
+- ✅ Revert detection - when breaking changes are reverted, violations file is deleted
+- ✅ Violations report file (`.logicstamp/strict_watch_violations.json`)
+
+**What Doesn't Work:**
+- ❌ Missing dependencies are not tracked as violations (they're expected for third-party packages)
+
+**State-Based Diffing Limitations (v0.5.5):**
+- ⚠️ **Baseline is session-scoped** - The baseline is set when watch mode starts and never updates. In long-running sessions with many file additions/deletions, comparing to a stale baseline could be misleading.
+- ⚠️ **Empty baseline edge case** - If watch mode starts with no bundles (new project), all changes show as "added" relative to the empty baseline.
+
+**Impact**: Helps catch breaking API changes during development before they affect consumers.
 
 **Priority**: ~~Medium~~ Complete
 

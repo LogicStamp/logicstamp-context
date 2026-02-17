@@ -2,6 +2,8 @@
  * Graceful shutdown utilities for handling cleanup on process exit
  */
 
+import { unlinkSync } from 'node:fs';
+
 export type CleanupHandler = () => Promise<void> | void;
 
 interface CleanupEntry {
@@ -10,14 +12,20 @@ interface CleanupEntry {
   priority: number; // Lower numbers run first
 }
 
-// Registry of cleanup handlers
+// Registry of cleanup handlers (async)
 const cleanupHandlers: CleanupEntry[] = [];
+
+// Registry of files to delete synchronously on exit (fallback for Windows)
+const syncCleanupPaths: Set<string> = new Set();
 
 // Track if shutdown is in progress to prevent re-entry
 let isShuttingDown = false;
 
 // Track if signal handlers have been registered
 let signalHandlersRegistered = false;
+
+// Track if exit handler has been registered
+let exitHandlerRegistered = false;
 
 /**
  * Register a cleanup handler to be called on graceful shutdown
@@ -95,6 +103,11 @@ export async function gracefulShutdown(
 /**
  * Register process signal handlers for graceful shutdown
  * Call this once at application startup
+ *
+ * Note: Signal handlers must NOT be async functions because Node.js
+ * doesn't wait for their returned promises. Instead, we call gracefulShutdown
+ * (which is async) and let it run - it will call process.exit() when done.
+ * The event loop stays alive because of pending promises in the main code.
  */
 export function registerSignalHandlers(): void {
   if (signalHandlersRegistered) {
@@ -103,19 +116,40 @@ export function registerSignalHandlers(): void {
   signalHandlersRegistered = true;
 
   // Handle Ctrl+C
+  // Don't use async - gracefulShutdown will call process.exit when done
   process.on('SIGINT', () => {
-    gracefulShutdown(130); // 128 + 2 (SIGINT signal number)
+    gracefulShutdown(130).catch((err) => {
+      console.error('Cleanup error during SIGINT:', err);
+      process.exit(130);
+    }); // 128 + 2 (SIGINT signal number)
   });
 
   // Handle termination request
   process.on('SIGTERM', () => {
-    gracefulShutdown(143); // 128 + 15 (SIGTERM signal number)
+    gracefulShutdown(143).catch((err) => {
+      console.error('Cleanup error during SIGTERM:', err);
+      process.exit(143);
+    }); // 128 + 15 (SIGTERM signal number)
   });
 
   // Handle terminal hangup (Unix only, no-op on Windows)
   process.on('SIGHUP', () => {
-    gracefulShutdown(129); // 128 + 1 (SIGHUP signal number)
+    gracefulShutdown(129).catch((err) => {
+      console.error('Cleanup error during SIGHUP:', err);
+      process.exit(129);
+    }); // 128 + 1 (SIGHUP signal number)
   });
+
+  // Handle Ctrl+Break on Windows (SIGBREAK)
+  // This signal is Windows-specific and may be used instead of SIGINT
+  if (process.platform === 'win32') {
+    process.on('SIGBREAK', () => {
+      gracefulShutdown(149).catch((err) => {
+        console.error('Cleanup error during SIGBREAK:', err);
+        process.exit(149);
+      }); // 128 + 21 (SIGBREAK signal number on Windows)
+    });
+  }
 }
 
 /**
@@ -123,6 +157,51 @@ export function registerSignalHandlers(): void {
  */
 export function isShutdownInProgress(): boolean {
   return isShuttingDown;
+}
+
+/**
+ * Register a file path for synchronous cleanup on process exit.
+ * This is a fallback for Windows where signal handlers may not fire.
+ * The file will be deleted synchronously in the 'exit' event handler.
+ * @param filePath Absolute path to the file to delete
+ * @returns Unregister function
+ */
+export function registerSyncCleanupPath(filePath: string): () => void {
+  syncCleanupPaths.add(filePath);
+  registerExitHandler(); // Ensure exit handler is registered
+  return () => unregisterSyncCleanupPath(filePath);
+}
+
+/**
+ * Unregister a file path from synchronous cleanup
+ */
+export function unregisterSyncCleanupPath(filePath: string): void {
+  syncCleanupPaths.delete(filePath);
+}
+
+/**
+ * Register the process 'exit' handler for synchronous cleanup.
+ * This is called automatically when registerSyncCleanupPath is used.
+ * The 'exit' handler always fires on process termination, even on Windows.
+ */
+function registerExitHandler(): void {
+  if (exitHandlerRegistered) {
+    return;
+  }
+  exitHandlerRegistered = true;
+
+  // The 'exit' event fires when the process is about to exit.
+  // Handlers must be synchronous - async operations won't complete.
+  process.on('exit', () => {
+    // Synchronously delete all registered cleanup paths
+    for (const filePath of syncCleanupPaths) {
+      try {
+        unlinkSync(filePath);
+      } catch {
+        // File doesn't exist or can't be deleted - ignore
+      }
+    }
+  });
 }
 
 /**

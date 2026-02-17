@@ -54,11 +54,14 @@ vi.mock('../../../../src/utils/config.js', () => ({
   appendWatchLog: vi.fn().mockResolvedValue(undefined),
   writeStrictWatchStatus: vi.fn().mockResolvedValue(undefined),
   deleteStrictWatchStatus: vi.fn().mockResolvedValue(undefined),
+  getWatchStatusPath: vi.fn((projectRoot: string) => `${projectRoot}/.logicstamp/context_watch-status.json`),
 }));
 
 vi.mock('../../../../src/utils/cleanup.js', () => ({
   registerCleanup: vi.fn(),
   gracefulShutdown: vi.fn(),
+  registerSyncCleanupPath: vi.fn(() => vi.fn()),
+  registerSignalHandlers: vi.fn(),
 }));
 
 vi.mock('../../../../src/cli/commands/context/watchDiff.js', () => ({
@@ -989,7 +992,7 @@ describe('logging', () => {
     }
     await new Promise(resolve => setTimeout(resolve, 600));
 
-    // Check that appendWatchLog was called
+    // appendWatchLog is called to add events to the log history
     // (May need to wait for regeneration to complete)
   });
 });

@@ -230,7 +230,6 @@ Strict watch mode identifies **breaking changes** that could affect consumers of
 | `breaking_change_variable_removed` | Warning | A module-level variable was removed |
 | `breaking_change_state_removed` | Warning | A state variable was removed |
 | `breaking_change_prop_type` | Warning | A prop's type signature changed |
-| `missing_dependency` | Warning | A dependency couldn't be resolved |
 
 ### Output
 
@@ -250,7 +249,7 @@ When violations are detected, strict watch mode displays them after each regener
    ❌ Errors (1):
       Breaking change: prop 'loading' removed from src/components/Button.tsx
 
-   📊 Session total: 1 error(s), 0 warning(s)
+   📊 Current state: 1 error(s), 0 warning(s)
 ```
 
 ### Violations Report File
@@ -261,9 +260,9 @@ Strict watch mode writes a structured JSON report to `.logicstamp/strict_watch_v
 {
   "active": true,
   "startedAt": "2025-01-22T10:30:00.000Z",
-  "cumulativeViolations": 3,
-  "cumulativeErrors": 2,
-  "cumulativeWarnings": 1,
+  "cumulativeViolations": 1,
+  "cumulativeErrors": 1,
+  "cumulativeWarnings": 0,
   "regenerationCount": 5,
   "lastCheck": {
     "timestamp": "2025-01-22T10:35:00.000Z",
@@ -283,6 +282,11 @@ Strict watch mode writes a structured JSON report to `.logicstamp/strict_watch_v
   }
 }
 ```
+
+**State-based semantics (v0.5.5+):** The violations report shows **current** violations relative to the baseline (state when watch mode started), not cumulative history:
+- `cumulativeViolations/Errors/Warnings` reflect the current state, not a running total
+- If you fix the violations (revert breaking changes), the file is **deleted** (no violations = no report)
+- This works like `git diff` - only shows what's currently different from baseline
 
 ### Exit Codes
 

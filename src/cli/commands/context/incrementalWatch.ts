@@ -254,10 +254,22 @@ export async function incrementalRebuild(
         cache.componentToBundles.get(entryId)!.add(bundleId);
       }
     } catch (error) {
-      // If bundle rebuild fails, keep the old one
+      // If bundle rebuild fails, keep the old one and restore its contracts
       const oldBundle = cache.allBundles.find(b => b.entryId === bundleId);
       if (oldBundle) {
         rebuiltBundles.push(oldBundle);
+        // Restore contracts from old bundle to maintain cache consistency
+        for (const node of oldBundle.graph.nodes) {
+          cache.contracts.set(node.contract.fileHash, node.contract);
+        }
+        // Restore reverse index entries for the old bundle
+        for (const node of oldBundle.graph.nodes) {
+          const entryId = normalizeEntryId(node.contract.entryId);
+          if (!cache.componentToBundles.has(entryId)) {
+            cache.componentToBundles.set(entryId, new Set());
+          }
+          cache.componentToBundles.get(entryId)!.add(bundleId);
+        }
       }
     }
   }
@@ -265,9 +277,22 @@ export async function incrementalRebuild(
   // Sort bundles by entryId for deterministic output
   rebuiltBundles.sort((a, b) => a.entryId.localeCompare(b.entryId));
 
+  // Rebuild contracts map from actual bundle contents to ensure consistency
+  // This handles cases where some bundles were reverted after pack() failures
+  const finalContracts = new Map<string, UIFContract>();
+  for (const bundle of rebuiltBundles) {
+    for (const node of bundle.graph.nodes) {
+      finalContracts.set(node.contract.fileHash, node.contract);
+    }
+  }
+  cache.contracts = finalContracts;
+
+  // Rebuild manifest from final contracts to ensure consistency
+  const consistentManifest = buildDependencyGraph(Array.from(finalContracts.values()));
+
   // Update cache
   cache.allBundles = rebuiltBundles;
-  cache.manifest = updatedManifest;
+  cache.manifest = consistentManifest;
 
   return { bundles: rebuiltBundles, updatedBundles };
 }
