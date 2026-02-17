@@ -203,13 +203,29 @@ export async function isWatchModeActive(projectRoot: string): Promise<boolean> {
 }
 
 /**
- * Read watch status from disk
+ * Read watch status from disk.
+ * Always validates that the PID is still running - if not, cleans up the stale file.
+ * This handles Windows where signal handlers may not fire on process exit.
  */
 export async function readWatchStatus(projectRoot: string): Promise<WatchStatus | null> {
   try {
     const statusPath = getWatchStatusPath(projectRoot);
     const content = await readFile(statusPath, 'utf-8');
-    return JSON.parse(content) as WatchStatus;
+    const status = JSON.parse(content) as WatchStatus;
+
+    // Validate PID is still running
+    if (status.pid) {
+      try {
+        // signal 0 checks if process exists without sending a signal
+        process.kill(status.pid, 0);
+      } catch {
+        // Process doesn't exist - clean up stale file and return null
+        await deleteWatchStatus(projectRoot);
+        return null;
+      }
+    }
+
+    return status;
   } catch {
     return null;
   }
@@ -412,6 +428,59 @@ export async function clearWatchLogs(projectRoot: string): Promise<void> {
     await unlink(logsPath);
   } catch {
     // File doesn't exist or can't be deleted - ignore
+  }
+}
+
+/**
+ * Write the current state diff to watch logs (overwrites, not appends)
+ * This gives "git diff" semantics - shows current state relative to baseline
+ * If there are no changes, the log file is cleared
+ */
+export async function writeWatchState(projectRoot: string, entry: WatchLogEntry | null): Promise<void> {
+  const configDir = getConfigDir(projectRoot);
+  const logsPath = getWatchLogsPath(projectRoot);
+  const tempPath = `${logsPath}.${randomUUID()}.tmp`;
+
+  // Non-fatal - continue even if directory can't be created
+  if (!await ensureConfigDirSilent(configDir, 'writeWatchState')) {
+    return;
+  }
+
+  try {
+    await withLock(logsPath, async () => {
+      if (!entry) {
+        // No changes from baseline - clear the log
+        try {
+          await unlink(logsPath);
+        } catch {
+          // File doesn't exist - ignore
+        }
+        return;
+      }
+
+      // Write single entry representing current state diff
+      const logs: WatchLogs = {
+        entries: [entry],
+      };
+
+      // Atomic write: temp file + rename
+      await writeFile(tempPath, JSON.stringify(logs, null, 2), 'utf-8');
+      await rename(tempPath, logsPath);
+    });
+  } catch (error) {
+    try {
+      await unlink(tempPath);
+    } catch {
+      // Ignore cleanup errors
+    }
+    const err = error as NodeJS.ErrnoException;
+    debugError('config', 'writeWatchState', {
+      logsPath,
+      operation: 'writeFile',
+      message: err.message,
+      code: err.code,
+    });
+    // Non-fatal - continue even if log can't be written
   }
 }
 

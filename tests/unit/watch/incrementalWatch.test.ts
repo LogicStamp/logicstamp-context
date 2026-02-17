@@ -357,6 +357,216 @@ describe('incrementalRebuild', () => {
     expect(result.bundles).toEqual(mockCache.allBundles);
   });
 
+  it('should revert to old bundle and restore contracts when pack fails', async () => {
+    // Set up initial state with a contract that matches the bundle
+    const oldContract = createMockContract('src/App.tsx', 'old-hash', 'old-semantic');
+    mockCache.contracts.set('old-hash', oldContract);
+    mockCache.allBundles = [{
+      type: 'LogicStampBundle',
+      schemaVersion: '0.1',
+      entryId: 'src/App.tsx',
+      depth: 2,
+      createdAt: new Date().toISOString(),
+      bundleHash: 'old-bundleHash',
+      graph: {
+        nodes: [{ entryId: 'src/App.tsx', contract: oldContract }],
+        edges: [],
+      },
+      meta: { missing: [], source: 'test' },
+    }];
+
+    // Mock file read with new content (simulating file change)
+    vi.mocked(readFileWithText).mockResolvedValue({ text: 'new content', path: 'src/App.tsx' });
+    vi.mocked(fileHash).mockReturnValue('new-hash');
+
+    // Mock AST extraction
+    vi.mocked(extractFromFile).mockResolvedValue({
+      kind: 'react:component',
+      exports: { named: ['App'] },
+      components: [],
+      functions: [],
+      hooks: [],
+      variables: [],
+      imports: [],
+      props: {},
+      emits: {},
+      state: {},
+      jsxRoutes: [],
+    });
+
+    // Mock contract building - returns new contract
+    const newContract = createMockContract('src/App.tsx', 'new-hash', 'new-semantic');
+    vi.mocked(buildContract).mockReturnValue({ contract: newContract, violations: [] });
+
+    // Mock manifest building
+    vi.mocked(buildDependencyGraph).mockReturnValue({
+      ...mockCache.manifest!,
+      graph: { roots: ['src/App.tsx'], leaves: [] },
+    });
+
+    // Mock pack to FAIL - this is the key scenario
+    vi.mocked(pack).mockRejectedValue(new Error('Pack failed'));
+
+    const result = await incrementalRebuild(
+      ['src/App.tsx'],
+      mockCache,
+      { out: '.', depth: 2 } as any,
+      '/project'
+    );
+
+    // Should keep the old bundle
+    expect(result.bundles.length).toBe(1);
+    expect(result.bundles[0].bundleHash).toBe('old-bundleHash');
+
+    // Cache contracts should be restored from old bundle (not the new contract)
+    expect(mockCache.contracts.size).toBe(1);
+    expect(mockCache.contracts.has('old-hash')).toBe(true);
+    expect(mockCache.contracts.has('new-hash')).toBe(false);
+
+    // The contract in cache should match the bundle's contract
+    const cachedContract = mockCache.contracts.get('old-hash');
+    expect(cachedContract?.semanticHash).toBe('old-semantic');
+
+    // Reverse index should still have the old bundle mapping
+    const appBundles = mockCache.componentToBundles.get('src/App.tsx');
+    expect(appBundles).toBeDefined();
+    expect(appBundles!.has('src/App.tsx')).toBe(true);
+  });
+
+  it('should maintain consistency when some packs succeed and others fail', async () => {
+    // Set up cache with two bundles
+    const appContract = createMockContract('src/App.tsx', 'app-hash', 'app-semantic');
+    const cardContract = createMockContract('src/Card.tsx', 'card-hash', 'card-semantic');
+
+    mockCache.contracts.set('app-hash', appContract);
+    mockCache.contracts.set('card-hash', cardContract);
+    mockCache.componentToBundles.set('src/App.tsx', new Set(['src/App.tsx']));
+    mockCache.componentToBundles.set('src/Card.tsx', new Set(['src/Card.tsx']));
+
+    mockCache.allBundles = [
+      {
+        type: 'LogicStampBundle',
+        schemaVersion: '0.1',
+        entryId: 'src/App.tsx',
+        depth: 2,
+        createdAt: new Date().toISOString(),
+        bundleHash: 'app-bundleHash',
+        graph: {
+          nodes: [{ entryId: 'src/App.tsx', contract: appContract }],
+          edges: [],
+        },
+        meta: { missing: [], source: 'test' },
+      },
+      {
+        type: 'LogicStampBundle',
+        schemaVersion: '0.1',
+        entryId: 'src/Card.tsx',
+        depth: 2,
+        createdAt: new Date().toISOString(),
+        bundleHash: 'card-bundleHash',
+        graph: {
+          nodes: [{ entryId: 'src/Card.tsx', contract: cardContract }],
+          edges: [],
+        },
+        meta: { missing: [], source: 'test' },
+      },
+    ];
+
+    mockCache.manifest = {
+      version: '0.3',
+      generatedAt: new Date().toISOString(),
+      totalComponents: 2,
+      components: {},
+      graph: { roots: ['src/App.tsx', 'src/Card.tsx'], leaves: [] },
+    };
+
+    // Mock file reads for both files
+    vi.mocked(readFileWithText).mockImplementation(async (path: string) => {
+      return { text: 'new content', path };
+    });
+    vi.mocked(fileHash).mockReturnValue('new-hash');
+
+    vi.mocked(extractFromFile).mockResolvedValue({
+      kind: 'react:component',
+      exports: { named: ['Component'] },
+      components: [],
+      functions: [],
+      hooks: [],
+      variables: [],
+      imports: [],
+      props: {},
+      emits: {},
+      state: {},
+      jsxRoutes: [],
+    });
+
+    // New contracts for both
+    const newAppContract = createMockContract('src/App.tsx', 'new-app-hash', 'new-app-semantic');
+    const newCardContract = createMockContract('src/Card.tsx', 'new-card-hash', 'new-card-semantic');
+
+    vi.mocked(buildContract).mockImplementation((file: string) => {
+      if (file.includes('App')) {
+        return { contract: newAppContract, violations: [] };
+      }
+      return { contract: newCardContract, violations: [] };
+    });
+
+    vi.mocked(buildDependencyGraph).mockReturnValue({
+      ...mockCache.manifest!,
+      graph: { roots: ['src/App.tsx', 'src/Card.tsx'], leaves: [] },
+    });
+
+    // App succeeds, Card fails
+    const newAppBundle = {
+      type: 'LogicStampBundle' as const,
+      schemaVersion: '0.1' as const,
+      entryId: 'src/App.tsx',
+      depth: 2,
+      createdAt: new Date().toISOString(),
+      bundleHash: 'new-app-bundleHash',
+      graph: {
+        nodes: [{ entryId: 'src/App.tsx', contract: newAppContract }],
+        edges: [] as [string, string][],
+      },
+      meta: { missing: [] as any[], source: 'test' },
+    };
+
+    vi.mocked(pack).mockImplementation(async (bundleId: string) => {
+      if (bundleId === 'src/App.tsx') {
+        return newAppBundle;
+      }
+      throw new Error('Pack failed for Card');
+    });
+
+    const result = await incrementalRebuild(
+      ['src/App.tsx', 'src/Card.tsx'],
+      mockCache,
+      { out: '.', depth: 2 } as any,
+      '/project'
+    );
+
+    // Should have 2 bundles: new App, old Card
+    expect(result.bundles.length).toBe(2);
+
+    const appBundle = result.bundles.find(b => b.entryId === 'src/App.tsx');
+    const cardBundle = result.bundles.find(b => b.entryId === 'src/Card.tsx');
+
+    expect(appBundle?.bundleHash).toBe('new-app-bundleHash');
+    expect(cardBundle?.bundleHash).toBe('card-bundleHash'); // Old bundle kept
+
+    // Cache should have contracts from actual bundle contents
+    // App has new contract, Card has old contract
+    const appCachedContract = Array.from(mockCache.contracts.values()).find(
+      c => c.entryId === 'src/App.tsx'
+    );
+    const cardCachedContract = Array.from(mockCache.contracts.values()).find(
+      c => c.entryId === 'src/Card.tsx'
+    );
+
+    expect(appCachedContract?.fileHash).toBe('new-app-hash');
+    expect(cardCachedContract?.fileHash).toBe('card-hash'); // Old hash preserved
+  });
+
   it('should update componentToBundles index after rebuild', async () => {
     vi.mocked(readFileWithText).mockResolvedValue({ text: 'new content', path: 'src/App.tsx' });
     vi.mocked(fileHash).mockReturnValue('new-hash');
@@ -519,9 +729,8 @@ describe('incrementalRebuild', () => {
     expect(result.bundles[2].entryId).toBe('src/components/Zebra.tsx');
   });
 
-  it('should deduplicate contracts by entryId', async () => {
-    // Add duplicate contracts with different hashes
-    // Note: deduplication keeps the contract with the alphabetically greater fileHash
+  it('should sync contracts from bundle contents for consistency', async () => {
+    // Add stale/duplicate contracts that don't match the bundle
     const contract1 = createMockContract('src/App.tsx', 'aaa-old-hash');
     const contract2 = createMockContract('src/App.tsx', 'zzz-new-hash');
     mockCache.contracts.set('aaa-old-hash', contract1);
@@ -530,17 +739,19 @@ describe('incrementalRebuild', () => {
     vi.mocked(buildDependencyGraph).mockReturnValue(mockCache.manifest!);
 
     await incrementalRebuild(
-      [], // No changes, just verify deduplication
+      [], // No changes
       mockCache,
       { out: '.', depth: 2 } as any,
       '/project'
     );
 
-    // Should have only one contract per entryId (the one with greater hash alphabetically)
+    // Contracts should be synced from actual bundle contents
+    // The bundle has contract with 'fileHash-src/App.tsx' (from createMockBundle in beforeEach)
     const contractsForApp = Array.from(mockCache.contracts.values()).filter(
       c => c.entryId === 'src/App.tsx'
     );
     expect(contractsForApp.length).toBe(1);
-    expect(contractsForApp[0].fileHash).toBe('zzz-new-hash');
+    // Contract should match what's in the bundle, not the stale cache entries
+    expect(contractsForApp[0].fileHash).toBe('fileHash-src/App.tsx');
   });
 });

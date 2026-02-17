@@ -16,8 +16,9 @@ import {
   appendWatchLog,
   writeStrictWatchStatus,
   deleteStrictWatchStatus,
+  getWatchStatusPath,
 } from '../../../utils/config.js';
-import { registerCleanup, gracefulShutdown } from '../../../utils/cleanup.js';
+import { registerCleanup, gracefulShutdown, registerSyncCleanupPath, registerSignalHandlers } from '../../../utils/cleanup.js';
 import type {
   WatchLogEntry,
   Violation,
@@ -40,20 +41,10 @@ import { contextCommand, type ContextOptions } from '../context.js';
 /**
  * Detect violations from bundle changes
  * Breaking changes are treated as errors, additions as info (not violations)
+ * Note: Missing dependencies are not tracked as violations (they're expected for third-party packages)
  */
-function detectViolations(changes: BundleChanges, missingDeps: string[] = []): Violation[] {
+function detectViolations(changes: BundleChanges): Violation[] {
   const violations: Violation[] = [];
-
-  // Check for missing dependencies
-  for (const dep of missingDeps) {
-    violations.push({
-      type: 'missing_dependency',
-      severity: 'warning',
-      entryId: 'project',
-      message: `Missing dependency: ${dep}`,
-      details: { dependencyName: dep },
-    });
-  }
 
   // Check for removed contracts (breaking change)
   for (const entryId of changes.removed) {
@@ -170,6 +161,9 @@ function displayViolations(violations: Violation[], options: { quiet?: boolean }
  * Start watch mode - monitors file changes and regenerates context
  */
 export async function startWatchMode(options: ContextOptions, projectRoot: string, initialCache: WatchCache | null = null): Promise<void> {
+  // Register signal handlers so Ctrl+C goes through gracefulShutdown
+  registerSignalHandlers();
+
   if (!options.quiet) {
     console.log(`\n👀 Watch mode enabled. Watching for file changes...`);
     if (options.strictWatch) {
@@ -183,6 +177,7 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
   const outputDir = outPath.endsWith('.json') ? dirname(outPath) : outPath;
 
   // Write watch status file so MCP server can detect watch mode
+  const watchStatusPath = resolve(getWatchStatusPath(projectRoot));
   try {
     await writeWatchStatus(projectRoot, {
       active: true,
@@ -191,6 +186,8 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
       startedAt: new Date().toISOString(),
       outputDir,
     });
+    // Register for synchronous cleanup on exit (fallback for Windows where signals may not fire)
+    registerSyncCleanupPath(watchStatusPath);
   } catch (error) {
     // Non-fatal - continue even if status file can't be written
     if (!options.quiet) {
@@ -201,7 +198,8 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
   let debounceTimer: NodeJS.Timeout | null = null;
   let regenerationPromise: Promise<void> | null = null; // Promise-based lock to prevent race conditions
   let changedFiles: Set<string> = new Set();
-  let previousBundles: LogicStampBundle[] | null = null;
+  let baselineBundles: LogicStampBundle[] | null = null; // Initial state - never changes (like git HEAD)
+  let previousBundles: LogicStampBundle[] | null = null; // Last state - for incremental tracking
   let watchCache: WatchCache | null = initialCache;
   let isFirstRun = false; // Set to false since cache is already initialized
 
@@ -271,9 +269,11 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
       const outPath = resolve(options.out);
       const outputDir = outPath.endsWith('.json') ? dirname(outPath) : outPath;
 
-      // Load previous bundles for comparison
-      if (!previousBundles) {
-        previousBundles = await loadAllBundles(outputDir);
+      // Load baseline bundles for state-based comparison (like git diff)
+      // Baseline is set once and never changes - represents the starting state
+      if (!baselineBundles) {
+        baselineBundles = await loadAllBundles(outputDir);
+        previousBundles = baselineBundles;
       }
 
       if (!options.quiet) {
@@ -348,65 +348,82 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
       }
       
       const durationMs = Date.now() - startTime;
-      const changes = previousBundles && previousBundles.length > 0 
-        ? getChanges(previousBundles, newBundles)
+      // Compare against BASELINE (starting state), not previous state
+      // This gives us cumulative diff like `git diff` - if changes are reverted, diff is empty
+      const changes = baselineBundles && baselineBundles.length > 0
+        ? getChanges(baselineBundles, newBundles)
         : null;
 
       if (!options.quiet) {
-        if (changes) {
-          showChanges(previousBundles!, newBundles, changedFileList[0] || 'unknown', { debug: options.debug });
+        if (changes && (changes.changed.length > 0 || changes.added.length > 0 || changes.removed.length > 0 || changes.bundleChanged.length > 0)) {
+          showChanges(baselineBundles!, newBundles, changedFileList[0] || 'unknown', { debug: options.debug });
         }
         console.log(`\n✅ Regenerated\n`);
       }
 
-      // Strict watch mode: detect and report violations
-      if (options.strictWatch && strictWatchStatus && changes) {
-        // Get missing dependencies from bundles
-        const missingDeps: string[] = [];
-        for (const bundle of newBundles) {
-          if (bundle.meta?.missing) {
-            // Extract names from MissingDependency objects
-            for (const dep of bundle.meta.missing) {
-              missingDeps.push(typeof dep === 'string' ? dep : dep.name);
+      // Update previousBundles for incremental tracking (still useful for other operations)
+      previousBundles = newBundles;
+
+      // Strict watch mode: detect and report violations (state-based, like git diff)
+      // Violations are calculated from current state vs baseline, not accumulated
+      if (options.strictWatch && strictWatchStatus) {
+        const hasChanges = changes && (
+          changes.changed.length > 0 ||
+          changes.added.length > 0 ||
+          changes.removed.length > 0 ||
+          changes.bundleChanged.length > 0
+        );
+
+        if (hasChanges) {
+          const violations = detectViolations(changes);
+          const errors = violations.filter(v => v.severity === 'error');
+          const warnings = violations.filter(v => v.severity === 'warning');
+
+          if (violations.length > 0) {
+            // Update state-based counts (current state, not cumulative)
+            strictWatchStatus.regenerationCount++;
+            strictWatchStatus.cumulativeViolations = violations.length;
+            strictWatchStatus.cumulativeErrors = errors.length;
+            strictWatchStatus.cumulativeWarnings = warnings.length;
+
+            // Store current violations
+            strictWatchStatus.lastCheck = {
+              timestamp: new Date().toISOString(),
+              totalViolations: violations.length,
+              errors: errors.length,
+              warnings: warnings.length,
+              violations,
+              changedFiles: changedFileList,
+            };
+
+            // Display violations to console
+            if (!options.quiet) {
+              displayViolations(violations, { quiet: options.quiet });
+              console.log(`   📊 Current state: ${errors.length} error(s), ${warnings.length} warning(s)`);
             }
+
+            // Write current violations state to disk
+            await writeStrictWatchStatus(projectRoot, strictWatchStatus);
+          } else {
+            // Changes exist but no violations - delete the file
+            strictWatchStatus.cumulativeViolations = 0;
+            strictWatchStatus.cumulativeErrors = 0;
+            strictWatchStatus.cumulativeWarnings = 0;
+            strictWatchStatus.lastCheck = undefined;
+            await deleteStrictWatchStatus(projectRoot);
           }
-        }
-
-        const violations = detectViolations(changes, [...new Set(missingDeps)]);
-        const errors = violations.filter(v => v.severity === 'error');
-        const warnings = violations.filter(v => v.severity === 'warning');
-
-        // Update cumulative stats
-        strictWatchStatus.regenerationCount++;
-        strictWatchStatus.cumulativeViolations += violations.length;
-        strictWatchStatus.cumulativeErrors += errors.length;
-        strictWatchStatus.cumulativeWarnings += warnings.length;
-
-        // Store last check summary
-        strictWatchStatus.lastCheck = {
-          timestamp: new Date().toISOString(),
-          totalViolations: violations.length,
-          errors: errors.length,
-          warnings: warnings.length,
-          violations,
-          changedFiles: changedFileList,
-        };
-
-        // Display violations to console
-        if (!options.quiet && violations.length > 0) {
-          displayViolations(violations, { quiet: options.quiet });
-        }
-
-        // Write strict watch status to disk
-        await writeStrictWatchStatus(projectRoot, strictWatchStatus);
-
-        // Show cumulative summary
-        if (!options.quiet && strictWatchStatus.cumulativeViolations > 0) {
-          console.log(`   📊 Session total: ${strictWatchStatus.cumulativeErrors} error(s), ${strictWatchStatus.cumulativeWarnings} warning(s)`);
+        } else {
+          // No changes from baseline - clear violations (state reverted)
+          strictWatchStatus.cumulativeViolations = 0;
+          strictWatchStatus.cumulativeErrors = 0;
+          strictWatchStatus.cumulativeWarnings = 0;
+          strictWatchStatus.lastCheck = undefined;
+          await deleteStrictWatchStatus(projectRoot);
         }
       }
 
       // Log structured data for MCP server (only if --log-file flag is set)
+      // Appends each event to the log file for event history
       if (options.logFile) {
         if (changes) {
           const logEntry: WatchLogEntry = {
@@ -446,12 +463,10 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
           await appendWatchLog(projectRoot, logEntry);
         }
       }
-
-      previousBundles = newBundles; // Update for next comparison
     } catch (error) {
       const durationMs = Date.now() - startTime;
       const errorMessage = (error as Error).message;
-      
+
       if (!options.quiet) {
         console.error(`   ❌ Error: ${errorMessage}\n`);
       }
