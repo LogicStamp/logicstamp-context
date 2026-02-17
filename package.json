@@ -1,6 +1,6 @@
 {
   "name": "logicstamp-context",
-  "version": "0.5.4",
+  "version": "0.5.5",
  "description": "Deterministic architectural context for TypeScript codebases. Generates explicit component contracts and dependency graphs for AI workflows.",
   "type": "module",
   "main": "./dist/index.js",

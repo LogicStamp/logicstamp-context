@@ -19,6 +19,82 @@ See [docs/limitations.md](docs/limitations.md).
 
 ---
 
+## [0.5.5] - 2026-02-17
+
+### Changed
+
+- **Strict watch mode now uses state-based diffing** ([#92](https://github.com/LogicStamp/logicstamp-context/pull/92)) - Strict watch violations now show the cumulative diff from the baseline (starting state), not cumulative history:
+  - Violations show current state vs baseline, not accumulated over time
+  - When breaking changes are reverted to baseline, violations file is deleted (no violations = no file)
+  - `--log-file` remains append-based for event history (unchanged)
+
+- **Removed missing dependencies from strict watch violations** ([#92](https://github.com/LogicStamp/logicstamp-context/pull/92)) - Missing dependencies (third-party packages) are no longer reported as violations in strict watch mode. They are expected and not breaking changes.
+
+### Fixed
+
+- **Watch mode cleanup on exit** ([#92](https://github.com/LogicStamp/logicstamp-context/pull/92)) - Fixed issue where `watch_status.json` file was not deleted when exiting watch mode on Windows/Cursor:
+  - Signal handlers are now registered at watch mode startup (calls `registerSignalHandlers()`)
+  - Watch status path is now resolved to absolute path for reliable cleanup
+  - Added synchronous cleanup fallback via `process.on('exit')` handler
+  - MCP tools now clean up stale status files when PID validation fails
+
+- **Watch mode revert correctness** ([#92](https://github.com/LogicStamp/logicstamp-context/pull/92)) - When `pack()` fails during incremental rebuild, the cache is now kept consistent:
+  - Contracts are restored from the old bundle when reverting
+  - Reverse index entries are preserved for reverted bundles
+  - Final contracts and manifest are rebuilt from actual bundle contents
+  - Prevents cache inconsistency between contracts/manifest and bundles
+
+- **Resilient glob pattern failure handling** ([#90](https://github.com/LogicStamp/logicstamp-context/pull/90)) - Improved `globFiles()` to continue processing remaining patterns when one fails:
+  - Previously, if pattern #2 failed, patterns #3+ never executed and partial results from pattern #1 were lost
+  - Now collects results from all successful patterns and errors from failed patterns
+  - Only throws an aggregate error if ALL patterns fail
+  - Logs warnings via `debugError()` for partial failures (e.g., "2/3 patterns succeeded")
+  - Returns partial results when some patterns succeed, improving robustness for edge cases
+
+- **Config read/write race condition (TOCTOU)** ([#89](https://github.com/LogicStamp/logicstamp-context/pull/89))- Fixed potential data loss when multiple processes update config simultaneously:
+  - Added lightweight file locking utility (`src/utils/fileLock.ts`) using exclusive file creation with PID tracking
+  - `updateConfig()` now acquires an exclusive lock before read-modify-write operations
+  - `appendWatchLog()` now acquires an exclusive lock to prevent log entry corruption
+  - Lock files automatically detect and clean up stale locks from dead processes
+  - Conservative stale detection: distinguishes ESRCH (process dead) from EPERM (permission denied) to avoid deleting valid locks
+  - Configurable timeout, retry interval, and stale threshold for lock acquisition
+  - No new dependencies - uses Node.js built-in `fs` with `O_CREAT | O_EXCL` flags
+
+- **Atomic file writes to prevent corruption on crash** ([#89](https://github.com/LogicStamp/logicstamp-context/pull/89)) - Config and status files now use temp file + rename pattern:
+  - `writeConfig()`, `writeWatchStatus()`, `writeStrictWatchStatus()`, and `appendWatchLog()` all use atomic writes
+  - Writes to a temp file first, then atomically renames to the target path
+  - Prevents partial/corrupted files if the process crashes mid-write
+  - Temp files are cleaned up on error
+
+- **Control flow fix in compare handler** ([#91](https://github.com/LogicStamp/logicstamp-context/pull/91)) - Added explicit `return` before `process.exit()` calls in `compareHandler.ts` to ensure proper control flow termination and prevent potential code execution after exit
+
+### Tests
+
+- Added comprehensive unit tests for cleanup utilities (`tests/unit/utils/cleanup.test.ts`):
+  - Handler registration, unregistration, and priority ordering
+  - Duplicate id replacement
+  - Error handling (handlers continue even when one throws)
+  - Sync cleanup path management with real temp file deletion
+  - Exit handler invocation verification
+  - `process.exit` called with correct exit code
+
+- Added comprehensive unit tests for file locking utility (`tests/unit/utils/fileLock.test.ts`) ([#89](https://github.com/LogicStamp/logicstamp-context/pull/89)):
+  - Lock acquisition and release
+  - Stale lock detection (dead process, age-based)
+  - Concurrent access serialization
+  - Timeout behavior
+  - Error handling and cleanup
+
+- Added comprehensive unit tests for CLI commands and handlers ([#91](https://github.com/LogicStamp/logicstamp-context/pull/91)):
+  - CLI routing tests (`tests/unit/cli/stamp.test.ts`) - Tests command routing to handlers
+  - CLI entry point tests (`tests/unit/cli/validate-index.test.ts`) - Tests validate-index CLI
+  - Command tests (`tests/unit/commands/`) - Tests for `compare`, `init`, `context`, `security`, and `validate` commands
+  - Watch mode tests (`tests/unit/commands/context/watchMode.test.ts`) - Tests watch mode initialization, file change handling, cleanup, and strict mode
+  - Handler tests (`tests/unit/handlers/compareHandler.test.ts`) - Tests for auto-compare, multi-file, and single-file compare modes
+  - Enhanced `fsx.test.ts` with tests for resilient glob pattern failure handling
+
+---
+
 ## [0.5.4] - 2026-02-15
 
 ### Fixed
@@ -1230,7 +1306,8 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ---
 
 ## Version links
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.5.4...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.5.5...HEAD
+[0.5.5]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.5
 [0.5.4]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.4
 [0.5.3]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.3
 [0.5.2]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.2
