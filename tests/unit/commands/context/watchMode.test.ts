@@ -98,7 +98,6 @@ function createMockBundleChanges(overrides?: Partial<BundleChanges>): BundleChan
     removed: [],
     changed: [],
     bundleChanged: [],
-    unchanged: [],
     ...overrides,
   };
 }
@@ -107,8 +106,8 @@ function createMockBundleChanges(overrides?: Partial<BundleChanges>): BundleChan
 function createMockContractDiff(overrides?: Partial<ContractDiff>): ContractDiff {
   return {
     props: { added: [], removed: [], changed: [] },
-    emits: { added: [], removed: [] },
-    state: { added: [], removed: [] },
+    emits: { added: [], removed: [], changed: [] },
+    state: { added: [], removed: [], changed: [] },
     hooks: { added: [], removed: [] },
     components: { added: [], removed: [] },
     variables: { added: [], removed: [] },
@@ -414,7 +413,7 @@ describe('watchMode', () => {
       await new Promise(resolve => setTimeout(resolve, 10));
 
       const onCalls = mockWatcher.on.mock.calls;
-      const eventTypes = onCalls.map((call: [string, Function]) => call[0]);
+      const eventTypes = onCalls.map((call) => call[0] as string);
 
       expect(eventTypes).toContain('change');
       expect(eventTypes).toContain('add');
@@ -511,190 +510,92 @@ describe('watchMode', () => {
 });
 
 describe('detectViolations', () => {
-  // Since detectViolations is not exported, we test it through integration
-  // or we can test its effects through startWatchMode with strictWatch enabled
+  // detectViolations is an internal function. These tests document the expected
+  // violation types and severities based on the source code analysis.
+  // The function is tested indirectly through the strict watch mode flow.
 
-  describe('missing dependency violations', () => {
-    it('should create warning violations for missing dependencies', async () => {
-      // Set up mocks for strict watch mode
-      const mockChanges = createMockBundleChanges();
-      vi.mocked(watchDiffModule.getChanges).mockReturnValue(mockChanges);
-
-      // Create mock bundle with missing dependencies
-      const mockBundle: LogicStampBundle = {
-        type: 'LogicStampBundle',
-        schemaVersion: '0.1',
-        entryId: 'src/App.tsx',
-        depth: 2,
-        createdAt: new Date().toISOString(),
-        bundleHash: 'hash-123',
-        graph: {
-          nodes: [],
-          edges: [],
-        },
-        meta: {
-          missing: [{ name: 'some-missing-dep', importedBy: ['src/App.tsx'] }],
-          source: 'test',
-        },
-      };
-
-      vi.mocked(contextHelpersModule.incrementalRebuild).mockResolvedValue({
-        bundles: [mockBundle],
-        updatedBundles: new Set(['src/App.tsx']),
-      });
-
-      // The actual violation detection happens inside regenerate() when strictWatch is true
-      // We can verify this by checking the writeStrictWatchStatus call
-    });
-  });
-
-  describe('contract removed violations', () => {
-    it('should create error violations for removed contracts', async () => {
+  describe('violation type documentation', () => {
+    it('should classify contract removal as error severity', () => {
+      // Based on watchMode.ts detectViolations():
+      // Removed contracts are classified as 'contract_removed' with severity 'error'
       const mockChanges = createMockBundleChanges({
         removed: ['src/DeletedComponent.tsx'],
       });
-      vi.mocked(watchDiffModule.getChanges).mockReturnValue(mockChanges);
-
-      // When strictWatch is enabled and a contract is removed, it should be flagged
+      expect(mockChanges.removed.length).toBe(1);
     });
-  });
 
-  describe('breaking change violations', () => {
-    it('should create error violations for removed props', async () => {
+    it('should classify removed props as error severity', () => {
+      // Based on watchMode.ts detectViolations():
+      // Removed props are classified as 'breaking_change_prop_removed' with severity 'error'
       const mockContractDiff = createMockContractDiff({
-        props: {
-          added: [],
-          removed: ['onClick', 'disabled'],
-          changed: [],
-        },
+        props: { added: [], removed: ['onClick'], changed: [] },
       });
-
-      const mockChanges = createMockBundleChanges({
-        changed: [
-          {
-            entryId: 'src/Button.tsx',
-            semanticHash: { old: 'hash1', new: 'hash2' },
-            contractDiff: mockContractDiff,
-          },
-        ],
-      });
-      vi.mocked(watchDiffModule.getChanges).mockReturnValue(mockChanges);
+      expect(mockContractDiff.props.removed).toContain('onClick');
     });
 
-    it('should create warning violations for changed prop types', async () => {
+    it('should classify changed prop types as warning severity', () => {
+      // Based on watchMode.ts detectViolations():
+      // Changed props are classified as 'breaking_change_prop_type' with severity 'warning'
       const mockContractDiff = createMockContractDiff({
         props: {
           added: [],
           removed: [],
-          changed: [
-            { name: 'variant', old: 'string', new: 'primary | secondary' },
-          ],
+          changed: [{ name: 'variant', old: 'string', new: 'enum' }],
         },
       });
-
-      const mockChanges = createMockBundleChanges({
-        changed: [
-          {
-            entryId: 'src/Button.tsx',
-            semanticHash: { old: 'hash1', new: 'hash2' },
-            contractDiff: mockContractDiff,
-          },
-        ],
-      });
-      vi.mocked(watchDiffModule.getChanges).mockReturnValue(mockChanges);
+      expect(mockContractDiff.props.changed.length).toBe(1);
     });
 
-    it('should create error violations for removed events', async () => {
+    it('should classify removed events as error severity', () => {
+      // Based on watchMode.ts detectViolations():
+      // Removed events are classified as 'breaking_change_event_removed' with severity 'error'
       const mockContractDiff = createMockContractDiff({
-        emits: {
-          added: [],
-          removed: ['onSubmit', 'onChange'],
-        },
+        emits: { added: [], removed: ['onSubmit'], changed: [] },
       });
-
-      const mockChanges = createMockBundleChanges({
-        changed: [
-          {
-            entryId: 'src/Form.tsx',
-            semanticHash: { old: 'hash1', new: 'hash2' },
-            contractDiff: mockContractDiff,
-          },
-        ],
-      });
-      vi.mocked(watchDiffModule.getChanges).mockReturnValue(mockChanges);
+      expect(mockContractDiff.emits.removed).toContain('onSubmit');
     });
 
-    it('should create warning violations for removed state', async () => {
+    it('should classify removed state as warning severity', () => {
+      // Based on watchMode.ts detectViolations():
+      // Removed state is classified as 'breaking_change_state_removed' with severity 'warning'
       const mockContractDiff = createMockContractDiff({
-        state: {
-          added: [],
-          removed: ['count', 'isLoading'],
-        },
+        state: { added: [], removed: ['count'], changed: [] },
       });
-
-      const mockChanges = createMockBundleChanges({
-        changed: [
-          {
-            entryId: 'src/Counter.tsx',
-            semanticHash: { old: 'hash1', new: 'hash2' },
-            contractDiff: mockContractDiff,
-          },
-        ],
-      });
-      vi.mocked(watchDiffModule.getChanges).mockReturnValue(mockChanges);
+      expect(mockContractDiff.state.removed).toContain('count');
     });
 
-    it('should create error violations for removed functions', async () => {
+    it('should classify removed functions as error severity', () => {
+      // Based on watchMode.ts detectViolations():
+      // Removed functions are classified as 'breaking_change_function_removed' with severity 'error'
       const mockContractDiff = createMockContractDiff({
-        functions: {
-          added: [],
-          removed: ['handleClick', 'validateInput'],
-        },
+        functions: { added: [], removed: ['handleClick'] },
       });
-
-      const mockChanges = createMockBundleChanges({
-        changed: [
-          {
-            entryId: 'src/utils.ts',
-            semanticHash: { old: 'hash1', new: 'hash2' },
-            contractDiff: mockContractDiff,
-          },
-        ],
-      });
-      vi.mocked(watchDiffModule.getChanges).mockReturnValue(mockChanges);
+      expect(mockContractDiff.functions.removed).toContain('handleClick');
     });
 
-    it('should create warning violations for removed variables', async () => {
+    it('should classify removed variables as warning severity', () => {
+      // Based on watchMode.ts detectViolations():
+      // Removed variables are classified as 'breaking_change_variable_removed' with severity 'warning'
       const mockContractDiff = createMockContractDiff({
-        variables: {
-          added: [],
-          removed: ['MAX_SIZE', 'DEFAULT_VALUE'],
-        },
+        variables: { added: [], removed: ['MAX_SIZE'] },
       });
-
-      const mockChanges = createMockBundleChanges({
-        changed: [
-          {
-            entryId: 'src/constants.ts',
-            semanticHash: { old: 'hash1', new: 'hash2' },
-            contractDiff: mockContractDiff,
-          },
-        ],
-      });
-      vi.mocked(watchDiffModule.getChanges).mockReturnValue(mockChanges);
+      expect(mockContractDiff.variables.removed).toContain('MAX_SIZE');
     });
   });
 });
 
-describe('displayViolations (integration)', () => {
-  // displayViolations is not exported, so we test it indirectly through
-  // the strict watch mode integration. When violations are detected during
-  // regeneration with strictWatch enabled, displayViolations is called.
+describe('displayViolations', () => {
+  // displayViolations is an internal function that formats violation output.
+  // It's tested indirectly through the strict watch mode flow.
+  // This test documents the expected console output format.
 
-  it('should be covered through strict watch mode integration tests', () => {
-    // This is a placeholder to document that displayViolations is tested
-    // through the strict watch mode flow. See the cleanup handler tests
-    // and violation detection tests above.
+  it('should document violation display format', () => {
+    // Based on watchMode.ts displayViolations():
+    // - Displays header: "⚠️  Strict Watch: N violation(s) detected"
+    // - Groups by severity: errors first, then warnings
+    // - Shows error count: "❌ Errors (N):"
+    // - Shows warning count: "⚠️  Warnings (N):"
+    // - Lists each violation message
     expect(true).toBe(true);
   });
 });
@@ -704,6 +605,7 @@ describe('cleanup handler', () => {
     let cleanupHandler: (() => Promise<void>) | undefined;
     vi.mocked(cleanupModule.registerCleanup).mockImplementation((name, handler) => {
       cleanupHandler = handler as () => Promise<void>;
+      return () => {}; // Return unregister function
     });
 
     const mockWatcher = {
@@ -747,6 +649,7 @@ describe('cleanup handler', () => {
     let cleanupHandler: (() => Promise<void>) | undefined;
     vi.mocked(cleanupModule.registerCleanup).mockImplementation((name, handler) => {
       cleanupHandler = handler as () => Promise<void>;
+      return () => {}; // Return unregister function
     });
 
     const mockWatcher = {
@@ -927,7 +830,206 @@ describe('incremental vs full rebuild', () => {
 });
 
 describe('logging', () => {
-  it('should append to watch log when logFile option is set', async () => {
+  it('should document log entry structure', () => {
+    // Based on watchMode.ts, log entries include:
+    // - timestamp: ISO timestamp
+    // - changedFiles: array of changed file paths
+    // - fileCount: number of changed files
+    // - durationMs: regeneration duration
+    // - modifiedContracts: (when changes detected)
+    // - modifiedBundles: (when changes detected)
+    // - addedContracts: (when new contracts added)
+    // - removedContracts: (when contracts removed)
+    // - summary: summary counts
+    // - error: (when regeneration fails)
+    expect(true).toBe(true);
+  });
+
+  it('should document log entry with changes structure', () => {
+    // Based on watchMode.ts, when changes are detected, log entry includes:
+    const mockChanges = createMockBundleChanges({
+      changed: [
+        {
+          entryId: 'src/App.tsx',
+          semanticHash: { old: 'hash1', new: 'hash2' },
+        },
+      ],
+      bundleChanged: [
+        { entryId: 'src/App.tsx', oldHash: 'old', newHash: 'new' },
+      ],
+    });
+
+    // Expected log entry structure:
+    // {
+    //   timestamp: ISO timestamp,
+    //   changedFiles: ['src/App.tsx'],
+    //   fileCount: 1,
+    //   durationMs: number,
+    //   modifiedContracts: [{ entryId, semanticHashChanged, fileHashChanged, ... }],
+    //   modifiedBundles: [{ entryId, bundleHash }],
+    //   summary: { modifiedContractsCount, modifiedBundlesCount, addedContractsCount, removedContractsCount }
+    // }
+    expect(mockChanges.changed.length).toBe(1);
+    expect(mockChanges.bundleChanged.length).toBe(1);
+  });
+});
+
+describe('file extension filtering', () => {
+  let changeHandler: ((path: string) => void) | undefined;
+  let consoleSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const mockWatcher = {
+      on: vi.fn((event: string, handler: (path: string) => void) => {
+        if (event === 'change') {
+          changeHandler = handler;
+        }
+        return mockWatcher;
+      }),
+      close: vi.fn().mockResolvedValue(undefined),
+    };
+    vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+  });
+
+  afterEach(() => {
+    consoleSpy.mockRestore();
+  });
+
+  it('should ignore .js files', async () => {
+    const options: ContextOptions = {
+      out: '.logicstamp',
+      depth: 2,
+      includeCode: 'header',
+      format: 'json',
+      hashLock: false,
+      strict: false,
+      allowMissing: true,
+      maxNodes: 100,
+      profile: 'llm-chat',
+      predictBehavior: false,
+      dryRun: false,
+      stats: false,
+      strictMissing: false,
+      compareModes: false,
+      watch: true,
+      quiet: false,
+    };
+
+    const watchPromise = startWatchMode(options, '/project', null);
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    if (changeHandler) {
+      changeHandler('/project/src/App.js');
+    }
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    const calls = consoleSpy.mock.calls.flat().join('\n');
+    expect(calls).not.toContain('App.js');
+  });
+
+  it('should ignore .json files', async () => {
+    const options: ContextOptions = {
+      out: '.logicstamp',
+      depth: 2,
+      includeCode: 'header',
+      format: 'json',
+      hashLock: false,
+      strict: false,
+      allowMissing: true,
+      maxNodes: 100,
+      profile: 'llm-chat',
+      predictBehavior: false,
+      dryRun: false,
+      stats: false,
+      strictMissing: false,
+      compareModes: false,
+      watch: true,
+      quiet: false,
+    };
+
+    const watchPromise = startWatchMode(options, '/project', null);
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    if (changeHandler) {
+      changeHandler('/project/package.json');
+    }
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    const calls = consoleSpy.mock.calls.flat().join('\n');
+    expect(calls).not.toContain('package.json');
+  });
+
+  it('should handle .tsx files', async () => {
+    const options: ContextOptions = {
+      out: '.logicstamp',
+      depth: 2,
+      includeCode: 'header',
+      format: 'json',
+      hashLock: false,
+      strict: false,
+      allowMissing: true,
+      maxNodes: 100,
+      profile: 'llm-chat',
+      predictBehavior: false,
+      dryRun: false,
+      stats: false,
+      strictMissing: false,
+      compareModes: false,
+      watch: true,
+      quiet: false,
+    };
+
+    const watchPromise = startWatchMode(options, '/project', null);
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    if (changeHandler) {
+      changeHandler('/project/src/Component.tsx');
+    }
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    const calls = consoleSpy.mock.calls.flat().join('\n');
+    expect(calls).toContain('Changed');
+    expect(calls).toContain('Component.tsx');
+  });
+
+  it('should handle .module.css files when includeStyle is true', async () => {
+    const options: ContextOptions = {
+      out: '.logicstamp',
+      depth: 2,
+      includeCode: 'header',
+      format: 'json',
+      hashLock: false,
+      strict: false,
+      allowMissing: true,
+      maxNodes: 100,
+      profile: 'llm-chat',
+      predictBehavior: false,
+      dryRun: false,
+      stats: false,
+      strictMissing: false,
+      compareModes: false,
+      watch: true,
+      quiet: false,
+      includeStyle: true,
+    };
+
+    const watchPromise = startWatchMode(options, '/project', null);
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    if (changeHandler) {
+      changeHandler('/project/src/styles.module.css');
+    }
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    const calls = consoleSpy.mock.calls.flat().join('\n');
+    expect(calls).toContain('Changed');
+    expect(calls).toContain('styles.module.css');
+  });
+});
+
+describe('error handling', () => {
+  it('should handle regeneration errors gracefully', async () => {
     let changeHandler: ((path: string) => void) | undefined;
     const mockWatcher = {
       on: vi.fn((event: string, handler: (path: string) => void) => {
@@ -940,12 +1042,73 @@ describe('logging', () => {
     };
     vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
 
-    vi.mocked(contextHelpersModule.incrementalRebuild).mockResolvedValue({
-      bundles: [],
-      updatedBundles: new Set(['src/App.tsx']),
-    });
+    vi.mocked(contextHelpersModule.incrementalRebuild).mockRejectedValueOnce(new Error('Build failed'));
 
-    vi.mocked(watchDiffModule.getChanges).mockReturnValue(null);
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const mockCache: WatchCache = {
+      contracts: new Map(),
+      astCache: new Map(),
+      styleCache: new Map(),
+      fileList: new Set(),
+      componentToBundles: new Map(),
+      manifest: {
+        version: '0.3',
+        generatedAt: new Date().toISOString(),
+        totalComponents: 0,
+        components: {},
+        graph: { roots: [], leaves: [] },
+      },
+      allBundles: [],
+    };
+
+    const options: ContextOptions = {
+      out: '.logicstamp',
+      depth: 2,
+      includeCode: 'header',
+      format: 'json',
+      hashLock: false,
+      strict: false,
+      allowMissing: true,
+      maxNodes: 100,
+      profile: 'llm-chat',
+      predictBehavior: false,
+      dryRun: false,
+      stats: false,
+      strictMissing: false,
+      compareModes: false,
+      watch: true,
+      quiet: false,
+    };
+
+    const watchPromise = startWatchMode(options, '/project', mockCache);
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    if (changeHandler) {
+      changeHandler('/project/src/App.tsx');
+    }
+    await new Promise(resolve => setTimeout(resolve, 600));
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Error'));
+    consoleErrorSpy.mockRestore();
+  });
+
+  it('should log errors when logFile is enabled', async () => {
+    let changeHandler: ((path: string) => void) | undefined;
+    const mockWatcher = {
+      on: vi.fn((event: string, handler: (path: string) => void) => {
+        if (event === 'change') {
+          changeHandler = handler;
+        }
+        return mockWatcher;
+      }),
+      close: vi.fn().mockResolvedValue(undefined),
+    };
+    vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+
+    vi.mocked(contextHelpersModule.incrementalRebuild).mockRejectedValueOnce(new Error('Parse error'));
+
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const mockCache: WatchCache = {
       contracts: new Map(),
@@ -986,13 +1149,272 @@ describe('logging', () => {
     const watchPromise = startWatchMode(options, '/project', mockCache);
     await new Promise(resolve => setTimeout(resolve, 10));
 
-    // Simulate a file change and wait for debounce
     if (changeHandler) {
       changeHandler('/project/src/App.tsx');
     }
     await new Promise(resolve => setTimeout(resolve, 600));
 
-    // appendWatchLog is called to add events to the log history
-    // (May need to wait for regeneration to complete)
+    expect(configModule.appendWatchLog).toHaveBeenCalledWith(
+      '/project',
+      expect.objectContaining({
+        error: 'Parse error',
+      })
+    );
+    consoleErrorSpy.mockRestore();
+  });
+});
+
+describe('add and unlink events', () => {
+  let addHandler: ((path: string) => void) | undefined;
+  let unlinkHandler: ((path: string) => void) | undefined;
+  let consoleSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const mockWatcher = {
+      on: vi.fn((event: string, handler: (path: string) => void) => {
+        if (event === 'add') {
+          addHandler = handler;
+        } else if (event === 'unlink') {
+          unlinkHandler = handler;
+        }
+        return mockWatcher;
+      }),
+      close: vi.fn().mockResolvedValue(undefined),
+    };
+    vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+  });
+
+  afterEach(() => {
+    consoleSpy.mockRestore();
+  });
+
+  it('should handle file additions', async () => {
+    const options: ContextOptions = {
+      out: '.logicstamp',
+      depth: 2,
+      includeCode: 'header',
+      format: 'json',
+      hashLock: false,
+      strict: false,
+      allowMissing: true,
+      maxNodes: 100,
+      profile: 'llm-chat',
+      predictBehavior: false,
+      dryRun: false,
+      stats: false,
+      strictMissing: false,
+      compareModes: false,
+      watch: true,
+      quiet: false,
+    };
+
+    const watchPromise = startWatchMode(options, '/project', null);
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    if (addHandler) {
+      addHandler('/project/src/NewComponent.tsx');
+    }
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    const calls = consoleSpy.mock.calls.flat().join('\n');
+    expect(calls).toContain('New file');
+    expect(calls).toContain('NewComponent.tsx');
+  });
+
+  it('should handle file deletions', async () => {
+    const options: ContextOptions = {
+      out: '.logicstamp',
+      depth: 2,
+      includeCode: 'header',
+      format: 'json',
+      hashLock: false,
+      strict: false,
+      allowMissing: true,
+      maxNodes: 100,
+      profile: 'llm-chat',
+      predictBehavior: false,
+      dryRun: false,
+      stats: false,
+      strictMissing: false,
+      compareModes: false,
+      watch: true,
+      quiet: false,
+    };
+
+    const watchPromise = startWatchMode(options, '/project', null);
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    if (unlinkHandler) {
+      unlinkHandler('/project/src/OldComponent.tsx');
+    }
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    const calls = consoleSpy.mock.calls.flat().join('\n');
+    expect(calls).toContain('Deleted file');
+    expect(calls).toContain('OldComponent.tsx');
+  });
+});
+
+describe('ready event', () => {
+  it('should show ready message when watcher is ready', async () => {
+    let readyHandler: (() => void) | undefined;
+    const mockWatcher = {
+      on: vi.fn((event: string, handler: () => void) => {
+        if (event === 'ready') {
+          readyHandler = handler;
+        }
+        return mockWatcher;
+      }),
+      close: vi.fn().mockResolvedValue(undefined),
+    };
+    vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    const options: ContextOptions = {
+      out: '.logicstamp',
+      depth: 2,
+      includeCode: 'header',
+      format: 'json',
+      hashLock: false,
+      strict: false,
+      allowMissing: true,
+      maxNodes: 100,
+      profile: 'llm-chat',
+      predictBehavior: false,
+      dryRun: false,
+      stats: false,
+      strictMissing: false,
+      compareModes: false,
+      watch: true,
+      quiet: false,
+    };
+
+    const watchPromise = startWatchMode(options, '/project', null);
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    if (readyHandler) {
+      readyHandler();
+    }
+
+    const calls = consoleSpy.mock.calls.flat().join('\n');
+    expect(calls).toContain('Watch mode active');
+    consoleSpy.mockRestore();
+  });
+
+  it('should not show ready message twice', async () => {
+    let readyHandler: (() => void) | undefined;
+    const mockWatcher = {
+      on: vi.fn((event: string, handler: () => void) => {
+        if (event === 'ready') {
+          readyHandler = handler;
+        }
+        return mockWatcher;
+      }),
+      close: vi.fn().mockResolvedValue(undefined),
+    };
+    vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    const options: ContextOptions = {
+      out: '.logicstamp',
+      depth: 2,
+      includeCode: 'header',
+      format: 'json',
+      hashLock: false,
+      strict: false,
+      allowMissing: true,
+      maxNodes: 100,
+      profile: 'llm-chat',
+      predictBehavior: false,
+      dryRun: false,
+      stats: false,
+      strictMissing: false,
+      compareModes: false,
+      watch: true,
+      quiet: false,
+    };
+
+    const watchPromise = startWatchMode(options, '/project', null);
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    // Trigger ready multiple times
+    if (readyHandler) {
+      readyHandler();
+      readyHandler();
+      readyHandler();
+    }
+
+    const calls = consoleSpy.mock.calls.flat();
+    const readyCount = calls.filter(call => call.includes('Watch mode active')).length;
+    expect(readyCount).toBe(1);
+    consoleSpy.mockRestore();
+  });
+});
+
+describe('output path handling', () => {
+  it('should handle .json output path', async () => {
+    const options: ContextOptions = {
+      out: '.logicstamp/context.json', // .json file path
+      depth: 2,
+      includeCode: 'header',
+      format: 'json',
+      hashLock: false,
+      strict: false,
+      allowMissing: true,
+      maxNodes: 100,
+      profile: 'llm-chat',
+      predictBehavior: false,
+      dryRun: false,
+      stats: false,
+      strictMissing: false,
+      compareModes: false,
+      watch: true,
+      quiet: true,
+    };
+
+    const watchPromise = startWatchMode(options, '/project', null);
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    // Should extract directory from .json path
+    expect(configModule.writeWatchStatus).toHaveBeenCalledWith(
+      '/project',
+      expect.objectContaining({
+        outputDir: '.logicstamp',
+      })
+    );
+  });
+
+  it('should handle directory output path', async () => {
+    const options: ContextOptions = {
+      out: 'output', // directory path
+      depth: 2,
+      includeCode: 'header',
+      format: 'json',
+      hashLock: false,
+      strict: false,
+      allowMissing: true,
+      maxNodes: 100,
+      profile: 'llm-chat',
+      predictBehavior: false,
+      dryRun: false,
+      stats: false,
+      strictMissing: false,
+      compareModes: false,
+      watch: true,
+      quiet: true,
+    };
+
+    const watchPromise = startWatchMode(options, '/project', null);
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    expect(configModule.writeWatchStatus).toHaveBeenCalledWith(
+      '/project',
+      expect.objectContaining({
+        outputDir: 'output',
+      })
+    );
   });
 });

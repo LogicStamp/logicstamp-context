@@ -244,6 +244,118 @@ describe('Event Extractor', () => {
 
       expect(Object.keys(events)).toHaveLength(0);
     });
+
+    it('should extract signature from arrow function when prop has no signature', () => {
+      const sourceCode = `
+        interface MyComponentProps {
+          onSelect?: (item: string, index: number) => void;
+        }
+
+        function MyComponent({ onSelect }: MyComponentProps) {
+          return (
+            <button onClick={(item: string, index: number) => onSelect?.(item, index)}>
+              Select
+            </button>
+          );
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode);
+
+      // Prop exists but without signature field
+      const props = {
+        onClick: { type: 'function', optional: true }
+      };
+      const events = extractEvents(sourceFile, props);
+
+      // Should extract signature from the arrow function
+      expect(events.onClick).toBeDefined();
+      expect(events.onClick).toHaveProperty('signature');
+      const signature = (events.onClick as { signature: string }).signature;
+      expect(signature).toContain('item');
+      expect(signature).toContain('index');
+    });
+
+    it('should handle arrow function with no parameters', () => {
+      const sourceCode = `
+        interface MyComponentProps {
+          onReset?: () => void;
+        }
+
+        function MyComponent({ onReset }: MyComponentProps) {
+          return <button onClick={() => onReset?.()}>Reset</button>;
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode);
+
+      const props = {
+        onClick: { type: 'function', optional: true }
+      };
+      const events = extractEvents(sourceFile, props);
+
+      expect(events.onClick).toBeDefined();
+      expect(events.onClick).toHaveProperty('signature', '() => void');
+    });
+
+    it('should handle arrow function with untyped parameters', () => {
+      const sourceCode = `
+        function MyComponent({ onData }: Props) {
+          return <div onData={(x) => console.log(x)}>Data</div>;
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode);
+
+      const props = {
+        onData: { type: 'function', optional: true }
+      };
+      const events = extractEvents(sourceFile, props);
+
+      expect(events.onData).toBeDefined();
+      expect(events.onData).toHaveProperty('signature');
+      // Untyped params should just show the name
+      const signature = (events.onData as { signature: string }).signature;
+      expect(signature).toContain('x');
+    });
+
+    it('should not extract handlers that do not match onXxx pattern', () => {
+      const sourceCode = `
+        function MyComponent({ handleClick }: Props) {
+          return <button handleClick={handleClick}>Click</button>;
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode);
+
+      const props = {
+        handleClick: { type: 'function', signature: '() => void', optional: true }
+      };
+      const events = extractEvents(sourceFile, props);
+
+      // handleClick doesn't match onXxx pattern
+      expect(events.handleClick).toBeUndefined();
+    });
+
+    it('should handle identifier reference without inferring signature', () => {
+      const sourceCode = `
+        function MyComponent({ onClick }: Props) {
+          const handleClick = () => {};
+          return <button onClick={handleClick}>Click</button>;
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode);
+
+      const props = {
+        onClick: { type: 'function', optional: true }
+      };
+      const events = extractEvents(sourceFile, props);
+
+      // Should use default signature since it's an identifier reference, not arrow function
+      expect(events.onClick).toBeDefined();
+      expect(events.onClick).toHaveProperty('signature', '() => void');
+    });
   });
 
   describe('extractJsxRoutes', () => {
@@ -332,6 +444,171 @@ describe('Event Extractor', () => {
       const routes = extractJsxRoutes(sourceFile);
 
       expect(routes.filter(r => r === '/home').length).toBe(1);
+    });
+
+    it('should extract routes from JSX expressions with string literals', () => {
+      const sourceCode = `
+        function MyComponent() {
+          return (
+            <div>
+              <Route path={"/dashboard"} />
+              <Link to={"/settings"} />
+            </div>
+          );
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode);
+
+      const routes = extractJsxRoutes(sourceFile);
+
+      expect(routes).toContain('/dashboard');
+      expect(routes).toContain('/settings');
+    });
+
+    it('should extract routes from href attribute', () => {
+      const sourceCode = `
+        function MyComponent() {
+          return (
+            <div>
+              <a href="/login">Login</a>
+              <a href="/signup">Signup</a>
+            </div>
+          );
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode);
+
+      const routes = extractJsxRoutes(sourceFile);
+
+      expect(routes).toContain('/login');
+      expect(routes).toContain('/signup');
+    });
+
+    it('should extract routes from as, route, and src attributes', () => {
+      const sourceCode = `
+        function MyComponent() {
+          return (
+            <div>
+              <Link as="/profile" />
+              <NavItem route="/nav" />
+              <Image src="/images/logo" />
+            </div>
+          );
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode);
+
+      const routes = extractJsxRoutes(sourceFile);
+
+      expect(routes).toContain('/profile');
+      expect(routes).toContain('/nav');
+      expect(routes).toContain('/images/logo');
+    });
+
+    it('should not extract routes from non-route attributes', () => {
+      const sourceCode = `
+        function MyComponent() {
+          return (
+            <div className="/not-a-route" id="/also-not-a-route">
+              Content
+            </div>
+          );
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode);
+
+      const routes = extractJsxRoutes(sourceFile);
+
+      expect(routes).not.toContain('/not-a-route');
+      expect(routes).not.toContain('/also-not-a-route');
+    });
+
+    it('should not extract variable references as routes', () => {
+      const sourceCode = `
+        function MyComponent() {
+          const dynamicPath = "/dynamic";
+          return <Route path={dynamicPath} />;
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode);
+
+      const routes = extractJsxRoutes(sourceFile);
+
+      // Variable references should not be extracted (only string literals)
+      expect(routes).not.toContain('/dynamic');
+      expect(routes).toHaveLength(0);
+    });
+
+    it('should not extract invalid route patterns', () => {
+      const sourceCode = `
+        function MyComponent() {
+          return (
+            <div>
+              <a href="https://external.com">External</a>
+              <a href="mailto:test@example.com">Email</a>
+              <a href="javascript:void(0)">JS</a>
+              <a href="not-a-route">Invalid</a>
+            </div>
+          );
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode);
+
+      const routes = extractJsxRoutes(sourceFile);
+
+      expect(routes).toHaveLength(0);
+    });
+
+    it('should extract routes with special valid characters', () => {
+      const sourceCode = `
+        function MyComponent() {
+          return (
+            <div>
+              <Route path="/api/v1/users" />
+              <Route path="/user-profile" />
+              <Route path="/user_settings" />
+              <Route path="/files/doc.pdf" />
+            </div>
+          );
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode);
+
+      const routes = extractJsxRoutes(sourceFile);
+
+      expect(routes).toContain('/api/v1/users');
+      expect(routes).toContain('/user-profile');
+      expect(routes).toContain('/user_settings');
+      expect(routes).toContain('/files/doc.pdf');
+    });
+
+    it('should handle case-insensitive attribute names', () => {
+      const sourceCode = `
+        function MyComponent() {
+          return (
+            <div>
+              <Route PATH="/uppercase" />
+              <Link TO="/uppercase-to" />
+              <a HREF="/uppercase-href">Link</a>
+            </div>
+          );
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode);
+
+      const routes = extractJsxRoutes(sourceFile);
+
+      expect(routes).toContain('/uppercase');
+      expect(routes).toContain('/uppercase-to');
+      expect(routes).toContain('/uppercase-href');
     });
   });
 
