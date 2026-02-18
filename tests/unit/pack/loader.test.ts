@@ -8,6 +8,7 @@ import {
   recordSanitizationBatch,
   extractCodeHeader,
   readSourceCode,
+  loadContract,
   type SanitizeInfo,
   type SanitizeStats,
 } from '../../../src/core/pack/loader.js';
@@ -260,6 +261,89 @@ export function TestComponent() {
       expect('code' in result).toBe(true);
       // sanitizeInfo is optional
       expect(result.sanitizeInfo === undefined || typeof result.sanitizeInfo === 'object').toBe(true);
+    });
+  });
+
+  describe('Path Traversal Protection', () => {
+    const testDir = join(process.cwd(), 'tests', 'fixtures', 'loader-test-temp');
+    const subDir = join(testDir, 'subdir');
+    const testFile = join(subDir, 'test-file.ts');
+
+    beforeEach(async () => {
+      await mkdir(subDir, { recursive: true });
+      await writeFile(testFile, 'export const x = 1;', 'utf8');
+    });
+
+    afterEach(async () => {
+      try {
+        await rm(testDir, { recursive: true, force: true });
+      } catch {
+        // Ignore cleanup errors
+      }
+    });
+
+    describe('loadContract', () => {
+      it('should reject paths with ../ traversal', async () => {
+        const result = await loadContract('../../../etc/passwd', testDir);
+        expect(result).toBeNull();
+      });
+
+      it('should reject paths with multiple ../ sequences', async () => {
+        const result = await loadContract('subdir/../../outside/file.ts', testDir);
+        expect(result).toBeNull();
+      });
+
+      it('should allow valid relative paths within project', async () => {
+        // This will return null because the .uif.json file doesn't exist,
+        // but it should not be rejected by path validation
+        const result = await loadContract('subdir/test-file.ts', testDir);
+        // Returns null because .uif.json doesn't exist, not because of path validation
+        expect(result).toBeNull();
+      });
+    });
+
+    describe('extractCodeHeader', () => {
+      it('should reject paths with ../ traversal', async () => {
+        const result = await extractCodeHeader('../../../etc/passwd', testDir);
+        expect(result.header).toBeNull();
+      });
+
+      it('should reject paths that escape project root', async () => {
+        const result = await extractCodeHeader('subdir/../../../outside.ts', testDir);
+        expect(result.header).toBeNull();
+      });
+
+      it('should allow valid paths within project', async () => {
+        // Create a file with @uif header
+        const fileWithHeader = join(subDir, 'with-header.ts');
+        await writeFile(fileWithHeader, '/**\n * @uif Test\n */\nexport const x = 1;', 'utf8');
+
+        const result = await extractCodeHeader('subdir/with-header.ts', testDir);
+        expect(result.header).toContain('@uif');
+      });
+    });
+
+    describe('readSourceCode', () => {
+      it('should reject paths with ../ traversal', async () => {
+        const result = await readSourceCode('../../../etc/passwd', testDir);
+        expect(result.code).toBeNull();
+      });
+
+      it('should reject paths that escape project root', async () => {
+        const result = await readSourceCode('foo/../../bar/../../../outside.ts', testDir);
+        expect(result.code).toBeNull();
+      });
+
+      it('should allow valid paths within project', async () => {
+        const result = await readSourceCode('subdir/test-file.ts', testDir);
+        expect(result.code).toBe('export const x = 1;');
+      });
+
+      it('should allow paths with ../ that stay within project', async () => {
+        // subdir/../subdir/test-file.ts resolves to subdir/test-file.ts which is valid
+        const result = await readSourceCode('subdir/../subdir/test-file.ts', testDir);
+        expect(result.code).toBe('export const x = 1;');
+      });
     });
   });
 });

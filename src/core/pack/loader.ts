@@ -3,7 +3,7 @@
  */
 
 import { readFile } from 'node:fs/promises';
-import { join, resolve, isAbsolute } from 'node:path';
+import { join, resolve, isAbsolute, relative } from 'node:path';
 import type { UIFContract } from '../../types/UIFContract.js';
 import type { ProjectManifest } from '../manifest.js';
 import { debugError } from '../../utils/debug.js';
@@ -160,6 +160,16 @@ export async function loadManifest(basePath: string): Promise<ProjectManifest> {
  * Sidecar path is computed from the manifest key (project-relative): resolved from projectRoot + key + '.uif.json'
  */
 export async function loadContract(entryId: string, projectRoot: string): Promise<UIFContract | null> {
+  // Validate path stays within project root (prevents path traversal attacks)
+  if (!isPathWithinRoot(entryId, projectRoot)) {
+    debugError('loader', 'loadContract', {
+      entryId,
+      projectRoot,
+      message: 'Path traversal attempt detected - path outside project root',
+    });
+    return null;
+  }
+
   // Resolve relative path from project root
   const absolutePath = isAbsolute(entryId) ? entryId : resolve(projectRoot, entryId);
   const sidecarPath = `${absolutePath}.uif.json`;
@@ -171,6 +181,19 @@ export async function loadContract(entryId: string, projectRoot: string): Promis
     // Sidecar file doesn't exist or can't be read
     return null;
   }
+}
+
+/**
+ * Check if a file path is within the project root directory
+ * Prevents path traversal attacks (e.g., `../../../sensitive.json`)
+ */
+function isPathWithinRoot(filePath: string, rootPath: string): boolean {
+  const resolvedPath = resolve(rootPath, filePath);
+  const relativePath = relative(rootPath, resolvedPath);
+
+  // Path is outside root if relative path starts with '..' or is absolute
+  // On Windows, also check for drive letter changes (e.g., C: to D:)
+  return !relativePath.startsWith('..') && !isAbsolute(relativePath);
 }
 
 /**
@@ -214,6 +237,16 @@ async function getSecurityReport(projectRoot: string): Promise<SecurityReport | 
  * Callers should aggregate sanitization info and record it once after batch processing.
  */
 export async function extractCodeHeader(entryId: string, projectRoot: string): Promise<CodeHeaderResult> {
+  // Validate path stays within project root (prevents path traversal attacks)
+  if (!isPathWithinRoot(entryId, projectRoot)) {
+    debugError('loader', 'extractCodeHeader', {
+      entryId,
+      projectRoot,
+      message: 'Path traversal attempt detected - path outside project root',
+    });
+    return { header: null };
+  }
+
   try {
     const absolutePath = isAbsolute(entryId) ? entryId : resolve(projectRoot, entryId);
     // Read file content (source file is never modified)
@@ -258,6 +291,16 @@ export async function extractCodeHeader(entryId: string, projectRoot: string): P
  * Callers should aggregate sanitization info and record it once after batch processing.
  */
 export async function readSourceCode(entryId: string, projectRoot: string): Promise<SourceCodeResult> {
+  // Validate path stays within project root (prevents path traversal attacks)
+  if (!isPathWithinRoot(entryId, projectRoot)) {
+    debugError('loader', 'readSourceCode', {
+      entryId,
+      projectRoot,
+      message: 'Path traversal attempt detected - path outside project root',
+    });
+    return { code: null };
+  }
+
   try {
     const absolutePath = isAbsolute(entryId) ? entryId : resolve(projectRoot, entryId);
     // Read file content (source file is never modified)
