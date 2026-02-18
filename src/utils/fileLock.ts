@@ -57,7 +57,19 @@ function isProcessAlive(pid: number): boolean | 'unknown' {
 async function isLockStale(lockPath: string, staleThreshold: number): Promise<boolean> {
   try {
     const content = await readFile(lockPath, 'utf-8');
-    const lockData: LockFileContent = JSON.parse(content);
+
+    // If file is empty, another process just created it and is writing - not stale
+    if (!content.trim()) {
+      return false;
+    }
+
+    let lockData: LockFileContent;
+    try {
+      lockData = JSON.parse(content);
+    } catch {
+      // Can't parse JSON - likely another process is mid-write, not stale
+      return false;
+    }
 
     // Check if the process that created the lock is still alive
     const alive = isProcessAlive(lockData.pid);
@@ -78,9 +90,14 @@ async function isLockStale(lockPath: string, staleThreshold: number): Promise<bo
     }
 
     return false;
-  } catch {
-    // If we can't read the lock file, assume it's stale
-    return true;
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException;
+    // File doesn't exist - either never created or already removed
+    if (err.code === 'ENOENT') {
+      return true;
+    }
+    // Other read errors - be conservative, assume not stale
+    return false;
   }
 }
 
