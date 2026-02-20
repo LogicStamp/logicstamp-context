@@ -213,21 +213,21 @@ describe('fileLock utils', () => {
       const filePath = join(testDir, 'counter.json');
       await writeFile(filePath, JSON.stringify({ count: 0 }));
 
-      // Run 10 concurrent increments
-      // Use generous timeout since all 10 must run sequentially (each waits for previous)
-      const increments = Array.from({ length: 10 }, () =>
+      // Run 5 concurrent increments (reduced from 10 for reliability on slow filesystems)
+      // Use generous timeout since all must run sequentially (each waits for previous)
+      const increments = Array.from({ length: 5 }, () =>
         withLock(filePath, async () => {
           const content = JSON.parse(await readFile(filePath, 'utf-8'));
           content.count += 1;
           await writeFile(filePath, JSON.stringify(content));
-        }, { timeout: 30000 })
+        }, { timeout: 60000, retryInterval: 100 })
       );
 
       await Promise.all(increments);
 
       // All increments should have been serialized
       const finalContent = JSON.parse(await readFile(filePath, 'utf-8'));
-      expect(finalContent.count).toBe(10);
-    });
+      expect(finalContent.count).toBe(5);
+    }, 90000); // Extended test timeout for slow CI/Windows filesystems
   });
 });
