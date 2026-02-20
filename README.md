@@ -7,10 +7,10 @@
     </picture>
   </a>
 
-### Structured context for AI coding assistants.
+### Prevent AI from silently breaking your TypeScript architecture.
 
-  Make AI coding assistants understand your architecture, not just your code.<br/>
-  Extract deterministic component contracts from your TypeScript codebase.
+  Extract deterministic contracts and dependency graphs.<br/>
+  Enforce strict architectural diffs in real time.
 
   <small><em>Supports: React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
 
@@ -24,13 +24,11 @@
   [![Version](https://img.shields.io/badge/version-0.5.5-8b5cf6.svg)](https://www.npmjs.com/package/logicstamp-context)
   ![Beta](https://img.shields.io/badge/status-beta-orange.svg)
   [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-  ![Node](https://img.shields.io/badge/node-%3E%3D18.18.0-brightgreen.svg)
+  ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)
   [![CI](https://github.com/LogicStamp/logicstamp-context/workflows/CI/badge.svg)](https://github.com/LogicStamp/logicstamp-context/actions)
 
 </div>
 <br/>
-
-**LogicStamp Context** is a static analyzer that extracts deterministic component contracts from TypeScript codebases - giving AI assistants structured architectural context instead of raw source code.
 
 <details>
 <summary><strong>📑 Table of Contents</strong></summary>
@@ -38,9 +36,8 @@
 - [The Problem](#the-problem)
 - [Quick Start](#quick-start)
 - [Why Structured Context?](#why-structured-context)
-- [Features](#features)
+- [Features](#-features)
 - [Watch Mode](#watch-mode)
-- [One-time Comparison](#one-time-comparison)
 - [How it Works](#how-it-works)
 - [MCP Server](#mcp-server)
 - [Example Output](#example-output)
@@ -388,7 +385,7 @@ LogicStamp Context is in beta. Some edge cases are not fully supported.
 
 ## Requirements
 
-- Node.js >= 18.18.0 (Node 20+ recommended)
+- Node.js >= 20
 - TypeScript codebase (React, Next.js, Vue (TS/TSX), Express, or NestJS)
 
 ## Need Help?

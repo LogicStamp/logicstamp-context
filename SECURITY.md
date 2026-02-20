@@ -126,3 +126,10 @@ LogicStamp Context:
 
 - **Local file access**: The tool reads files from your local filesystem based on the scan path you provide.
 
+### Runtime Schema Validation
+
+LogicStamp Context validates generated context bundles against the official JSON schema at load time.
+
+Invalid, malformed, or schema-drifted contract files are rejected early to prevent corrupted or outdated architectural context from being consumed by tooling or AI agents.
+
+This validation step ensures structural integrity and deterministic behavior across versions.

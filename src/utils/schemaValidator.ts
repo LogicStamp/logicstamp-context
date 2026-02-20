@@ -74,15 +74,13 @@ export function validateUIFContract(data: unknown): {
 } {
   const validator = initializeValidator();
 
-  // If schema failed to load, skip validation and return success
-  // This ensures the tool still works even if schema file is missing
-  // Note: schemaLoadError is logged via debugError() but not returned in errors
-  // to avoid the confusing state of valid=true with non-empty errors
+  // If schema failed to load, reject validation
+  // This ensures corrupted or invalid contracts are never silently accepted
   if (!validator) {
     return {
-      valid: true,
-      errors: [],
-      data: data as UIFContract,
+      valid: false,
+      errors: ['Schema validation unavailable: ' + (schemaLoadError?.message || 'failed to load schema')],
+      data: null,
     };
   }
 

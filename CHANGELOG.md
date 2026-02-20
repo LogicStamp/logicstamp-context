@@ -19,6 +19,51 @@ See [docs/limitations.md](docs/limitations.md).
 
 ---
 
+## [0.6.0] - 2026-02-20
+
+### ⚠️ Breaking Changes
+
+- **Node.js requirement bumped to >=20** ([#97](https://github.com/LogicStamp/logicstamp-context/pull/97)) - Required by dependency and security updates.
+
+### Changed
+
+- **Updated `ts-morph` to 27.0.2** ([#97](https://github.com/LogicStamp/logicstamp-context/pull/97)) - Major update from 21.0.1 with improved TypeScript 5.x support.
+
+### Added
+
+- **Schema validation for UIFContract files during contract loading** ([#96](https://github.com/LogicStamp/logicstamp-context/pull/96)) - `.uif.json` sidecar files are validated via AJV during load. Invalid or outdated contracts are rejected with detailed errors.
+
+### Fixed
+
+- **Reject contracts when schema unavailable** ([#97](https://github.com/LogicStamp/logicstamp-context/pull/97)) - Prevents silent validation bypass if the schema fails to load.
+
+- **Improved schema validator reliability and API consistency** ([#96](https://github.com/LogicStamp/logicstamp-context/pull/96)) - Ensures consistent `err.data` reporting and correct `valid` / `errors` return values.
+
+- **Corrected validation type reporting** ([#96](https://github.com/LogicStamp/logicstamp-context/pull/96)) - Properly reports `null` and `array` instead of generic `object`.
+
+- **Improved contract loader error handling** ([#96](https://github.com/LogicStamp/logicstamp-context/pull/96)) - Clearly distinguishes file-not-found, read errors, JSON parse errors, and schema validation errors. Validation errors capped at 20.
+
+- **Fix file lock race condition during concurrent access** ([#94](https://github.com/LogicStamp/logicstamp-context/pull/94)) - Prevents concurrent processes from acquiring locks mid-write.
+
+### Documentation
+
+- Updated `SECURITY.md` to document runtime schema validation and contract integrity guarantees - ([#97](https://github.com/LogicStamp/logicstamp-context/pull/97)).
+- Updated `schema.md` to reflect enforced runtime schema validation behavior - ([#97](https://github.com/LogicStamp/logicstamp-context/pull/97)).
+
+### Tests
+
+- **Added root-boundary traversal tests** ([#94](https://github.com/LogicStamp/logicstamp-context/pull/94)) - Covers nested traversal attempts and in-root validation.
+
+- **Expanded extraction and related test coverage** ([#95](https://github.com/LogicStamp/logicstamp-context/pull/95)) - Improved event and route extraction coverage across modules.
+
+### Security
+
+- **Prevent path traversal in file loading utilities** ([#94](https://github.com/LogicStamp/logicstamp-context/pull/94)) - Enforces strict project-root boundaries across internal file utilities.
+
+- **Updated `glob` to 13.0.6 to address minimatch ReDoS vulnerability** ([#97](https://github.com/LogicStamp/logicstamp-context/pull/97)) - Includes patched minimatch version. Required Node.js >=20.
+
+---
+
 ## [0.5.5] - 2026-02-17
 
 ### Changed
