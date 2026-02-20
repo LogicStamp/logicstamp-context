@@ -1,7 +1,7 @@
 {
   "name": "logicstamp-context",
-  "version": "0.5.5",
-  "description": "Deterministic architectural context for TypeScript codebases. Generates explicit component contracts and dependency graphs for AI workflows.",
+  "version": "0.6.0",
+  "description": "Deterministic architectural context for TypeScript. Extract explicit contracts and dependency graphs to prevent AI-driven architectural drift.",
   "type": "module",
   "main": "./dist/index.js",
   "exports": {
@@ -63,8 +63,8 @@
     "ajv": "^8.18.0",
     "chokidar": "^4.0.3",
     "css-tree": "^3.1.0",
-    "glob": "^10.5.0",
-    "ts-morph": "^21.0.1"
+    "glob": "^13.0.6",
+    "ts-morph": "^27.0.2"
   },
   "optionalDependencies": {
     "@anthropic-ai/tokenizer": "^0.0.4",
@@ -78,6 +78,6 @@
     "vitest": "^4.0.16"
   },
   "engines": {
-    "node": ">=18.18.0"
+    "node": ">=20"
   }
 }
