@@ -640,7 +640,24 @@ See [hashes.md](./hashes.md) for detailed information about hash computation.
 
 ## Validation
 
-All schemas can be validated using `stamp context validate`:
+### Runtime Validation
+
+LogicStamp performs **automatic runtime validation** when loading sidecar `.uif.json` contract files using [AJV](https://ajv.js.org/). This ensures that:
+
+- Malformed or corrupted contract files are caught immediately
+- Outdated contracts (wrong `schemaVersion`) are rejected
+- Unexpected fields are detected (schema uses `additionalProperties: false`)
+- Type mismatches are reported with clear error messages
+
+Invalid contracts return `null` from `loadContract()` with detailed errors logged via `debugError()`. Enable debug logging to see validation errors:
+
+```bash
+LOGICSTAMP_DEBUG=1 stamp context
+```
+
+### CLI Validation
+
+All schemas can also be validated explicitly using `stamp context validate`:
 
 ```bash
 # Validate all context files (multi-file mode)

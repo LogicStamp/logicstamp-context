@@ -264,6 +264,165 @@ export function TestComponent() {
     });
   });
 
+  describe('loadContract Schema Validation', () => {
+    const testDir = join(process.cwd(), 'tests', 'fixtures', 'loader-contract-temp');
+    const testFile = join(testDir, 'Button.tsx');
+    const sidecarFile = join(testDir, 'Button.tsx.uif.json');
+
+    beforeEach(async () => {
+      await mkdir(testDir, { recursive: true });
+      // Create a dummy source file
+      await writeFile(testFile, 'export function Button() { return <button />; }', 'utf8');
+    });
+
+    afterEach(async () => {
+      try {
+        await rm(testDir, { recursive: true, force: true });
+      } catch {
+        // Ignore cleanup errors
+      }
+    });
+
+    it('should load valid contract from sidecar file', async () => {
+      const validContract = {
+        type: 'UIFContract',
+        schemaVersion: '0.4',
+        kind: 'react:component',
+        entryId: 'Button.tsx',
+        description: 'A button component',
+        composition: {
+          variables: [],
+          hooks: [],
+          components: [],
+          functions: ['Button'],
+        },
+        interface: {
+          props: {},
+          emits: {},
+        },
+        semanticHash: 'uif:abcdef123456789012345678',
+        fileHash: 'uif:123456789abcdef012345678',
+      };
+      await writeFile(sidecarFile, JSON.stringify(validContract), 'utf8');
+
+      const result = await loadContract('Button.tsx', testDir);
+
+      expect(result).not.toBeNull();
+      expect(result?.type).toBe('UIFContract');
+      expect(result?.kind).toBe('react:component');
+      expect(result?.entryId).toBe('Button.tsx');
+    });
+
+    it('should return null for invalid contract (wrong schemaVersion)', async () => {
+      const invalidContract = {
+        type: 'UIFContract',
+        schemaVersion: '0.3', // Wrong version
+        kind: 'react:component',
+        entryId: 'Button.tsx',
+        description: 'A button component',
+        composition: {
+          variables: [],
+          hooks: [],
+          components: [],
+          functions: [],
+        },
+        interface: {
+          props: {},
+          emits: {},
+        },
+        semanticHash: 'uif:abcdef123456789012345678',
+        fileHash: 'uif:123456789abcdef012345678',
+      };
+      await writeFile(sidecarFile, JSON.stringify(invalidContract), 'utf8');
+
+      const result = await loadContract('Button.tsx', testDir);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null for invalid contract (missing required fields)', async () => {
+      const invalidContract = {
+        type: 'UIFContract',
+        schemaVersion: '0.4',
+        // Missing: kind, entryId, description, composition, interface, semanticHash, fileHash
+      };
+      await writeFile(sidecarFile, JSON.stringify(invalidContract), 'utf8');
+
+      const result = await loadContract('Button.tsx', testDir);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null for invalid contract (wrong type)', async () => {
+      const invalidContract = {
+        type: 'WrongType', // Wrong type
+        schemaVersion: '0.4',
+        kind: 'react:component',
+        entryId: 'Button.tsx',
+        description: 'A button component',
+        composition: {
+          variables: [],
+          hooks: [],
+          components: [],
+          functions: [],
+        },
+        interface: {
+          props: {},
+          emits: {},
+        },
+        semanticHash: 'uif:abcdef123456789012345678',
+        fileHash: 'uif:123456789abcdef012345678',
+      };
+      await writeFile(sidecarFile, JSON.stringify(invalidContract), 'utf8');
+
+      const result = await loadContract('Button.tsx', testDir);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null for invalid contract (extra properties)', async () => {
+      const invalidContract = {
+        type: 'UIFContract',
+        schemaVersion: '0.4',
+        kind: 'react:component',
+        entryId: 'Button.tsx',
+        description: 'A button component',
+        composition: {
+          variables: [],
+          hooks: [],
+          components: [],
+          functions: [],
+        },
+        interface: {
+          props: {},
+          emits: {},
+        },
+        semanticHash: 'uif:abcdef123456789012345678',
+        fileHash: 'uif:123456789abcdef012345678',
+        unknownExtraField: 'should cause validation failure',
+      };
+      await writeFile(sidecarFile, JSON.stringify(invalidContract), 'utf8');
+
+      const result = await loadContract('Button.tsx', testDir);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null for malformed JSON', async () => {
+      await writeFile(sidecarFile, '{ invalid json }', 'utf8');
+
+      const result = await loadContract('Button.tsx', testDir);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null when sidecar file does not exist', async () => {
+      const result = await loadContract('NonExistent.tsx', testDir);
+
+      expect(result).toBeNull();
+    });
+  });
+
   describe('Path Traversal Protection', () => {
     const testDir = join(process.cwd(), 'tests', 'fixtures', 'loader-test-temp');
     const subDir = join(testDir, 'subdir');
