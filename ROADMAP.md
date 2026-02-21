@@ -4,6 +4,16 @@ This roadmap outlines the planned features, improvements, and known limitations 
 
 ## Recent Achievements
 
+## v0.6.0 (February 2026)
+- ✅ **Runtime schema validation (AJV-enforced)** – `.uif.json` contracts are now validated during load. Invalid, malformed, or outdated contracts are rejected with capped, structured error reporting (max 20 errors).
+- ✅ **Fail-closed contract loading** – If the schema fails to load, contracts are rejected instead of silently bypassing validation.
+- ✅ **Hardened contract loader error handling** – Explicit distinction between file-not-found, read errors, JSON parse errors, and schema validation failures.
+- ✅ **Path traversal protection** – Enforced strict project-root boundaries across internal file utilities.
+- ✅ **File lock race condition fix** – Prevents concurrent lock acquisition mid-write.
+- ✅ **Dependency security updates** – `glob@13.0.6` (patched minimatch ReDoS), `ts-morph@27.0.2` with improved TypeScript 5.x support.
+- ⚠️ **Node.js >= 20 required** – Required by dependency and security updates.
+- ✅ **Test coverage expansion** – Added root-boundary traversal tests and expanded extraction coverage.
+
 ### v0.5.5 (February 2026)
 - ✅ **State-based strict watch diffing** - Strict watch mode now compares current state vs the original baseline (like `git diff`), not cumulative history. Violations reflect current drift only and are automatically cleared when changes are reverted.
 - ✅ **Removed missing dependencies from strict watch violations** - Third-party packages are no longer treated as breaking changes in strict watch mode.

@@ -7,10 +7,10 @@
     </picture>
   </a>
 
-### Prevent AI from silently breaking your TypeScript architecture.
+### Deterministic architectural context for TypeScript.
 
   Extract deterministic contracts and dependency graphs.<br/>
-  Enforce strict architectural diffs in real time.
+  Prevent AI-driven architectural drift and enforce strict diffs in real time.
 
   <small><em>Supports: React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
 
