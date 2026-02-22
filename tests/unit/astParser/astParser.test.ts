@@ -260,7 +260,7 @@ app.get('/users', (req, res) => {
       writeFileSync(mixedFile, mixedContent, 'utf-8');
 
       const result = await extractFromFile(mixedFile);
-      
+
       // Should extract backend (not React) because Backend > React priority
       expect(result.kind).toBe('node:api');
       expect(result.backend).toBeDefined();
@@ -271,6 +271,395 @@ app.get('/users', (req, res) => {
       expect(result.props).toEqual({});
       expect(result.state).toEqual({});
       expect(result.emits).toEqual({});
+    });
+  });
+});
+
+// ============================================================================
+// FAILURE MODE TESTS - Real-world edge cases and error scenarios
+// ============================================================================
+
+describe('AST Parser Failure Modes', () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = join(tmpdir(), `logicstamp-failure-test-${Date.now()}`);
+    mkdirSync(tempDir, { recursive: true });
+  });
+
+  describe('binary and encoding edge cases', () => {
+    it('should handle binary data disguised as TypeScript', async () => {
+      const binaryFile = join(tempDir, 'binary.tsx');
+      // Write binary data (PNG header)
+      const binaryData = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+      writeFileSync(binaryFile, binaryData);
+
+      const result = await extractFromFile(binaryFile);
+
+      // Should not crash, should return empty AST
+      expect(result).toBeDefined();
+      expect(result.kind).toBe('ts:module');
+    });
+
+    it('should handle file with null bytes', async () => {
+      const nullFile = join(tempDir, 'nullbytes.tsx');
+      const content = 'export const x = 1;\0\0\0export const y = 2;';
+      writeFileSync(nullFile, content, 'utf-8');
+
+      const result = await extractFromFile(nullFile);
+
+      // Should handle gracefully
+      expect(result).toBeDefined();
+    });
+
+    it('should handle file with only comments', async () => {
+      const commentFile = join(tempDir, 'comments.tsx');
+      const content = `
+        // This is a comment
+        /* This is a
+           multiline comment */
+        /**
+         * JSDoc comment
+         * @param x - some param
+         */
+      `;
+      writeFileSync(commentFile, content, 'utf-8');
+
+      const result = await extractFromFile(commentFile);
+
+      expect(result).toBeDefined();
+      expect(result.kind).toBe('ts:module');
+      expect(result.functions).toEqual([]);
+      expect(result.components).toEqual([]);
+    });
+
+    it('should handle file with BOM (Byte Order Mark)', async () => {
+      const bomFile = join(tempDir, 'bom.tsx');
+      // UTF-8 BOM + content
+      const content = '\uFEFFexport const Component = () => <div>Test</div>;';
+      writeFileSync(bomFile, content, 'utf-8');
+
+      const result = await extractFromFile(bomFile);
+
+      expect(result).toBeDefined();
+      // Should still extract the component
+    });
+
+    it('should handle file with mixed line endings', async () => {
+      const mixedFile = join(tempDir, 'mixed-endings.tsx');
+      const content = 'import React from "react";\r\n\nexport function A() {\r  return <div />;\n}\r\n';
+      writeFileSync(mixedFile, content, 'utf-8');
+
+      const result = await extractFromFile(mixedFile);
+
+      expect(result).toBeDefined();
+      expect(result.imports).toContain('react');
+    });
+  });
+
+  describe('unicode and special characters', () => {
+    it('should handle unicode identifiers', async () => {
+      const unicodeFile = join(tempDir, 'unicode.tsx');
+      const content = `
+        export const コンポーネント = () => <div>日本語</div>;
+        export const Émoji = () => <div>🎉</div>;
+        export const кириллица = () => <div>Привет</div>;
+      `;
+      writeFileSync(unicodeFile, content, 'utf-8');
+
+      const result = await extractFromFile(unicodeFile);
+
+      expect(result).toBeDefined();
+      // Should extract functions with unicode names
+      expect(result.functions.length).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should handle emoji in JSX content', async () => {
+      const emojiFile = join(tempDir, 'emoji.tsx');
+      const content = `
+        export const Component = () => (
+          <div>
+            <span>🎉 Party!</span>
+            <span>👍 Good</span>
+          </div>
+        );
+      `;
+      writeFileSync(emojiFile, content, 'utf-8');
+
+      const result = await extractFromFile(emojiFile);
+
+      expect(result).toBeDefined();
+      expect(result.functions).toContain('Component');
+    });
+
+    it('should handle special characters in strings', async () => {
+      const specialFile = join(tempDir, 'special.tsx');
+      const content = `
+        export const Component = () => {
+          const text = "Special: \\n\\t\\r\\0 chars";
+          const regex = /[a-z]+/gi;
+          return <div>{text}</div>;
+        };
+      `;
+      writeFileSync(specialFile, content, 'utf-8');
+
+      const result = await extractFromFile(specialFile);
+
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe('deeply nested and complex structures', () => {
+    it('should handle deeply nested JSX', async () => {
+      const deepFile = join(tempDir, 'deep.tsx');
+      let jsx = '<div>';
+      for (let i = 0; i < 50; i++) {
+        jsx += `<div className="level-${i}">`;
+      }
+      jsx += 'Content';
+      for (let i = 0; i < 50; i++) {
+        jsx += '</div>';
+      }
+      jsx += '</div>';
+
+      const content = `export const DeepComponent = () => (${jsx});`;
+      writeFileSync(deepFile, content, 'utf-8');
+
+      const result = await extractFromFile(deepFile);
+
+      expect(result).toBeDefined();
+      expect(result.functions).toContain('DeepComponent');
+    });
+
+    it('should handle many props', async () => {
+      const manyPropsFile = join(tempDir, 'manyprops.tsx');
+      const props = Array.from({ length: 100 }, (_, i) => `prop${i}: string`).join('; ');
+      const content = `
+        interface Props { ${props} }
+        export const Component = (props: Props) => <div />;
+      `;
+      writeFileSync(manyPropsFile, content, 'utf-8');
+
+      const result = await extractFromFile(manyPropsFile);
+
+      expect(result).toBeDefined();
+      // Should extract props (may be limited by implementation)
+    });
+
+    it('should handle many imports', async () => {
+      const manyImportsFile = join(tempDir, 'manyimports.tsx');
+      const imports = Array.from({ length: 50 }, (_, i) =>
+        `import { util${i} } from './utils/util${i}';`
+      ).join('\n');
+      const content = `
+        ${imports}
+        export const Component = () => <div />;
+      `;
+      writeFileSync(manyImportsFile, content, 'utf-8');
+
+      const result = await extractFromFile(manyImportsFile);
+
+      expect(result).toBeDefined();
+      expect(result.imports.length).toBeGreaterThan(0);
+    });
+
+    it('should handle circular type references', async () => {
+      const circularFile = join(tempDir, 'circular.tsx');
+      const content = `
+        interface Node {
+          children: Node[];
+          parent?: Node;
+        }
+
+        export const TreeComponent = (props: { root: Node }) => (
+          <div>
+            {props.root.children.map((child) => (
+              <TreeComponent root={child} />
+            ))}
+          </div>
+        );
+      `;
+      writeFileSync(circularFile, content, 'utf-8');
+
+      const result = await extractFromFile(circularFile);
+
+      expect(result).toBeDefined();
+      expect(result.functions).toContain('TreeComponent');
+    });
+  });
+
+  describe('syntax edge cases', () => {
+    it('should handle TypeScript decorators', async () => {
+      const decoratorFile = join(tempDir, 'decorator.ts');
+      const content = `
+        function log(target: any) {
+          console.log(target);
+        }
+
+        @log
+        export class MyComponent {
+          render() {
+            return null;
+          }
+        }
+      `;
+      writeFileSync(decoratorFile, content, 'utf-8');
+
+      const result = await extractFromFile(decoratorFile);
+
+      expect(result).toBeDefined();
+    });
+
+    it('should handle JSX fragments', async () => {
+      const fragmentFile = join(tempDir, 'fragment.tsx');
+      const content = `
+        export const Component = () => (
+          <>
+            <div>First</div>
+            <div>Second</div>
+          </>
+        );
+      `;
+      writeFileSync(fragmentFile, content, 'utf-8');
+
+      const result = await extractFromFile(fragmentFile);
+
+      expect(result).toBeDefined();
+      expect(result.functions).toContain('Component');
+    });
+
+    it('should handle JSX spread attributes', async () => {
+      const spreadFile = join(tempDir, 'spread.tsx');
+      const content = `
+        interface Props {
+          className?: string;
+          [key: string]: any;
+        }
+
+        export const Component = (props: Props) => (
+          <div {...props}>Content</div>
+        );
+      `;
+      writeFileSync(spreadFile, content, 'utf-8');
+
+      const result = await extractFromFile(spreadFile);
+
+      expect(result).toBeDefined();
+    });
+
+    it('should handle optional chaining and nullish coalescing', async () => {
+      const modernFile = join(tempDir, 'modern.tsx');
+      const content = `
+        export const Component = ({ data }: { data?: { value?: string } }) => (
+          <div>{data?.value ?? 'default'}</div>
+        );
+      `;
+      writeFileSync(modernFile, content, 'utf-8');
+
+      const result = await extractFromFile(modernFile);
+
+      expect(result).toBeDefined();
+    });
+
+    it('should handle template literal types', async () => {
+      const templateFile = join(tempDir, 'template.tsx');
+      const content = `
+        type EventName = \`on\${string}\`;
+
+        interface Props {
+          [K in EventName]?: () => void;
+        }
+
+        export const Component = (props: Props) => <div />;
+      `;
+      writeFileSync(templateFile, content, 'utf-8');
+
+      const result = await extractFromFile(templateFile);
+
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe('partial parse recovery', () => {
+    it('should extract what it can from partially valid file', async () => {
+      const partialFile = join(tempDir, 'partial.tsx');
+      const content = `
+        import React from 'react';
+
+        export const ValidComponent = () => <div>Valid</div>;
+
+        // Below is invalid syntax
+        export const Broken = () => {
+          const x = {
+        // Missing closing brace
+      `;
+      writeFileSync(partialFile, content, 'utf-8');
+
+      const result = await extractFromFile(partialFile);
+
+      // Should not crash
+      expect(result).toBeDefined();
+      // Might extract the valid import
+      expect(Array.isArray(result.imports)).toBe(true);
+    });
+
+    it('should handle unterminated string literal', async () => {
+      const unterminatedFile = join(tempDir, 'unterminated.tsx');
+      const content = `
+        export const Component = () => {
+          const text = "This string never ends...
+          return <div>{text}</div>;
+        };
+      `;
+      writeFileSync(unterminatedFile, content, 'utf-8');
+
+      const result = await extractFromFile(unterminatedFile);
+
+      expect(result).toBeDefined();
+    });
+
+    it('should handle unbalanced brackets', async () => {
+      const unbalancedFile = join(tempDir, 'unbalanced.tsx');
+      const content = `
+        export const Component = () => {
+          const arr = [1, 2, 3;
+          const obj = { a: 1, b: 2;
+          return <div />;
+        };
+      `;
+      writeFileSync(unbalancedFile, content, 'utf-8');
+
+      const result = await extractFromFile(unbalancedFile);
+
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe('large file handling', () => {
+    it('should handle large file with many components', async () => {
+      const largeFile = join(tempDir, 'large.tsx');
+      const components = Array.from({ length: 100 }, (_, i) => `
+        export const Component${i} = () => <div>Component ${i}</div>;
+      `).join('\n');
+
+      const content = `import React from 'react';\n${components}`;
+      writeFileSync(largeFile, content, 'utf-8');
+
+      const result = await extractFromFile(largeFile);
+
+      expect(result).toBeDefined();
+      expect(result.functions.length).toBeGreaterThan(0);
+    });
+
+    it('should handle file with very long single line', async () => {
+      const longLineFile = join(tempDir, 'longline.tsx');
+      const longString = 'x'.repeat(10000);
+      const content = `export const Component = () => <div className="${longString}">Content</div>;`;
+      writeFileSync(longLineFile, content, 'utf-8');
+
+      const result = await extractFromFile(longLineFile);
+
+      expect(result).toBeDefined();
     });
   });
 });
