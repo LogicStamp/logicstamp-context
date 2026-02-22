@@ -2,7 +2,7 @@
  * Prop Extractor - Extracts component props from TypeScript interfaces/types
  */
 
-import { SourceFile, Node, SyntaxKind, Type } from 'ts-morph';
+import { SourceFile, Node, Type, InterfaceDeclaration, TypeAliasDeclaration, PropertySignature, Symbol as TsMorphSymbol } from 'ts-morph';
 import type { PropType } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
 import { normalizePropType, stripUndefinedFromUnionText } from '../shared/propTypeNormalizer.js';
@@ -13,20 +13,203 @@ import { hasExportedHooks, extractHookParameters } from './hookParameterExtracto
 const TYPEFLAG_UNDEFINED = 16384; // ts.TypeFlags.Undefined
 
 /**
+ * Wraps a function call in a try-catch, returning a default value on error.
+ * Use this to simplify error handling for operations that may fail but shouldn't
+ * stop processing of other items.
+ */
+function safeExtract<T>(
+  fn: () => T,
+  defaultValue: T,
+  errorContext?: { filePath: string; context: string }
+): T {
+  try {
+    return fn();
+  } catch (error) {
+    if (errorContext) {
+      debugError('propExtractor', 'extractProps', {
+        filePath: errorContext.filePath,
+        error: error instanceof Error ? error.message : String(error),
+        context: errorContext.context,
+      });
+    }
+    return defaultValue;
+  }
+}
+
+/**
  * Safely get TypeScript type flags from a ts-morph Type
  * Accesses the underlying TypeScript compiler type to get flags
  */
 function getTypeFlags(type: Type): number {
-  try {
-    // Access the underlying TypeScript compiler type
-    const compilerType = type.compilerType;
-    if (compilerType && typeof compilerType.flags === 'number') {
-      return compilerType.flags;
-    }
-  } catch {
-    // Fallback if compiler type not accessible
+  const compilerType = type.compilerType;
+  if (compilerType && typeof compilerType.flags === 'number') {
+    return compilerType.flags;
   }
   return 0;
+}
+
+/**
+ * Check if a union type includes undefined
+ */
+function isUndefinedType(type: Type): boolean {
+  const flags = getTypeFlags(type);
+  if ((flags & TYPEFLAG_UNDEFINED) !== 0) {
+    return true;
+  }
+  return type.getText() === 'undefined';
+}
+
+/**
+ * Check if a union type contains undefined and extract the non-undefined type text
+ * Returns { hasUndefined, typeText } where typeText excludes undefined
+ */
+function analyzeUnionForUndefined(propType: Type): { hasUndefined: boolean; typeText: string } {
+  if (!propType.isUnion()) {
+    return { hasUndefined: false, typeText: propType.getText() };
+  }
+
+  const unionTypes = propType.getUnionTypes();
+  const hasUndefined = unionTypes.some(isUndefinedType);
+
+  if (!hasUndefined) {
+    return { hasUndefined: false, typeText: propType.getText() };
+  }
+
+  const typeText = unionTypes
+    .filter(ut => !isUndefinedType(ut))
+    .map(ut => ut.getText())
+    .join(' | ');
+
+  return { hasUndefined: true, typeText };
+}
+
+/**
+ * Extract a single prop from an interface property
+ */
+function extractInterfaceProp(prop: PropertySignature): { name: string; propType: PropType } | null {
+  const name = prop.getName();
+  let isOptional = prop.hasQuestionToken();
+  let type = prop.getType().getText();
+  let didRebuildFromUnion = false;
+
+  // Check for union-with-undefined (some people write foo: string | undefined without ?)
+  if (!isOptional) {
+    const analysis = analyzeUnionForUndefined(prop.getType());
+    if (analysis.hasUndefined) {
+      isOptional = true;
+      type = analysis.typeText;
+      didRebuildFromUnion = true;
+    }
+  }
+
+  // If optional but we didn't rebuild from union types, strip undefined from type text
+  if (isOptional && !didRebuildFromUnion) {
+    type = stripUndefinedFromUnionText(type);
+  }
+
+  return { name, propType: normalizePropType(type, isOptional) };
+}
+
+/**
+ * Extract props from a single interface declaration
+ */
+function extractPropsFromInterface(
+  iface: InterfaceDeclaration,
+  filePath: string
+): Record<string, PropType> {
+  const props: Record<string, PropType> = {};
+
+  if (!/Props$/i.test(iface.getName())) {
+    return props;
+  }
+
+  for (const prop of iface.getProperties()) {
+    const result = safeExtract(
+      () => extractInterfaceProp(prop),
+      null,
+      { filePath, context: 'props-interface-property' }
+    );
+
+    if (result) {
+      props[result.name] = result.propType;
+    }
+  }
+
+  return props;
+}
+
+/**
+ * Extract a single prop from a type alias property symbol
+ */
+function extractTypeAliasProp(
+  prop: TsMorphSymbol,
+  typeAlias: TypeAliasDeclaration
+): { name: string; propType: PropType } | null {
+  const name = prop.getName();
+  let isOptional = false;
+  let propType = prop.getTypeAtLocation(typeAlias).getText();
+  let didRebuildFromUnion = false;
+
+  // Method 1: Check if type is a union that includes undefined
+  const propTypeObj = prop.getTypeAtLocation(typeAlias);
+  const analysis = analyzeUnionForUndefined(propTypeObj);
+  if (analysis.hasUndefined) {
+    isOptional = true;
+    propType = analysis.typeText;
+    didRebuildFromUnion = true;
+  }
+
+  // Method 2: Check declarations for question token (AST method)
+  if (!isOptional) {
+    const declarations = prop.getDeclarations();
+    isOptional = declarations.some((decl) => {
+      if (Node.isPropertySignature(decl)) {
+        return decl.hasQuestionToken();
+      }
+      if (Node.isPropertyDeclaration(decl)) {
+        return decl.hasQuestionToken();
+      }
+      return false;
+    });
+  }
+
+  // If optional but we didn't rebuild from union types, strip undefined from type text
+  if (isOptional && !didRebuildFromUnion) {
+    propType = stripUndefinedFromUnionText(propType);
+  }
+
+  return { name, propType: normalizePropType(propType, isOptional) };
+}
+
+/**
+ * Extract props from a single type alias declaration
+ */
+function extractPropsFromTypeAlias(
+  typeAlias: TypeAliasDeclaration,
+  filePath: string
+): Record<string, PropType> {
+  const props: Record<string, PropType> = {};
+
+  if (!/Props$/i.test(typeAlias.getName())) {
+    return props;
+  }
+
+  const type = typeAlias.getType();
+  const properties = type.getProperties();
+
+  for (const prop of properties) {
+    const result = safeExtract(
+      () => extractTypeAliasProp(prop, typeAlias),
+      null,
+      { filePath, context: 'props-typealias-property' }
+    );
+
+    if (result) {
+      props[result.name] = result.propType;
+    }
+  }
+
+  return props;
 }
 
 /**
@@ -37,219 +220,48 @@ export function extractProps(source: SourceFile): Record<string, PropType> {
   const props: Record<string, PropType> = {};
   const filePath = source.getFilePath?.() ?? 'unknown';
 
-  try {
-    // Look for interfaces ending with Props
-    try {
-      source.getInterfaces().forEach((iface) => {
-        try {
-          if (/Props$/i.test(iface.getName())) {
-            iface.getProperties().forEach((prop) => {
-              try {
-                const name = prop.getName();
-                let isOptional = prop.hasQuestionToken();
-                let type = prop.getType().getText();
-                let didRebuildFromUnion = false;
-                
-                // Also check for union-with-undefined (some people write foo: string | undefined without ?)
-                if (!isOptional) {
-                  try {
-                    const propType = prop.getType();
-                    if (propType.isUnion()) {
-                      const unionTypes = propType.getUnionTypes();
-                      const hasUndefined = unionTypes.some(ut => {
-                        try {
-                          const flags = getTypeFlags(ut);
-                          if ((flags & TYPEFLAG_UNDEFINED) !== 0) {
-                            return true;
-                          }
-                        } catch {
-                          // Fallback to string check if flags not available
-                        }
-                        const text = ut.getText();
-                        return text === 'undefined';
-                      });
-                      
-                      if (hasUndefined) {
-                        isOptional = true;
-                        // Normalize type text by removing undefined from union (handles any position)
-                        type = unionTypes
-                          .filter(ut => {
-                            const flags = getTypeFlags(ut);
-                            if ((flags & TYPEFLAG_UNDEFINED) !== 0) {
-                              return false;
-                            }
-                            return ut.getText() !== 'undefined';
-                          })
-                          .map(ut => ut.getText())
-                          .join(' | ');
-                        didRebuildFromUnion = true;
-                      }
-                    }
-                  } catch {
-                    // Fallback if union check fails
-                  }
-                }
-                
-                // If optional but we didn't rebuild from union types, strip undefined from type text
-                // This handles cases like "foo?: undefined | string" where ? token made us skip union logic
-                if (isOptional && !didRebuildFromUnion) {
-                  type = stripUndefinedFromUnionText(type);
-                }
-                
-                props[name] = normalizePropType(type, isOptional);
-              } catch (error) {
-                debugError('propExtractor', 'extractProps', {
-                  filePath,
-                  error: error instanceof Error ? error.message : String(error),
-                  context: 'props-interface-property',
-                });
-                // Continue with next property
-              }
-            });
-          }
-        } catch (error) {
-          debugError('propExtractor', 'extractProps', {
-            filePath,
-            error: error instanceof Error ? error.message : String(error),
-            context: 'props-interface',
-          });
-          // Continue with next interface
-        }
-      });
-    } catch (error) {
-      debugError('propExtractor', 'extractProps', {
-        filePath,
-        error: error instanceof Error ? error.message : String(error),
-        context: 'props-interfaces-batch',
-      });
+  // Extract props from interfaces ending with Props
+  const interfaces = safeExtract(
+    () => source.getInterfaces(),
+    [],
+    { filePath, context: 'props-interfaces-batch' }
+  );
+
+  for (const iface of interfaces) {
+    const ifaceProps = safeExtract(
+      () => extractPropsFromInterface(iface, filePath),
+      {},
+      { filePath, context: 'props-interface' }
+    );
+    Object.assign(props, ifaceProps);
+  }
+
+  // Extract props from type aliases ending with Props
+  const typeAliases = safeExtract(
+    () => source.getTypeAliases(),
+    [],
+    { filePath, context: 'props-typealiases-batch' }
+  );
+
+  for (const typeAlias of typeAliases) {
+    const typeAliasProps = safeExtract(
+      () => extractPropsFromTypeAlias(typeAlias, filePath),
+      {},
+      { filePath, context: 'props-typealias' }
+    );
+    Object.assign(props, typeAliasProps);
+  }
+
+  // Extract hook parameters if there are exported hooks
+  // Props take priority on conflicts (if a prop exists in both, Props value is kept)
+  if (hasExportedHooks(source)) {
+    const hookParams = extractHookParameters(source);
+    if (Object.keys(hookParams).length > 0) {
+      // Merge hook parameters with Props, with Props taking priority on conflicts
+      const originalProps = { ...props };
+      Object.assign(props, hookParams);
+      Object.assign(props, originalProps); // Props override any conflicting hook parameters
     }
-
-    // Look for type aliases ending with Props
-    try {
-      source.getTypeAliases().forEach((typeAlias) => {
-        try {
-          if (/Props$/i.test(typeAlias.getName())) {
-            const type = typeAlias.getType();
-            const properties = type.getProperties();
-
-            properties.forEach((prop) => {
-              try {
-                const name = prop.getName();
-                
-                // Check if optional using TypeScript's type system
-                let isOptional = false;
-                let propType = prop.getTypeAtLocation(typeAlias).getText();
-                let didRebuildFromUnion = false;
-
-                // Method 1: Check if type is a union that includes undefined
-                // Use type flags instead of string matching to avoid false positives
-                try {
-                  const propTypeObj = prop.getTypeAtLocation(typeAlias);
-                  if (propTypeObj.isUnion()) {
-                    const unionTypes = propTypeObj.getUnionTypes();
-                    const hasUndefined = unionTypes.some(ut => {
-                      // Check type flags for undefined (more robust than string matching)
-                      const flags = getTypeFlags(ut);
-                      if ((flags & TYPEFLAG_UNDEFINED) !== 0) {
-                        return true;
-                      }
-                      // Fallback: exact string match only (avoid false positives like SomeUndefinedType)
-                      const text = ut.getText();
-                      return text === 'undefined';
-                    });
-
-                    if (hasUndefined) {
-                      isOptional = true;
-                      // Normalize type text by removing undefined from union (handles any position)
-                      // This ensures consistent output: undefined | string and string | undefined both become string
-                      propType = unionTypes
-                        .filter(ut => {
-                          const flags = getTypeFlags(ut);
-                          if ((flags & TYPEFLAG_UNDEFINED) !== 0) {
-                            return false;
-                          }
-                          return ut.getText() !== 'undefined';
-                        })
-                        .map(ut => ut.getText())
-                        .join(' | ');
-                      didRebuildFromUnion = true;
-                    }
-                  }
-                } catch {
-                  // Fallback if union check fails
-                }
-
-                // Method 2: Check declarations for question token (AST method)
-                if (!isOptional) {
-                  const declarations = prop.getDeclarations();
-                  isOptional = declarations.some((decl) => {
-                    // Use AST method to check for question token
-                    // PropertySignature and PropertyDeclaration both have hasQuestionToken()
-                    if (Node.isPropertySignature(decl)) {
-                      return decl.hasQuestionToken();
-                    }
-                    if (Node.isPropertyDeclaration(decl)) {
-                      return decl.hasQuestionToken();
-                    }
-                    return false;
-                  });
-                }
-
-                // If optional but we didn't rebuild from union types, strip undefined from type text
-                // This handles cases like "foo?: undefined | string" where ? token made us skip union logic
-                // Also handles "foo?: string | number" where union exists but doesn't contain undefined
-                if (isOptional && !didRebuildFromUnion) {
-                  propType = stripUndefinedFromUnionText(propType);
-                }
-
-                props[name] = normalizePropType(propType, isOptional);
-              } catch (error) {
-                debugError('propExtractor', 'extractProps', {
-                  filePath,
-                  error: error instanceof Error ? error.message : String(error),
-                  context: 'props-typealias-property',
-                });
-                // Continue with next property
-              }
-            });
-          }
-        } catch (error) {
-          debugError('propExtractor', 'extractProps', {
-            filePath,
-            error: error instanceof Error ? error.message : String(error),
-            context: 'props-typealias',
-          });
-          // Continue with next type alias
-        }
-      });
-    } catch (error) {
-      debugError('propExtractor', 'extractProps', {
-        filePath,
-        error: error instanceof Error ? error.message : String(error),
-        context: 'props-typealiases-batch',
-      });
-    }
-
-    // Always try to extract hook parameters if there are exported hooks
-    // This ensures hook parameters are captured even if there's a Props interface
-    // Props take priority on conflicts (if a prop exists in both, Props value is kept)
-    // Quick check: only extract if there might be exported hooks (performance optimization)
-    if (hasExportedHooks(source)) {
-      const hookParams = extractHookParameters(source);
-      if (Object.keys(hookParams).length > 0) {
-        // Merge hook parameters with Props, with Props taking priority on conflicts
-        // Save original props to preserve Props values, then merge hookParams, then restore Props
-        const originalProps = { ...props };
-        Object.assign(props, hookParams);
-        Object.assign(props, originalProps); // Props override any conflicting hook parameters
-      }
-    }
-  } catch (error) {
-    debugError('propExtractor', 'extractProps', {
-      filePath,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return {};
   }
 
   return props;
