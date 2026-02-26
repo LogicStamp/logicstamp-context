@@ -507,6 +507,364 @@ function getPassword() {
       expect(result.secretsReplaced).toBe(true);
       expect(result.matchCount).toBe(2);
     });
+
+    it('should match files when project roots differ but relative paths match', async () => {
+      // Report was created with a different project root
+      const differentRoot = resolve(testDir, 'original');
+      const report: SecurityReport = {
+        type: 'LogicStampSecurityReport',
+        schemaVersion: '0.1',
+        createdAt: new Date().toISOString(),
+        projectRoot: differentRoot,
+        filesScanned: 1,
+        secretsFound: 1,
+        matches: [
+          {
+            file: 'src/config.ts', // Relative path in report
+            line: 1,
+            column: 12,
+            type: 'API Key',
+            snippet: "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
+            severity: 'high',
+          },
+        ],
+        filesWithSecrets: ['src/config.ts'],
+      };
+
+      const code = "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';";
+      // Current project root is different from report's projectRoot
+      const currentRoot = resolve(testDir, 'current');
+      const filePath = 'src/config.ts'; // Same relative path
+      const result = sanitizeCode(code, filePath, report, currentRoot);
+
+      expect(result.sanitized).toContain('PRIVATE_DATA');
+      expect(result.secretsReplaced).toBe(true);
+      expect(result.matchCount).toBe(1);
+    });
+
+    it('should handle database URL fallback when full pattern does not match', async () => {
+      const report: SecurityReport = {
+        type: 'LogicStampSecurityReport',
+        schemaVersion: '0.1',
+        createdAt: new Date().toISOString(),
+        projectRoot: testDir,
+        filesScanned: 1,
+        secretsFound: 1,
+        matches: [
+          {
+            file: 'src/db.ts',
+            line: 1,
+            column: 12,
+            type: 'Database URL with Credentials',
+            snippet: 'postgres://admin:secretpassword123@host',
+            severity: 'high',
+          },
+        ],
+        filesWithSecrets: ['src/db.ts'],
+      };
+
+      // Line without quotes around the URL (no full match, triggers fallback)
+      const code = 'const url = postgres://admin:secretpassword123@host:5432/db';
+      const filePath = resolve(testDir, 'src/db.ts');
+      const result = sanitizeCode(code, filePath, report, testDir);
+
+      expect(result.sanitized).toContain('PRIVATE_DATA');
+      expect(result.sanitized).not.toContain('secretpassword123');
+      expect(result.secretsReplaced).toBe(true);
+    });
+
+    it('should handle quoted value fallback when quote types differ', async () => {
+      const report: SecurityReport = {
+        type: 'LogicStampSecurityReport',
+        schemaVersion: '0.1',
+        createdAt: new Date().toISOString(),
+        projectRoot: testDir,
+        filesScanned: 1,
+        secretsFound: 1,
+        matches: [
+          {
+            file: 'src/config.ts',
+            line: 1,
+            column: 12,
+            type: 'API Key',
+            // Snippet uses single quotes
+            snippet: "apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop'",
+            severity: 'high',
+          },
+        ],
+        filesWithSecrets: ['src/config.ts'],
+      };
+
+      // Actual code uses double quotes (different from snippet)
+      const code = 'const apiKey = "FAKE_API_KEY_1234567890abcdefghijklmnop";';
+      const filePath = resolve(testDir, 'src/config.ts');
+      const result = sanitizeCode(code, filePath, report, testDir);
+
+      expect(result.sanitized).toContain('PRIVATE_DATA');
+      expect(result.sanitized).not.toContain('FAKE_API_KEY_1234567890abcdefghijklmnop');
+      expect(result.secretsReplaced).toBe(true);
+    });
+
+    it('should handle unquoted values after = or :', async () => {
+      const report: SecurityReport = {
+        type: 'LogicStampSecurityReport',
+        schemaVersion: '0.1',
+        createdAt: new Date().toISOString(),
+        projectRoot: testDir,
+        filesScanned: 1,
+        secretsFound: 1,
+        matches: [
+          {
+            file: 'src/config.ts',
+            line: 1,
+            column: 12,
+            type: 'API Key',
+            // Unquoted value pattern (16+ chars after = or :)
+            snippet: 'API_KEY= UNQUOTED_SECRET_VALUE_1234567890',
+            severity: 'high',
+          },
+        ],
+        filesWithSecrets: ['src/config.ts'],
+      };
+
+      const code = 'export const API_KEY = UNQUOTED_SECRET_VALUE_1234567890;';
+      const filePath = resolve(testDir, 'src/config.ts');
+      const result = sanitizeCode(code, filePath, report, testDir);
+
+      expect(result.sanitized).toContain('PRIVATE_DATA');
+      expect(result.sanitized).not.toContain('UNQUOTED_SECRET_VALUE_1234567890');
+      expect(result.secretsReplaced).toBe(true);
+    });
+
+    it('should handle private keys on single line', async () => {
+      const report: SecurityReport = {
+        type: 'LogicStampSecurityReport',
+        schemaVersion: '0.1',
+        createdAt: new Date().toISOString(),
+        projectRoot: testDir,
+        filesScanned: 1,
+        secretsFound: 1,
+        matches: [
+          {
+            file: 'src/keys.ts',
+            line: 1,
+            column: 1,
+            type: 'Private Key',
+            snippet: '-----BEGIN PRIVATE KEY-----MIIEvQIBAD-----END PRIVATE KEY-----',
+            severity: 'critical',
+          },
+        ],
+        filesWithSecrets: ['src/keys.ts'],
+      };
+
+      // Single-line private key (minified/encoded format)
+      const code = 'const key = "-----BEGIN PRIVATE KEY-----MIIEvQIBADANBgkq-----END PRIVATE KEY-----";';
+      const filePath = resolve(testDir, 'src/keys.ts');
+      const result = sanitizeCode(code, filePath, report, testDir);
+
+      expect(result.sanitized).toContain('-----BEGIN PRIVATE KEY-----');
+      expect(result.sanitized).toContain('PRIVATE_DATA');
+      expect(result.sanitized).toContain('-----END PRIVATE KEY-----');
+      expect(result.sanitized).not.toContain('MIIEvQIBADANBgkq');
+      expect(result.secretsReplaced).toBe(true);
+    });
+
+    it('should handle RSA private keys on single line', async () => {
+      const report: SecurityReport = {
+        type: 'LogicStampSecurityReport',
+        schemaVersion: '0.1',
+        createdAt: new Date().toISOString(),
+        projectRoot: testDir,
+        filesScanned: 1,
+        secretsFound: 1,
+        matches: [
+          {
+            file: 'src/keys.ts',
+            line: 1,
+            column: 1,
+            type: 'Private Key',
+            snippet: '-----BEGIN RSA PRIVATE KEY-----MIIEow-----END RSA PRIVATE KEY-----',
+            severity: 'critical',
+          },
+        ],
+        filesWithSecrets: ['src/keys.ts'],
+      };
+
+      // Single-line RSA private key
+      const code = '-----BEGIN RSA PRIVATE KEY-----MIIEowIBAAKCAQEA0Z3VS5JJ-----END RSA PRIVATE KEY-----';
+      const filePath = resolve(testDir, 'src/keys.ts');
+      const result = sanitizeCode(code, filePath, report, testDir);
+
+      expect(result.sanitized).toContain('-----BEGIN RSA PRIVATE KEY-----');
+      expect(result.sanitized).toContain('PRIVATE_DATA');
+      expect(result.sanitized).toContain('-----END RSA PRIVATE KEY-----');
+      expect(result.sanitized).not.toContain('MIIEowIBAAKCAQEA0Z3VS5JJ');
+      expect(result.secretsReplaced).toBe(true);
+    });
+
+    it('should handle long alphanumeric string fallback', async () => {
+      const report: SecurityReport = {
+        type: 'LogicStampSecurityReport',
+        schemaVersion: '0.1',
+        createdAt: new Date().toISOString(),
+        projectRoot: testDir,
+        filesScanned: 1,
+        secretsFound: 1,
+        matches: [
+          {
+            file: 'src/config.ts',
+            line: 1,
+            column: 12,
+            type: 'Generic Secret',
+            // Snippet with long alphanumeric string but no clear pattern
+            snippet: 'secret ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcd value',
+            severity: 'medium',
+          },
+        ],
+        filesWithSecrets: ['src/config.ts'],
+      };
+
+      // The secret appears without quotes or typical patterns
+      const code = 'const data = ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcd;';
+      const filePath = resolve(testDir, 'src/config.ts');
+      const result = sanitizeCode(code, filePath, report, testDir);
+
+      expect(result.sanitized).toContain('PRIVATE_DATA');
+      expect(result.sanitized).not.toContain('ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcd');
+      expect(result.secretsReplaced).toBe(true);
+    });
+
+    it('should handle match file with absolute path in report', async () => {
+      const absoluteFilePath = resolve(testDir, 'src/config.ts');
+      const report: SecurityReport = {
+        type: 'LogicStampSecurityReport',
+        schemaVersion: '0.1',
+        createdAt: new Date().toISOString(),
+        projectRoot: testDir,
+        filesScanned: 1,
+        secretsFound: 1,
+        matches: [
+          {
+            file: absoluteFilePath, // Absolute path in report
+            line: 1,
+            column: 12,
+            type: 'API Key',
+            snippet: "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
+            severity: 'high',
+          },
+        ],
+        filesWithSecrets: [absoluteFilePath],
+      };
+
+      const code = "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';";
+      const result = sanitizeCode(code, absoluteFilePath, report, testDir);
+
+      expect(result.sanitized).toContain('PRIVATE_DATA');
+      expect(result.secretsReplaced).toBe(true);
+      expect(result.matchCount).toBe(1);
+    });
+
+    it('should handle multiple secrets on the same line', async () => {
+      const report: SecurityReport = {
+        type: 'LogicStampSecurityReport',
+        schemaVersion: '0.1',
+        createdAt: new Date().toISOString(),
+        projectRoot: testDir,
+        filesScanned: 1,
+        secretsFound: 2,
+        matches: [
+          {
+            file: 'src/config.ts',
+            line: 1,
+            column: 12,
+            type: 'API Key',
+            snippet: "apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop'",
+            severity: 'high',
+          },
+          {
+            file: 'src/config.ts',
+            line: 1,
+            column: 50,
+            type: 'Secret',
+            snippet: "secret = 'ANOTHER_SECRET_VALUE_1234567890xyz'",
+            severity: 'high',
+          },
+        ],
+        filesWithSecrets: ['src/config.ts'],
+      };
+
+      const code = "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop', secret = 'ANOTHER_SECRET_VALUE_1234567890xyz';";
+      const filePath = resolve(testDir, 'src/config.ts');
+      const result = sanitizeCode(code, filePath, report, testDir);
+
+      expect(result.sanitized).not.toContain('FAKE_API_KEY_1234567890abcdefghijklmnop');
+      expect(result.sanitized).not.toContain('ANOTHER_SECRET_VALUE_1234567890xyz');
+      expect((result.sanitized.match(/PRIVATE_DATA/g) || []).length).toBe(2);
+      expect(result.secretsReplaced).toBe(true);
+      expect(result.matchCount).toBe(2);
+    });
+
+    it('should handle mysql database URLs', async () => {
+      const report: SecurityReport = {
+        type: 'LogicStampSecurityReport',
+        schemaVersion: '0.1',
+        createdAt: new Date().toISOString(),
+        projectRoot: testDir,
+        filesScanned: 1,
+        secretsFound: 1,
+        matches: [
+          {
+            file: 'src/db.ts',
+            line: 1,
+            column: 12,
+            type: 'Database URL with Credentials',
+            snippet: "const dbUrl = 'mysql://root:mysqlpassword@localhost:3306/db';",
+            severity: 'high',
+          },
+        ],
+        filesWithSecrets: ['src/db.ts'],
+      };
+
+      const code = "const dbUrl = 'mysql://root:mysqlpassword@localhost:3306/db';";
+      const filePath = resolve(testDir, 'src/db.ts');
+      const result = sanitizeCode(code, filePath, report, testDir);
+
+      expect(result.sanitized).toContain('PRIVATE_DATA');
+      expect(result.sanitized).not.toContain('mysqlpassword');
+      expect(result.sanitized).toContain('mysql://root:PRIVATE_DATA@localhost:3306/db');
+      expect(result.secretsReplaced).toBe(true);
+    });
+
+    it('should handle mongodb database URLs', async () => {
+      const report: SecurityReport = {
+        type: 'LogicStampSecurityReport',
+        schemaVersion: '0.1',
+        createdAt: new Date().toISOString(),
+        projectRoot: testDir,
+        filesScanned: 1,
+        secretsFound: 1,
+        matches: [
+          {
+            file: 'src/db.ts',
+            line: 1,
+            column: 12,
+            type: 'Database URL with Credentials',
+            snippet: "const dbUrl = \"mongodb://admin:mongopass123@localhost:27017/db\";",
+            severity: 'high',
+          },
+        ],
+        filesWithSecrets: ['src/db.ts'],
+      };
+
+      const code = 'const dbUrl = "mongodb://admin:mongopass123@localhost:27017/db";';
+      const filePath = resolve(testDir, 'src/db.ts');
+      const result = sanitizeCode(code, filePath, report, testDir);
+
+      expect(result.sanitized).toContain('PRIVATE_DATA');
+      expect(result.sanitized).not.toContain('mongopass123');
+      expect(result.sanitized).toContain('mongodb://admin:PRIVATE_DATA@localhost:27017/db');
+      expect(result.secretsReplaced).toBe(true);
+    });
   });
 });
 
