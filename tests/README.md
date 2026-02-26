@@ -512,7 +512,29 @@ describe('Error Handling', () => {
 
 ### Current Coverage
 
-The test suite includes **1188 passing tests** across **56 test files** covering:
+The test suite includes **95+ test files** with the following coverage metrics:
+
+| Metric     | Coverage |
+|------------|----------|
+| Statements | 85.19%   |
+| Branches   | 73.71%   |
+| Functions  | 92.04%   |
+| Lines      | 85.34%   |
+
+**Coverage by module:**
+
+| Module                | Statements | Branches | Notes |
+|-----------------------|------------|----------|-------|
+| `core/`               | 97%        | 89%      | AST parsing, contracts, signatures |
+| `extractors/react/`   | 92%        | 77%      | Component, prop, state extraction |
+| `extractors/nest/`    | 92%        | 76%      | NestJS decorator extraction |
+| `extractors/express/` | 87%        | 68%      | Express route extraction |
+| `extractors/styling/` | 85%        | 69%      | Tailwind, SCSS, styled-components |
+| `cli/commands/`       | 87%        | 77%      | CLI command implementations |
+| `cli/handlers/`       | 87%        | 77%      | Command handlers |
+| `utils/`              | 84%        | 77%      | Utilities, config, file operations |
+
+**Features covered:**
 
 - ✅ All CLI commands and workflows
 - ✅ Core AST parsing functionality
@@ -529,24 +551,6 @@ The test suite includes **1188 passing tests** across **56 test files** covering
 - ✅ Watch mode with incremental rebuilds
 - ✅ Secret detection and code sanitization
 - ✅ `.stampignore` file handling
-
-### Understanding Coverage Metrics
-
-**Important:** The reported unit test coverage (~54%) doesn't reflect the full picture:
-
-- **Unit Tests** (~54%): Test core logic, extractors, utilities, and parsers in isolation
-- **E2E Tests** (not counted in coverage): Test CLI workflows end-to-end, exercising:
-  - CLI entry points (`src/cli/index.ts`, `stamp.ts`)
-  - CLI commands (`context.ts`, `compare.ts`, `init.ts`, etc.)
-  - CLI handlers (via command execution)
-  - Complete integration workflows
-
-**Why the split?**
-- E2E tests run CLI commands as subprocesses, so coverage instrumentation doesn't track them
-- This is a common pattern for CLI tools: unit tests for core logic, e2e tests for CLI workflows
-- Many files showing "0% coverage" are actually well-tested via e2e tests
-
-**Effective Coverage:** Combined unit + e2e coverage is estimated at **70-80%+** for critical paths.
 
 ### Coverage Goals
 
