@@ -45,10 +45,11 @@ jobs:
         run: npm run build
 
       - name: Run tests
+        if: ${{ !(matrix.os == 'ubuntu-latest' && matrix.node-version == '20.x') }}
         run: npm test
 
       - name: Run tests with coverage
-        if: matrix.os == 'ubuntu-latest' && matrix.node-version == '20.x'
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.node-version == '20.x' }}
         run: npm run test:coverage
 
   lint-check:
