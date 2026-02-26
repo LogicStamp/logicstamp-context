@@ -24,6 +24,7 @@ export default defineConfig({
       exclude: [
         'src/**/*.d.ts',
         'src/types/**',
+        'src/**/index.ts',        // barrel files
         'node_modules/**',
         'dist/**',
         'tests/**',
