@@ -31,7 +31,7 @@ chmod +x run.sh
 
 ## What Gets Generated
 
-Running the context generator on this simple app will create a `context.json` file containing:
+Running the context compiler on this simple app will create a `context.json` file containing:
 
 - **2 root components**: App.tsx and Button.tsx
 - **Dependency graph**: Showing how Card depends on Button

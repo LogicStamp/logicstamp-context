@@ -6,7 +6,7 @@
 # Install globally
 npm install -g logicstamp-context
 
-# Generate context for your project
+# Compile context for your project
 stamp context
 
 # Output: Multiple context.json files (one per folder) plus context_main.json index
@@ -24,8 +24,8 @@ stamp --help                       # Show help
 stamp init [path] [options]        # Initialize LogicStamp in project
 stamp ignore <path> [path2] ...     # Add files/folders to .stampignore
 stamp context [path] [options]
-stamp context style [path] [options]  # Generate context with style metadata
-stamp context --watch [path] [options] # Watch mode - auto-regenerate on changes
+stamp context style [path] [options]  # Compile context with style metadata
+stamp context --watch [path] [options] # Watch mode - recompile on changes
 stamp context validate [file]
 stamp context compare [oldFile] [newFile] [options]  # Auto-mode (default): omit files to compare all context files
 stamp context clean [path] [options]

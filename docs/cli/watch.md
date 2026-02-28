@@ -36,6 +36,7 @@ stamp context --watch --strict-watch
 3. **Debouncing** - Waits 500ms after the last change before regenerating (batches rapid changes)
 4. **Incremental Rebuild** - Only rebuilds affected bundles, not the entire project
 5. **Change Detection** - Shows what changed (props, hooks, state, etc.)
+6. **Strict Watch Mode** - Optionally tracks breaking changes (removed props, events, functions) and reports violations in real-time with `--strict-watch`
 
 ## Features
 
@@ -288,24 +289,21 @@ Strict watch mode writes a structured JSON report to `.logicstamp/strict_watch_v
 - If you fix the violations (revert breaking changes), the file is **deleted** (no violations = no report)
 - This works like `git diff` - only shows what's currently different from baseline
 
-### Exit Codes
+### Exit Behavior
 
-When you stop watch mode (Ctrl+C), it exits with:
-- **Exit code 0** - No errors detected during the session
-- **Exit code 1** - One or more errors detected during the session
+Watch mode is designed for **development awareness**, not CI enforcement. When you stop watch mode (Ctrl+C), it exits with the standard signal code (130 for SIGINT) regardless of violations detected.
 
-This enables workflows where you want to track violations across a development session.
-
-### Non-blocking Mode (Awareness Only)
-
-If you want strict watch to report violations without failing (awareness mode), append `|| true` to ignore the exit code:
+For CI/CD pipelines with exit codes based on contract drift, use the `stamp compare` command instead:
 
 ```bash
-# Report violations but don't fail - useful during active refactoring
-stamp context --watch --strict-watch || true
+# CI: Exit code 1 if breaking changes detected
+stamp compare --baseline .logicstamp/baseline.json
+
+# Development: Awareness-only (no exit code enforcement)
+stamp context --watch --strict-watch
 ```
 
-This lets you see breaking changes during development without blocking your workflow.
+The violations report (`.logicstamp/strict_watch_violations.json`) persists after watch mode stops, allowing you to review violations before committing.
 
 ### Session Summary
 
