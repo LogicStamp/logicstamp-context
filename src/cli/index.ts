@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * LogicStamp Context CLI - Standalone context generator
- * Scans TypeScript files and generates AI-friendly context bundles
+ * LogicStamp Context CLI - The context compiler for TypeScript
+ * Compiles TypeScript codebases into deterministic architectural contracts
  */
 
 import { contextCommand, type ContextOptions } from './commands/context.js';

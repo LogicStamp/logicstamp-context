@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * Stamp CLI - Main entry point for LogicStamp Context tools
- * Routes to context operations: generate, validate, compare
+ * Stamp CLI - The Context Compiler for TypeScript
+ * Compiles TypeScript codebases into deterministic architectural contracts
  */
 
 import { readFile } from 'node:fs/promises';

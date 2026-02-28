@@ -5,13 +5,13 @@
 export function getMainHelp(): string {
   return `
 ╭─────────────────────────────────────────────────╮
-│  Stamp - LogicStamp Context CLI                 │
-│  AI-ready context generation for TypeScript     │
+│  Stamp - The Context Compiler for TypeScript    │
+│  Compile code into deterministic contracts      │
 ╰─────────────────────────────────────────────────╯
 
 USAGE:
   stamp init [path]                    Initialize LogicStamp in a project
-  stamp context [path] [options]       Generate context
+  stamp context [path] [options]       Compile context
   stamp context style [path] [options] Generate context with style metadata
   stamp context validate [file]        Validate context file
   stamp context compare [options]      Detect drift (auto-generates fresh context)
@@ -111,8 +111,9 @@ For detailed help on scan command:
 export function getStyleHelp(): string {
   return `
 ╭─────────────────────────────────────────────────╮
-│  Stamp Context Style - Generate with Style      │
-│  Extract Tailwind, SCSS, animations & layout    │
+│  Stamp Context Style - Compile with Style       │
+│  Generate context with style metadata           │
+│  (Tailwind, SCSS, animations, layout)           │
 ╰─────────────────────────────────────────────────╯
 
 USAGE:
@@ -153,16 +154,16 @@ STYLE METADATA EXTRACTED:
 
 EXAMPLES:
   stamp context style
-    Generate context with style metadata for current directory
+    Compile context with style metadata for current directory
 
   stamp context style ./src
-    Generate with style metadata for src directory
+    Compile with style metadata for src directory
 
   stamp context style --profile llm-safe
     Use conservative profile with style metadata
 
   stamp context style --watch
-    Watch for file changes and regenerate context with style metadata
+    Watch for file changes and recompile with style metadata
 
   stamp context style --watch --debug
     Watch mode with detailed hash information
@@ -183,8 +184,8 @@ NOTES:
 export function getGenerateHelp(): string {
   return `
 ╭─────────────────────────────────────────────────╮
-│  Stamp Context - Generate AI Context            │
-│  Scan and analyze TypeScript codebase           │
+│  Stamp Context - Compile Architectural Context  │
+│  Deterministic contracts from TypeScript        │
 ╰─────────────────────────────────────────────────╯
 
 USAGE:
@@ -219,31 +220,31 @@ OPTIONS:
 
 EXAMPLES:
   stamp context
-    Generate context for current directory
+    Compile context for current directory
 
   stamp context style
-    Generate context with style metadata (Tailwind, SCSS, animations, layout)
+    Compile context with style metadata (Tailwind, SCSS, animations, layout)
 
   stamp context --include-style
     Alternative syntax for including style metadata
 
   stamp context ./src --depth 2
-    Deep scan of src directory
+    Compile src directory with depth 2
 
   stamp context --include-code none --out api.json
-    Generate API documentation only
+    Compile contracts only (no code)
 
   stamp context --compare-modes
     Show token cost comparison across modes
 
   stamp context --watch
-    Watch for file changes and regenerate context automatically
+    Watch for file changes and recompile automatically
 
   stamp context --watch --debug
     Watch mode with detailed hash information
 
   stamp context ./src/components/MyFeature --watch
-    Watch only files in a specific subdirectory (incremental rebuilds are fast!)
+    Watch only files in a specific subdirectory (incremental recompilation)
 
   stamp context --watch --strict-watch
     Watch mode with violation tracking - reports breaking changes
@@ -533,7 +534,7 @@ export function getIgnoreHelp(): string {
   return `
 ╭─────────────────────────────────────────────────╮
 │  Stamp Ignore - Add Files to .stampignore      │
-│  Exclude files from context generation          │
+│  Exclude files from context compilation         │
 ╰─────────────────────────────────────────────────╯
 
 USAGE:
@@ -565,7 +566,7 @@ WHAT IT DOES:
 NOTES:
   • Paths are relative to project root
   • Supports glob patterns (e.g., **/*.key, src/**/secrets.ts)
-  • Files in .stampignore are excluded from context generation
+  • Files in .stampignore are excluded from context compilation
   • Use "stamp context" to verify files are excluded
   `;
 }

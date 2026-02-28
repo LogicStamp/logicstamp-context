@@ -1,6 +1,8 @@
 # Schema Reference
 
-Complete schema reference for all LogicStamp data structures. All schemas are versioned and validated to ensure compatibility.
+LogicStamp compiles TypeScript source code into a structured intermediate representation (IR) — deterministic architectural contracts that describe your system's interfaces, dependencies, and composition.
+
+This document covers all LogicStamp data structures. All schemas are versioned and validated to ensure compatibility.
 
 ## Schema Versions
 

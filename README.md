@@ -7,10 +7,11 @@
     </picture>
   </a>
 
-### Deterministic architectural context for TypeScript.
+### The Context Compiler for TypeScript.
 
-  Extract deterministic contracts and dependency graphs.<br/>
-  Prevent AI-driven architectural drift and enforce strict diffs in real time.
+Compile your codebase into deterministic architectural contracts and dependency graphs - a **structured, compact source of truth** for AI coding workflows.
+
+Watch mode. Structured context bundles. Strict, auditable diffs. Catch breaking changes in real time.
 
   <small><em>Supports: React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
 
@@ -54,25 +55,28 @@
 
 ## The Problem
 
-AI coding assistants read your source code, but they don't *understand* it structurally. They hallucinate props that don't exist, miss dependencies, and can't tell when a breaking change affects downstream components.
+AI coding assistants read your source code - but they don’t understand its structure.  
+They hallucinate props, miss dependencies, and can’t detect when a breaking change impacts consumers.
 
-For example: your `Button` component accepts `variant` and `disabled` - but the AI suggests `isLoading` because it saw that pattern elsewhere. No structured contract means no source of truth.
+Example: your `Button` accepts `variant` and `disabled`, but the AI suggests `isLoading` because it saw that pattern elsewhere. Without a structured contract, there is no reliable source of truth.
 
-**LogicStamp Context** is a static analyzer that extracts deterministic component contracts from TypeScript - giving AI assistants structured architectural context instead of raw source code.
+**LogicStamp Context** compiles TypeScript into deterministic architectural contracts and dependency graphs - a machine-readable representation of your system that AI tools can consume instead of parsing raw implementation code.
 
 These contracts:
+
 - Stay in sync with your code (watch mode auto-regenerates)
-- Expose what matters (props, hooks, dependencies) without implementation noise
-- Work with any MCP-compatible AI assistant (Claude, Cursor, etc.)
+- Expose interfaces (props, hooks, APIs) without implementation noise
+- Are deterministic, diffable, and auditable
+- Enable early detection of architectural drift and breaking changes
 
 ![LogicStamp MCP Workflow](./assets/logicstamp-workflow.gif)
 *Context bundles generated and consumed across MCP-powered AI workflows.*
 
-**Same code ⇒ same context output.** Diff outputs to detect architectural drift.
+**Same code ⇒ same context output.** Contracts are diffable, so you can detect drift and breaking changes.
 
 ```
-TypeScript Code  →  AST Parsing  →  Deterministic Contracts  →  AI Assistant
-   (.ts/.tsx)        (ts-morph)      (context.json bundles)      (Claude, Cursor)
+TypeScript Code  →  Compilation  →  Deterministic Contracts  →  AI Assistant
+   (.ts/.tsx)        (ts-morph)       (context.json bundles)     (Claude, Cursor)
 ```
 
 ---
@@ -182,6 +186,11 @@ Strict watch catches breaking changes that affect consumers:
 | `breaking_change_function_removed` | Deleted exported `formatDate()` |
 | `contract_removed` | Deleted entire component |
 
+![Strict Watch Mode](./assets/strict_watch_mode.png)
+*Strict watch mode detecting a breaking change in real time.*
+
+> ℹ️ **Note:** Strict Watch currently detects breaking changes at the source. Next step: a symbol-level import/export reverse index to trace which consumer files will break.
+
 ### One-time Comparison
 
 Compare regenerated context against existing files:
@@ -197,17 +206,18 @@ Useful for reviewing changes before committing or validating context is up-to-da
 
 ## How it Works
 
-1. **Scan** - Finds all `.ts` and `.tsx` files in your project
-2. **Analyze** - Parses components and APIs using TypeScript AST (Abstract Syntax Tree) via `ts-morph`
-3. **Extract** - Builds contracts with props, hooks, state, signatures
-4. **Graph** - Creates dependency graph showing relationships
-5. **Bundle** - Packages context optimized for AI workflows
-6. **Organize** - Groups by folder, writes `context.json` files
-7. **Index** - Creates `context_main.json` with metadata and statistics
+The compilation pipeline:
 
-**Why AST parsing matters:** Unlike text-based parsing (regex, string matching), AST parsing understands TypeScript's syntax structure, type information, and code semantics. This enables LogicStamp Context to accurately extract prop types, detect hooks, understand component composition, and handle complex patterns reliably - making contracts deterministic and trustworthy.
+1. **Scan** - Discovers all `.ts` and `.tsx` source files
+2. **Parse** - Builds AST (Abstract Syntax Tree) via `ts-morph` using the TypeScript compiler API
+3. **Extract** - Compiles contracts with props, hooks, state, signatures
+4. **Graph** - Resolves dependency relationships
+5. **Emit** - Outputs `context.json` bundles per folder
+6. **Index** - Generates `context_main.json` with metadata and statistics
 
-No pre-compilation needed. One command.
+**Why AST-based compilation matters:** LogicStamp leverages the full TypeScript compiler (via ts-morph) for deterministic, type-aware contract extraction. Prop types, hooks, and composition patterns are resolved structurally - not inferred from text or retrieval.
+
+One command. No build step required.
 
 > **💡Tip:** Use `stamp context` for basic contracts. Use `stamp context style` when you need style metadata (Tailwind classes, SCSS selectors, layout patterns).
 
@@ -216,11 +226,11 @@ No pre-compilation needed. One command.
 
 **LogicStamp Context IS:**
 
-✅ **An AST-based static analysis tool** - Uses the TypeScript compiler API (via ts-morph) to extract component contracts, props, hooks, and dependencies in a deterministic, type-aware way.
+✅ **A context compiler** - Uses the TypeScript compiler API (via ts-morph) to compile source code into deterministic architectural contracts.
 
-✅ **A deterministic context generator** - Produces structured architectural contract bundles for tooling and AI workflows.
+✅ **Deterministic** - Same input always produces the same output. Contracts are auditable and diffable.
 
-✅ **Local and offline-first** - Runs entirely on your machine (no cloud services, no network calls).
+✅ **Local execution** - Runs entirely on your machine (no cloud services, no network calls).
 
 ✅ **Framework-aware** - Understands React, Next.js, Vue, Express, and NestJS patterns and extracts relevant metadata.
 
@@ -232,7 +242,7 @@ No pre-compilation needed. One command.
 
 ❌ **A documentation generator** - It produces structured contracts, not documentation.
 
-❌ **A build or runtime tool** - It analyzes static source code only; it does not execute or bundle your application.
+❌ **A build or runtime tool** - It compiles contracts from static source code; it does not execute or bundle your application.
 
 ❌ **A linter, formatter, or testing framework** - It does not check code quality or run tests.
 
