@@ -189,6 +189,7 @@ Strict watch catches breaking changes that affect consumers:
 | `contract_removed` | Deleted entire component |
 
 ![Strict Watch Mode](./assets/strict_watch_mode.png)
+
 *Strict watch mode detecting a breaking change in real time.*
 
 > ℹ️ **Note:** Strict Watch currently detects breaking changes at the source. Next step: a symbol-level import/export reverse index to trace which consumer files will break.
