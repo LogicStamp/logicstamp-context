@@ -9,7 +9,9 @@
 
 ### The Context Compiler for TypeScript.
 
-Compile your codebase into deterministic architectural contracts and dependency graphs - a **structured, compact source of truth** for AI coding workflows.
+Compile codebases into deterministic architectural contracts and dependency graphs.  
+
+A **structured, compact source of truth** for AI coding workflows.
 
 Watch mode. Structured context bundles. Strict, auditable diffs. Catch breaking changes in real time.
 
