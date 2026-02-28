@@ -55,6 +55,8 @@ export interface SanitizeStats {
   filesWithSecrets: number;
   totalSecretsReplaced: number;
   filesProcessed: string[];
+  /** Whether a security report was loaded (false = security scan was never run) */
+  securityReportLoaded: boolean;
 }
 
 // Per-file sanitization info returned from extraction functions
@@ -80,7 +82,11 @@ let sanitizeStats: SanitizeStats = {
   filesWithSecrets: 0,
   totalSecretsReplaced: 0,
   filesProcessed: [],
+  securityReportLoaded: false,
 };
+
+// Track whether security report was loaded during this context generation
+let securityReportWasLoaded = false;
 
 /**
  * Record sanitization info into the module-level accumulator
@@ -112,12 +118,17 @@ export function recordSanitizationBatch(infos: SanitizeInfo[]): void {
  * Get and reset sanitization statistics
  */
 export function getAndResetSanitizeStats(): SanitizeStats {
-  const stats = { ...sanitizeStats };
+  const stats = {
+    ...sanitizeStats,
+    securityReportLoaded: securityReportWasLoaded,
+  };
   sanitizeStats = {
     filesWithSecrets: 0,
     totalSecretsReplaced: 0,
     filesProcessed: [],
+    securityReportLoaded: false,
   };
+  securityReportWasLoaded = false;
   return stats;
 }
 
@@ -266,6 +277,10 @@ function normalizeProjectRoot(path: string): string {
 async function getSecurityReport(projectRoot: string): Promise<SecurityReport | null> {
   // Check if we have a valid cached report
   if (isCacheValid(securityReportCache, projectRoot)) {
+    // Track that we have a security report available
+    if (securityReportCache!.report !== null) {
+      securityReportWasLoaded = true;
+    }
     return securityReportCache!.report;
   }
 
@@ -276,6 +291,12 @@ async function getSecurityReport(projectRoot: string): Promise<SecurityReport | 
     projectRoot,
     timestamp: Date.now(),
   };
+
+  // Track that we have a security report available
+  if (report !== null) {
+    securityReportWasLoaded = true;
+  }
+
   return report;
 }
 

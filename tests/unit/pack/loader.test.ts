@@ -41,6 +41,7 @@ describe('Loader Module', () => {
           filesWithSecrets: 0,
           totalSecretsReplaced: 0,
           filesProcessed: [],
+          securityReportLoaded: false,
         });
       });
 
