@@ -307,7 +307,7 @@ npm run test:coverage
 ### Test Coverage
 
 The test suite includes:
-- **E2E tests**: Full CLI workflow testing (context generation, validation, comparison, cleaning)
+- **E2E tests**: Full CLI workflow testing (context compilation, validation, comparison, cleaning)
 - **Unit tests**: Core module testing (AST parsing, contract building, dependency graphs)
 - **Integration tests**: End-to-end pipeline verification
 - **Determinism tests**: Ensuring consistent output across runs
@@ -325,7 +325,7 @@ npm test
 
 For manual verification, you can also test manually:
 
-- [ ] Basic context generation: `stamp context`
+- [ ] Basic context compilation: `stamp context`
 - [ ] Custom directory: `stamp context ./src`
 - [ ] All profiles: `--profile llm-safe/llm-chat/ci-strict/watch-fast`
 - [ ] Code modes: `--include-code none/header/full`

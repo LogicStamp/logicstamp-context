@@ -1,6 +1,6 @@
 # `stamp ignore` Command
 
-Add files or folders to `.stampignore` to exclude them from context generation.
+Add files or folders to `.stampignore` to exclude them from context compilation.
 
 ```bash
 stamp ignore <path1> [path2] ... [options]
@@ -35,7 +35,7 @@ stamp ignore src/secrets.ts --quiet
 
 ## What It Does
 
-`stamp ignore` adds file or folder paths to `.stampignore`, which tells LogicStamp Context to exclude those files from context generation. This is useful for:
+`stamp ignore` adds file or folder paths to `.stampignore`, which tells LogicStamp Context to exclude those files from context compilation. This is useful for:
 
 - **Excluding files with secrets** - Files that contain sensitive information (API keys, passwords, tokens) that shouldn't be included in context bundles
 - **Excluding large generated files** - Files that are too large or not useful for AI context
@@ -194,6 +194,6 @@ See [stampignore.md](../stampignore.md) for more details on glob pattern syntax.
 ## See Also
 
 - [stampignore.md](../stampignore.md) - Complete `.stampignore` file format and usage guide
-- [context.md](context.md) - How `.stampignore` affects context generation
+- [context.md](context.md) - How `.stampignore` affects context compilation
 - [security-scan.md](security-scan.md) - Security scanning to detect secrets in your codebase
 

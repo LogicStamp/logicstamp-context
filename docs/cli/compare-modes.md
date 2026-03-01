@@ -1,6 +1,6 @@
 # Mode Comparison Guide
 
-Compare token costs across all context generation modes to choose the right one for your workflow.
+Compare token costs across all context compilation modes to choose the right one for your workflow.
 
 ```bash
 stamp context --compare-modes

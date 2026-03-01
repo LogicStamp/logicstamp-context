@@ -124,7 +124,7 @@ stamp init --no-secure
 
 ### `stamp ignore`
 
-Add files or folders to `.stampignore` to exclude them from context generation. This is useful for excluding files with secrets, large generated files, or other files that shouldn't be included in context bundles.
+Add files or folders to `.stampignore` to exclude them from context compilation. This is useful for excluding files with secrets, large generated files, or other files that shouldn't be included in context bundles.
 
 **Arguments**
 
@@ -980,7 +980,7 @@ LogicStamp generates per-root component bundles (not individual files per compon
 
 Each bundle is self-contained with the complete dependency graph, so the AI sees all related components together. This structure also supports a future `--split` mode without breaking changes.
 
-Per-component files would be useful for advanced use cases (granular Git diffs, component analytics, platform indexing), but those are future platform features, not v1 "context generation for AI chat" use cases.
+Per-component files would be useful for advanced use cases (granular Git diffs, component analytics, platform indexing), but those are future platform features, not v1 "context compilation for AI chat" use cases.
 
 **Example: `src/components/context.json`**
 
@@ -1283,7 +1283,7 @@ Debug logs help identify:
 | Use case | Quick AI context | Full contract management |
 
 **When to use logicstamp-context:**
-- Quick AI context generation
+- Quick AI context compilation
 - One-off codebase analysis
 - Lightweight tool
 - No project configuration

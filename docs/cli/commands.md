@@ -7,7 +7,7 @@ LogicStamp Context provides a single CLI entry point, `stamp`, with
 |---------|---------|-------------|-------------|
 | `stamp --version` | Show version number and exit. | Check installed version. | `-v` (alias) |
 | `stamp init [path]` | Initialize LogicStamp in a project by setting up `.gitignore` patterns. | First-time project setup or explicit `.gitignore` configuration. | `--skip-gitignore`, `--yes`, `--no-secure` |
-| `stamp ignore <path> [path2] ...` | Add files or folders to `.stampignore` to exclude them from context generation. Creates `.stampignore` if it doesn't exist. | Exclude files with secrets, large generated files, or other files that shouldn't be in context bundles. | `--quiet` |
+| `stamp ignore <path> [path2] ...` | Add files or folders to `.stampignore` to exclude them from context compilation. Creates `.stampignore` if it doesn't exist. | Exclude files with secrets, large generated files, or other files that shouldn't be in context bundles. | `--quiet` |
 | `stamp security scan [path]` | Scan your project for secrets (API keys, passwords, tokens). Runs 100% locally — nothing is uploaded or sent anywhere. | Prevent accidental exposure of sensitive credentials, CI/CD security checks, project initialization. | `--out`, `--quiet` |
 | `stamp security --hard-reset` | Delete security report file. | Reset security configuration, start fresh after remediation. | `--force`, `--out`, `--quiet` |
 | `stamp context [path] [options]` | Generates context files organized by folder (one `context.json` per folder plus `context_main.json` index). CI-friendly: never prompts, respects preferences from `stamp init`. | Produce fresh context for AI workflows, documentation, or review. | `--depth`, `--include-code`, `--format`, `--profile`, `--max-nodes`, `--dry-run`, `--stats`, `--predict-behavior`, `--compare-modes`, `--include-style`, `--strict-missing`, `--skip-gitignore`, `--out`, `--quiet`, `--watch`, `--strict-watch`, `--debug`, `--log-file` |
@@ -19,8 +19,8 @@ LogicStamp Context provides a single CLI entry point, `stamp`, with
 ## Command interactions
 
 - `stamp init` sets up `.gitignore` patterns and `LLM_context.md` non-interactively (by default) before generating context files. `stamp context` respects these preferences and never prompts (CI-friendly). By default, `stamp init` automatically runs a security scan, which makes it non-interactive. Use `--no-secure` to skip the security scan and enable interactive prompts (in TTY mode).
-- `stamp ignore` adds files or folders to `.stampignore` to exclude them from context generation. Useful for excluding files with secrets or other sensitive information. After running `stamp security scan`, review the report and use `stamp ignore <file>` to exclude files with detected secrets.
-- `stamp security scan` finds secrets (API keys, passwords, tokens) in your project. Runs 100% locally—nothing is uploaded or sent anywhere. The scan runs automatically during `stamp init` by default. Review the security report and use `stamp ignore <file>` to exclude files with secrets from context generation.
+- `stamp ignore` adds files or folders to `.stampignore` to exclude them from context compilation. Useful for excluding files with secrets or other sensitive information. After running `stamp security scan`, review the report and use `stamp ignore <file>` to exclude files with detected secrets.
+- `stamp security scan` finds secrets (API keys, passwords, tokens) in your project. Runs 100% locally—nothing is uploaded or sent anywhere. The scan runs automatically during `stamp init` by default. Review the security report and use `stamp ignore <file>` to exclude files with secrets from context compilation.
 - `stamp context` generates multiple `context.json` files (one per folder) plus `context_main.json` index, or use `--out` for a custom output directory. Automatically excludes files listed in `.stampignore`.
 - `stamp context style` generates context with style metadata (Tailwind, SCSS, Material UI, animations, layout patterns). Equivalent to `stamp context --include-style`.
 - `stamp context validate` validates **all context files** (multi-file mode using `context_main.json`) or a specific file. With no arguments, automatically validates all folder context files. Exit code is CI-friendly.
@@ -43,7 +43,7 @@ stamp init --yes
 # Initialize without security scan (enables interactive prompts in TTY mode)
 stamp init --no-secure
 
-# Add files to .stampignore to exclude from context generation
+# Add files to .stampignore to exclude from context compilation
 stamp ignore src/secrets.ts
 
 # Add multiple files or use glob patterns

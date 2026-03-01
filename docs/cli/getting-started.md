@@ -250,7 +250,7 @@ stamp context --watch --strict-watch
 
 ## Excluding Files
 
-If you need to exclude files from context generation:
+If you need to exclude files from context compilation:
 
 ```bash
 # Add files to .stampignore
