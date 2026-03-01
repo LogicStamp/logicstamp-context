@@ -227,6 +227,11 @@ Like `stamp context`, the style command also automatically sanitizes secrets in 
 
 All options from `stamp context` are supported except `--compare-modes`. The style command is equivalent to `stamp context --include-style`. **Note:** `--compare-modes` is not available for `stamp context style`; use `stamp context --compare-modes` instead to analyze token costs.
 
+**Style mode:**
+
+- `--style-mode lean` (default) – Compact format with counts and flags for token efficiency
+- `--style-mode full` – Verbose format with arrays and detailed information for comprehensive analysis
+
 **What it extracts**
 
 The style command analyzes components and extracts:
@@ -277,6 +282,12 @@ stamp context style ./src
 
 # Use with other options
 stamp context style --profile llm-safe --out ./output
+
+# Use full style mode (arrays + details, verbose)
+stamp context style --style-mode full
+
+# Use lean style mode (counts + flags, compact) - default
+stamp context style --style-mode lean
 
 # Equivalent to using the flag
 stamp context --include-style

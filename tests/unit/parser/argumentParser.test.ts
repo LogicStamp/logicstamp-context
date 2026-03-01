@@ -33,6 +33,7 @@ describe('parseContextArgs', () => {
     expect(options.out).toBe('context.json');
     expect(options.strict).toBe(false);
     expect(options.watch).toBe(false);
+    expect(options.styleMode).toBe('lean');
   });
 
   it('should parse depth flag', () => {
@@ -88,6 +89,16 @@ describe('parseContextArgs', () => {
   it('should parse profile flag', () => {
     const options = parseContextArgs(['--profile', 'llm-safe']);
     expect(options.profile).toBe('llm-safe');
+  });
+
+  it('should parse style-mode flag', () => {
+    const options = parseContextArgs(['--style-mode', 'full']);
+    expect(options.styleMode).toBe('full');
+  });
+
+  it('should default styleMode to lean', () => {
+    const options = parseContextArgs(['--include-style']);
+    expect(options.styleMode).toBe('lean');
   });
 
   it('should parse boolean flags', () => {

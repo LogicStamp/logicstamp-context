@@ -339,6 +339,7 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
           const filteredFiles = stampignore ? filterIgnoredFiles(files, stampignore.ignore, projectRoot) : files;
           const { contracts } = await buildContractsFromFiles(filteredFiles, projectRoot, {
             includeStyle: options.includeStyle,
+            styleMode: options.styleMode,
             predictBehavior: options.predictBehavior,
             quiet: true,
           });

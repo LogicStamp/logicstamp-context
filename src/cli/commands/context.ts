@@ -58,6 +58,7 @@ export interface ContextOptions {
   quiet?: boolean;
   suppressSuccessIndicator?: boolean; // When true, don't output ✓ even in quiet mode (for internal calls)
   includeStyle?: boolean; // Extract style metadata (Tailwind, SCSS, animations, layout)
+  styleMode?: 'lean' | 'full'; // Style output mode: lean (default) or full
   watch?: boolean; // Watch for file changes and recompile context automatically
   debug?: boolean; // Enable debug output (shows hashes in watch mode)
   logFile?: boolean; // Write watch mode logs to file (default: false)
@@ -104,6 +105,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   }
   const { contracts, analyzed, totalSourceSize } = await buildContractsFromFiles(files, projectRoot, {
     includeStyle: options.includeStyle,
+    styleMode: options.styleMode,
     predictBehavior: options.predictBehavior,
     quiet: options.quiet,
   });

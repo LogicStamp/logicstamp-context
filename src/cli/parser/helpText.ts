@@ -123,6 +123,9 @@ ARGUMENTS:
   [path]                              Directory to scan (default: current)
 
 OPTIONS:
+  --style-mode <mode>                 Style output: lean|full (default: lean)
+                                      lean: counts + flags (compact)
+                                      full: arrays + details (verbose)
   --depth, -d <n>                     Dependency depth (default: 2)
   --include-code, -c <mode>           Code inclusion: none|header|full (default: header)
   --format, -f <format>                Output format: json|pretty|ndjson|toon (default: json)
@@ -198,6 +201,9 @@ OPTIONS:
   --depth, -d <n>                     Dependency depth (default: 2)
   --include-code, -c <mode>           Code inclusion: none|header|full (default: header)
   --include-style                     Extract style metadata (Tailwind, SCSS, animations, layout)
+  --style-mode <mode>                 Style output: lean|full (default: lean)
+                                      lean: counts + flags (compact)
+                                      full: arrays + details (verbose)
   --format, -f <format>               Output format: json|pretty|ndjson|toon (default: json)
   --out, -o <file>                    Output file (default: context.json)
   --max-nodes, -m <n>                 Max nodes per bundle (default: 100)

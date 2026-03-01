@@ -27,6 +27,7 @@ export async function buildContractsFromFiles(
   projectRoot: string,
   options: {
     includeStyle?: boolean;
+    styleMode?: 'lean' | 'full';
     predictBehavior: boolean;
     quiet?: boolean;
   }
@@ -64,7 +65,7 @@ export async function buildContractsFromFiles(
       if (options.includeStyle && styleProject) {
         try {
           const sourceFile = styleProject.addSourceFileAtPath(absoluteFilePath);
-          styleMetadata = await extractStyleMetadata(sourceFile, absoluteFilePath);
+          styleMetadata = await extractStyleMetadata(sourceFile, absoluteFilePath, options.styleMode ?? 'lean');
         } catch (styleError) {
           // Style extraction is optional - don't fail if it errors
           if (!options.quiet) {

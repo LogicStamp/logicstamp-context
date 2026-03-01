@@ -292,7 +292,8 @@ export async function generateModeComparison(
         let styleMetadata;
         try {
           const sourceFile = styleProject.addSourceFileAtPath(absoluteFilePath);
-          styleMetadata = await extractStyleMetadata(sourceFile, absoluteFilePath);
+          // Use 'lean' mode (default) for comparison
+          styleMetadata = await extractStyleMetadata(sourceFile, absoluteFilePath, 'lean');
         } catch (styleError) {
           // Style extraction is optional
         }
@@ -434,6 +435,8 @@ export async function displayModeComparison(
   console.log(`     Header       | ${formatTokenCount(headerNoStyleGPT4).padStart(13)} | ${formatTokenCount(headerNoStyleClaude).padStart(13)} | ${headerSavingsGPT4}%`);
   console.log(`     Header+style | ${formatTokenCount(headerWithStyleGPT4).padStart(13)} | ${formatTokenCount(headerWithStyleClaude).padStart(13)} | ${headerStyleSavingsGPT4}%`);
   console.log('\n   Mode breakdown:');
+  console.log('');
+  console.log('     (Full context = contracts with complete source code embedded)');
   console.log('');
   console.log('     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Full Context');
   console.log('     -------------|---------------|---------------|--------------------------');

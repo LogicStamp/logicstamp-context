@@ -131,7 +131,7 @@ export async function incrementalRebuild(
               compilerOptions: { jsx: 1, target: 99 },
             });
             const sourceFile = styleProject.addSourceFileAtPath(absoluteFilePath);
-            styleMetadata = await extractStyleMetadata(sourceFile, absoluteFilePath);
+            styleMetadata = await extractStyleMetadata(sourceFile, absoluteFilePath, options.styleMode ?? 'lean');
             // Cache style extraction result
             if (styleMetadata) {
               cache.styleCache.set(currentFileHash, styleMetadata);

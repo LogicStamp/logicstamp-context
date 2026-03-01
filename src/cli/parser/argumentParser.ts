@@ -43,6 +43,7 @@ export function parseContextArgs(args: string[]): ContextOptions {
     skipGitignore: false,
     quiet: false,
     includeStyle: false, // Default to false
+    styleMode: 'lean', // Default to lean
     watch: false, // Default to false
     debug: false, // Default to false
     logFile: false, // Default to false
@@ -114,6 +115,10 @@ export function parseContextArgs(args: string[]): ContextOptions {
           break;
         case 'include-style':
           options.includeStyle = true;
+          break;
+        case 'style-mode':
+          options.styleMode = value as 'lean' | 'full';
+          i++;
           break;
         case 'watch':
         case 'w':

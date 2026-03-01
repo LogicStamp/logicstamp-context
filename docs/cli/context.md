@@ -34,6 +34,7 @@ stamp context [path] [options]
 | `--stats` | | `false` | Emit single-line JSON stats (ideal for CI). When combined with `--compare-modes`, writes `context_compare_modes.json` for MCP integration. |
 | `--compare-modes` | | `false` | Show detailed token comparison table across all modes (none/header/header+style/full) with accurate style metadata impact. When combined with `--stats`, writes `context_compare_modes.json` for MCP (Model Context Protocol) integration. See [compare-modes.md](compare-modes.md) for comprehensive guide. |
 | `--include-style` | | `false` | Extract style metadata (Tailwind, SCSS, Material UI, Ant Design, Chakra UI, animations, layout). |
+| `--style-mode <mode>` | | `lean` | Style output format: `lean` (counts + flags, compact) or `full` (arrays + details, verbose). Default is `lean` for token efficiency. |
 | `--skip-gitignore` | | `false` | Skip `.gitignore` setup (never prompt or modify). |
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors). |
 | `--watch` | `-w` | `false` | Watch for file changes and regenerate automatically. |
@@ -354,7 +355,7 @@ For comprehensive watch mode documentation, see [watch.md](watch.md).
 - Use `--max-nodes` to keep bundle size manageable before sharing with LLMs.
 - Run `stamp context validate` after generation to catch schema drift early.
 - Use `stamp context clean` to remove all context artifacts when resetting or switching branches.
-- Use `stamp context style` or `--include-style` to extract visual and layout metadata for design-aware context bundles. See [style.md](style.md) for detailed documentation.
+- Use `stamp context style` or `--include-style` to extract visual and layout metadata for design-aware context bundles. Use `--style-mode lean` (default) for compact output or `--style-mode full` for detailed arrays. See [style.md](style.md) for detailed documentation.
 - Use `--compare-modes` to see accurate token estimates across all modes (none/header/header+style/full) and understand the cost impact of including style metadata.
 - Use `--watch` during development for automatic context regeneration on file changes. See [watch.md](watch.md) for details.
 
