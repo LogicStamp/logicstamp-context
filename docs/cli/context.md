@@ -229,6 +229,12 @@ Generated `context.json`:
 2. This creates `stamp_security_report.json`
 3. Subsequent `stamp context` runs will automatically sanitize secrets
 
+**Completion messages:**
+
+- `✅ Generated context verified - no secret patterns detected` - Security report exists and no secrets were found
+- `⚠️ Secret sanitization: Replaced X secret(s) in Y file(s)` - Secrets were detected and sanitized
+- `ℹ️ Security scan skipped (no security report found)` - No security report exists; run `stamp init` or `stamp security` to enable secret detection
+
 See [security-scan.md](security-scan.md) for more information about security scanning.
 
 ## Output Structure

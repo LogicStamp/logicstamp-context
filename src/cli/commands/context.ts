@@ -450,8 +450,11 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     if (sanitizeStats.filesWithSecrets > 0) {
       console.log(`\n⚠️  Secret sanitization: Replaced ${sanitizeStats.totalSecretsReplaced} secret(s) in ${sanitizeStats.filesWithSecrets} file(s)`);
       console.log(`   Secrets were replaced with "PRIVATE_DATA" in generated JSON files`);
-    } else {
+    } else if (sanitizeStats.securityReportLoaded) {
       console.log(`\n✅ Generated context verified - no secret patterns detected`);
+    } else {
+      console.log(`\nℹ️  Security scan skipped (no security report found)`);
+      console.log(`   Run \`stamp init\` or \`stamp security\` to enable secret detection`);
     }
 
     console.log(`\n⏱  Completed in ${elapsed}ms`);

@@ -18,7 +18,7 @@ vi.mock('../../../src/cli/commands/context/index.js');
 vi.mock('../../../src/cli/commands/validate.js');
 vi.mock('../../../src/cli/commands/context/watchMode.js');
 vi.mock('../../../src/core/pack/index.js', () => ({
-  getAndResetSanitizeStats: vi.fn(() => ({ filesWithSecrets: 0, totalSecretsReplaced: 0, filesProcessed: [] })),
+  getAndResetSanitizeStats: vi.fn(() => ({ filesWithSecrets: 0, totalSecretsReplaced: 0, filesProcessed: [], securityReportLoaded: false })),
 }));
 vi.mock('node:fs/promises', () => ({
   mkdir: vi.fn().mockResolvedValue(undefined),
@@ -299,6 +299,7 @@ describe('contextCommand', () => {
       filesWithSecrets: 2,
       totalSecretsReplaced: 5,
       filesProcessed: ['src/config.ts', 'src/secrets.ts'],
+      securityReportLoaded: true,
     });
 
     await contextCommand(defaultOptions);
@@ -629,12 +630,32 @@ describe('contextCommand', () => {
       filesWithSecrets: 0,
       totalSecretsReplaced: 0,
       filesProcessed: [],
+      securityReportLoaded: true,
     });
 
     await contextCommand(defaultOptions);
 
     expect(console.log).toHaveBeenCalledWith(
       expect.stringContaining('no secret patterns detected')
+    );
+  });
+
+  it('should display security scan skipped message when no security report exists', async () => {
+    const packIndexModule = await import('../../../src/core/pack/index.js');
+    vi.mocked(packIndexModule.getAndResetSanitizeStats).mockReturnValue({
+      filesWithSecrets: 0,
+      totalSecretsReplaced: 0,
+      filesProcessed: [],
+      securityReportLoaded: false,
+    });
+
+    await contextCommand(defaultOptions);
+
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Security scan skipped')
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('stamp init')
     );
   });
 

@@ -87,16 +87,18 @@ describe('fileLock utils', () => {
       await writeFile(filePath, '{}');
 
       // Create a lock file with old timestamp but current PID
+      // On Windows, process.kill(pid, 0) may return EPERM for the current process,
+      // which triggers the 5x stale threshold. Use 180 seconds to exceed 5x30s=150s.
       const lockPath = `${filePath}.lock`;
       await writeFile(lockPath, JSON.stringify({
         pid: process.pid, // Current PID (process is alive)
-        timestamp: Date.now() - 60000, // 60 seconds ago
+        timestamp: Date.now() - 180000, // 180 seconds ago (exceeds 5x threshold on Windows)
       }));
 
       // Should be able to acquire lock (lock is too old)
       const lock = await acquireLock(filePath, {
         timeout: 100,
-        staleThreshold: 30000, // 30 seconds
+        staleThreshold: 30000, // 30 seconds (5x = 150 seconds for 'unknown' alive status)
       });
       expect(lock).not.toBeNull();
 
