@@ -222,7 +222,7 @@ The compilation pipeline:
 
 One command. No build step required.
 
-> **💡Tip:** Use `stamp context` for basic contracts. Use `stamp context style` when you need style metadata (Tailwind classes, SCSS selectors, layout patterns).
+> **💡Tip:** Use `stamp context` for basic contracts. Use `stamp context style` when you need style metadata (Tailwind classes, SCSS selectors, layout patterns). Use `--style-mode lean` (default) for compact output or `--style-mode full` for detailed arrays.
 
 <details>
 <summary><strong>📋 What LogicStamp Context Is (and Isn't)</strong></summary>
@@ -335,7 +335,8 @@ stamp --help                       # Show help
 stamp init [path]                  # Initialize project (security scan by default)
 stamp ignore <path>                # Add to .stampignore
 stamp context [path]               # Generate context bundles
-stamp context style [path]         # Generate with style metadata
+stamp context style [path]         # Generate with style metadata (lean mode by default)
+stamp context style --style-mode full  # Generate with full style details (verbose)
 stamp context --watch              # Watch mode
 stamp context --watch --strict-watch  # Watch with breaking change detection
 stamp context compare              # Detect changes vs existing context

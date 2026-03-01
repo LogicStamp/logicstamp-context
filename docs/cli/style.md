@@ -196,6 +196,7 @@ All options from `stamp context` are supported except `--compare-modes`. The sty
 |--------|-------|---------|-------------|
 | `--depth <n>` | `-d` | `2` | Dependency traversal depth (`0` = entry only, `1` = direct deps, `2` = nested components, etc.). See [context.md](context.md#depth-parameter) for details. |
 | `--include-code <mode>` | `-c` | `header` | Include `none`, `header`, or `full` source snippets. |
+| `--style-mode <mode>` | | `lean` | Style output format: `lean` (counts + flags, compact) or `full` (arrays + details, verbose). Default is `lean` for token efficiency. |
 | `--format <fmt>` | `-f` | `json` | Output format: `json`, `pretty`, `ndjson`, `toon`. |
 | `--out <file>` | `-o` | `context.json` | Output directory or file path. If a `.json` file is specified, its directory is used as the output directory. Otherwise, the path is used as the output directory. All context files will be written within this directory structure. |
 | `--max-nodes <n>` | `-m` | `100` | Maximum graph nodes per bundle. |
@@ -228,6 +229,12 @@ stamp context style --profile llm-safe
 # Include full source code with style metadata
 stamp context style --include-code full
 
+# Use full style mode (arrays + details, verbose)
+stamp context style --style-mode full
+
+# Use lean style mode (counts + flags, compact) - default
+stamp context style --style-mode lean
+
 # Custom output directory
 stamp context style --out ./output
 
@@ -249,6 +256,32 @@ stamp context style --watch --strict-watch
 # Equivalent syntax using flag
 stamp context --include-style
 ```
+
+## Style Mode: Lean vs Full
+
+The `--style-mode` flag controls how style metadata is formatted in the output:
+
+- **`lean` (default)** – Compact format with counts and flags:
+  - Tailwind: `classCount` instead of full class arrays
+  - Component libraries: Top N components with counts
+  - More token-efficient, suitable for most use cases
+  
+- **`full`** – Verbose format with arrays and detailed information:
+  - Tailwind: Full arrays of classes in each category
+  - Component libraries: Complete component lists with all details
+  - More comprehensive, useful for detailed design analysis
+
+**When to use each mode:**
+
+- Use `lean` (default) when:
+  - You want token-efficient context bundles
+  - You need basic style awareness for AI assistants
+  - You're working with large codebases
+  
+- Use `full` when:
+  - You need complete style information for design system analysis
+  - You're doing detailed visual pattern analysis
+  - Token cost is not a primary concern
 
 ## Output Format
 

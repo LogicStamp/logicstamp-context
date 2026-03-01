@@ -157,7 +157,8 @@ export type ExportMetadata =
 export interface StyleSources {
   // Tailwind with detailed class categorization
   tailwind?: {
-    categories: Record<string, string[]>; // layout, spacing, colors, etc.
+    categories?: Record<string, string[]>; // layout, spacing, colors, etc. (full mode only)
+    categoriesUsed?: string[];              // category names only (lean mode)
     breakpoints?: string[]; // sm, md, lg, xl, 2xl
     classCount: number;
   };
@@ -165,9 +166,9 @@ export interface StyleSources {
   // SCSS module with parsed details
   scssModule?: string;
   scssDetails?: {
-    selectors: string[]; // CSS selectors found in the SCSS file
-    properties: string[]; // CSS properties used
-    features: {
+    selectors?: string[]; // CSS selectors found in the SCSS file (full mode)
+    properties?: string[]; // CSS properties used (full mode)
+    features?: {
       variables?: boolean; // Uses SCSS variables
       nesting?: boolean; // Uses SCSS nesting
       mixins?: boolean; // Uses SCSS mixins
@@ -189,15 +190,18 @@ export interface StyleSources {
 
   // Styled JSX with CSS content extraction
   styledJsx?: {
-    css?: string; // Extracted CSS content from <style jsx> blocks
+    css?: string; // Extracted CSS content from <style jsx> blocks (full mode)
     global?: boolean; // Whether the style block has global attribute
-    selectors?: string[]; // CSS selectors found in the extracted CSS
-    properties?: string[]; // CSS properties found in the extracted CSS
+    selectors?: string[]; // CSS selectors found in the extracted CSS (full mode)
+    properties?: string[]; // CSS properties found in the extracted CSS (full mode)
+    selectorCount?: number; // Number of selectors (lean mode)
+    propertyCount?: number; // Number of properties (lean mode)
   };
 
   // Styled-components/Emotion with component analysis
   styledComponents?: {
-    components?: string[]; // Styled component names (e.g., ['div', 'Button'])
+    components?: string[]; // Styled component names (e.g., ['div', 'Button']) (full mode)
+    componentCount?: number; // Number of styled components (lean mode)
     usesTheme?: boolean; // Uses theme
     usesCssProp?: boolean; // Uses css prop
   };
@@ -291,18 +295,22 @@ export interface LayoutMetadata {
   cols?: string;
   hasHeroPattern?: boolean;
   hasFeatureCards?: boolean;
-  sections?: string[];
+  sections?: string[];       // full mode
+  sectionCount?: number;     // lean mode
 }
 
 export interface VisualMetadata {
-  colors?: string[];
-  spacing?: string[];
+  colors?: string[];         // full mode
+  colorCount?: number;       // lean mode
+  spacing?: string[];        // full mode
+  spacingCount?: number;     // lean mode
   /**
    * Border radius token (e.g., "default", "sm", "md", "lg", "xl", "2xl", "3xl", "full")
    * Stores just the token, not the full class name (e.g., "lg" not "rounded-lg")
    */
   radius?: string;
-  typography?: string[];
+  typography?: string[];     // full mode
+  typographyCount?: number;  // lean mode
 }
 
 export interface AnimationMetadata {
@@ -317,12 +325,29 @@ export interface PageLayoutMetadata {
   ctaCount?: number;
 }
 
+/**
+ * Style extraction mode
+ * - 'lean': Compact output with counts/flags only (default)
+ * - 'full': Verbose output with full class/component arrays
+ */
+export type StyleMode = 'lean' | 'full';
+
+/**
+ * Style extraction summary - always present when style is extracted
+ */
+export interface StyleSummary {
+  mode: StyleMode;
+  sources: string[];        // e.g. ['tailwind', 'shadcn', 'scss']
+  fullModeBytes?: number;   // JSON.stringify(fullStyleSources).length - only in lean mode
+}
+
 export interface StyleMetadata {
   styleSources?: StyleSources;
   layout?: LayoutMetadata;
   visual?: VisualMetadata;
   animation?: AnimationMetadata;
   pageLayout?: PageLayoutMetadata;
+  summary?: StyleSummary;   // Style extraction summary
 }
 
 export interface UIFContract {

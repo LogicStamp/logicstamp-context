@@ -4,7 +4,7 @@
  */
 
 import { SourceFile, SyntaxKind, JsxAttribute, JsxExpression, StringLiteral, NoSubstitutionTemplateLiteral } from 'ts-morph';
-import type { StyleMetadata, StyleSources } from '../../types/UIFContract.js';
+import type { StyleMetadata, StyleSources, StyleMode, StyleSummary, LayoutMetadata, VisualMetadata } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
 import { extractTailwindClasses, categorizeTailwindClasses, extractBreakpoints } from './tailwind.js';
 import { extractScssMetadata, parseStyleFile } from './scss.js';
@@ -20,11 +20,18 @@ import { extractAntDesign } from './antd.js';
 
 /**
  * Extract style metadata from a source file
+ * @param source - The source file to extract from
+ * @param filePath - The file path for error reporting
+ * @param mode - Style extraction mode: 'lean' (default) or 'full'
  */
-export async function extractStyleMetadata(source: SourceFile, filePath: string): Promise<StyleMetadata | undefined> {
+export async function extractStyleMetadata(
+  source: SourceFile,
+  filePath: string,
+  mode: StyleMode = 'lean'
+): Promise<StyleMetadata | undefined> {
   try {
-    const styleSources = await extractStyleSources(source, filePath);
-    
+    const fullStyleSources = await extractStyleSources(source, filePath);
+
     let layout: ReturnType<typeof extractLayoutMetadata> = {};
     try {
       layout = extractLayoutMetadata(source);
@@ -60,7 +67,7 @@ export async function extractStyleMetadata(source: SourceFile, filePath: string)
 
     // Only return metadata if we found any style information
     if (
-      Object.keys(styleSources).length === 0 &&
+      Object.keys(fullStyleSources).length === 0 &&
       Object.keys(layout).length === 0 &&
       Object.keys(visual).length === 0 &&
       Object.keys(animation).length === 0
@@ -68,11 +75,22 @@ export async function extractStyleMetadata(source: SourceFile, filePath: string)
       return undefined;
     }
 
+    // Build summary and apply lean transformation if needed
+    const summary = buildStyleSummary(fullStyleSources, mode);
+    const styleSources = mode === 'lean'
+      ? transformToLean(fullStyleSources, summary)
+      : fullStyleSources;
+
+    // Transform layout and visual in lean mode
+    const finalLayout = mode === 'lean' ? transformLayoutToLean(layout) : layout;
+    const finalVisual = mode === 'lean' ? transformVisualToLean(visual) : visual;
+
     return {
       ...(Object.keys(styleSources).length > 0 && { styleSources }),
-      ...(Object.keys(layout).length > 0 && { layout }),
-      ...(Object.keys(visual).length > 0 && { visual }),
+      ...(Object.keys(finalLayout).length > 0 && { layout: finalLayout }),
+      ...(Object.keys(finalVisual).length > 0 && { visual: finalVisual }),
       ...(Object.keys(animation).length > 0 && { animation }),
+      summary,
     };
   } catch (error) {
     debugError('styleExtractor', 'extractStyleMetadata', {
@@ -81,6 +99,174 @@ export async function extractStyleMetadata(source: SourceFile, filePath: string)
     });
     return undefined;
   }
+}
+
+/**
+ * Build style summary from full style sources
+ */
+function buildStyleSummary(styleSources: StyleSources, mode: StyleMode): StyleSummary {
+  const sources: string[] = [];
+
+  if (styleSources.tailwind) sources.push('tailwind');
+  if (styleSources.scssModule) sources.push('scss');
+  if (styleSources.cssModule) sources.push('css');
+  if (styleSources.inlineStyles) sources.push('inline');
+  if (styleSources.styledJsx) sources.push('styled-jsx');
+  if (styleSources.styledComponents) sources.push('styled-components');
+  if (styleSources.motion) sources.push('framer-motion');
+  if (styleSources.materialUI) sources.push('material-ui');
+  if (styleSources.shadcnUI) sources.push('shadcn');
+  if (styleSources.radixUI) sources.push('radix');
+  if (styleSources.chakraUI) sources.push('chakra');
+  if (styleSources.antd) sources.push('antd');
+
+  const summary: StyleSummary = { mode, sources };
+
+  // Add fullModeBytes only in lean mode to show what full would cost
+  if (mode === 'lean' && sources.length > 0) {
+    try {
+      summary.fullModeBytes = JSON.stringify(styleSources).length;
+    } catch {
+      // Ignore serialization errors
+    }
+  }
+
+  return summary;
+}
+
+/**
+ * Transform full style sources to lean format
+ * Drops verbose arrays, keeps counts and flags
+ */
+function transformToLean(fullSources: StyleSources, summary: StyleSummary): StyleSources {
+  const lean: StyleSources = {};
+
+  // Tailwind: keep classCount + categoriesUsed, drop class arrays
+  if (fullSources.tailwind) {
+    lean.tailwind = {
+      classCount: fullSources.tailwind.classCount,
+      categoriesUsed: fullSources.tailwind.categories
+        ? Object.keys(fullSources.tailwind.categories)
+        : undefined,
+      breakpoints: fullSources.tailwind.breakpoints,
+    };
+  }
+
+  // SCSS: keep import path + features, drop selectors/properties
+  if (fullSources.scssModule) {
+    lean.scssModule = fullSources.scssModule;
+    if (fullSources.scssDetails?.features) {
+      lean.scssDetails = { features: fullSources.scssDetails.features };
+    }
+  }
+
+  // CSS: keep import path only, drop cssDetails entirely
+  if (fullSources.cssModule) {
+    lean.cssModule = fullSources.cssModule;
+  }
+
+  // Inline styles: keep as-is (already compact)
+  if (fullSources.inlineStyles) {
+    lean.inlineStyles = fullSources.inlineStyles;
+  }
+
+  // Styled-jsx: keep selectors/properties count, drop full css
+  if (fullSources.styledJsx) {
+    lean.styledJsx = {
+      global: fullSources.styledJsx.global,
+      // Keep counts instead of arrays
+      ...(fullSources.styledJsx.selectors && { selectorCount: fullSources.styledJsx.selectors.length }),
+      ...(fullSources.styledJsx.properties && { propertyCount: fullSources.styledJsx.properties.length }),
+    };
+  }
+
+  // Styled-components: keep as-is (already compact flags)
+  if (fullSources.styledComponents) {
+    lean.styledComponents = {
+      usesTheme: fullSources.styledComponents.usesTheme,
+      usesCssProp: fullSources.styledComponents.usesCssProp,
+      // Drop components array, keep count
+      ...(fullSources.styledComponents.components && {
+        componentCount: fullSources.styledComponents.components.length
+      }),
+    };
+  }
+
+  // Motion: keep features only, drop components/variants arrays
+  if (fullSources.motion) {
+    lean.motion = {
+      features: fullSources.motion.features,
+    };
+  }
+
+  // Material UI: keep features only, drop components/packages arrays
+  if (fullSources.materialUI) {
+    lean.materialUI = {
+      features: fullSources.materialUI.features,
+    };
+  }
+
+  // ShadCN: keep features only, drop components/variants/sizes arrays
+  if (fullSources.shadcnUI) {
+    lean.shadcnUI = {
+      features: fullSources.shadcnUI.features,
+    };
+  }
+
+  // Radix: keep features + accessibility, drop primitives/patterns
+  if (fullSources.radixUI) {
+    lean.radixUI = {
+      ...(fullSources.radixUI.accessibility && { accessibility: fullSources.radixUI.accessibility }),
+      ...(fullSources.radixUI.features && { features: fullSources.radixUI.features }),
+    };
+  }
+
+  // Chakra: keep features only, drop components/packages arrays
+  if (fullSources.chakraUI) {
+    lean.chakraUI = {
+      features: fullSources.chakraUI.features,
+    };
+  }
+
+  // Ant Design: keep features only, drop components/packages arrays
+  if (fullSources.antd) {
+    lean.antd = {
+      features: fullSources.antd.features,
+    };
+  }
+
+  return lean;
+}
+
+/**
+ * Transform layout metadata to lean format
+ */
+function transformLayoutToLean(layout: LayoutMetadata): LayoutMetadata {
+  if (Object.keys(layout).length === 0) return layout;
+
+  return {
+    type: layout.type,
+    cols: layout.cols,
+    hasHeroPattern: layout.hasHeroPattern,
+    hasFeatureCards: layout.hasFeatureCards,
+    // Replace sections array with count
+    ...(layout.sections && { sectionCount: layout.sections.length }),
+  };
+}
+
+/**
+ * Transform visual metadata to lean format
+ */
+function transformVisualToLean(visual: VisualMetadata): VisualMetadata {
+  if (Object.keys(visual).length === 0) return visual;
+
+  return {
+    // Replace arrays with counts
+    ...(visual.colors && { colorCount: visual.colors.length }),
+    ...(visual.spacing && { spacingCount: visual.spacing.length }),
+    radius: visual.radius,
+    ...(visual.typography && { typographyCount: visual.typography.length }),
+  };
 }
 
 

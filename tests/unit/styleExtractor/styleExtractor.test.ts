@@ -89,7 +89,8 @@ describe('Style Extractor', () => {
 
       const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
-      const result = await extractStyleMetadata(sourceFile, tempDir);
+      // Use 'full' mode to get component arrays
+      const result = await extractStyleMetadata(sourceFile, tempDir, 'full');
 
       expect(result).toBeDefined();
       expect(result?.styleSources?.styledComponents).toBeDefined();
@@ -114,7 +115,8 @@ describe('Style Extractor', () => {
 
       const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
-      const result = await extractStyleMetadata(sourceFile, tempDir);
+      // Use 'full' mode to get component arrays
+      const result = await extractStyleMetadata(sourceFile, tempDir, 'full');
 
       expect(result).toBeDefined();
       expect(result?.styleSources?.motion).toBeDefined();
@@ -138,7 +140,8 @@ describe('Style Extractor', () => {
 
       const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
-      const result = await extractStyleMetadata(sourceFile, tempDir);
+      // Use 'full' mode to get component/package arrays
+      const result = await extractStyleMetadata(sourceFile, tempDir, 'full');
 
       expect(result).toBeDefined();
       expect(result?.styleSources?.materialUI).toBeDefined();
@@ -241,7 +244,8 @@ describe('Style Extractor', () => {
 
       const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
-      const result = await extractStyleMetadata(sourceFile, tempDir);
+      // Use 'full' mode to get css/selectors/properties arrays
+      const result = await extractStyleMetadata(sourceFile, tempDir, 'full');
 
       expect(result).toBeDefined();
       expect(result?.styleSources?.styledJsx).toBeDefined();
@@ -273,7 +277,8 @@ describe('Style Extractor', () => {
 
       const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
-      const result = await extractStyleMetadata(sourceFile, tempDir);
+      // Use 'full' mode to get css/selectors arrays
+      const result = await extractStyleMetadata(sourceFile, tempDir, 'full');
 
       expect(result).toBeDefined();
       expect(result?.styleSources?.styledJsx).toBeDefined();
@@ -311,7 +316,8 @@ describe('Style Extractor', () => {
 
       const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
-      const result = await extractStyleMetadata(sourceFile, tempDir);
+      // Use 'full' mode to get arrays instead of counts
+      const result = await extractStyleMetadata(sourceFile, tempDir, 'full');
 
       expect(result).toBeDefined();
       expect(result?.visual).toBeDefined();
@@ -418,7 +424,8 @@ describe('Style Extractor', () => {
 
       const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
-      const result = await extractStyleMetadata(sourceFile, tempDir);
+      // Use 'full' mode to get categories arrays
+      const result = await extractStyleMetadata(sourceFile, tempDir, 'full');
 
       expect(result).toBeDefined();
       expect(result?.styleSources?.tailwind?.categories).toBeDefined();
@@ -464,7 +471,8 @@ describe('Style Extractor', () => {
 
       const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
 
-      const result = await extractStyleMetadata(sourceFile, tempDir);
+      // Use 'full' mode to get variants array
+      const result = await extractStyleMetadata(sourceFile, tempDir, 'full');
 
       expect(result).toBeDefined();
       expect(result?.styleSources?.motion?.variants).toBeDefined();
@@ -697,9 +705,158 @@ describe('Style Extractor', () => {
 
       // Should not throw
       const result = await extractStyleMetadata(sourceFile, tempDir);
-      
+
       // Should return undefined gracefully
       expect(result).toBeUndefined();
+    });
+  });
+
+  describe('Style Mode', () => {
+    it('should default to lean mode', async () => {
+      const sourceCode = `
+        import { Button } from '@mui/material';
+        function MyComponent() {
+          return <Button className="flex p-4">Hello</Button>;
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
+      const result = await extractStyleMetadata(sourceFile, tempDir);
+
+      expect(result).toBeDefined();
+      expect(result?.summary?.mode).toBe('lean');
+    });
+
+    it('should include summary with sources list', async () => {
+      const sourceCode = `
+        import styled from 'styled-components';
+        function MyComponent() {
+          return <div className="flex p-4" style={{ color: 'blue' }}>Hello</div>;
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
+      const result = await extractStyleMetadata(sourceFile, tempDir);
+
+      expect(result?.summary).toBeDefined();
+      expect(result?.summary?.sources).toContain('tailwind');
+      expect(result?.summary?.sources).toContain('inline');
+    });
+
+    it('should include fullModeBytes in lean mode', async () => {
+      const sourceCode = `
+        function MyComponent() {
+          return <div className="flex p-4 bg-blue-500">Hello</div>;
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
+      const result = await extractStyleMetadata(sourceFile, tempDir, 'lean');
+
+      expect(result?.summary?.mode).toBe('lean');
+      expect(result?.summary?.fullModeBytes).toBeDefined();
+      expect(result?.summary?.fullModeBytes).toBeGreaterThan(0);
+    });
+
+    it('should NOT include fullModeBytes in full mode', async () => {
+      const sourceCode = `
+        function MyComponent() {
+          return <div className="flex p-4 bg-blue-500">Hello</div>;
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
+      const result = await extractStyleMetadata(sourceFile, tempDir, 'full');
+
+      expect(result?.summary?.mode).toBe('full');
+      expect(result?.summary?.fullModeBytes).toBeUndefined();
+    });
+
+    it('lean mode should have categoriesUsed instead of categories', async () => {
+      const sourceCode = `
+        function MyComponent() {
+          return <div className="flex p-4 bg-blue-500 text-white">Hello</div>;
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
+      const result = await extractStyleMetadata(sourceFile, tempDir, 'lean');
+
+      expect(result?.styleSources?.tailwind?.categoriesUsed).toBeDefined();
+      expect(result?.styleSources?.tailwind?.categories).toBeUndefined();
+      expect(result?.styleSources?.tailwind?.categoriesUsed).toContain('layout');
+      expect(result?.styleSources?.tailwind?.categoriesUsed).toContain('spacing');
+    });
+
+    it('full mode should have categories with class arrays', async () => {
+      const sourceCode = `
+        function MyComponent() {
+          return <div className="flex p-4 bg-blue-500 text-white">Hello</div>;
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
+      const result = await extractStyleMetadata(sourceFile, tempDir, 'full');
+
+      expect(result?.styleSources?.tailwind?.categories).toBeDefined();
+      expect(result?.styleSources?.tailwind?.categoriesUsed).toBeUndefined();
+      expect(result?.styleSources?.tailwind?.categories?.layout).toContain('flex');
+    });
+
+    it('lean mode should keep features but drop component arrays', async () => {
+      const sourceCode = `
+        import { Button, TextField } from '@mui/material';
+        function MyComponent() {
+          return <Button sx={{ p: 2 }}><TextField /></Button>;
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
+      const result = await extractStyleMetadata(sourceFile, tempDir, 'lean');
+
+      expect(result?.styleSources?.materialUI?.features?.usesSxProp).toBe(true);
+      expect(result?.styleSources?.materialUI?.components).toBeUndefined();
+      expect(result?.styleSources?.materialUI?.packages).toBeUndefined();
+    });
+
+    it('lean mode should keep motion features but drop components', async () => {
+      const sourceCode = `
+        import { motion } from 'framer-motion';
+        function MyComponent() {
+          return <motion.div whileHover={{ scale: 1.1 }}>Hello</motion.div>;
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
+      const result = await extractStyleMetadata(sourceFile, tempDir, 'lean');
+
+      expect(result?.styleSources?.motion?.features?.gestures).toBe(true);
+      expect(result?.styleSources?.motion?.components).toBeUndefined();
+      expect(result?.styleSources?.motion?.variants).toBeUndefined();
+    });
+
+    it('lean mode should use counts instead of arrays for styled-jsx', async () => {
+      const sourceCode = `
+        function MyComponent() {
+          return (
+            <>
+              <div className="container">Hello</div>
+              <style jsx>{\`
+                .container { padding: 1rem; }
+                .other { margin: 2rem; }
+              \`}</style>
+            </>
+          );
+        }
+      `;
+
+      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx');
+      const result = await extractStyleMetadata(sourceFile, tempDir, 'lean');
+
+      expect(result?.styleSources?.styledJsx?.selectorCount).toBeDefined();
+      expect(result?.styleSources?.styledJsx?.propertyCount).toBeDefined();
+      expect(result?.styleSources?.styledJsx?.css).toBeUndefined();
+      expect(result?.styleSources?.styledJsx?.selectors).toBeUndefined();
     });
   });
 });
