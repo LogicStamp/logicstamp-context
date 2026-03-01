@@ -1,5 +1,5 @@
 /**
- * Security scan command - Scans for secrets and generates report
+ * Security scan command - Scans for secrets and compiles report
  */
 
 import { resolve, dirname, join, relative } from 'node:path';

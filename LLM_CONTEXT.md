@@ -1,10 +1,10 @@
 # LogicStamp Context – LLM Guide
 
 ## Overview
-- Generates AI-friendly context bundles from React/Next.js/Vue/TypeScript projects and backend frameworks (Express.js, NestJS) without build steps.
-- Ships as a global CLI (install with `npm install -g logicstamp-context`, then use `stamp context` command) that scans `.ts`/`.tsx` files, extracts component contracts, and emits structured JSON.
-- Optimizes output for consumption by assistants such as Claude or ChatGPT to improve code understanding and guidance.
-- Works on Node.js ≥ 18.18.0 and requires access to the project's source tree.
+- **The Context Compiler for TypeScript.** Compiles React/Next.js/Vue/TypeScript projects and backend frameworks (Express.js, NestJS) into deterministic architectural contracts and dependency graphs.
+- Ships as a global CLI (install with `npm install -g logicstamp-context`, then use `stamp context` command) that parses `.ts`/`.tsx` files via `ts-morph`, extracts component contracts, and emits structured JSON bundles.
+- Contracts are deterministic (same input = same output), diffable, and auditable. AI assistants consume contracts instead of parsing raw implementation code.
+- Works on Node.js ≥ 20 and requires access to the project's source tree.
 - **Framework support**: React, Next.js, Vue 3 (Composition API), TypeScript, Express.js, and NestJS. Vue support works with `.ts`/`.tsx` files only (JSX/TSX components, composables); Single File Components (`.vue` files) are not currently supported. Backend frameworks (Express.js, NestJS) are automatically detected and their routes, controllers, and API signatures are extracted.
 
 **Note**: "Global CLI" means the tool is installed globally on your system (via `npm install -g`), making the `stamp` command available from any directory in your terminal, not just within a specific project folder.
@@ -28,7 +28,7 @@
 - Install globally: `npm install -g logicstamp-context`.
 - Show version: `stamp --version` or `stamp -v` displays the version number.
 - Default command `stamp context [target]` scans the current directory (or supplied path) and emits multiple `context.json` files (one per folder containing components) plus a `context_main.json` index file at the output root.
-- Key flags: `--depth` (dependency traversal), `--include-code none|header|full`, `--profile llm-chat|llm-safe|ci-strict|watch-fast`, `--out <file>` (output directory or file path), `--max-nodes <n>`, `--quiet` or `-q` (suppress verbose output, show only errors).
+- Key flags: `--depth` (dependency traversal), `--include-code none|header|full`, `--profile llm-chat|llm-safe|ci-strict|watch-fast`, `--out <file>` (output directory or file path), `--max-nodes <n>`, `--quiet` or `-q` (suppress verbose output, show only errors), `--watch` or `-w` (watch mode), `--strict-watch` (breaking change detection in watch mode).
 - Profiles tune defaults: `llm-chat` (balanced), `llm-safe` (token-conservative), `ci-strict` (validation-first), `watch-fast` (lighter style extraction for watch mode).
 - Supports multiple output formats via `--format`: `json` (default), `pretty`, `ndjson`, `toon`.
 - Compare command: `stamp context compare` compares all context files (multi-file mode) to detect drift, ADDED/ORPHANED folders, and component changes. Supports `--approve` for auto-updates, `--clean-orphaned` for cleanup, `--stats` for per-folder token deltas, and `--quiet` or `-q` to show only diffs.
@@ -94,7 +94,7 @@ The `context_main.json` file serves as a directory index:
     }
   ],
   "meta": {
-      "source": "logicstamp-context@0.5.3"
+      "source": "logicstamp-context@0.6.1"
   }
 }
 ```
@@ -117,7 +117,7 @@ Each folder's `context.json` contains an array of LogicStamp bundles. Each bundl
 - `graph.edges` lists dependency relationships between nodes (empty when analysis depth is 1).
 - `meta` section contains two critical fields:
   - `missing`: Array of unresolved dependencies. Each entry includes `name` (import path), `reason` (why it failed), and `referencedBy` (source component). Empty array indicates complete dependency resolution.
-  - `source`: Generator version string (e.g., `"logicstamp-context@0.5.1"`) for compatibility tracking.
+  - `source`: Generator version string (e.g., `"logicstamp-context@0.6.1"`) for compatibility tracking.
 - Example bundle skeleton:
 
 ```
@@ -178,9 +178,9 @@ When `meta.missing` is non-empty, it signals incomplete dependency resolution:
 - Suggest running with `--depth 2` or higher if many "max depth exceeded" entries appear
 - Flag "file not found" entries as potential bugs in the codebase
 
-## Why Structured Data Is Better Than Raw Source
+## Why Compiled Contracts Are Better Than Raw Source
 
-LogicStamp generates **structured context bundles** rather than raw source files. This approach provides significant advantages for AI workflows:
+LogicStamp compiles TypeScript into **structured context bundles** rather than passing raw source files to AI. This approach provides significant advantages for AI workflows:
 
 ### Semantic Density
 
@@ -644,6 +644,9 @@ stamp context --watch
 # Start watch mode with change logging
 stamp context --watch --log-file
 
+# Watch with breaking change detection (strict mode)
+stamp context --watch --strict-watch
+
 # Watch with style metadata
 stamp context --watch --include-style
 
@@ -653,4 +656,21 @@ stamp context --watch --debug
 # Watch specific directory
 stamp context ./src/components --watch
 ```
+
+### Strict Watch Mode
+
+Strict watch mode (`--strict-watch`) detects breaking changes in real-time:
+
+**Violation types:**
+- `breaking_change_prop_removed` - Prop removed from component
+- `breaking_change_event_removed` - Event/callback removed
+- `breaking_change_function_removed` - Exported function removed
+- `breaking_change_state_removed` - State variable removed
+- `breaking_change_prop_type` - Prop type changed (warning)
+- `contract_removed` - Entire component/module removed
+
+**Output files:**
+- `.logicstamp/strict_watch_violations.json` - Current violations (deleted when all resolved)
+
+**CI integration:** Exits with code 1 if errors detected during session.
 

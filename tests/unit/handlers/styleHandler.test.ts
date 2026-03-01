@@ -99,7 +99,7 @@ describe('handleStyle', () => {
   });
 
   it('should handle errors and exit with code 1', async () => {
-    const error = new Error('Style generation failed');
+    const error = new Error('Style compilation failed');
     error.stack = 'Error stack trace';
     vi.spyOn(styleCommand, 'styleCommand').mockRejectedValue(error);
     vi.spyOn(parser, 'parseStyleArgs').mockReturnValue({
@@ -128,8 +128,8 @@ describe('handleStyle', () => {
     await handleStyle([]);
 
     expect(console.error).toHaveBeenCalledWith(
-      '❌ Style context generation failed:',
-      'Style generation failed'
+      '❌ Style context compilation failed:',
+      'Style compilation failed'
     );
     expect(console.error).toHaveBeenCalledWith('Error stack trace');
     expect(process.exit).toHaveBeenCalledWith(1);

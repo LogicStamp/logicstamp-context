@@ -117,7 +117,7 @@ describe('handleGenerate', () => {
     await handleGenerate([]);
 
     expect(console.error).toHaveBeenCalledWith(
-      '❌ Context generation failed:',
+      '❌ Context compilation failed:',
       'Test error'
     );
     expect(process.exit).toHaveBeenCalledWith(1);

@@ -153,7 +153,7 @@ async function main() {
     return;
   }
 
-  // Default: generate context
+  // Default: compile context
   await handleGenerate(contextArgs);
 }
 

@@ -424,7 +424,7 @@ describe('watchMode', () => {
   });
 
   describe('file change handling', () => {
-    it('should trigger regeneration only for TypeScript files by default', async () => {
+    it('should trigger recompilation only for TypeScript files by default', async () => {
       const options: ContextOptions = {
         out: '.logicstamp',
         depth: 2,
@@ -467,7 +467,7 @@ describe('watchMode', () => {
       expect(calls).not.toContain('readme.md');
     });
 
-    it('should trigger regeneration for .stampignore file changes', async () => {
+    it('should trigger recompilation for .stampignore file changes', async () => {
       const options: ContextOptions = {
         out: '.logicstamp',
         depth: 2,
@@ -773,7 +773,7 @@ describe('debouncing', () => {
     // Advance timer past debounce delay (500ms)
     await vi.advanceTimersByTimeAsync(600);
 
-    // Should only trigger one regeneration despite multiple changes
+    // Should only trigger one recompilation despite multiple changes
     // (We verify this by checking that incrementalRebuild was called only once)
   });
 });
@@ -835,13 +835,13 @@ describe('logging', () => {
     // - timestamp: ISO timestamp
     // - changedFiles: array of changed file paths
     // - fileCount: number of changed files
-    // - durationMs: regeneration duration
+    // - durationMs: recompilation duration
     // - modifiedContracts: (when changes detected)
     // - modifiedBundles: (when changes detected)
     // - addedContracts: (when new contracts added)
     // - removedContracts: (when contracts removed)
     // - summary: summary counts
-    // - error: (when regeneration fails)
+    // - error: (when recompilation fails)
     expect(true).toBe(true);
   });
 
@@ -1029,7 +1029,7 @@ describe('file extension filtering', () => {
 });
 
 describe('error handling', () => {
-  it('should handle regeneration errors gracefully', async () => {
+  it('should handle recompilation errors gracefully', async () => {
     let changeHandler: ((path: string) => void) | undefined;
     const mockWatcher = {
       on: vi.fn((event: string, handler: (path: string) => void) => {
@@ -1529,8 +1529,8 @@ describe('Watch Mode Failure Modes', () => {
     });
   });
 
-  describe('concurrent regeneration', () => {
-    it('should queue regeneration when already in progress', async () => {
+  describe('concurrent recompilation', () => {
+    it('should queue recompilation when already in progress', async () => {
       let changeHandler: ((path: string) => void) | undefined;
       const mockWatcher = {
         on: vi.fn((event: string, handler: (path: string) => void) => {
@@ -1605,7 +1605,7 @@ describe('Watch Mode Failure Modes', () => {
       // Wait for both to complete
       await new Promise(resolve => setTimeout(resolve, 700));
 
-      // The regeneration should handle concurrent changes without crashing
+      // The recompilation should handle concurrent changes without crashing
       // (exact behavior depends on implementation - may batch or queue)
     });
   });
@@ -2016,7 +2016,7 @@ describe('Watch Mode Failure Modes', () => {
         }
       }
 
-      // Wait for debounce + regeneration
+      // Wait for debounce + recompilation
       await new Promise(resolve => setTimeout(resolve, 700));
 
       // The console should show batched message

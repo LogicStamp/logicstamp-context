@@ -1,5 +1,5 @@
 /**
- * Watch Mode - Monitors file changes and regenerates context automatically
+ * Watch Mode - Monitors file changes and recompiles context automatically
  */
 
 import { resolve, dirname, join, relative } from 'node:path';
@@ -158,7 +158,7 @@ function displayViolations(violations: Violation[], options: { quiet?: boolean }
 }
 
 /**
- * Start watch mode - monitors file changes and regenerates context
+ * Start watch mode - monitors file changes and recompiles context
  */
 export async function startWatchMode(options: ContextOptions, projectRoot: string, initialCache: WatchCache | null = null): Promise<void> {
   // Register signal handlers so Ctrl+C goes through gracefulShutdown
@@ -280,7 +280,7 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
         const fileList = changedFileList.length > 3 
           ? `${changedFileList.slice(0, 3).join(', ')}, ... (+${changedFileList.length - 3} more)`
           : changedFileList.join(', ');
-        console.log(`\n🔄 Regenerating (${changedFileList.length} file${changedFileList.length > 1 ? 's' : ''} changed)...`);
+        console.log(`\n🔄 Recompiling (${changedFileList.length} file${changedFileList.length > 1 ? 's' : ''} changed)...`);
       }
 
       let newBundles: LogicStampBundle[];
@@ -358,7 +358,7 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
         if (changes && (changes.changed.length > 0 || changes.added.length > 0 || changes.removed.length > 0 || changes.bundleChanged.length > 0)) {
           showChanges(baselineBundles!, newBundles, changedFileList[0] || 'unknown', { debug: options.debug });
         }
-        console.log(`\n✅ Regenerated\n`);
+        console.log(`\n✅ Recompiled\n`);
       }
 
       // Update previousBundles for incremental tracking (still useful for other operations)
@@ -532,7 +532,7 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
     // Watch all files and filter by extension in the event handlers
     const watcher = chokidar.watch(projectRoot, {
       ignored: [
-        // Ignore generated context files
+        // Ignore compiled context files
         /context\.json$/,
         /context_main\.json$/,
         /context_compare_modes\.json$/,
@@ -645,7 +645,7 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
 
         if (options.strictWatch && strictWatchStatus && strictWatchStatus.cumulativeViolations > 0) {
           console.log(`\n📋 Strict Watch Session Summary:`);
-          console.log(`   Regenerations: ${strictWatchStatus.regenerationCount}`);
+          console.log(`   Recompilations: ${strictWatchStatus.regenerationCount}`);
           console.log(`   Total violations: ${strictWatchStatus.cumulativeViolations}`);
           console.log(`   Errors: ${strictWatchStatus.cumulativeErrors}`);
           console.log(`   Warnings: ${strictWatchStatus.cumulativeWarnings}`);

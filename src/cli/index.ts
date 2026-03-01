@@ -143,7 +143,7 @@ async function main() {
   try {
     await contextCommand(options);
   } catch (error) {
-    console.error('❌ Context generation failed:', (error as Error).message);
+    console.error('❌ Context compilation failed:', (error as Error).message);
     console.error((error as Error).stack);
     process.exit(1);
   }
@@ -153,7 +153,7 @@ function printHelp() {
   console.log(`
 ╭─────────────────────────────────────────────────╮
 │  LogicStamp Context - AI-Ready Documentation    │
-│  Generate context bundles from React codebases  │
+│  Compile context bundles from React codebases   │
 ╰─────────────────────────────────────────────────╯
 
 USAGE:
@@ -178,7 +178,7 @@ OPTIONS:
   --compare-modes           Show detailed token comparison table
   --skip-gitignore          Skip .gitignore setup (never prompt or modify)
   --quiet, -q               Suppress verbose output (show only errors)
-  --watch, -w               Watch for file changes and regenerate automatically
+  --watch, -w               Watch for file changes and recompile automatically
   --debug                   Show detailed hash information in watch mode
   -h, --help                Show this help
 
@@ -189,10 +189,10 @@ PROFILES:
 
 EXAMPLES:
   logicstamp-context
-    Generate context for entire project
+    Compile context for entire project
 
   logicstamp-context ./src
-    Generate context for src directory
+    Compile context for src directory
 
   logicstamp-context --profile llm-safe --out ai-context.json
     Use conservative profile with custom output
@@ -201,15 +201,15 @@ EXAMPLES:
     Include full source code with deeper traversal
 
   logicstamp-context --watch
-    Watch for file changes and regenerate context automatically
+    Watch for file changes and recompile context automatically
 
 VALIDATION:
-  Use logicstamp-validate to check generated bundles:
+  Use logicstamp-validate to check compiled bundles:
     logicstamp-validate context.json
 
 NOTES:
   • Scans for .ts/.tsx files automatically
-  • Generates context on-the-fly (no pre-compilation needed)
+  • Compiles context on-the-fly (ready for immediate use)
   • Output is ready for Claude, ChatGPT, or other AI tools
   `);
 }

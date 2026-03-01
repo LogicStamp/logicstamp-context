@@ -401,8 +401,8 @@ describe('CLI Command Options Tests', () => {
       expect(() => JSON.parse(lastLine)).not.toThrow();
       const stats = JSON.parse(lastLine);
       expect(stats).toHaveProperty('totalComponents');
-      // Check for either totalBundles or bundlesGenerated
-      expect(stats).toHaveProperty(stats.totalBundles !== undefined ? 'totalBundles' : 'bundlesGenerated');
+      // Check for bundlesCompiled field
+      expect(stats).toHaveProperty('bundlesCompiled');
     }, 30000);
 
     it('should handle --quiet flag', async () => {

@@ -186,14 +186,14 @@ describe('contextCommand', () => {
     );
   });
 
-  it('should exit with 1 when no bundles generated', async () => {
+  it('should exit with 1 when no bundles compiled', async () => {
     vi.mocked(pack.pack).mockRejectedValue(new Error('Pack failed'));
 
     await contextCommand(defaultOptions);
 
     expect(exitCode).toBe(1);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('No bundles could be generated')
+      expect.stringContaining('No bundles could be compiled')
     );
   });
 

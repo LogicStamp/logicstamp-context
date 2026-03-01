@@ -1,5 +1,5 @@
 /**
- * Clean command - Removes all generated context artifacts
+ * Clean command - Removes all compiled context artifacts
  * Deletes context_main.json, all folder context.json files, and optionally .logicstamp/ cache
  */
 
@@ -65,7 +65,7 @@ async function findLogicStampDir(projectRoot: string): Promise<string | null> {
 }
 
 /**
- * Clean command - removes all generated context artifacts
+ * Clean command - removes all compiled context artifacts
  */
 export async function cleanCommand(options: CleanOptions): Promise<void> {
   const projectRoot = resolve(options.projectRoot || '.');

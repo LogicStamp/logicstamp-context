@@ -42,7 +42,7 @@ describe('CLI Context Generation Tests', () => {
       expect(stdout).toContain('Scanning');
       expect(stdout).toContain('Analyzing components');
       expect(stdout).toContain('Building dependency graph');
-      expect(stdout).toContain('Generating context');
+      expect(stdout).toContain('Compiling context');
       expect(stdout).toContain('context files written successfully');
 
       // Verify context_main.json was created (index file)
@@ -365,7 +365,7 @@ describe('CLI Context Generation Tests', () => {
       expect(stdout).toContain('Summary:');
       expect(stdout).toContain('Total components:');
       expect(stdout).toContain('Root components:');
-      expect(stdout).toContain('Bundles generated:');
+      expect(stdout).toContain('Bundles compiled:');
       expect(stdout).toContain('Completed in');
     }, 30000);
 
@@ -407,7 +407,7 @@ describe('CLI Context Generation Tests', () => {
       expect(stdout).not.toContain('Found');
       expect(stdout).not.toContain('🔨 Analyzing');
       expect(stdout).not.toContain('📊 Building');
-      expect(stdout).not.toContain('📦 Generating');
+      expect(stdout).not.toContain('📦 Compiling');
       expect(stdout).not.toContain('📝 Writing');
       expect(stdout).not.toContain('context files written successfully');
       expect(stdout).not.toContain('Summary:');
@@ -433,7 +433,7 @@ describe('CLI Context Generation Tests', () => {
       expect(stdout).not.toContain('Found');
       expect(stdout).not.toContain('🔨 Analyzing');
       expect(stdout).not.toContain('📊 Building');
-      expect(stdout).not.toContain('📦 Generating');
+      expect(stdout).not.toContain('📦 Compiling');
       expect(stdout).not.toContain('📝 Writing');
       expect(stdout).not.toContain('context files written successfully');
 
@@ -888,7 +888,7 @@ describe('CLI Context Generation Tests', () => {
         `node dist/cli/stamp.js context ${testDir} --include-code full --out ${outDir}`
       );
 
-      expect(stdout).toContain('Generating context');
+      expect(stdout).toContain('Compiling context');
 
       // Read the generated context file
       const contextPath = join(outDir, 'src', 'context.json');
@@ -951,7 +951,7 @@ describe('CLI Context Generation Tests', () => {
         `node dist/cli/stamp.js context ${testDir} --include-code full --out ${outDir}`
       );
 
-      expect(stdout).toContain('Generating context');
+      expect(stdout).toContain('Compiling context');
 
       // Read the generated context file
       const contextPath = join(outDir, 'src', 'context.json');

@@ -969,7 +969,7 @@ describe('CLI Compare Command Tests', () => {
 
       // Should not contain verbose output
       expect(stdout).not.toContain('Auto-compare mode');
-      expect(stdout).not.toContain('Generating fresh context');
+      expect(stdout).not.toContain('Compiling fresh context');
       expect(stdout).not.toContain('Comparing all context files');
       expect(stdout).not.toContain('Folder Summary:');
       expect(stdout).not.toContain('Total folders:');

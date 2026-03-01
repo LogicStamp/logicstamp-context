@@ -1,5 +1,5 @@
 /**
- * Handler for compare command
+ * Handler for context compare command
  */
 
 import { contextCommand, type ContextOptions } from '../commands/context.js';
@@ -96,7 +96,7 @@ async function handleAutoCompareMode(options: {
 
   // Check if context_main.json exists
   if (!existsSync('context_main.json')) {
-    console.error('❌ context_main.json not found. Run "stamp context" first to generate context files.');
+    console.error('❌ context_main.json not found. Run "stamp context" first to compile context files.');
     return process.exit(1);
   }
 
@@ -104,7 +104,7 @@ async function handleAutoCompareMode(options: {
     console.log('Auto-compare mode');
   }
 
-  // Create temp directory for new context generation
+  // Create temp directory for new context compilation
   const tempDir = join(tmpdir(), `context-compare-${Date.now()}`);
   try {
     await mkdir(tempDir, { recursive: true });
@@ -120,10 +120,10 @@ async function handleAutoCompareMode(options: {
   }
 
   if (!quiet) {
-    console.log('🔄 Generating fresh context...');
+    console.log('🔄 Compiling fresh context...');
   }
 
-  // Generate fresh context to temp directory
+  // Compile fresh context to temp directory
   const contextOptions: ContextOptions = {
     depth: 1,
     includeCode: 'header',
