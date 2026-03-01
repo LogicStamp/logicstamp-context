@@ -563,7 +563,7 @@ Route extraction may miss routes in edge cases where JSX attribute values have u
 
 ### 9. Test Files Excluded
 
-**Issue**: Test files are completely excluded from context generation.
+**Issue**: Test files are completely excluded from context compilation.
 
 **Current behavior**: Test files (`.test.ts`, `.test.tsx`, `.spec.ts`, `.spec.tsx`) are explicitly filtered out during file scanning and never analyzed.
 

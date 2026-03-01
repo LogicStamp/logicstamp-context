@@ -110,7 +110,7 @@ The decoded structure is identical to JSON format bundles - same schema, same co
 
 ### `.stampignore.example`
 Example `.stampignore` file demonstrating file exclusion patterns:
-- 🔒 Shows how to exclude files containing secrets from context generation
+- 🔒 Shows how to exclude files containing secrets from context compilation
 - Demonstrates both specific file paths and glob patterns
 - Example patterns for common secret file locations
 

@@ -315,7 +315,7 @@ After installation, the `stamp` command is available globally.
 
 LogicStamp Context protects sensitive data in generated context:
 
-- **Security scanning by default** - `stamp init` scans source files (`.ts`, `.tsx`, `.js`, `.jsx`) and `.json` files for hard-coded secrets before context generation
+- **Security scanning by default** - `stamp init` scans source files (`.ts`, `.tsx`, `.js`, `.jsx`) and `.json` files for hard-coded secrets before context compilation
 - **Automatic sanitization** - Detected secrets replaced with `"PRIVATE_DATA"` in output
 - **Manual exclusions** - Use `stamp ignore <file>` to exclude files via `.stampignore`
 - **Safe by default** - Only metadata included. Credentials only appear in `--include-code full` mode

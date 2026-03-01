@@ -1,14 +1,14 @@
 # .stampignore File Format
 
-The `.stampignore` file tells LogicStamp Context which files to exclude from context generation. You can use it to exclude any files you don't want included in your context bundles.
+The `.stampignore` file tells LogicStamp Context which files to exclude from context compilation. You can use it to exclude any files you don't want included in your context bundles.
 
 ## Overview
 
 When you run `stamp context` or `stamp context style` (equivalent to `stamp context --include-style`), LogicStamp automatically reads `.stampignore` and excludes any files listed in it. This happens before processing, so excluded files are never analyzed or included in context bundles.
 
-**All context generation commands respect `.stampignore`:**
-- `stamp context` - Standard context generation
-- `stamp context style` - Context generation with style metadata (equivalent to `stamp context --include-style`)
+**All context compilation commands respect `.stampignore`:**
+- `stamp context` - Standard context compilation
+- `stamp context style` - Context compilation with style metadata (equivalent to `stamp context --include-style`)
 - `stamp context --include-style` - Alternative syntax for style metadata extraction
 
 **Use cases:**
@@ -184,11 +184,11 @@ Files are matched against `.stampignore` patterns using glob matching:
 - **`.gitignore`**: Prevents files from being committed to version control
 - **`.stampignore`**: Prevents files from being included in LogicStamp context bundles
 
-**Note**: `.stampignore` is independent of security scanning. The security report file (`stamp_security_report.json`) is automatically added to `.gitignore` by `stamp security scan`, but this is separate from `.stampignore`, which only affects context generation.
+**Note**: `.stampignore` is independent of security scanning. The security report file (`stamp_security_report.json`) is automatically added to `.gitignore` by `stamp security scan`, but this is separate from `.stampignore`, which only affects context compilation.
 
 **Use cases:**
 - Files in `.gitignore` are excluded from Git commits
-- Files in `.stampignore` are excluded from context generation (but may still be committed)
+- Files in `.stampignore` are excluded from context compilation (but may still be committed)
 - Files can be in both (like secret files that shouldn't be committed OR included in context)
 
 ## Best Practices
@@ -307,12 +307,12 @@ Or edit it to remove entries you no longer need.
 ## Related Commands
 
 - [`stamp ignore`](cli/ignore.md) - Add files/folders to `.stampignore` (recommended way to manage exclusions)
-- [`stamp context`](cli/context.md) - Generate context (respects `.stampignore`)
-- [`stamp context style`](cli/style.md) - Generate context with style metadata (respects `.stampignore`, equivalent to `stamp context --include-style`)
+- [`stamp context`](cli/context.md) - Compile context (respects `.stampignore`)
+- [`stamp context style`](cli/style.md) - Compile context with style metadata (respects `.stampignore`, equivalent to `stamp context --include-style`)
 - [`stamp security scan`](cli/security-scan.md) - Scan for secrets in your codebase
 
 ## See Also
 
-- [Context Generation](cli/context.md) - How context generation works with file exclusion
+- [Context Compilation](cli/context.md) - How context compilation works with file exclusion
 - [Init Command](cli/init.md) - Project initialization
 

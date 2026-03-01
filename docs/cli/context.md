@@ -13,7 +13,7 @@ stamp context [path] [options]
 
 **Setup:** `stamp context` respects preferences saved in `.logicstamp/config.json` and never prompts. On first run (no config), it defaults to skipping both `.gitignore` and `LLM_CONTEXT.md` setup for CI-friendly behavior. Use [`stamp init`](init.md) to configure these options (non-interactive by default; use `--no-secure` for interactive mode).
 
-**File Exclusion:** `stamp context` respects `.stampignore` and excludes those files from context generation. You'll see how many files were excluded (unless using `--quiet`). Use `stamp ignore <file>` to add files to `.stampignore`. `.stampignore` is completely optional and independent of security scanning. See [stampignore.md](../stampignore.md) for details.
+**File Exclusion:** `stamp context` respects `.stampignore` and excludes those files from context compilation. You'll see how many files were excluded (unless using `--quiet`). Use `stamp ignore <file>` to add files to `.stampignore`. `.stampignore` is completely optional and independent of security scanning. See [stampignore.md](../stampignore.md) for details.
 
 **Secret Sanitization:** If a security report (`stamp_security_report.json`) exists, `stamp context` automatically replaces detected secrets with `"PRIVATE_DATA"` in the generated JSON files. **Your source code files are never modified** - only the generated context files contain sanitized values. See [security-scan.md](security-scan.md) for details.
 
@@ -165,7 +165,7 @@ stamp context --out ./output/context.json
 
 ## File Exclusion with .stampignore
 
-Files in `.stampignore` are excluded from context generation (no flags needed). You'll see how many files were excluded (unless using `--quiet`). Supports glob patterns and exact file paths.
+Files in `.stampignore` are excluded from context compilation (no flags needed). You'll see how many files were excluded (unless using `--quiet`). Supports glob patterns and exact file paths.
 
 Example `.stampignore`:
 ```json
