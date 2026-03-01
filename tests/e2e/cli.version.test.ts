@@ -53,7 +53,7 @@ describe('CLI Version Command Tests', () => {
     // Should not contain error messages or other CLI output
     expect(stderr).toBe('');
     expect(stdout).not.toContain('❌');
-    expect(stdout).not.toContain('Context generation');
+    expect(stdout).not.toContain('Context compilation');
   }, 30000);
 });
 

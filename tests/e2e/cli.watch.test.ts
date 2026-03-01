@@ -312,11 +312,11 @@ describe('CLI Watch Mode Tests', () => {
             await writeFile(appPath, content + '\n// Test comment');
           }
 
-          // Check for regeneration
-          if (output.includes('Regenerating') || output.includes('Changed')) {
+          // Check for recompilation
+          if (output.includes('Recompiling') || output.includes('Changed')) {
             clearTimeout(timeout);
             watchProcess?.kill('SIGTERM');
-            expect(output).toMatch(/Regenerating|Changed/);
+            expect(output).toMatch(/Recompiling|Changed/);
             resolve();
           }
         });
@@ -395,14 +395,14 @@ describe('CLI Watch Mode Tests', () => {
           if ((output.includes('Watch mode active') || output.includes('Waiting for file changes')) && !isReady) {
             isReady = true;
 
-            // Modify a file to trigger regeneration and create a log entry
+            // Modify a file to trigger recompilation and create a log entry
             const appPath = join(testDir, 'src', 'App.tsx');
             const content = await readFile(appPath, 'utf-8');
             await writeFile(appPath, content + '\n// Log test');
           }
 
-          // Wait for regeneration to complete
-          if (output.includes('Regenerated') || output.includes('✅')) {
+          // Wait for recompilation to complete
+          if (output.includes('Recompiled') || output.includes('✅')) {
             // Wait a bit for log to be written
             await new Promise(r => setTimeout(r, 500));
 
@@ -439,7 +439,7 @@ describe('CLI Watch Mode Tests', () => {
             expect(logs).toHaveProperty('entries');
             expect(Array.isArray(logs.entries)).toBe(true);
           } catch {
-            // Logs might not exist if no regeneration happened
+            // Logs might not exist if no recompilation happened
           }
 
           // Status file should be cleaned up, logs should persist
@@ -448,7 +448,7 @@ describe('CLI Watch Mode Tests', () => {
             console.log('Note: context_watch-status.json still exists (cleanup is best-effort)');
           }
 
-          // Logs should be preserved (if regeneration happened)
+          // Logs should be preserved (if recompilation happened)
           if (logsExist) {
             expect(logsExist).toBe(true);
           }
@@ -493,14 +493,14 @@ describe('CLI Watch Mode Tests', () => {
           if ((output.includes('Watch mode active') || output.includes('Waiting for file changes')) && !isReady) {
             isReady = true;
 
-            // Modify a file to trigger regeneration
+            // Modify a file to trigger recompilation
             const appPath = join(testDir, 'src', 'App.tsx');
             const content = await readFile(appPath, 'utf-8');
             await writeFile(appPath, content + '\n// No log test');
           }
 
-          // Wait for regeneration to complete
-          if (output.includes('Regenerated') || output.includes('✅')) {
+          // Wait for recompilation to complete
+          if (output.includes('Recompiled') || output.includes('✅')) {
             // Wait a bit
             await new Promise(r => setTimeout(r, 500));
 
@@ -660,7 +660,7 @@ describe('CLI Watch Mode Tests', () => {
           if (watchProcess) {
             watchProcess.kill('SIGTERM');
           }
-          // If no regeneration after modifying node_modules, test passes
+          // If no recompilation after modifying node_modules, test passes
           resolve();
         }, 15000);
 
@@ -693,13 +693,13 @@ describe('CLI Watch Mode Tests', () => {
             modifiedNodeModules = true;
           }
 
-          // Should not regenerate for node_modules changes
-          if (modifiedNodeModules && output.includes('Regenerating')) {
+          // Should not recompile for node_modules changes
+          if (modifiedNodeModules && output.includes('Recompiling')) {
             // Check if it's regenerating due to node_modules
             if (output.includes('node_modules')) {
               clearTimeout(timeout);
               watchProcess?.kill('SIGTERM');
-              reject(new Error('Should not regenerate for node_modules changes'));
+              reject(new Error('Should not recompile for node_modules changes'));
             }
           }
         });
@@ -733,21 +733,21 @@ describe('CLI Watch Mode Tests', () => {
         });
 
         let output = '';
-        let regenerationCount = 0;
+        let recompilationCount = 0;
 
         watchProcess.stdout?.on('data', (data: Buffer) => {
           output += data.toString();
 
-          // Count regenerations
-          const matches = output.match(/Regenerating/g);
+          // Count recompilations
+          const matches = output.match(/Recompiling/g);
           if (matches) {
-            regenerationCount = matches.length;
+            recompilationCount = matches.length;
 
-            // If too many regenerations, might be an infinite loop
-            if (regenerationCount > 3) {
+            // If too many recompilations, might be an infinite loop
+            if (recompilationCount > 3) {
               clearTimeout(timeout);
               watchProcess?.kill('SIGTERM');
-              reject(new Error('Too many regenerations - possible infinite loop'));
+              reject(new Error('Too many recompilations - possible infinite loop'));
             }
           }
         });
@@ -797,7 +797,7 @@ describe('CLI Watch Mode Tests', () => {
           }
 
           // Check for file name in output
-          if (output.includes('App.tsx') && (output.includes('Changed') || output.includes('Regenerating'))) {
+          if (output.includes('App.tsx') && (output.includes('Changed') || output.includes('Recompiling'))) {
             clearTimeout(timeout);
             watchProcess?.kill('SIGTERM');
             expect(output).toContain('App.tsx');
@@ -812,7 +812,7 @@ describe('CLI Watch Mode Tests', () => {
       });
     }, 35000);
 
-    it('should show regeneration success message', { retry: CI_RETRY, timeout: 120000 }, async () => {
+    it('should show recompilation success message', { retry: CI_RETRY, timeout: 120000 }, async () => {
       let output = '';
 
       watchProcess = spawn('node', [
@@ -843,18 +843,18 @@ describe('CLI Watch Mode Tests', () => {
       // Give watcher a moment to fully attach (CI stability)
       await sleep(300);
 
-      // Modify a file to trigger regeneration
+      // Modify a file to trigger recompilation
       const appPath = join(testDir, 'src', 'App.tsx');
       const content = await readFile(appPath, 'utf-8');
       await writeFile(appPath, content + '\n// Test change');
 
-      // Wait for regeneration success
+      // Wait for recompilation success
       await waitFor(
-        () => output.includes('Regenerated') || output.includes('✅'),
-        { timeoutMs: 90000, onTimeoutMessage: 'Timeout waiting for regeneration success message' }
+        () => output.includes('Recompiled') || output.includes('✅'),
+        { timeoutMs: 90000, onTimeoutMessage: 'Timeout waiting for recompilation success message' }
       );
 
-      expect(output).toMatch(/Regenerated|✅/);
+      expect(output).toMatch(/Recompiled|✅/);
 
       watchProcess?.kill('SIGTERM');
     });
@@ -947,7 +947,7 @@ describe('CLI Watch Mode Tests', () => {
       // Give watcher a moment to fully attach
       await sleep(300);
 
-      // Modify a file to trigger regeneration (add a prop, then remove it to trigger violation)
+      // Modify a file to trigger recompilation (add a prop, then remove it to trigger violation)
       const appPath = join(testDir, 'src', 'App.tsx');
       const originalContent = await readFile(appPath, 'utf-8');
 
@@ -958,10 +958,10 @@ describe('CLI Watch Mode Tests', () => {
       );
       await writeFile(appPath, modifiedContent);
 
-      // Wait for first regeneration
+      // Wait for first recompilation
       await waitFor(
-        () => output.includes('Regenerated'),
-        { timeoutMs: 60000, onTimeoutMessage: 'Timeout waiting for first regeneration' }
+        () => output.includes('Recompiled'),
+        { timeoutMs: 60000, onTimeoutMessage: 'Timeout waiting for first recompilation' }
       );
 
       await sleep(500);
@@ -969,10 +969,10 @@ describe('CLI Watch Mode Tests', () => {
       // Now remove the prop to trigger a breaking change
       await writeFile(appPath, originalContent);
 
-      // Wait for second regeneration
+      // Wait for second recompilation
       await waitFor(
-        () => (output.match(/Regenerated/g) || []).length >= 2,
-        { timeoutMs: 60000, onTimeoutMessage: 'Timeout waiting for second regeneration' }
+        () => (output.match(/Recompiled/g) || []).length >= 2,
+        { timeoutMs: 60000, onTimeoutMessage: 'Timeout waiting for second recompilation' }
       );
 
       await sleep(500);
@@ -986,7 +986,7 @@ describe('CLI Watch Mode Tests', () => {
 
         expect(violations).toHaveProperty('active', true);
         expect(violations).toHaveProperty('cumulativeViolations');
-        expect(violations).toHaveProperty('regenerationCount');
+        expect(violations).toHaveProperty('recompilationCount');
       } catch {
         // File might not exist if no violations were detected (content change might not result in violations)
         // This is acceptable - we're testing the mechanism, not forcing violations

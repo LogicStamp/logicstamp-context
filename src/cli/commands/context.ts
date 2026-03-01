@@ -1,5 +1,5 @@
 /**
- * Context command - Generates context bundles from TypeScript codebases
+ * Context command - Compiles context bundles from TypeScript codebases
  */
 
 import { resolve, dirname, join } from 'node:path';
@@ -58,7 +58,7 @@ export interface ContextOptions {
   quiet?: boolean;
   suppressSuccessIndicator?: boolean; // When true, don't output ✓ even in quiet mode (for internal calls)
   includeStyle?: boolean; // Extract style metadata (Tailwind, SCSS, animations, layout)
-  watch?: boolean; // Watch for file changes and regenerate context automatically
+  watch?: boolean; // Watch for file changes and recompile context automatically
   debug?: boolean; // Enable debug output (shows hashes in watch mode)
   logFile?: boolean; // Write watch mode logs to file (default: false)
   strictWatch?: boolean; // Enable strict watch mode - track violations and report them
@@ -192,9 +192,9 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     contractsMap, // Pass in-memory contracts
   };
 
-  // Generate context for all root components
+  // Compile context for all root components
   if (!options.quiet) {
-    console.log(`📦 Generating context for ${manifest.graph.roots.length} root components (depth=${depth})...`);
+    console.log(`📦 Compiling context for ${manifest.graph.roots.length} root components (depth=${depth})...`);
   }
 
   const bundles: LogicStampBundle[] = [];
@@ -210,7 +210,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   }
 
   if (bundles.length === 0) {
-    console.error('❌ No bundles could be generated');
+    console.error('❌ No bundles could be compiled');
     process.exit(1);
   }
 
@@ -345,7 +345,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
 
   // Validate bundles before writing
   if (!options.quiet) {
-    console.log(`🔍 Validating generated context...`);
+    console.log(`🔍 Validating compiled context...`);
   }
   const bundlesWithSchema = bundles.map((b, idx) => ({
     $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
@@ -449,9 +449,9 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     const sanitizeStats = getAndResetSanitizeStats();
     if (sanitizeStats.filesWithSecrets > 0) {
       console.log(`\n⚠️  Secret sanitization: Replaced ${sanitizeStats.totalSecretsReplaced} secret(s) in ${sanitizeStats.filesWithSecrets} file(s)`);
-      console.log(`   Secrets were replaced with "PRIVATE_DATA" in generated JSON files`);
+      console.log(`   Secrets were replaced with "PRIVATE_DATA" in compiled JSON files`);
     } else if (sanitizeStats.securityReportLoaded) {
-      console.log(`\n✅ Generated context verified - no secret patterns detected`);
+      console.log(`\n✅ Compiled context verified - no secret patterns detected`);
     } else {
       console.log(`\nℹ️  Security scan skipped (no security report found)`);
       console.log(`   Run \`stamp init\` or \`stamp security\` to enable secret detection`);

@@ -1,6 +1,6 @@
 /**
  * Incremental Watch Mode - Fast rebuilds with caching
- * Only rebuilds affected bundles instead of full regeneration
+ * Only rebuilds affected bundles instead of full recompilation
  */
 
 import { resolve, dirname, join, relative, isAbsolute } from 'node:path';

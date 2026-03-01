@@ -62,7 +62,7 @@ describe('CLI Output and Formatting Tests', () => {
       expect(stdout).toContain('🔍 Scanning');
       expect(stdout).toContain('Analyzing components');
       expect(stdout).toContain('Building dependency graph');
-      expect(stdout).toContain('Generating context');
+      expect(stdout).toContain('Compiling context');
       expect(stdout).toContain('📝 Writing context files for');
       expect(stdout).toContain('📝 Writing main context index');
       expect(stdout).toContain('context files written successfully');
@@ -70,7 +70,7 @@ describe('CLI Output and Formatting Tests', () => {
       expect(stdout).toContain('Total components:');
       expect(stdout).toContain('Root components:');
       expect(stdout).toContain('Leaf components:');
-      expect(stdout).toContain('Bundles generated:');
+      expect(stdout).toContain('Bundles compiled:');
       expect(stdout).toContain('Total nodes in context:');
       expect(stdout).toContain('Total edges:');
       expect(stdout).toContain('⏱  Completed in');

@@ -22,7 +22,7 @@ export interface ValidateArgs {
 }
 
 /**
- * Parse context command arguments (for generate command)
+ * Parse context command arguments (for compile command)
  */
 export function parseContextArgs(args: string[]): ContextOptions {
   const options: ContextOptions = {

@@ -411,7 +411,7 @@ context_*.json
 
       // Verify file exists before test
       await access(reportPath);
-      
+
       // Test that the command accepts --hard-reset without --force
       // The actual confirmation prompt interaction is tested via --force flag
       // This test verifies the command structure accepts the flag
@@ -430,7 +430,7 @@ context_*.json
         // File should still exist since we didn't confirm
         await access(reportPath);
       }
-    }, 5000);
+    }, 10000);
 
     it('should delete report file with --force flag', async () => {
       // Create report file

@@ -169,7 +169,7 @@ describe('CLI Init Command Tests', () => {
       );
 
       // Verify informational messages are shown (in non-interactive mode, defaults to yes)
-      expect(stdout).toContain('LogicStamp generates large context files');
+      expect(stdout).toContain('LogicStamp compiles large context files');
       expect(stdout).toContain('context.json');
       expect(stdout).toContain('context_*.json');
       expect(stdout).toContain('context.toon');
@@ -231,7 +231,7 @@ describe('CLI Init Command Tests', () => {
       expect(stdout).toContain('initialization complete');
       // Should not contain prompt text
       expect(stdout).not.toContain('Add recommended patterns to .gitignore?');
-      expect(stdout).not.toContain('Generate LLM_CONTEXT.md in project root?');
+      expect(stdout).not.toContain('Create LLM_CONTEXT.md in project root?');
 
       // Verify .gitignore was created (defaults to yes)
       const gitignorePath = join(testDir, '.gitignore');
@@ -261,7 +261,7 @@ describe('CLI Init Command Tests', () => {
       expect(stdout).toContain('initialization complete');
       // Should not contain prompt text
       expect(stdout).not.toContain('Add recommended patterns to .gitignore?');
-      expect(stdout).not.toContain('Generate LLM_CONTEXT.md in project root?');
+      expect(stdout).not.toContain('Create LLM_CONTEXT.md in project root?');
 
       // Verify .gitignore was created (defaults to yes)
       const gitignorePath = join(testDir, '.gitignore');
@@ -322,7 +322,7 @@ describe('CLI Init Command Tests', () => {
       // Verify init was run (no prompts, auto-yes)
       expect(stdout).toContain('Initializing LogicStamp');
       expect(stdout).not.toContain('Add recommended patterns to .gitignore?');
-      expect(stdout).not.toContain('Generate LLM_CONTEXT.md in project root?');
+      expect(stdout).not.toContain('Create LLM_CONTEXT.md in project root?');
 
       // Verify security scan was run
       expect(stdout).toContain('Running security scan');

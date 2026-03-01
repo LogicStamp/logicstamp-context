@@ -35,7 +35,7 @@ function checkBundleResults<T>(
       .map(r => r.reason instanceof Error ? r.reason.message : String(r.reason));
 
     if (!quiet) {
-      console.warn(`\n⚠️  All ${context} bundle generations failed:`);
+      console.warn(`\n⚠️  All ${context} bundle compilations failed:`);
       errors.forEach(e => console.warn(`   - ${e}`));
     }
 
@@ -45,7 +45,7 @@ function checkBundleResults<T>(
   // Log partial failures as warnings
   const failedCount = results.length - successful.length;
   if (failedCount > 0 && !quiet) {
-    console.warn(`   ⚠️  ${failedCount}/${results.length} ${context} bundles failed to generate`);
+    console.warn(`   ⚠️  ${failedCount}/${results.length} ${context} bundles failed to compile`);
   }
 
   return { successful, allFailed: false };
@@ -196,7 +196,7 @@ export async function generateModeComparison(
   let headerWithStyleClaude: number;
   
   if (isHeaderMode && hasStyle) {
-    // Current is header+style - regenerate contracts without style to get accurate count
+    // Current is header+style - recompile contracts without style to get accurate count
     headerWithStyleGPT4 = currentGPT4;
     headerWithStyleClaude = currentClaude;
     
@@ -253,7 +253,7 @@ export async function generateModeComparison(
       checkBundleResults(noStyleBundleResults, 'no-style', options.quiet);
 
     if (noStyleAllFailed) {
-      throw new Error('Failed to generate any no-style bundles for token comparison');
+      throw new Error('Failed to compile any no-style bundles for token comparison');
     }
 
     // Format no-style bundles to get token count
@@ -262,7 +262,7 @@ export async function generateModeComparison(
     headerNoStyleGPT4 = await estimateGPT4Tokens(noStyleOutput);
     headerNoStyleClaude = await estimateClaudeTokens(noStyleOutput);
   } else if (isHeaderMode && !hasStyle) {
-    // Current is header without style - regenerate contracts with style to get accurate count
+    // Current is header without style - recompile contracts with style to get accurate count
     headerNoStyleGPT4 = currentGPT4;
     headerNoStyleClaude = currentClaude;
     
@@ -335,7 +335,7 @@ export async function generateModeComparison(
       checkBundleResults(styleBundleResults, 'style', options.quiet);
 
     if (styleAllFailed) {
-      throw new Error('Failed to generate any style bundles for token comparison');
+      throw new Error('Failed to compile any style bundles for token comparison');
     }
 
     // Format style bundles to get token count

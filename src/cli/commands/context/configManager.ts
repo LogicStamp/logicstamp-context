@@ -59,7 +59,7 @@ export async function setupGitignore(
       }
     }
   } catch (error) {
-    // Silently ignore gitignore errors - not critical to context generation
+    // Silently ignore gitignore errors - not critical to context compilation
     // Users can run `stamp init` manually if needed
   }
 }
@@ -79,7 +79,7 @@ export async function setupLLMContext(
       console.log('\n📝 Created LLM_CONTEXT.md');
     }
   } catch (error) {
-    // Silently ignore LLM_CONTEXT.md errors - not critical to context generation
+    // Silently ignore LLM_CONTEXT.md errors - not critical to context compilation
   }
 }
 

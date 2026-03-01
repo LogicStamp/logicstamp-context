@@ -44,7 +44,7 @@ export function generateStatsOutput(
     totalComponents: contracts.length,
     rootComponents: manifest.graph.roots.length,
     leafComponents: manifest.graph.leaves.length,
-    bundlesGenerated: bundles.length,
+    bundlesCompiled: bundles.length,
     totalNodes: stats.totalNodes,
     totalEdges: stats.totalEdges,
     missingDependencies: stats.totalMissing,
@@ -63,7 +63,7 @@ export function generateStatsOutput(
 
 /**
  * Generate summary output for console
- * Uses accurate token counting (regenerates contracts) like --compare-modes
+ * Uses accurate token counting (recompiles contracts) like --compare-modes
  */
 export async function generateSummary(
   contracts: UIFContract[],
@@ -95,7 +95,7 @@ export async function generateSummary(
   console.log(`   Total components: ${contracts.length}`);
   console.log(`   Root components: ${manifest.graph.roots.length}`);
   console.log(`   Leaf components: ${manifest.graph.leaves.length}`);
-  console.log(`   Bundles generated: ${bundles.length}`);
+  console.log(`   Bundles compiled: ${bundles.length}`);
   console.log(`   Total nodes in context: ${stats.totalNodes}`);
   console.log(`   Total edges: ${stats.totalEdges}`);
   console.log(`   Missing dependencies: ${stats.totalMissing}`);
@@ -113,7 +113,7 @@ export async function generateSummary(
     modeLabel = options.includeCode === 'full' ? 'full+style' : options.includeCode;
   }
   
-  // Calculate header token estimates (use estimates for performance, accurate regeneration only in --compare-modes)
+  // Calculate header token estimates (use estimates for performance, accurate recompilation only in --compare-modes)
   let headerNoStyleGPT4: number;
   let headerNoStyleClaude: number;
   let headerWithStyleGPT4: number;

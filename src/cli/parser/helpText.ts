@@ -12,12 +12,12 @@ export function getMainHelp(): string {
 USAGE:
   stamp init [path]                    Initialize LogicStamp in a project
   stamp context [path] [options]       Compile context
-  stamp context style [path] [options] Generate context with style metadata
+  stamp context style [path] [options] Compile context with style metadata
   stamp context validate [file]        Validate context file
-  stamp context compare [options]      Detect drift (auto-generates fresh context)
-  stamp context clean [path] [options] Remove all generated context artifacts
+  stamp context compare [options]      Detect drift (auto-compiles fresh context)
+  stamp context clean [path] [options] Remove all compiled context artifacts
   stamp ignore <path> [path2] ...      Add files/folders to .stampignore
-  stamp security scan [path] [options] Scan for secrets and generate report
+  stamp security scan [path] [options] Scan for secrets and compile report
   stamp security --hard-reset [options] Delete security report
 
 OPTIONS:
@@ -29,10 +29,10 @@ EXAMPLES:
     Set up LogicStamp in current directory (creates/updates .gitignore)
 
   stamp context
-    Generate context.json for current directory
+    Compile context.json for current directory
 
   stamp context style
-    Generate context with style metadata (Tailwind, SCSS, animations, layout)
+    Compile context with style metadata (Tailwind, SCSS, animations, layout)
 
   stamp context --include-style
     Same as 'stamp context style' (alternative syntax)
@@ -73,7 +73,7 @@ export function getSecurityHelp(): string {
 ╰─────────────────────────────────────────────────╯
 
 USAGE:
-  stamp security scan [path] [options]       Scan for secrets and generate report
+  stamp security scan [path] [options]       Scan for secrets and compile report
   stamp security --hard-reset [path] [options] Delete security report
 
 COMMANDS:
@@ -112,7 +112,7 @@ export function getStyleHelp(): string {
   return `
 ╭─────────────────────────────────────────────────╮
 │  Stamp Context Style - Compile with Style       │
-│  Generate context with style metadata           │
+│  Compile context with style metadata           │
 │  (Tailwind, SCSS, animations, layout)           │
 ╰─────────────────────────────────────────────────╯
 
@@ -138,7 +138,7 @@ OPTIONS:
   --compare-modes                     Show detailed mode comparison table
   --skip-gitignore                    Skip .gitignore setup (never prompt or modify)
   --quiet, -q                         Suppress verbose output (show only errors)
-  --watch, -w                         Watch for file changes and regenerate automatically
+  --watch, -w                         Watch for file changes and recompile automatically
                                       Tip: Pass a subdirectory path to watch only that folder
   --strict-watch                      Enable strict watch mode - track breaking changes and
                                       violations during watch mode. Exits with code 1 if
@@ -211,7 +211,7 @@ OPTIONS:
   --compare-modes                     Show detailed mode comparison table
   --skip-gitignore                    Skip .gitignore setup (never prompt or modify)
   --quiet, -q                         Suppress verbose output (show only errors)
-  --watch, -w                         Watch for file changes and regenerate automatically
+  --watch, -w                         Watch for file changes and recompile automatically
   --strict-watch                      Enable strict watch mode - track breaking changes and
                                       violations during watch mode. Exits with code 1 if
                                       errors detected. Reports saved to .logicstamp/
@@ -310,7 +310,7 @@ OPTIONS:
   --approve                           Auto-approve updates (non-interactive, CI-safe)
   --clean-orphaned                    Auto-delete orphaned files with --approve
   --stats                             Show token count statistics per folder
-  --skip-gitignore                    Skip .gitignore setup when generating fresh context (auto-mode only)
+  --skip-gitignore                    Skip .gitignore setup when compiling fresh context (auto-mode only)
   --quiet                             Show only diffs (suppress summaries, PASS folders, and token analysis)
   -h, --help                          Show this help
 
@@ -330,7 +330,7 @@ COMPARISON MODES:
 
 EXAMPLES:
   stamp context compare
-    Auto-mode: generate fresh context, compare ALL files
+    Auto-mode: compile fresh context, compare ALL files
     → Shows folder-level and component-level changes
     → Interactive: prompts Y/N to update if drift detected
     → CI: exits with code 1 if drift detected (no prompt)
@@ -385,7 +385,7 @@ export function getCleanHelp(): string {
   return `
 ╭─────────────────────────────────────────────────╮
 │  Stamp Context Clean - Remove Artifacts        │
-│  Delete all generated context files            │
+│  Delete all compiled context files             │
 ╰─────────────────────────────────────────────────╯
 
 USAGE:

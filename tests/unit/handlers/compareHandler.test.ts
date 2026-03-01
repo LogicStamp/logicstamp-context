@@ -252,7 +252,7 @@ describe('handleCompare', () => {
       await expect(handleCompare([])).rejects.toThrow('Exit called with code 1');
 
       expect(console.error).toHaveBeenCalledWith(
-        '❌ context_main.json not found. Run "stamp context" first to generate context files.'
+        '❌ context_main.json not found. Run "stamp context" first to compile context files.'
       );
       expect(exitSpy).toHaveBeenCalledWith(1);
     });
@@ -364,11 +364,11 @@ describe('handleCompare', () => {
       expect(process.exit).toHaveBeenCalledWith(0);
     });
 
-    it('should handle error during context generation', async () => {
+    it('should handle error during context compilation', async () => {
       mockExistsSync.mockReturnValue(true);
       mockMkdir.mockResolvedValue(undefined);
       mockRm.mockResolvedValue(undefined);
-      mockContextCommand.mockRejectedValue(new Error('Context generation failed'));
+      mockContextCommand.mockRejectedValue(new Error('Context compilation failed'));
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -385,7 +385,7 @@ describe('handleCompare', () => {
 
       await expect(handleCompare([])).rejects.toThrow('Exit called with code 1');
 
-      expect(console.error).toHaveBeenCalledWith('❌ Compare failed:', 'Context generation failed');
+      expect(console.error).toHaveBeenCalledWith('❌ Compare failed:', 'Context compilation failed');
       expect(exitSpy).toHaveBeenCalledWith(1);
     });
 

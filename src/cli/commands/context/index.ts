@@ -17,7 +17,7 @@
  *
  * Watch mode modules:
  * - incrementalWatch: Incremental rebuild cache and utilities
- * - watchMode: File watching and automatic regeneration
+ * - watchMode: File watching and automatic recompilation
  * - watchDiff: Contract and bundle comparison utilities
  */
 

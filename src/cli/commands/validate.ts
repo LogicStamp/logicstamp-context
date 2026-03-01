@@ -25,7 +25,7 @@ export interface ValidationResult {
 }
 
 /**
- * Validate bundles in memory (for auto-validation during generation)
+ * Validate bundles in memory (for auto-validation during compilation)
  */
 export function validateBundles(bundles: LogicStampBundle[]): ValidationResult {
   const result: ValidationResult = {
@@ -164,7 +164,7 @@ async function loadIndex(indexPath: string): Promise<LogicStampIndex> {
     if (index.schemaVersion === '0.1') {
       console.warn(`⚠️  Warning: context_main.json uses schema version 0.1 (legacy format).`);
       console.warn(``);
-      console.warn(`   Consider regenerating with "stamp context" to upgrade to version 0.2 (relative paths).`);
+      console.warn(`   Consider recompiling with "stamp context" to upgrade to version 0.2 (relative paths).`);
       console.warn(``);
       console.warn(`   Optional cleanup: "stamp context clean --all --yes".`);
       console.warn(``);

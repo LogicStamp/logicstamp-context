@@ -1,5 +1,5 @@
 /**
- * Handler for context/generate command
+ * Handler for context/compile command
  */
 
 import { contextCommand, type ContextOptions } from '../commands/context.js';
@@ -23,7 +23,7 @@ export async function handleGenerate(args: string[]): Promise<void> {
     await contextCommand(options);
   } catch (error) {
     const err = error as Error;
-    console.error('❌ Context generation failed:', err.message);
+    console.error('❌ Context compilation failed:', err.message);
     console.error(err.stack);
     await gracefulShutdown(1);
   }

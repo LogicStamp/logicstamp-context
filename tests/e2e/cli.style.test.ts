@@ -378,7 +378,7 @@ describe('CLI Style Command Tests', () => {
       const { stdout } = await execAsync('node dist/cli/stamp.js context style --help');
 
       expect(stdout).toContain('Stamp Context Style');
-      expect(stdout).toContain('Generate context with style metadata');
+      expect(stdout).toContain('Compile context with style metadata');
       expect(stdout).toContain('stamp context style');
       expect(stdout).toContain('Tailwind');
       expect(stdout).toContain('SCSS');
