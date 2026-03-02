@@ -767,8 +767,8 @@ describe('incrementalRebuild', () => {
 
       const existingContract = createMockContract('src/App.tsx', 'hash-100');
       mockCache.contracts.set('hash-100', existingContract);
-      // Cache style for the NEW hash that will be used
-      mockCache.styleCache.set('new-hash', cachedStyle);
+      // Cache style for the NEW hash that will be used (key includes styleMode)
+      mockCache.styleCache.set('new-hash:lean', cachedStyle);
 
       vi.mocked(readFileWithText).mockResolvedValue({ text: 'x'.repeat(100), path: 'src/App.tsx' });
       vi.mocked(fileHash).mockReturnValue('new-hash');
@@ -801,8 +801,8 @@ describe('incrementalRebuild', () => {
 
       // Should use cached style, not call extractStyleMetadata
       expect(extractStyleMetadata).not.toHaveBeenCalled();
-      // buildContract should be called with cached style
-      expect(buildContract).toHaveBeenCalledWith(
+      // buildContract should be called with cached style - check last call to avoid flakiness
+      expect(buildContract).toHaveBeenLastCalledWith(
         'src/App.tsx',
         expect.any(Object),
         expect.objectContaining({
@@ -859,8 +859,8 @@ describe('incrementalRebuild', () => {
 
       // Should call extractStyleMetadata
       expect(extractStyleMetadata).toHaveBeenCalled();
-      // Should cache the extracted style
-      expect(mockCache.styleCache.get('new-hash')).toEqual(extractedStyle);
+      // Should cache the extracted style (key includes styleMode)
+      expect(mockCache.styleCache.get('new-hash:lean')).toEqual(extractedStyle);
     });
 
     it('should handle style extraction errors gracefully', async () => {
@@ -904,8 +904,172 @@ describe('incrementalRebuild', () => {
         )
       ).resolves.not.toThrow();
 
-      // Should call buildContract without styleMetadata
-      expect(buildContract).toHaveBeenCalledWith(
+      // Should call buildContract without styleMetadata - check last call to avoid flakiness
+      expect(buildContract).toHaveBeenLastCalledWith(
+        'src/App.tsx',
+        expect.any(Object),
+        expect.objectContaining({
+          styleMetadata: undefined,
+        })
+      );
+    });
+
+    it('should clean up old style cache entries when file hash changes', async () => {
+      // Set up: file has old hash with cached style
+      const oldContract = createMockContract('src/App.tsx', 'old-hash');
+      const oldStyle = {
+        classes: ['old-class'],
+        animations: [],
+        colors: [],
+        spacing: [],
+      } as any;
+      
+      mockCache.contracts.set('old-hash', oldContract);
+      mockCache.styleCache.set('old-hash:lean', oldStyle); // Old style cached (key includes styleMode)
+
+      // File changes to new hash
+      vi.mocked(readFileWithText).mockResolvedValue({ text: 'new content', path: 'src/App.tsx' });
+      vi.mocked(fileHash).mockReturnValue('new-hash');
+
+      vi.mocked(extractFromFile).mockResolvedValue({
+        kind: 'react:component',
+        exports: { named: ['App'] },
+        components: [],
+        functions: [],
+        hooks: [],
+        variables: [],
+        imports: [],
+        props: {},
+        emits: {},
+        state: {},
+        jsxRoutes: [],
+      });
+
+      const newStyle = {
+        classes: ['new-class'],
+        animations: [],
+        colors: [],
+        spacing: [],
+      } as any;
+      vi.mocked(extractStyleMetadata).mockResolvedValue(newStyle);
+
+      const newContract = createMockContract('src/App.tsx', 'new-hash');
+      vi.mocked(buildContract).mockReturnValue({ contract: newContract, violations: [] });
+
+      vi.mocked(buildDependencyGraph).mockReturnValue(mockCache.manifest!);
+
+      // Create bundle with the new contract (matching the new hash)
+      // The cache is synced from bundle contents, so the bundle must have the correct contract
+      const newBundle: LogicStampBundle = {
+        type: 'LogicStampBundle',
+        schemaVersion: '0.1',
+        entryId: 'src/App.tsx',
+        depth: 2,
+        createdAt: new Date().toISOString(),
+        bundleHash: 'new-bundleHash',
+        graph: {
+          nodes: [{
+            entryId: 'src/App.tsx',
+            contract: newContract, // Use the new contract with new-hash
+          }],
+          edges: [],
+        },
+        meta: {
+          missing: [],
+          source: 'test',
+        },
+      };
+      vi.mocked(pack).mockResolvedValue(newBundle);
+
+      await incrementalRebuild(
+        ['src/App.tsx'],
+        mockCache,
+        { out: '.', depth: 2, includeStyle: true } as any,
+        '/project'
+      );
+
+      // Old style cache entry should be removed (key includes styleMode)
+      expect(mockCache.styleCache.has('old-hash:lean')).toBe(false);
+      // New style should be cached (key includes styleMode)
+      expect(mockCache.styleCache.get('new-hash:lean')).toEqual(newStyle);
+      // Old contract should be removed
+      expect(mockCache.contracts.has('old-hash')).toBe(false);
+      // New contract should be present
+      expect(mockCache.contracts.has('new-hash')).toBe(true);
+    });
+
+    it('should cache failed style extraction results to avoid retrying', async () => {
+      const existingContract = createMockContract('src/App.tsx', 'hash-100');
+      mockCache.contracts.set('hash-100', existingContract);
+
+      vi.mocked(readFileWithText).mockResolvedValue({ text: 'content', path: 'src/App.tsx' });
+      vi.mocked(fileHash).mockReturnValue('hash-100');
+
+      vi.mocked(extractFromFile).mockResolvedValue({
+        kind: 'react:component',
+        exports: { named: ['App'] },
+        components: [],
+        functions: [],
+        hooks: [],
+        variables: [],
+        imports: [],
+        props: {},
+        emits: {},
+        state: {},
+        jsxRoutes: [],
+      });
+
+      // First call: style extraction fails
+      vi.mocked(extractStyleMetadata).mockRejectedValueOnce(new Error('Style extraction failed'));
+
+      const contract = createMockContract('src/App.tsx', 'hash-100');
+      vi.mocked(buildContract).mockReturnValue({ contract, violations: [] });
+      vi.mocked(buildDependencyGraph).mockReturnValue(mockCache.manifest!);
+
+      // First rebuild - should attempt extraction and cache failure
+      await incrementalRebuild(
+        ['src/App.tsx'],
+        mockCache,
+        { out: '.', depth: 2, includeStyle: true } as any,
+        '/project'
+      );
+
+      // Should have cached null (sentinel for failed extraction) (key includes styleMode)
+      expect(mockCache.styleCache.has('hash-100:lean')).toBe(true);
+      expect(mockCache.styleCache.get('hash-100:lean')).toBe(null);
+      expect(extractStyleMetadata).toHaveBeenCalledTimes(1);
+
+      // Second rebuild - should use cached failure, not retry
+      vi.clearAllMocks();
+      vi.mocked(readFileWithText).mockResolvedValue({ text: 'content', path: 'src/App.tsx' });
+      vi.mocked(fileHash).mockReturnValue('hash-100');
+      vi.mocked(extractFromFile).mockResolvedValue({
+        kind: 'react:component',
+        exports: { named: ['App'] },
+        components: [],
+        functions: [],
+        hooks: [],
+        variables: [],
+        imports: [],
+        props: {},
+        emits: {},
+        state: {},
+        jsxRoutes: [],
+      });
+      vi.mocked(buildContract).mockReturnValue({ contract, violations: [] });
+      vi.mocked(buildDependencyGraph).mockReturnValue(mockCache.manifest!);
+
+      await incrementalRebuild(
+        ['src/App.tsx'],
+        mockCache,
+        { out: '.', depth: 2, includeStyle: true } as any,
+        '/project'
+      );
+
+      // Should not retry extraction (cached failure)
+      expect(extractStyleMetadata).not.toHaveBeenCalled();
+      // buildContract should be called with undefined styleMetadata (null converted back)
+      expect(buildContract).toHaveBeenLastCalledWith(
         'src/App.tsx',
         expect.any(Object),
         expect.objectContaining({
