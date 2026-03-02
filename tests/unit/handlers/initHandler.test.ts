@@ -100,5 +100,125 @@ describe('initHandler', () => {
       );
       expect(process.exit).toHaveBeenCalledWith(1);
     });
+
+    // ============================================================================
+    // BRANCH COVERAGE TESTS - Testing conditional branches
+    // ============================================================================
+
+    it('should handle help flag check with --help first', async () => {
+      const initSpy = vi.spyOn(initCommand, 'init').mockResolvedValue(undefined);
+      const getHelpSpy = vi.spyOn(parser, 'getInitHelp').mockReturnValue('Init help text');
+      const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
+        throw new Error(`Exit called with code ${code}`);
+      });
+
+      await expect(handleInit(['--help', '--other'])).rejects.toThrow('Exit called with code 0');
+
+      expect(getHelpSpy).toHaveBeenCalled();
+      expect(console.log).toHaveBeenCalledWith('Init help text');
+      expect(exitSpy).toHaveBeenCalledWith(0);
+      // Should not call init when help is shown
+      expect(initSpy).not.toHaveBeenCalled();
+    });
+
+    it('should handle help flag check with -h first', async () => {
+      const getHelpSpy = vi.spyOn(parser, 'getInitHelp').mockReturnValue('Init help text');
+      const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
+        throw new Error(`Exit called with code ${code}`);
+      });
+
+      await expect(handleInit(['-h', '--other'])).rejects.toThrow('Exit called with code 0');
+
+      expect(getHelpSpy).toHaveBeenCalled();
+      expect(console.log).toHaveBeenCalledWith('Init help text');
+      expect(exitSpy).toHaveBeenCalledWith(0);
+    });
+
+    it('should handle help flag in middle of args', async () => {
+      const getHelpSpy = vi.spyOn(parser, 'getInitHelp').mockReturnValue('Init help text');
+      const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
+        throw new Error(`Exit called with code ${code}`);
+      });
+
+      await expect(handleInit(['arg1', '--help', 'arg2'])).rejects.toThrow('Exit called with code 0');
+
+      expect(getHelpSpy).toHaveBeenCalled();
+      expect(exitSpy).toHaveBeenCalledWith(0);
+    });
+
+    it('should handle help flag at end of args', async () => {
+      const getHelpSpy = vi.spyOn(parser, 'getInitHelp').mockReturnValue('Init help text');
+      const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
+        throw new Error(`Exit called with code ${code}`);
+      });
+
+      await expect(handleInit(['arg1', 'arg2', '--help'])).rejects.toThrow('Exit called with code 0');
+
+      expect(getHelpSpy).toHaveBeenCalled();
+      expect(exitSpy).toHaveBeenCalledWith(0);
+    });
+
+    it('should not show help when help flags are not present', async () => {
+      const initSpy = vi.spyOn(initCommand, 'init').mockResolvedValue(undefined);
+      const getHelpSpy = vi.spyOn(parser, 'getInitHelp').mockReturnValue('Init help text');
+      vi.spyOn(parser, 'parseInitArgs').mockReturnValue({} as any);
+
+      await handleInit(['arg1', 'arg2']);
+
+      expect(getHelpSpy).not.toHaveBeenCalled();
+      expect(console.log).not.toHaveBeenCalledWith('Init help text');
+      expect(initSpy).toHaveBeenCalled();
+    });
+
+    it('should handle empty args array', async () => {
+      const initSpy = vi.spyOn(initCommand, 'init').mockResolvedValue(undefined);
+      vi.spyOn(parser, 'parseInitArgs').mockReturnValue({} as any);
+
+      await handleInit([]);
+
+      expect(initSpy).toHaveBeenCalledWith({});
+    });
+
+    it('should handle error with non-Error object', async () => {
+      const error = 'String error';
+      vi.spyOn(initCommand, 'init').mockRejectedValue(error);
+      vi.spyOn(parser, 'parseInitArgs').mockReturnValue({} as any);
+
+      await handleInit([]);
+
+      // Should handle gracefully - error.message would be undefined for string
+      expect(console.error).toHaveBeenCalled();
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+    it('should handle error with Error object that has message', async () => {
+      const error = new Error('Custom error message');
+      vi.spyOn(initCommand, 'init').mockRejectedValue(error);
+      vi.spyOn(parser, 'parseInitArgs').mockReturnValue({} as any);
+
+      await handleInit([]);
+
+      expect(console.error).toHaveBeenCalledWith(
+        '❌ Initialization failed:',
+        'Custom error message'
+      );
+      expect(process.exit).toHaveBeenCalledWith(1);
+    });
+
+    it('should parse args correctly before calling init', async () => {
+      const initSpy = vi.spyOn(initCommand, 'init').mockResolvedValue(undefined);
+      const parseSpy = vi.spyOn(parser, 'parseInitArgs').mockReturnValue({
+        targetDir: '/custom',
+        skipGitignore: true,
+      } as any);
+
+      await handleInit(['--skip-gitignore', '/custom']);
+
+      expect(parseSpy).toHaveBeenCalledWith(['--skip-gitignore', '/custom']);
+      expect(initSpy).toHaveBeenCalledWith({
+        targetDir: '/custom',
+        skipGitignore: true,
+      });
+    });
   });
 });

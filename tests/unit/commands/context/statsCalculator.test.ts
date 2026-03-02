@@ -17,6 +17,7 @@ import {
   generateStatsOutput,
   generateSummary,
 } from '../../../../src/cli/commands/context/statsCalculator.js';
+import * as tokens from '../../../../src/utils/tokens.js';
 
 describe('statsCalculator', () => {
   let consoleSpy: ReturnType<typeof vi.spyOn>;
@@ -24,6 +25,8 @@ describe('statsCalculator', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    // Reset tokenizer status mock to default (both available)
+    vi.mocked(tokens.getTokenizerStatus).mockResolvedValue({ gpt4: true, claude: true });
   });
 
   afterEach(() => {
@@ -65,13 +68,13 @@ describe('statsCalculator', () => {
     it('should sum missing dependencies across all bundles', () => {
       const bundle1 = createMockBundle('src/App.tsx');
       bundle1.meta.missing = [
-        { name: 'lodash', reason: 'external', requestedBy: 'src/App.tsx' },
+        { name: 'lodash', reason: 'external', referencedBy: 'src/App.tsx' },
       ];
 
       const bundle2 = createMockBundle('src/Card.tsx');
       bundle2.meta.missing = [
-        { name: 'react-icons', reason: 'external', requestedBy: 'src/Card.tsx' },
-        { name: 'date-fns', reason: 'external', requestedBy: 'src/Card.tsx' },
+        { name: 'react-icons', reason: 'external', referencedBy: 'src/Card.tsx' },
+        { name: 'date-fns', reason: 'external', referencedBy: 'src/Card.tsx' },
       ];
 
       const stats = calculateStats([bundle1, bundle2]);
@@ -249,7 +252,7 @@ describe('statsCalculator', () => {
       const manifest = createMockManifest(['src/App.tsx']);
       const bundle = createMockBundle('src/App.tsx');
       bundle.meta.missing = [
-        { name: 'lodash', reason: 'external', requestedBy: 'src/App.tsx' },
+        { name: 'lodash', reason: 'external', referencedBy: 'src/App.tsx' },
       ];
       const bundles = [bundle];
       const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 1 };
@@ -306,6 +309,485 @@ describe('statsCalculator', () => {
 
       const calls = consoleSpy.mock.calls.map(c => c[0]);
       expect(calls.some((c: string) => c.includes('header+style'))).toBe(true);
+    });
+
+    describe('mode label branches', () => {
+      it('should use "full+style" label when includeCode is "full"', async () => {
+        const contracts = [createMockContract('src/App.tsx')];
+        const manifest = createMockManifest(['src/App.tsx']);
+        const bundles = [createMockBundle('src/App.tsx')];
+        const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
+        const tokenEstimates = createMockTokenEstimates();
+
+        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
+          includeCode: 'full',
+          includeStyle: false,
+          files: ['src/App.tsx'],
+          projectRoot: '/project',
+          currentGPT4: 1000,
+          currentClaude: 1100,
+          totalSourceSize: 5000,
+          packOptions: {
+            depth: 2,
+            maxNodes: 30,
+            format: 'json',
+            hashLock: false,
+            strict: false,
+            allowMissing: true,
+            predictBehavior: false,
+          },
+        });
+
+        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        expect(calls.some((c: string) => c.includes('full+style mode'))).toBe(true);
+      });
+
+      it('should use "none" label when includeCode is "none"', async () => {
+        const contracts = [createMockContract('src/App.tsx')];
+        const manifest = createMockManifest(['src/App.tsx']);
+        const bundles = [createMockBundle('src/App.tsx')];
+        const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
+        const tokenEstimates = createMockTokenEstimates();
+
+        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
+          includeCode: 'none',
+          includeStyle: false,
+          files: ['src/App.tsx'],
+          projectRoot: '/project',
+          currentGPT4: 1000,
+          currentClaude: 1100,
+          totalSourceSize: 5000,
+          packOptions: {
+            depth: 2,
+            maxNodes: 30,
+            format: 'json',
+            hashLock: false,
+            strict: false,
+            allowMissing: true,
+            predictBehavior: false,
+          },
+        });
+
+        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        expect(calls.some((c: string) => c.includes('none mode'))).toBe(true);
+      });
+    });
+
+    describe('raw source estimation', () => {
+      it('should use default sourceTokens in non-header mode', async () => {
+        const contracts = [createMockContract('src/App.tsx')];
+        const manifest = createMockManifest(['src/App.tsx']);
+        const bundles = [createMockBundle('src/App.tsx')];
+        const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
+        const tokenEstimates = createMockTokenEstimates({
+          sourceTokensGPT4: 5000,
+          sourceTokensClaude: 5500,
+        });
+
+        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
+          includeCode: 'none',
+          includeStyle: false,
+          files: ['src/App.tsx'],
+          projectRoot: '/project',
+          currentGPT4: 1000,
+          currentClaude: 1100,
+          totalSourceSize: 5000,
+          packOptions: {
+            depth: 2,
+            maxNodes: 30,
+            format: 'json',
+            hashLock: false,
+            strict: false,
+            allowMissing: true,
+            predictBehavior: false,
+          },
+        });
+
+        // In non-header mode, estimatedRawSource should use sourceTokensGPT4/Claude
+        // Verify that the raw source value in output matches sourceTokensGPT4
+        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const rawSourceLine = calls.find((c: string) => c.includes('Raw source'));
+        expect(rawSourceLine).toBeDefined();
+        // The raw source should show the sourceTokensGPT4 value (5000)
+        expect(rawSourceLine).toContain('5,000');
+      });
+    });
+
+    describe('header token estimates', () => {
+      it('should use estimates for non-header modes', async () => {
+        const contracts = [createMockContract('src/App.tsx')];
+        const manifest = createMockManifest(['src/App.tsx']);
+        const bundles = [createMockBundle('src/App.tsx')];
+        const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
+        const tokenEstimates = createMockTokenEstimates();
+
+        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
+          includeCode: 'none',
+          includeStyle: false,
+          files: ['src/App.tsx'],
+          projectRoot: '/project',
+          currentGPT4: 1000,
+          currentClaude: 1100,
+          totalSourceSize: 5000,
+          packOptions: {
+            depth: 2,
+            maxNodes: 30,
+            format: 'json',
+            hashLock: false,
+            strict: false,
+            allowMissing: true,
+            predictBehavior: false,
+          },
+        });
+
+        // In non-header mode, headerNoStyleGPT4 = currentGPT4 * 0.75 = 750
+        // headerWithStyleGPT4 = currentGPT4 * 0.85 = 850
+        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const headerLine = calls.find((c: string) => c.includes('Header'));
+        expect(headerLine).toBeDefined();
+        // Verify the header estimate is shown (750)
+        expect(headerLine).toContain('750');
+      });
+    });
+
+    describe('savings calculation', () => {
+      it('should return "0" when estimatedRawSourceGPT4 is 0', async () => {
+        const contracts = [createMockContract('src/App.tsx')];
+        const manifest = createMockManifest(['src/App.tsx']);
+        const bundles = [createMockBundle('src/App.tsx')];
+        const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
+        const tokenEstimates = createMockTokenEstimates({
+          sourceTokensGPT4: 0,
+          sourceTokensClaude: 0,
+        });
+
+        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
+          includeCode: 'none',
+          includeStyle: false,
+          files: ['src/App.tsx'],
+          projectRoot: '/project',
+          currentGPT4: 1000,
+          currentClaude: 1100,
+          totalSourceSize: 5000,
+          packOptions: {
+            depth: 2,
+            maxNodes: 30,
+            format: 'json',
+            hashLock: false,
+            strict: false,
+            allowMissing: true,
+            predictBehavior: false,
+          },
+        });
+
+        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const headerLine = calls.find((c: string) => c.includes('Header') && c.includes('%'));
+        expect(headerLine).toBeDefined();
+        // When estimatedRawSourceGPT4 is 0, savings should be "0%"
+        expect(headerLine).toContain('0%');
+      });
+
+      it('should return "0" when estimatedRawSourceGPT4 is negative', async () => {
+        const contracts = [createMockContract('src/App.tsx')];
+        const manifest = createMockManifest(['src/App.tsx']);
+        const bundles = [createMockBundle('src/App.tsx')];
+        const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
+        // Note: In practice, sourceTokensGPT4 shouldn't be negative, but we test the branch
+        const tokenEstimates = createMockTokenEstimates({
+          sourceTokensGPT4: -1,
+          sourceTokensClaude: -1,
+        });
+
+        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
+          includeCode: 'none',
+          includeStyle: false,
+          files: ['src/App.tsx'],
+          projectRoot: '/project',
+          currentGPT4: 1000,
+          currentClaude: 1100,
+          totalSourceSize: 5000,
+          packOptions: {
+            depth: 2,
+            maxNodes: 30,
+            format: 'json',
+            hashLock: false,
+            strict: false,
+            allowMissing: true,
+            predictBehavior: false,
+          },
+        });
+
+        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const headerLine = calls.find((c: string) => c.includes('Header') && c.includes('%'));
+        expect(headerLine).toBeDefined();
+        // When estimatedRawSourceGPT4 is negative, savings should be "0%"
+        expect(headerLine).toContain('0%');
+      });
+
+      it('should return "0" for headerStyleSavings when estimatedRawSourceGPT4 is 0', async () => {
+        const contracts = [createMockContract('src/App.tsx')];
+        const manifest = createMockManifest(['src/App.tsx']);
+        const bundles = [createMockBundle('src/App.tsx')];
+        const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
+        const tokenEstimates = createMockTokenEstimates({
+          sourceTokensGPT4: 0,
+          sourceTokensClaude: 0,
+        });
+
+        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
+          includeCode: 'none',
+          includeStyle: false,
+          files: ['src/App.tsx'],
+          projectRoot: '/project',
+          currentGPT4: 1000,
+          currentClaude: 1100,
+          totalSourceSize: 5000,
+          packOptions: {
+            depth: 2,
+            maxNodes: 30,
+            format: 'json',
+            hashLock: false,
+            strict: false,
+            allowMissing: true,
+            predictBehavior: false,
+          },
+        });
+
+        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const headerStyleLine = calls.find((c: string) => c.includes('Header+style') && c.includes('%'));
+        expect(headerStyleLine).toBeDefined();
+        // When estimatedRawSourceGPT4 is 0, headerStyleSavings should be "0%"
+        expect(headerStyleLine).toContain('0%');
+      });
+    });
+
+    describe('tokenizer status', () => {
+      it('should show tip when GPT-4 tokenizer is missing', async () => {
+        vi.mocked(tokens.getTokenizerStatus).mockResolvedValue({ gpt4: false, claude: true });
+
+        const contracts = [createMockContract('src/App.tsx')];
+        const manifest = createMockManifest(['src/App.tsx']);
+        const bundles = [createMockBundle('src/App.tsx')];
+        const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
+        const tokenEstimates = createMockTokenEstimates();
+
+        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
+          includeCode: 'header',
+          includeStyle: false,
+          files: ['src/App.tsx'],
+          projectRoot: '/project',
+          currentGPT4: 1000,
+          currentClaude: 1100,
+          totalSourceSize: 5000,
+          packOptions: {
+            depth: 2,
+            maxNodes: 30,
+            format: 'json',
+            hashLock: false,
+            strict: false,
+            allowMissing: true,
+            predictBehavior: false,
+          },
+        });
+
+        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const tipLine = calls.find((c: string) => c.includes('💡 Tip'));
+        expect(tipLine).toBeDefined();
+        expect(tipLine).toContain('@dqbd/tiktoken (GPT-4)');
+        expect(tipLine).not.toContain('@anthropic-ai/tokenizer (Claude)');
+      });
+
+      it('should show tip when Claude tokenizer is missing', async () => {
+        vi.mocked(tokens.getTokenizerStatus).mockResolvedValue({ gpt4: true, claude: false });
+
+        const contracts = [createMockContract('src/App.tsx')];
+        const manifest = createMockManifest(['src/App.tsx']);
+        const bundles = [createMockBundle('src/App.tsx')];
+        const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
+        const tokenEstimates = createMockTokenEstimates();
+
+        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
+          includeCode: 'header',
+          includeStyle: false,
+          files: ['src/App.tsx'],
+          projectRoot: '/project',
+          currentGPT4: 1000,
+          currentClaude: 1100,
+          totalSourceSize: 5000,
+          packOptions: {
+            depth: 2,
+            maxNodes: 30,
+            format: 'json',
+            hashLock: false,
+            strict: false,
+            allowMissing: true,
+            predictBehavior: false,
+          },
+        });
+
+        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const tipLine = calls.find((c: string) => c.includes('💡 Tip'));
+        expect(tipLine).toBeDefined();
+        expect(tipLine).toContain('@anthropic-ai/tokenizer (Claude)');
+        expect(tipLine).not.toContain('@dqbd/tiktoken (GPT-4)');
+      });
+
+      it('should show tip when both tokenizers are missing', async () => {
+        vi.mocked(tokens.getTokenizerStatus).mockResolvedValue({ gpt4: false, claude: false });
+
+        const contracts = [createMockContract('src/App.tsx')];
+        const manifest = createMockManifest(['src/App.tsx']);
+        const bundles = [createMockBundle('src/App.tsx')];
+        const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
+        const tokenEstimates = createMockTokenEstimates();
+
+        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
+          includeCode: 'header',
+          includeStyle: false,
+          files: ['src/App.tsx'],
+          projectRoot: '/project',
+          currentGPT4: 1000,
+          currentClaude: 1100,
+          totalSourceSize: 5000,
+          packOptions: {
+            depth: 2,
+            maxNodes: 30,
+            format: 'json',
+            hashLock: false,
+            strict: false,
+            allowMissing: true,
+            predictBehavior: false,
+          },
+        });
+
+        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const tipLine = calls.find((c: string) => c.includes('💡 Tip'));
+        expect(tipLine).toBeDefined();
+        expect(tipLine).toContain('@dqbd/tiktoken (GPT-4)');
+        expect(tipLine).toContain('@anthropic-ai/tokenizer (Claude)');
+        expect(tipLine).toContain('and/or');
+      });
+
+      it('should use "approximation" method when tokenizers are missing', async () => {
+        vi.mocked(tokens.getTokenizerStatus).mockResolvedValue({ gpt4: false, claude: false });
+
+        const contracts = [createMockContract('src/App.tsx')];
+        const manifest = createMockManifest(['src/App.tsx']);
+        const bundles = [createMockBundle('src/App.tsx')];
+        const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
+        const tokenEstimates = createMockTokenEstimates();
+
+        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
+          includeCode: 'header',
+          includeStyle: false,
+          files: ['src/App.tsx'],
+          projectRoot: '/project',
+          currentGPT4: 1000,
+          currentClaude: 1100,
+          totalSourceSize: 5000,
+          packOptions: {
+            depth: 2,
+            maxNodes: 30,
+            format: 'json',
+            hashLock: false,
+            strict: false,
+            allowMissing: true,
+            predictBehavior: false,
+          },
+        });
+
+        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const estimationLine = calls.find((c: string) => c.includes('Token estimation:'));
+        expect(estimationLine).toBeDefined();
+        expect(estimationLine).toContain('approximation');
+        expect(estimationLine).not.toContain('tiktoken');
+        expect(estimationLine).not.toContain('tokenizer');
+      });
+    });
+
+    describe('missing dependencies', () => {
+      it('should show "... and X more" when there are more than 10 missing dependencies', async () => {
+        const contracts = [createMockContract('src/App.tsx')];
+        const manifest = createMockManifest(['src/App.tsx']);
+        const bundle = createMockBundle('src/App.tsx');
+        // Create 15 unique missing dependencies
+        bundle.meta.missing = Array.from({ length: 15 }, (_, i) => ({
+          name: `dependency-${i}`,
+          reason: 'external' as const,
+          referencedBy: 'src/App.tsx',
+        }));
+        const bundles = [bundle];
+        const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 15 };
+        const tokenEstimates = createMockTokenEstimates();
+
+        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
+          includeCode: 'header',
+          includeStyle: false,
+          files: ['src/App.tsx'],
+          projectRoot: '/project',
+          currentGPT4: 1000,
+          currentClaude: 1100,
+          totalSourceSize: 5000,
+          packOptions: {
+            depth: 2,
+            maxNodes: 30,
+            format: 'json',
+            hashLock: false,
+            strict: false,
+            allowMissing: true,
+            predictBehavior: false,
+          },
+        });
+
+        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const moreLine = calls.find((c: string) => c.includes('... and') && c.includes('more'));
+        expect(moreLine).toBeDefined();
+        // Should show "... and 5 more" (15 - 10 = 5)
+        expect(moreLine).toContain('... and 5 more');
+      });
+
+      it('should show exactly 10 dependencies when there are exactly 10', async () => {
+        const contracts = [createMockContract('src/App.tsx')];
+        const manifest = createMockManifest(['src/App.tsx']);
+        const bundle = createMockBundle('src/App.tsx');
+        // Create exactly 10 unique missing dependencies
+        bundle.meta.missing = Array.from({ length: 10 }, (_, i) => ({
+          name: `dependency-${i}`,
+          reason: 'external' as const,
+          referencedBy: 'src/App.tsx',
+        }));
+        const bundles = [bundle];
+        const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 10 };
+        const tokenEstimates = createMockTokenEstimates();
+
+        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
+          includeCode: 'header',
+          includeStyle: false,
+          files: ['src/App.tsx'],
+          projectRoot: '/project',
+          currentGPT4: 1000,
+          currentClaude: 1100,
+          totalSourceSize: 5000,
+          packOptions: {
+            depth: 2,
+            maxNodes: 30,
+            format: 'json',
+            hashLock: false,
+            strict: false,
+            allowMissing: true,
+            predictBehavior: false,
+          },
+        });
+
+        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const moreLine = calls.find((c: string) => c.includes('... and') && c.includes('more'));
+        // Should NOT show "... and X more" when exactly 10
+        expect(moreLine).toBeUndefined();
+        
+        // Count dependency lines
+        const dependencyLines = calls.filter((c: string) => c.trim().startsWith('- dependency-'));
+        expect(dependencyLines.length).toBe(10);
+      });
     });
   });
 });
