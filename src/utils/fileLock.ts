@@ -177,6 +177,9 @@ export async function acquireLock(
         // Lock file exists - check if it's stale
         if (await isLockStale(lockPath, staleThreshold)) {
           await removeStale(lockPath);
+          // Small delay after removing stale lock to let filesystem catch up
+          // Especially important on Windows where file deletion can be asynchronous
+          await new Promise(resolve => setTimeout(resolve, 10));
           // Retry immediately after removing stale lock
           continue;
         }
