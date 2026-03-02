@@ -120,7 +120,7 @@ export async function incrementalRebuild(
       // Extract style if needed (with caching)
       let styleMetadata;
       if (options.includeStyle) {
-        // Check cache first
+        // Check cache first - use currentFileHash to look up cached style
         const cachedStyle = cache.styleCache.get(currentFileHash);
         if (cachedStyle) {
           styleMetadata = cachedStyle;
@@ -138,6 +138,7 @@ export async function incrementalRebuild(
             }
           } catch {
             // Style extraction failed - continue without it
+            styleMetadata = undefined;
           }
         }
       }
@@ -168,6 +169,15 @@ export async function incrementalRebuild(
         const bundlesForComponent = cache.componentToBundles.get(normalizedEntryId) || new Set();
         for (const bundleId of bundlesForComponent) {
           updatedBundles.add(bundleId);
+        }
+        
+        // Also check if this component has its own bundle (root component)
+        // This handles cases where componentToBundles doesn't include the component's own bundle
+        const existingBundle = cache.allBundles.find(
+          b => normalizeEntryId(b.entryId) === normalizedEntryId
+        );
+        if (existingBundle && !bundlesForComponent.has(existingBundle.entryId)) {
+          updatedBundles.add(existingBundle.entryId);
         }
       }
     } catch (error) {
