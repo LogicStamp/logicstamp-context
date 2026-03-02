@@ -516,23 +516,126 @@ The test suite includes **95+ test files** with the following coverage metrics:
 
 | Metric     | Coverage |
 |------------|----------|
-| Statements | 85.19%   |
-| Branches   | 73.71%   |
-| Functions  | 92.04%   |
-| Lines      | 85.34%   |
+| Statements | 88%      |
+| Branches   | 77.21%   |
+| Functions  | 93.9%    |
+| Lines      | 88.19%   |
 
 **Coverage by module:**
 
-| Module                | Statements | Branches | Notes |
-|-----------------------|------------|----------|-------|
-| `core/`               | 97%        | 89%      | AST parsing, contracts, signatures |
-| `extractors/react/`   | 92%        | 77%      | Component, prop, state extraction |
-| `extractors/nest/`    | 92%        | 76%      | NestJS decorator extraction |
-| `extractors/express/` | 87%        | 68%      | Express route extraction |
-| `extractors/styling/` | 85%        | 69%      | Tailwind, SCSS, styled-components |
-| `cli/commands/`       | 87%        | 77%      | CLI command implementations |
-| `cli/handlers/`       | 87%        | 77%      | Command handlers |
-| `utils/`              | 84%        | 77%      | Utilities, config, file operations |
+| Module                | Statements | Branches | Functions | Lines | Notes |
+|-----------------------|------------|----------|-----------|-------|-------|
+| `core/`               | 97.13%     | 89.04%   | 97.18%    | 97.08% | AST parsing, contracts, signatures |
+| `extractors/react/`   | 92.16%     | 76.51%   | 100%      | 92.03% | Component, prop, state extraction |
+| `extractors/nest/`    | 91.89%     | 76.19%   | 100%      | 91.54% | NestJS decorator extraction |
+| `extractors/express/` | 87.14%     | 68.08%   | 100%      | 86.95% | Express route extraction |
+| `extractors/styling/` | 84.93%     | 69.73%   | 98.55%    | 85.44% | Tailwind, SCSS, styled-components |
+| `extractors/vue/`     | 92.21%     | 67.82%   | 100%      | 92.54% | Vue.js component extraction |
+| `cli/commands/`       | 89.14%     | 80.75%   | 90.47%    | 89.14% | CLI command implementations |
+| `cli/commands/context/` | 88.93%   | 83.86%   | 85.12%    | 89.7%  | Context generation commands |
+| `cli/handlers/`       | 94.77%     | 84.41%   | 100%      | 94.75% | Command handlers |
+| `utils/`              | 84.26%     | 77.54%   | 91.71%    | 83.95% | Utilities, config, file operations |
+
+### Detailed Coverage Report
+
+```
+----------------------------|---------|----------|---------|---------|----------------------------------------
+File                        | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
+----------------------------|---------|----------|---------|---------|----------------------------------------
+All files                   |      88 |    77.21 |    93.9 |   88.19 |                                        
+ cli                        |   76.92 |       85 |      75 |   76.66 |                                        
+  stamp.ts                  |   73.41 |    83.92 |      50 |   73.07 | 30-41,47-49,71-73,162-166              
+  validate-index.ts         |     100 |      100 |     100 |     100 |                                        
+ cli/commands               |   89.14 |    80.75 |   90.47 |   89.14 |                                        
+  clean.ts                  |     100 |       95 |     100 |     100 | 101,138                                
+  compare.ts                |   89.21 |    81.58 |   91.89 |   89.16 | ...463-469,479-485,498-500,723,748-750 
+  context.ts                |   90.39 |    78.19 |     100 |      90 | 270-277,299-321,325,476-477            
+  ignore.ts                 |   90.62 |    76.92 |     100 |   90.32 | 57-60                                  
+  init.ts                   |   85.71 |    82.08 |      40 |   85.71 | ...,86,102-104,141,150-151,183,192-193 
+  security.ts               |   93.43 |    80.23 |     100 |   93.43 | 172-178,192-199,333                    
+  style.ts                  |     100 |      100 |     100 |     100 |                                        
+  validate.ts               |   84.18 |    77.77 |   84.61 |   84.51 | ...476-477,480-481,488-489,504-510,520 
+ cli/commands/context       |   88.93 |    83.86 |   85.12 |    89.7 |                                        
+  bundleFormatter.ts        |     100 |      100 |     100 |     100 |                                        
+  configManager.ts          |     100 |      100 |     100 |     100 |                                        
+  contractBuilder.ts        |     100 |      100 |     100 |     100 |                                        
+  fileWriter.ts             |   80.39 |       75 |     100 |   79.79 | 22,123,125,171-178,255-276              
+  incrementalWatch.ts      |     100 |    91.37 |     100 |     100 | 134-161,200,281                        
+  statsCalculator.ts        |     100 |      100 |     100 |     100 |                                        
+  tokenEstimator.ts         |   90.84 |    79.72 |   93.75 |   91.11 | 38-39,48,188-189,205,419-426            
+  watchDiff.ts              |   82.74 |     79.8 |   68.57 |   84.74 | ...456,459,462,481-485,490-494,499-503 
+  watchMode.ts              |   85.24 |    82.78 |   78.57 |   86.44 | ...253-256,402-403,442,648-653,672-673 
+ cli/handlers               |   94.77 |    84.41 |     100 |   94.75 |                                        
+  cleanHandler.ts           |     100 |      100 |     100 |     100 |                                        
+  compareHandler.ts         |   92.53 |     78.7 |     100 |   92.53 | ...195,202-208,220-227,233-241,277,292 
+  contextHandler.ts         |     100 |      100 |     100 |     100 |                                        
+  ignoreHandler.ts          |     100 |      100 |     100 |     100 |                                        
+  initHandler.ts            |     100 |      100 |     100 |     100 |                                        
+  securityHandler.ts        |     100 |    94.44 |     100 |     100 | 31                                      
+  styleHandler.ts           |     100 |      100 |     100 |     100 |                                        
+  validateHandler.ts        |     100 |      100 |     100 |     100 |                                        
+ cli/parser                 |   84.61 |    82.71 |     100 |      84 |                                        
+  argumentParser.ts         |   83.33 |    82.71 |     100 |    82.6 | 95-111,128-135,227-228                  
+  helpText.ts               |     100 |      100 |     100 |     100 |                                        
+ core                       |   97.13 |    89.04 |   97.18 |   97.08 |                                        
+  astParser.ts              |   96.52 |    78.87 |   96.66 |   96.52 | 79-84,304,356                          
+  contractBuilder.ts        |     100 |      100 |     100 |     100 |                                        
+  manifest.ts               |     100 |       94 |     100 |     100 | 83,221,229                              
+  pack.ts                   |      91 |    75.71 |   85.71 |    90.9 | 71-76,118-127,368,492                  
+  signature.ts              |     100 |    97.12 |     100 |     100 | 116,122-125,298                          
+  styleExtractor.ts         |       0 |        0 |       0 |       0 |                                        
+ core/astParser             |   78.07 |     70.6 |      95 |   77.85 |                                        
+  detectors.ts              |   78.07 |     70.6 |      95 |   77.85 | ...583,606,620,626-629,650-663,702-706 
+ core/pack                  |    91.3 |    85.18 |     100 |   91.85 |                                        
+  builder.ts                |   88.88 |    85.71 |     100 |   87.87 | 41-43,115                              
+  collector.ts              |   98.07 |    86.84 |     100 |   98.07 | 46                                      
+  loader.ts                 |   85.21 |       70 |     100 |    86.6 | 200-207,270,282,297,331-341,385-395    
+  packageInfo.ts            |     100 |      100 |     100 |     100 |                                        
+  resolver.ts               |    93.1 |       90 |     100 |    93.1 | 27,45                                    
+ extractors/express         |   87.14 |    68.08 |     100 |   86.95 |                                        
+  expressExtractor.ts       |   87.14 |    68.08 |     100 |   86.95 | 71,87-100,132-134,180-185               
+ extractors/nest            |   91.89 |    76.19 |     100 |   91.54 |                                        
+  nestjsExtractor.ts        |   91.89 |    76.19 |     100 |   91.54 | 61,87,114-118,179-185                   
+ extractors/react           |   92.16 |    76.51 |     100 |   92.03 |                                        
+  componentExtractor.ts     |   94.44 |    69.23 |     100 |   94.44 | 108-112                                
+  eventExtractor.ts         |    92.4 |    80.32 |     100 |    92.4 | 71,83,168-171                          
+  hookParameterExtractor.ts |   89.88 |    73.94 |     100 |   89.88 | ...158,169-183,246,262-265,357,385-389 
+  propExtractor.ts          |   91.91 |       75 |     100 |   91.91 | 28-35,48,57,169-172                     
+  stateExtractor.ts         |   98.07 |    84.09 |     100 |   97.77 | 85                                      
+ extractors/shared          |    88.7 |    83.33 |     100 |    88.7 |                                        
+  backendExtractor.ts       |   88.37 |    80.55 |     100 |   88.37 | 119-126,148-154                         
+  propTypeNormalizer.ts     |   89.47 |    88.88 |     100 |   89.47 | 79-83                                    
+ extractors/styling         |   84.93 |    69.73 |   98.55 |   85.44 |                                        
+  antd.ts                   |   85.57 |    72.44 |     100 |   85.14 | ...179,211,233,256,291,312,330,349-353 
+  chakra.ts                 |      80 |    68.31 |     100 |   81.08 | ...124,153,185,214,255,295,313,331-335 
+  layout.ts                 |   94.36 |       80 |     100 |   93.75 | 101-104,169-172                         
+  material.ts               |   87.39 |    73.19 |     100 |   87.61 | ...159,195,213,248,268,307,325,344-348 
+  motion.ts                 |   83.66 |    61.49 |     100 |      84 | ...282,297,309,353,372,416,445,456-460 
+  radix.ts                  |   88.88 |    79.76 |     100 |   89.51 | 108,179,185-193,207,350-353            
+  scss.ts                   |   95.58 |    72.46 |     100 |   95.58 | 220,234-238                            
+  shadcn.ts                 |   88.33 |     80.2 |   81.81 |   89.28 | 133,172-175,276,310-313,373-376         
+  styleExtractor.ts         |    82.2 |    65.03 |     100 |   82.88 | ...568,588-597,612-624,639-647,662-670 
+  styled.ts                 |   84.92 |    67.46 |     100 |   85.48 | ...192,234-235,246-249,273,287-300,336 
+  styledJsx.ts              |   67.41 |    57.57 |     100 |   68.67 | 18,33-53,72-77,115-135,200,212-217      
+  tailwind.ts               |    86.3 |    73.96 |     100 |   87.01 | ...486,492-494,532-535,608-611,638-641 
+ extractors/vue             |   92.21 |    67.82 |     100 |   92.54 |                                        
+  componentExtractor.ts     |   92.21 |    67.82 |     100 |   92.54 | ...419,427-430,444,509,582,608,662-669 
+ utils                      |   84.26 |    77.54 |   91.71 |   83.95 |                                        
+  cleanup.ts                |   82.08 |    94.44 |   66.66 |   80.64 | 121-123,129-131,137-139,147-149         
+  codeSanitizer.ts          |    93.2 |       80 |     100 |   93.13 | 36,85-89,106                            
+  config.ts                 |   82.46 |       75 |   96.15 |   82.46 | ...130,248-260,405-411,471-477,600-606 
+  debug.ts                  |     100 |      100 |     100 |     100 |                                        
+  fileLock.ts               |   83.33 |    76.66 |     100 |   82.53 | 36,48,63,71,79-80,94-100,194            
+  fsx.ts                    |   84.52 |    71.42 |     100 |   83.33 | 150-162,183-189,202                    
+  gitignore.ts              |   76.92 |    70.37 |      95 |   75.51 | 119,129,202-224,280,316-338             
+  hash.ts                   |   94.44 |    84.09 |   88.23 |   94.28 | 228-235                                
+  llmContext.ts             |     100 |      100 |     100 |     100 |                                        
+  schemaValidator.ts        |   79.16 |    68.75 |     100 |   82.22 | 36,55-62,80,143                         
+  secretDetector.ts         |   96.87 |       85 |     100 |   96.66 | 162                                      
+  stampignore.ts            |   80.95 |    74.41 |     100 |   80.48 | 92-114,175,197,217,254-259              
+  tokens.ts                 |   75.51 |    70.83 |   85.71 |   75.51 | 58-66,87-90,111,134,149-151             
+----------------------------|---------|----------|---------|---------|----------------------------------------
+```
 
 **Features covered:**
 

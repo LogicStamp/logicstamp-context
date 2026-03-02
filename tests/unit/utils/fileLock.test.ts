@@ -76,7 +76,8 @@ describe('fileLock utils', () => {
       }));
 
       // Should be able to acquire lock (stale lock is removed)
-      const lock = await acquireLock(filePath, { timeout: 100 });
+      // Use longer timeout to allow for stale detection, removal, and retry (especially on Windows)
+      const lock = await acquireLock(filePath, { timeout: 2000, retryInterval: 50 });
       expect(lock).not.toBeNull();
 
       await lock!.release();
@@ -96,8 +97,10 @@ describe('fileLock utils', () => {
       }));
 
       // Should be able to acquire lock (lock is too old)
+      // Use longer timeout to allow for stale detection, removal, and retry (especially on Windows)
       const lock = await acquireLock(filePath, {
-        timeout: 100,
+        timeout: 2000,
+        retryInterval: 50,
         staleThreshold: 30000, // 30 seconds (5x = 150 seconds for 'unknown' alive status)
       });
       expect(lock).not.toBeNull();
