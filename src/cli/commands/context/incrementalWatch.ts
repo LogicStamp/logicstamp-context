@@ -31,8 +31,8 @@ export interface WatchCache {
   contracts: Map<string, UIFContract>;
   // AST cache: fileHash -> AST extract
   astCache: Map<string, any>;
-  // Style cache: fileHash -> style metadata
-  styleCache: Map<string, any>;
+  // Style cache: fileHash -> style metadata (null sentinel indicates failed extraction)
+  styleCache: Map<string, any | null>;
   // File list cache: tracks all files in project
   fileList: Set<string>;
   // Reverse index: component entryId -> bundles that include it
@@ -83,6 +83,63 @@ export async function initializeWatchCache(
 }
 
 /**
+ * Generate cache key for style metadata (includes content hash and style mode)
+ */
+function styleCacheKey(contentHash: string, options: ContextOptions): string {
+  return `${contentHash}:${options.styleMode ?? 'lean'}`;
+}
+
+/**
+ * Check if style metadata is already cached for a given content hash
+ */
+function hasStyleCached(contentHash: string, cache: WatchCache, options: ContextOptions): boolean {
+  if (!options.includeStyle) return true;
+  return cache.styleCache.has(styleCacheKey(contentHash, options));
+}
+
+/**
+ * Extract and cache style metadata for a file
+ * Returns the style metadata (or undefined if extraction failed/not needed)
+ */
+async function extractAndCacheStyle(
+  absoluteFilePath: string,
+  contentHash: string,
+  cache: WatchCache,
+  options: ContextOptions
+): Promise<any> {
+  if (!options.includeStyle) {
+    return undefined;
+  }
+
+  const key = styleCacheKey(contentHash, options);
+
+  // Check cache first - use key to look up cached style
+  // Use .has() to distinguish between undefined and falsy values
+  if (cache.styleCache.has(key)) {
+    const cached = cache.styleCache.get(key);
+    // Convert null sentinel back to undefined (null means "tried and got nothing")
+    return cached === null ? undefined : cached;
+  }
+
+  // Extract and cache style metadata
+  try {
+    const styleProject = new Project({
+      skipAddingFilesFromTsConfig: true,
+      compilerOptions: { jsx: 1, target: 99 },
+    });
+    const sourceFile = styleProject.addSourceFileAtPath(absoluteFilePath);
+    const styleMetadata = await extractStyleMetadata(sourceFile, absoluteFilePath, options.styleMode ?? 'lean');
+    // Cache style extraction result (use null as sentinel for undefined to avoid retrying failures)
+    cache.styleCache.set(key, styleMetadata ?? null);
+    return styleMetadata;
+  } catch {
+    // Style extraction failed - cache null to avoid retrying on every rebuild
+    cache.styleCache.set(key, null);
+    return undefined;
+  }
+}
+
+/**
  * Incrementally rebuild only affected bundles
  */
 export async function incrementalRebuild(
@@ -92,8 +149,6 @@ export async function incrementalRebuild(
   projectRoot: string
 ): Promise<{ bundles: LogicStampBundle[]; updatedBundles: Set<string> }> {
   const updatedBundles = new Set<string>();
-  const affectedComponents = new Set<string>();
-  const contractsToRebuild = new Map<string, UIFContract>();
 
   // Step 1: Rebuild contracts for changed files
   for (const file of changedFiles) {
@@ -103,14 +158,23 @@ export async function incrementalRebuild(
       // Read file content
       const { text } = await readFileWithText(absoluteFilePath);
       const currentFileHash = fileHash(text);
+      const normalizedEntryId = normalizeEntryId(file);
 
       // Check if file actually changed (compare hash)
       const existingContract = Array.from(cache.contracts.values()).find(
-        c => normalizeEntryId(c.entryId) === normalizeEntryId(file)
+        c => normalizeEntryId(c.entryId) === normalizedEntryId
       );
 
       if (existingContract && existingContract.fileHash === currentFileHash) {
-        // File hash unchanged - skip (might be a false positive from watcher)
+        // File hash unchanged - check if we need to backfill styles
+        if (hasStyleCached(currentFileHash, cache, options)) {
+          // File hash unchanged and styles already cached (or not needed) - skip
+          // (might be a false positive from watcher)
+          continue;
+        }
+
+        // Fast path: only backfill styles, skip AST/contract rebuild
+        await extractAndCacheStyle(absoluteFilePath, currentFileHash, cache, options);
         continue;
       }
 
@@ -118,29 +182,7 @@ export async function incrementalRebuild(
       const ast = await extractFromFile(absoluteFilePath);
       
       // Extract style if needed (with caching)
-      let styleMetadata;
-      if (options.includeStyle) {
-        // Check cache first
-        const cachedStyle = cache.styleCache.get(currentFileHash);
-        if (cachedStyle) {
-          styleMetadata = cachedStyle;
-        } else {
-          try {
-            const styleProject = new Project({
-              skipAddingFilesFromTsConfig: true,
-              compilerOptions: { jsx: 1, target: 99 },
-            });
-            const sourceFile = styleProject.addSourceFileAtPath(absoluteFilePath);
-            styleMetadata = await extractStyleMetadata(sourceFile, absoluteFilePath, options.styleMode ?? 'lean');
-            // Cache style extraction result
-            if (styleMetadata) {
-              cache.styleCache.set(currentFileHash, styleMetadata);
-            }
-          } catch {
-            // Style extraction failed - continue without it
-          }
-        }
-      }
+      const styleMetadata = await extractAndCacheStyle(absoluteFilePath, currentFileHash, cache, options);
 
       const result = buildContract(file, ast, {
         preset: 'none',
@@ -151,23 +193,52 @@ export async function incrementalRebuild(
 
       if (result.contract) {
         // Remove old contract with different hash but same entryId to prevent duplicates
-        const normalizedEntryId = normalizeEntryId(file);
+        // normalizedEntryId already computed above
+        
+        // Capture old hashes BEFORE deleting contracts (so we can clean up style cache)
+        const oldHashes: string[] = [];
         for (const [hash, contract] of cache.contracts.entries()) {
           if (normalizeEntryId(contract.entryId) === normalizedEntryId && hash !== result.contract.fileHash) {
-            cache.contracts.delete(hash);
-            break;
+            oldHashes.push(hash);
+          }
+        }
+        
+        // Remove old contracts
+        for (const h of oldHashes) {
+          cache.contracts.delete(h);
+        }
+        
+        // Clean up old style cache entries for the same entryId (different hash)
+        // This prevents cache growth when files change repeatedly
+        // Delete all style mode variants for each old hash
+        if (options.includeStyle) {
+          for (const oldHash of oldHashes) {
+            for (const key of cache.styleCache.keys()) {
+              if (key.startsWith(`${oldHash}:`)) {
+                cache.styleCache.delete(key);
+              }
+            }
           }
         }
         
         // Update cache with new contract
         cache.contracts.set(result.contract.fileHash, result.contract);
-        contractsToRebuild.set(file, result.contract);
-        affectedComponents.add(normalizedEntryId);
 
         // Find all bundles that include this component
         const bundlesForComponent = cache.componentToBundles.get(normalizedEntryId) || new Set();
         for (const bundleId of bundlesForComponent) {
           updatedBundles.add(bundleId);
+        }
+        
+        // Also check if this component has its own bundle (root component)
+        // This handles cases where componentToBundles doesn't include the component's own bundle
+        const existingBundle = cache.allBundles.find(
+          b => normalizeEntryId(b.entryId) === normalizedEntryId
+        );
+        // bundlesForComponent contains unnormalized bundle IDs, so check with unnormalized ID
+        // but ensure we normalize for comparison consistency
+        if (existingBundle && !bundlesForComponent.has(existingBundle.entryId)) {
+          updatedBundles.add(existingBundle.entryId);
         }
       }
     } catch (error) {
@@ -178,12 +249,15 @@ export async function incrementalRebuild(
 
   // Step 2: Update manifest with new contracts
   // Deduplicate contracts by entryId to prevent duplicates from hash changes
+  // Note: We already removed duplicates above when processing changed files,
+  // so this is mainly defensive. Use "first one wins" since fileHash string
+  // comparison doesn't indicate "newer" (hashes are not ordered).
   const contractsByEntryId = new Map<string, UIFContract>();
   for (const contract of cache.contracts.values()) {
     const normalizedId = normalizeEntryId(contract.entryId);
-    // Keep the most recent contract (by fileHash) for each entryId
-    const existing = contractsByEntryId.get(normalizedId);
-    if (!existing || contract.fileHash > existing.fileHash) {
+    // Keep first contract encountered for each entryId
+    // Duplicates should have been removed earlier, but this is defensive
+    if (!contractsByEntryId.has(normalizedId)) {
       contractsByEntryId.set(normalizedId, contract);
     }
   }
