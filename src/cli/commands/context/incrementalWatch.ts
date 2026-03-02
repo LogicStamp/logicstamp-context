@@ -15,6 +15,7 @@ import { buildContract } from '../../../core/contractBuilder.js';
 import { extractStyleMetadata } from '../../../extractors/styling/index.js';
 import { readFileWithText, normalizeEntryId } from '../../../utils/fsx.js';
 import { fileHash } from '../../../utils/hash.js';
+import { debugError } from '../../../utils/debug.js';
 import { Project } from 'ts-morph';
 import { buildContractsFromFiles } from './contractBuilder.js';
 import { writeContextFiles, writeMainIndex, groupBundlesByFolder, displayPath } from './fileWriter.js';
@@ -132,8 +133,13 @@ async function extractAndCacheStyle(
     // Cache style extraction result (use null as sentinel for undefined to avoid retrying failures)
     cache.styleCache.set(key, styleMetadata ?? null);
     return styleMetadata;
-  } catch {
-    // Style extraction failed - cache null to avoid retrying on every rebuild
+  } catch (error) {
+    // Style extraction failed - log error and cache null to avoid retrying on every rebuild
+    debugError('incrementalWatch', 'extractAndCacheStyle', {
+      filePath: absoluteFilePath,
+      error: error instanceof Error ? error.message : String(error),
+      context: 'Style extraction failed, continuing without style metadata',
+    });
     cache.styleCache.set(key, null);
     return undefined;
   }
