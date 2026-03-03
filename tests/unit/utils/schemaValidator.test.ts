@@ -58,7 +58,7 @@ describe('schemaValidator', () => {
       expect(result.errors).toHaveLength(0);
     });
 
-    it('should validate contract with style metadata', () => {
+    it('should validate contract with style metadata (full mode)', () => {
       const contract = createValidContract({
         style: {
           styleSources: {
@@ -73,6 +73,49 @@ describe('schemaValidator', () => {
           visual: {
             colors: ['blue-500', 'white'],
             spacing: ['p-4', 'px-2'],
+          },
+        },
+      });
+      const result = validateUIFContract(contract);
+
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it('should validate contract with style metadata (lean mode)', () => {
+      const contract = createValidContract({
+        style: {
+          styleSources: {
+            tailwind: {
+              categoriesUsed: ['layout', 'colors'],
+              classCount: 4,
+              breakpoints: ['md', 'lg'],
+            },
+            styledJsx: {
+              global: true,
+              selectorCount: 3,
+              propertyCount: 5,
+            },
+            styledComponents: {
+              componentCount: 2,
+              usesTheme: true,
+              usesCssProp: false,
+            },
+          },
+          layout: {
+            type: 'flex',
+            sectionCount: 3,
+          },
+          visual: {
+            colorCount: 5,
+            spacingCount: 8,
+            typographyCount: 2,
+            radius: 'lg',
+          },
+          summary: {
+            mode: 'lean',
+            sources: ['tailwind', 'styled-jsx', 'styled-components'],
+            fullModeBytes: 1234,
           },
         },
       });

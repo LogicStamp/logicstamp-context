@@ -503,6 +503,10 @@ describe('Schema Completeness Validation', () => {
             colors: ['blue-500', 'white'],
             spacing: ['p-4'],
           },
+          summary: {
+            mode: 'full',
+            sources: ['tailwind'],
+          },
         },
         nextjs: {
           isInAppDir: true,
@@ -521,6 +525,82 @@ describe('Schema Completeness Validation', () => {
       const valid = contractValidator(contract);
       if (!valid) {
         console.error('Contract validation errors:', contractValidator.errors);
+      }
+      expect(valid).toBe(true);
+    });
+
+    it('should validate UIFContract with lean mode style metadata', () => {
+      const contract: UIFContract = {
+        type: 'UIFContract',
+        schemaVersion: '0.4',
+        kind: 'react:component',
+        entryId: 'src/components/Button.tsx',
+        description: 'A button component',
+        composition: {
+          variables: [],
+          hooks: [],
+          components: [],
+          functions: [],
+        },
+        interface: {
+          props: {},
+          emits: {},
+        },
+        style: {
+          styleSources: {
+            tailwind: {
+              categoriesUsed: ['layout', 'colors', 'spacing'],
+              classCount: 15,
+              breakpoints: ['md', 'lg'],
+            },
+            styledJsx: {
+              global: false,
+              selectorCount: 5,
+              propertyCount: 12,
+            },
+            styledComponents: {
+              componentCount: 3,
+              usesTheme: true,
+              usesCssProp: false,
+            },
+            motion: {
+              features: {
+                gestures: true,
+                layoutAnimations: false,
+                viewportAnimations: true,
+              },
+            },
+            materialUI: {
+              features: {
+                usesTheme: true,
+                usesSxProp: false,
+              },
+            },
+          },
+          layout: {
+            type: 'flex',
+            hasHeroPattern: true,
+            sectionCount: 4,
+          },
+          visual: {
+            colorCount: 8,
+            spacingCount: 12,
+            typographyCount: 5,
+            radius: 'md',
+          },
+          summary: {
+            mode: 'lean',
+            sources: ['tailwind', 'styled-jsx', 'styled-components', 'framer-motion', 'material-ui'],
+            fullModeBytes: 5678,
+          },
+        },
+        semanticHash: 'uif:abcdef123456789012345678',
+        fileHash: 'uif:123456789abcdef012345678',
+      };
+
+      const valid = contractValidator(contract);
+      if (!valid) {
+        console.error('Lean mode contract validation errors:', contractValidator.errors);
       }
       expect(valid).toBe(true);
     });
