@@ -11,6 +11,7 @@
 
 <em>Supports: React · Next.js · Vue (TS/TSX) · Express · NestJS</em>
 
+<br/>
 </div>
 
 LogicStamp Context is a CLI that compiles TypeScript codebases into deterministic, diffable architectural contracts and dependency graphs - a compact, structured source of truth for AI coding workflows.
