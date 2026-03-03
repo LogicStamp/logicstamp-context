@@ -7,17 +7,19 @@
     </picture>
   </a>
 
-### The Context Compiler for TypeScript.
+## The Context Compiler for TypeScript.
 
-Compile codebases into deterministic architectural contracts and dependency graphs.  
+<em>Supports: React · Next.js · Vue (TS/TSX) · Express · NestJS</em>
 
-A **structured, compact source of truth** for AI coding workflows.
+</div>
 
-Watch mode. Structured context bundles. Strict, auditable diffs. Catch breaking changes in real time.
+LogicStamp Context is a CLI that compiles TypeScript codebases into deterministic, diffable architectural contracts and dependency graphs - a compact, structured source of truth for AI coding workflows.
 
-  <small><em>Supports: React · Next.js · Vue (TS/TSX) · Express · NestJS</em></small>
+Watch mode. Strict, auditable diffs. Real-time breaking change detection. AST-based contract extraction.
 
-  **Works with Claude, Cursor, Copilot Chat, and any MCP-compatible agent.**
+**Includes an MCP server. Works with Claude, Cursor, Copilot Chat, and any MCP-compatible agent.**
+
+<div align="center">
 
   <br/>
   <a href="https://github.com/LogicStamp">

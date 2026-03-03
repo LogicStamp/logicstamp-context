@@ -19,6 +19,109 @@ See [docs/limitations.md](docs/limitations.md).
 
 ---
 
+## [0.7.0] - 2026-03-03
+
+### ⚠️ Breaking Changes
+
+- **Default `stamp context style` output is now `--style-mode lean`** ([#109](https://github.com/LogicStamp/logicstamp-context/pull/109))  
+  - `stamp context style` previously emitted full style metadata by default. It now defaults to lean output for smaller, faster bundles.  
+  - Use `--style-mode full` to restore the previous behavior.
+
+### Improved
+
+- **Context module barrel exports** ([#100](https://github.com/LogicStamp/logicstamp-context/pull/100))  
+  Added missing `watchMode` and `watchDiff` exports to `src/cli/commands/context/index.ts`. All context command modules are now explicitly exported via the barrel file with documented public API sections.
+
+- **Refactored propExtractor structure** ([#101](https://github.com/LogicStamp/logicstamp-context/pull/101))  
+  Flattened deeply nested try-catch blocks in `propExtractor.ts` using a `safeExtract()` helper pattern. Extracted focused helper functions for improved readability, maintainability, and clearer error boundaries.
+
+- **Expanded failure-mode coverage** ([#102](https://github.com/LogicStamp/logicstamp-context/pull/102))  
+  Added tests covering AST parser edge cases, watch mode error handling paths, and circular dependency pack scenarios.
+
+- **Security report awareness in `stamp context`** ([#106](https://github.com/LogicStamp/logicstamp-context/pull/106))  
+  Added `securityReportLoaded` to `SanitizeStats` and updated `stamp context` / `stamp context style` messaging to warn when no security report is found (prompting `stamp init` / `stamp security` for secret detection).
+
+- **Enhanced extraction and error-path test coverage** ([#104](https://github.com/LogicStamp/logicstamp-context/pull/104))  
+  - Added sanitization tests across multiple secret-pattern scenarios  
+  - Expanded manifest handling tests (missing imports, duplicate deps, hash indices)  
+  - Improved component/event extraction edge-case coverage  
+  - Updated coverage documentation with revised per-module metrics
+
+- **Incremental watch style cache optimization** ([#111](https://github.com/LogicStamp/logicstamp-context/pull/111))  
+  - `incrementalRebuild` now reuses cached style metadata when available, reducing redundant extraction work during watch mode.  
+  - Automatically extracts and caches style metadata when missing, ensuring consistent style output across rebuilds.  
+  - Added defensive error handling for style extraction failures so incremental rebuilds continue without style metadata instead of failing.  
+  - Style cache now uses a null sentinel for failed extractions, preventing unnecessary retries on subsequent rebuilds.  
+  - Implemented cache key generation and checking functions to support style mode variants (`lean`/`full`) in cache lookups.  
+  - Enhanced cache cleanup to remove old style cache entries when file hashes change, optimizing memory usage during watch mode.  
+  - Expanded unit tests to validate style cache hit/miss, failure scenarios, cache cleanup, and null sentinel behavior.
+
+- **Error logging for style extraction failures** ([#112](https://github.com/LogicStamp/logicstamp-context/pull/112))  
+  - Style extraction failures in watch mode now log errors via `debugError()` when `LOGICSTAMP_DEBUG=1` is set, improving debuggability while maintaining resilient rebuild behavior.  
+  - Errors include file path and error message context, making it easier to diagnose style extraction issues during development.
+
+- **Watch status file includes strictWatch field** ([#117](https://github.com/LogicStamp/logicstamp-context/pull/117))  
+  - Added `strictWatch` boolean field to `WatchStatus` interface and watch status file (`.logicstamp/context_watch-status.json`) to indicate whether strict watch mode is enabled.  
+  - MCP servers and other tools can now detect if watch mode is running with `--strict-watch` by reading the status file.  
+  - Updated documentation and added unit tests for the new field.
+
+### Fixed
+
+- **Schema validation for lean style mode** ([#116](https://github.com/LogicStamp/logicstamp-context/pull/116))  
+  - Updated JSON schema to support both `lean` and `full` style mode variants. The schema was missing lean mode fields (`categoriesUsed`, `selectorCount`, `propertyCount`, `componentCount`, `sectionCount`, `colorCount`, `spacingCount`, `typographyCount`, `summary`), which would cause validation failures for lean mode output.  
+  - Added comprehensive tests for lean mode style metadata validation to prevent future schema drift.  
+  - Updated schema validation documentation to emphasize testing both style mode variants.
+
+- **Stale lock removal consistency in `fileLock`** ([#110](https://github.com/LogicStamp/logicstamp-context/pull/110))  
+  - Added a delay after stale lock removal to improve filesystem consistency and Windows reliability.
+
+### Chore
+
+- **CI and Vitest configuration refinement** ([#103](https://github.com/LogicStamp/logicstamp-context/pull/103))  
+  - Excluded barrel (`index.ts`) files from coverage reporting  
+  - Optimized CI matrix and enabled sharded test execution
+
+### Tests
+
+- **Windows stale-lock handling in `fileLock` tests** ([#106](https://github.com/LogicStamp/logicstamp-context/pull/106))  
+  - Updated lockfile timestamps to exceed the Windows stale threshold and clarified `process.kill` behavior assumptions to keep lock acquisition tests reliable.
+
+- **Vue Extractor Coverage Expansion** ([#113](https://github.com/LogicStamp/logicstamp-context/pull/113)) 
+  - Expanded test suite to cover component extraction from variable declarations, composable deduplication, and various state initializer edge cases to ensure extraction determinism for the context compiler.
+
+- **Watch mode test suite refactor** ([#114](https://github.com/LogicStamp/logicstamp-context/pull/114))  
+  - Split monolithic watch mode tests into focused modules (events, failure paths, rebuild logic, strict mode) to improve maintainability and clarity.
+
+- **Coverage Expansion & Metrics Visibility** ([#115](https://github.com/LogicStamp/logicstamp-context/pull/115))  
+  - Increased overall test coverage (Statements: 88%, Branches: 77.21%, Functions: 93.9%, Lines: 88.19%).  
+  - Added module-level coverage reporting section to `tests/README.md` for clearer visibility into per-module coverage health.  
+  - Expanded `clean` command tests with additional error-handling and edge-case scenarios.  
+  - Extended `init` command tests to cover TTY mode branches and `autoYes` logic paths.  
+  - Improved `statsCalculator` and `tokenEstimator` coverage with additional edge-case scenarios.
+
+### Documentation
+
+- **Reframe LogicStamp as the "Context Compiler for TypeScript"** ([#105](https://github.com/LogicStamp/logicstamp-context/pull/105))
+  - Updated README positioning and terminology
+  - Clarified compilation stages and structural guarantees
+  - Added strict watch mode screenshot
+  - Updated `PULL_REQUEST_TEMPLATE.md`
+  - No runtime behavior changes
+
+- **Complete documentation terminology sync** ([#108](https://github.com/LogicStamp/logicstamp-context/pull/108)) - Updated all remaining markdown files (14 files, 29 replacements) to use "context compilation" terminology consistently. Files updated: `CONTRIBUTING.md`, `README.md`, `SECURITY.md`, `ROADMAP.md`, `docs/cli/context.md`, `docs/cli/ignore.md`, `docs/cli/commands.md`, `docs/cli/compare-modes.md`, `docs/cli/getting-started.md`, `docs/stampignore.md`, `docs/usage.md`, `docs/uif_contracts.md`, `docs/limitations.md`, `examples/README.md`.
+
+- **Document `--style-mode` behavior and defaults** ([#109](https://github.com/LogicStamp/logicstamp-context/pull/109))
+  - Updated CLI documentation and help text to reflect `lean` as the default style output mode.
+  - Added usage examples for `--style-mode full`.
+
+### Refactor
+
+- **Adopt "Context Compiler" terminology across CLI and documentation** ([#107](https://github.com/LogicStamp/logicstamp-context/pull/107))
+  - Replaced "context generation" with "context compilation" across the codebase.
+  - Updated CLI help output and documentation to align with the "Context Compiler for TypeScript" positioning.
+
+---
+
 ## [0.6.0] - 2026-02-20
 
 ### ⚠️ Breaking Changes
@@ -1351,7 +1454,8 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ---
 
 ## Version links
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.6.1...HEAD
+[0.6.1]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.6.1
 [0.6.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.6.0
 [0.5.5]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.5
 [0.5.4]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.4
