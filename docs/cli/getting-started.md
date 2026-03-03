@@ -42,9 +42,9 @@ You can also try LogicStamp Context without installing:
 npx logicstamp-context context
 ```
 
-## Step 1: Initialize Your Project
+## Step 1: Initialize Your Project (Recommended)
 
-Before generating context, initialize LogicStamp in your project:
+**Note:** `stamp init` is **recommended** for a complete setup. You can run `stamp context` without initialization—it will use safe defaults (skips `.gitignore` setup and `LLM_CONTEXT.md` generation for CI-friendly behavior). However, running `stamp init` provides several benefits:
 
 ```bash
 stamp init
@@ -78,6 +78,8 @@ stamp init --skip-gitignore
 # Initialize specific directory
 stamp init ./my-project
 ```
+
+> **💡 Tip:** If you skip `stamp init`, you can still run `stamp context` directly. It will work with safe defaults, but you'll miss out on automatic `.gitignore` setup, security scanning, and `LLM_CONTEXT.md` generation. You can always run `stamp init` later to configure these options.
 
 📋 **See [Init Documentation](init.md)** for complete details.
 
