@@ -551,6 +551,9 @@
         },
         "pageLayout": {
           "$ref": "#/definitions/PageLayoutMetadata"
+        },
+        "summary": {
+          "$ref": "#/definitions/StyleSummary"
         }
       },
       "additionalProperties": false
@@ -569,7 +572,14 @@
                   "type": "string"
                 }
               },
-              "description": "Tailwind classes categorized by type (layout, spacing, colors, typography, borders, effects)"
+              "description": "Tailwind classes categorized by type (layout, spacing, colors, typography, borders, effects) - full mode only"
+            },
+            "categoriesUsed": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Category names used (e.g., ['layout', 'spacing', 'colors']) - lean mode only"
             },
             "breakpoints": {
               "type": "array",
@@ -684,7 +694,7 @@
           "properties": {
             "css": {
               "type": "string",
-              "description": "Extracted CSS content from <style jsx> blocks"
+              "description": "Extracted CSS content from <style jsx> blocks - full mode only"
             },
             "global": {
               "type": "boolean",
@@ -695,14 +705,22 @@
               "items": {
                 "type": "string"
               },
-              "description": "CSS selectors found in the extracted CSS"
+              "description": "CSS selectors found in the extracted CSS - full mode only"
+            },
+            "selectorCount": {
+              "type": "number",
+              "description": "Number of CSS selectors found - lean mode only"
             },
             "properties": {
               "type": "array",
               "items": {
                 "type": "string"
               },
-              "description": "CSS properties found in the extracted CSS"
+              "description": "CSS properties found in the extracted CSS - full mode only"
+            },
+            "propertyCount": {
+              "type": "number",
+              "description": "Number of CSS properties found - lean mode only"
             }
           },
           "additionalProperties": false
@@ -715,7 +733,11 @@
               "items": {
                 "type": "string"
               },
-              "description": "Styled component names (e.g., ['div', 'Button'])"
+              "description": "Styled component names (e.g., ['div', 'Button']) - full mode only"
+            },
+            "componentCount": {
+              "type": "number",
+              "description": "Number of styled components - lean mode only"
             },
             "usesTheme": {
               "type": "boolean",
@@ -1067,7 +1089,11 @@
           "items": {
             "type": "string"
           },
-          "description": "Identified page sections"
+          "description": "Identified page sections - full mode only"
+        },
+        "sectionCount": {
+          "type": "number",
+          "description": "Number of identified page sections - lean mode only"
         }
       },
       "additionalProperties": false
@@ -1080,14 +1106,22 @@
           "items": {
             "type": "string"
           },
-          "description": "Color utility classes (sorted, limited to top 10)"
+          "description": "Color utility classes (sorted, limited to top 10) - full mode only"
+        },
+        "colorCount": {
+          "type": "number",
+          "description": "Number of color utility classes - lean mode only"
         },
         "spacing": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "description": "Spacing utility classes (sorted, limited to top 10)"
+          "description": "Spacing utility classes (sorted, limited to top 10) - full mode only"
+        },
+        "spacingCount": {
+          "type": "number",
+          "description": "Number of spacing utility classes - lean mode only"
         },
         "radius": {
           "type": "string",
@@ -1098,7 +1132,11 @@
           "items": {
             "type": "string"
           },
-          "description": "Typography classes (sorted, limited to top 10)"
+          "description": "Typography classes (sorted, limited to top 10) - full mode only"
+        },
+        "typographyCount": {
+          "type": "number",
+          "description": "Number of typography classes - lean mode only"
         }
       },
       "additionalProperties": false
@@ -1139,6 +1177,29 @@
         "ctaCount": {
           "type": "number",
           "description": "Number of call-to-action elements"
+        }
+      },
+      "additionalProperties": false
+    },
+    "StyleSummary": {
+      "type": "object",
+      "required": ["mode", "sources"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["lean", "full"],
+          "description": "Style extraction mode: 'lean' (compact with counts/flags) or 'full' (verbose with arrays)"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Style sources detected (e.g., ['tailwind', 'shadcn', 'scss'])"
+        },
+        "fullModeBytes": {
+          "type": "number",
+          "description": "Estimated byte size of full mode output (only present in lean mode)"
         }
       },
       "additionalProperties": false
