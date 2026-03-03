@@ -164,7 +164,7 @@ Debug output shows:
 
 Watch mode can write status files for integration with other tools (like the MCP server).
 
-### Status File (`.logicstamp/watch_status.json`)
+### Status File (`.logicstamp/context_watch-status.json`)
 
 Written when watch mode starts, deleted when it stops:
 
@@ -174,9 +174,18 @@ Written when watch mode starts, deleted when it stops:
   "projectRoot": "/path/to/project",
   "pid": 12345,
   "startedAt": "2025-01-19T10:30:00.000Z",
-  "outputDir": "/path/to/project"
+  "outputDir": "/path/to/project",
+  "strictWatch": false
 }
 ```
+
+**Fields:**
+- `active` - Always `true` when file exists (file is deleted on exit)
+- `projectRoot` - Absolute path to the watched project
+- `pid` - Process ID of the watch process (use to verify process is still running)
+- `startedAt` - ISO timestamp when watch mode started
+- `outputDir` - Directory where context files are written
+- `strictWatch` - Whether strict watch mode is enabled (`true` when `--strict-watch` flag is used, `false` otherwise)
 
 ### Watch Log (`.logicstamp/context_watch-mode-logs.json`)
 

@@ -163,6 +163,8 @@ export interface WatchStatus {
   startedAt: string;
   /** Output directory being watched */
   outputDir?: string;
+  /** Whether strict watch mode is enabled */
+  strictWatch?: boolean;
 }
 
 /**

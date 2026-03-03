@@ -185,6 +185,7 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
       pid: process.pid,
       startedAt: new Date().toISOString(),
       outputDir,
+      strictWatch: options.strictWatch ?? false,
     });
     // Register for synchronous cleanup on exit (fallback for Windows where signals may not fire)
     registerSyncCleanupPath(watchStatusPath);

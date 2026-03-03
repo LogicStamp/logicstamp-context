@@ -721,6 +721,36 @@ describe('config utils', () => {
       const readStatus = await readWatchStatus(testDir);
       expect(readStatus?.outputDir).toBe(join(testDir, 'custom-output'));
     });
+
+    it('should include optional strictWatch field', async () => {
+      const status = {
+        active: true,
+        projectRoot: testDir,
+        pid: process.pid,
+        startedAt: new Date().toISOString(),
+        strictWatch: true,
+      };
+
+      await writeWatchStatus(testDir, status);
+
+      const readStatus = await readWatchStatus(testDir);
+      expect(readStatus?.strictWatch).toBe(true);
+    });
+
+    it('should handle strictWatch set to false', async () => {
+      const status = {
+        active: true,
+        projectRoot: testDir,
+        pid: process.pid,
+        startedAt: new Date().toISOString(),
+        strictWatch: false,
+      };
+
+      await writeWatchStatus(testDir, status);
+
+      const readStatus = await readWatchStatus(testDir);
+      expect(readStatus?.strictWatch).toBe(false);
+    });
   });
 
   describe('readStrictWatchStatus edge cases', () => {
