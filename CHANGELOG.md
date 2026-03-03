@@ -1454,8 +1454,8 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ---
 
 ## Version links
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.6.1...HEAD
-[0.6.1]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.6.1
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.7.0
 [0.6.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.6.0
 [0.5.5]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.5
 [0.5.4]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.4
