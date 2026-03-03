@@ -2,102 +2,19 @@
 
 This roadmap outlines the planned features, improvements, and known limitations for LogicStamp Context. It's organized into bug fixes, framework expansion, and future enhancements.
 
-## Recent Achievements
+## Current Status
 
-## v0.6.0 (February 2026)
-- ✅ **Runtime schema validation (AJV-enforced)** – `.uif.json` contracts are now validated during load. Invalid, malformed, or outdated contracts are rejected with capped, structured error reporting (max 20 errors).
-- ✅ **Fail-closed contract loading** – If the schema fails to load, contracts are rejected instead of silently bypassing validation.
-- ✅ **Hardened contract loader error handling** – Explicit distinction between file-not-found, read errors, JSON parse errors, and schema validation failures.
-- ✅ **Path traversal protection** – Enforced strict project-root boundaries across internal file utilities.
-- ✅ **File lock race condition fix** – Prevents concurrent lock acquisition mid-write.
-- ✅ **Dependency security updates** – `glob@13.0.6` (patched minimatch ReDoS), `ts-morph@27.0.2` with improved TypeScript 5.x support.
-- ⚠️ **Node.js >= 20 required** – Required by dependency and security updates.
-- ✅ **Test coverage expansion** – Added root-boundary traversal tests and expanded extraction coverage.
+**Current Version:** v0.7.0 (Beta)
 
-### v0.5.5 (February 2026)
-- ✅ **State-based strict watch diffing** - Strict watch mode now compares current state vs the original baseline (like `git diff`), not cumulative history. Violations reflect current drift only and are automatically cleared when changes are reverted.
-- ✅ **Removed missing dependencies from strict watch violations** - Third-party packages are no longer treated as breaking changes in strict watch mode.
-- ✅ **Watch mode cleanup on exit (Windows/Cursor reliability)** - Signal handlers register at watch startup, watch status paths resolve to absolute paths, synchronous cleanup runs on `process.on('exit')`, and MCP tools remove stale status files when PID validation fails.
-- ✅ **Watch mode revert correctness** - If `pack()` fails during incremental rebuild, bundles/contracts/manifest now revert consistently: old bundle contracts are restored, reverse index entries preserved, and final contracts + manifest rebuilt from actual bundle contents.
-- ✅ **Resilient glob pattern failure handling** - `globFiles()` now continues across pattern failures, returns partial results when possible, and only throws an aggregate error if *all* patterns fail (with debug warnings for partial failures).
-- ✅ **Config read/write race condition (TOCTOU) fixed** - Added lightweight file locking using exclusive lockfiles + PID tracking; `updateConfig()` and `appendWatchLog()` acquire locks; conservative stale detection (ESRCH vs EPERM); configurable timeout/retry/stale thresholds; no new dependencies.
-- ✅ **Atomic writes to prevent crash corruption** - Config + status writes now use temp-file + rename pattern (`writeConfig()`, `writeWatchStatus()`, `writeStrictWatchStatus()`, `appendWatchLog()`), with temp cleanup on error.
-- ✅ **Compare handler control-flow fix** - Added explicit `return` before `process.exit()` calls to prevent unintended execution after exit.
-- ✅ **Test coverage expansion** - Added comprehensive unit tests for cleanup utilities, file locking, CLI routing/entry points, commands, watch mode behavior, compare handler modes, and glob resilience.
+For detailed release notes and completed features, see [CHANGELOG.md](CHANGELOG.md).
 
-### v0.5.4 (February 2026)
-- ✅ **Graceful shutdown on process exit** - Introduced a centralized cleanup registry (`src/utils/cleanup.ts`) so watchers/status files are reliably cleaned up on errors and signals (SIGINT/SIGTERM/SIGHUP), routing shutdown through `gracefulShutdown()` with priority-ordered async handlers.
-- ✅ **Token comparison fails loudly when all bundles fail** - Added `checkBundleResults()` to detect complete failure across `Promise.allSettled`, throwing a descriptive error (and logging warnings for partial failures) for `--compare-modes`.
-- ✅ **Improved debug logging for unresolved dependencies** - Added `debugLog()` and surfaced unresolved dependency details in manifest building when `LOGICSTAMP_DEBUG=1`.
-- ✅ **Reduced duplicated error handling in config writes** - Refactored config/status/log write helpers (`ensureConfigDir*`, `formatWriteError()`) to remove duplicated error paths and improve consistency.
-- ✅ **New unit tests for context command modules** - Added coverage for `bundleFormatter`, `configManager`, `contractBuilder`, `fileWriter`, `statsCalculator`, `tokenEstimator`, and `watchDiff`.
-
-### v0.5.3 (February 2026)
-- ✅ **Bug fixes** - Fixed JSON schema validation (removed incorrect required fields), race condition in sanitization stats, memory leak in global caches, and Windows path separator bug in dependency resolution.
-- ✅ **Performance improvements** - O(n²) to O(n) in dependency collection (replaced `array.shift()` with index-based iteration), eliminated redundant file reads in token estimation via caching.
-- ✅ **Type safety** - Replaced unsafe `as any` casts with proper ts-morph type guards across 10+ files.
-
-### v0.5.2 (February 2026)
-- ✅ **JSON Schema completeness** - Added missing fields to JSON schema (`nextjs`, `antd`, `chakraUI`, `shadcnUI`, `radixUI`) that were causing IDE validation errors.
-
-### v0.5.1 (February 2026)
-- ✅ **Chakra UI support** - Complete style metadata extraction for Chakra UI components. Extracts Chakra UI component props (`colorScheme`, `size`, `variant`, etc.), responsive props, and style system tokens. Handles Chakra UI's component composition patterns and theme-aware styling.
-- ✅ **Ant Design support** - Complete style metadata extraction for Ant Design components. Extracts Ant Design component props (`type`, `size`, `shape`, `ghost`, etc.), theme tokens, and component-specific styling patterns. Supports Ant Design's design system and component API patterns.
-
-### v0.5.0 (January 2026)
-- ✅ **Strict watch mode** (`--strict-watch`) - Track breaking changes and violations during watch mode. Automatically detects breaking changes when files are modified (removed props, events, state, functions, variables; changed prop types; removed contracts; missing dependencies). Real-time violation reporting with cumulative tracking across watch sessions. Writes structured JSON violation reports and provides CI-friendly exit codes.
-- ✅ **Schema improvements** - Renamed fields for clarity: `MissingDependency.version` → `packageVersion`, `UIFContract.version` → `composition`, `UIFContract.logicSignature` → `interface`. These changes improve clarity and avoid confusion between component composition and version numbers.
-- ✅ **Performance optimizations** - O(1) dependency collection lookups and missing dependency tracking. Replaced O(n) linear searches with Map-based and Set-based lookups for significantly improved performance on large projects.
-- ✅ **Watch mode improvements** - Fixed race condition in watch mode using Promise-based locking. Fixed silent error swallowing in compare handler.
-
-### v0.4.1 (January 2026)
-- ✅ **Watch mode** - Automatic context regeneration when source files change. Incremental rebuilds only regenerate affected bundles. Detects and displays contract changes (props, hooks, state, events). Debounces rapid changes. Watches style files when using `--include-style`. Debug mode shows hash changes. Status files for tooling integration.
-
-### v0.4.0 (January 2026)
-- ✅ **Backend framework support** - Comprehensive support for Node.js backend frameworks (Express.js, NestJS). Extracts API routes, HTTP methods, route parameters, request/response types, and framework-specific metadata. Automatically detects backend frameworks and skips frontend extraction for backend files. Introduces new `node:api` contract kind and extensible `language:type` pattern for future language support.
-
-### v0.3.10 (January 2026)
-- ✅ **Advanced Next.js App Router features** - Enhanced Next.js metadata extraction with route roles, segment paths, and metadata exports. Automatically detects route roles (`page`, `layout`, `loading`, `error`, `not-found`, `template`, `default`, `route`), extracts segment paths from file structure, and parses both static and dynamic metadata exports.
-
-### v0.3.9 (January 2026)
-- ✅ **Dynamic Tailwind class parsing (Phase 1)** - Enhanced Tailwind CSS extractor to resolve dynamic class expressions within template literals. Resolves const/let variables, object properties, and conditional expressions. Handles ~70-80% of common dynamic class patterns.
-
-### v0.3.8 (January 2026)
-- ✅ **Enhanced third-party component info (Phase 1)** - Missing dependencies now include package names and versions for third-party packages. Package name extraction handles scoped packages and subpath imports. Version lookup reads from `package.json` with caching for efficiency.
-
-### v0.3.7 (January 2026)
-- ✅ **Emit detection accuracy** - Fixed issue where internal event handlers were incorrectly listed as component emits. Now only includes handlers that are part of the component's public API (props). Uses prop type signatures when available for accurate event signatures.
-
-### v0.3.6 (January 2026)
-- ✅ **Hook parameter detection** - Comprehensive support for extracting function signatures from custom React hooks, including parameter types, default values, and optional parameters. Works even when Props interfaces exist in the same file.
-- ✅ **Default depth changed from 1 to 2** - Default `--depth` parameter now set to `2` to ensure proper signature extraction, including nested component signatures in dependency graphs.
-
-### v0.3.5 (January 2026)
-- ✅ **Styled JSX support** - Full CSS extraction from `<style jsx>` blocks with selector and property parsing
-- ✅ **Enhanced inline style extraction** - Now extracts both property names and literal values from `style={{ ... }}` objects
-
-### v0.3.4 (January 2026)
-- ✅ **Vue.js TypeScript/TSX support** - Comprehensive Vue 3 Composition API support (components, composables, props, emits)
-
-### v0.3.3 (December 2025)
-- ✅ **TOON output format** - New `--format toon` option for alternative format optimized for AI workflows
-
-### v0.3.2 (December 2025)
-- ✅ **CSS/SCSS AST-based parsing** - Migrated from regex to deterministic AST walk using `css-tree`
-- ✅ **Relative paths in output** - Improved portability with relative paths instead of absolute paths
-
-### v0.3.1 (December 2025)
-- ✅ **Hook classification accuracy** - Custom hooks now correctly classified as `react:hook` instead of `react:component`
-
-### v0.3.0 (December 2025)
-- ✅ **Security scanning by default** - Automatic secret detection during `stamp init`
-- ✅ **Automatic secret sanitization** - Secrets replaced with `"PRIVATE_DATA"` in generated context files
-
-### v0.2.x Series
-- ✅ **Style metadata extraction** - Tailwind, SCSS, Material UI, ShadCN, Radix UI, Framer Motion support
-- ✅ **Security scanning** - Secret detection and `.stampignore` file exclusion
-- ✅ **Export metadata extraction** - Default and named export detection
-- ✅ **Internal component filtering** - Improved dependency graph accuracy
+Recent major milestones include:
+- ✅ Lean style mode default (v0.7.0)
+- ✅ Runtime schema validation and security hardening (v0.6.0)
+- ✅ Strict watch mode for breaking change detection (v0.5.0)
+- ✅ Watch mode with incremental rebuilds (v0.4.1)
+- ✅ Backend framework support (Express.js, NestJS) (v0.4.0)
+- ✅ Complete CSS-in-JS library support (v0.5.1)
 
 ---
 
@@ -256,7 +173,7 @@ Add cross-folder relationships and project-wide statistics to `context_main.json
 Extract test structure, test cases, and testing patterns.
 
 **Current Behavior:**
-- ✅ Test files explicitly excluded from context generation
+- ✅ Test files explicitly excluded from context compilation
 - ❌ No test analysis at all
 
 **Note:** This is intentional by design - test files are excluded to keep context bundles focused on production code.
@@ -703,16 +620,6 @@ We welcome contributions! If you'd like to work on any of these roadmap items:
 - JavaScript & JSX support - Add `.js`/`.jsx` file analysis
 - Complete Vue.js support - Add `.vue` SFC file parsing
 - ✅ Watch mode - Automatic context regeneration on file changes (v0.4.1)
-
----
-
-## Version History
-
-For detailed release notes and changes, see [CHANGELOG.md](CHANGELOG.md).
-
-**Current Version:** v0.5.3 (Beta)
-
-**Status:** Actively developed - we're working on improving accuracy and expanding feature coverage based on user feedback.
 
 ---
 

@@ -32,7 +32,7 @@
 - Profiles tune defaults: `llm-chat` (balanced), `llm-safe` (token-conservative), `ci-strict` (validation-first), `watch-fast` (lighter style extraction for watch mode).
 - Supports multiple output formats via `--format`: `json` (default), `pretty`, `ndjson`, `toon`.
 - Compare command: `stamp context compare` compares all context files (multi-file mode) to detect drift, ADDED/ORPHANED folders, and component changes. Supports `--approve` for auto-updates, `--clean-orphaned` for cleanup, `--stats` for per-folder token deltas, and `--quiet` or `-q` to show only diffs.
-- Validate command: `stamp context validate [file]` checks context files for schema compliance. Supports `--quiet` or `-q` to show only errors.
+- Validate command: `stamp context validate [file]` checks context files for schema compliance. Supports `--quiet` or `-q` to show only errors. The JSON schema (`schema/logicstamp.context.schema.json`) supports both lean and full style mode variants (v0.7.0+).
 - Clean command: `stamp context clean [path]` removes context artifacts. Supports `--quiet` or `-q` to suppress verbose output.
 - Output structure: Context files are organized by folder, maintaining project directory hierarchy. Each folder gets its own `context.json` with bundles for that folder's components. The `context_main.json` index file provides metadata about all folders.
 
@@ -376,13 +376,25 @@ FAQ.tsx is imported by src/app/page.tsx
 
 ### Style Metadata (Optional)
 
-When using `stamp context style` or `stamp context --include-style`, bundles include a `style` field with visual and layout information:
+When using `stamp context style` or `stamp context --include-style`, bundles include a `style` field with visual and layout information.
+
+**Style Mode Variants (v0.7.0+):**
+- **Lean mode** (default): Compact format with count fields (`selectorCount`, `componentCount`, `colorCount`, etc.) and category names (`categoriesUsed`) instead of full arrays. Includes `summary.mode: 'lean'` and optional `summary.fullModeBytes` for size comparison. This is the default output format for `stamp context style` and `stamp context --include-style`.
+- **Full mode**: Verbose format with complete arrays (`selectors`, `components`, `colors`, `categories` objects, etc.). Includes `summary.mode: 'full'`. Use `--style-mode full` to generate this format.
+
+Both formats are valid and schema-compliant. The JSON schema supports both variants to ensure validation passes regardless of style mode.
 
 **Style Sources (`style.styleSources`):**
-- **Tailwind CSS**: Categorized utility classes (layout, spacing, colors, typography, borders, effects) with breakpoint information
+- **Tailwind CSS**: 
+  - Full mode: `categories` object with arrays of classes per category, plus `classCount` and `breakpoints`
+  - Lean mode: `categoriesUsed` array (category names), `classCount`, and `breakpoints`
 - **SCSS/CSS Modules**: File paths and parsed details (selectors, properties, SCSS features like variables, nesting, mixins)
-- **Styled JSX** (v0.3.5+): Full CSS content extraction from `<style jsx>` blocks, including CSS selectors and properties. Detects `global` attribute.
-- **styled-components/Emotion**: Component names, theme usage, CSS prop detection
+- **Styled JSX** (v0.3.5+): 
+  - Full mode: `css` string, `selectors` array, `properties` array, `global` boolean
+  - Lean mode: `selectorCount`, `propertyCount`, `global` boolean
+- **styled-components/Emotion**: 
+  - Full mode: `components` array, `usesTheme`, `usesCssProp`
+  - Lean mode: `componentCount`, `usesTheme`, `usesCssProp`
 - **framer-motion**: Motion components, variants, gesture handlers, layout animations, viewport animations
 - **Material UI**: Components, packages, theme usage, sx prop, styled API, makeStyles, system props
 - **ShadCN/UI**: Components, variants, sizes, form integration, theme usage, icon libraries, component density
@@ -393,13 +405,26 @@ When using `stamp context style` or `stamp context --include-style`, bundles inc
 - Layout type (flex, grid, relative, absolute)
 - Grid column patterns
 - Hero section and feature card patterns
-- Page sections
+- Page sections:
+  - Full mode: `sections` array with section names
+  - Lean mode: `sectionCount` number
 
 **Visual Metadata (`style.visual`):**
-- Color palettes (top 10 color utility classes)
-- Spacing patterns (top 10 spacing utilities)
-- Border radius tokens
-- Typography classes (top 10)
+- Color palettes:
+  - Full mode: `colors` array (top 10 color utility classes)
+  - Lean mode: `colorCount` number
+- Spacing patterns:
+  - Full mode: `spacing` array (top 10 spacing utilities)
+  - Lean mode: `spacingCount` number
+- Border radius tokens (`radius` string)
+- Typography classes:
+  - Full mode: `typography` array (top 10)
+  - Lean mode: `typographyCount` number
+
+**Style Summary (`style.summary`):**
+- `mode`: `'lean'` or `'full'` - indicates which format is used
+- `sources`: Array of detected style sources (e.g., `['tailwind', 'styled-jsx']`)
+- `fullModeBytes`: Optional, only in lean mode - estimated byte size if full mode were used
 
 **Animation Metadata (`style.animation`):**
 - Animation library type
@@ -502,7 +527,8 @@ Check if watch mode is active by reading `.logicstamp/context_watch-status.json`
   "projectRoot": "/path/to/project",
   "pid": 12345,
   "startedAt": "2025-01-19T10:30:00.000Z",
-  "outputDir": "/path/to/project"
+  "outputDir": "/path/to/project",
+  "strictWatch": false
 }
 ```
 
@@ -512,6 +538,7 @@ Check if watch mode is active by reading `.logicstamp/context_watch-status.json`
 - `pid` - Process ID of the watch process (use to verify process is still running)
 - `startedAt` - ISO timestamp when watch mode started
 - `outputDir` - Directory where context files are written
+- `strictWatch` - Whether strict watch mode is enabled (`true` when `--strict-watch` flag is used, `false` otherwise)
 
 **Important**: The status file is deleted when watch mode exits. If the file exists but the process crashed, validate using the `pid` field:
 

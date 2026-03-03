@@ -2,6 +2,14 @@
 
 Things that don't work perfectly yet. We're working on improving these areas.
 
+## ⚠️ Breaking Changes
+
+### v0.7.0 - Style Mode Default Changed
+
+**Breaking Change:** The default output mode for `stamp context style` is now `--style-mode lean` instead of `full`. This provides smaller, faster bundles by default. Use `--style-mode full` to restore the previous behavior.
+
+See [CHANGELOG.md](../CHANGELOG.md#070---2026-03-03) for details.
+
 ## Overview
 
 LogicStamp Context is pretty accurate overall—around 90% of the time it gets things right. Component structure, props, state, hooks, and imports are usually detected correctly, but there are a few areas where things can be incomplete or a bit off.
@@ -370,6 +378,7 @@ This section documents what's currently captured in context files versus what's 
 - **Layout patterns**: Flex vs grid, column configs
 - **Visual metadata**: Color palettes, spacing patterns, typography scales
 - **Animation metadata**: Library type, animation types
+- **Style mode variants**: `lean` (default in v0.7.0) and `full` modes for token optimization ✅ **v0.7.0**
 
 ### 3. Project Structure
 
@@ -389,7 +398,7 @@ This section documents what's currently captured in context files versus what's 
 
 - **Created timestamps**: When context was generated
 - **OS detection**: Platform info (e.g., `win32`)
-- **Source tool version**: `logicstamp-context@0.4.1`
+- **Source tool version**: `logicstamp-context@0.7.0`
 - **Missing dependencies**: Tracked in `missing` array
 
 ## What's Missing or Incomplete
@@ -662,6 +671,11 @@ Watch mode has been fully implemented for automatic context regeneration.
 - ❌ Configurable watch patterns/exclusions (uses fixed defaults)
 - ❌ Hot reload integration (manual browser refresh still needed)
 
+**Recent Improvements (v0.7.0):**
+- ✅ Style cache optimization - Incremental rebuilds reuse cached style metadata when available
+- ✅ Style error resilience - Style extraction failures don't block watch mode rebuilds
+- ✅ Style mode variants - Cache supports both `lean` and `full` style modes
+
 **Impact**: Improves developer experience by automatically keeping context files in sync with code changes during development.
 
 **Priority**: ~~Medium~~ Complete
@@ -686,6 +700,10 @@ Strict watch mode (`--strict-watch`) tracks breaking changes during development 
 - ⚠️ **Baseline is session-scoped** - The baseline is set when watch mode starts and never updates. In long-running sessions with many file additions/deletions, comparing to a stale baseline could be misleading.
 - ⚠️ **Empty baseline edge case** - If watch mode starts with no bundles (new project), all changes show as "added" relative to the empty baseline.
 
+**Recent Improvements (v0.5.5):**
+- ✅ Missing dependencies excluded - Third-party packages no longer reported as violations (expected behavior)
+- ✅ Revert detection - When breaking changes are reverted to baseline, violations file is automatically deleted
+
 **Impact**: Helps catch breaking API changes during development before they affect consumers.
 
 **Priority**: ~~Medium~~ Complete
@@ -696,12 +714,36 @@ Strict watch mode (`--strict-watch`) tracks breaking changes during development 
 
 These items were previously limitations but have been fixed. For detailed release notes, see the [CHANGELOG](../CHANGELOG.md).
 
+## Recent Fixes (v0.7.x)
+
+| Version | Fix | Description |
+|---------|-----|-------------|
+| v0.7.0 | Style mode default | Default `stamp context style` output is now `--style-mode lean` (breaking change) |
+| v0.7.0 | Security awareness | `stamp context` warns when no security report is found |
+| v0.7.0 | Watch style cache | Incremental watch mode reuses cached style metadata, reducing redundant extraction |
+| v0.7.0 | Style error logging | Style extraction failures in watch mode now log errors when `LOGICSTAMP_DEBUG=1` |
+| v0.7.0 | File lock consistency | Added delay after stale lock removal for improved filesystem consistency on Windows |
+
+## Recent Fixes (v0.6.x)
+
+| Version | Fix | Description |
+|---------|-----|-------------|
+| v0.6.0 | Schema validation | UIFContract files validated via AJV during load; invalid contracts rejected with detailed errors |
+| v0.6.0 | Path traversal protection | Enforced strict project-root boundaries across internal file utilities |
+| v0.6.0 | Node.js requirement | Bumped to >=20 (required by dependency and security updates) |
+
 ## Recent Fixes (v0.5.x)
 
 | Version | Fix | Description |
 |---------|-----|-------------|
+| v0.5.5 | Strict watch diffing | State-based diffing shows current state vs baseline (not cumulative history) |
+| v0.5.5 | Config race condition | File locking prevents TOCTOU race conditions in config updates |
+| v0.5.5 | Atomic file writes | Config and status files use temp file + rename pattern to prevent corruption |
+| v0.5.5 | Watch cleanup | Watch status file properly deleted on exit (Windows/Cursor compatibility) |
 | v0.5.4 | Graceful shutdown | Centralized cleanup registry ensures watch mode resources are cleaned up on any exit |
 | v0.5.4 | Empty bundle handling | `--compare-modes` now reports errors when all bundle generations fail |
+| v0.5.4 | Debug logging | Manifest building logs unresolved dependencies when `LOGICSTAMP_DEBUG=1` |
+| v0.5.4 | Error handling | Extracted duplicate error handling code into shared utilities |
 | v0.5.3 | Race condition fix | Sanitization stats no longer corrupted during concurrent file processing |
 | v0.5.3 | Memory leak fix | Security report cache has 5-minute TTL; tokenizer cache can be cleared |
 | v0.5.3 | Windows paths | Dependency resolution works correctly with Windows backslash paths |

@@ -1,7 +1,7 @@
 {
   "name": "logicstamp-context",
-  "version": "0.6.0",
-  "description": "Deterministic architectural context for TypeScript. Extract explicit contracts and dependency graphs to prevent AI-driven architectural drift.",
+  "version": "0.7.0",
+  "description": "The context compiler for TypeScript. Compile your codebase into deterministic architectural contracts and dependency graphs for AI coding workflows.",
   "type": "module",
   "main": "./dist/index.js",
   "exports": {
