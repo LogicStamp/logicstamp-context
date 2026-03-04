@@ -556,6 +556,12 @@ export interface StrictWatchStatus {
   cumulativeErrors: number;
   /** Cumulative warnings count */
   cumulativeWarnings: number;
+  /** Total errors detected across all checks (cumulative) */
+  totalErrorsDetected: number;
+  /** Total warnings detected across all checks (cumulative) */
+  totalWarningsDetected: number;
+  /** Number of times all violations were completely resolved (increments only when ALL violations go from >0 to 0, not on partial decreases) */
+  resolvedCount: number;
   /** Number of regeneration cycles */
   regenerationCount: number;
   /** Most recent violations summary */
@@ -576,7 +582,21 @@ export async function readStrictWatchStatus(projectRoot: string): Promise<Strict
   try {
     const reportPath = getStrictWatchReportPath(projectRoot);
     const content = await readFile(reportPath, 'utf-8');
-    return JSON.parse(content) as StrictWatchStatus;
+    const parsed = JSON.parse(content) as Partial<StrictWatchStatus>;
+    
+    // Backward compatibility: provide defaults for new fields
+    return {
+      active: parsed.active ?? false,
+      startedAt: parsed.startedAt ?? new Date().toISOString(),
+      cumulativeViolations: parsed.cumulativeViolations ?? 0,
+      cumulativeErrors: parsed.cumulativeErrors ?? 0,
+      cumulativeWarnings: parsed.cumulativeWarnings ?? 0,
+      totalErrorsDetected: parsed.totalErrorsDetected ?? 0,
+      totalWarningsDetected: parsed.totalWarningsDetected ?? 0,
+      resolvedCount: parsed.resolvedCount ?? 0,
+      regenerationCount: parsed.regenerationCount ?? 0,
+      lastCheck: parsed.lastCheck,
+    };
   } catch {
     return null;
   }
