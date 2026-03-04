@@ -175,7 +175,9 @@ Pre-parsed. Categorized. Stable. The AI reads contracts, not implementations.
 
 ## Watch Mode
 
-![Strict Watch Mode Demo](./assets/logicstamp-strict-watch.gif)
+<p align="center">
+  <img src="./assets/logicstamp-strict-watch.gif" width="820" />
+</p>
 
 *Strict watch mode in action: detecting violations and clearing them when resolved.*
 
