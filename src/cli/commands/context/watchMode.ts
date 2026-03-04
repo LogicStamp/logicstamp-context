@@ -158,6 +158,22 @@ function displayViolations(violations: Violation[], options: { quiet?: boolean }
 }
 
 /**
+ * Display session status block
+ */
+function displaySessionStatus(status: StrictWatchStatus, options: { quiet?: boolean } = {}): void {
+  if (options.quiet) return;
+
+  const activeErrors = status.lastCheck?.errors ?? 0;
+  const activeWarnings = status.lastCheck?.warnings ?? 0;
+
+  console.log(`\n📊 Session status:`);
+  console.log(`   ❌ Errors detected:   ${status.totalErrorsDetected}`);
+  console.log(`   ⚠️  Warnings detected: ${status.totalWarningsDetected}`);
+  console.log(`   🔧 Resolved:          ${status.resolvedCount}`);
+  console.log(`   📌 Active:            ${activeErrors + activeWarnings}`);
+}
+
+/**
  * Start watch mode - monitors file changes and recompiles context
  */
 export async function startWatchMode(options: ContextOptions, projectRoot: string, initialCache: WatchCache | null = null): Promise<void> {
@@ -211,6 +227,9 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
     cumulativeViolations: 0,
     cumulativeErrors: 0,
     cumulativeWarnings: 0,
+    totalErrorsDetected: 0,
+    totalWarningsDetected: 0,
+    resolvedCount: 0,
     regenerationCount: 0,
   } : null;
 
@@ -376,14 +395,39 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
           changes.bundleChanged.length > 0
         );
 
+        // Track previous state to detect new violations and resolution
+        const previousActiveErrors = strictWatchStatus.lastCheck?.errors ?? 0;
+        const previousActiveWarnings = strictWatchStatus.lastCheck?.warnings ?? 0;
+        const hadActiveViolations = previousActiveErrors > 0 || previousActiveWarnings > 0;
+
         if (hasChanges) {
           const violations = detectViolations(changes);
           const errors = violations.filter(v => v.severity === 'error');
           const warnings = violations.filter(v => v.severity === 'warning');
 
+          strictWatchStatus.regenerationCount++;
+
           if (violations.length > 0) {
+            // Only increment totals if these are NEW violations (first time seeing violations, or count increased)
+            const isNewViolation = !hadActiveViolations;
+            const violationCountIncreased = errors.length > previousActiveErrors || warnings.length > previousActiveWarnings;
+            
+            if (isNewViolation || violationCountIncreased) {
+              // Calculate new violations (only count increases, not existing ones)
+              if (isNewViolation) {
+                // First time violations appear - count all of them
+                strictWatchStatus.totalErrorsDetected += errors.length;
+                strictWatchStatus.totalWarningsDetected += warnings.length;
+              } else {
+                // Violations increased - only count the new ones
+                const newErrors = Math.max(0, errors.length - previousActiveErrors);
+                const newWarnings = Math.max(0, warnings.length - previousActiveWarnings);
+                strictWatchStatus.totalErrorsDetected += newErrors;
+                strictWatchStatus.totalWarningsDetected += newWarnings;
+              }
+            }
+
             // Update state-based counts (current state, not cumulative)
-            strictWatchStatus.regenerationCount++;
             strictWatchStatus.cumulativeViolations = violations.length;
             strictWatchStatus.cumulativeErrors = errors.length;
             strictWatchStatus.cumulativeWarnings = warnings.length;
@@ -398,28 +442,56 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
               changedFiles: changedFileList,
             };
 
-            // Display violations to console
+            // Display violations to console (only if status changed)
             if (!options.quiet) {
-              displayViolations(violations, { quiet: options.quiet });
-              console.log(`   📊 Current state: ${errors.length} error(s), ${warnings.length} warning(s)`);
+              const statusChanged = errors.length !== previousActiveErrors || warnings.length !== previousActiveWarnings;
+              if (statusChanged) {
+                if (isNewViolation || violationCountIncreased) {
+                  console.log(`\n❌ Breaking change detected`);
+                }
+                displayViolations(violations, { quiet: options.quiet });
+                displaySessionStatus(strictWatchStatus, { quiet: options.quiet });
+              }
             }
 
             // Write current violations state to disk
             await writeStrictWatchStatus(projectRoot, strictWatchStatus);
           } else {
-            // Changes exist but no violations - delete the file
+            // Changes exist but no violations - violations were resolved
+            if (hadActiveViolations) {
+              strictWatchStatus.resolvedCount++;
+            }
+
             strictWatchStatus.cumulativeViolations = 0;
             strictWatchStatus.cumulativeErrors = 0;
             strictWatchStatus.cumulativeWarnings = 0;
             strictWatchStatus.lastCheck = undefined;
+
+            // Display resolution message and status
+            if (!options.quiet && hadActiveViolations) {
+              console.log(`\n✅ Violation resolved`);
+              displaySessionStatus(strictWatchStatus, { quiet: options.quiet });
+            }
+
             await deleteStrictWatchStatus(projectRoot);
           }
         } else {
           // No changes from baseline - clear violations (state reverted)
+          if (hadActiveViolations) {
+            strictWatchStatus.resolvedCount++;
+          }
+
           strictWatchStatus.cumulativeViolations = 0;
           strictWatchStatus.cumulativeErrors = 0;
           strictWatchStatus.cumulativeWarnings = 0;
           strictWatchStatus.lastCheck = undefined;
+
+          // Display resolution message and status
+          if (!options.quiet && hadActiveViolations) {
+            console.log(`\n✅ Violation resolved`);
+            displaySessionStatus(strictWatchStatus, { quiet: options.quiet });
+          }
+
           await deleteStrictWatchStatus(projectRoot);
         }
       }
@@ -645,15 +717,22 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
       if (!options.quiet) {
         console.log(`\n👋 Watch mode stopped`);
 
-        if (options.strictWatch && strictWatchStatus && strictWatchStatus.cumulativeViolations > 0) {
-          console.log(`\n📋 Strict Watch Session Summary:`);
-          console.log(`   Recompilations: ${strictWatchStatus.regenerationCount}`);
-          console.log(`   Total violations: ${strictWatchStatus.cumulativeViolations}`);
-          console.log(`   Errors: ${strictWatchStatus.cumulativeErrors}`);
-          console.log(`   Warnings: ${strictWatchStatus.cumulativeWarnings}`);
-          console.log(`   Report saved to: .logicstamp/strict_watch_violations.json`);
-        } else if (options.strictWatch) {
-          console.log(`\n✅ Strict Watch: No violations detected during session`);
+        if (options.strictWatch && strictWatchStatus) {
+          const activeErrors = strictWatchStatus.lastCheck?.errors ?? 0;
+          const activeWarnings = strictWatchStatus.lastCheck?.warnings ?? 0;
+          const activeTotal = activeErrors + activeWarnings;
+
+          console.log(`\n✅ Strict Watch session complete`);
+
+          console.log(`\n📊 Session summary:`);
+          console.log(`   ❌ Errors detected:   ${strictWatchStatus.totalErrorsDetected}`);
+          console.log(`   ⚠️  Warnings detected: ${strictWatchStatus.totalWarningsDetected}`);
+          console.log(`   🔧 Resolved:          ${strictWatchStatus.resolvedCount}`);
+          console.log(`   📌 Active:            ${activeTotal}`);
+
+          if (activeTotal > 0) {
+            console.log(`\n   Report saved to: .logicstamp/strict_watch_violations.json`);
+          }
         }
       }
 

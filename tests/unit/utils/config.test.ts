@@ -363,7 +363,12 @@ describe('config utils', () => {
         );
 
         const status = await readStrictWatchStatus(testDir);
-        expect(status).toEqual(testStatus);
+        expect(status).toEqual({
+          ...testStatus,
+          totalErrorsDetected: 0,
+          totalWarningsDetected: 0,
+          resolvedCount: 0,
+        });
       });
     });
 
@@ -375,6 +380,9 @@ describe('config utils', () => {
           cumulativeViolations: 0,
           cumulativeErrors: 0,
           cumulativeWarnings: 0,
+          totalErrorsDetected: 0,
+          totalWarningsDetected: 0,
+          resolvedCount: 0,
           regenerationCount: 0,
         };
         await writeStrictWatchStatus(testDir, testStatus);
@@ -772,6 +780,9 @@ describe('config utils', () => {
         cumulativeViolations: 3,
         cumulativeErrors: 2,
         cumulativeWarnings: 1,
+        totalErrorsDetected: 2,
+        totalWarningsDetected: 1,
+        resolvedCount: 0,
         regenerationCount: 5,
         lastCheck: {
           timestamp: new Date().toISOString(),
@@ -817,6 +828,9 @@ describe('config utils', () => {
         cumulativeViolations: 0,
         cumulativeErrors: 0,
         cumulativeWarnings: 0,
+        totalErrorsDetected: 0,
+        totalWarningsDetected: 0,
+        resolvedCount: 0,
         regenerationCount: 0,
       };
 
@@ -1123,6 +1137,9 @@ describe('config utils', () => {
         cumulativeViolations: allViolationTypes.length,
         cumulativeErrors: allViolationTypes.length,
         cumulativeWarnings: 0,
+        totalErrorsDetected: allViolationTypes.length,
+        totalWarningsDetected: 0,
+        resolvedCount: 0,
         regenerationCount: 1,
         lastCheck: {
           timestamp: new Date().toISOString(),
@@ -1216,6 +1233,9 @@ describe('config utils', () => {
         cumulativeViolations: 1,
         cumulativeErrors: 1,
         cumulativeWarnings: 0,
+        totalErrorsDetected: 1,
+        totalWarningsDetected: 0,
+        resolvedCount: 0,
         regenerationCount: 1,
         lastCheck: {
           timestamp: new Date().toISOString(),
@@ -1439,6 +1459,9 @@ describe('config utils', () => {
         cumulativeViolations: 0,
         cumulativeErrors: 0,
         cumulativeWarnings: 0,
+        totalErrorsDetected: 0,
+        totalWarningsDetected: 0,
+        resolvedCount: 0,
         regenerationCount: 0,
       };
 
@@ -1580,6 +1603,9 @@ describe('config utils', () => {
         cumulativeViolations: 0,
         cumulativeErrors: 0,
         cumulativeWarnings: 0,
+        totalErrorsDetected: 0,
+        totalWarningsDetected: 0,
+        resolvedCount: 0,
         regenerationCount: 0,
       };
 
@@ -1599,6 +1625,9 @@ describe('config utils', () => {
         cumulativeViolations: 0,
         cumulativeErrors: 0,
         cumulativeWarnings: 0,
+        totalErrorsDetected: 0,
+        totalWarningsDetected: 0,
+        resolvedCount: 0,
         regenerationCount: 0,
       };
 

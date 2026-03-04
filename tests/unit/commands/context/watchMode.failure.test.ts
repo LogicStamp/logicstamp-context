@@ -569,6 +569,9 @@ describe('Watch Mode Failure Modes', () => {
         cumulativeViolations: 0,
         cumulativeErrors: 0,
         cumulativeWarnings: 0,
+        totalErrorsDetected: 0,
+        totalWarningsDetected: 0,
+        resolvedCount: 0,
         regenerationCount: 0,
       };
 
@@ -579,6 +582,8 @@ describe('Watch Mode Failure Modes', () => {
         cumulativeViolations: 3,
         cumulativeErrors: 2,
         cumulativeWarnings: 1,
+        totalErrorsDetected: 2,
+        totalWarningsDetected: 1,
         lastCheck: {
           timestamp: new Date().toISOString(),
           totalViolations: 3,

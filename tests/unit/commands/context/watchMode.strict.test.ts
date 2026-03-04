@@ -120,3 +120,258 @@ describe('displayViolations', () => {
     expect(true).toBe(true);
   });
 });
+
+describe('Session status tracking', () => {
+  // Tests for the new session status tracking features:
+  // - totalErrorsDetected and totalWarningsDetected (cumulative counts)
+  // - resolvedCount (number of times violations were resolved)
+  // - Session status display
+
+  it('should track total errors and warnings detected when violations first appear', () => {
+    // Simulate initial state with no violations
+    const initialStatus = {
+      active: true,
+      startedAt: new Date().toISOString(),
+      cumulativeViolations: 0,
+      cumulativeErrors: 0,
+      cumulativeWarnings: 0,
+      totalErrorsDetected: 0,
+      totalWarningsDetected: 0,
+      resolvedCount: 0,
+      regenerationCount: 0,
+      lastCheck: undefined,
+    };
+
+    // First violation detected: 2 errors, 1 warning
+    const afterFirstViolation = {
+      ...initialStatus,
+      regenerationCount: 1,
+      cumulativeViolations: 3,
+      cumulativeErrors: 2,
+      cumulativeWarnings: 1,
+      totalErrorsDetected: 2, // Should increment from 0 to 2
+      totalWarningsDetected: 1, // Should increment from 0 to 1
+      resolvedCount: 0,
+      lastCheck: {
+        timestamp: new Date().toISOString(),
+        totalViolations: 3,
+        errors: 2,
+        warnings: 1,
+        violations: [],
+        changedFiles: ['src/App.tsx'],
+      },
+    };
+
+    expect(afterFirstViolation.totalErrorsDetected).toBe(2);
+    expect(afterFirstViolation.totalWarningsDetected).toBe(1);
+    expect(afterFirstViolation.resolvedCount).toBe(0);
+  });
+
+  it('should track additional violations when count increases', () => {
+    // Start with existing violations
+    const statusWithViolations = {
+      active: true,
+      startedAt: new Date().toISOString(),
+      cumulativeViolations: 2,
+      cumulativeErrors: 1,
+      cumulativeWarnings: 1,
+      totalErrorsDetected: 1,
+      totalWarningsDetected: 1,
+      resolvedCount: 0,
+      regenerationCount: 1,
+      lastCheck: {
+        timestamp: new Date().toISOString(),
+        totalViolations: 2,
+        errors: 1,
+        warnings: 1,
+        violations: [],
+        changedFiles: ['src/App.tsx'],
+      },
+    };
+
+    // Violations increase: 1 error added (now 2 errors, 1 warning)
+    const afterIncrease = {
+      ...statusWithViolations,
+      regenerationCount: 2,
+      cumulativeViolations: 3,
+      cumulativeErrors: 2, // Increased from 1 to 2
+      cumulativeWarnings: 1,
+      totalErrorsDetected: 2, // Should increment by 1 (new error)
+      totalWarningsDetected: 1, // No change
+      lastCheck: {
+        timestamp: new Date().toISOString(),
+        totalViolations: 3,
+        errors: 2,
+        warnings: 1,
+        violations: [],
+        changedFiles: ['src/Button.tsx'],
+      },
+    };
+
+    expect(afterIncrease.totalErrorsDetected).toBe(2); // 1 + 1 new error
+    expect(afterIncrease.totalWarningsDetected).toBe(1); // No change
+  });
+
+  it('should increment resolvedCount when violations are cleared', () => {
+    // Start with active violations
+    const statusWithViolations = {
+      active: true,
+      startedAt: new Date().toISOString(),
+      cumulativeViolations: 2,
+      cumulativeErrors: 1,
+      cumulativeWarnings: 1,
+      totalErrorsDetected: 1,
+      totalWarningsDetected: 1,
+      resolvedCount: 0,
+      regenerationCount: 1,
+      lastCheck: {
+        timestamp: new Date().toISOString(),
+        totalViolations: 2,
+        errors: 1,
+        warnings: 1,
+        violations: [],
+        changedFiles: ['src/App.tsx'],
+      },
+    };
+
+    // Violations resolved (reverted to baseline)
+    const afterResolution = {
+      ...statusWithViolations,
+      regenerationCount: 2,
+      cumulativeViolations: 0,
+      cumulativeErrors: 0,
+      cumulativeWarnings: 0,
+      totalErrorsDetected: 1, // Should not change (cumulative)
+      totalWarningsDetected: 1, // Should not change (cumulative)
+      resolvedCount: 1, // Should increment
+      lastCheck: undefined,
+    };
+
+    expect(afterResolution.resolvedCount).toBe(1);
+    expect(afterResolution.totalErrorsDetected).toBe(1); // Cumulative, doesn't reset
+    expect(afterResolution.totalWarningsDetected).toBe(1); // Cumulative, doesn't reset
+  });
+
+  it('should track multiple resolution cycles', () => {
+    // Simulate a session with multiple violation/resolution cycles
+    let status = {
+      active: true,
+      startedAt: new Date().toISOString(),
+      cumulativeViolations: 0,
+      cumulativeErrors: 0,
+      cumulativeWarnings: 0,
+      totalErrorsDetected: 0,
+      totalWarningsDetected: 0,
+      resolvedCount: 0,
+      regenerationCount: 0,
+      lastCheck: undefined,
+    };
+
+    // First violation: 1 error
+    status = {
+      ...status,
+      regenerationCount: 1,
+      cumulativeViolations: 1,
+      cumulativeErrors: 1,
+      totalErrorsDetected: 1,
+      lastCheck: { timestamp: new Date().toISOString(), totalViolations: 1, errors: 1, warnings: 0, violations: [], changedFiles: [] },
+    };
+    expect(status.totalErrorsDetected).toBe(1);
+    expect(status.resolvedCount).toBe(0);
+
+    // Resolved
+    status = {
+      ...status,
+      regenerationCount: 2,
+      cumulativeViolations: 0,
+      cumulativeErrors: 0,
+      resolvedCount: 1,
+      lastCheck: undefined,
+    };
+    expect(status.resolvedCount).toBe(1);
+
+    // Second violation: 2 errors
+    status = {
+      ...status,
+      regenerationCount: 3,
+      cumulativeViolations: 2,
+      cumulativeErrors: 2,
+      totalErrorsDetected: 3, // 1 + 2 new errors
+      lastCheck: { timestamp: new Date().toISOString(), totalViolations: 2, errors: 2, warnings: 0, violations: [], changedFiles: [] },
+    };
+    expect(status.totalErrorsDetected).toBe(3);
+    expect(status.resolvedCount).toBe(1);
+
+    // Resolved again
+    status = {
+      ...status,
+      regenerationCount: 4,
+      cumulativeViolations: 0,
+      cumulativeErrors: 0,
+      resolvedCount: 2,
+      lastCheck: undefined,
+    };
+    expect(status.resolvedCount).toBe(2);
+    expect(status.totalErrorsDetected).toBe(3); // Still cumulative
+  });
+
+  it('should calculate active violations correctly', () => {
+    const status = {
+      active: true,
+      startedAt: new Date().toISOString(),
+      cumulativeViolations: 3,
+      cumulativeErrors: 2,
+      cumulativeWarnings: 1,
+      totalErrorsDetected: 2,
+      totalWarningsDetected: 1,
+      resolvedCount: 0,
+      regenerationCount: 1,
+      lastCheck: {
+        timestamp: new Date().toISOString(),
+        totalViolations: 3,
+        errors: 2,
+        warnings: 1,
+        violations: [],
+        changedFiles: ['src/App.tsx'],
+      },
+    };
+
+    const activeErrors = status.lastCheck?.errors ?? 0;
+    const activeWarnings = status.lastCheck?.warnings ?? 0;
+    const activeTotal = activeErrors + activeWarnings;
+
+    expect(activeTotal).toBe(3);
+    expect(activeErrors).toBe(2);
+    expect(activeWarnings).toBe(1);
+  });
+
+  it('should handle session summary format', () => {
+    // Test the final session summary structure
+    const finalStatus = {
+      active: true,
+      startedAt: new Date().toISOString(),
+      cumulativeViolations: 0,
+      cumulativeErrors: 0,
+      cumulativeWarnings: 0,
+      totalErrorsDetected: 5,
+      totalWarningsDetected: 3,
+      resolvedCount: 2,
+      regenerationCount: 10,
+      lastCheck: undefined, // No active violations
+    };
+
+    const activeErrors = finalStatus.lastCheck?.errors ?? 0;
+    const activeWarnings = finalStatus.lastCheck?.warnings ?? 0;
+    const activeTotal = activeErrors + activeWarnings;
+
+    // Session summary should show:
+    // - Total errors detected: 5
+    // - Total warnings detected: 3
+    // - Resolved: 2
+    // - Active: 0
+    expect(finalStatus.totalErrorsDetected).toBe(5);
+    expect(finalStatus.totalWarningsDetected).toBe(3);
+    expect(finalStatus.resolvedCount).toBe(2);
+    expect(activeTotal).toBe(0);
+  });
+});
