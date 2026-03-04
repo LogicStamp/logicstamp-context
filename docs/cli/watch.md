@@ -260,11 +260,22 @@ When violations are detected, strict watch mode displays them after each regener
       Breaking change: prop 'loading' removed from src/components/Button.tsx
 
    📊 Current state: 1 error(s), 0 warning(s)
+
+📊 Session status:
+   ❌ Errors detected:   1
+   ⚠️  Warnings detected: 0
+   🔧 Resolved:          0
+   📌 Active:            1
 ```
+
+**Note:** The session status block only appears when violations change (not on every file change), keeping terminal output clean. It tracks cumulative statistics throughout the watch session:
+- **Errors/Warnings detected**: Total count of violations detected during the session (cumulative across all checks, only increments when new violations appear or count increases)
+- **Resolved**: Number of times all violations were completely resolved (increments only when ALL violations - both errors and warnings - go from >0 to 0, reverted back to baseline). Partial fixes (e.g., warnings decreasing from 2 to 1) do not increment this count.
+- **Active**: Current number of active violations (errors + warnings)
 
 ### Violations Report File
 
-Strict watch mode writes a structured JSON report to `.logicstamp/strict_watch_violations.json`:
+When violations are detected, strict watch mode creates a structured JSON report at `.logicstamp/strict_watch_violations.json`. **The file only exists when violations are present** - if there are no violations, the file is not created (or is deleted if all violations are resolved):
 
 ```json
 {
@@ -295,7 +306,7 @@ Strict watch mode writes a structured JSON report to `.logicstamp/strict_watch_v
 
 **State-based semantics (v0.5.5+):** The violations report shows **current** violations relative to the baseline (state when watch mode started), not cumulative history:
 - `cumulativeViolations/Errors/Warnings` reflect the current state, not a running total
-- If you fix the violations (revert breaking changes), the file is **deleted** (no violations = no report)
+- **File lifecycle**: The file is created when violations are detected and automatically deleted when all violations are resolved (reverted back to baseline)
 - This works like `git diff` - only shows what's currently different from baseline
 
 ### Exit Behavior
@@ -322,21 +333,30 @@ When exiting, strict watch mode displays a session summary:
 ^C
 👋 Watch mode stopped
 
-📋 Strict Watch Session Summary:
-   Regenerations: 12
-   Total violations: 5
-   Errors: 3
-   Warnings: 2
+✅ Strict Watch session complete
+
+📊 Session summary:
+   ❌ Errors detected:   3
+   ⚠️  Warnings detected: 2
+   🔧 Resolved:          1
+   📌 Active:            5
+
    Report saved to: .logicstamp/strict_watch_violations.json
 ```
 
-If no violations were detected:
+If no violations were detected during the session:
 
 ```
 ^C
 👋 Watch mode stopped
 
-✅ Strict Watch: No violations detected during session
+✅ Strict Watch session complete
+
+📊 Session summary:
+   ❌ Errors detected:   0
+   ⚠️  Warnings detected: 0
+   🔧 Resolved:          0
+   📌 Active:            0
 ```
 
 ### Use Cases
