@@ -456,7 +456,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
       console.log(`\n✅ Compiled context verified - no secret patterns detected`);
     } else {
       console.log(`\nℹ️  Security scan skipped (no security report found)`);
-      console.log(`   Run \`stamp init\` or \`stamp security\` to enable secret detection`);
+      console.log(`   Run \`stamp init\` or \`stamp security scan\` to enable secret detection`);
     }
 
     console.log(`\n⏱  Completed in ${elapsed}ms`);

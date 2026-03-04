@@ -234,7 +234,7 @@ Generated `context.json`:
 
 - `✅ Generated context verified - no secret patterns detected` - Security report exists and no secrets were found
 - `⚠️ Secret sanitization: Replaced X secret(s) in Y file(s)` - Secrets were detected and sanitized
-- `ℹ️ Security scan skipped (no security report found)` - No security report exists; run `stamp init` or `stamp security` to enable secret detection
+- `ℹ️ Security scan skipped (no security report found)` - No security report exists; run `stamp init` or `stamp security scan` to enable secret detection
 
 See [security-scan.md](security-scan.md) for more information about security scanning.
 
