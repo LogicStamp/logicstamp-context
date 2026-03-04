@@ -175,6 +175,10 @@ Pre-parsed. Categorized. Stable. The AI reads contracts, not implementations.
 
 ## Watch Mode
 
+![Strict Watch Mode Demo](./assets/logicstamp-strict-watch.gif)
+
+*Strict watch mode in action: detecting violations and clearing them when resolved.*
+
 For development, run watch mode to keep context fresh as you code:
 
 ```bash
@@ -191,9 +195,11 @@ Strict watch catches breaking changes that affect consumers:
 | `breaking_change_function_removed` | Deleted exported `formatDate()` |
 | `contract_removed` | Deleted entire component |
 
-![Strict Watch Mode](./assets/strict_watch_mode.png)
+**Errors vs Warnings:** Violations are classified by severity. **Errors** indicate breaking changes that will affect consumers (removed props, events, functions, or entire contracts). **Warnings** indicate less severe changes (type signature changes, removed internal state). Violations are tracked in real-time and automatically cleared when resolved.
 
-*Strict watch mode detecting a breaking change in real time.*
+![Strict Watch Mode Terminal Output](./assets/logicstamp-strict-watch-output.png)
+
+*Example terminal output showing violations.*
 
 > ℹ️ **Note:** Strict Watch currently detects breaking changes at the source. Next step: a symbol-level import/export reverse index to trace which consumer files will break.
 
