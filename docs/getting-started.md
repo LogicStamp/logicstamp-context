@@ -17,6 +17,7 @@ LogicStamp Context compiles TypeScript codebases into **deterministic architectu
 - ✅ **Structured** - Pre-parsed contracts, not raw source code
 - ✅ **Framework-aware** - Understands React, Next.js, Vue, Express, NestJS
 - ✅ **Watch mode** - Auto-regenerates as you code
+- ✅ **Strict watch** - Detects breaking changes during development
 - ✅ **MCP-ready** - Works seamlessly with AI assistants via MCP protocol
 
 ## Choose Your Path
@@ -134,7 +135,7 @@ LogicStamp Context generates structured JSON bundles:
 ### For CLI Users
 1. **[CLI Getting Started Guide](cli/getting-started.md)** - Complete CLI setup and usage
 2. **[Usage Guide](usage.md)** - Comprehensive command reference
-3. **[Watch Mode](cli/watch.md)** - Auto-regenerate context as you code
+3. **[Watch Mode](cli/watch.md)** - Auto-regenerate context as you code (includes strict watch mode)
 4. **[Schema Documentation](schema.md)** - Understanding output format
 
 ### For MCP Users
@@ -151,6 +152,9 @@ stamp init
 
 # Start watch mode (auto-regenerates on changes)
 stamp context --watch
+
+# Strict watch mode (detects breaking changes during refactors)
+stamp context --strict-watch
 
 # Generate with style metadata
 stamp context style
