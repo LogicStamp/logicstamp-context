@@ -2,9 +2,9 @@
  * Watch Mode Diffing - Contract and bundle comparison utilities
  */
 
-import type { LogicStampBundle } from '../../../core/pack.js';
-import type { UIFContract } from '../../../types/UIFContract.js';
-import { normalizeEntryId } from '../../../utils/fsx.js';
+import type { LogicStampBundle } from '../../../../core/pack.js';
+import type { UIFContract } from '../../../../types/UIFContract.js';
+import { normalizeEntryId } from '../../../../utils/fsx.js';
 
 /**
  * Contract comparison result with detailed changes

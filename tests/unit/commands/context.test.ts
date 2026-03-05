@@ -16,7 +16,7 @@ vi.mock('../../../src/core/pack.js');
 vi.mock('../../../src/utils/tokens.js');
 vi.mock('../../../src/cli/commands/context/index.js');
 vi.mock('../../../src/cli/commands/validate.js');
-vi.mock('../../../src/cli/commands/context/watchMode.js');
+vi.mock('../../../src/cli/commands/context/watchMode/watchMode.js');
 vi.mock('../../../src/core/pack/index.js', () => ({
   getAndResetSanitizeStats: vi.fn(() => ({ filesWithSecrets: 0, totalSecretsReplaced: 0, filesProcessed: [], securityReportLoaded: false })),
 }));

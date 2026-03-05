@@ -6,7 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import type { UIFContract } from '../../../src/types/UIFContract.js';
 import type { LogicStampBundle } from '../../../src/core/pack.js';
-import { compareContracts, getChanges } from '../../../src/cli/commands/context/watchDiff.js';
+import { compareContracts, getChanges } from '../../../src/cli/commands/context/watchMode/watchDiff.js';
 
 // Helper to create mock contracts and bundles
 const createMockContract = (

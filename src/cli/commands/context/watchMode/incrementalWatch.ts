@@ -5,24 +5,24 @@
 
 import { resolve, dirname, join, relative, isAbsolute } from 'node:path';
 import { readFile } from 'node:fs/promises';
-import type { UIFContract } from '../../../types/UIFContract.js';
-import type { LogicStampBundle } from '../../../core/pack.js';
-import type { ProjectManifest } from '../../../core/manifest.js';
-import { buildDependencyGraph } from '../../../core/manifest.js';
-import { pack, type PackOptions } from '../../../core/pack.js';
-import { extractFromFile } from '../../../core/astParser.js';
-import { buildContract } from '../../../core/contractBuilder.js';
-import { extractStyleMetadata } from '../../../extractors/styling/index.js';
-import { readFileWithText, normalizeEntryId } from '../../../utils/fsx.js';
-import { fileHash } from '../../../utils/hash.js';
-import { debugError } from '../../../utils/debug.js';
+import type { UIFContract } from '../../../../types/UIFContract.js';
+import type { LogicStampBundle } from '../../../../core/pack.js';
+import type { ProjectManifest } from '../../../../core/manifest.js';
+import { buildDependencyGraph } from '../../../../core/manifest.js';
+import { pack, type PackOptions } from '../../../../core/pack.js';
+import { extractFromFile } from '../../../../core/astParser.js';
+import { buildContract } from '../../../../core/contractBuilder.js';
+import { extractStyleMetadata } from '../../../../extractors/styling/index.js';
+import { readFileWithText, normalizeEntryId } from '../../../../utils/fsx.js';
+import { fileHash } from '../../../../utils/hash.js';
+import { debugError } from '../../../../utils/debug.js';
 import { Project } from 'ts-morph';
-import { buildContractsFromFiles } from './contractBuilder.js';
-import { writeContextFiles, writeMainIndex, groupBundlesByFolder, displayPath } from './fileWriter.js';
-import { formatBundles } from './bundleFormatter.js';
-import { calculateStats } from './statsCalculator.js';
-import { validateBundles } from '../validate.js';
-import type { ContextOptions } from '../context.js';
+import { buildContractsFromFiles } from '../contractBuilder.js';
+import { writeContextFiles, writeMainIndex, groupBundlesByFolder, displayPath } from '../fileWriter.js';
+import { formatBundles } from '../bundleFormatter.js';
+import { calculateStats } from '../statsCalculator.js';
+import { validateBundles } from '../../validate.js';
+import type { ContextOptions } from '../../context.js';
 
 /**
  * Cache entries for contracts, AST, and style extraction

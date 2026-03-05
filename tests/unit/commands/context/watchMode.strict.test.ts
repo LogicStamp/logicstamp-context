@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import type { BundleChanges, ContractDiff } from '../../../../src/cli/commands/context/watchDiff.js';
+import type { BundleChanges, ContractDiff } from '../../../../src/cli/commands/context/watchMode/watchDiff.js';
 
 // Helper to create mock bundle changes
 function createMockBundleChanges(overrides?: Partial<BundleChanges>): BundleChanges {

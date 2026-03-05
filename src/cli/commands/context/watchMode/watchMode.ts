@@ -5,11 +5,11 @@
 import { resolve, dirname, join, relative } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import chokidar from 'chokidar';
-import { globFiles } from '../../../utils/fsx.js';
-import { readStampignore, filterIgnoredFiles } from '../../../utils/stampignore.js';
-import { buildDependencyGraph } from '../../../core/manifest.js';
-import type { LogicStampBundle } from '../../../core/pack.js';
-import { normalizeEntryId } from '../../../utils/fsx.js';
+import { globFiles } from '../../../../utils/fsx.js';
+import { readStampignore, filterIgnoredFiles } from '../../../../utils/stampignore.js';
+import { buildDependencyGraph } from '../../../../core/manifest.js';
+import type { LogicStampBundle } from '../../../../core/pack.js';
+import { normalizeEntryId } from '../../../../utils/fsx.js';
 import {
   writeWatchStatus,
   deleteWatchStatus,
@@ -17,15 +17,20 @@ import {
   writeStrictWatchStatus,
   deleteStrictWatchStatus,
   getWatchStatusPath,
-} from '../../../utils/config.js';
-import { registerCleanup, gracefulShutdown, registerSyncCleanupPath, registerSignalHandlers } from '../../../utils/cleanup.js';
+} from '../../../../utils/config.js';
+import { registerCleanup, gracefulShutdown, registerSyncCleanupPath, registerSignalHandlers } from '../../../../utils/cleanup.js';
 import type {
   WatchLogEntry,
   Violation,
   ViolationsSummary,
   StrictWatchStatus,
-} from '../../../utils/config.js';
+} from '../../../../utils/config.js';
 import { getChanges, showChanges, type BundleChanges, type ContractDiff } from './watchDiff.js';
+import {
+  initializeWatchCache,
+  incrementalRebuild,
+  type WatchCache,
+} from './index.js';
 import {
   buildContractsFromFiles,
   writeContextFiles,
@@ -33,11 +38,8 @@ import {
   groupBundlesByFolder,
   displayPath,
   displayProjectRoot,
-  initializeWatchCache,
-  incrementalRebuild,
-  type WatchCache,
-} from './index.js';
-import { contextCommand, type ContextOptions } from '../context.js';
+} from '../index.js';
+import { contextCommand, type ContextOptions } from '../../context.js';
 
 /**
  * Detect violations from bundle changes

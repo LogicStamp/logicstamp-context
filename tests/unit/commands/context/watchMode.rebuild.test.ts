@@ -4,7 +4,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { ContextOptions } from '../../../../src/cli/commands/context.js';
-import type { WatchCache } from '../../../../src/cli/commands/context/incrementalWatch.js';
+import type { WatchCache } from '../../../../src/cli/commands/context/watchMode/incrementalWatch.js';
 
 // Mock all dependencies before importing the module
 vi.mock('node:path', async () => {
@@ -62,9 +62,14 @@ vi.mock('../../../../src/utils/cleanup.js', () => ({
   registerSignalHandlers: vi.fn(),
 }));
 
-vi.mock('../../../../src/cli/commands/context/watchDiff.js', () => ({
+vi.mock('../../../../src/cli/commands/context/watchMode/watchDiff.js', () => ({
   getChanges: vi.fn(),
   showChanges: vi.fn(),
+}));
+
+vi.mock('../../../../src/cli/commands/context/watchMode/index.js', () => ({
+  initializeWatchCache: vi.fn(),
+  incrementalRebuild: vi.fn(),
 }));
 
 vi.mock('../../../../src/cli/commands/context/index.js', () => ({
@@ -75,8 +80,6 @@ vi.mock('../../../../src/cli/commands/context/index.js', () => ({
   displayPath: vi.fn((p: string) => p),
   displayProjectRoot: vi.fn((p: string) => p),
   displayFilePath: vi.fn((p: string) => p),
-  initializeWatchCache: vi.fn(),
-  incrementalRebuild: vi.fn(),
 }));
 
 vi.mock('../../../../src/cli/commands/context.js', () => ({
@@ -84,7 +87,8 @@ vi.mock('../../../../src/cli/commands/context.js', () => ({
 }));
 
 // Import the module after mocks
-import { startWatchMode } from '../../../../src/cli/commands/context/watchMode.js';
+import { startWatchMode } from '../../../../src/cli/commands/context/watchMode/watchMode.js';
+import * as watchModeModule from '../../../../src/cli/commands/context/watchMode/index.js';
 import * as contextHelpersModule from '../../../../src/cli/commands/context/index.js';
 import * as cleanupModule from '../../../../src/utils/cleanup.js';
 import * as configModule from '../../../../src/utils/config.js';
@@ -205,7 +209,7 @@ describe('debouncing', () => {
     };
     vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
 
-    vi.mocked(contextHelpersModule.incrementalRebuild).mockResolvedValue({
+    vi.mocked(watchModeModule.incrementalRebuild).mockResolvedValue({
       bundles: [],
       updatedBundles: new Set(),
     });
@@ -270,7 +274,7 @@ describe('debouncing', () => {
 
 describe('incremental vs full rebuild', () => {
   it('should use incremental rebuild when cache is provided', async () => {
-    vi.mocked(contextHelpersModule.incrementalRebuild).mockResolvedValue({
+    vi.mocked(watchModeModule.incrementalRebuild).mockResolvedValue({
       bundles: [],
       updatedBundles: new Set(),
     });

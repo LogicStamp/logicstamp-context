@@ -3,10 +3,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { BundleChanges, ContractDiff } from '../../../../src/cli/commands/context/watchDiff.js';
+import type { BundleChanges, ContractDiff } from '../../../../src/cli/commands/context/watchMode/watchDiff.js';
 import type { Violation, StrictWatchStatus } from '../../../../src/utils/config.js';
 import type { LogicStampBundle } from '../../../../src/core/pack.js';
-import type { WatchCache } from '../../../../src/cli/commands/context/incrementalWatch.js';
+import type { WatchCache } from '../../../../src/cli/commands/context/watchMode/incrementalWatch.js';
 import type { ContextOptions } from '../../../../src/cli/commands/context.js';
 
 // Mock all dependencies before importing the module
@@ -65,9 +65,14 @@ vi.mock('../../../../src/utils/cleanup.js', () => ({
   registerSignalHandlers: vi.fn(),
 }));
 
-vi.mock('../../../../src/cli/commands/context/watchDiff.js', () => ({
+vi.mock('../../../../src/cli/commands/context/watchMode/watchDiff.js', () => ({
   getChanges: vi.fn(),
   showChanges: vi.fn(),
+}));
+
+vi.mock('../../../../src/cli/commands/context/watchMode/index.js', () => ({
+  initializeWatchCache: vi.fn(),
+  incrementalRebuild: vi.fn(),
 }));
 
 vi.mock('../../../../src/cli/commands/context/index.js', () => ({
@@ -78,8 +83,6 @@ vi.mock('../../../../src/cli/commands/context/index.js', () => ({
   displayPath: vi.fn((p: string) => p),
   displayProjectRoot: vi.fn((p: string) => p),
   displayFilePath: vi.fn((p: string) => p),
-  initializeWatchCache: vi.fn(),
-  incrementalRebuild: vi.fn(),
 }));
 
 vi.mock('../../../../src/cli/commands/context.js', () => ({
@@ -87,10 +90,11 @@ vi.mock('../../../../src/cli/commands/context.js', () => ({
 }));
 
 // Import the module after mocks
-import { startWatchMode } from '../../../../src/cli/commands/context/watchMode.js';
+import { startWatchMode } from '../../../../src/cli/commands/context/watchMode/watchMode.js';
 import * as configModule from '../../../../src/utils/config.js';
 import * as cleanupModule from '../../../../src/utils/cleanup.js';
-import * as watchDiffModule from '../../../../src/cli/commands/context/watchDiff.js';
+import * as watchDiffModule from '../../../../src/cli/commands/context/watchMode/watchDiff.js';
+import * as watchModeModule from '../../../../src/cli/commands/context/watchMode/index.js';
 import * as contextHelpersModule from '../../../../src/cli/commands/context/index.js';
 import chokidar from 'chokidar';
 import { readFile } from 'node:fs/promises';
@@ -246,7 +250,7 @@ describe('Watch Mode Failure Modes', () => {
 
       // Make incrementalRebuild slow
       let rebuildCallCount = 0;
-      vi.mocked(contextHelpersModule.incrementalRebuild).mockImplementation(async () => {
+      vi.mocked(watchModeModule.incrementalRebuild).mockImplementation(async () => {
         rebuildCallCount++;
         await new Promise(resolve => setTimeout(resolve, 100));
         return { bundles: [], updatedBundles: new Set() };
@@ -664,7 +668,7 @@ describe('Watch Mode Failure Modes', () => {
         allBundles: [baselineBundle],
       };
 
-      vi.mocked(contextHelpersModule.incrementalRebuild).mockResolvedValue({
+      vi.mocked(watchModeModule.incrementalRebuild).mockResolvedValue({
         bundles: [newBundle],
         updatedBundles: new Set(['src/App.tsx']),
       });
@@ -758,7 +762,7 @@ describe('Watch Mode Failure Modes', () => {
         allBundles: [],
       };
 
-      vi.mocked(contextHelpersModule.incrementalRebuild).mockResolvedValue({
+      vi.mocked(watchModeModule.incrementalRebuild).mockResolvedValue({
         bundles: [],
         updatedBundles: new Set(),
       });
@@ -857,7 +861,7 @@ describe('Watch Mode Failure Modes', () => {
         allBundles: [],
       };
 
-      vi.mocked(contextHelpersModule.incrementalRebuild).mockResolvedValue({
+      vi.mocked(watchModeModule.incrementalRebuild).mockResolvedValue({
         bundles: [],
         updatedBundles: new Set(),
       });
@@ -951,7 +955,7 @@ describe('Watch Mode Failure Modes', () => {
         allBundles: [],
       };
 
-      vi.mocked(contextHelpersModule.incrementalRebuild).mockResolvedValue({
+      vi.mocked(watchModeModule.incrementalRebuild).mockResolvedValue({
         bundles: [],
         updatedBundles: new Set(),
       });
@@ -1012,7 +1016,7 @@ describe('Watch Mode Failure Modes', () => {
       };
       vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
 
-      vi.mocked(contextHelpersModule.incrementalRebuild).mockRejectedValueOnce(new Error('Build failed'));
+      vi.mocked(watchModeModule.incrementalRebuild).mockRejectedValueOnce(new Error('Build failed'));
 
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -1076,7 +1080,7 @@ describe('Watch Mode Failure Modes', () => {
       };
       vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
 
-      vi.mocked(contextHelpersModule.incrementalRebuild).mockRejectedValueOnce(new Error('Parse error'));
+      vi.mocked(watchModeModule.incrementalRebuild).mockRejectedValueOnce(new Error('Parse error'));
 
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -1221,7 +1225,7 @@ describe('Watch Mode Failure Modes', () => {
         allBundles: [],
       };
 
-      vi.mocked(contextHelpersModule.incrementalRebuild).mockResolvedValue({
+      vi.mocked(watchModeModule.incrementalRebuild).mockResolvedValue({
         bundles: [],
         updatedBundles: new Set(),
       });
@@ -1299,7 +1303,7 @@ describe('Watch Mode Failure Modes', () => {
         allBundles: [],
       };
 
-      vi.mocked(contextHelpersModule.incrementalRebuild).mockResolvedValue({
+      vi.mocked(watchModeModule.incrementalRebuild).mockResolvedValue({
         bundles: [],
         updatedBundles: new Set(),
       });
@@ -1408,7 +1412,7 @@ describe('Watch Mode Failure Modes', () => {
         allBundles: [baselineBundle],
       };
 
-      vi.mocked(contextHelpersModule.incrementalRebuild).mockResolvedValue({
+      vi.mocked(watchModeModule.incrementalRebuild).mockResolvedValue({
         bundles: [newBundle],
         updatedBundles: new Set(['src/App.tsx']),
       });
@@ -1478,7 +1482,7 @@ describe('Watch Mode Failure Modes', () => {
         return '';
       });
       // Re-setup incrementalRebuild mock after clearAllMocks
-      vi.mocked(contextHelpersModule.incrementalRebuild).mockResolvedValue({
+      vi.mocked(watchModeModule.incrementalRebuild).mockResolvedValue({
         bundles: [newBundle],
         updatedBundles: new Set(['src/App.tsx']),
       });
@@ -1529,7 +1533,7 @@ describe('Watch Mode Failure Modes', () => {
         }
         return '';
       });
-      vi.mocked(contextHelpersModule.incrementalRebuild).mockResolvedValue({
+      vi.mocked(watchModeModule.incrementalRebuild).mockResolvedValue({
         bundles: [newBundle],
         updatedBundles: new Set(['src/New.tsx']),
       });
@@ -1575,7 +1579,7 @@ describe('Watch Mode Failure Modes', () => {
       };
       vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
 
-      vi.mocked(contextHelpersModule.incrementalRebuild).mockResolvedValue({
+      vi.mocked(watchModeModule.incrementalRebuild).mockResolvedValue({
         bundles: [],
         updatedBundles: new Set(),
       });
