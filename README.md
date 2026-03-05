@@ -75,7 +75,7 @@ These contracts:
 - Enable early detection of architectural drift and breaking changes
 
 ![LogicStamp MCP Workflow](./assets/logicstamp-workflow.gif)
-*Context bundles generated and consumed across MCP-powered AI workflows.*
+*Example workflow: `stamp context --strict-watch` generates context bundles that MCP-powered assistants use to explain component architecture (ThemeContext shown here).*
 
 **Same code ⇒ same context output.** Contracts are diffable, so you can detect drift and breaking changes.
 
