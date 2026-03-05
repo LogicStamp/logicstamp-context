@@ -5,7 +5,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, rm, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve, basename } from 'node:path';
 import { createMockBundle, createMockContract } from './helpers.js';
 
 // Mock tokens module
@@ -31,6 +31,8 @@ vi.mock('../../../../src/utils/debug.js', () => ({
 // Import after mocks
 import {
   displayPath,
+  displayProjectRoot,
+  displayFilePath,
   detectRootFolder,
   groupBundlesByFolder,
   writeContextFiles,
@@ -76,6 +78,100 @@ describe('fileWriter', () => {
 
     it('should handle root path', () => {
       expect(displayPath('.')).toBe('.');
+    });
+  });
+
+  describe('displayProjectRoot', () => {
+    it('should normalize backslashes to forward slashes', () => {
+      // Test that Windows-style paths are normalized
+      const result = displayProjectRoot('C:\\Users\\River\\Desktop\\my-project');
+      // Should use forward slashes
+      expect(result).not.toContain('\\');
+      expect(result).toContain('/');
+    });
+
+    it('should show folder name when project root is current directory', () => {
+      // Test with actual current directory
+      const currentDir = process.cwd();
+      const result = displayProjectRoot(currentDir);
+      // Should show folder name instead of "." or absolute path
+      expect(result).toBe(basename(currentDir));
+    });
+
+    it('should handle relative paths correctly', () => {
+      // Test with relative path
+      const result = displayProjectRoot('./src');
+      // Should normalize and show relative path
+      expect(result).not.toContain('\\');
+      expect(result).toBe('src');
+    });
+
+    it('should prefer relative paths over absolute when possible', () => {
+      // Test with absolute path - function will try to show relative path if possible
+      const result = displayProjectRoot('/completely/different/path');
+      // Should show normalized path (relative if possible, absolute as fallback)
+      expect(result).not.toContain('\\');
+      expect(typeof result).toBe('string');
+      expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('should show relative path when possible', () => {
+      // Test with a path relative to current directory
+      const currentDir = process.cwd();
+      const parentDir = resolve(currentDir, '..');
+      const result = displayProjectRoot(parentDir);
+      // Should show relative path or folder name
+      expect(result).not.toContain('\\');
+      // Result should be either a relative path or the folder name
+      expect(typeof result).toBe('string');
+      expect(result.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('displayFilePath', () => {
+    it('should normalize backslashes to forward slashes', () => {
+      // Test that Windows-style paths are normalized
+      const result = displayFilePath('C:\\Users\\River\\Desktop\\my-project\\context.json');
+      // Should use forward slashes
+      expect(result).not.toContain('\\');
+      expect(result).toContain('/');
+    });
+
+    it('should show relative path when file is in current directory', () => {
+      // Test with a file in current directory
+      const currentDir = process.cwd();
+      const filePath = join(currentDir, 'context.json');
+      const result = displayFilePath(filePath);
+      // Should show relative path
+      expect(result).toBe('context.json');
+      expect(result).not.toContain('\\');
+    });
+
+    it('should show relative path when file is in subdirectory', () => {
+      // Test with a file in a subdirectory
+      const currentDir = process.cwd();
+      const filePath = join(currentDir, 'src', 'components', 'context.json');
+      const result = displayFilePath(filePath);
+      // Should show relative path
+      expect(result).toBe('src/components/context.json');
+      expect(result).not.toContain('\\');
+    });
+
+    it('should prefer relative paths over absolute when possible', () => {
+      // Test with absolute path - function will try to show relative path if possible
+      const result = displayFilePath('/completely/different/path/context.json');
+      // Should show normalized path (relative if possible, absolute as fallback)
+      expect(result).not.toContain('\\');
+      expect(typeof result).toBe('string');
+      expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('should handle relative paths correctly', () => {
+      // Test with relative path
+      const result = displayFilePath('./src/context.json');
+      // Should normalize and show relative path
+      expect(result).not.toContain('\\');
+      expect(result).toBe('src/context.json');
     });
   });
 

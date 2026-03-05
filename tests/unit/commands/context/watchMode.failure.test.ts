@@ -76,6 +76,8 @@ vi.mock('../../../../src/cli/commands/context/index.js', () => ({
   writeMainIndex: vi.fn().mockResolvedValue(undefined),
   groupBundlesByFolder: vi.fn(() => new Map()),
   displayPath: vi.fn((p: string) => p),
+  displayProjectRoot: vi.fn((p: string) => p),
+  displayFilePath: vi.fn((p: string) => p),
   initializeWatchCache: vi.fn(),
   incrementalRebuild: vi.fn(),
 }));

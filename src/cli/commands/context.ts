@@ -29,6 +29,7 @@ import {
   writeMainIndex,
   groupBundlesByFolder,
   displayPath,
+  displayProjectRoot,
   ensureConfigExists,
   setupGitignore,
   setupLLMContext,
@@ -73,7 +74,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   const projectRoot = resolve(targetPath);
 
   if (!options.quiet) {
-    console.log(`🔍 Scanning ${displayPath(projectRoot)}...`);
+    console.log(`🔍 Scanning ${displayProjectRoot(projectRoot)}...`);
   }
 
   // Step 1: Find all TypeScript files
@@ -90,7 +91,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   }
 
   if (files.length === 0) {
-    console.error(`❌ No TypeScript modules found under ${displayPath(projectRoot)}`);
+    console.error(`❌ No TypeScript modules found under ${displayProjectRoot(projectRoot)}`);
     console.error(`   Try: logicstamp-context ./src or --depth 0 to scan all directories`);
     process.exit(1);
   }

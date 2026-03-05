@@ -2,8 +2,7 @@
  * Watch Mode - Monitors file changes and recompiles context automatically
  */
 
-import { resolve, dirname, join, relative, basename } from 'node:path';
-import { cwd } from 'node:process';
+import { resolve, dirname, join, relative } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import chokidar from 'chokidar';
 import { globFiles } from '../../../utils/fsx.js';
@@ -33,6 +32,7 @@ import {
   writeMainIndex,
   groupBundlesByFolder,
   displayPath,
+  displayProjectRoot,
   initializeWatchCache,
   incrementalRebuild,
   type WatchCache,
@@ -130,35 +130,6 @@ function detectViolations(changes: BundleChanges): Violation[] {
   }
 
   return violations;
-}
-
-/**
- * Display project root path in a normalized, user-friendly format
- * Shows folder name if it's the current directory, relative path if possible, otherwise absolute path
- */
-function displayProjectRoot(projectRoot: string): string {
-  const currentDir = cwd();
-  const resolvedRoot = resolve(projectRoot);
-  const resolvedCurrent = resolve(currentDir);
-  
-  // If it's the current directory, show the folder name instead of "."
-  if (resolvedRoot === resolvedCurrent) {
-    return basename(resolvedRoot);
-  }
-  
-  // Try to show relative path from current directory
-  try {
-    const relPath = relative(currentDir, resolvedRoot);
-    // Use relative path if available (more portable than absolute)
-    if (relPath) {
-      return displayPath(relPath);
-    }
-  } catch {
-    // If relative path calculation fails, fall back to absolute
-  }
-  
-  // Fall back to absolute path (normalized)
-  return displayPath(resolvedRoot);
 }
 
 /**

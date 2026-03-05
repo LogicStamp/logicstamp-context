@@ -3,7 +3,8 @@
  */
 
 import { writeFile, mkdir } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve, relative, basename } from 'node:path';
+import { cwd } from 'node:process';
 import { createRequire } from 'module';
 import type { LogicStampBundle, LogicStampIndex, FolderInfo } from '../../../core/pack.js';
 import { getFolderPath, normalizeEntryId } from '../../../utils/fsx.js';
@@ -27,6 +28,58 @@ try {
  */
 export function displayPath(path: string): string {
   return path.replace(/\\/g, '/');
+}
+
+/**
+ * Display project root path in a normalized, user-friendly format
+ * Shows folder name if it's the current directory, relative path if possible, otherwise absolute path
+ */
+export function displayProjectRoot(projectRoot: string): string {
+  const currentDir = cwd();
+  const resolvedRoot = resolve(projectRoot);
+  const resolvedCurrent = resolve(currentDir);
+  
+  // If it's the current directory, show the folder name instead of "."
+  if (resolvedRoot === resolvedCurrent) {
+    return basename(resolvedRoot);
+  }
+  
+  // Try to show relative path from current directory
+  try {
+    const relPath = relative(currentDir, resolvedRoot);
+    // Use relative path if available (more portable than absolute)
+    if (relPath) {
+      return displayPath(relPath);
+    }
+  } catch {
+    // If relative path calculation fails, fall back to absolute
+  }
+  
+  // Fall back to absolute path (normalized)
+  return displayPath(resolvedRoot);
+}
+
+/**
+ * Display file path in a normalized, user-friendly format
+ * Shows relative path from current directory when possible, otherwise normalized absolute path
+ */
+export function displayFilePath(filePath: string): string {
+  const currentDir = cwd();
+  const resolvedPath = resolve(filePath);
+  
+  // Try to show relative path from current directory
+  try {
+    const relPath = relative(currentDir, resolvedPath);
+    // Use relative path if available (more portable than absolute)
+    if (relPath) {
+      return displayPath(relPath);
+    }
+  } catch {
+    // If relative path calculation fails, fall back to absolute
+  }
+  
+  // Fall back to absolute path (normalized)
+  return displayPath(resolvedPath);
 }
 
 /**
@@ -182,7 +235,7 @@ export async function writeContextFiles(
       throw new Error(userMessage);
     }
     if (!options.quiet) {
-      console.log(`   ✓ ${displayPath(folderContextPath)} (${folderBundles.length} bundles)`);
+      console.log(`   ✓ ${displayFilePath(folderContextPath)} (${folderBundles.length} bundles)`);
     }
 
     // Add to folder info array
@@ -280,7 +333,7 @@ export async function writeMainIndex(
     // Minimal output in quiet mode (unless suppressed for internal calls)
     process.stdout.write('✓\n');
   } else if (!options.quiet) {
-    console.log(`   ✓ ${displayPath(mainContextPath)} (index of ${bundlesByFolderSize} folders)`);
+    console.log(`   ✓ ${displayFilePath(mainContextPath)} (index of ${bundlesByFolderSize} folders)`);
   }
 }
 
