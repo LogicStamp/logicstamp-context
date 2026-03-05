@@ -108,6 +108,18 @@ describe('parseContextArgs', () => {
     expect(options.includeStyle).toBe(true);
   });
 
+  it('should parse strict-watch flag and automatically enable watch', () => {
+    const options = parseContextArgs(['--strict-watch']);
+    expect(options.strictWatch).toBe(true);
+    expect(options.watch).toBe(true);
+  });
+
+  it('should allow both watch and strict-watch flags together', () => {
+    const options = parseContextArgs(['--watch', '--strict-watch']);
+    expect(options.watch).toBe(true);
+    expect(options.strictWatch).toBe(true);
+  });
+
   it('should parse short boolean flags', () => {
     const options = parseContextArgs(['-s', '-w', '-q']);
     expect(options.strict).toBe(true);

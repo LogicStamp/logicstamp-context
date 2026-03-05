@@ -695,5 +695,5 @@ The compare command detects context drift with multi-file support:
 - **Three-tier output**: folder summary → component summary → detailed changes
 - **Orphaned file cleanup**: automatically clean up stale files with `--clean-orphaned`
 
-> ⚠️ **Note:** For real-time breaking change detection during development, use `stamp context --watch --strict-watch` instead. For CI-based comparison against git refs, the `--baseline git:<ref>` option is **not yet implemented** - use the manual workflow shown in the CI/CD Integration section above.
+> ⚠️ **Note:** For real-time breaking change detection during development, use `stamp context --strict-watch` instead. For CI-based comparison against git refs, the `--baseline git:<ref>` option is **not yet implemented** - use the manual workflow shown in the CI/CD Integration section above.
 

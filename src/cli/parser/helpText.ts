@@ -144,9 +144,10 @@ OPTIONS:
   --verbose                            Show detailed bundle output (checkmarks for each file)
   --watch, -w                         Watch for file changes and recompile automatically
                                       Tip: Pass a subdirectory path to watch only that folder
-  --strict-watch                      Enable strict watch mode - track breaking changes and
-                                      violations during watch mode. Exits with code 1 if
-                                      errors detected. Reports saved to .logicstamp/
+  --strict-watch                      Enable strict watch mode - automatically enables watch
+                                      mode and tracks breaking changes and violations.
+                                      Exits with code 1 if errors detected. Reports saved
+                                      to .logicstamp/
   --debug                             Show detailed hash information in watch mode
   -h, --help                          Show this help
 
@@ -175,8 +176,9 @@ EXAMPLES:
   stamp context style ./src/components/MyFeature --watch
     Watch only files in a specific subdirectory (incremental rebuilds are fast!)
 
-  stamp context style --watch --strict-watch
+  stamp context style --strict-watch
     Watch mode with violation tracking for breaking changes
+    (Equivalent to: stamp context style --watch --strict-watch)
 
 NOTES:
   • This is equivalent to: stamp context --include-style
@@ -220,9 +222,10 @@ OPTIONS:
   --quiet, -q                         Suppress verbose output (show only errors)
   --verbose                            Show detailed bundle output (checkmarks for each file)
   --watch, -w                         Watch for file changes and recompile automatically
-  --strict-watch                      Enable strict watch mode - track breaking changes and
-                                      violations during watch mode. Exits with code 1 if
-                                      errors detected. Reports saved to .logicstamp/
+  --strict-watch                      Enable strict watch mode - automatically enables watch
+                                      mode and tracks breaking changes and violations.
+                                      Exits with code 1 if errors detected. Reports saved
+                                      to .logicstamp/
   --debug                             Show detailed hash information in watch mode
   -h, --help                          Show this help
 
@@ -254,10 +257,11 @@ EXAMPLES:
   stamp context ./src/components/MyFeature --watch
     Watch only files in a specific subdirectory (incremental recompilation)
 
-  stamp context --watch --strict-watch
+  stamp context --strict-watch
     Watch mode with violation tracking - reports breaking changes
     (removed props, events, functions) and missing dependencies.
     Exits with code 1 if errors detected during session.
+    (Equivalent to: stamp context --watch --strict-watch)
 
   stamp context --quiet
     Suppress verbose output (show only errors)

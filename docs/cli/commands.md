@@ -101,7 +101,8 @@ stamp context --watch --debug
 stamp context --watch --log-file
 
 # Strict watch mode - track breaking changes and violations
-stamp context --watch --strict-watch
+# (--strict-watch automatically enables watch mode)
+stamp context --strict-watch
 
 # Scan your project for secrets (API keys, passwords, tokens)
 # Runs 100% locally — nothing is uploaded or sent anywhere
