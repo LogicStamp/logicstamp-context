@@ -333,7 +333,7 @@ When exiting, strict watch mode displays a session summary:
 ^C
 👋 Watch mode stopped
 
-✅ Strict Watch session complete
+❌ Strict Watch session complete - 3 errors, 2 warnings detected
 
 📊 Session summary:
    ❌ Errors detected:   3
@@ -350,13 +350,28 @@ If no violations were detected during the session:
 ^C
 👋 Watch mode stopped
 
-✅ Strict Watch session complete
+✅ Strict Watch session complete - no violations detected
 
 📊 Session summary:
    ❌ Errors detected:   0
    ⚠️  Warnings detected: 0
    🔧 Resolved:          0
    📌 Active:            0
+```
+
+If only warnings were detected:
+
+```
+^C
+👋 Watch mode stopped
+
+⚠️ Strict Watch session complete - 2 warnings detected
+
+📊 Session summary:
+   ❌ Errors detected:   0
+   ⚠️  Warnings detected: 2
+   🔧 Resolved:          0
+   📌 Active:            2
 ```
 
 ### Use Cases
@@ -385,7 +400,7 @@ stamp context --watch
 # 👀 Watch mode enabled. Watching for file changes...
 #    Press Ctrl+C to stop
 #
-#    Watching: /path/to/project
+#    Watching: my-project
 #    Ignoring: context.json files, node_modules, dist, build, etc.
 #    Watching extensions: .ts, .tsx
 #

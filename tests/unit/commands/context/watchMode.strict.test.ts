@@ -111,8 +111,9 @@ describe('displayViolations', () => {
   // This test documents the expected console output format.
 
   it('should document violation display format', () => {
-    // Based on watchMode.ts displayViolations():
-    // - Displays header: "⚠️  Strict Watch: N violation(s) detected"
+    // Based on watchMode.ts violation display logic:
+    // - Shows initial message: "❌ Breaking change detected" (when errors present) or "⚠️  Warning detected" (warnings only)
+    // - Then displays header: "⚠️  Strict Watch: N violation(s) detected"
     // - Groups by severity: errors first, then warnings
     // - Shows error count: "❌ Errors (N):"
     // - Shows warning count: "⚠️  Warnings (N):"
