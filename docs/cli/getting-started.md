@@ -239,7 +239,8 @@ stamp context --watch
 stamp context style --watch
 
 # Strict watch mode (detects breaking changes)
-stamp context --watch --strict-watch
+# (--strict-watch automatically enables watch mode)
+stamp context --strict-watch
 ```
 
 **Features:**

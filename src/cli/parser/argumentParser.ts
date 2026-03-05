@@ -137,6 +137,7 @@ export function parseContextArgs(args: string[]): ContextOptions {
           break;
         case 'strict-watch':
           options.strictWatch = true;
+          options.watch = true; // --strict-watch automatically enables watch mode
           break;
         default:
           console.error(`❌ Unknown option: ${arg}`);

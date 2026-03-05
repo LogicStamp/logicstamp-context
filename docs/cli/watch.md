@@ -26,7 +26,8 @@ stamp context --watch --debug
 stamp context --watch --log-file
 
 # Strict watch mode - track breaking changes and violations
-stamp context --watch --strict-watch
+# (--strict-watch automatically enables watch mode)
+stamp context --strict-watch
 ```
 
 ## How It Works
@@ -120,7 +121,7 @@ Watch mode automatically ignores:
 | Option | Alias | Description |
 |--------|-------|-------------|
 | `--watch` | `-w` | Enable watch mode |
-| `--strict-watch` | | Enable strict watch mode - track breaking changes and violations |
+| `--strict-watch` | | Enable strict watch mode - automatically enables watch mode and tracks breaking changes and violations |
 | `--debug` | | Show detailed hash information on changes |
 | `--quiet` | `-q` | Suppress verbose output (show only errors) |
 | `--include-style` | | Watch style files and include style metadata |
@@ -219,12 +220,17 @@ By default, watch mode does not write log files. Use `--log-file` when you need 
 
 Strict watch mode (`--strict-watch`) tracks breaking changes and violations during development. It detects API changes in real-time as you code.
 
+**Note:** `--strict-watch` automatically enables watch mode, so `--watch` is optional. Both `stamp context --strict-watch` and `stamp context --watch --strict-watch` are equivalent and fully supported for backward compatibility.
+
 ```bash
-# Enable strict watch mode
+# Enable strict watch mode (--strict-watch automatically enables watch mode)
+stamp context --strict-watch
+
+# Alternative: explicitly enable both (equivalent to above, backward compatible)
 stamp context --watch --strict-watch
 
 # Combine with style metadata
-stamp context style --watch --strict-watch
+stamp context style --strict-watch
 ```
 
 ### What It Detects
@@ -320,7 +326,7 @@ For CI/CD pipelines with exit codes based on contract drift, use the `stamp comp
 stamp compare --baseline .logicstamp/baseline.json
 
 # Development: Awareness-only (no exit code enforcement)
-stamp context --watch --strict-watch
+stamp context --strict-watch
 ```
 
 The violations report (`.logicstamp/strict_watch_violations.json`) persists after watch mode stops, allowing you to review violations before committing.

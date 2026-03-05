@@ -39,7 +39,7 @@ stamp context [path] [options]
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors). |
 | `--verbose` | | `false` | Show detailed bundle output (checkmarks for each file written). By default, only shows summary messages. |
 | `--watch` | `-w` | `false` | Watch for file changes and regenerate automatically. |
-| `--strict-watch` | | `false` | Enable strict watch mode - track breaking changes and violations during development. Exits with code 1 if errors detected. |
+| `--strict-watch` | | `false` | Enable strict watch mode - automatically enables watch mode and tracks breaking changes and violations during development. Exits with code 1 if errors detected. |
 | `--debug` | | `false` | Show detailed hash information in watch mode. |
 | `--log-file` | | `false` | Write structured change logs to file (watch mode only, for change notifications). |
 | `--help` | `-h` | | Print usage help. |
@@ -160,6 +160,10 @@ stamp context ./src/components --watch
 stamp context --watch --debug
 
 # Strict watch mode - track breaking changes and violations
+# (--strict-watch automatically enables watch mode)
+stamp context --strict-watch
+
+# Alternative: explicitly enable both (equivalent to above)
 stamp context --watch --strict-watch
 
 # Custom output directory
