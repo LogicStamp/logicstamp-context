@@ -53,6 +53,7 @@ async function main() {
     compareModes: false,
     skipGitignore: false,
     quiet: false,
+    verbose: false,
     watch: false,
     debug: false,
   };
@@ -127,6 +128,10 @@ async function main() {
         case 'q':
           options.quiet = true;
           break;
+        case 'verbose':
+        case 'v':
+          options.verbose = true;
+          break;
         case 'watch':
         case 'w':
           options.watch = true;
@@ -178,6 +183,7 @@ OPTIONS:
   --compare-modes           Show detailed token comparison table
   --skip-gitignore          Skip .gitignore setup (never prompt or modify)
   --quiet, -q               Suppress verbose output (show only errors)
+  --verbose                 Show detailed bundle output (checkmarks for each file)
   --watch, -w               Watch for file changes and recompile automatically
   --debug                   Show detailed hash information in watch mode
   -h, --help                Show this help

@@ -154,6 +154,7 @@ export async function writeContextFiles(
   options: {
     format: 'json' | 'pretty' | 'ndjson' | 'toon';
     quiet?: boolean;
+    verbose?: boolean;
   }
 ): Promise<{ filesWritten: number; folderInfos: FolderInfo[]; totalTokenEstimate: number }> {
   const bundlesByFolder = groupBundlesByFolder(bundles);
@@ -234,7 +235,7 @@ export async function writeContextFiles(
       }
       throw new Error(userMessage);
     }
-    if (!options.quiet) {
+    if (!options.quiet && options.verbose) {
       console.log(`   ✓ ${displayFilePath(folderContextPath)} (${folderBundles.length} bundles)`);
     }
 

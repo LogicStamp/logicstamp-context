@@ -208,6 +208,7 @@ All options from `stamp context` are supported except `--compare-modes`. The sty
 | `--strict-missing` | | `false` | Exit with error if any missing dependencies found. |
 | `--skip-gitignore` | | `false` | Skip `.gitignore` setup (never prompt or modify). |
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors). |
+| `--verbose` | | `false` | Show detailed bundle output (checkmarks for each file written). By default, only shows summary messages. |
 | `--watch` | `-w` | `false` | Watch for file changes and regenerate automatically. |
 | `--strict-watch` | | `false` | Enable strict watch mode - track breaking changes and violations. |
 | `--debug` | | `false` | Show detailed hash information in watch mode. |

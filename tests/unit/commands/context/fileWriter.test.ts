@@ -336,6 +336,58 @@ describe('fileWriter', () => {
       expect(consoleSpy).not.toHaveBeenCalled();
     });
 
+    it('should show bundle checkmarks when verbose is true', async () => {
+      const bundles = [
+        createMockBundle('src/App.tsx', [createMockContract('src/App.tsx')]),
+        createMockBundle('src/components/Button.tsx', [createMockContract('src/components/Button.tsx')]),
+      ];
+
+      await writeContextFiles(bundles, tempDir, tempDir, {
+        format: 'json',
+        quiet: false,
+        verbose: true,
+      });
+
+      const calls = consoleSpy.mock.calls.flat().join('\n');
+      expect(calls).toContain('✓');
+      expect(calls).toContain('bundles');
+    });
+
+    it('should not show bundle checkmarks when verbose is false (default)', async () => {
+      const bundles = [
+        createMockBundle('src/App.tsx', [createMockContract('src/App.tsx')]),
+        createMockBundle('src/components/Button.tsx', [createMockContract('src/components/Button.tsx')]),
+      ];
+
+      await writeContextFiles(bundles, tempDir, tempDir, {
+        format: 'json',
+        quiet: false,
+        verbose: false,
+      });
+
+      const calls = consoleSpy.mock.calls.flat().join('\n');
+      // Should still show "Writing context files" but not bundle checkmarks
+      expect(calls).toContain('Writing context files');
+      // Bundle checkmarks should not appear
+      expect(calls).not.toMatch(/✓.*bundles/);
+    });
+
+    it('should not show bundle checkmarks when verbose is undefined (default)', async () => {
+      const bundles = [
+        createMockBundle('src/App.tsx', [createMockContract('src/App.tsx')]),
+      ];
+
+      await writeContextFiles(bundles, tempDir, tempDir, {
+        format: 'json',
+        quiet: false,
+        // verbose not specified (defaults to undefined/false)
+      });
+
+      const calls = consoleSpy.mock.calls.flat().join('\n');
+      expect(calls).toContain('Writing context files');
+      expect(calls).not.toMatch(/✓.*bundles/);
+    });
+
     it('should populate folderInfos with correct structure', async () => {
       const bundles = [
         createMockBundle('src/App.tsx', [createMockContract('src/App.tsx')]),

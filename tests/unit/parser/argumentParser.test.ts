@@ -115,6 +115,21 @@ describe('parseContextArgs', () => {
     expect(options.quiet).toBe(true);
   });
 
+  it('should parse verbose flag', () => {
+    const options = parseContextArgs(['--verbose']);
+    expect(options.verbose).toBe(true);
+  });
+
+  it('should parse verbose short flag', () => {
+    const options = parseContextArgs(['-v']);
+    expect(options.verbose).toBe(true);
+  });
+
+  it('should default verbose to false', () => {
+    const options = parseContextArgs([]);
+    expect(options.verbose).toBe(false);
+  });
+
   it('should parse entry path as positional argument', () => {
     const options = parseContextArgs(['src/App.tsx']);
     expect(options.entry).toBe('src/App.tsx');
