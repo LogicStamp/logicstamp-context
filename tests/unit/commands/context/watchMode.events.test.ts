@@ -61,7 +61,7 @@ vi.mock('../../../../src/utils/cleanup.js', () => ({
   registerSignalHandlers: vi.fn(),
 }));
 
-vi.mock('../../../../src/cli/commands/context/watchDiff.js', () => ({
+vi.mock('../../../../src/cli/commands/context/watchMode/watchDiff.js', () => ({
   getChanges: vi.fn(),
   showChanges: vi.fn(),
 }));
@@ -83,7 +83,7 @@ vi.mock('../../../../src/cli/commands/context.js', () => ({
 }));
 
 // Import the module after mocks
-import { startWatchMode } from '../../../../src/cli/commands/context/watchMode.js';
+import { startWatchMode } from '../../../../src/cli/commands/context/watchMode/watchMode.js';
 import chokidar from 'chokidar';
 
 describe('file extension filtering', () => {

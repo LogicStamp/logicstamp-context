@@ -16,7 +16,7 @@ import {
   getContractFromBundles,
   getChanges,
   showChanges,
-} from '../../../../src/cli/commands/context/watchDiff.js';
+} from '../../../../src/cli/commands/context/watchMode/watchDiff.js';
 
 describe('watchDiff', () => {
   let consoleSpy: ReturnType<typeof vi.spyOn>;

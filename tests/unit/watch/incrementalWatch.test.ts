@@ -48,7 +48,7 @@ import {
   initializeWatchCache,
   incrementalRebuild,
   type WatchCache,
-} from '../../../src/cli/commands/context/incrementalWatch.js';
+} from '../../../src/cli/commands/context/watchMode/incrementalWatch.js';
 import { buildDependencyGraph } from '../../../src/core/manifest.js';
 import { pack } from '../../../src/core/pack.js';
 import { readFileWithText } from '../../../src/utils/fsx.js';

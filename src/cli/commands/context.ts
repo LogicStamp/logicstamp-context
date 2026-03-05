@@ -37,7 +37,7 @@ import {
   type WatchCache,
 } from './context/index.js';
 import { getAndResetSanitizeStats } from '../../core/pack/index.js';
-import { startWatchMode } from './context/watchMode.js';
+import { startWatchMode } from './context/watchMode/watchMode.js';
 
 export interface ContextOptions {
   entry?: string;

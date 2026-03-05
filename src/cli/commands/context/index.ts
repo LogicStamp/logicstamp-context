@@ -30,6 +30,4 @@ export * from './statsCalculator.js';
 export * from './tokenEstimator.js';
 
 // Watch mode modules
-export * from './incrementalWatch.js';
-export * from './watchDiff.js';
-export * from './watchMode.js';
+export * from './watchMode/index.js';
