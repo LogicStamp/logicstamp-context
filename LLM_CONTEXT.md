@@ -697,7 +697,7 @@ Strict watch mode (`--strict-watch`) detects breaking changes in real-time:
 - `contract_removed` - Entire component/module removed
 
 **Output files:**
-- `.logicstamp/strict_watch_violations.json` - Current violations (deleted when all resolved)
+- `.logicstamp/strict_watch_violations.json` - Current violations (only exists when violations are present; automatically deleted when all resolved)
 
 **CI integration:** Exits with code 1 if errors detected during session.
 

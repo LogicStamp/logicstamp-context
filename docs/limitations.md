@@ -690,8 +690,8 @@ Strict watch mode (`--strict-watch`) tracks breaking changes during development 
 - ✅ Detects breaking changes: removed props, events, functions, contracts
 - ✅ Detects warnings: changed prop types, removed state/variables
 - ✅ State-based diffing like `git diff` (v0.5.5) - violations show current state vs baseline
-- ✅ Revert detection - when breaking changes are reverted, violations file is deleted
-- ✅ Violations report file (`.logicstamp/strict_watch_violations.json`)
+- ✅ Revert detection - when breaking changes are reverted, violations file is automatically deleted
+- ✅ Violations report file (`.logicstamp/strict_watch_violations.json`) - only exists when violations are present; deleted when all resolved
 
 **What Doesn't Work:**
 - ❌ Missing dependencies are not tracked as violations (they're expected for third-party packages)
