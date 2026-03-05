@@ -37,6 +37,7 @@ stamp context [path] [options]
 | `--style-mode <mode>` | | `lean` | Style output format: `lean` (counts + flags, compact) or `full` (arrays + details, verbose). Default is `lean` for token efficiency. |
 | `--skip-gitignore` | | `false` | Skip `.gitignore` setup (never prompt or modify). |
 | `--quiet` | `-q` | `false` | Suppress verbose output (show only errors). |
+| `--verbose` | | `false` | Show detailed bundle output (checkmarks for each file written). By default, only shows summary messages. |
 | `--watch` | `-w` | `false` | Watch for file changes and regenerate automatically. |
 | `--strict-watch` | | `false` | Enable strict watch mode - track breaking changes and violations during development. Exits with code 1 if errors detected. |
 | `--debug` | | `false` | Show detailed hash information in watch mode. |
@@ -129,6 +130,9 @@ stamp context ./packages/ui --dry-run
 
 # Suppress verbose output (quiet mode)
 stamp context --quiet
+
+# Show detailed bundle output (verbose mode)
+stamp context --verbose
 
 # Generate context with style metadata
 stamp context style

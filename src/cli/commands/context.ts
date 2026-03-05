@@ -57,6 +57,7 @@ export interface ContextOptions {
   compareModes: boolean;
   skipGitignore?: boolean;
   quiet?: boolean;
+  verbose?: boolean; // Show detailed bundle output (checkmarks for each file)
   suppressSuccessIndicator?: boolean; // When true, don't output ✓ even in quiet mode (for internal calls)
   includeStyle?: boolean; // Extract style metadata (Tailwind, SCSS, animations, layout)
   styleMode?: 'lean' | 'full'; // Style output mode: lean (default) or full
@@ -387,6 +388,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
       {
         format: options.format,
         quiet: options.quiet,
+        verbose: options.verbose,
       }
     );
 

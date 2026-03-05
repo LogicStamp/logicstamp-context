@@ -42,6 +42,7 @@ export function parseContextArgs(args: string[]): ContextOptions {
     compareModes: false,
     skipGitignore: false,
     quiet: false,
+    verbose: false, // Default to false
     includeStyle: false, // Default to false
     styleMode: 'lean', // Default to lean
     watch: false, // Default to false
@@ -112,6 +113,10 @@ export function parseContextArgs(args: string[]): ContextOptions {
         case 'quiet':
         case 'q':
           options.quiet = true;
+          break;
+        case 'verbose':
+        case 'v':
+          options.verbose = true;
           break;
         case 'include-style':
           options.includeStyle = true;

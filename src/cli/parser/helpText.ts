@@ -141,6 +141,7 @@ OPTIONS:
   --compare-modes                     Show detailed mode comparison table
   --skip-gitignore                    Skip .gitignore setup (never prompt or modify)
   --quiet, -q                         Suppress verbose output (show only errors)
+  --verbose                            Show detailed bundle output (checkmarks for each file)
   --watch, -w                         Watch for file changes and recompile automatically
                                       Tip: Pass a subdirectory path to watch only that folder
   --strict-watch                      Enable strict watch mode - track breaking changes and
@@ -217,6 +218,7 @@ OPTIONS:
   --compare-modes                     Show detailed mode comparison table
   --skip-gitignore                    Skip .gitignore setup (never prompt or modify)
   --quiet, -q                         Suppress verbose output (show only errors)
+  --verbose                            Show detailed bundle output (checkmarks for each file)
   --watch, -w                         Watch for file changes and recompile automatically
   --strict-watch                      Enable strict watch mode - track breaking changes and
                                       violations during watch mode. Exits with code 1 if

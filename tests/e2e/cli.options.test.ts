@@ -427,6 +427,32 @@ describe('CLI Command Options Tests', () => {
       expect(stdout.length).toBeLessThan(500);
     }, 30000);
 
+    it('should show bundle checkmarks with --verbose flag', async () => {
+      const outDir = join(outputPath, 'verbose-flag');
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --verbose --out ${outDir}`
+      );
+
+      // Should contain bundle checkmarks
+      expect(stdout).toMatch(/✓.*bundles/);
+      // Should still show main messages
+      expect(stdout).toContain('📝 Writing main context index');
+      expect(stdout).toContain('context files written successfully');
+    }, 30000);
+
+    it('should not show bundle checkmarks without --verbose flag (default)', async () => {
+      const outDir = join(outputPath, 'no-verbose');
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`
+      );
+
+      // Should not contain bundle checkmarks
+      expect(stdout).not.toMatch(/✓.*bundles/);
+      // Should still show main messages
+      expect(stdout).toContain('📝 Writing main context index');
+      expect(stdout).toContain('context files written successfully');
+    }, 30000);
+
     it('should handle --strict-missing flag', async () => {
       const outDir = join(outputPath, 'strict-missing');
       // This should work even if there are no missing deps
