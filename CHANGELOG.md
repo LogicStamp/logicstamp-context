@@ -19,6 +19,51 @@ See [docs/limitations.md](docs/limitations.md).
 
 ---
 
+## [0.7.1] - 2026-03-05
+
+### Improved
+
+- **Session status tracking for strict watch mode** ([#124](https://github.com/LogicStamp/logicstamp-context/pull/124))  
+  - Added session-level statistics for errors, warnings, and resolved violations  
+  - Status block now shows cumulative session metrics and active violations  
+  - Output only updates when violations change to keep watch mode clean  
+  - Added backward compatibility for existing status files and test coverage
+
+- **Enhanced strict watch session summary** ([#126](https://github.com/LogicStamp/logicstamp-context/pull/126))  
+  - Session completion message now reflects detected violations with contextual emoji (✅ none, ⚠️ warnings, ❌ errors)  
+  - Displays properly pluralized error/warning counts  
+  - Updated watch mode messaging and docs with examples of all status outcomes
+
+- **Normalized path display across all commands** ([#127](https://github.com/LogicStamp/logicstamp-context/pull/127))  
+  - Added `displayProjectRoot()` and `displayFilePath()` utilities for consistent path formatting  
+  - Paths now display as relative when possible (e.g., `src/context.json`) instead of long absolute paths  
+  - Updated `stamp context`, validation output, and watch mode to use the shared utilities  
+  - Removed duplicated path formatting logic in `watchMode.ts`  
+  - Added unit tests and updated watch mode test mocks for the new utilities
+
+- **Added `--verbose` flag for detailed bundle output** ([#128](https://github.com/LogicStamp/logicstamp-context/pull/128))  
+  - Bundle checkmarks (e.g., `✓ src/app/context.json (2 bundles)`) now only appear when `--verbose` is used  
+  - Default output shows only summary messages: "📝 Writing main context index..." and "✅ XX context files written successfully"  
+  - Use `stamp context --verbose` or `stamp context style --verbose` to see detailed per-file output  
+  - Updated documentation, added unit tests for flag parsing, and e2e tests for output behavior
+
+- **`--strict-watch` now automatically enables watch mode** ([#129](https://github.com/LogicStamp/logicstamp-context/pull/129))  
+  - `stamp context --strict-watch` now works standalone without requiring `--watch` flag  
+  - Both `stamp context --strict-watch` and `stamp context --watch --strict-watch` are equivalent and fully supported for backward compatibility  
+  - Updated help text and documentation to reflect the simplified usage  
+  - Added unit tests to verify the automatic watch mode enablement
+
+### Refactor
+
+- **Organized watch mode files into dedicated folder** ([#130](https://github.com/LogicStamp/logicstamp-context/pull/130))  
+  - Moved `incrementalWatch.ts`, `watchDiff.ts`, and `watchMode.ts` into `src/cli/commands/context/watchMode/` folder  
+  - Created `watchMode/index.ts` barrel export for cleaner module organization  
+  - Updated all imports across codebase and test files to use new paths  
+  - Improved module structure and maintainability without changing functionality
+
+
+---
+
 ## [0.7.0] - 2026-03-03
 
 ### ⚠️ Breaking Changes
@@ -1454,7 +1499,8 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ---
 
 ## Version links
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.7.1
 [0.7.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.7.0
 [0.6.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.6.0
 [0.5.5]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.5
