@@ -4,11 +4,13 @@ This roadmap outlines the planned features, improvements, and known limitations 
 
 ## Current Status
 
-**Current Version:** v0.7.0 (Beta)
+**Current Version:** v0.7.1 (Beta)
 
 For detailed release notes and completed features, see [CHANGELOG.md](CHANGELOG.md).
 
 Recent major milestones include:
+- ✅ Strict watch mode enhancements (v0.7.1) - Session status tracking, automatic watch enablement, enhanced summaries
+- ✅ Developer experience improvements (v0.7.1) - Normalized path display, `--verbose` flag, watch mode file organization
 - ✅ Lean style mode default (v0.7.0)
 - ✅ Runtime schema validation and security hardening (v0.6.0)
 - ✅ Strict watch mode for breaking change detection (v0.5.0)
@@ -275,7 +277,7 @@ Add support for JavaScript (`.js`) and JSX (`.jsx`) files in addition to TypeScr
 ---
 
 #### 3. Watch Mode
-**Status:** ✅ **Complete (v0.4.1)**
+**Status:** ✅ **Complete (v0.4.1)** - Enhanced in v0.7.1
 
 Automatic context regeneration when source files change.
 
@@ -290,7 +292,15 @@ Automatic context regeneration when source files change.
 - Log file (`--log-file`) for structured change logs (`.logicstamp/context_watch-mode-logs.json`) - opt-in for change notifications
 - `watch-fast` profile for lighter style extraction
 
-**Impact:** Improves developer experience by automatically keeping context files in sync with code changes.
+**Enhancements (v0.7.1):**
+- ✅ Session status tracking for strict watch mode (cumulative errors/warnings, resolved count, active violations)
+- ✅ `--strict-watch` automatically enables watch mode (simplified usage: `stamp context --strict-watch`)
+- ✅ Enhanced session summary with contextual emoji and proper pluralization
+- ✅ Normalized path display across all commands (relative paths when possible)
+- ✅ `--verbose` flag for detailed bundle output (per-file checkmarks)
+- ✅ Improved watch mode file organization and module structure
+
+**Impact:** Improves developer experience by automatically keeping context files in sync with code changes. Enhanced strict watch mode provides better visibility into breaking changes during development.
 
 **Priority:** ~~Medium~~ Complete
 
@@ -572,6 +582,9 @@ export type UIFContract = ReactUIFContract | BackendUIFContract | VueUIFContract
 - **Additional output formats** - More format options for different AI workflow patterns
 
 ### Developer Experience
+- ✅ **Normalized path display** (v0.7.1) - Consistent relative path formatting across all commands
+- ✅ **Verbose output flag** (v0.7.1) - `--verbose` flag for detailed per-file bundle output
+- ✅ **Watch mode improvements** (v0.7.1) - Enhanced strict watch session tracking and simplified usage
 - **Integration examples** - Examples for popular AI assistants (Cursor, Claude Desktop, GitHub Copilot Chat)
 - **Advanced debugging tools** - Better diagnostics and troubleshooting capabilities
 
