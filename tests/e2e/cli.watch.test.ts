@@ -1027,9 +1027,11 @@ describe('CLI Watch Mode Tests', () => {
           }
 
           // Check for strict watch summary in exit message
-          if (output.includes('Strict Watch') && (output.includes('No violations') || output.includes('Session Summary'))) {
+          // New format: "✅ Strict Watch session complete — no violations detected" or similar
+          if (output.includes('Strict Watch session complete') && output.includes('Session summary:')) {
             clearTimeout(timeout);
-            expect(output).toMatch(/Strict Watch/);
+            expect(output).toMatch(/Strict Watch session complete/);
+            expect(output).toMatch(/Session summary:/);
             resolve();
           }
         });

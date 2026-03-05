@@ -2,7 +2,8 @@
  * Watch Mode - Monitors file changes and recompiles context automatically
  */
 
-import { resolve, dirname, join, relative } from 'node:path';
+import { resolve, dirname, join, relative, basename } from 'node:path';
+import { cwd } from 'node:process';
 import { readFile } from 'node:fs/promises';
 import chokidar from 'chokidar';
 import { globFiles } from '../../../utils/fsx.js';
@@ -129,6 +130,35 @@ function detectViolations(changes: BundleChanges): Violation[] {
   }
 
   return violations;
+}
+
+/**
+ * Display project root path in a normalized, user-friendly format
+ * Shows folder name if it's the current directory, relative path if possible, otherwise absolute path
+ */
+function displayProjectRoot(projectRoot: string): string {
+  const currentDir = cwd();
+  const resolvedRoot = resolve(projectRoot);
+  const resolvedCurrent = resolve(currentDir);
+  
+  // If it's the current directory, show the folder name instead of "."
+  if (resolvedRoot === resolvedCurrent) {
+    return basename(resolvedRoot);
+  }
+  
+  // Try to show relative path from current directory
+  try {
+    const relPath = relative(currentDir, resolvedRoot);
+    // Use relative path if available (more portable than absolute)
+    if (relPath) {
+      return displayPath(relPath);
+    }
+  } catch {
+    // If relative path calculation fails, fall back to absolute
+  }
+  
+  // Fall back to absolute path (normalized)
+  return displayPath(resolvedRoot);
 }
 
 /**
@@ -447,7 +477,12 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
               const statusChanged = errors.length !== previousActiveErrors || warnings.length !== previousActiveWarnings;
               if (statusChanged) {
                 if (isNewViolation || violationCountIncreased) {
-                  console.log(`\n❌ Breaking change detected`);
+                  // Show appropriate emoji based on severity: ❌ for errors, ⚠️ for warnings only
+                  if (errors.length > 0) {
+                    console.log(`\n❌ Breaking change detected`);
+                  } else if (warnings.length > 0) {
+                    console.log(`\n⚠️  Warning detected`);
+                  }
                 }
                 displayViolations(violations, { quiet: options.quiet });
                 displaySessionStatus(strictWatchStatus, { quiet: options.quiet });
@@ -586,9 +621,9 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
     const normalizedOutputDir = resolve(outputDir);
 
     if (!options.quiet) {
-      console.log(`   Watching: ${displayPath(projectRoot)}`);
+      console.log(`   Watching: ${displayProjectRoot(projectRoot)}`);
       if (normalizedOutputDir !== projectRoot) {
-        console.log(`   Ignoring output directory: ${displayPath(normalizedOutputDir)}`);
+        console.log(`   Ignoring output directory: ${displayProjectRoot(normalizedOutputDir)}`);
       }
       console.log(`   Ignoring: context.json files, node_modules, dist, build, etc.\n`);
     }
@@ -722,7 +757,33 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
           const activeWarnings = strictWatchStatus.lastCheck?.warnings ?? 0;
           const activeTotal = activeErrors + activeWarnings;
 
-          console.log(`\n✅ Strict Watch session complete`);
+          // Helper for pluralization
+          const pluralize = (count: number, singular: string, plural: string) => 
+            count === 1 ? singular : plural;
+
+          // Determine emoji and message based on errors/warnings
+          let emoji: string;
+          let message: string;
+          
+          if (activeErrors === 0 && activeWarnings === 0) {
+            emoji = '✅';
+            message = 'Strict Watch session complete - no violations detected';
+          } else if (activeErrors === 0 && activeWarnings > 0) {
+            emoji = '⚠️';
+            message = `Strict Watch session complete - ${activeWarnings} ${pluralize(activeWarnings, 'warning', 'warnings')} detected`;
+          } else {
+            emoji = '❌';
+            const parts: string[] = [];
+            if (activeErrors > 0) {
+              parts.push(`${activeErrors} ${pluralize(activeErrors, 'error', 'errors')}`);
+            }
+            if (activeWarnings > 0) {
+              parts.push(`${activeWarnings} ${pluralize(activeWarnings, 'warning', 'warnings')}`);
+            }
+            message = `Strict Watch session complete - ${parts.join(', ')} detected`;
+          }
+
+          console.log(`\n${emoji} ${message}`);
 
           console.log(`\n📊 Session summary:`);
           console.log(`   ❌ Errors detected:   ${strictWatchStatus.totalErrorsDetected}`);
