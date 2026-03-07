@@ -97,6 +97,9 @@ vi.mock('../../../src/utils/git.js', () => ({
   createBaselinePaths: mockCreateBaselinePaths,
   cleanupBaselinePaths: mockCleanupBaselinePaths,
   filterGitIgnoredFiles: mockFilterGitIgnoredFiles,
+  GIT_REF_RESOLVE_TIMEOUT: 15000,
+  GIT_REF_DESCRIBE_TIMEOUT: 15000,
+  GIT_WORKTREE_TIMEOUT: 60000,
 }));
 
 vi.mock('node:readline', () => ({
