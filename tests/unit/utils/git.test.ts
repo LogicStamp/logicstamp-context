@@ -9,28 +9,60 @@ import {
   describeGitRef,
   hasUncommittedChanges,
   getCurrentBranch,
+  isGitIgnored,
+  filterGitIgnoredFiles,
 } from '../../../src/utils/git.js';
 
-// Mock child_process and util.promisify
-// Use vi.hoisted to declare mockExec so it's available to hoisted mocks
-const mockExec = vi.hoisted(() => vi.fn());
+// Mock child_process spawn
+// Use vi.hoisted to declare mockSpawn and mockSpawnResult
+const mockSpawn = vi.hoisted(() => vi.fn());
+const mockSpawnResult = vi.hoisted(() => {
+  return vi.fn(() => ({
+    stdout: '',
+    stderr: '',
+    code: 0,
+    error: null as Error | null,
+  }));
+});
 
 vi.mock('node:child_process', () => ({
-  exec: (command: string, options: any, callback?: Function) => {
-    if (callback) {
-      mockExec(command, options, callback);
-    } else {
-      mockExec(command, options);
-    }
-    return { on: vi.fn() };
-  },
-}));
-
-// Mock util.promisify - promisify takes a function and returns a promisified version
-vi.mock('node:util', () => ({
-  promisify: (fn: Function) => {
-    // Return mockExec when promisify(exec) is called
-    return mockExec;
+  spawn: (command: string, args: string[], options: any) => {
+    // Store the call for assertions
+    mockSpawn(command, args, options);
+    
+    const result = mockSpawnResult();
+    
+    // Create a mock ChildProcess-like object
+    const mockChild = {
+      stdout: {
+        on: vi.fn((event: string, handler: Function) => {
+          if (event === 'data' && result.stdout) {
+            // Simulate stdout data asynchronously
+            setImmediate(() => handler(Buffer.from(result.stdout)));
+          }
+        }),
+      },
+      stderr: {
+        on: vi.fn((event: string, handler: Function) => {
+          if (event === 'data' && result.stderr) {
+            // Simulate stderr data asynchronously
+            setImmediate(() => handler(Buffer.from(result.stderr)));
+          }
+        }),
+      },
+      on: vi.fn((event: string, handler: Function) => {
+        if (event === 'error' && result.error) {
+          // Simulate error asynchronously
+          setImmediate(() => handler(result.error));
+        } else if (event === 'close') {
+          // Simulate close with exit code asynchronously
+          const code = result.error ? 1 : result.code;
+          setImmediate(() => handler(code));
+        }
+      }),
+    };
+    
+    return mockChild;
   },
 }));
 
@@ -48,6 +80,13 @@ describe('git utilities', () => {
     vi.clearAllMocks();
     mockMkdir.mockResolvedValue(undefined);
     mockRm.mockResolvedValue(undefined);
+    // Reset spawn result to default success
+    mockSpawnResult.mockReturnValue({
+      stdout: '',
+      stderr: '',
+      code: 0,
+      error: null,
+    });
   });
 
   describe('parseGitBaseline', () => {
@@ -146,7 +185,7 @@ describe('git utilities', () => {
       };
 
       // Mock successful worktree remove
-      mockExec.mockResolvedValueOnce({ stdout: '', stderr: '' });
+      mockSpawnResult.mockReturnValue({ stdout: '', stderr: '', code: 0, error: null });
 
       await cleanupBaselinePaths(paths);
 
@@ -162,7 +201,7 @@ describe('git utilities', () => {
       };
 
       // Mock failed worktree remove
-      mockExec.mockRejectedValueOnce(new Error('Worktree not found'));
+      mockSpawnResult.mockReturnValue({ stdout: '', stderr: 'Worktree not found', code: 1, error: null });
       mockRm.mockRejectedValueOnce(new Error('Directory not found'));
 
       // Should not throw
@@ -172,14 +211,19 @@ describe('git utilities', () => {
 
   describe('isGitRepo', () => {
     it('should return true for git repository', async () => {
-      mockExec.mockResolvedValueOnce({ stdout: '.git', stderr: '' });
+      mockSpawnResult.mockReturnValue({ stdout: '.git', stderr: '', code: 0, error: null });
 
       const result = await isGitRepo();
       expect(result).toBe(true);
     });
 
     it('should return false for non-git directory', async () => {
-      mockExec.mockRejectedValueOnce(new Error('Not a git repository'));
+      mockSpawnResult.mockReturnValue({ 
+        stdout: '', 
+        stderr: 'Not a git repository', 
+        code: 1, 
+        error: null 
+      });
 
       const result = await isGitRepo();
       expect(result).toBe(false);
@@ -188,14 +232,19 @@ describe('git utilities', () => {
 
   describe('resolveGitRef', () => {
     it('should resolve ref to commit hash', async () => {
-      mockExec.mockResolvedValueOnce({ stdout: 'abc123def456', stderr: '' });
+      mockSpawnResult.mockReturnValue({ stdout: 'abc123def456', stderr: '', code: 0, error: null });
 
       const result = await resolveGitRef('main');
       expect(result).toBe('abc123def456');
     });
 
     it('should throw for invalid ref', async () => {
-      mockExec.mockRejectedValueOnce(new Error('fatal: bad revision'));
+      mockSpawnResult.mockReturnValue({ 
+        stdout: '', 
+        stderr: 'fatal: bad revision', 
+        code: 1, 
+        error: null 
+      });
 
       await expect(resolveGitRef('nonexistent')).rejects.toThrow(
         'Invalid git ref "nonexistent": ref does not exist'
@@ -205,7 +254,7 @@ describe('git utilities', () => {
 
   describe('describeGitRef', () => {
     it('should return branch name for branch ref', async () => {
-      mockExec.mockResolvedValueOnce({ stdout: 'main', stderr: '' });
+      mockSpawnResult.mockReturnValue({ stdout: 'main', stderr: '', code: 0, error: null });
 
       const result = await describeGitRef('main');
       expect(result).toBe('main');
@@ -213,17 +262,17 @@ describe('git utilities', () => {
 
     it('should return short hash for detached HEAD', async () => {
       // First call returns HEAD (not a branch)
-      mockExec.mockResolvedValueOnce({ stdout: 'HEAD', stderr: '' });
+      mockSpawnResult.mockReturnValueOnce({ stdout: 'HEAD', stderr: '', code: 0, error: null });
       // Second call returns short hash
-      mockExec.mockResolvedValueOnce({ stdout: 'abc123d', stderr: '' });
+      mockSpawnResult.mockReturnValueOnce({ stdout: 'abc123d', stderr: '', code: 0, error: null });
 
       const result = await describeGitRef('abc123def456');
       expect(result).toBe('abc123d');
     });
 
     it('should return original ref if all lookups fail', async () => {
-      mockExec.mockRejectedValueOnce(new Error('Failed'));
-      mockExec.mockRejectedValueOnce(new Error('Failed'));
+      mockSpawnResult.mockReturnValueOnce({ stdout: '', stderr: 'Failed', code: 1, error: null });
+      mockSpawnResult.mockReturnValueOnce({ stdout: '', stderr: 'Failed', code: 1, error: null });
 
       const result = await describeGitRef('weird-ref');
       expect(result).toBe('weird-ref');
@@ -232,21 +281,21 @@ describe('git utilities', () => {
 
   describe('hasUncommittedChanges', () => {
     it('should return true when there are changes', async () => {
-      mockExec.mockResolvedValueOnce({ stdout: 'M file.ts', stderr: '' });
+      mockSpawnResult.mockReturnValue({ stdout: 'M file.ts', stderr: '', code: 0, error: null });
 
       const result = await hasUncommittedChanges();
       expect(result).toBe(true);
     });
 
     it('should return false when working tree is clean', async () => {
-      mockExec.mockResolvedValueOnce({ stdout: '', stderr: '' });
+      mockSpawnResult.mockReturnValue({ stdout: '', stderr: '', code: 0, error: null });
 
       const result = await hasUncommittedChanges();
       expect(result).toBe(false);
     });
 
     it('should return false on error', async () => {
-      mockExec.mockRejectedValueOnce(new Error('Not a git repo'));
+      mockSpawnResult.mockReturnValue({ stdout: '', stderr: 'Not a git repo', code: 1, error: null });
 
       const result = await hasUncommittedChanges();
       expect(result).toBe(false);
@@ -255,17 +304,137 @@ describe('git utilities', () => {
 
   describe('getCurrentBranch', () => {
     it('should return current branch name', async () => {
-      mockExec.mockResolvedValueOnce({ stdout: 'feature-branch', stderr: '' });
+      mockSpawnResult.mockReturnValue({ stdout: 'feature-branch', stderr: '', code: 0, error: null });
 
       const result = await getCurrentBranch();
       expect(result).toBe('feature-branch');
     });
 
     it('should return HEAD when detached', async () => {
-      mockExec.mockRejectedValueOnce(new Error('Not on a branch'));
+      mockSpawnResult.mockReturnValue({ stdout: '', stderr: 'Not on a branch', code: 1, error: null });
 
       const result = await getCurrentBranch();
       expect(result).toBe('HEAD');
+    });
+  });
+
+  describe('isGitIgnored', () => {
+    it('should return true for git-ignored file', async () => {
+      // git check-ignore --quiet returns exit code 0 (success) if file is ignored
+      mockSpawnResult.mockReturnValue({ stdout: '', stderr: '', code: 0, error: null });
+
+      const result = await isGitIgnored('next-env.d.ts');
+      expect(result).toBe(true);
+      expect(mockSpawn).toHaveBeenCalledWith(
+        'git',
+        ['check-ignore', '--quiet', 'next-env.d.ts'],
+        expect.any(Object)
+      );
+    });
+
+    it('should return false for non-ignored file', async () => {
+      // git check-ignore --quiet returns exit code 1 (failure) if file is not ignored
+      mockSpawnResult.mockReturnValue({ stdout: '', stderr: '', code: 1, error: null });
+
+      const result = await isGitIgnored('src/components/Button.tsx');
+      expect(result).toBe(false);
+    });
+
+    it('should use custom cwd option', async () => {
+      mockSpawnResult.mockReturnValue({ stdout: '', stderr: '', code: 0, error: null });
+
+      await isGitIgnored('file.ts', { cwd: '/custom/path' });
+
+      expect(mockSpawn).toHaveBeenCalledWith(
+        'git',
+        ['check-ignore', '--quiet', 'file.ts'],
+        expect.objectContaining({ cwd: '/custom/path' })
+      );
+    });
+  });
+
+  describe('filterGitIgnoredFiles', () => {
+    it('should filter out git-ignored files', async () => {
+      const filePaths = ['src/components/Button.tsx', 'next-env.d.ts', 'src/utils/helper.ts'];
+      
+      // Button.tsx is not ignored (check fails)
+      mockSpawnResult.mockReturnValueOnce({ stdout: '', stderr: '', code: 1, error: null });
+      // next-env.d.ts is ignored (check succeeds)
+      mockSpawnResult.mockReturnValueOnce({ stdout: '', stderr: '', code: 0, error: null });
+      // helper.ts is not ignored (check fails)
+      mockSpawnResult.mockReturnValueOnce({ stdout: '', stderr: '', code: 1, error: null });
+
+      const result = await filterGitIgnoredFiles(filePaths, '/project');
+
+      expect(result).toEqual(['src/components/Button.tsx', 'src/utils/helper.ts']);
+      expect(result).not.toContain('next-env.d.ts');
+    });
+
+    it('should handle relative paths', async () => {
+      const filePaths = ['next-env.d.ts', 'src/file.ts'];
+      
+      // next-env.d.ts is ignored (check succeeds)
+      mockSpawnResult.mockReturnValueOnce({ stdout: '', stderr: '', code: 0, error: null });
+      // src/file.ts is not ignored (check fails)
+      mockSpawnResult.mockReturnValueOnce({ stdout: '', stderr: '', code: 1, error: null });
+
+      const result = await filterGitIgnoredFiles(filePaths, '/project');
+
+      expect(result).toEqual(['src/file.ts']);
+    });
+
+    it('should handle absolute paths', async () => {
+      const filePaths = ['/project/next-env.d.ts', '/project/src/file.ts'];
+      
+      // next-env.d.ts is ignored (check succeeds)
+      mockSpawnResult.mockReturnValueOnce({ stdout: '', stderr: '', code: 0, error: null });
+      // file.ts is not ignored (check fails)
+      mockSpawnResult.mockReturnValueOnce({ stdout: '', stderr: '', code: 1, error: null });
+
+      const result = await filterGitIgnoredFiles(filePaths, '/project');
+
+      expect(result).toEqual(['/project/src/file.ts']);
+    });
+
+    it('should return all files if none are ignored', async () => {
+      const filePaths = ['src/file1.ts', 'src/file2.ts'];
+      
+      // Both files are not ignored (checks fail)
+      mockSpawnResult.mockReturnValueOnce({ stdout: '', stderr: '', code: 1, error: null });
+      mockSpawnResult.mockReturnValueOnce({ stdout: '', stderr: '', code: 1, error: null });
+
+      const result = await filterGitIgnoredFiles(filePaths, '/project');
+
+      expect(result).toEqual(filePaths);
+    });
+
+    it('should return empty array if all files are ignored', async () => {
+      const filePaths = ['next-env.d.ts', '.env.local'];
+      
+      // Both files are ignored
+      mockSpawnResult.mockReturnValueOnce({ stdout: '', stderr: '', code: 0, error: null });
+      mockSpawnResult.mockReturnValueOnce({ stdout: '', stderr: '', code: 0, error: null });
+
+      const result = await filterGitIgnoredFiles(filePaths, '/project');
+
+      expect(result).toEqual([]);
+    });
+
+    it('should check basename patterns for normalized paths', async () => {
+      const filePaths = ['next-env.d.ts']; // Normalized basename (no path)
+      
+      // Check basename directly - file is ignored (check succeeds)
+      mockSpawnResult.mockReturnValue({ stdout: '', stderr: '', code: 0, error: null });
+      // Pattern check should not be called if basename check succeeds
+      
+      const result = await filterGitIgnoredFiles(filePaths, '/project');
+
+      expect(result).toEqual([]);
+      expect(mockSpawn).toHaveBeenCalledWith(
+        'git',
+        ['check-ignore', '--quiet', 'next-env.d.ts'],
+        expect.any(Object)
+      );
     });
   });
 });

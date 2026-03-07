@@ -23,6 +23,7 @@ import {
   removeWorktree,
   createBaselinePaths,
   cleanupBaselinePaths,
+  filterGitIgnoredFiles,
   type GitBaselinePaths,
 } from '../../utils/git.js';
 
@@ -461,7 +462,70 @@ async function handleGitBaselineCompare(options: {
       gitBaseline: true, // Enable path normalization for git baseline comparisons
     };
 
-    const result = await multiFileCompare(multiCompareOptions);
+    let result = await multiFileCompare(multiCompareOptions);
+    
+    // Filter out git-ignored files from comparison results
+    // This prevents false positives where git-ignored files (like next-env.d.ts)
+    // exist in working directory but not in git worktree
+    const projectRoot = process.cwd();
+    for (const folder of result.folders) {
+      if (folder.componentResult) {
+        const cr = folder.componentResult;
+        // Filter added components that are git-ignored
+        cr.added = await filterGitIgnoredFiles(cr.added, projectRoot);
+        // Filter removed components that are git-ignored
+        cr.removed = await filterGitIgnoredFiles(cr.removed, projectRoot);
+        // Filter changed components that are git-ignored
+        cr.changed = (await Promise.all(
+          cr.changed.map(async ({ id, deltas }) => {
+            const filtered = await filterGitIgnoredFiles([id], projectRoot);
+            return filtered.length > 0 ? { id, deltas } : null;
+          })
+        )).filter((item): item is { id: string; deltas: any[] } => item !== null);
+        
+        // Recalculate status if all changes were filtered out
+        if (cr.added.length === 0 && cr.removed.length === 0 && cr.changed.length === 0) {
+          folder.status = 'PASS';
+          // Update component result status as well
+          cr.status = 'PASS';
+        }
+      }
+    }
+    
+    // Recalculate summary counts after filtering
+    const addedFolders = result.folders.filter(f => f.status === 'ADDED').length;
+    const orphanedFolders = result.folders.filter(f => f.status === 'ORPHANED').length;
+    const driftFolders = result.folders.filter(f => f.status === 'DRIFT').length;
+    const passFolders = result.folders.filter(f => f.status === 'PASS').length;
+    
+    // Recalculate component counts from filtered results
+    let totalComponentsAdded = 0;
+    let totalComponentsRemoved = 0;
+    let totalComponentsChanged = 0;
+    
+    for (const folder of result.folders) {
+      if (folder.componentResult && folder.status === 'DRIFT') {
+        totalComponentsAdded += folder.componentResult.added.length;
+        totalComponentsRemoved += folder.componentResult.removed.length;
+        totalComponentsChanged += folder.componentResult.changed.length;
+      }
+    }
+    
+    // Update summary
+    result.summary = {
+      totalFolders: result.folders.length,
+      addedFolders,
+      orphanedFolders,
+      driftFolders,
+      passFolders,
+      totalComponentsAdded,
+      totalComponentsRemoved,
+      totalComponentsChanged,
+    };
+    
+    // Recalculate overall status
+    result.status = addedFolders > 0 || orphanedFolders > 0 || driftFolders > 0 ? 'DRIFT' : 'PASS';
+    
     displayMultiFileCompareResult(result, stats, quiet);
 
     // Step 5: Clean up

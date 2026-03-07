@@ -3,14 +3,11 @@
  * Handles worktree creation, ref validation, and cleanup
  */
 
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
+import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { access, rm, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { debugLog, debugError } from './debug.js';
-
-const execAsync = promisify(exec);
 
 /**
  * Result from creating a git worktree
@@ -36,6 +33,7 @@ export interface GitOptions {
 
 /**
  * Execute a git command and return stdout
+ * Uses spawn instead of exec for better security (no shell interpretation)
  * @throws Error if git command fails
  */
 async function execGit(
@@ -48,33 +46,57 @@ async function execGit(
 
   debugLog('git', `Executing: ${command}`, { cwd });
 
-  try {
-    const { stdout, stderr } = await execAsync(command, {
+  return new Promise((resolve, reject) => {
+    const child = spawn('git', args, {
       cwd,
       timeout,
-      maxBuffer: 10 * 1024 * 1024, // 10MB buffer for large repos
+      stdio: ['ignore', 'pipe', 'pipe'],
     });
 
-    if (stderr && !stderr.includes('Preparing worktree')) {
-      // Some git commands output to stderr even on success
-      debugLog('git', `stderr: ${stderr.trim()}`);
+    let stdout = '';
+    let stderr = '';
+
+    // TypeScript needs explicit type assertion for stdio pipes
+    if (child.stdout) {
+      child.stdout.on('data', (data: Buffer) => {
+        stdout += data.toString();
+      });
     }
 
-    return stdout.trim();
-  } catch (error) {
-    const err = error as Error & { stderr?: string; code?: number };
-    debugError('git', 'execGit', {
-      command,
-      cwd,
-      message: err.message,
-      stderr: err.stderr,
-      code: err.code,
+    if (child.stderr) {
+      child.stderr.on('data', (data: Buffer) => {
+        stderr += data.toString();
+      });
+    }
+
+    child.on('error', (error: Error) => {
+      debugError('git', 'execGit spawn error', {
+        command,
+        cwd,
+        message: error.message,
+      });
+      reject(new Error(`Git command failed: ${error.message}`));
     });
 
-    // Extract meaningful error message from stderr
-    const errorMessage = err.stderr?.trim() || err.message;
-    throw new Error(`Git command failed: ${errorMessage}`);
-  }
+    child.on('close', (code: number | null) => {
+      if (code === 0) {
+        if (stderr && !stderr.includes('Preparing worktree')) {
+          // Some git commands output to stderr even on success
+          debugLog('git', `stderr: ${stderr.trim()}`);
+        }
+        resolve(stdout.trim());
+      } else {
+        debugError('git', 'execGit', {
+          command,
+          cwd,
+          code,
+          stderr: stderr.trim(),
+        });
+        const errorMessage = stderr.trim() || `Command failed with exit code ${code}`;
+        reject(new Error(`Git command failed: ${errorMessage}`));
+      }
+    });
+  });
 }
 
 /**
@@ -360,6 +382,89 @@ export async function createBaselinePaths(
     currentDir,
     worktreeDir,
   };
+}
+
+/**
+ * Check if a file is git-ignored
+ * @param filePath - File path relative to git root or absolute path
+ * @param options - Git options
+ * @returns true if the file is git-ignored, false otherwise
+ */
+export async function isGitIgnored(
+  filePath: string,
+  options: GitOptions = {}
+): Promise<boolean> {
+  try {
+    // git check-ignore --quiet returns exit code 0 if file is ignored, 1 if not ignored
+    // execGit throws on non-zero exit codes, so if it succeeds, file is ignored
+    await execGit(['check-ignore', '--quiet', filePath], options);
+    return true; // Command succeeded, file is ignored
+  } catch {
+    // Command failed (exit code 1), file is not ignored
+    return false;
+  }
+}
+
+/**
+ * Filter out git-ignored files from an array of file paths
+ * @param filePaths - Array of file paths to filter (may be normalized basenames in git baseline mode)
+ * @param projectRoot - Project root directory (for resolving relative paths)
+ * @param options - Git options
+ * @returns Array of file paths that are NOT git-ignored
+ */
+export async function filterGitIgnoredFiles(
+  filePaths: string[],
+  projectRoot: string,
+  options: GitOptions = {}
+): Promise<string[]> {
+  const { relative } = await import('node:path');
+  
+  const filtered: string[] = [];
+  
+  for (const filePath of filePaths) {
+    let isIgnored = false;
+    
+    // If the path contains a slash, it's a full relative path
+    if (filePath.includes('/')) {
+      // Convert to relative path from project root if needed
+      let relativePath: string;
+      if (filePath.startsWith('/') || filePath.match(/^[A-Z]:/)) {
+        // Absolute path - convert to relative
+        relativePath = relative(projectRoot, filePath).replace(/\\/g, '/');
+      } else {
+        relativePath = filePath;
+      }
+      
+      // Check if file is git-ignored
+      isIgnored = await isGitIgnored(relativePath, { ...options, cwd: projectRoot });
+    } else {
+      // It's just a basename (normalized in git baseline mode)
+      // Check if the basename itself is git-ignored (works for root-level files like next-env.d.ts)
+      isIgnored = await isGitIgnored(filePath, { ...options, cwd: projectRoot });
+      
+      // Also check common patterns that might match this basename
+      if (!isIgnored) {
+        // Check common git-ignore patterns that might match
+        const patternsToCheck = [
+          `**/${filePath}`,
+          `*/${filePath}`,
+        ];
+        
+        for (const pattern of patternsToCheck) {
+          if (await isGitIgnored(pattern, { ...options, cwd: projectRoot })) {
+            isIgnored = true;
+            break;
+          }
+        }
+      }
+    }
+    
+    if (!isIgnored) {
+      filtered.push(filePath);
+    }
+  }
+  
+  return filtered;
 }
 
 /**
