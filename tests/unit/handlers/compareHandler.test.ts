@@ -73,7 +73,7 @@ vi.mock('../../../src/cli/commands/context.js', () => ({
   contextCommand: mockContextCommand,
 }));
 
-vi.mock('../../../src/cli/commands/compare.js', () => ({
+vi.mock('../../../src/cli/commands/compare/index.js', () => ({
   compareCommand: mockCompareCommand,
   multiFileCompare: mockMultiFileCompare,
   displayMultiFileCompareResult: mockDisplayMultiFileCompareResult,
@@ -148,8 +148,8 @@ describe('handleCompare', () => {
     mockReadFile.mockResolvedValue(JSON.stringify({ folders: [] }));
     mockWriteFile.mockResolvedValue(undefined);
     mockContextCommand.mockResolvedValue(undefined);
-    mockCompareCommand.mockResolvedValue({ status: 'IDENTICAL' });
-    mockMultiFileCompare.mockResolvedValue({ status: 'IDENTICAL', folderResults: [] });
+    mockCompareCommand.mockResolvedValue({ status: 'PASS' });
+    mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
     mockDisplayMultiFileCompareResult.mockImplementation(() => {});
     mockCleanOrphanedFiles.mockResolvedValue(0);
 
@@ -236,7 +236,7 @@ describe('handleCompare', () => {
   });
 
   it('should call compareCommand for single file comparison', async () => {
-    mockCompareCommand.mockResolvedValue({ status: 'IDENTICAL' });
+    mockCompareCommand.mockResolvedValue({ status: 'PASS', added: [], removed: [], changed: [] });
     vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
       stats: false,
       approve: false,
@@ -258,7 +258,7 @@ describe('handleCompare', () => {
   });
 
   it('should call multiFileCompare for context_main.json files', async () => {
-    mockMultiFileCompare.mockResolvedValue({ status: 'IDENTICAL' });
+    mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
     vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
       stats: false,
       approve: false,
@@ -323,7 +323,7 @@ describe('handleCompare', () => {
       mockRm.mockResolvedValue(undefined);
       mockReadFile.mockResolvedValue(JSON.stringify({ folders: [] }));
       mockContextCommand.mockResolvedValue(undefined);
-      mockMultiFileCompare.mockResolvedValue({ status: 'IDENTICAL', folderResults: [] });
+      mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -475,7 +475,7 @@ describe('handleCompare', () => {
       mockRm.mockResolvedValue(undefined);
       mockReadFile.mockResolvedValue(JSON.stringify({ folders: [] }));
       mockContextCommand.mockResolvedValue(undefined);
-      mockMultiFileCompare.mockResolvedValue({ status: 'IDENTICAL', folderResults: [] });
+      mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -540,7 +540,7 @@ describe('handleCompare', () => {
     });
 
     it('should pass stats option to multiFileCompare', async () => {
-      mockMultiFileCompare.mockResolvedValue({ status: 'IDENTICAL', folderResults: [] });
+      mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: true,
@@ -987,7 +987,7 @@ describe('handleCompare', () => {
     });
 
     it('should pass stats option to compareCommand', async () => {
-      mockCompareCommand.mockResolvedValue({ status: 'IDENTICAL' });
+      mockCompareCommand.mockResolvedValue({ status: 'PASS', added: [], removed: [], changed: [] });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: true,
@@ -1006,7 +1006,7 @@ describe('handleCompare', () => {
     });
 
     it('should pass quiet option to compareCommand', async () => {
-      mockCompareCommand.mockResolvedValue({ status: 'IDENTICAL' });
+      mockCompareCommand.mockResolvedValue({ status: 'PASS', added: [], removed: [], changed: [] });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -1025,7 +1025,7 @@ describe('handleCompare', () => {
     });
 
     it('should exit 0 when files are identical', async () => {
-      mockCompareCommand.mockResolvedValue({ status: 'IDENTICAL' });
+      mockCompareCommand.mockResolvedValue({ status: 'PASS', added: [], removed: [], changed: [] });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -1121,7 +1121,7 @@ describe('handleCompare', () => {
       });
       mockCleanupBaselinePaths.mockResolvedValue(undefined);
       mockContextCommand.mockResolvedValue(undefined);
-      mockMultiFileCompare.mockResolvedValue({ status: 'IDENTICAL', folders: [] });
+      mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
     });
 
     it('should reject invalid baseline format', async () => {
@@ -1200,7 +1200,7 @@ describe('handleCompare', () => {
     });
 
     it('should run git baseline comparison and exit 0 when no drift', async () => {
-      mockMultiFileCompare.mockResolvedValue({ status: 'IDENTICAL', folders: [] });
+      mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -1245,7 +1245,7 @@ describe('handleCompare', () => {
     });
 
     it('should pass stats option through', async () => {
-      mockMultiFileCompare.mockResolvedValue({ status: 'IDENTICAL', folders: [] });
+      mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: true,
@@ -1265,7 +1265,7 @@ describe('handleCompare', () => {
     });
 
     it('should suppress output in quiet mode', async () => {
-      mockMultiFileCompare.mockResolvedValue({ status: 'IDENTICAL', folders: [] });
+      mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -1336,7 +1336,7 @@ describe('handleCompare', () => {
     });
 
     it('should use skipGitignore: true for both baseline and current for symmetric comparison', async () => {
-      mockMultiFileCompare.mockResolvedValue({ status: 'IDENTICAL', folders: [] });
+      mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,

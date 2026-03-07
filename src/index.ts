@@ -37,8 +37,8 @@ export { buildLogicSignature } from './core/signature.js';
 // CLI commands (for programmatic use)
 export { contextCommand } from './cli/commands/context.js';
 export type { ContextOptions } from './cli/commands/context.js';
-export { compareCommand, multiFileCompare } from './cli/commands/compare.js';
-export type { CompareOptions, CompareResult, FolderCompareResult, MultiFileCompareResult, MultiFileCompareOptions } from './cli/commands/compare.js';
+export { compareCommand, multiFileCompare } from './cli/commands/compare/index.js';
+export type { CompareOptions, CompareResult, FolderCompareResult, MultiFileCompareResult, MultiFileCompareOptions } from './cli/commands/compare/index.js';
 export { validateCommand, validateBundles, multiFileValidate } from './cli/commands/validate.js';
 export type { ValidationResult, FolderValidationResult, MultiFileValidationResult } from './cli/commands/validate.js';
 export { init } from './cli/commands/init.js';

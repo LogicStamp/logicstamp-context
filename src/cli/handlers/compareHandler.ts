@@ -10,7 +10,7 @@ import {
   type MultiFileCompareOptions,
   displayMultiFileCompareResult,
   cleanOrphanedFiles,
-} from '../commands/compare.js';
+} from '../commands/compare/index.js';
 import { parseCompareArgs, getCompareHelp } from '../parser/index.js';
 import { printFoxIcon } from './initHandler.js';
 import { debugLog, debugError } from '../../utils/debug.js';

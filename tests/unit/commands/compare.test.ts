@@ -6,7 +6,7 @@ import {
   cleanOrphanedFiles,
   type CompareResult,
   type MultiFileCompareResult,
-} from '../../../src/cli/commands/compare.js';
+} from '../../../src/cli/commands/compare/index.js';
 import * as fs from 'node:fs/promises';
 
 // Mock fs/promises
@@ -816,6 +816,248 @@ describe('compareCommand', () => {
       old: ['onSubmit'],
       new: ['onSubmit', 'onCancel'],
     });
+  });
+
+  it('should detect variables changes', async () => {
+    const oldBundles = [
+      createBundle('src/utils.ts', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/utils.ts',
+              contract: {
+                entryId: 'src/utils.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                semanticHash: 'uif:hash123',
+                composition: {
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                  variables: ['count'],
+                },
+                interface: { props: {}, emits: {} },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+    const newBundles = [
+      createBundle('src/utils.ts', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/utils.ts',
+              contract: {
+                entryId: 'src/utils.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                semanticHash: 'uif:hash123',
+                composition: {
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                  variables: ['count', 'isOpen'],
+                },
+                interface: { props: {}, emits: {} },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+
+    vi.mocked(fs.readFile).mockImplementation(async (path) => {
+      const pathStr = String(path);
+      if (pathStr.includes('old')) {
+        return JSON.stringify(oldBundles);
+      }
+      return JSON.stringify(newBundles);
+    });
+
+    const result = await compareCommand({
+      oldFile: 'old.json',
+      newFile: 'new.json',
+    });
+
+    expect(result.status).toBe('DRIFT');
+    expect(result.changed[0].deltas).toContainEqual({
+      type: 'variables',
+      old: ['count'],
+      new: ['count', 'isOpen'],
+    });
+  });
+
+  it('should detect state changes', async () => {
+    const oldBundles = [
+      createBundle('src/App.tsx', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/App.tsx',
+              contract: {
+                entryId: 'src/App.tsx',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                semanticHash: 'uif:hash123',
+                composition: {
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  state: { count: 'number' },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+    const newBundles = [
+      createBundle('src/App.tsx', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/App.tsx',
+              contract: {
+                entryId: 'src/App.tsx',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                semanticHash: 'uif:hash123',
+                composition: {
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  state: { count: 'number', isOpen: 'boolean' },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+
+    vi.mocked(fs.readFile).mockImplementation(async (path) => {
+      const pathStr = String(path);
+      if (pathStr.includes('old')) {
+        return JSON.stringify(oldBundles);
+      }
+      return JSON.stringify(newBundles);
+    });
+
+    const result = await compareCommand({
+      oldFile: 'old.json',
+      newFile: 'new.json',
+    });
+
+    expect(result.status).toBe('DRIFT');
+    expect(result.changed[0].deltas).toContainEqual({
+      type: 'state',
+      old: { count: 'number' },
+      new: { count: 'number', isOpen: 'boolean' },
+    });
+  });
+
+  it('should detect state type changes', async () => {
+    const oldBundles = [
+      createBundle('src/App.tsx', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/App.tsx',
+              contract: {
+                entryId: 'src/App.tsx',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                semanticHash: 'uif:hash123',
+                composition: {
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  state: { count: 'number' },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+    const newBundles = [
+      createBundle('src/App.tsx', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/App.tsx',
+              contract: {
+                entryId: 'src/App.tsx',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                semanticHash: 'uif:hash123',
+                composition: {
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  state: { count: 'string' },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+
+    vi.mocked(fs.readFile).mockImplementation(async (path) => {
+      const pathStr = String(path);
+      if (pathStr.includes('old')) {
+        return JSON.stringify(oldBundles);
+      }
+      return JSON.stringify(newBundles);
+    });
+
+    const result = await compareCommand({
+      oldFile: 'old.json',
+      newFile: 'new.json',
+    });
+
+    expect(result.status).toBe('DRIFT');
+    const stateDelta = result.changed[0].deltas.find(d => d.type === 'state');
+    expect(stateDelta).toBeDefined();
+    expect(stateDelta?.old).toEqual({ count: 'number' });
+    expect(stateDelta?.new).toEqual({ count: 'string' });
   });
 
   it('should detect export kind changes', async () => {
