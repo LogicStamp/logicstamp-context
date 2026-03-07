@@ -70,6 +70,7 @@ export interface CompareOptions {
   stats?: boolean;
   approve?: boolean;
   quiet?: boolean;
+  gitBaseline?: boolean; // Enable tolerance for git baseline comparisons (normalizes paths)
 }
 
 export interface MultiFileCompareOptions {
@@ -79,36 +80,78 @@ export interface MultiFileCompareOptions {
   approve?: boolean;
   autoCleanOrphaned?: boolean; // Auto-delete orphaned files with --approve
   quiet?: boolean;
+  gitBaseline?: boolean; // Enable tolerance for git baseline comparisons (normalizes paths)
+}
+
+/**
+ * Normalize a component/hook/function name for comparison
+ * Strips relative paths and normalizes casing
+ */
+function normalizeName(name: string): string {
+  // Strip relative path prefixes (./, ../, ../../, etc.)
+  let stripped = name;
+  while (stripped.startsWith('./') || stripped.startsWith('../')) {
+    stripped = stripped.replace(/^\.\.?\//, '');
+  }
+  // Extract just the basename (last part after /)
+  const basename = stripped.includes('/') ? stripped.split('/').pop()! : stripped;
+  // Normalize to lowercase for case-insensitive comparison
+  return basename.toLowerCase();
+}
+
+/**
+ * Normalize an array of names for comparison
+ */
+function normalizeNames(names: string[]): string[] {
+  return [...names].map(normalizeName).sort();
 }
 
 /**
  * Index bundles into a map of entryId -> LiteSig
  */
-function index(bundles: LogicStampBundle[]): Map<string, LiteSig> {
+function index(bundles: LogicStampBundle[], normalize = false): Map<string, LiteSig> {
   const m = new Map<string, LiteSig>();
   for (const b of bundles) {
     for (const n of b.graph.nodes) {
       const c = n.contract;
-      m.set(c.entryId.toLowerCase(), {
+      const sig: LiteSig = {
         semanticHash: c.semanticHash,
-        imports: c.composition?.imports ?? [],
-        hooks: c.composition?.hooks ?? [],
-        functions: c.composition?.functions ?? [],
-        components: c.composition?.components ?? [],
+        imports: normalize ? normalizeNames(c.composition?.imports ?? []) : (c.composition?.imports ?? []),
+        hooks: normalize ? normalizeNames(c.composition?.hooks ?? []) : (c.composition?.hooks ?? []),
+        functions: normalize ? normalizeNames(c.composition?.functions ?? []) : (c.composition?.functions ?? []),
+        components: normalize ? normalizeNames(c.composition?.components ?? []) : (c.composition?.components ?? []),
         props: Object.keys(c.interface?.props ?? {}),
         emits: Object.keys(c.interface?.emits ?? {}),
         exportKind: typeof c.exports === 'string' ? 'default'
                    : c.exports?.named?.length ? 'named' : 'none',
-      });
+      };
+      m.set(c.entryId.toLowerCase(), sig);
     }
   }
   return m;
 }
 
 /**
- * Diff two indexed bundles with detailed change information
+ * Compare two arrays with optional normalization
+ * Always sorts arrays for order-independence
  */
-function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>): CompareResult {
+function arraysEqual(a: string[], b: string[], normalize = false): boolean {
+  if (normalize) {
+    const aNorm = normalizeNames(a);
+    const bNorm = normalizeNames(b);
+    return JSON.stringify(aNorm) === JSON.stringify(bNorm);
+  }
+  // Sort both arrays for order-independence
+  const aSorted = [...a].sort();
+  const bSorted = [...b].sort();
+  return JSON.stringify(aSorted) === JSON.stringify(bSorted);
+}
+
+/**
+ * Diff two indexed bundles with detailed change information
+ * @param ignoreHashOnly - If true, ignore hash-only changes (useful for git baseline comparisons where hash may differ due to TypeScript project resolution differences between worktree and working directory contexts)
+ */
+function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>, normalize = false, ignoreHashOnly = false): CompareResult {
   const added: string[] = [];
   const removed: string[] = [];
   const changed: CompareResult['changed'] = [];
@@ -134,23 +177,34 @@ function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>): Compa
       const b = newIdx.get(id)!;
       const deltas: CompareResult['changed'][number]['deltas'] = [];
 
-      if (a.semanticHash !== b.semanticHash) {
+      // Check for non-hash changes first
+      const hasNonHashChanges = 
+        !arraysEqual(a.imports, b.imports, normalize) ||
+        !arraysEqual(a.hooks, b.hooks, normalize) ||
+        !arraysEqual(a.functions, b.functions, normalize) ||
+        !arraysEqual(a.components, b.components, normalize) ||
+        JSON.stringify(a.props) !== JSON.stringify(b.props) ||
+        JSON.stringify(a.emits) !== JSON.stringify(b.emits) ||
+        a.exportKind !== b.exportKind;
+
+      // Only include hash change if there are other changes, or if ignoreHashOnly is false
+      if (a.semanticHash !== b.semanticHash && (!ignoreHashOnly || hasNonHashChanges)) {
         deltas.push({ type: 'hash', old: a.semanticHash, new: b.semanticHash });
       }
 
-      if (JSON.stringify(a.imports) !== JSON.stringify(b.imports)) {
+      if (!arraysEqual(a.imports, b.imports, normalize)) {
         deltas.push({ type: 'imports', old: a.imports, new: b.imports });
       }
 
-      if (JSON.stringify(a.hooks) !== JSON.stringify(b.hooks)) {
+      if (!arraysEqual(a.hooks, b.hooks, normalize)) {
         deltas.push({ type: 'hooks', old: a.hooks, new: b.hooks });
       }
 
-      if (JSON.stringify(a.functions) !== JSON.stringify(b.functions)) {
+      if (!arraysEqual(a.functions, b.functions, normalize)) {
         deltas.push({ type: 'functions', old: a.functions, new: b.functions });
       }
 
-      if (JSON.stringify(a.components) !== JSON.stringify(b.components)) {
+      if (!arraysEqual(a.components, b.components, normalize)) {
         deltas.push({ type: 'components', old: a.components, new: b.components });
       }
 
@@ -239,12 +293,14 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
     throw new Error(`Failed to parse context files: ${err.message}`);
   }
 
-  // Index bundles
-  const oldIdx = index(oldBundles);
-  const newIdx = index(newBundles);
+  // Index bundles (with normalization for git baseline mode)
+  const normalize = options.gitBaseline ?? false;
+  const ignoreHashOnly = options.gitBaseline ?? false; // Ignore hash-only changes in git baseline mode
+  const oldIdx = index(oldBundles, normalize);
+  const newIdx = index(newBundles, normalize);
 
   // Compute diff
-  const result = diff(oldIdx, newIdx);
+  const result = diff(oldIdx, newIdx, normalize, ignoreHashOnly);
 
   // Output result (skip PASS status in quiet mode)
   if (options.quiet && result.status === 'PASS') {
@@ -439,7 +495,8 @@ async function compareFolderContext(
   oldContextPath: string,
   newContextPath: string,
   stats: boolean,
-  quiet?: boolean
+  quiet?: boolean,
+  gitBaseline = false
 ): Promise<{ result: CompareResult; tokenDelta?: { gpt4: number; claude: number } }> {
   // Load both files
   let oldContent: string;
@@ -485,12 +542,14 @@ async function compareFolderContext(
     throw new Error(`Failed to parse context files for folder: ${err.message}`);
   }
 
-  // Index bundles
-  const oldIdx = index(oldBundles);
-  const newIdx = index(newBundles);
+  // Index bundles (with normalization for git baseline mode)
+  const normalize = gitBaseline;
+  const ignoreHashOnly = gitBaseline; // Ignore hash-only changes in git baseline mode
+  const oldIdx = index(oldBundles, normalize);
+  const newIdx = index(newBundles, normalize);
 
   // Compute diff
-  const result = diff(oldIdx, newIdx);
+  const result = diff(oldIdx, newIdx, normalize, ignoreHashOnly);
 
   // Calculate token delta if stats requested and not in quiet mode
   let tokenDelta: { gpt4: number; claude: number } | undefined;
@@ -549,7 +608,7 @@ export async function multiFileCompare(options: MultiFileCompareOptions): Promis
       const newPath = join(newBaseDir, newFolder.contextFile);
 
       try {
-        const { result, tokenDelta } = await compareFolderContext(oldPath, newPath, options.stats || false, options.quiet);
+        const { result, tokenDelta } = await compareFolderContext(oldPath, newPath, options.stats || false, options.quiet, options.gitBaseline ?? false);
 
         folderResults.push({
           folderPath: newFolder.path,

@@ -319,6 +319,7 @@ ARGUMENTS:
   <new.json>                          Path to new context file or context_main.json
 
 OPTIONS:
+  --baseline <ref>                    Compare against a git ref (e.g., git:main, git:HEAD, git:v1.0.0)
   --approve                           Auto-approve updates (non-interactive, CI-safe)
   --clean-orphaned                    Auto-delete orphaned files with --approve
   --stats                             Show token count statistics per folder
@@ -331,6 +332,12 @@ COMPARISON MODES:
     Compares ALL context files using context_main.json as index
     → Detects ADDED, ORPHANED, DRIFT, and PASS status per folder
     → Shows three-tier output: folder summary, component summary, details
+
+  Git Baseline Mode:
+    Compare current working tree against a git ref (branch, tag, commit)
+    → Uses git worktree to checkout ref in isolation
+    → Generates context for both versions and compares
+    → Useful for PR reviews, CI validation, and release checks
 
   Single-File Mode:
     Compares two individual context.json files
@@ -367,6 +374,17 @@ EXAMPLES:
 
   stamp context compare || exit 1
     CI validation: fail build if drift detected
+
+  stamp context compare --baseline git:main
+    Compare current working tree against main branch
+    → "What changed in this branch vs main?"
+
+  stamp context compare --baseline git:HEAD
+    Compare uncommitted changes against last commit
+
+  stamp context compare --baseline git:v1.0.0
+    Compare against a release tag
+    → "What changed since last release?"
 
 EXIT CODES:
   0                                   PASS - No drift OR drift approved and updated

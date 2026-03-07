@@ -13,7 +13,18 @@ import {
 } from '../commands/compare.js';
 import { parseCompareArgs, getCompareHelp } from '../parser/index.js';
 import { printFoxIcon } from './initHandler.js';
-import { debugError } from '../../utils/debug.js';
+import { debugLog, debugError } from '../../utils/debug.js';
+import {
+  parseGitBaseline,
+  isGitRepo,
+  resolveGitRef,
+  describeGitRef,
+  createWorktree,
+  removeWorktree,
+  createBaselinePaths,
+  cleanupBaselinePaths,
+  type GitBaselinePaths,
+} from '../../utils/git.js';
 
 /**
  * Prompt user for Y/N input (only in TTY mode)
@@ -53,7 +64,24 @@ export async function handleCompare(args: string[]): Promise<void> {
     return process.exit(1);
   }
 
-  const { stats, approve, cleanOrphaned, quiet, skipGitignore, positionalArgs } = parseCompareArgs(args);
+  const { stats, approve, cleanOrphaned, quiet, skipGitignore, baseline, positionalArgs } = parseCompareArgs(args);
+
+  // Git baseline mode: --baseline git:<ref>
+  if (baseline) {
+    const gitBaseline = parseGitBaseline(baseline);
+    if (!gitBaseline) {
+      console.error(`❌ Invalid baseline format: "${baseline}". Expected format: git:<ref> (e.g., git:main, git:HEAD)`);
+      return process.exit(1);
+    }
+    await handleGitBaselineCompare({
+      ref: gitBaseline.ref,
+      stats,
+      approve,
+      quiet,
+      skipGitignore,
+    });
+    return;
+  }
 
   // Auto-mode: no files specified - use multi-file comparison with context_main.json
   if (positionalArgs.length === 0) {
@@ -297,6 +325,173 @@ async function handleAutoCompareMode(options: {
     }
 
     console.error('❌ Compare failed:', (error as Error).message);
+    return process.exit(1);
+  }
+}
+
+/**
+ * Handle git baseline comparison mode
+ * Compares current working tree against a git ref (branch, tag, commit)
+ */
+async function handleGitBaselineCompare(options: {
+  ref: string;
+  stats: boolean;
+  approve: boolean;
+  quiet: boolean;
+  skipGitignore: boolean;
+}): Promise<void> {
+  const { ref, stats, approve, quiet, skipGitignore } = options;
+  const { join } = await import('node:path');
+  const { rm } = await import('node:fs/promises');
+
+  // Validate git repository
+  if (!(await isGitRepo())) {
+    console.error('❌ Not a git repository. Git baseline comparison requires a git repository.');
+    return process.exit(1);
+  }
+
+  // Resolve and describe the git ref
+  let commitHash: string;
+  let refDescription: string;
+  try {
+    commitHash = await resolveGitRef(ref);
+    refDescription = await describeGitRef(ref);
+  } catch (error) {
+    console.error(`❌ ${(error as Error).message}`);
+    return process.exit(1);
+  }
+
+  if (!quiet) {
+    console.log(`Git baseline comparison`);
+    console.log(`  Baseline: ${refDescription} (${commitHash.substring(0, 8)})`);
+    console.log(`  Current:  working tree\n`);
+  }
+
+  // Create directory structure
+  let paths: GitBaselinePaths;
+  try {
+    paths = await createBaselinePaths(process.cwd(), ref);
+  } catch (error) {
+    console.error(`❌ Failed to create comparison directories: ${(error as Error).message}`);
+    return process.exit(1);
+  }
+
+  debugLog('compareHandler', 'Git baseline paths', { ...paths });
+
+  try {
+    // Step 1: Create git worktree at the baseline ref
+    if (!quiet) {
+      console.log(`🔄 Creating worktree at ${refDescription}...`);
+    }
+
+    const worktree = await createWorktree(ref, paths.worktreeDir);
+
+    // Step 2: Generate context for baseline (from worktree)
+    if (!quiet) {
+      console.log(`🔄 Generating baseline context...`);
+    }
+
+    // Read .stampignore from working directory for symmetric comparison
+    // Both baseline and current should use the same .stampignore source
+    const workingDir = process.cwd();
+    const baselineContextOptions: ContextOptions = {
+      depth: 1,
+      includeCode: 'header',
+      format: 'json',
+      out: paths.baselineDir,
+      hashLock: false,
+      strict: false,
+      allowMissing: true,
+      maxNodes: 100,
+      profile: 'llm-chat',
+      predictBehavior: false,
+      dryRun: false,
+      stats: false,
+      strictMissing: false,
+      compareModes: false,
+      skipGitignore: true, // Always skip in worktree
+      quiet: true, // Suppress output during generation
+      suppressSuccessIndicator: true,
+      entry: paths.worktreeDir, // Generate from worktree
+      stampignorePath: workingDir, // Use working directory's .stampignore for symmetric comparison
+    };
+
+    await contextCommand(baselineContextOptions);
+
+    // Step 3: Generate context for current working tree
+    if (!quiet) {
+      console.log(`🔄 Generating current context...`);
+    }
+
+    const currentContextOptions: ContextOptions = {
+      depth: 1,
+      includeCode: 'header',
+      format: 'json',
+      out: paths.currentDir,
+      hashLock: false,
+      strict: false,
+      allowMissing: true,
+      maxNodes: 100,
+      profile: 'llm-chat',
+      predictBehavior: false,
+      dryRun: false,
+      stats: false,
+      strictMissing: false,
+      compareModes: false,
+      skipGitignore: true, // Always skip in git baseline mode for symmetric comparison
+      quiet: true, // Suppress output during generation
+      suppressSuccessIndicator: true,
+      stampignorePath: workingDir, // Use working directory's .stampignore for symmetric comparison
+    };
+
+    await contextCommand(currentContextOptions);
+
+    // Step 4: Compare baseline vs current
+    if (!quiet) {
+      console.log(`🔍 Comparing baseline vs current...\n`);
+    }
+
+    const multiCompareOptions: MultiFileCompareOptions = {
+      oldIndexFile: join(paths.baselineDir, 'context_main.json'),
+      newIndexFile: join(paths.currentDir, 'context_main.json'),
+      stats,
+      approve,
+      autoCleanOrphaned: false, // Don't clean orphaned in git baseline mode
+      quiet,
+      gitBaseline: true, // Enable path normalization for git baseline comparisons
+    };
+
+    const result = await multiFileCompare(multiCompareOptions);
+    displayMultiFileCompareResult(result, stats, quiet);
+
+    // Step 5: Clean up
+    await cleanupBaselinePaths(paths);
+
+    // Git baseline mode is read-only - no approval/update workflow
+    // Just report drift status
+    if (result.status === 'DRIFT') {
+      if (!quiet) {
+        console.log(`\n📊 Summary: Changes detected compared to ${refDescription}`);
+      }
+      return process.exit(1); // Exit 1 for drift (useful for CI)
+    } else {
+      if (!quiet) {
+        console.log(`\n✅ No changes detected compared to ${refDescription}`);
+      }
+      return process.exit(0);
+    }
+  } catch (error) {
+    // Clean up on error
+    try {
+      await cleanupBaselinePaths(paths);
+    } catch (cleanupError) {
+      debugError('compareHandler', 'handleGitBaselineCompare', {
+        operation: 'cleanup',
+        message: (cleanupError as Error).message,
+      });
+    }
+
+    console.error(`❌ Git baseline comparison failed: ${(error as Error).message}`);
     return process.exit(1);
   }
 }
