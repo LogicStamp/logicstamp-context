@@ -116,16 +116,33 @@ describe('fileLock utils', () => {
       const lock1 = await acquireLock(filePath);
       expect(lock1).not.toBeNull();
 
-      // Try to acquire second lock (should wait)
+      // Start acquiring second lock (will wait for lock1 to be released)
       // Use generous timeout to avoid flakiness on slow systems
       const startTime = Date.now();
       const lock2Promise = acquireLock(filePath, { timeout: 2000, retryInterval: 50 });
 
-      // Release first lock after 100ms
-      setTimeout(() => lock1!.release(), 100);
+      // Give lock2Promise a moment to start and enter the retry loop
+      // This ensures it's actively checking before we release lock1
+      await new Promise(resolve => setTimeout(resolve, 20));
 
+      // Release first lock after 100ms total, ensuring release completes
+      // Use a Promise to properly handle the async release and filesystem delay
+      const releasePromise = (async () => {
+        await new Promise(resolve => setTimeout(resolve, 80)); // Wait until ~100ms total
+        await lock1!.release();
+        // Additional delay to let filesystem catch up (especially important on Windows)
+        // Windows file deletion can be asynchronous, so we need to ensure
+        // the deletion is fully visible before lock2's next check
+        await new Promise(r => setTimeout(r, 30));
+      })();
+
+      // Don't await releasePromise - let it run in parallel with lock2Promise
+      // lock2Promise will succeed once the lock is released and filesystem updates
       const lock2 = await lock2Promise;
       const elapsed = Date.now() - startTime;
+
+      // Ensure release completed (should be done by now, but verify for cleanup)
+      await releasePromise;
 
       expect(lock2).not.toBeNull();
       expect(elapsed).toBeGreaterThanOrEqual(90); // Should have waited
