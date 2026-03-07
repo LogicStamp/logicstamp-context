@@ -242,6 +242,142 @@ describe('compareCommand', () => {
     });
   });
 
+  describe('gitBaseline mode - hash-only change filtering', () => {
+    it('should ignore hash-only changes when gitBaseline is true', async () => {
+      const oldBundles = [createBundle('src/App.tsx', 'uif:oldhash')];
+      const newBundles = [createBundle('src/App.tsx', 'uif:newhash')];
+
+      vi.mocked(fs.readFile).mockImplementation(async (path) => {
+        const pathStr = String(path);
+        if (pathStr.includes('old')) {
+          return JSON.stringify(oldBundles);
+        }
+        return JSON.stringify(newBundles);
+      });
+
+      const result = await compareCommand({
+        oldFile: 'old.json',
+        newFile: 'new.json',
+        gitBaseline: true,
+      });
+
+      // Hash-only change should be ignored in git baseline mode
+      expect(result.status).toBe('PASS');
+      expect(result.changed).toHaveLength(0);
+    });
+
+    it('should report hash changes when accompanied by other changes in gitBaseline mode', async () => {
+      const oldBundles = [
+        createBundle('src/App.tsx', 'uif:oldhash', {
+          graph: {
+            nodes: [
+              {
+                entryId: 'src/App.tsx',
+                contract: {
+                  entryId: 'src/App.tsx',
+                  type: 'UIFContract',
+                  schemaVersion: '0.4',
+                  semanticHash: 'uif:oldhash',
+                  composition: {
+                    imports: ['react'],
+                    hooks: [],
+                    functions: [],
+                    components: [],
+                  },
+                  interface: { props: {}, emits: {} },
+                  exports: 'default',
+                },
+              },
+            ],
+            edges: [],
+          },
+        }),
+      ];
+      const newBundles = [
+        createBundle('src/App.tsx', 'uif:newhash', {
+          graph: {
+            nodes: [
+              {
+                entryId: 'src/App.tsx',
+                contract: {
+                  entryId: 'src/App.tsx',
+                  type: 'UIFContract',
+                  schemaVersion: '0.4',
+                  semanticHash: 'uif:newhash',
+                  composition: {
+                    imports: ['react', 'react-dom'], // Import changed
+                    hooks: [],
+                    functions: [],
+                    components: [],
+                  },
+                  interface: { props: {}, emits: {} },
+                  exports: 'default',
+                },
+              },
+            ],
+            edges: [],
+          },
+        }),
+      ];
+
+      vi.mocked(fs.readFile).mockImplementation(async (path) => {
+        const pathStr = String(path);
+        if (pathStr.includes('old')) {
+          return JSON.stringify(oldBundles);
+        }
+        return JSON.stringify(newBundles);
+      });
+
+      const result = await compareCommand({
+        oldFile: 'old.json',
+        newFile: 'new.json',
+        gitBaseline: true,
+      });
+
+      // Hash change should be reported when there are other changes
+      expect(result.status).toBe('DRIFT');
+      expect(result.changed).toHaveLength(1);
+      expect(result.changed[0].deltas).toContainEqual({
+        type: 'hash',
+        old: 'uif:oldhash',
+        new: 'uif:newhash',
+      });
+      expect(result.changed[0].deltas).toContainEqual({
+        type: 'imports',
+        old: ['react'],
+        new: ['react', 'react-dom'],
+      });
+    });
+
+    it('should report hash changes normally when gitBaseline is false', async () => {
+      const oldBundles = [createBundle('src/App.tsx', 'uif:oldhash')];
+      const newBundles = [createBundle('src/App.tsx', 'uif:newhash')];
+
+      vi.mocked(fs.readFile).mockImplementation(async (path) => {
+        const pathStr = String(path);
+        if (pathStr.includes('old')) {
+          return JSON.stringify(oldBundles);
+        }
+        return JSON.stringify(newBundles);
+      });
+
+      const result = await compareCommand({
+        oldFile: 'old.json',
+        newFile: 'new.json',
+        gitBaseline: false,
+      });
+
+      // Hash-only change should be reported in normal mode
+      expect(result.status).toBe('DRIFT');
+      expect(result.changed).toHaveLength(1);
+      expect(result.changed[0].deltas).toContainEqual({
+        type: 'hash',
+        old: 'uif:oldhash',
+        new: 'uif:newhash',
+      });
+    });
+  });
+
   it('should throw error when old file not found', async () => {
     const error = new Error('ENOENT') as NodeJS.ErrnoException;
     error.code = 'ENOENT';
@@ -1086,6 +1222,131 @@ describe('multiFileCompare', () => {
 
     expect(result.status).toBe('DRIFT');
     expect(result.summary.driftFolders).toBe(1);
+  });
+
+  it('should ignore hash-only changes in gitBaseline mode', async () => {
+    const mockIndex = {
+      type: 'LogicStampIndex',
+      schemaVersion: '0.2',
+      folders: [
+        { path: 'src', contextFile: 'src/context.json', bundles: 1 },
+      ],
+    };
+
+    const oldBundles = [createBundle('src/App.tsx', 'uif:oldhash')];
+    const newBundles = [createBundle('src/App.tsx', 'uif:newhash')];
+
+    vi.mocked(fs.readFile).mockImplementation(async (path) => {
+      const pathStr = String(path);
+      if (pathStr.includes('context_main.json')) {
+        return JSON.stringify(mockIndex);
+      }
+      if (pathStr.includes('old')) {
+        return JSON.stringify(oldBundles);
+      }
+      return JSON.stringify(newBundles);
+    });
+
+    const result = await multiFileCompare({
+      oldIndexFile: '/old/context_main.json',
+      newIndexFile: '/new/context_main.json',
+      gitBaseline: true,
+    });
+
+    // Hash-only change should be ignored in git baseline mode
+    expect(result.status).toBe('PASS');
+    expect(result.summary.driftFolders).toBe(0);
+    expect(result.folders[0].status).toBe('PASS');
+  });
+
+  it('should report hash changes with other changes in gitBaseline mode', async () => {
+    const mockIndex = {
+      type: 'LogicStampIndex',
+      schemaVersion: '0.2',
+      folders: [
+        { path: 'src', contextFile: 'src/context.json', bundles: 1 },
+      ],
+    };
+
+    const oldBundles = [
+      createBundle('src/App.tsx', 'uif:oldhash', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/App.tsx',
+              contract: {
+                entryId: 'src/App.tsx',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                semanticHash: 'uif:oldhash',
+                composition: {
+                  imports: ['react'],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: { props: {}, emits: {} },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+    const newBundles = [
+      createBundle('src/App.tsx', 'uif:newhash', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/App.tsx',
+              contract: {
+                entryId: 'src/App.tsx',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                semanticHash: 'uif:newhash',
+                composition: {
+                  imports: ['react', 'react-dom'], // Import changed
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: { props: {}, emits: {} },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+
+    vi.mocked(fs.readFile).mockImplementation(async (path) => {
+      const pathStr = String(path);
+      if (pathStr.includes('context_main.json')) {
+        return JSON.stringify(mockIndex);
+      }
+      if (pathStr.includes('old')) {
+        return JSON.stringify(oldBundles);
+      }
+      return JSON.stringify(newBundles);
+    });
+
+    const result = await multiFileCompare({
+      oldIndexFile: '/old/context_main.json',
+      newIndexFile: '/new/context_main.json',
+      gitBaseline: true,
+    });
+
+    // Hash change should be reported when there are other changes
+    expect(result.status).toBe('DRIFT');
+    expect(result.summary.driftFolders).toBe(1);
+    expect(result.folders[0].status).toBe('DRIFT');
+    expect(result.folders[0].componentResult?.changed[0].deltas).toContainEqual({
+      type: 'hash',
+      old: 'uif:oldhash',
+      new: 'uif:newhash',
+    });
   });
 
   it('should throw error for invalid index type', async () => {

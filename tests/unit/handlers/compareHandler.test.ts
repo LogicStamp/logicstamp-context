@@ -17,7 +17,17 @@ const {
   mockDisplayMultiFileCompareResult,
   mockCleanOrphanedFiles,
   mockDebugError,
+  mockDebugLog,
   mockReadlineInterface,
+  // Git mocks
+  mockParseGitBaseline,
+  mockIsGitRepo,
+  mockResolveGitRef,
+  mockDescribeGitRef,
+  mockCreateWorktree,
+  mockRemoveWorktree,
+  mockCreateBaselinePaths,
+  mockCleanupBaselinePaths,
 } = vi.hoisted(() => ({
   mockExistsSync: vi.fn(),
   mockMkdir: vi.fn(),
@@ -31,10 +41,20 @@ const {
   mockDisplayMultiFileCompareResult: vi.fn(),
   mockCleanOrphanedFiles: vi.fn(),
   mockDebugError: vi.fn(),
+  mockDebugLog: vi.fn(),
   mockReadlineInterface: {
     question: vi.fn(),
     close: vi.fn(),
   },
+  // Git mocks
+  mockParseGitBaseline: vi.fn(),
+  mockIsGitRepo: vi.fn(),
+  mockResolveGitRef: vi.fn(),
+  mockDescribeGitRef: vi.fn(),
+  mockCreateWorktree: vi.fn(),
+  mockRemoveWorktree: vi.fn(),
+  mockCreateBaselinePaths: vi.fn(),
+  mockCleanupBaselinePaths: vi.fn(),
 }));
 
 vi.mock('node:fs', () => ({
@@ -62,6 +82,18 @@ vi.mock('../../../src/cli/commands/compare.js', () => ({
 
 vi.mock('../../../src/utils/debug.js', () => ({
   debugError: mockDebugError,
+  debugLog: mockDebugLog,
+}));
+
+vi.mock('../../../src/utils/git.js', () => ({
+  parseGitBaseline: mockParseGitBaseline,
+  isGitRepo: mockIsGitRepo,
+  resolveGitRef: mockResolveGitRef,
+  describeGitRef: mockDescribeGitRef,
+  createWorktree: mockCreateWorktree,
+  removeWorktree: mockRemoveWorktree,
+  createBaselinePaths: mockCreateBaselinePaths,
+  cleanupBaselinePaths: mockCleanupBaselinePaths,
 }));
 
 vi.mock('node:readline', () => ({
@@ -95,8 +127,18 @@ describe('handleCompare', () => {
     mockDisplayMultiFileCompareResult.mockReset();
     mockCleanOrphanedFiles.mockReset();
     mockDebugError.mockReset();
+    mockDebugLog.mockReset();
     mockReadlineInterface.question.mockReset();
     mockReadlineInterface.close.mockReset();
+    // Git mocks
+    mockParseGitBaseline.mockReset();
+    mockIsGitRepo.mockReset();
+    mockResolveGitRef.mockReset();
+    mockDescribeGitRef.mockReset();
+    mockCreateWorktree.mockReset();
+    mockRemoveWorktree.mockReset();
+    mockCreateBaselinePaths.mockReset();
+    mockCleanupBaselinePaths.mockReset();
 
     // Set default mock implementations
     mockExistsSync.mockReturnValue(true);
@@ -1056,6 +1098,275 @@ describe('handleCompare', () => {
         expect(console.log).not.toHaveBeenCalledWith('❌ Update declined\n');
         expect(exitSpy).toHaveBeenCalledWith(1);
       });
+    });
+  });
+
+  describe('git baseline mode', () => {
+    beforeEach(() => {
+      // Set up default git mock implementations
+      mockParseGitBaseline.mockReturnValue({ ref: 'main' });
+      mockIsGitRepo.mockResolvedValue(true);
+      mockResolveGitRef.mockResolvedValue('abc123def456789');
+      mockDescribeGitRef.mockResolvedValue('main');
+      mockCreateBaselinePaths.mockResolvedValue({
+        tempRoot: '/project/.logicstamp/compare',
+        baselineDir: '/project/.logicstamp/compare/baseline',
+        currentDir: '/project/.logicstamp/compare/current',
+        worktreeDir: '/tmp/logicstamp-worktree-main-123',
+      });
+      mockCreateWorktree.mockResolvedValue({
+        worktreePath: '/tmp/logicstamp-worktree-main-123',
+        commitHash: 'abc123def456789',
+        ref: 'main',
+      });
+      mockCleanupBaselinePaths.mockResolvedValue(undefined);
+      mockContextCommand.mockResolvedValue(undefined);
+      mockMultiFileCompare.mockResolvedValue({ status: 'IDENTICAL', folders: [] });
+    });
+
+    it('should reject invalid baseline format', async () => {
+      mockParseGitBaseline.mockReturnValue(null);
+
+      vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
+        stats: false,
+        approve: false,
+        cleanOrphaned: false,
+        quiet: false,
+        skipGitignore: false,
+        baseline: 'invalid',
+        positionalArgs: [],
+      });
+
+      const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
+        throw new Error(`Exit called with code ${code}`);
+      });
+
+      await expect(handleCompare(['--baseline', 'invalid'])).rejects.toThrow('Exit called with code 1');
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid baseline format')
+      );
+      expect(exitSpy).toHaveBeenCalledWith(1);
+    });
+
+    it('should error when not in a git repository', async () => {
+      mockIsGitRepo.mockResolvedValue(false);
+
+      vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
+        stats: false,
+        approve: false,
+        cleanOrphaned: false,
+        quiet: false,
+        skipGitignore: false,
+        baseline: 'git:main',
+        positionalArgs: [],
+      });
+
+      const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
+        throw new Error(`Exit called with code ${code}`);
+      });
+
+      await expect(handleCompare(['--baseline', 'git:main'])).rejects.toThrow('Exit called with code 1');
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('Not a git repository')
+      );
+      expect(exitSpy).toHaveBeenCalledWith(1);
+    });
+
+    it('should error when git ref does not exist', async () => {
+      mockResolveGitRef.mockRejectedValue(new Error('Invalid git ref "nonexistent": ref does not exist'));
+
+      vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
+        stats: false,
+        approve: false,
+        cleanOrphaned: false,
+        quiet: false,
+        skipGitignore: false,
+        baseline: 'git:nonexistent',
+        positionalArgs: [],
+      });
+
+      const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
+        throw new Error(`Exit called with code ${code}`);
+      });
+
+      await expect(handleCompare(['--baseline', 'git:nonexistent'])).rejects.toThrow('Exit called with code 1');
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid git ref')
+      );
+      expect(exitSpy).toHaveBeenCalledWith(1);
+    });
+
+    it('should run git baseline comparison and exit 0 when no drift', async () => {
+      mockMultiFileCompare.mockResolvedValue({ status: 'IDENTICAL', folders: [] });
+
+      vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
+        stats: false,
+        approve: false,
+        cleanOrphaned: false,
+        quiet: false,
+        skipGitignore: false,
+        baseline: 'git:main',
+        positionalArgs: [],
+      });
+
+      await handleCompare(['--baseline', 'git:main']);
+
+      expect(mockCreateWorktree).toHaveBeenCalled();
+      expect(mockContextCommand).toHaveBeenCalledTimes(2); // baseline + current
+      expect(mockMultiFileCompare).toHaveBeenCalled();
+      expect(mockCleanupBaselinePaths).toHaveBeenCalled();
+      expect(process.exit).toHaveBeenCalledWith(0);
+    });
+
+    it('should exit 1 when drift detected in git baseline mode', async () => {
+      mockMultiFileCompare.mockResolvedValue({ status: 'DRIFT', folders: [] });
+
+      vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
+        stats: false,
+        approve: false,
+        cleanOrphaned: false,
+        quiet: false,
+        skipGitignore: false,
+        baseline: 'git:main',
+        positionalArgs: [],
+      });
+
+      const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
+        throw new Error(`Exit called with code ${code}`);
+      });
+
+      await expect(handleCompare(['--baseline', 'git:main'])).rejects.toThrow('Exit called with code 1');
+
+      expect(mockCleanupBaselinePaths).toHaveBeenCalled();
+      expect(exitSpy).toHaveBeenCalledWith(1);
+    });
+
+    it('should pass stats option through', async () => {
+      mockMultiFileCompare.mockResolvedValue({ status: 'IDENTICAL', folders: [] });
+
+      vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
+        stats: true,
+        approve: false,
+        cleanOrphaned: false,
+        quiet: false,
+        skipGitignore: false,
+        baseline: 'git:main',
+        positionalArgs: [],
+      });
+
+      await handleCompare(['--baseline', 'git:main', '--stats']);
+
+      expect(mockMultiFileCompare).toHaveBeenCalledWith(
+        expect.objectContaining({ stats: true })
+      );
+    });
+
+    it('should suppress output in quiet mode', async () => {
+      mockMultiFileCompare.mockResolvedValue({ status: 'IDENTICAL', folders: [] });
+
+      vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
+        stats: false,
+        approve: false,
+        cleanOrphaned: false,
+        quiet: true,
+        skipGitignore: false,
+        baseline: 'git:main',
+        positionalArgs: [],
+      });
+
+      await handleCompare(['--baseline', 'git:main', '--quiet']);
+
+      // Should not log the baseline info header
+      expect(console.log).not.toHaveBeenCalledWith('Git baseline comparison');
+      expect(process.exit).toHaveBeenCalledWith(0);
+    });
+
+    it('should cleanup on error', async () => {
+      mockContextCommand.mockRejectedValue(new Error('Context generation failed'));
+
+      vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
+        stats: false,
+        approve: false,
+        cleanOrphaned: false,
+        quiet: false,
+        skipGitignore: false,
+        baseline: 'git:main',
+        positionalArgs: [],
+      });
+
+      const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
+        throw new Error(`Exit called with code ${code}`);
+      });
+
+      await expect(handleCompare(['--baseline', 'git:main'])).rejects.toThrow('Exit called with code 1');
+
+      expect(mockCleanupBaselinePaths).toHaveBeenCalled();
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('Git baseline comparison failed')
+      );
+      expect(exitSpy).toHaveBeenCalledWith(1);
+    });
+
+    it('should handle createBaselinePaths failure', async () => {
+      mockCreateBaselinePaths.mockRejectedValue(new Error('Failed to create directories'));
+
+      vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
+        stats: false,
+        approve: false,
+        cleanOrphaned: false,
+        quiet: false,
+        skipGitignore: false,
+        baseline: 'git:main',
+        positionalArgs: [],
+      });
+
+      const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
+        throw new Error(`Exit called with code ${code}`);
+      });
+
+      await expect(handleCompare(['--baseline', 'git:main'])).rejects.toThrow('Exit called with code 1');
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to create comparison directories')
+      );
+      expect(exitSpy).toHaveBeenCalledWith(1);
+    });
+
+    it('should use skipGitignore: true for both baseline and current for symmetric comparison', async () => {
+      mockMultiFileCompare.mockResolvedValue({ status: 'IDENTICAL', folders: [] });
+
+      vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
+        stats: false,
+        approve: false,
+        cleanOrphaned: false,
+        quiet: false,
+        skipGitignore: false, // User did NOT pass --skip-gitignore
+        baseline: 'git:main',
+        positionalArgs: [],
+      });
+
+      await handleCompare(['--baseline', 'git:main']);
+
+      // Both context commands should have skipGitignore: true for symmetric comparison
+      expect(mockContextCommand).toHaveBeenCalledTimes(2);
+
+      // First call: baseline context (from worktree)
+      expect(mockContextCommand).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        skipGitignore: true,
+        entry: '/tmp/logicstamp-worktree-main-123',
+        stampignorePath: process.cwd(), // Should use working directory's .stampignore
+      }));
+
+      // Second call: current context (from working tree)
+      expect(mockContextCommand).toHaveBeenNthCalledWith(2, expect.objectContaining({
+        skipGitignore: true, // Must be true for symmetric comparison, regardless of user flag
+        stampignorePath: process.cwd(), // Should use working directory's .stampignore
+      }));
+
+      expect(process.exit).toHaveBeenCalledWith(0);
     });
   });
 });

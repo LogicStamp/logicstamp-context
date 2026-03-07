@@ -65,6 +65,7 @@ export interface ContextOptions {
   debug?: boolean; // Enable debug output (shows hashes in watch mode)
   logFile?: boolean; // Write watch mode logs to file (default: false)
   strictWatch?: boolean; // Enable strict watch mode - track violations and report them
+  stampignorePath?: string; // Override where .stampignore is read from (for git baseline comparisons)
 }
 
 export async function contextCommand(options: ContextOptions): Promise<void> {
@@ -82,7 +83,9 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   let files = await globFiles(projectRoot);
 
   // Step 1.5: Filter files based on .stampignore
-  const stampignore = await readStampignore(projectRoot);
+  // Use stampignorePath override if provided (for git baseline comparisons), otherwise use projectRoot
+  const stampignoreDir = options.stampignorePath ? resolve(options.stampignorePath) : projectRoot;
+  const stampignore = await readStampignore(stampignoreDir);
   if (stampignore && stampignore.ignore.length > 0) {
     const originalCount = files.length;
     files = filterIgnoredFiles(files, stampignore.ignore, projectRoot);
