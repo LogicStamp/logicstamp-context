@@ -28,6 +28,7 @@ const {
   mockRemoveWorktree,
   mockCreateBaselinePaths,
   mockCleanupBaselinePaths,
+  mockFilterGitIgnoredFiles,
 } = vi.hoisted(() => ({
   mockExistsSync: vi.fn(),
   mockMkdir: vi.fn(),
@@ -55,6 +56,7 @@ const {
   mockRemoveWorktree: vi.fn(),
   mockCreateBaselinePaths: vi.fn(),
   mockCleanupBaselinePaths: vi.fn(),
+  mockFilterGitIgnoredFiles: vi.fn(),
 }));
 
 vi.mock('node:fs', () => ({
@@ -94,6 +96,7 @@ vi.mock('../../../src/utils/git.js', () => ({
   removeWorktree: mockRemoveWorktree,
   createBaselinePaths: mockCreateBaselinePaths,
   cleanupBaselinePaths: mockCleanupBaselinePaths,
+  filterGitIgnoredFiles: mockFilterGitIgnoredFiles,
 }));
 
 vi.mock('node:readline', () => ({
@@ -139,6 +142,9 @@ describe('handleCompare', () => {
     mockRemoveWorktree.mockReset();
     mockCreateBaselinePaths.mockReset();
     mockCleanupBaselinePaths.mockReset();
+    mockFilterGitIgnoredFiles.mockReset();
+    // Default implementation: pass through all files (not filtered)
+    mockFilterGitIgnoredFiles.mockImplementation(async (files: string[]) => files);
 
     // Set default mock implementations
     mockExistsSync.mockReturnValue(true);
@@ -1103,6 +1109,10 @@ describe('handleCompare', () => {
 
   describe('git baseline mode', () => {
     beforeEach(() => {
+      // Reset all mocks
+      mockFilterGitIgnoredFiles.mockReset();
+      mockDisplayMultiFileCompareResult.mockReset();
+      
       // Set up default git mock implementations
       mockParseGitBaseline.mockReturnValue({ ref: 'main' });
       mockIsGitRepo.mockResolvedValue(true);
@@ -1122,6 +1132,9 @@ describe('handleCompare', () => {
       mockCleanupBaselinePaths.mockResolvedValue(undefined);
       mockContextCommand.mockResolvedValue(undefined);
       mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
+      // Default implementation: pass through all files (not filtered)
+      mockFilterGitIgnoredFiles.mockImplementation(async (files: string[]) => files);
+      mockDisplayMultiFileCompareResult.mockImplementation(() => {});
     });
 
     it('should reject invalid baseline format', async () => {
@@ -1365,6 +1378,172 @@ describe('handleCompare', () => {
         skipGitignore: true, // Must be true for symmetric comparison, regardless of user flag
         stampignorePath: process.cwd(), // Should use working directory's .stampignore
       }));
+
+      expect(process.exit).toHaveBeenCalledWith(0);
+    });
+
+    it('should filter git-ignored files from comparison results', async () => {
+      // Mock comparison result with git-ignored file showing as added
+      const mockResult = {
+        status: 'DRIFT' as const,
+        folders: [
+          {
+            folderPath: '.',
+            contextFile: 'context.json',
+            status: 'DRIFT' as const,
+            componentResult: {
+              status: 'DRIFT' as const,
+              added: ['next-env.d.ts', 'src/components/Button.tsx'],
+              removed: [],
+              changed: [],
+            },
+          },
+        ],
+        summary: {
+          totalFolders: 1,
+          addedFolders: 0,
+          orphanedFolders: 0,
+          driftFolders: 1,
+          passFolders: 0,
+          totalComponentsAdded: 2,
+          totalComponentsRemoved: 0,
+          totalComponentsChanged: 0,
+        },
+      };
+
+      mockMultiFileCompare.mockResolvedValue(mockResult);
+      
+      // Mock filterGitIgnoredFiles to filter out next-env.d.ts but keep Button.tsx
+      mockFilterGitIgnoredFiles.mockImplementation(async (files: string[]) => {
+        return files.filter(f => f !== 'next-env.d.ts');
+      });
+
+      // Ensure process.exit doesn't interrupt execution
+      vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+
+      vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
+        stats: false,
+        approve: false,
+        cleanOrphaned: false,
+        quiet: false,
+        skipGitignore: false,
+        baseline: 'git:main',
+        positionalArgs: [],
+      });
+
+      await handleCompare(['--baseline', 'git:main']);
+
+      // Verify multiFileCompare was called first
+      expect(mockMultiFileCompare).toHaveBeenCalled();
+
+      // Verify filterGitIgnoredFiles was called for added components
+      expect(mockFilterGitIgnoredFiles).toHaveBeenCalledWith(
+        ['next-env.d.ts', 'src/components/Button.tsx'],
+        expect.any(String)
+      );
+      // Should also be called for removed (empty array)
+      expect(mockFilterGitIgnoredFiles).toHaveBeenCalledWith(
+        [],
+        expect.any(String)
+      );
+
+      // Verify the filtered result was passed to displayMultiFileCompareResult
+      expect(mockDisplayMultiFileCompareResult).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: 'DRIFT',
+          folders: [
+            expect.objectContaining({
+              componentResult: expect.objectContaining({
+                added: ['src/components/Button.tsx'], // next-env.d.ts should be filtered out
+              }),
+            }),
+          ],
+          summary: expect.objectContaining({
+            totalComponentsAdded: 1, // Should be recalculated after filtering
+          }),
+        }),
+        false,
+        false
+      );
+    });
+
+    it('should change folder status to PASS when all changes are filtered out', async () => {
+      // Mock comparison result where all changes are git-ignored
+      const mockResult = {
+        status: 'DRIFT' as const,
+        folders: [
+          {
+            folderPath: '.',
+            contextFile: 'context.json',
+            status: 'DRIFT' as const,
+            componentResult: {
+              status: 'DRIFT' as const,
+              added: ['next-env.d.ts'],
+              removed: [],
+              changed: [],
+            },
+          },
+        ],
+        summary: {
+          totalFolders: 1,
+          addedFolders: 0,
+          orphanedFolders: 0,
+          driftFolders: 1,
+          passFolders: 0,
+          totalComponentsAdded: 1,
+          totalComponentsRemoved: 0,
+          totalComponentsChanged: 0,
+        },
+      };
+
+      mockMultiFileCompare.mockResolvedValue(mockResult);
+      
+      // Mock filterGitIgnoredFiles to filter out all files
+      mockFilterGitIgnoredFiles.mockResolvedValue([]);
+
+      vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
+        stats: false,
+        approve: false,
+        cleanOrphaned: false,
+        quiet: false,
+        skipGitignore: false,
+        baseline: 'git:main',
+        positionalArgs: [],
+      });
+
+      await handleCompare(['--baseline', 'git:main']);
+
+      // Verify multiFileCompare was called first
+      expect(mockMultiFileCompare).toHaveBeenCalled();
+
+      // Verify filterGitIgnoredFiles was called
+      expect(mockFilterGitIgnoredFiles).toHaveBeenCalledWith(
+        ['next-env.d.ts'],
+        expect.any(String)
+      );
+
+      // Verify the folder status was changed to PASS
+      expect(mockDisplayMultiFileCompareResult).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: 'PASS', // Overall status should be PASS
+          folders: [
+            expect.objectContaining({
+              status: 'PASS', // Folder status should be PASS
+              componentResult: expect.objectContaining({
+                status: 'PASS', // Component result status should be PASS
+                added: [], // All git-ignored files filtered out
+              }),
+            }),
+          ],
+          summary: expect.objectContaining({
+            driftFolders: 0, // Should be recalculated
+            passFolders: 1, // Should be recalculated
+            totalComponentsAdded: 0, // Should be recalculated
+          }),
+        }),
+        false,
+        false
+      );
 
       expect(process.exit).toHaveBeenCalledWith(0);
     });
