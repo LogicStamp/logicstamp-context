@@ -238,6 +238,46 @@ describe('git utilities', () => {
       expect(result).toBe('abc123def456');
     });
 
+    it('should trim whitespace from ref', async () => {
+      mockSpawnResult.mockReturnValue({ stdout: 'abc123def456', stderr: '', code: 0, error: null });
+
+      const result = await resolveGitRef('  main  ');
+      expect(result).toBe('abc123def456');
+      // Verify it was called with trimmed ref
+      expect(mockSpawn).toHaveBeenCalledWith(
+        'git',
+        ['rev-parse', '--verify', 'main'],
+        expect.any(Object)
+      );
+    });
+
+    it('should reject empty ref', async () => {
+      await expect(resolveGitRef('')).rejects.toThrow(
+        'Invalid baseline ref: ref is empty or exceeds 256 characters'
+      );
+    });
+
+    it('should reject ref with only whitespace', async () => {
+      await expect(resolveGitRef('   ')).rejects.toThrow(
+        'Invalid baseline ref: ref is empty or exceeds 256 characters'
+      );
+    });
+
+    it('should reject ref exceeding 256 characters', async () => {
+      const longRef = 'a'.repeat(257);
+      await expect(resolveGitRef(longRef)).rejects.toThrow(
+        'Invalid baseline ref: ref is empty or exceeds 256 characters'
+      );
+    });
+
+    it('should accept ref with exactly 256 characters', async () => {
+      const ref256 = 'a'.repeat(256);
+      mockSpawnResult.mockReturnValue({ stdout: 'abc123def456', stderr: '', code: 0, error: null });
+
+      const result = await resolveGitRef(ref256);
+      expect(result).toBe('abc123def456');
+    });
+
     it('should throw for invalid ref', async () => {
       mockSpawnResult.mockReturnValue({ 
         stdout: '', 

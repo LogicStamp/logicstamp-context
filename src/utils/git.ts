@@ -27,9 +27,32 @@ export interface GitWorktreeResult {
 export interface GitOptions {
   /** Working directory for git commands (default: process.cwd()) */
   cwd?: string;
-  /** Timeout in milliseconds (default: 30000) */
+  /** Timeout in milliseconds (default: 30000 for regular operations) */
   timeout?: number;
 }
+
+/**
+ * Default timeout for regular git operations (30 seconds)
+ */
+const DEFAULT_GIT_TIMEOUT = 30000;
+
+/**
+ * Timeout for git ref resolution operations (15 seconds)
+ * git rev-parse is lightweight and should complete quickly
+ */
+export const GIT_REF_RESOLVE_TIMEOUT = 15000;
+
+/**
+ * Timeout for git ref description operations (15 seconds)
+ * git rev-parse --abbrev-ref and --short are lightweight and should complete quickly
+ */
+export const GIT_REF_DESCRIBE_TIMEOUT = 15000;
+
+/**
+ * Timeout for git worktree creation (60 seconds)
+ * Worktree creation can be slow on large repos due to file checkout operations
+ */
+export const GIT_WORKTREE_TIMEOUT = 60000;
 
 /**
  * Execute a git command and return stdout
@@ -41,7 +64,7 @@ async function execGit(
   options: GitOptions = {}
 ): Promise<string> {
   const cwd = options.cwd ?? process.cwd();
-  const timeout = options.timeout ?? 30000;
+  const timeout = options.timeout ?? DEFAULT_GIT_TIMEOUT;
   const command = `git ${args.join(' ')}`;
 
   debugLog('git', `Executing: ${command}`, { cwd });
@@ -133,22 +156,51 @@ export async function supportsWorktrees(options: GitOptions = {}): Promise<boole
 }
 
 /**
+ * Maximum length for git refs (256 characters)
+ * This is a defense-in-depth measure - Git itself will validate refs
+ */
+const MAX_REF_LENGTH = 256;
+
+/**
+ * Validate git ref input (lightweight validation)
+ * Trims whitespace and checks length, but lets Git be the source of truth for semantic validity
+ *
+ * @param ref - Git ref to validate
+ * @throws Error if ref is empty or exceeds length limit
+ */
+function validateGitRef(ref: string): void {
+  const trimmed = ref.trim();
+  if (trimmed.length === 0) {
+    throw new Error('Invalid baseline ref: ref is empty or exceeds 256 characters');
+  }
+  if (trimmed.length > MAX_REF_LENGTH) {
+    throw new Error('Invalid baseline ref: ref is empty or exceeds 256 characters');
+  }
+}
+
+/**
  * Resolve a git ref to its commit hash
  * Validates that the ref exists
  *
  * @param ref - Git ref (branch, tag, commit, HEAD, HEAD~1, etc.)
  * @returns The resolved commit hash
- * @throws Error if ref doesn't exist
+ * @throws Error if ref doesn't exist or is invalid
  */
 export async function resolveGitRef(
   ref: string,
   options: GitOptions = {}
 ): Promise<string> {
+  // Lightweight validation: trim whitespace and check length
+  // Let Git be the source of truth for semantic validity
+  validateGitRef(ref);
+  
+  const trimmedRef = ref.trim();
+  
   try {
-    const hash = await execGit(['rev-parse', '--verify', ref], options);
+    const hash = await execGit(['rev-parse', '--verify', trimmedRef], options);
     return hash;
   } catch (error) {
-    throw new Error(`Invalid git ref "${ref}": ref does not exist`);
+    throw new Error(`Invalid git ref "${trimmedRef}": ref does not exist`);
   }
 }
 
@@ -160,10 +212,12 @@ export async function describeGitRef(
   ref: string,
   options: GitOptions = {}
 ): Promise<string> {
+  // Use trimmed ref for consistency with resolveGitRef
+  const trimmedRef = ref.trim();
   try {
     // Try to get a symbolic name first
     const symbolic = await execGit(
-      ['rev-parse', '--abbrev-ref', ref],
+      ['rev-parse', '--abbrev-ref', trimmedRef],
       options
     );
     if (symbolic && symbolic !== 'HEAD') {
@@ -175,10 +229,10 @@ export async function describeGitRef(
 
   try {
     // Fall back to short commit hash
-    const shortHash = await execGit(['rev-parse', '--short', ref], options);
+    const shortHash = await execGit(['rev-parse', '--short', trimmedRef], options);
     return shortHash;
   } catch {
-    return ref; // Return original if all else fails
+    return trimmedRef; // Return trimmed ref if all else fails
   }
 }
 
@@ -195,6 +249,9 @@ export async function createWorktree(
   targetDir?: string,
   options: GitOptions = {}
 ): Promise<GitWorktreeResult> {
+  // Use trimmed ref for consistency
+  const trimmedRef = ref.trim();
+  
   // Validate we're in a git repo
   if (!(await isGitRepo(options))) {
     throw new Error('Not a git repository');
@@ -205,8 +262,8 @@ export async function createWorktree(
     throw new Error('Git worktrees not supported (requires git >= 2.5)');
   }
 
-  // Resolve the ref to a commit hash
-  const commitHash = await resolveGitRef(ref, options);
+  // Resolve the ref to a commit hash (this will also validate the ref)
+  const commitHash = await resolveGitRef(trimmedRef, options);
 
   // Generate worktree path if not provided
   const worktreePath = targetDir ?? join(
@@ -214,7 +271,7 @@ export async function createWorktree(
     `logicstamp-worktree-${Date.now()}-${commitHash.substring(0, 8)}`
   );
 
-  debugLog('git', `Creating worktree at ${worktreePath} for ref ${ref}`, {
+  debugLog('git', `Creating worktree at ${worktreePath} for ref ${trimmedRef}`, {
     commitHash,
   });
 
@@ -236,7 +293,7 @@ export async function createWorktree(
     return {
       worktreePath,
       commitHash,
-      ref,
+      ref: trimmedRef,
     };
   } catch (error) {
     // Clean up on failure
@@ -248,12 +305,12 @@ export async function createWorktree(
 
     const err = error as Error;
     debugError('git', 'createWorktree', {
-      ref,
+      ref: trimmedRef,
       targetDir: worktreePath,
       message: err.message,
     });
 
-    throw new Error(`Failed to create worktree for "${ref}": ${err.message}`);
+    throw new Error(`Failed to create worktree for "${trimmedRef}": ${err.message}`);
   }
 }
 

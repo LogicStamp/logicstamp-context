@@ -24,6 +24,9 @@ import {
   createBaselinePaths,
   cleanupBaselinePaths,
   filterGitIgnoredFiles,
+  GIT_REF_RESOLVE_TIMEOUT,
+  GIT_REF_DESCRIBE_TIMEOUT,
+  GIT_WORKTREE_TIMEOUT,
   type GitBaselinePaths,
 } from '../../utils/git.js';
 
@@ -352,11 +355,12 @@ async function handleGitBaselineCompare(options: {
   }
 
   // Resolve and describe the git ref
+  // Use appropriate timeouts: ref resolution/description are fast, worktree creation can be slow
   let commitHash: string;
   let refDescription: string;
   try {
-    commitHash = await resolveGitRef(ref);
-    refDescription = await describeGitRef(ref);
+    commitHash = await resolveGitRef(ref, { timeout: GIT_REF_RESOLVE_TIMEOUT });
+    refDescription = await describeGitRef(ref, { timeout: GIT_REF_DESCRIBE_TIMEOUT });
   } catch (error) {
     console.error(`❌ ${(error as Error).message}`);
     return process.exit(1);
@@ -385,7 +389,7 @@ async function handleGitBaselineCompare(options: {
       console.log(`🔄 Creating worktree at ${refDescription}...`);
     }
 
-    const worktree = await createWorktree(ref, paths.worktreeDir);
+    const worktree = await createWorktree(ref, paths.worktreeDir, { timeout: GIT_WORKTREE_TIMEOUT });
 
     // Step 2: Generate context for baseline (from worktree)
     if (!quiet) {
