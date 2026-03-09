@@ -48,6 +48,7 @@ export function index(bundles: LogicStampBundle[], normalize = false): Map<strin
         state: c.interface?.state ?? {},
         exportKind: typeof c.exports === 'string' ? 'default'
                    : c.exports?.named?.length ? 'named' : 'none',
+        apiSignature: c.interface?.apiSignature,
       };
       m.set(c.entryId.toLowerCase(), sig);
     }
@@ -111,7 +112,8 @@ export function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>,
         JSON.stringify(a.props) !== JSON.stringify(b.props) ||
         JSON.stringify(a.emits) !== JSON.stringify(b.emits) ||
         JSON.stringify(a.state) !== JSON.stringify(b.state) ||
-        a.exportKind !== b.exportKind;
+        a.exportKind !== b.exportKind ||
+        JSON.stringify(a.apiSignature ?? {}) !== JSON.stringify(b.apiSignature ?? {});
 
       // Only include hash change if there are other changes, or if ignoreHashOnly is false
       if (a.semanticHash !== b.semanticHash && (!ignoreHashOnly || hasNonHashChanges)) {
@@ -152,6 +154,10 @@ export function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>,
 
       if (a.exportKind !== b.exportKind) {
         deltas.push({ type: 'exports', old: a.exportKind, new: b.exportKind });
+      }
+
+      if (JSON.stringify(a.apiSignature ?? {}) !== JSON.stringify(b.apiSignature ?? {})) {
+        deltas.push({ type: 'apiSignature', old: a.apiSignature ?? null, new: b.apiSignature ?? null });
       }
 
       if (deltas.length > 0) {

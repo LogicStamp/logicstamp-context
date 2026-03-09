@@ -625,4 +625,633 @@ describe('diff', () => {
     expect(result.changed[0].deltas.map(d => d.type)).toContain('imports');
     expect(result.changed[0].deltas.map(d => d.type)).toContain('hooks');
   });
+
+  it('should detect apiSignature changes', () => {
+    const oldBundles = [
+      createBundle('src/api/users.ts', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:hash123',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  apiSignature: {
+                    parameters: { id: 'string' },
+                    returnType: 'User',
+                  },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+    const newBundles = [
+      createBundle('src/api/users.ts', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:hash123',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  apiSignature: {
+                    parameters: { id: 'string', includeDeleted: 'boolean' },
+                    returnType: 'User',
+                  },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+
+    const oldIdx = index(oldBundles);
+    const newIdx = index(newBundles);
+
+    const result = diff(oldIdx, newIdx);
+    expect(result.status).toBe('DRIFT');
+    expect(result.changed).toHaveLength(1);
+    expect(result.changed[0].deltas).toContainEqual({
+      type: 'apiSignature',
+      old: { parameters: { id: 'string' }, returnType: 'User' },
+      new: { parameters: { id: 'string', includeDeleted: 'boolean' }, returnType: 'User' },
+    });
+  });
+
+  it('should detect apiSignature parameter changes', () => {
+    const oldBundles = [
+      createBundle('src/api/users.ts', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:hash123',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  apiSignature: {
+                    parameters: { id: 'string' },
+                    returnType: 'User',
+                  },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+    const newBundles = [
+      createBundle('src/api/users.ts', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:hash123',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  apiSignature: {
+                    parameters: { id: 'number' }, // Type changed from string to number
+                    returnType: 'User',
+                  },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+
+    const oldIdx = index(oldBundles);
+    const newIdx = index(newBundles);
+
+    const result = diff(oldIdx, newIdx);
+    expect(result.status).toBe('DRIFT');
+    expect(result.changed).toHaveLength(1);
+    expect(result.changed[0].deltas).toContainEqual({
+      type: 'apiSignature',
+      old: { parameters: { id: 'string' }, returnType: 'User' },
+      new: { parameters: { id: 'number' }, returnType: 'User' },
+    });
+  });
+
+  it('should detect apiSignature returnType changes', () => {
+    const oldBundles = [
+      createBundle('src/api/users.ts', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:hash123',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  apiSignature: {
+                    parameters: { id: 'string' },
+                    returnType: 'User',
+                  },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+    const newBundles = [
+      createBundle('src/api/users.ts', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:hash123',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  apiSignature: {
+                    parameters: { id: 'string' },
+                    returnType: 'UserResponse', // Changed
+                  },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+
+    const oldIdx = index(oldBundles);
+    const newIdx = index(newBundles);
+
+    const result = diff(oldIdx, newIdx);
+    expect(result.status).toBe('DRIFT');
+    expect(result.changed).toHaveLength(1);
+    expect(result.changed[0].deltas).toContainEqual({
+      type: 'apiSignature',
+      old: { parameters: { id: 'string' }, returnType: 'User' },
+      new: { parameters: { id: 'string' }, returnType: 'UserResponse' },
+    });
+  });
+
+  it('should detect apiSignature requestType and responseType changes', () => {
+    const oldBundles = [
+      createBundle('src/api/users.ts', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:hash123',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  apiSignature: {
+                    parameters: { id: 'string' },
+                    returnType: 'User',
+                    requestType: 'CreateUserRequest',
+                    responseType: 'UserResponse',
+                  },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+    const newBundles = [
+      createBundle('src/api/users.ts', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:hash123',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  apiSignature: {
+                    parameters: { id: 'string' },
+                    returnType: 'User',
+                    requestType: 'UpdateUserRequest', // Changed
+                    responseType: 'UserResponse',
+                  },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+
+    const oldIdx = index(oldBundles);
+    const newIdx = index(newBundles);
+
+    const result = diff(oldIdx, newIdx);
+    expect(result.status).toBe('DRIFT');
+    expect(result.changed).toHaveLength(1);
+    expect(result.changed[0].deltas).toContainEqual({
+      type: 'apiSignature',
+      old: {
+        parameters: { id: 'string' },
+        returnType: 'User',
+        requestType: 'CreateUserRequest',
+        responseType: 'UserResponse',
+      },
+      new: {
+        parameters: { id: 'string' },
+        returnType: 'User',
+        requestType: 'UpdateUserRequest',
+        responseType: 'UserResponse',
+      },
+    });
+  });
+
+  it('should detect apiSignature added (was undefined)', () => {
+    const oldBundles = [
+      createBundle('src/api/users.ts', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:hash123',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  // No apiSignature
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+    const newBundles = [
+      createBundle('src/api/users.ts', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:hash123',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  apiSignature: {
+                    parameters: { id: 'string' },
+                    returnType: 'User',
+                  },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+
+    const oldIdx = index(oldBundles);
+    const newIdx = index(newBundles);
+
+    const result = diff(oldIdx, newIdx);
+    expect(result.status).toBe('DRIFT');
+    expect(result.changed).toHaveLength(1);
+    expect(result.changed[0].deltas).toContainEqual({
+      type: 'apiSignature',
+      old: null,
+      new: { parameters: { id: 'string' }, returnType: 'User' },
+    });
+  });
+
+  it('should detect apiSignature removed (became undefined)', () => {
+    const oldBundles = [
+      createBundle('src/api/users.ts', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:hash123',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  apiSignature: {
+                    parameters: { id: 'string' },
+                    returnType: 'User',
+                  },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+    const newBundles = [
+      createBundle('src/api/users.ts', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:hash123',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  // No apiSignature
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+
+    const oldIdx = index(oldBundles);
+    const newIdx = index(newBundles);
+
+    const result = diff(oldIdx, newIdx);
+    expect(result.status).toBe('DRIFT');
+    expect(result.changed).toHaveLength(1);
+    expect(result.changed[0].deltas).toContainEqual({
+      type: 'apiSignature',
+      old: { parameters: { id: 'string' }, returnType: 'User' },
+      new: null,
+    });
+  });
+
+  it('should include apiSignature in non-hash change detection for git baseline mode', () => {
+    const oldBundles = [
+      createBundle('src/api/users.ts', 'uif:oldhash', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:oldhash',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  apiSignature: {
+                    parameters: { id: 'string' },
+                    returnType: 'User',
+                  },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+    const newBundles = [
+      createBundle('src/api/users.ts', 'uif:newhash', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:newhash',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  apiSignature: {
+                    parameters: { id: 'string', includeDeleted: 'boolean' },
+                    returnType: 'User',
+                  },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+
+    const oldIdx = index(oldBundles);
+    const newIdx = index(newBundles);
+
+    // With ignoreHashOnly=true (git baseline mode), hash should be included because apiSignature changed
+    const result = diff(oldIdx, newIdx, false, true);
+    expect(result.status).toBe('DRIFT');
+    expect(result.changed).toHaveLength(1);
+    expect(result.changed[0].deltas.map(d => d.type)).toContain('hash');
+    expect(result.changed[0].deltas.map(d => d.type)).toContain('apiSignature');
+  });
 });

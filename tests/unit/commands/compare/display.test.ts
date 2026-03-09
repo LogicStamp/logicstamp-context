@@ -585,6 +585,157 @@ describe('displayMultiFileCompareResult', () => {
     expect(console.log).toHaveBeenCalledWith(expect.stringContaining('+ onHover'));
   });
 
+  it('should display apiSignature delta details', () => {
+    const result: MultiFileCompareResult = {
+      status: 'DRIFT',
+      folders: [
+        {
+          folderPath: 'src/api',
+          contextFile: 'src/api/context.json',
+          status: 'DRIFT',
+          componentResult: {
+            status: 'DRIFT',
+            added: [],
+            removed: [],
+            changed: [
+              {
+                id: 'src/api/users.ts',
+                deltas: [
+                  {
+                    type: 'apiSignature',
+                    old: {
+                      parameters: { id: 'string' },
+                      returnType: 'User',
+                    },
+                    new: {
+                      parameters: { id: 'string', includeDeleted: 'boolean' },
+                      returnType: 'User',
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+      summary: {
+        totalFolders: 1,
+        addedFolders: 0,
+        orphanedFolders: 0,
+        driftFolders: 1,
+        passFolders: 0,
+        totalComponentsAdded: 0,
+        totalComponentsRemoved: 0,
+        totalComponentsChanged: 1,
+      },
+    };
+
+    displayMultiFileCompareResult(result, false, false);
+
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('apiSignature'));
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('parameters.includeDeleted'));
+  });
+
+  it('should display apiSignature returnType changes', () => {
+    const result: MultiFileCompareResult = {
+      status: 'DRIFT',
+      folders: [
+        {
+          folderPath: 'src/api',
+          contextFile: 'src/api/context.json',
+          status: 'DRIFT',
+          componentResult: {
+            status: 'DRIFT',
+            added: [],
+            removed: [],
+            changed: [
+              {
+                id: 'src/api/users.ts',
+                deltas: [
+                  {
+                    type: 'apiSignature',
+                    old: {
+                      parameters: { id: 'string' },
+                      returnType: 'User',
+                    },
+                    new: {
+                      parameters: { id: 'string' },
+                      returnType: 'UserResponse',
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+      summary: {
+        totalFolders: 1,
+        addedFolders: 0,
+        orphanedFolders: 0,
+        driftFolders: 1,
+        passFolders: 0,
+        totalComponentsAdded: 0,
+        totalComponentsRemoved: 0,
+        totalComponentsChanged: 1,
+      },
+    };
+
+    displayMultiFileCompareResult(result, false, false);
+
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('apiSignature'));
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('returnType'));
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('User → UserResponse'));
+  });
+
+  it('should display apiSignature added', () => {
+    const result: MultiFileCompareResult = {
+      status: 'DRIFT',
+      folders: [
+        {
+          folderPath: 'src/api',
+          contextFile: 'src/api/context.json',
+          status: 'DRIFT',
+          componentResult: {
+            status: 'DRIFT',
+            added: [],
+            removed: [],
+            changed: [
+              {
+                id: 'src/api/users.ts',
+                deltas: [
+                  {
+                    type: 'apiSignature',
+                    old: null,
+                    new: {
+                      parameters: { id: 'string' },
+                      returnType: 'User',
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ],
+      summary: {
+        totalFolders: 1,
+        addedFolders: 0,
+        orphanedFolders: 0,
+        driftFolders: 1,
+        passFolders: 0,
+        totalComponentsAdded: 0,
+        totalComponentsRemoved: 0,
+        totalComponentsChanged: 1,
+      },
+    };
+
+    displayMultiFileCompareResult(result, false, false);
+
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('apiSignature'));
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Added API signature'));
+  });
+
   it('should display variables delta details', () => {
     const result: MultiFileCompareResult = {
       status: 'DRIFT',
