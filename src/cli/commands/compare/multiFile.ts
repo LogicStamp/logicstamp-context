@@ -102,7 +102,8 @@ export async function multiFileCompare(options: MultiFileCompareOptions): Promis
   const driftFolders = folderResults.filter(f => f.status === 'DRIFT').length;
   const passFolders = folderResults.filter(f => f.status === 'PASS').length;
 
-  const status = addedFolders > 0 || orphanedFolders > 0 || driftFolders > 0 ? 'DRIFT' : 'PASS';
+  // Only orphaned folders and drift folders qualify as drift; added folders are growth, not drift
+  const status = orphanedFolders > 0 || driftFolders > 0 ? 'DRIFT' : 'PASS';
 
   // Sort folder results by path for consistent output
   folderResults.sort((a, b) => a.folderPath.localeCompare(b.folderPath));
