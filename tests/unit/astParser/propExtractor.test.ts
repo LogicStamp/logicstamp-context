@@ -775,7 +775,8 @@ describe('Prop Extractor', () => {
       expect(result).toHaveProperty('type', 'literal-union');
       expect(result).toHaveProperty('literals');
       if (typeof result === 'object' && 'literals' in result) {
-        expect(result.literals).toEqual(['small', 'medium', 'large']);
+        // Literals are sorted alphabetically for determinism
+        expect(result.literals).toEqual(['large', 'medium', 'small']);
       }
     });
 
@@ -817,7 +818,8 @@ describe('Prop Extractor', () => {
         expect(result).toHaveProperty('type', 'literal-union');
         expect(result).toHaveProperty('literals');
         if (typeof result === 'object' && 'literals' in result) {
-          expect(result.literals).toEqual(['small', 'medium', 'large']);
+          // Literals are sorted alphabetically for determinism
+          expect(result.literals).toEqual(['large', 'medium', 'small']);
         }
       });
 
@@ -862,7 +864,8 @@ describe('Prop Extractor', () => {
         
         expect(result).toHaveProperty('type', 'literal-union');
         if (typeof result === 'object' && 'literals' in result) {
-          expect(result.literals).toEqual(['0xFF', '0x00', '0x0A']);
+          // Literals are sorted alphabetically for determinism
+          expect(result.literals).toEqual(['0x00', '0x0A', '0xFF']);
         }
       });
 
@@ -871,7 +874,8 @@ describe('Prop Extractor', () => {
         
         expect(result).toHaveProperty('type', 'literal-union');
         if (typeof result === 'object' && 'literals' in result) {
-          expect(result.literals).toEqual(['true', 'false']);
+          // Literals are sorted alphabetically for determinism
+          expect(result.literals).toEqual(['false', 'true']);
         }
       });
 
@@ -889,7 +893,8 @@ describe('Prop Extractor', () => {
         
         expect(result).toHaveProperty('type', 'literal-union');
         if (typeof result === 'object' && 'literals' in result) {
-          expect(result.literals).toEqual(['small', '1', 'true', 'null']);
+          // Literals are sorted alphabetically for determinism
+          expect(result.literals).toEqual(['1', 'null', 'small', 'true']);
         }
       });
 
@@ -899,7 +904,8 @@ describe('Prop Extractor', () => {
         expect(result).toHaveProperty('type', 'literal-union');
         expect(result).toHaveProperty('optional', true);
         if (typeof result === 'object' && 'literals' in result) {
-          expect(result.literals).toEqual(['small', 'medium', 'large']);
+          // Literals are sorted alphabetically for determinism
+          expect(result.literals).toEqual(['large', 'medium', 'small']);
         }
       });
     });
