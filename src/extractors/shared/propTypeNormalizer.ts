@@ -44,7 +44,8 @@ export function normalizePropType(typeText: string, isOptional: boolean): PropTy
             return trimmed.slice(1, -1);
           }
           return trimmed;
-        });
+        })
+        .sort(); // Sort literals for determinism
 
       return {
         type: 'literal-union',

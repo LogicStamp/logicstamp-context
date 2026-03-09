@@ -182,8 +182,9 @@ export function bundleHash(
  */
 export function stableStringify(obj: unknown): string {
   return JSON.stringify(obj, (k, v) => {
-    if (v && typeof v === 'object' && !Array.isArray(v)) {
-      // Sort object keys
+    // Explicitly check for null (typeof null === 'object' in JavaScript)
+    if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
+      // Sort object keys recursively
       return Object.keys(v as Record<string, unknown>)
         .sort()
         .reduce((o, key) => {
@@ -192,7 +193,10 @@ export function stableStringify(obj: unknown): string {
         }, {} as Record<string, unknown>);
     }
     if (Array.isArray(v)) {
-      // Sort arrays for stability
+      // NOTE: Arrays are expected to be normalized and deterministically ordered
+      // by the extraction/normalization layer before reaching stableStringify.
+      // We only sort primitives here to prevent accidental ordering issues.
+      // Arrays of objects should be pre-sorted elsewhere (e.g., via sortObject).
       return [...v].sort();
     }
     return v;
@@ -201,12 +205,24 @@ export function stableStringify(obj: unknown): string {
 
 /**
  * Sort object keys for stable hashing
+ * Recursively sorts nested objects and arrays to ensure complete determinism
  */
 function sortObject<T extends Record<string, unknown>>(obj: T): T {
   const sorted = Object.keys(obj)
     .sort()
     .reduce((acc, key) => {
-      acc[key] = obj[key];
+      const value = obj[key];
+      // Recursively sort nested objects
+      if (value && typeof value === 'object' && !Array.isArray(value) && value !== null) {
+        acc[key] = sortObject(value as Record<string, unknown>);
+      } 
+      // Sort arrays for determinism (e.g., literals arrays in PropType objects)
+      else if (Array.isArray(value)) {
+        acc[key] = [...value].sort();
+      } 
+      else {
+        acc[key] = value;
+      }
       return acc;
     }, {} as Record<string, unknown>);
 
