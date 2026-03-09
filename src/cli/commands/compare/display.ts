@@ -95,12 +95,31 @@ export function displayMultiFileCompareResult(result: MultiFileCompareResult, st
               if (delta.type === 'hash') {
                 console.log(`            old: ${delta.old}`);
                 console.log(`            new: ${delta.new}`);
-              } else if (delta.type === 'imports' || delta.type === 'hooks' || delta.type === 'functions' ||
-                         delta.type === 'components' || delta.type === 'variables') {
-                const oldSet = new Set(delta.old);
-                const newSet = new Set(delta.new);
-                const removed = delta.old.filter((item: string) => !newSet.has(item));
-                const added = delta.new.filter((item: string) => !oldSet.has(item));
+              } else if (delta.type === 'props' || delta.type === 'emits') {
+                // Handle props/emits FIRST to prevent any fallthrough to other cases
+                // ALWAYS convert to arrays - never print objects directly
+                let oldArray: string[];
+                if (Array.isArray(delta.old)) {
+                  oldArray = delta.old;
+                } else if (delta.old && typeof delta.old === 'object' && delta.old !== null) {
+                  oldArray = Object.keys(delta.old);
+                } else {
+                  oldArray = [];
+                }
+                
+                let newArray: string[];
+                if (Array.isArray(delta.new)) {
+                  newArray = delta.new;
+                } else if (delta.new && typeof delta.new === 'object' && delta.new !== null) {
+                  newArray = Object.keys(delta.new);
+                } else {
+                  newArray = [];
+                }
+                
+                const oldSet = new Set(oldArray);
+                const newSet = new Set(newArray);
+                const removed = oldArray.filter((item: string) => !newSet.has(item));
+                const added = newArray.filter((item: string) => !oldSet.has(item));
 
                 if (removed.length > 0) {
                   removed.forEach((item: string) => console.log(`            - ${item}`));
@@ -108,10 +127,11 @@ export function displayMultiFileCompareResult(result: MultiFileCompareResult, st
                 if (added.length > 0) {
                   added.forEach((item: string) => console.log(`            + ${item}`));
                 }
-                if (removed.length === 0 && added.length === 0) {
+                if (removed.length === 0 && added.length === 0 && oldArray.length > 0) {
                   console.log(`            (order changed)`);
                 }
-              } else if (delta.type === 'props' || delta.type === 'emits') {
+              } else if (delta.type === 'imports' || delta.type === 'hooks' || delta.type === 'functions' ||
+                         delta.type === 'components' || delta.type === 'variables') {
                 const oldSet = new Set(delta.old);
                 const newSet = new Set(delta.new);
                 const removed = delta.old.filter((item: string) => !newSet.has(item));

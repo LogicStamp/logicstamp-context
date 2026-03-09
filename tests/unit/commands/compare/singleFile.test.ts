@@ -129,7 +129,8 @@ describe('compareCommand', () => {
       newFile: 'new.json',
     });
 
-    expect(result.status).toBe('DRIFT');
+    // Additions are growth, not drift - should be PASS
+    expect(result.status).toBe('PASS');
     expect(result.added).toContain('src/button.tsx'); // Note: lowercased
   });
 

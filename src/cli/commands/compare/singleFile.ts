@@ -207,13 +207,39 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
               console.log(`      (order changed)`);
             }
           } else if (delta.type === 'props' || delta.type === 'emits') {
-            const oldSet = new Set(delta.old);
-            const newSet = new Set(delta.new);
+            // Props and emits should be arrays of strings (prop/emit names)
+            // Handle both arrays and objects (defensive coding for edge cases)
+            // If objects are passed, extract keys; if arrays, use directly
+            let oldArray: string[];
+            let newArray: string[];
+            
+            if (Array.isArray(delta.old)) {
+              oldArray = delta.old;
+            } else if (delta.old && typeof delta.old === 'object') {
+              // If it's an object, extract the keys
+              oldArray = Object.keys(delta.old);
+            } else {
+              // Fallback: treat as empty array
+              oldArray = [];
+            }
+            
+            if (Array.isArray(delta.new)) {
+              newArray = delta.new;
+            } else if (delta.new && typeof delta.new === 'object') {
+              // If it's an object, extract the keys
+              newArray = Object.keys(delta.new);
+            } else {
+              // Fallback: treat as empty array
+              newArray = [];
+            }
+            
+            const oldSet = new Set(oldArray);
+            const newSet = new Set(newArray);
 
             // Find removed items
-            const removed = delta.old.filter((item: string) => !newSet.has(item));
+            const removed = oldArray.filter((item: string) => !newSet.has(item));
             // Find added items
-            const added = delta.new.filter((item: string) => !oldSet.has(item));
+            const added = newArray.filter((item: string) => !oldSet.has(item));
 
             if (removed.length > 0) {
               removed.forEach((item: string) => console.log(`      - ${item}`));
@@ -221,8 +247,8 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
             if (added.length > 0) {
               added.forEach((item: string) => console.log(`      + ${item}`));
             }
-            if (removed.length === 0 && added.length === 0) {
-              // Order changed but items are the same
+            if (removed.length === 0 && added.length === 0 && oldArray.length > 0) {
+              // Only show "order changed" if arrays are non-empty and identical
               console.log(`      (order changed)`);
             }
           } else if (delta.type === 'state') {

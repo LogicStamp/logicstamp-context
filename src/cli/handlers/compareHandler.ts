@@ -528,7 +528,8 @@ async function handleGitBaselineCompare(options: {
     };
     
     // Recalculate overall status
-    result.status = addedFolders > 0 || orphanedFolders > 0 || driftFolders > 0 ? 'DRIFT' : 'PASS';
+    // Only orphaned folders and drift folders qualify as drift; added folders are growth, not drift
+    result.status = orphanedFolders > 0 || driftFolders > 0 ? 'DRIFT' : 'PASS';
     
     displayMultiFileCompareResult(result, stats, quiet);
 

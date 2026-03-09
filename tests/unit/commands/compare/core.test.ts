@@ -347,7 +347,8 @@ describe('diff', () => {
     const newIdx = index(newBundles);
 
     const result = diff(oldIdx, newIdx);
-    expect(result.status).toBe('DRIFT');
+    // Additions are growth, not drift - should be PASS
+    expect(result.status).toBe('PASS');
     expect(result.added).toContain('src/button.tsx');
     expect(result.removed).toHaveLength(0);
   });

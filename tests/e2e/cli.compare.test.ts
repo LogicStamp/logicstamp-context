@@ -637,19 +637,15 @@ describe('CLI Compare Command Tests', () => {
         }], null, 2)
       );
 
-      // Compare - should detect ADDED FILE
-      try {
-        await execAsync(
-          `node dist/cli/stamp.js context compare ${join(outDir1, 'context_main.json')} ${join(outDir2, 'context_main.json')}`
-        );
-        expect.fail('Should have detected drift');
-      } catch (error: any) {
-        expect(error.code).toBe(1);
-        const output = error.stdout || '';
-        expect(output).toContain('DRIFT');
-        expect(output).toContain('ADDED FILE');
-        expect(output).toContain('src/new-folder/context.json');
-      }
+      // Compare - should detect ADDED FILE (but additions are growth, not drift, so should PASS)
+      const result = await execAsync(
+        `node dist/cli/stamp.js context compare ${join(outDir1, 'context_main.json')} ${join(outDir2, 'context_main.json')}`
+      );
+      const output = result.stdout || '';
+      // Additions are growth, not drift - should be PASS
+      expect(output).toContain('PASS');
+      expect(output).toContain('ADDED FILE');
+      expect(output).toContain('src/new-folder/context.json');
     }, 60000);
 
     it('should detect ORPHANED FILE when folder is removed', async () => {
