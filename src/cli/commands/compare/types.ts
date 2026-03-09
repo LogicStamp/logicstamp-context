@@ -2,6 +2,8 @@
  * Compare command types and interfaces
  */
 
+import type { ApiSignature } from '../../../types/UIFContract.js';
+
 export interface LiteSig {
   semanticHash: string;
   imports: string[];
@@ -13,6 +15,7 @@ export interface LiteSig {
   emits: string[];
   variables: string[];
   state: Record<string, any>;
+  apiSignature?: ApiSignature;
 }
 
 export interface CompareResult {
@@ -21,11 +24,11 @@ export interface CompareResult {
   removed: string[];
   changed: Array<{
     id: string;
-    deltas: Array<{
-      type: 'hash' | 'imports' | 'hooks' | 'exports' | 'functions' | 'components' | 'props' | 'emits' | 'variables' | 'state';
-      old: any;
-      new: any;
-    }>;
+      deltas: Array<{
+        type: 'hash' | 'imports' | 'hooks' | 'exports' | 'functions' | 'components' | 'props' | 'emits' | 'variables' | 'state' | 'apiSignature';
+        old: any;
+        new: any;
+      }>;
   }>;
 }
 

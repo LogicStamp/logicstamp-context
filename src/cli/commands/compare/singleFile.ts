@@ -258,6 +258,49 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
             }
           } else if (delta.type === 'exports') {
             console.log(`      ${delta.old} → ${delta.new}`);
+          } else if (delta.type === 'apiSignature') {
+            const oldSig = delta.old as Record<string, any> | null;
+            const newSig = delta.new as Record<string, any> | null;
+            
+            // Handle null/undefined cases
+            if (!oldSig && newSig) {
+              console.log(`      + Added API signature`);
+              if (newSig.parameters) console.log(`        parameters: ${JSON.stringify(newSig.parameters)}`);
+              if (newSig.returnType) console.log(`        returnType: ${newSig.returnType}`);
+              if (newSig.requestType) console.log(`        requestType: ${newSig.requestType}`);
+              if (newSig.responseType) console.log(`        responseType: ${newSig.responseType}`);
+            } else if (oldSig && !newSig) {
+              console.log(`      - Removed API signature`);
+            } else if (oldSig && newSig) {
+              // Compare individual fields
+              const oldParams = oldSig.parameters ?? {};
+              const newParams = newSig.parameters ?? {};
+              const oldKeys = Object.keys(oldParams);
+              const newKeys = Object.keys(newParams);
+              const paramRemoved = oldKeys.filter(k => !(k in newParams));
+              const paramAdded = newKeys.filter(k => !(k in oldParams));
+              const paramChanged = oldKeys.filter(k => k in newParams && oldParams[k] !== newParams[k]);
+              
+              if (paramRemoved.length > 0) {
+                paramRemoved.forEach(k => console.log(`      - parameters.${k}: ${oldParams[k]}`));
+              }
+              if (paramAdded.length > 0) {
+                paramAdded.forEach(k => console.log(`      + parameters.${k}: ${newParams[k]}`));
+              }
+              if (paramChanged.length > 0) {
+                paramChanged.forEach(k => console.log(`      ~ parameters.${k}: ${oldParams[k]} → ${newParams[k]}`));
+              }
+              
+              if (oldSig.returnType !== newSig.returnType) {
+                console.log(`      ~ returnType: ${oldSig.returnType ?? '(none)'} → ${newSig.returnType ?? '(none)'}`);
+              }
+              if (oldSig.requestType !== newSig.requestType) {
+                console.log(`      ~ requestType: ${oldSig.requestType ?? '(none)'} → ${newSig.requestType ?? '(none)'}`);
+              }
+              if (oldSig.responseType !== newSig.responseType) {
+                console.log(`      ~ responseType: ${oldSig.responseType ?? '(none)'} → ${newSig.responseType ?? '(none)'}`);
+              }
+            }
           }
         });
       });

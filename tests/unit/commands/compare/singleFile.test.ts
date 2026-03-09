@@ -829,6 +829,282 @@ describe('compareCommand - delta type displays', () => {
     expect(console.log).toHaveBeenCalledWith(expect.stringContaining('emits'));
   });
 
+  it('should display apiSignature delta', async () => {
+    const oldBundles = [
+      createBundle('src/api/users.ts', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:hash123',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  apiSignature: {
+                    parameters: { id: 'string' },
+                    returnType: 'User',
+                  },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+    const newBundles = [
+      createBundle('src/api/users.ts', 'uif:hash456', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:hash456',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  apiSignature: {
+                    parameters: { id: 'string', includeDeleted: 'boolean' },
+                    returnType: 'User',
+                  },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+
+    vi.mocked(fs.readFile).mockImplementation(async (path) => {
+      const pathStr = String(path);
+      if (pathStr.includes('old')) {
+        return JSON.stringify(oldBundles);
+      }
+      return JSON.stringify(newBundles);
+    });
+
+    await compareCommand({
+      oldFile: 'old.json',
+      newFile: 'new.json',
+    });
+
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('apiSignature'));
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('parameters'));
+  });
+
+  it('should display apiSignature returnType changes', async () => {
+    const oldBundles = [
+      createBundle('src/api/users.ts', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:hash123',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  apiSignature: {
+                    parameters: { id: 'string' },
+                    returnType: 'User',
+                  },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+    const newBundles = [
+      createBundle('src/api/users.ts', 'uif:hash456', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:hash456',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  apiSignature: {
+                    parameters: { id: 'string' },
+                    returnType: 'UserResponse',
+                  },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+
+    vi.mocked(fs.readFile).mockImplementation(async (path) => {
+      const pathStr = String(path);
+      if (pathStr.includes('old')) {
+        return JSON.stringify(oldBundles);
+      }
+      return JSON.stringify(newBundles);
+    });
+
+    await compareCommand({
+      oldFile: 'old.json',
+      newFile: 'new.json',
+    });
+
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('apiSignature'));
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('returnType'));
+  });
+
+  it('should display apiSignature added', async () => {
+    const oldBundles = [
+      createBundle('src/api/users.ts', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:hash123',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  // No apiSignature
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+    const newBundles = [
+      createBundle('src/api/users.ts', 'uif:hash456', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/api/users.ts',
+              contract: {
+                entryId: 'src/api/users.ts',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'node:api',
+                description: 'Users API',
+                semanticHash: 'uif:hash456',
+                fileHash: 'fileHash-src-api-users-ts',
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
+                interface: {
+                  props: {},
+                  emits: {},
+                  apiSignature: {
+                    parameters: { id: 'string' },
+                    returnType: 'User',
+                  },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+
+    vi.mocked(fs.readFile).mockImplementation(async (path) => {
+      const pathStr = String(path);
+      if (pathStr.includes('old')) {
+        return JSON.stringify(oldBundles);
+      }
+      return JSON.stringify(newBundles);
+    });
+
+    await compareCommand({
+      oldFile: 'old.json',
+      newFile: 'new.json',
+    });
+
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('apiSignature'));
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Added API signature'));
+  });
+
   it('should display state delta', async () => {
     const oldBundles = [
       createBundle('src/App.tsx', 'uif:hash123', {
