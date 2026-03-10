@@ -242,6 +242,116 @@ describe('index', () => {
     expect(sig.imports).toEqual(['button', 'react']);
   });
 
+  it('should store full props and emits objects (not just keys)', () => {
+    const bundles = [
+      createBundle('src/Button.tsx', 'uif:hash123', {
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/Button.tsx',
+              contract: {
+                entryId: 'src/Button.tsx',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'react:component',
+                description: 'Button component',
+                semanticHash: 'uif:hash123',
+                fileHash: 'fileHash-src-Button-tsx',
+                composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                interface: {
+                  props: {
+                    onClick: 'function',
+                    disabled: 'boolean',
+                    size: { type: 'union', values: ['small', 'medium', 'large'] }
+                  },
+                  emits: {
+                    onHover: '() => void',
+                    onChange: '(value: string) => void'
+                  },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+      }),
+    ];
+
+    const idx = index(bundles);
+    const sig = idx.get('src/button.tsx')!;
+
+    // Props should be full object with types, not array of keys
+    expect(sig.props).toEqual({
+      onClick: 'function',
+      disabled: 'boolean',
+      size: { type: 'union', values: ['small', 'medium', 'large'] }
+    });
+
+    // Emits should be full object with types, not array of keys
+    expect(sig.emits).toEqual({
+      onHover: '() => void',
+      onChange: '(value: string) => void'
+    });
+  });
+
+  it('should filter invalid prop/emit keys while preserving valid ones with types', () => {
+    const bundles: LogicStampBundle[] = [
+      {
+        type: 'LogicStampBundle',
+        schemaVersion: '0.1',
+        entryId: 'src/Test.tsx',
+        depth: 2,
+        createdAt: new Date().toISOString(),
+        bundleHash: 'bundleHash-src-Test-tsx',
+        graph: {
+          nodes: [
+            {
+              entryId: 'src/Test.tsx',
+              contract: {
+                entryId: 'src/Test.tsx',
+                type: 'UIFContract',
+                schemaVersion: '0.4',
+                kind: 'react:component',
+                description: 'Test component',
+                semanticHash: 'uif:hash123',
+                fileHash: 'fileHash-src-Test-tsx',
+                composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                interface: {
+                  props: {
+                    validProp: 'string',
+                    'invalid\nkey': 'should be filtered',
+                    'has{brace': 'should be filtered',
+                    anotherValid: 'number'
+                  },
+                  emits: {
+                    validEmit: '() => void',
+                    'bad}key': 'should be filtered'
+                  },
+                },
+                exports: 'default',
+              },
+            },
+          ],
+          edges: [],
+        },
+        meta: { missing: [], source: 'test' },
+      },
+    ];
+
+    const idx = index(bundles);
+    const sig = idx.get('src/test.tsx')!;
+
+    // Should only include valid keys with their types
+    expect(sig.props).toEqual({
+      validProp: 'string',
+      anotherValid: 'number'
+    });
+    expect(sig.emits).toEqual({
+      validEmit: '() => void'
+    });
+  });
+
   it('should extract export kind correctly', () => {
     const defaultBundle = createBundle('src/App.tsx', 'uif:hash123');
     const namedBundle = createBundle('src/utils.ts', 'uif:hash456', {
@@ -1166,6 +1276,488 @@ describe('diff', () => {
       type: 'apiSignature',
       old: { parameters: { id: 'string' }, returnType: 'User' },
       new: null,
+    });
+  });
+
+  describe('props and emits type changes', () => {
+    it('should detect added props', () => {
+      const oldBundles = [
+        createBundle('src/Button.tsx', 'uif:hash123', {
+          graph: {
+            nodes: [
+              {
+                entryId: 'src/Button.tsx',
+                contract: {
+                  entryId: 'src/Button.tsx',
+                  type: 'UIFContract',
+                  schemaVersion: '0.4',
+                  kind: 'react:component',
+                  description: 'Button component',
+                  semanticHash: 'uif:hash123',
+                  fileHash: 'fileHash-src-Button-tsx',
+                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  interface: {
+                    props: { onClick: 'function' },
+                    emits: {},
+                  },
+                  exports: 'default',
+                },
+              },
+            ],
+            edges: [],
+          },
+        }),
+      ];
+      const newBundles = [
+        createBundle('src/Button.tsx', 'uif:hash123', {
+          graph: {
+            nodes: [
+              {
+                entryId: 'src/Button.tsx',
+                contract: {
+                  entryId: 'src/Button.tsx',
+                  type: 'UIFContract',
+                  schemaVersion: '0.4',
+                  kind: 'react:component',
+                  description: 'Button component',
+                  semanticHash: 'uif:hash123',
+                  fileHash: 'fileHash-src-Button-tsx',
+                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  interface: {
+                    props: { onClick: 'function', disabled: 'boolean' },
+                    emits: {},
+                  },
+                  exports: 'default',
+                },
+              },
+            ],
+            edges: [],
+          },
+        }),
+      ];
+
+      const oldIdx = index(oldBundles);
+      const newIdx = index(newBundles);
+
+      const result = diff(oldIdx, newIdx);
+      expect(result.status).toBe('DRIFT');
+      expect(result.changed).toHaveLength(1);
+
+      const propsDelta = result.changed[0].deltas.find(d => d.type === 'props');
+      expect(propsDelta).toBeDefined();
+      expect(propsDelta!.old).toEqual([]); // no removed
+      expect(propsDelta!.new).toEqual(['disabled']); // added
+    });
+
+    it('should detect removed props', () => {
+      const oldBundles = [
+        createBundle('src/Button.tsx', 'uif:hash123', {
+          graph: {
+            nodes: [
+              {
+                entryId: 'src/Button.tsx',
+                contract: {
+                  entryId: 'src/Button.tsx',
+                  type: 'UIFContract',
+                  schemaVersion: '0.4',
+                  kind: 'react:component',
+                  description: 'Button component',
+                  semanticHash: 'uif:hash123',
+                  fileHash: 'fileHash-src-Button-tsx',
+                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  interface: {
+                    props: { onClick: 'function', disabled: 'boolean' },
+                    emits: {},
+                  },
+                  exports: 'default',
+                },
+              },
+            ],
+            edges: [],
+          },
+        }),
+      ];
+      const newBundles = [
+        createBundle('src/Button.tsx', 'uif:hash123', {
+          graph: {
+            nodes: [
+              {
+                entryId: 'src/Button.tsx',
+                contract: {
+                  entryId: 'src/Button.tsx',
+                  type: 'UIFContract',
+                  schemaVersion: '0.4',
+                  kind: 'react:component',
+                  description: 'Button component',
+                  semanticHash: 'uif:hash123',
+                  fileHash: 'fileHash-src-Button-tsx',
+                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  interface: {
+                    props: { onClick: 'function' },
+                    emits: {},
+                  },
+                  exports: 'default',
+                },
+              },
+            ],
+            edges: [],
+          },
+        }),
+      ];
+
+      const oldIdx = index(oldBundles);
+      const newIdx = index(newBundles);
+
+      const result = diff(oldIdx, newIdx);
+      expect(result.status).toBe('DRIFT');
+      expect(result.changed).toHaveLength(1);
+
+      const propsDelta = result.changed[0].deltas.find(d => d.type === 'props');
+      expect(propsDelta).toBeDefined();
+      expect(propsDelta!.old).toEqual(['disabled']); // removed
+      expect(propsDelta!.new).toEqual([]); // no added
+    });
+
+    it('should detect prop type changes with propsChanged delta', () => {
+      const oldBundles = [
+        createBundle('src/Button.tsx', 'uif:hash123', {
+          graph: {
+            nodes: [
+              {
+                entryId: 'src/Button.tsx',
+                contract: {
+                  entryId: 'src/Button.tsx',
+                  type: 'UIFContract',
+                  schemaVersion: '0.4',
+                  kind: 'react:component',
+                  description: 'Button component',
+                  semanticHash: 'uif:hash123',
+                  fileHash: 'fileHash-src-Button-tsx',
+                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  interface: {
+                    props: { value: 'string', count: 'number' },
+                    emits: {},
+                  },
+                  exports: 'default',
+                },
+              },
+            ],
+            edges: [],
+          },
+        }),
+      ];
+      const newBundles = [
+        createBundle('src/Button.tsx', 'uif:hash123', {
+          graph: {
+            nodes: [
+              {
+                entryId: 'src/Button.tsx',
+                contract: {
+                  entryId: 'src/Button.tsx',
+                  type: 'UIFContract',
+                  schemaVersion: '0.4',
+                  kind: 'react:component',
+                  description: 'Button component',
+                  semanticHash: 'uif:hash123',
+                  fileHash: 'fileHash-src-Button-tsx',
+                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  interface: {
+                    props: { value: 'number', count: 'number' }, // value changed from string to number
+                    emits: {},
+                  },
+                  exports: 'default',
+                },
+              },
+            ],
+            edges: [],
+          },
+        }),
+      ];
+
+      const oldIdx = index(oldBundles);
+      const newIdx = index(newBundles);
+
+      const result = diff(oldIdx, newIdx);
+      expect(result.status).toBe('DRIFT');
+      expect(result.changed).toHaveLength(1);
+
+      // Should NOT have a props delta (no added/removed)
+      const propsDelta = result.changed[0].deltas.find(d => d.type === 'props');
+      expect(propsDelta).toBeUndefined();
+
+      // Should have a propsChanged delta
+      const propsChangedDelta = result.changed[0].deltas.find(d => d.type === 'propsChanged');
+      expect(propsChangedDelta).toBeDefined();
+      expect(propsChangedDelta!.old).toBeNull();
+      expect(propsChangedDelta!.new).toEqual([
+        { name: 'value', old: 'string', new: 'number' }
+      ]);
+    });
+
+    it('should detect emit type changes with emitsChanged delta', () => {
+      const oldBundles = [
+        createBundle('src/Input.tsx', 'uif:hash123', {
+          graph: {
+            nodes: [
+              {
+                entryId: 'src/Input.tsx',
+                contract: {
+                  entryId: 'src/Input.tsx',
+                  type: 'UIFContract',
+                  schemaVersion: '0.4',
+                  kind: 'react:component',
+                  description: 'Input component',
+                  semanticHash: 'uif:hash123',
+                  fileHash: 'fileHash-src-Input-tsx',
+                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  interface: {
+                    props: {},
+                    emits: { onChange: '(value: string) => void' },
+                  },
+                  exports: 'default',
+                },
+              },
+            ],
+            edges: [],
+          },
+        }),
+      ];
+      const newBundles = [
+        createBundle('src/Input.tsx', 'uif:hash123', {
+          graph: {
+            nodes: [
+              {
+                entryId: 'src/Input.tsx',
+                contract: {
+                  entryId: 'src/Input.tsx',
+                  type: 'UIFContract',
+                  schemaVersion: '0.4',
+                  kind: 'react:component',
+                  description: 'Input component',
+                  semanticHash: 'uif:hash123',
+                  fileHash: 'fileHash-src-Input-tsx',
+                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  interface: {
+                    props: {},
+                    emits: { onChange: '(value: number) => void' }, // changed
+                  },
+                  exports: 'default',
+                },
+              },
+            ],
+            edges: [],
+          },
+        }),
+      ];
+
+      const oldIdx = index(oldBundles);
+      const newIdx = index(newBundles);
+
+      const result = diff(oldIdx, newIdx);
+      expect(result.status).toBe('DRIFT');
+      expect(result.changed).toHaveLength(1);
+
+      // Should have emitsChanged delta
+      const emitsChangedDelta = result.changed[0].deltas.find(d => d.type === 'emitsChanged');
+      expect(emitsChangedDelta).toBeDefined();
+      expect(emitsChangedDelta!.old).toBeNull();
+      expect(emitsChangedDelta!.new).toEqual([
+        { name: 'onChange', old: '(value: string) => void', new: '(value: number) => void' }
+      ]);
+    });
+
+    it('should detect both added/removed props AND type changes together', () => {
+      const oldBundles = [
+        createBundle('src/Button.tsx', 'uif:hash123', {
+          graph: {
+            nodes: [
+              {
+                entryId: 'src/Button.tsx',
+                contract: {
+                  entryId: 'src/Button.tsx',
+                  type: 'UIFContract',
+                  schemaVersion: '0.4',
+                  kind: 'react:component',
+                  description: 'Button component',
+                  semanticHash: 'uif:hash123',
+                  fileHash: 'fileHash-src-Button-tsx',
+                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  interface: {
+                    props: { onClick: 'function', size: 'string', deprecated: 'boolean' },
+                    emits: {},
+                  },
+                  exports: 'default',
+                },
+              },
+            ],
+            edges: [],
+          },
+        }),
+      ];
+      const newBundles = [
+        createBundle('src/Button.tsx', 'uif:hash123', {
+          graph: {
+            nodes: [
+              {
+                entryId: 'src/Button.tsx',
+                contract: {
+                  entryId: 'src/Button.tsx',
+                  type: 'UIFContract',
+                  schemaVersion: '0.4',
+                  kind: 'react:component',
+                  description: 'Button component',
+                  semanticHash: 'uif:hash123',
+                  fileHash: 'fileHash-src-Button-tsx',
+                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  interface: {
+                    props: {
+                      onClick: 'function',
+                      size: 'number',  // type changed
+                      variant: 'string' // added
+                      // deprecated removed
+                    },
+                    emits: {},
+                  },
+                  exports: 'default',
+                },
+              },
+            ],
+            edges: [],
+          },
+        }),
+      ];
+
+      const oldIdx = index(oldBundles);
+      const newIdx = index(newBundles);
+
+      const result = diff(oldIdx, newIdx);
+      expect(result.status).toBe('DRIFT');
+      expect(result.changed).toHaveLength(1);
+
+      // Should have props delta for added/removed
+      const propsDelta = result.changed[0].deltas.find(d => d.type === 'props');
+      expect(propsDelta).toBeDefined();
+      expect(propsDelta!.old).toEqual(['deprecated']); // removed
+      expect(propsDelta!.new).toEqual(['variant']); // added
+
+      // Should also have propsChanged delta for type changes
+      const propsChangedDelta = result.changed[0].deltas.find(d => d.type === 'propsChanged');
+      expect(propsChangedDelta).toBeDefined();
+      expect(propsChangedDelta!.new).toEqual([
+        { name: 'size', old: 'string', new: 'number' }
+      ]);
+    });
+
+    it('should handle complex prop type objects', () => {
+      const oldBundles = [
+        createBundle('src/Form.tsx', 'uif:hash123', {
+          graph: {
+            nodes: [
+              {
+                entryId: 'src/Form.tsx',
+                contract: {
+                  entryId: 'src/Form.tsx',
+                  type: 'UIFContract',
+                  schemaVersion: '0.4',
+                  kind: 'react:component',
+                  description: 'Form component',
+                  semanticHash: 'uif:hash123',
+                  fileHash: 'fileHash-src-Form-tsx',
+                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  interface: {
+                    props: {
+                      config: { type: 'object', properties: { enabled: 'boolean' } }
+                    },
+                    emits: {},
+                  },
+                  exports: 'default',
+                },
+              },
+            ],
+            edges: [],
+          },
+        }),
+      ];
+      const newBundles = [
+        createBundle('src/Form.tsx', 'uif:hash123', {
+          graph: {
+            nodes: [
+              {
+                entryId: 'src/Form.tsx',
+                contract: {
+                  entryId: 'src/Form.tsx',
+                  type: 'UIFContract',
+                  schemaVersion: '0.4',
+                  kind: 'react:component',
+                  description: 'Form component',
+                  semanticHash: 'uif:hash123',
+                  fileHash: 'fileHash-src-Form-tsx',
+                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  interface: {
+                    props: {
+                      config: { type: 'object', properties: { enabled: 'boolean', mode: 'string' } }
+                    },
+                    emits: {},
+                  },
+                  exports: 'default',
+                },
+              },
+            ],
+            edges: [],
+          },
+        }),
+      ];
+
+      const oldIdx = index(oldBundles);
+      const newIdx = index(newBundles);
+
+      const result = diff(oldIdx, newIdx);
+      expect(result.status).toBe('DRIFT');
+      expect(result.changed).toHaveLength(1);
+
+      const propsChangedDelta = result.changed[0].deltas.find(d => d.type === 'propsChanged');
+      expect(propsChangedDelta).toBeDefined();
+      expect(propsChangedDelta!.new).toHaveLength(1);
+      expect(propsChangedDelta!.new[0].name).toBe('config');
+      expect(propsChangedDelta!.new[0].old).toEqual({ type: 'object', properties: { enabled: 'boolean' } });
+      expect(propsChangedDelta!.new[0].new).toEqual({ type: 'object', properties: { enabled: 'boolean', mode: 'string' } });
+    });
+
+    it('should not report changes when props/emits are identical', () => {
+      const bundles = [
+        createBundle('src/Button.tsx', 'uif:hash123', {
+          graph: {
+            nodes: [
+              {
+                entryId: 'src/Button.tsx',
+                contract: {
+                  entryId: 'src/Button.tsx',
+                  type: 'UIFContract',
+                  schemaVersion: '0.4',
+                  kind: 'react:component',
+                  description: 'Button component',
+                  semanticHash: 'uif:hash123',
+                  fileHash: 'fileHash-src-Button-tsx',
+                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  interface: {
+                    props: { onClick: 'function', disabled: 'boolean' },
+                    emits: { onHover: '() => void' },
+                  },
+                  exports: 'default',
+                },
+              },
+            ],
+            edges: [],
+          },
+        }),
+      ];
+
+      const oldIdx = index(bundles);
+      const newIdx = index(bundles);
+
+      const result = diff(oldIdx, newIdx);
+      expect(result.status).toBe('PASS');
+      expect(result.changed).toHaveLength(0);
     });
   });
 
