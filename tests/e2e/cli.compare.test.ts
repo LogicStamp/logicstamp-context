@@ -991,5 +991,445 @@ describe('CLI Compare Command Tests', () => {
       }
     }, 30000);
   });
+
+  describe('Git baseline comparison', () => {
+    let gitRepoPath: string;
+
+    // Helper function to initialize a git repository
+    async function initGitRepo(path: string): Promise<void> {
+      // Try to initialize with main branch (git 2.28+)
+      try {
+        await execAsync('git init -b main', { cwd: path });
+      } catch {
+        // Fallback for older git versions
+        await execAsync('git init', { cwd: path });
+        // Create main branch explicitly
+        try {
+          await execAsync('git checkout -b main', { cwd: path });
+        } catch {
+          // If that fails, try to rename existing branch
+          try {
+            const { stdout: currentBranch } = await execAsync('git branch --show-current', { cwd: path });
+            const branchName = currentBranch.trim();
+            if (branchName && branchName !== 'main') {
+              await execAsync(`git branch -m ${branchName} main`, { cwd: path });
+            }
+          } catch {
+            // Ignore - will create main on first commit
+          }
+        }
+      }
+      await execAsync('git config user.email "test@example.com"', { cwd: path });
+      await execAsync('git config user.name "Test User"', { cwd: path });
+    }
+
+    // Helper function to create a commit
+    async function createCommit(path: string, message: string): Promise<string> {
+      // Ensure we're on main branch before committing (first commit creates the branch)
+      try {
+        const { stdout: currentBranch } = await execAsync('git branch --show-current', { cwd: path });
+        if (!currentBranch.trim()) {
+          // We're in detached HEAD or no branch exists, create main
+          await execAsync('git checkout -b main', { cwd: path });
+        } else if (currentBranch.trim() !== 'main') {
+          // We're on a different branch, switch to main or create it
+          try {
+            await execAsync('git checkout main', { cwd: path });
+          } catch {
+            // Main doesn't exist, rename current branch to main
+            await execAsync(`git branch -m ${currentBranch.trim()} main`, { cwd: path });
+          }
+        }
+      } catch {
+        // If branch check fails, try to create main
+        try {
+          await execAsync('git checkout -b main', { cwd: path });
+        } catch {
+          // Ignore - might already exist
+        }
+      }
+      await execAsync('git add -A', { cwd: path });
+      await execAsync(`git commit -m "${message}"`, { cwd: path });
+      const { stdout } = await execAsync('git rev-parse HEAD', { cwd: path });
+      return stdout.trim();
+    }
+
+    // Helper function to create a branch
+    async function createBranch(path: string, branchName: string): Promise<void> {
+      await execAsync(`git checkout -b ${branchName}`, { cwd: path });
+    }
+
+    // Helper function to create a tag
+    async function createTag(path: string, tagName: string): Promise<void> {
+      await execAsync(`git tag ${tagName}`, { cwd: path });
+    }
+
+    beforeEach(async () => {
+      // Create a unique git repository for this test
+      const uniqueId = randomUUID().substring(0, 8);
+      gitRepoPath = join(outputPath, `git-repo-${uniqueId}`);
+      await mkdir(gitRepoPath, { recursive: true });
+
+      // Copy fixture files to git repo
+      const { cpSync } = await import('node:fs');
+      cpSync(fixturesPath, gitRepoPath, { recursive: true });
+
+      // Initialize git repository
+      await initGitRepo(gitRepoPath);
+    });
+
+    afterEach(async () => {
+      // Clean up git repository
+      if (gitRepoPath) {
+        try {
+          // Remove worktrees first if any exist
+          try {
+            await execAsync('git worktree prune', { cwd: gitRepoPath });
+          } catch {
+            // Ignore errors
+          }
+          await rm(gitRepoPath, { recursive: true, force: true });
+        } catch (error) {
+          // Ignore cleanup errors
+        }
+      }
+    });
+
+    it('should compare against git baseline and detect no drift', async () => {
+      // Create initial commit
+      await createCommit(gitRepoPath, 'Initial commit');
+
+      // Generate context at baseline
+      await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
+        { cwd: gitRepoPath }
+      );
+
+      // Compare against baseline - should pass (no changes)
+      const { stdout } = await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:HEAD`,
+        { cwd: gitRepoPath }
+      );
+
+      expect(stdout).toContain('Git baseline comparison');
+      expect(stdout).toContain('PASS');
+      expect(stdout).toContain('No changes detected');
+    }, 120000);
+
+    it('should detect drift when code changes after baseline', async () => {
+      // Create initial commit
+      await createCommit(gitRepoPath, 'Initial commit');
+
+      // Make a significant change to a file (add a new function to ensure structural change)
+      const appFile = join(gitRepoPath, 'src', 'App.tsx');
+      const content = await readFile(appFile, 'utf-8');
+      await writeFile(appFile, content + '\nexport function newFunction() { return null; }\n');
+
+      // Compare against baseline - should detect drift
+      try {
+        await execAsync(
+          `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:HEAD`,
+          { cwd: gitRepoPath }
+        );
+        expect.fail('Should have detected drift');
+      } catch (error: any) {
+        // Handle both error.code and exit code from execAsync
+        const exitCode = error.code ?? (error as any).exitCode ?? 1;
+        expect(exitCode).toBe(1);
+        const output = error.stdout || error.stderr || '';
+        expect(output).toContain('DRIFT');
+      }
+    }, 120000);
+
+    it('should compare against a branch', async () => {
+      // Create initial commit on main (initGitRepo ensures main branch exists)
+      await createCommit(gitRepoPath, 'Initial commit');
+
+      // Create and switch to feature branch
+      await createBranch(gitRepoPath, 'feature-branch');
+      
+      // Make a change before committing
+      const appFile = join(gitRepoPath, 'src', 'App.tsx');
+      const content = await readFile(appFile, 'utf-8');
+      await writeFile(appFile, content + '\n// Feature change\n');
+      await createCommit(gitRepoPath, 'Feature commit');
+
+      // Compare current (feature-branch) against main
+      const { stdout } = await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:main`,
+        { cwd: gitRepoPath }
+      );
+
+      expect(stdout).toContain('Git baseline comparison');
+      expect(stdout).toContain('Baseline: main');
+    }, 120000);
+
+    it('should compare against a tag', async () => {
+      // Create initial commit
+      const commitHash = await createCommit(gitRepoPath, 'Initial commit');
+
+      // Create a tag
+      await createTag(gitRepoPath, 'v1.0.0');
+
+      // Make changes
+      const appFile = join(gitRepoPath, 'src', 'App.tsx');
+      const content = await readFile(appFile, 'utf-8');
+      await writeFile(appFile, content + '\n// New change\n');
+      await createCommit(gitRepoPath, 'Post-tag commit');
+
+      // Compare against tag
+      const { stdout } = await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:v1.0.0`,
+        { cwd: gitRepoPath }
+      );
+
+      expect(stdout).toContain('Git baseline comparison');
+      expect(stdout).toContain('Baseline: v1.0.0');
+    }, 120000);
+
+    it('should compare against a commit hash', async () => {
+      // Create initial commit
+      const initialHash = await createCommit(gitRepoPath, 'Initial commit');
+
+      // Make changes and create another commit
+      const appFile = join(gitRepoPath, 'src', 'App.tsx');
+      const content = await readFile(appFile, 'utf-8');
+      await writeFile(appFile, content + '\n// Change\n');
+      await createCommit(gitRepoPath, 'Second commit');
+
+      // Compare against initial commit hash (short form)
+      const shortHash = initialHash.substring(0, 7);
+      const { stdout } = await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:${shortHash}`,
+        { cwd: gitRepoPath }
+      );
+
+      expect(stdout).toContain('Git baseline comparison');
+    }, 120000);
+
+    it('should filter git-ignored files from comparison', async () => {
+      // Create initial commit
+      await createCommit(gitRepoPath, 'Initial commit');
+
+      // Create a git-ignored file (like next-env.d.ts)
+      const gitignorePath = join(gitRepoPath, '.gitignore');
+      await writeFile(gitignorePath, 'next-env.d.ts\n.env.local\n');
+      
+      const ignoredFile = join(gitRepoPath, 'next-env.d.ts');
+      await writeFile(ignoredFile, '// Auto-generated file\n');
+
+      // Commit .gitignore
+      await createCommit(gitRepoPath, 'Add gitignore');
+
+      // Compare - git-ignored file should not cause drift
+      const { stdout } = await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:HEAD`,
+        { cwd: gitRepoPath }
+      );
+
+      // Should pass because git-ignored files are filtered
+      expect(stdout).toContain('PASS');
+      expect(stdout).not.toContain('next-env.d.ts');
+    }, 120000);
+
+    it('should error when not in a git repository', async () => {
+      // Create a non-git directory in a temp location outside the project
+      const { tmpdir } = await import('node:os');
+      const nonGitDir = join(tmpdir(), `logicstamp-non-git-${randomUUID().substring(0, 8)}`);
+      await mkdir(nonGitDir, { recursive: true });
+      const { cpSync } = await import('node:fs');
+      cpSync(fixturesPath, nonGitDir, { recursive: true });
+
+      try {
+        await execAsync(
+          `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:main`,
+          { cwd: nonGitDir }
+        );
+        expect.fail('Should have errored');
+      } catch (error: any) {
+        const exitCode = error.code ?? (error as any).exitCode ?? 1;
+        expect(exitCode).toBe(1);
+        const output = error.stdout || error.stderr || '';
+        expect(output).toContain('Not a git repository');
+      } finally {
+        await rm(nonGitDir, { recursive: true, force: true });
+      }
+    }, 60000);
+
+    it('should error when git ref does not exist', async () => {
+      // Create initial commit
+      await createCommit(gitRepoPath, 'Initial commit');
+
+      try {
+        await execAsync(
+          `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:nonexistent-branch`,
+          { cwd: gitRepoPath }
+        );
+        expect.fail('Should have errored');
+      } catch (error: any) {
+        const exitCode = error.code ?? (error as any).exitCode ?? 1;
+        expect(exitCode).toBe(1);
+        const output = error.stdout || error.stderr || '';
+        expect(output).toContain('Invalid git ref');
+      }
+    }, 60000);
+
+    it('should error when baseline format is invalid', async () => {
+      // Create initial commit
+      await createCommit(gitRepoPath, 'Initial commit');
+
+      try {
+        await execAsync(
+          `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline invalid-format`,
+          { cwd: gitRepoPath }
+        );
+        expect.fail('Should have errored');
+      } catch (error: any) {
+        const exitCode = error.code ?? (error as any).exitCode ?? 1;
+        expect(exitCode).toBe(1);
+        const output = error.stdout || error.stderr || '';
+        expect(output).toContain('Invalid baseline format');
+      }
+    }, 60000);
+
+    it('should support --quiet flag in git baseline mode', async () => {
+      // Create initial commit
+      await createCommit(gitRepoPath, 'Initial commit');
+
+      // Compare with --quiet flag
+      const { stdout } = await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:HEAD --quiet`,
+        { cwd: gitRepoPath }
+      );
+
+      // Should not contain verbose output
+      expect(stdout).not.toContain('Git baseline comparison');
+      expect(stdout).not.toContain('Baseline:');
+      expect(stdout).not.toContain('Creating worktree');
+      expect(stdout).not.toContain('Generating baseline context');
+      expect(stdout).not.toContain('Generating current context');
+      expect(stdout).not.toContain('Comparing baseline vs current');
+      expect(stdout).not.toContain('Folder Summary:');
+      
+      // Should output just ✓ in quiet mode for PASS
+      expect(stdout.trim()).toBe('✓');
+    }, 120000);
+
+    it('should support --stats flag in git baseline mode', async () => {
+      // Create initial commit
+      await createCommit(gitRepoPath, 'Initial commit');
+
+      // Make a significant change to trigger drift (add a new export)
+      const appFile = join(gitRepoPath, 'src', 'App.tsx');
+      const content = await readFile(appFile, 'utf-8');
+      await writeFile(appFile, content + '\nexport const newConstant = "test";\n');
+
+      // Compare with --stats flag
+      try {
+        await execAsync(
+          `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:HEAD --stats`,
+          { cwd: gitRepoPath }
+        );
+        expect.fail('Should have detected drift');
+      } catch (error: any) {
+        const exitCode = error.code ?? (error as any).exitCode ?? 1;
+        expect(exitCode).toBe(1);
+        const output = error.stdout || error.stderr || '';
+        expect(output).toContain('DRIFT');
+        // Stats should be shown
+        expect(output).toContain('Token');
+      }
+    }, 120000);
+
+    it('should cleanup worktrees after comparison', async () => {
+      // Create initial commit
+      await createCommit(gitRepoPath, 'Initial commit');
+
+      // Run comparison
+      await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:HEAD`,
+        { cwd: gitRepoPath }
+      );
+
+      // Check that no worktrees remain
+      const { stdout } = await execAsync('git worktree list', { cwd: gitRepoPath });
+      // Should only have the main worktree, no logicstamp worktrees
+      expect(stdout).not.toContain('logicstamp-worktree');
+    }, 120000);
+
+    it('should cleanup worktrees even on error', async () => {
+      // Create initial commit
+      await createCommit(gitRepoPath, 'Initial commit');
+
+      // Try to compare against non-existent ref (will error)
+      try {
+        await execAsync(
+          `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:nonexistent`,
+          { cwd: gitRepoPath }
+        );
+      } catch {
+        // Expected to fail
+      }
+
+      // Check that no worktrees remain even after error
+      const { stdout } = await execAsync('git worktree list', { cwd: gitRepoPath });
+      expect(stdout).not.toContain('logicstamp-worktree');
+    }, 60000);
+
+    it('should handle multiple folders with drift', async () => {
+      // Create initial commit
+      await createCommit(gitRepoPath, 'Initial commit');
+
+      // Make significant changes to multiple files (add exports to ensure structural changes)
+      const appFile = join(gitRepoPath, 'src', 'App.tsx');
+      const appContent = await readFile(appFile, 'utf-8');
+      await writeFile(appFile, appContent + '\nexport const change1 = "test1";\n');
+
+      // Find another file to modify
+      const { readdir } = await import('node:fs/promises');
+      const srcDir = join(gitRepoPath, 'src');
+      const files = await readdir(srcDir);
+      const otherFile = files.find(f => f.endsWith('.tsx') || f.endsWith('.ts'));
+      if (otherFile) {
+        const otherFilePath = join(srcDir, otherFile);
+        const otherContent = await readFile(otherFilePath, 'utf-8');
+        await writeFile(otherFilePath, otherContent + '\nexport const change2 = "test2";\n');
+      }
+
+      // Compare - should detect drift in multiple folders
+      try {
+        await execAsync(
+          `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:HEAD`,
+          { cwd: gitRepoPath }
+        );
+        expect.fail('Should have detected drift');
+      } catch (error: any) {
+        const exitCode = error.code ?? (error as any).exitCode ?? 1;
+        expect(exitCode).toBe(1);
+        const output = error.stdout || error.stderr || '';
+        expect(output).toContain('DRIFT');
+        expect(output).toContain('Folder Summary:');
+      }
+    }, 120000);
+
+    it('should compare against HEAD~1 (previous commit)', async () => {
+      // Create initial commit
+      await createCommit(gitRepoPath, 'Initial commit');
+
+      // Make changes and create second commit
+      const appFile = join(gitRepoPath, 'src', 'App.tsx');
+      const content = await readFile(appFile, 'utf-8');
+      await writeFile(appFile, content + '\n// Second commit\n');
+      await createCommit(gitRepoPath, 'Second commit');
+
+      // Compare against HEAD~1
+      const { stdout } = await execAsync(
+        `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:HEAD~1`,
+        { cwd: gitRepoPath }
+      );
+
+      expect(stdout).toContain('Git baseline comparison');
+    }, 120000);
+  });
 });
 
