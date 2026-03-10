@@ -11,8 +11,8 @@ export interface LiteSig {
   exportKind: 'default' | 'named' | 'none';
   functions: string[];
   components: string[];
-  props: string[];
-  emits: string[];
+  props: Record<string, any>;
+  emits: Record<string, any>;
   variables: string[];
   state: Record<string, any>;
   apiSignature?: ApiSignature;
@@ -25,7 +25,7 @@ export interface CompareResult {
   changed: Array<{
     id: string;
       deltas: Array<{
-        type: 'hash' | 'imports' | 'hooks' | 'exports' | 'functions' | 'components' | 'props' | 'emits' | 'variables' | 'state' | 'apiSignature';
+        type: 'hash' | 'imports' | 'hooks' | 'exports' | 'functions' | 'components' | 'props' | 'emits' | 'propsChanged' | 'emitsChanged' | 'variables' | 'state' | 'apiSignature';
         old: any;
         new: any;
       }>;

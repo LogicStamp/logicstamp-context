@@ -29,17 +29,34 @@ export function normalizeNames(names: string[]): string[] {
 }
 
 /**
- * Normalize an object by sorting its keys for stable comparison
+ * Normalize an object by sorting its keys recursively for stable comparison
  * This ensures objects with the same content but different key order compare as equal
  */
 function normalizeObject(obj: Record<string, any>): Record<string, any> {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(item => normalizeObject(item));
+  }
   const sorted = Object.keys(obj)
     .sort()
     .reduce((acc, key) => {
-      acc[key] = obj[key];
+      acc[key] = normalizeObject(obj[key]);
       return acc;
     }, {} as Record<string, any>);
   return sorted;
+}
+
+/**
+ * Compare two values (primitives or objects) for equality with normalized key order
+ */
+function valuesEqual(a: any, b: any): boolean {
+  if (a === b) return true;
+  if (a === null || b === null) return a === b;
+  if (typeof a !== typeof b) return false;
+  if (typeof a !== 'object') return a === b;
+  return JSON.stringify(normalizeObject(a)) === JSON.stringify(normalizeObject(b));
 }
 
 /**
@@ -60,46 +77,47 @@ export function index(bundles: LogicStampBundle[], normalize = false): Map<strin
   for (const b of bundles) {
     for (const n of b.graph.nodes) {
       const c = n.contract;
-      // Extract and sort props/emits keys for deterministic comparison
-      // Object.keys() order depends on insertion order, so we sort to ensure consistency
-      // BUG FIX: Filter out any non-prop-name strings (like stringified prop objects)
-      // Only keep valid prop names (simple identifiers, no newlines, no braces)
-      const allPropsKeys = Object.keys(c.interface?.props ?? {});
-      const propsKeys = allPropsKeys
-        .filter(key => {
-          // Filter out stringified prop objects - they contain newlines or braces
-          return typeof key === 'string' && 
-                 key.length > 0 && 
-                 !key.includes('\n') && 
-                 !key.includes('\r') && 
-                 !key.includes('{') && 
-                 !key.includes('}') &&
-                 /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key); // Valid identifier
-        })
-        .sort();
-      
-      const allEmitsKeys = Object.keys(c.interface?.emits ?? {});
-      const emitsKeys = allEmitsKeys
-        .filter(key => {
-          // Filter out stringified emit objects - they contain newlines or braces
-          return typeof key === 'string' && 
-                 key.length > 0 && 
-                 !key.includes('\n') && 
-                 !key.includes('\r') && 
-                 !key.includes('{') && 
-                 !key.includes('}') &&
-                 /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key); // Valid identifier
-        })
-        .sort();
-      
+      // Extract full props/emits objects with types for comparison
+      // Filter out any invalid prop/emit names (like stringified objects)
+      const rawProps = c.interface?.props ?? {};
+      const rawEmits = c.interface?.emits ?? {};
+
+      // Filter and build props object with valid keys only
+      const propsObj: Record<string, any> = {};
+      for (const key of Object.keys(rawProps)) {
+        if (typeof key === 'string' &&
+            key.length > 0 &&
+            !key.includes('\n') &&
+            !key.includes('\r') &&
+            !key.includes('{') &&
+            !key.includes('}') &&
+            /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key)) {
+          propsObj[key] = rawProps[key];
+        }
+      }
+
+      // Filter and build emits object with valid keys only
+      const emitsObj: Record<string, any> = {};
+      for (const key of Object.keys(rawEmits)) {
+        if (typeof key === 'string' &&
+            key.length > 0 &&
+            !key.includes('\n') &&
+            !key.includes('\r') &&
+            !key.includes('{') &&
+            !key.includes('}') &&
+            /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key)) {
+          emitsObj[key] = rawEmits[key];
+        }
+      }
+
       const sig: LiteSig = {
         semanticHash: c.semanticHash,
         imports: normalize ? normalizeNames(c.composition?.imports ?? []) : (c.composition?.imports ?? []),
         hooks: normalize ? normalizeNames(c.composition?.hooks ?? []) : (c.composition?.hooks ?? []),
         functions: normalize ? normalizeNames(c.composition?.functions ?? []) : (c.composition?.functions ?? []),
         components: normalize ? normalizeNames(c.composition?.components ?? []) : (c.composition?.components ?? []),
-        props: normalize ? normalizeNames(propsKeys) : propsKeys,
-        emits: normalize ? normalizeNames(emitsKeys) : emitsKeys,
+        props: propsObj,
+        emits: emitsObj,
         variables: normalize ? normalizeNames(c.composition?.variables ?? []) : (c.composition?.variables ?? []),
         state: c.interface?.state ?? {},
         exportKind: typeof c.exports === 'string' ? 'default'
@@ -158,130 +176,65 @@ export function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>,
       const b = newIdx.get(id)!;
       const deltas: CompareResult['changed'][number]['deltas'] = [];
 
-      // Ensure props and emits are arrays before comparison
-      // CRITICAL: a.props and b.props should ALWAYS be arrays from the index function
-      // But defensively handle the case where they might be objects
-      let aPropsArray: string[];
-      let bPropsArray: string[];
-      let aEmitsArray: string[];
-      let bEmitsArray: string[];
-      
-      // CRITICAL: Always ensure props are arrays of prop names (strings), never objects
-      // BUG FIX: Filter out stringified prop objects that somehow got into the array
-      // These contain newlines/braces and are not valid prop names
-      if (Array.isArray(a.props)) {
-        // Filter out invalid prop names (stringified objects with newlines/braces)
-        aPropsArray = a.props.filter((p): p is string => 
-          typeof p === 'string' && 
-          p.length > 0 && 
-          !p.includes('\n') && 
-          !p.includes('\r') && 
-          !p.includes('{') && 
-          !p.includes('}') &&
-          /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(p) // Valid identifier
-        );
-      } else if (a.props && typeof a.props === 'object' && a.props !== null) {
-        // If it's an object, extract keys (prop names) and filter invalid ones
-        aPropsArray = Object.keys(a.props)
-          .filter(key => 
-            typeof key === 'string' && 
-            key.length > 0 && 
-            !key.includes('\n') && 
-            !key.includes('\r') && 
-            !key.includes('{') && 
-            !key.includes('}') &&
-            /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key)
-          )
-          .sort();
-      } else {
-        aPropsArray = [];
+      // Props and emits are now Record<string, any> objects
+      // We need to detect: added keys, removed keys, and changed types
+      const oldProps = a.props ?? {};
+      const newProps = b.props ?? {};
+      const oldEmits = a.emits ?? {};
+      const newEmits = b.emits ?? {};
+
+      // Compare props - detect added, removed, and type changes
+      // Note: Type changes are only detected when ignoreHashOnly=false (non-git-baseline mode)
+      // because prop values can differ between worktree and working tree due to TS resolution differences
+      const propsAdded: string[] = [];
+      const propsRemoved: string[] = [];
+      const propsChanged: Array<{name: string; old: any; new: any}> = [];
+
+      for (const key of Object.keys(newProps)) {
+        if (!(key in oldProps)) {
+          propsAdded.push(key);
+        } else if (!ignoreHashOnly && !valuesEqual(oldProps[key], newProps[key])) {
+          // Only detect type changes in non-git-baseline mode
+          propsChanged.push({ name: key, old: oldProps[key], new: newProps[key] });
+        }
       }
-      
-      if (Array.isArray(b.props)) {
-        // Filter out invalid prop names (stringified objects with newlines/braces)
-        bPropsArray = b.props.filter((p): p is string => 
-          typeof p === 'string' && 
-          p.length > 0 && 
-          !p.includes('\n') && 
-          !p.includes('\r') && 
-          !p.includes('{') && 
-          !p.includes('}') &&
-          /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(p) // Valid identifier
-        );
-      } else if (b.props && typeof b.props === 'object' && b.props !== null) {
-        // If it's an object, extract keys (prop names) and filter invalid ones
-        bPropsArray = Object.keys(b.props)
-          .filter(key => 
-            typeof key === 'string' && 
-            key.length > 0 && 
-            !key.includes('\n') && 
-            !key.includes('\r') && 
-            !key.includes('{') && 
-            !key.includes('}') &&
-            /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key)
-          )
-          .sort();
-      } else {
-        bPropsArray = [];
+      for (const key of Object.keys(oldProps)) {
+        if (!(key in newProps)) {
+          propsRemoved.push(key);
+        }
       }
-      
-      // CRITICAL: Ensure both are arrays of valid prop name strings
-      if (!Array.isArray(aPropsArray)) {
-        aPropsArray = [];
+
+      // Compare emits - detect added, removed, and type changes
+      const emitsAdded: string[] = [];
+      const emitsRemoved: string[] = [];
+      const emitsChanged: Array<{name: string; old: any; new: any}> = [];
+
+      for (const key of Object.keys(newEmits)) {
+        if (!(key in oldEmits)) {
+          emitsAdded.push(key);
+        } else if (!ignoreHashOnly && !valuesEqual(oldEmits[key], newEmits[key])) {
+          // Only detect type changes in non-git-baseline mode
+          emitsChanged.push({ name: key, old: oldEmits[key], new: newEmits[key] });
+        }
       }
-      if (!Array.isArray(bPropsArray)) {
-        bPropsArray = [];
+      for (const key of Object.keys(oldEmits)) {
+        if (!(key in newEmits)) {
+          emitsRemoved.push(key);
+        }
       }
+
+      // Determine if props/emits have any changes
+      const propsHaveChanges = propsAdded.length > 0 || propsRemoved.length > 0 || propsChanged.length > 0;
+      const emitsHaveChanges = emitsAdded.length > 0 || emitsRemoved.length > 0 || emitsChanged.length > 0;
       
-      // CRITICAL: Always ensure emits are arrays, never objects
-      // Defensively handle both arrays and objects (runtime type checking)
-      if (Array.isArray(a.emits)) {
-        aEmitsArray = a.emits;
-      } else if (a.emits && typeof a.emits === 'object' && a.emits !== null && !Array.isArray(a.emits)) {
-        // If it's an object (not array), extract keys and sort for consistency
-        aEmitsArray = Object.keys(a.emits).sort();
-      } else {
-        aEmitsArray = [];
-      }
-      
-      if (Array.isArray(b.emits)) {
-        bEmitsArray = b.emits;
-      } else if (b.emits && typeof b.emits === 'object' && b.emits !== null && !Array.isArray(b.emits)) {
-        // If it's an object (not array), extract keys and sort for consistency
-        bEmitsArray = Object.keys(b.emits).sort();
-      } else {
-        bEmitsArray = [];
-      }
-      
-      // CRITICAL: Ensure both are arrays before proceeding
-      // If somehow they're still not arrays, force convert to empty arrays
-      if (!Array.isArray(aEmitsArray)) {
-        aEmitsArray = [];
-      }
-      if (!Array.isArray(bEmitsArray)) {
-        bEmitsArray = [];
-      }
-      
-      // Check for non-hash changes first
-      // Note: props and emits are string arrays (prop/emit names), state and apiSignature are objects
-      // CRITICAL: Use the extracted arrays (aPropsArray, bPropsArray) for comparison, not a.props/b.props directly
-      // Normalize props/emits arrays for comparison to ensure consistent comparison
-      const oldPropsNormalized = normalize ? normalizeNames(aPropsArray) : [...aPropsArray].sort();
-      const newPropsNormalized = normalize ? normalizeNames(bPropsArray) : [...bPropsArray].sort();
-      const propsEqual = JSON.stringify(oldPropsNormalized) === JSON.stringify(newPropsNormalized);
-      
-      const oldEmitsNormalized = normalize ? normalizeNames(aEmitsArray) : [...aEmitsArray].sort();
-      const newEmitsNormalized = normalize ? normalizeNames(bEmitsArray) : [...bEmitsArray].sort();
-      const emitsEqual = JSON.stringify(oldEmitsNormalized) === JSON.stringify(newEmitsNormalized);
-      
-      const hasNonHashChanges = 
+      const hasNonHashChanges =
         !arraysEqual(a.imports, b.imports, normalize) ||
         !arraysEqual(a.hooks, b.hooks, normalize) ||
         !arraysEqual(a.functions, b.functions, normalize) ||
         !arraysEqual(a.components, b.components, normalize) ||
         !arraysEqual(a.variables, b.variables, normalize) ||
-        !propsEqual ||
-        !emitsEqual ||
+        propsHaveChanges ||
+        emitsHaveChanges ||
         !objectsEqual(a.state, b.state) ||
         a.exportKind !== b.exportKind ||
         !objectsEqual(a.apiSignature ?? {}, b.apiSignature ?? {});
@@ -307,42 +260,40 @@ export function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>,
         deltas.push({ type: 'components', old: a.components, new: b.components });
       }
 
-      // Only add props delta if they're actually different (reuse propsEqual computed above)
-      if (!propsEqual) {
-        // CRITICAL: Ensure we're ALWAYS storing arrays of strings (prop names), never objects
-        // aPropsArray and bPropsArray are already filtered to valid prop names only
-        const oldPropsFinal = [...aPropsArray].sort();
-        const newPropsFinal = [...bPropsArray].sort();
-        deltas.push({ type: 'props', old: oldPropsFinal, new: newPropsFinal });
+      // Add props deltas for added/removed props
+      if (propsAdded.length > 0 || propsRemoved.length > 0) {
+        deltas.push({
+          type: 'props',
+          old: propsRemoved.sort(),
+          new: propsAdded.sort()
+        });
       }
 
-      // Only add emits delta if they're actually different (reuse emitsEqual computed above)
-      if (!emitsEqual) {
-        // CRITICAL: Ensure we're ALWAYS storing arrays of strings (emit names), never objects
-        // aEmitsArray and bEmitsArray should already be arrays, but defensively ensure they are
-        let oldEmitsFinal: string[];
-        let newEmitsFinal: string[];
-        
-        if (Array.isArray(aEmitsArray)) {
-          oldEmitsFinal = [...aEmitsArray].sort();
-        } else if (aEmitsArray && typeof aEmitsArray === 'object') {
-          oldEmitsFinal = Object.keys(aEmitsArray).sort();
-        } else {
-          oldEmitsFinal = [];
-        }
-        
-        if (Array.isArray(bEmitsArray)) {
-          newEmitsFinal = [...bEmitsArray].sort();
-        } else if (bEmitsArray && typeof bEmitsArray === 'object') {
-          newEmitsFinal = Object.keys(bEmitsArray).sort();
-        } else {
-          newEmitsFinal = [];
-        }
-        
-        // Final safety check: ensure we're storing arrays, not objects
-        if (Array.isArray(oldEmitsFinal) && Array.isArray(newEmitsFinal)) {
-          deltas.push({ type: 'emits', old: oldEmitsFinal, new: newEmitsFinal });
-        }
+      // Add propsChanged delta for type changes
+      if (propsChanged.length > 0) {
+        deltas.push({
+          type: 'propsChanged',
+          old: null,
+          new: propsChanged.sort((x, y) => x.name.localeCompare(y.name))
+        });
+      }
+
+      // Add emits deltas for added/removed emits
+      if (emitsAdded.length > 0 || emitsRemoved.length > 0) {
+        deltas.push({
+          type: 'emits',
+          old: emitsRemoved.sort(),
+          new: emitsAdded.sort()
+        });
+      }
+
+      // Add emitsChanged delta for type changes
+      if (emitsChanged.length > 0) {
+        deltas.push({
+          type: 'emitsChanged',
+          old: null,
+          new: emitsChanged.sort((x, y) => x.name.localeCompare(y.name))
+        });
       }
 
       if (!arraysEqual(a.variables, b.variables, normalize)) {
