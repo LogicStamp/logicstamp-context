@@ -997,13 +997,57 @@ describe('CLI Compare Command Tests', () => {
 
     // Helper function to initialize a git repository
     async function initGitRepo(path: string): Promise<void> {
-      await execAsync('git init', { cwd: path });
+      // Try to initialize with main branch (git 2.28+)
+      try {
+        await execAsync('git init -b main', { cwd: path });
+      } catch {
+        // Fallback for older git versions
+        await execAsync('git init', { cwd: path });
+        // Create main branch explicitly
+        try {
+          await execAsync('git checkout -b main', { cwd: path });
+        } catch {
+          // If that fails, try to rename existing branch
+          try {
+            const { stdout: currentBranch } = await execAsync('git branch --show-current', { cwd: path });
+            const branchName = currentBranch.trim();
+            if (branchName && branchName !== 'main') {
+              await execAsync(`git branch -m ${branchName} main`, { cwd: path });
+            }
+          } catch {
+            // Ignore - will create main on first commit
+          }
+        }
+      }
       await execAsync('git config user.email "test@example.com"', { cwd: path });
       await execAsync('git config user.name "Test User"', { cwd: path });
     }
 
     // Helper function to create a commit
     async function createCommit(path: string, message: string): Promise<string> {
+      // Ensure we're on main branch before committing (first commit creates the branch)
+      try {
+        const { stdout: currentBranch } = await execAsync('git branch --show-current', { cwd: path });
+        if (!currentBranch.trim()) {
+          // We're in detached HEAD or no branch exists, create main
+          await execAsync('git checkout -b main', { cwd: path });
+        } else if (currentBranch.trim() !== 'main') {
+          // We're on a different branch, switch to main or create it
+          try {
+            await execAsync('git checkout main', { cwd: path });
+          } catch {
+            // Main doesn't exist, rename current branch to main
+            await execAsync(`git branch -m ${currentBranch.trim()} main`, { cwd: path });
+          }
+        }
+      } catch {
+        // If branch check fails, try to create main
+        try {
+          await execAsync('git checkout -b main', { cwd: path });
+        } catch {
+          // Ignore - might already exist
+        }
+      }
       await execAsync('git add -A', { cwd: path });
       await execAsync(`git commit -m "${message}"`, { cwd: path });
       const { stdout } = await execAsync('git rev-parse HEAD', { cwd: path });
@@ -1098,7 +1142,7 @@ describe('CLI Compare Command Tests', () => {
     }, 120000);
 
     it('should compare against a branch', async () => {
-      // Create initial commit on main
+      // Create initial commit on main (initGitRepo ensures main branch exists)
       await createCommit(gitRepoPath, 'Initial commit');
 
       // Create and switch to feature branch
