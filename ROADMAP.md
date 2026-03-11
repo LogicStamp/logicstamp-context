@@ -4,11 +4,13 @@ This roadmap outlines the planned features, improvements, and known limitations 
 
 ## Current Status
 
-**Current Version:** v0.7.1 (Beta)
+**Current Version:** v0.7.2 (Beta)
 
 For detailed release notes and completed features, see [CHANGELOG.md](CHANGELOG.md).
 
 Recent major milestones include:
+- ✅ Git baseline comparison (v0.7.2) - Compare against any git ref with `--baseline git:<ref>`
+- ✅ Full contract comparison (v0.7.2) - State, variables, API signatures, prop/emit type changes
 - ✅ Strict watch mode enhancements (v0.7.1) - Session status tracking, automatic watch enablement, enhanced summaries
 - ✅ Developer experience improvements (v0.7.1) - Normalized path display, `--verbose` flag, watch mode file organization
 - ✅ Lean style mode default (v0.7.0)
@@ -404,60 +406,104 @@ These are longer-term features and improvements planned for future releases.
 ### Comparison & Drift Detection
 
 #### Git Baseline for Compare
-**Status:** 🔴 Not Started
+**Status:** ✅ **Complete in v0.7.2**
 
-Add git-based baseline support for context comparison, enabling meaningful drift detection against known reference points.
+Git-based baseline support for context comparison, enabling meaningful drift detection against known reference points.
+
+**What Works (v0.7.2):**
+- ✅ `--baseline git:<ref>` option to compare against any local git ref
+- ✅ Uses git worktrees for clean isolation during comparison
+- ✅ Generates context for both baseline and current code, then compares
+- ✅ Automatic cleanup of worktrees and temp directories
+- ✅ Works with branches, tags, and commit hashes
 
 **Current Behavior:**
 - ✅ Watch mode compares against previous state (rolling baseline)
 - ✅ `stamp context compare` compares disk files vs freshly generated
-- ❌ No git baseline support
+- ✅ `stamp context compare --baseline git:main` compares against git ref
 
-**Why This Is Non-Trivial:**
-Context files are gitignored by design - they don't exist in git history. So git baseline can't simply "checkout context files from a ref". Instead, it must:
-1. Generate context from source code at the current state
-2. Generate context from source code at the baseline git ref
-3. Compare the two generated contexts
+**How It Works:**
+Context files are gitignored by design - they don't exist in git history. Git baseline generates context at two points and compares them:
 
-**Planned Implementation:**
-- `--baseline git:HEAD` - Compare against last commit
-- `--baseline git:main` - Compare against main branch
-- `--baseline git:<ref>` - Compare against any git ref (branch, tag, commit)
-
-**Under the hood:**
 ```
 stamp context compare --baseline git:main
 
-1. Generate context for current working tree → temp/current/
-2. Create git worktree at ref (or stash + checkout)
-3. Generate context for baseline ref → temp/baseline/
-4. Restore working directory
-5. Compare temp/baseline/ vs temp/current/
-6. Report drift/violations
-7. Cleanup temp directories
+1. Validate git repo and resolve ref
+2. Create git worktree at ref → temp/worktree/
+3. Generate context for baseline → .logicstamp/compare/baseline/
+4. Generate context for current working tree → .logicstamp/compare/current/
+5. Compare baseline vs current
+6. Report drift
+7. Cleanup worktree and temp directories
 ```
 
-**Implementation Considerations:**
-- Use `git worktree` for clean isolation (avoids disrupting working directory)
-- Fallback to stash/checkout if worktrees unavailable
-- Cache baseline context if ref hasn't changed (optimization)
-- Handle uncommitted changes gracefully
+**Implementation Details:**
+- Uses `git worktree` for clean isolation (avoids disrupting working directory)
+- Context stored in `.logicstamp/compare/` (already gitignored)
+- Worktrees stored in system temp directory
+- Automatic cleanup on success or failure
+
+**Hash Behavior in Git Baseline Comparisons:**
+
+Semantic hashes track meaningful structural and logical changes to components (props, emits, state, imports, hooks, functions, components). In git baseline mode, hash behavior differs from regular comparisons:
+
+- **Hash-only changes are filtered**: When only the semantic hash differs (with no changes to imports, hooks, functions, components, props, emits, or exports), the hash change is ignored to prevent false positives
+- **Hash changes with other changes are reported**: When the hash differs AND there are other structural changes, the hash is still reported to provide context
+- **Why filter hash-only?** TypeScript project resolution can produce slightly different AST structures between worktree and working directory contexts (different absolute paths, module resolution contexts, or TypeScript compiler state) even for functionally identical code. Filtering hash-only changes ensures deterministic structural comparison while preserving hash information when there are real changes.
+
+**Hash Behavior in Other Comparison Modes:**
+
+- **Regular comparison modes** (single-file, multi-file, auto-mode): All hash changes are reported, as both sides are generated from the same environment context
+- **Watch mode**: Hashes are used for incremental rebuild detection and bundle hashing
+
+**Why Hashes Are Still Needed:**
+
+Even though hash-only changes are filtered in git baseline mode, semantic hashes are still computed and used because:
+- Context for real changes: When there ARE other changes, the hash provides context about what changed
+- Regular comparisons: In non-git-baseline comparisons, hashes are always reported
+- Watch mode: Hashes drive incremental rebuild detection
+- Bundle hashing: Bundle-level hashes depend on component semantic hashes
+- Contract integrity: Hashes are part of the contract structure
+
+The filtering only suppresses hash-only noise in git baseline mode—hashes still provide value when there are real structural changes.
 
 **Use Cases:**
-- PR review: "What changed in this branch vs main?"
-- CI integration: "Did this PR introduce breaking changes?"
-- Pre-commit: "Am I about to push breaking changes?"
-- Release validation: "What changed since last release tag?"
+- PR review: `stamp context compare --baseline git:main`
+- CI integration: `stamp context compare --baseline git:origin/main`
+- Release validation: `stamp context compare --baseline git:v1.0.0`
+- Pre-commit: `stamp context compare --baseline git:HEAD`
 
-**Enables:**
+**Limitations:**
+- Only works with local refs (must `git fetch` first for remote branches)
+- No caching yet (regenerates on every run)
+
+**Future Enhancements:**
 - `--fail-on-breaking` flag for `stamp context compare` (exit non-zero on breaking changes)
+- Baseline caching when ref hasn't changed (optimization)
+- Remote ref auto-fetch option
 
-**Note:** Can't use `--strict` as it already exists for missing dependency checking. No need for a `--no-fail` flag - without `--fail-on-breaking`, compare just shows drift without breaking change detection.
-- Meaningful CI integration for contract drift detection
+**Impact:** Enables meaningful drift detection against stable reference points, making CI integration straightforward.
 
-**Impact:** Enables meaningful drift detection against stable reference points. This is the prerequisite for CI-friendly strict mode.
+---
 
-**Priority:** High
+#### Enhanced Compare Command
+**Status:** ✅ **Complete in v0.7.2**
+
+Full contract comparison support for all contract fields, aligning compare command behavior with watch mode.
+
+**What Works (v0.7.2):**
+- ✅ State comparison - Detects added/removed/changed state variables with type information
+- ✅ Variables comparison - Detects added/removed module-level variables
+- ✅ API signature comparison - Detects changes to backend API parameters, return types, request/response types
+- ✅ Prop/emit type change detection - Detects when prop/emit types change (not just added/removed)
+- ✅ New delta types: `state`, `variables`, `apiSignature`, `propsChanged`, `emitsChanged`
+
+**Prop/Emit Type Changes:**
+- Displays type changes as: `~ propName: "string" → "number"`
+- Only detected in direct file comparisons (not in git baseline mode due to TypeScript resolution differences)
+- Aligns with watch mode behavior
+
+**Impact:** Compare command now provides comprehensive drift detection across all contract fields, matching watch mode capabilities for consistent behavior.
 
 ---
 

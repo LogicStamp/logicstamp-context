@@ -2,9 +2,7 @@
 
 The `compare` command detects drift between context files. It compares regenerated context against existing context files on disk.
 
-> ⚠️ **Git Baseline Automation:** The `--baseline git:<ref>` option (e.g., `--baseline git:main`) is **not yet implemented**. Currently, `stamp context compare` only compares against context files on disk. For CI workflows comparing against git refs, use the manual workflow shown in the [CI/CD Integration](#cicd-integration) section below. See the [roadmap](https://logicstamp.dev/roadmap) for planned automation.
-
-> **Note:** Context files are gitignored by default (`stamp init` sets this up). The compare command is primarily useful for **local development** - comparing your current code against previously generated context files.
+> **Note:** Context files are gitignored by default (`stamp init` sets this up). The compare command supports both **local development** (comparing against disk) and **git baseline** comparison (comparing against any git ref like branches, tags, or commits).
 
 ### Quick Start
 
@@ -24,6 +22,11 @@ stamp context compare old.json new.json
 # Multi-file mode: Compare two context_main.json indices
 stamp context compare old/context_main.json new/context_main.json
 
+# Git baseline: Compare against a git ref (branch, tag, commit)
+stamp context compare --baseline git:main
+stamp context compare --baseline git:HEAD
+stamp context compare --baseline git:v1.0.0
+
 # With token statistics
 stamp context compare --stats
 
@@ -35,7 +38,7 @@ stamp context compare --quiet
 
 ### What It Does
 
-The compare command now supports **two comparison modes**:
+The compare command now supports **three comparison modes**:
 
 #### Single-File Mode
 Creates a lightweight signature for each component in a single context file and detects:
@@ -46,15 +49,90 @@ Creates a lightweight signature for each component in a single context file and 
   - Imports (dependencies changed)
   - Hooks (state management changed)
   - Functions, components, props, emits, exports
+  - Variables (module-level variables changed)
+  - State (component state variables changed)
+  - API signature (backend API parameters, return types, request/response types changed)
 
 **Note:** The compare command does **not** compare styles by design. Style changes (CSS, Tailwind classes, inline styles, etc.) are intentionally excluded from comparison as they represent visual/presentation changes rather than structural or logical changes.
 
-#### Multi-File Mode (NEW)
+#### Git Baseline Mode
+Compares your **current working tree against a local git ref** (branch, tag, or commit). This mode:
+- Creates a temporary git worktree at the specified ref
+- Generates context for both the baseline and current code
+- Compares the two generated contexts
+- Cleans up automatically
+
+> **Note:** Git baseline only works with **local refs** that exist in your local repository. Remote branches must be fetched first (e.g., `git fetch origin main` before using `--baseline git:origin/main`).
+
+**How Semantic Hashes Work in Comparisons:**
+
+Semantic hashes track meaningful structural and logical changes to components (props, emits, state, imports, hooks, functions, components). They are computed from the component's contract structure and provide a fast way to detect when a component's public API or internal structure has changed.
+
+**Hash Behavior by Comparison Mode:**
+
+1. **Git Baseline Mode** (`--baseline git:<ref>`):
+   - **Hash-only changes are filtered**: When only the semantic hash differs (with no changes to imports, hooks, functions, components, props, emits, or exports), the hash change is ignored
+   - **Hash changes with other changes are reported**: When the hash differs AND there are other structural changes, the hash is still reported to provide context
+   - **Why filter hash-only?** TypeScript project resolution can produce slightly different AST structures between worktree and working directory contexts (different absolute paths, module resolution contexts, or TypeScript compiler state) even for functionally identical code. Filtering hash-only changes prevents false positives while preserving hash information when there are real changes.
+
+2. **Regular Comparison Modes** (single-file, multi-file, auto-mode):
+   - **All hash changes are reported**: Hash-only filtering does not apply—all hash changes are included in the comparison results
+   - **Why always report?** In regular comparisons, both sides are generated from the same environment context, so hash differences reliably indicate actual structural changes
+
+3. **Watch Mode** (`stamp context --watch`):
+   - **Hashes drive incremental rebuilds**: Semantic hashes are used to detect which components changed and need rebuilding
+   - **Bundle hashing**: Bundle-level hashes depend on component semantic hashes for efficient change detection
+
+**Why Hashes Are Still Needed:**
+
+Even though hash-only changes are filtered in git baseline mode, semantic hashes are still computed and used because:
+- **Context for real changes**: When there ARE other changes (imports, props, etc.), the hash is still reported to provide context about what changed
+- **Regular comparisons**: In non-git-baseline comparisons, hashes are always reported (hash-only filtering only applies to git baseline mode)
+- **Watch mode**: Hashes are used for incremental rebuild detection in watch mode
+- **Bundle hashing**: Bundle-level hashes depend on component semantic hashes for change detection
+- **Contract integrity**: Hashes are part of the contract structure and used for validation
+
+The filtering only suppresses hash-only noise in git baseline mode—hashes still provide value when there are real structural changes.
+
+**Determinism in Git Baseline Mode:**
+
+✅ **Yes, the workflow is deterministic for detecting meaningful changes.**
+
+Even if semantic hashes differ between worktree and working directory (due to TypeScript resolution differences), the comparison will:
+- **Always report the same structural/logical changes** for identical code
+- **Filter out hash-only differences** that don't represent actual code changes
+- **Report hash changes** when they occur alongside other structural changes
+
+**Why hash differences occur with identical code:**
+- Different absolute paths (worktree vs working directory)
+- TypeScript module resolution context differences
+- TypeScript compiler state differences
+
+These are environment-dependent factors, not code changes. The comparison filters them out to ensure deterministic results.
+
+**Example:** If you run `stamp context compare --baseline git:main` twice on the same codebase with no changes, you'll get the same comparison result (PASS or DRIFT) even if individual hash values differ between runs.
+
+**File Exclusion Symmetry:**
+Both baseline and current context generation use the working directory's `.stampignore` file for symmetric file scanning. This prevents false positives when `.stampignore` differs between the git ref and current state, ensuring consistent file exclusion patterns across both sides of the comparison.
+
+**Git-Ignored File Filtering:**
+Git-ignored files (like `next-env.d.ts`, `.env.local`, etc.) are automatically filtered from comparison results in git baseline mode. This prevents false positives where git-ignored files exist in your working directory but not in the git worktree (since git doesn't track them).
+
+**Example:** If `next-env.d.ts` exists in your working directory but is git-ignored, it won't appear as an "added" component in the comparison results, even though it's included in context generation with `--skip-gitignore`. The comparison filters these files out before reporting results, ensuring only tracked files contribute to drift detection.
+
+This is ideal for PR reviews, CI validation, and release checks.
+
+#### Multi-File Mode
 Compares **all context files** across your project using `context_main.json` as the root index and detects:
-- **ADDED FILE** – New folders with context files
-- **ORPHANED FILE** – Folders removed from the project
-- **DRIFT** – Changed files with component-level changes
+- **ADDED FILE** – New folders with context files (treated as growth, not drift)
+- **ORPHANED FILE** – Folders removed from the project (triggers DRIFT)
+- **DRIFT** – Changed files with component-level changes (triggers DRIFT)
 - **PASS** – Unchanged files
+
+**Important:** Only **ORPHANED FILE** and **DRIFT** statuses cause the overall comparison to result in DRIFT. **ADDED FILE** folders are treated as growth (new features/components) and do not trigger DRIFT status. This means:
+- Adding new components or folders results in **PASS** status (ideal for CI/CD where new features shouldn't fail validation)
+- Only removals and modifications trigger **DRIFT** status
+- This behavior ensures that new development work doesn't unnecessarily fail validation checks
 
 ---
 
@@ -77,6 +155,8 @@ stamp context compare
 5. Prompts you to update if drift detected (in terminal)
 6. Exits with error if drift detected (in CI)
 
+**Note:** Only removals (ORPHANED FILE) and modifications (DRIFT) trigger drift detection. New additions (ADDED FILE) result in PASS status, so adding new features won't fail CI validation.
+
 This is perfect for local development – just run it after making changes!
 
 **Example output:**
@@ -97,7 +177,53 @@ This is perfect for local development – just run it after making changes!
    ...
 ```
 
-#### 2. Manual Mode - Single File
+#### 2. Git Baseline Mode
+
+```bash
+stamp context compare --baseline git:main
+```
+
+**What happens:**
+1. Validates you're in a git repository
+2. Resolves the git ref to a commit hash
+3. Creates a git worktree at the specified ref
+4. Generates context for the baseline (from worktree)
+5. Generates context for the current working tree
+6. Compares baseline vs current
+7. Cleans up worktree and temp directories
+8. Exits with code 1 if drift detected (useful for CI)
+
+**Example output:**
+```bash
+Git baseline comparison
+  Baseline: main (a1b2c3d4)
+  Current:  working tree
+
+🔄 Creating worktree at main...
+🔄 Generating baseline context...
+🔄 Generating current context...
+🔍 Comparing baseline vs current...
+
+⚠️  DRIFT
+
+📁 Folder Summary:
+   Total folders: 14
+   ~  Changed folders: 2
+   ✓  Unchanged folders: 12
+
+📦 Component Summary:
+   + Added: 3
+   ~ Changed: 2
+
+📊 Summary: Changes detected compared to main
+```
+
+**Use cases:**
+- **PR review:** "What changed in this branch vs main?"
+- **CI validation:** "Did this PR introduce breaking changes?"
+- **Release checks:** "What changed since the last release tag?"
+
+#### 3. Manual Mode - Single File
 
 ```bash
 stamp context compare old.json new.json
@@ -111,7 +237,7 @@ stamp context compare old.json new.json
 
 Use this when you want to compare specific snapshots or versions.
 
-#### 3. Manual Mode - Multi-File
+#### 4. Manual Mode - Multi-File
 
 ```bash
 stamp context compare old/context_main.json new/context_main.json
@@ -171,6 +297,8 @@ Typical output:
 Update all context files? (y/N) y
 ✅ 15 context files updated successfully
 ```
+
+**Note:** In this example, the overall status is `⚠️ DRIFT` because there are changed folders (`~ Changed folders: 2`). If there were **only** added folders (no changed or orphaned folders), the status would be `✅ PASS` instead, since additions are growth, not drift.
 
 - Only in terminals (TTY mode)
 - Prompts Y/N if drift detected
@@ -312,11 +440,18 @@ stamp context compare
 
 Exit code: `1`
 
+**Note:** In this example, the overall status is `⚠️ DRIFT` because there are **ORPHANED FILE** folders (`🗑️ Orphaned folders: 1`) and **DRIFT** folders (`~ Changed folders: 2`). The `➕ ADDED FILE` folder alone would not cause DRIFT status—only removals and modifications trigger DRIFT.
+
 **Folder Status Indicators:**
-- **➕ ADDED FILE** – New folder with context file
-- **🗑️ ORPHANED FILE** – Folder removed (context file still exists)
-- **⚠️ DRIFT** – Folder has component changes
+- **➕ ADDED FILE** – New folder with context file (results in PASS status - growth, not drift)
+- **🗑️ ORPHANED FILE** – Folder removed (context file still exists) (triggers DRIFT status)
+- **⚠️ DRIFT** – Folder has component changes (triggers DRIFT status)
 - **✅ PASS** – Folder unchanged
+
+**Drift Detection Logic:**
+- **ADDED FILE** folders contribute to **PASS** status (new components/folders are growth, not drift)
+- **ORPHANED FILE** and **DRIFT** folders cause the overall comparison to result in **DRIFT**
+- This ensures CI/CD workflows don't fail when adding new features, only when removing or modifying existing contracts
 
 **Detailed Diff Breakdown:**
 - **hash**: Shows old and new semantic hash values (indicates structure/logic changed)
@@ -325,8 +460,16 @@ Exit code: `1`
 - **functions**: Shows removed (`-`) and added (`+`) functions in the module
 - **components**: Shows removed (`-`) and added (`+`) React components used
 - **props**: Shows removed (`-`) and added (`+`) component props
+- **propsChanged**: Shows prop type changes (`~ propName: "string" → "number"`)
 - **emits**: Shows removed (`-`) and added (`+`) events/callbacks
+- **emitsChanged**: Shows emit type changes (`~ eventName: "(old signature)" → "(new signature)"`)
+- **variables**: Shows removed (`-`) and added (`+`) module-level variables
+- **state**: Shows removed (`-`) and added (`+`) component state variables
 - **exports**: Shows export kind change (e.g., `named → default`)
+- **apiSignature**: Shows API signature changes for backend files:
+  - Parameters added/removed/changed (with type information)
+  - Return type changes
+  - Request/response type changes
 
 ---
 
@@ -405,15 +548,17 @@ Token stats show the delta for each folder with changes.
 
 | Code | Meaning | Use Case |
 |------|---------|----------|
-| `0` | PASS – No drift detected | CI validation passed |
+| `0` | PASS – No drift detected (includes additions only) | CI validation passed |
 | `0` | DRIFT approved and updated | User approved changes or `--approve` used |
-| `1` | DRIFT – Changes detected but not approved | CI validation failed |
+| `1` | DRIFT – Changes detected but not approved (removals/modifications) | CI validation failed |
 | `1` | DRIFT – User declined update (typed `n`) | Local dev declined changes |
 | `1` | Error (file not found, invalid JSON, generation failed) | Fatal error occurred |
 
 **Key Points:**
 
 - Exit 0 = Success (no drift OR drift was approved/updated)
+  - **Includes additions only**: New components/folders result in PASS (exit 0)
+  - **Only removals/modifications trigger DRIFT**: ORPHANED FILE and DRIFT folders cause exit 1
 - Exit 1 = Failure (drift not approved OR error)
 - This matches Jest snapshot behavior exactly
 
@@ -421,24 +566,9 @@ Token stats show the delta for each folder with changes.
 
 ### CI/CD Integration
 
-> ⚠️ **Git Baseline Automation Not Yet Implemented:** The `--baseline git:<ref>` option (e.g., `--baseline git:main`) is not yet implemented. Until automation is available, CI/CD workflows require either committing context files (not recommended) or using the manual baseline generation workflow shown below.
->
-> **What works:**
-> - Contract verification — works, but only against disk snapshots
-> - Change detection — works, but only against disk snapshots
->
-> **What's missing:**
-> - Native git baseline automation (`--baseline git:main`, `--baseline git:HEAD~1`) — not yet implemented
->
-> **Current workarounds:**
-> 1. **Committing context files** - Remove them from `.gitignore` (not recommended)
-> 2. **Manual baseline generation** - Generate context at two points and compare (shown in second example)
->
-> See the [roadmap](https://logicstamp.dev/roadmap) for planned features.
+The git baseline feature makes CI/CD integration straightforward. No need to commit context files or use complex manual workflows.
 
-#### GitHub Actions Example (Auto-Mode Multi-File)
-
-> ⚠️ This example only works if context files are committed to git (not the default setup).
+#### GitHub Actions Example (Git Baseline)
 
 ```yaml
 name: Context Drift Check
@@ -452,67 +582,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Required for git baseline to access branch history
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Check for context drift
-        run: |
-          stamp context compare --stats
-        continue-on-error: true
-        id: drift_check
-
-      - name: Comment on PR if drift detected
-        if: steps.drift_check.outcome == 'failure'
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '⚠️ Context drift detected across multiple folders! Run `stamp context compare --approve` locally to update all context files, then commit the changes.'
-            })
-
-      - name: Fail if drift detected
-        if: steps.drift_check.outcome == 'failure'
-        run: exit 1
-```
-
-#### GitHub Actions Example (Manual Multi-File Comparison)
-
-> **Manual workflow (required until automation is implemented):** This example generates context at two git refs manually. The automated `--baseline git:<ref>` option is not yet implemented.
-
-```yaml
-name: Context Drift Check (Multi-File)
-
-on:
-  pull_request:
-    branches: [main]
-
-jobs:
-  check-drift:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Install LogicStamp Context
-        run: npm install -g logicstamp-context
-
-      - name: Generate PR context
-        run: stamp context --out pr-context
-
-      - name: Checkout base branch
-        run: git checkout ${{ github.base_ref }}
-
-      - name: Generate base context
-        run: stamp context --out base-context
-
-      - name: Compare all context files
-        run: |
-          stamp context compare base-context/context_main.json pr-context/context_main.json --stats
+      - name: Check for context drift against main
+        run: stamp context compare --baseline git:origin/main --stats
 
       - name: Comment on PR if drift detected
         if: failure()
@@ -523,8 +605,37 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '⚠️ Context drift detected! Please review the folder-level and component-level changes.'
+              body: '⚠️ Context drift detected! This PR introduces changes to component contracts compared to main branch.'
             })
+```
+
+#### GitHub Actions Example (Compare Against Last Commit)
+
+```yaml
+name: Context Drift Check (Last Commit)
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  check-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2  # Need at least 2 commits for HEAD~1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for context drift against previous commit
+        run: stamp context compare --baseline git:HEAD~1 --stats
 ```
 
 #### Shell Script (Auto-Mode)
@@ -625,13 +736,14 @@ chmod +x .git/hooks/pre-commit
 2. **Discover Folders** – Gets list of all context files from both indices
 3. **Compare Per-Folder** – For each folder:
    - If in both: Compare context files (PASS or DRIFT)
-   - If only in new: ADDED FILE
-   - If only in old: ORPHANED FILE
+   - If only in new: ADDED FILE (treated as PASS, not drift)
+   - If only in old: ORPHANED FILE (triggers DRIFT)
 4. **Find Orphaned on Disk** – Checks if old files still exist on disk
 5. **Aggregate Results** – Combines into three-tier output:
    - Folder-level summary
    - Component-level summary
    - Detailed per-folder changes
+   - **Overall status**: PASS if only additions, DRIFT if removals or modifications exist
 6. **Handle Approval** – If approved, copies all new files and optionally cleans orphaned files
 
 **Key Design Decisions:**
@@ -644,14 +756,22 @@ chmod +x .git/hooks/pre-commit
 
 ### Delta Types Explained
 
-- **Hash changes** – component structure or logic changed.
+- **Hash changes** – component structure or logic changed. 
+  - **In git baseline mode**: Hash-only changes (without other changes) are filtered out to ensure deterministic structural comparison, preventing false positives from environment-dependent TypeScript resolution differences. Hash changes are still reported when they occur alongside other structural changes.
+  - **In regular comparison modes**: All hash changes are reported, as both sides are generated from the same environment context.
 - **Import changes** – import dependencies added/removed or order changed.
 - **Hook changes** – React hooks usage changed.
 - **Function changes** – functions declared in the module added/removed.
 - **Component changes** – referenced React components changed.
-- **Prop changes** – component API surface changed.
-- **Event/emit changes** – event/callback interface changed.
+- **Prop changes** – component props added/removed, or prop types changed (e.g., `string` → `number`).
+  - **In git baseline mode**: Only added/removed props are detected; type changes are skipped to avoid false positives from TypeScript resolution differences.
+  - **In regular comparison modes**: Both added/removed and type changes are detected.
+- **Event/emit changes** – events/callbacks added/removed, or emit types changed.
+  - Same git baseline behavior as props: type changes only detected in regular comparison modes.
+- **Variable changes** – module-level variables added/removed or changed.
+- **State changes** – component state variables added/removed or changed.
 - **Export changes** – export type changed (e.g., from `export default` to `export const`).
+- **API signature changes** – backend API signature changed (parameters added/removed/changed, return type changed, request/response types changed).
 
 **What is NOT compared:**
 - **Styles** – CSS classes, Tailwind utilities, inline styles, and other styling-related metadata are intentionally excluded. 
@@ -661,6 +781,8 @@ chmod +x .git/hooks/pre-commit
 
 ### Use Cases
 
+- **Git baseline comparison** – Compare against any local git ref (branch, tag, commit)
+- **PR review** – "What changed in this branch vs main?" with `--baseline git:main`
 - **Multi-folder drift detection** – See which folders have changes at a glance
 - **Pre-merge validation** – Ensure context changes are intentional before merging
 - **Cost impact analysis** – See per-folder token cost impact with `--stats`
@@ -690,10 +812,88 @@ chmod +x .git/hooks/pre-commit
 The compare command detects context drift with multi-file support:
 
 - **Local dev**: auto-detects changes across all folders and prompts to update
+- **Git baseline**: compare against any local git ref with `--baseline git:<ref>`
 - **Jest-style**: familiar `--approve` flag workflow
 - **Zero config**: just run `stamp context compare`
 - **Three-tier output**: folder summary → component summary → detailed changes
 - **Orphaned file cleanup**: automatically clean up stale files with `--clean-orphaned`
 
-> ⚠️ **Note:** For real-time breaking change detection during development, use `stamp context --strict-watch` instead. For CI-based comparison against git refs, the `--baseline git:<ref>` option is **not yet implemented** - use the manual workflow shown in the CI/CD Integration section above.
+> **Tip:** For real-time breaking change detection during development, use `stamp context --strict-watch`. For CI-based comparison against git refs, use `--baseline git:main` or `--baseline git:origin/main`.
+
+---
+
+### Frequently Asked Questions
+
+#### Q: Is git baseline comparison deterministic?
+
+**A: Yes, the workflow is deterministic for detecting meaningful changes.**
+
+Even when semantic hashes differ between worktree and working directory (which can happen due to TypeScript resolution differences), the comparison will:
+- Always produce the same result (PASS or DRIFT) for identical code
+- Filter out hash-only differences that don't represent actual code changes
+- Report hash changes when they occur alongside other structural changes
+
+**Example:** Running `stamp context compare --baseline git:main` twice on the same codebase with no changes will produce identical comparison results, even if individual hash values differ between runs.
+
+#### Q: Why do I see hash differences even when there are no git diffs?
+
+**A: This is expected and correctly handled.**
+
+Semantic hashes can differ between worktree and working directory contexts even for identical code due to:
+- Different absolute paths (worktree vs working directory)
+- TypeScript module resolution context differences
+- TypeScript compiler state differences
+
+These are environment-dependent factors, not code changes. The comparison filters out hash-only differences to ensure deterministic results. If you see hash differences but no structural changes (imports, props, hooks, etc.), the comparison will correctly report PASS.
+
+#### Q: Should I be concerned if hashes differ but no other changes are reported?
+
+**A: No, this is normal and expected.**
+
+Hash-only differences are filtered out in git baseline mode because they don't represent actual code changes. The comparison focuses on structural and logical changes (props, imports, hooks, functions, components, emits, exports), which are deterministic regardless of environment differences.
+
+If you want to see all hash changes (including hash-only), use regular comparison mode instead of git baseline mode.
+
+#### Q: Why don't I see git-ignored files like `next-env.d.ts` in comparison results?
+
+**A: Git-ignored files are automatically filtered from comparison results in git baseline mode.**
+
+When comparing against a git baseline with `--skip-gitignore`, git-ignored files are included in context generation but filtered out from comparison results. This prevents false positives where git-ignored files (like `next-env.d.ts`, `.env.local`, etc.) exist in your working directory but not in the git worktree.
+
+**Example:** If `next-env.d.ts` exists in your working directory but is git-ignored, it won't appear as an "added" component in the comparison results, even though it's included in context generation. The comparison filters these files out before reporting results, ensuring only tracked files contribute to drift detection.
+
+This behavior is automatic and requires no configuration. If you need to see git-ignored files in comparisons, you can add them to `.stampignore` to exclude them from context generation entirely.
+
+#### Q: Why do ADDED FILE folders result in PASS instead of DRIFT?
+
+**A: Additions are treated as growth, not drift, to support healthy development workflows.**
+
+The compare command distinguishes between:
+- **Growth** (additions) – New components and folders are expected during development and should not fail validation
+- **Drift** (removals/modifications) – Changes to existing contracts may indicate breaking changes that need review
+
+**Behavior:**
+- **ADDED FILE** folders alone result in **PASS** status (exit code 0)
+- Only **ORPHANED FILE** (removals) and **DRIFT** (modifications) trigger **DRIFT** status (exit code 1)
+
+**Why this matters for CI/CD:**
+- New features and components can be added without failing validation checks
+- Only actual breaking changes (removals/modifications) trigger failures
+- This prevents false positives in PR validation where new work is expected
+
+**Example:** If you add a new feature folder with components, the comparison will show `➕ ADDED FILE` but still result in `✅ PASS` status, allowing CI to pass. Only if you remove or modify existing components will it result in `⚠️ DRIFT` status.
+
+#### Q: Why don't I see prop/emit type changes in git baseline mode?
+
+**A: Type changes are intentionally skipped in git baseline mode to avoid false positives.**
+
+When comparing against a git baseline (`--baseline git:<ref>`), prop and emit **type changes** are not detected—only added/removed props and emits are reported. This is because:
+
+- TypeScript resolution can produce slightly different type representations between worktree and working directory contexts
+- The same prop might be extracted as `"string"` in one context and `{ type: "string" }` in another
+- These are environment-dependent differences, not actual code changes
+
+**In regular comparison modes** (direct file comparison), both added/removed and type changes are detected since both sides are generated from the same environment.
+
+**Workaround:** If you need to detect prop type changes, use direct file comparison instead of git baseline mode, or ensure both contexts are generated from the same environment.
 

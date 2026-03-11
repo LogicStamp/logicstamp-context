@@ -589,7 +589,7 @@ stamp context compare --approve
 stamp context compare --stats
 ```
 
-> ⚠️ **Note:** Context files are gitignored by default, so `stamp context compare` is primarily useful for local development. CI-based comparison against git refs using `--baseline git:<ref>` is **not yet implemented** - use the manual workflow shown in the [CI/CD Integration](#cicd-integration) section.
+> **Note:** Context files are gitignored by default. The compare command supports both local development (comparing against disk) and git baseline comparison (comparing against any git ref). See [compare.md](cli/compare.md) for complete documentation including git baseline usage.
 
 **See also:** [compare.md](cli/compare.md) for comprehensive documentation.
 
@@ -724,7 +724,7 @@ Strict validation mode:
 - Strict dependencies enabled
 - Fails on missing deps
 
-Useful for validation workflows. ⚠️ **Note:** Git baseline automation (`--baseline git:<ref>`) for CI/CD workflows is **not yet implemented** - use the manual workflow shown in the CI/CD Integration section.
+Useful for validation workflows. **Git baseline comparison** (v0.7.2): Use `stamp context compare --baseline git:main` for CI/CD workflows. See [compare.md](cli/compare.md) for complete documentation.
 
 ```bash
 stamp context --profile ci-strict
@@ -863,14 +863,23 @@ stamp context --depth 3 --include-code full --max-nodes 50
 
 ### CI/CD Integration
 
-> ⚠️ **Git Baseline Automation Not Yet Implemented:** The `--baseline git:<ref>` option (e.g., `--baseline git:main`) is **not yet implemented**. Until automation is available, CI/CD workflows require either committing context files (not recommended) or using the manual baseline generation workflow shown below. See the [roadmap](https://logicstamp.dev/roadmap) for planned features.
+**Git baseline comparison** (v0.7.2): Compare against any git ref for CI/CD workflows:
+```bash
+# Compare against main branch
+stamp context compare --baseline git:main
 
-**Current CI support:**
+# Compare against origin/main (requires git fetch first)
+stamp context compare --baseline git:origin/main
+
+# Compare against a tag
+stamp context compare --baseline git:v1.0.0
+```
+
+**CI support:**
 - Context files are gitignored by default (regenerable artifacts)
 - CI can generate context files fresh and validate them
-- Useful for: validation, stats collection, ensuring generation succeeds
-- **Contract verification** — works, but only against disk snapshots
-- **Change detection** — works, but only against disk snapshots
+- **Contract verification** — works against disk snapshots or git refs
+- **Change detection** — works against disk snapshots or git refs (via `--baseline git:<ref>`)
 
 ```bash
 # Generate context files fresh in CI
@@ -898,7 +907,7 @@ stamp context --skip-gitignore --quiet
 stamp context validate || exit 1
 ```
 
-> ⚠️ **Note:** CI-based drift detection using `--baseline git:<ref>` (e.g., `--baseline git:main`) is **not yet implemented**. Currently, `stamp context compare` compares against existing context files on disk, which is useful for local development but not CI (since context files are gitignored). Use the manual workflow shown above until automation is available. See the [roadmap](https://logicstamp.dev/roadmap) for planned features.
+> **Note:** For CI-based drift detection, use `stamp context compare --baseline git:main` (v0.7.2). This automatically generates context for both the baseline ref and current working tree, then compares them. See [compare.md](cli/compare.md) for complete documentation including GitHub Actions examples.
 
 ### Validation & QA
 

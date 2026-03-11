@@ -19,6 +19,70 @@ See [docs/limitations.md](docs/limitations.md).
 
 ---
 
+## [0.7.2] - 2026-03-11
+
+### Added
+
+- **Git baseline comparison** ([#135](https://github.com/LogicStamp/logicstamp-context/pull/135))  
+  - New `--baseline git:<ref>` option to compare the current project against any git ref (branch, tag, commit)  
+  - Uses temporary git worktrees to generate baseline context safely 
+  - Useful for CI validation, PR reviews, and release checks
+
+- **Backend API signature comparison** ([#140](https://github.com/LogicStamp/logicstamp-context/pull/140))  
+  - Detects changes in API parameters, request/response types, and return types  
+  - Displays detailed parameter-level diffs
+
+- **State and module variable comparison** ([#136](https://github.com/LogicStamp/logicstamp-context/pull/136))  
+  - Detects added, removed, and changed state variables with type information  
+  - Tracks module-level variables similar to imports and hooks
+
+- **Prop and emit type change detection** ([#142](https://github.com/LogicStamp/logicstamp-context/pull/142))  
+  - Detects type changes in component props and emits  
+  - Example: `~ propName: "string" → "number"`  
+  - Aligns compare command behavior with watch mode
+
+- **Expanded test coverage for compare command** ([#138](https://github.com/LogicStamp/logicstamp-context/pull/138))
+
+### Fixed
+
+- **False drift detection in git baseline comparisons** ([#135](https://github.com/LogicStamp/logicstamp-context/pull/135), [#137](https://github.com/LogicStamp/logicstamp-context/pull/137))  
+  - Resolved issues caused by `.gitignore`, `.stampignore`, and git-ignored files  
+  - Prevents hash-only drift and incorrect “added component” detection
+
+- **Deterministic hashing issues** ([#141](https://github.com/LogicStamp/logicstamp-context/pull/141))  
+  - Fixed null handling and normalized object ordering to prevent hash churn
+
+### Changed
+
+- **Additions no longer count as drift** ([#141](https://github.com/LogicStamp/logicstamp-context/pull/141))  
+  - Newly added components and folders are treated as growth rather than drift  
+  - Only removals and modifications trigger `DRIFT`
+
+- **Improved robustness of prop, state, and API comparisons** ([#141](https://github.com/LogicStamp/logicstamp-context/pull/141))  
+  - Normalizes contract structures and filters invalid identifiers
+
+### Security
+
+- **Safer git command execution** ([#137](https://github.com/LogicStamp/logicstamp-context/pull/137))  
+  - Replaced `exec` with `spawn` to prevent command injection risks
+
+- **Improved git ref validation and timeout handling** ([#139](https://github.com/LogicStamp/logicstamp-context/pull/139))
+
+### Refactor
+
+- **Modularized compare command implementation** ([#136](https://github.com/LogicStamp/logicstamp-context/pull/136))  
+  - Split the large `compare.ts` file into smaller modules for maintainability
+
+### Tests
+
+- **Stabilized file lock tests** ([#134](https://github.com/LogicStamp/logicstamp-context/pull/134))  
+  - Fixed race condition causing intermittent failures
+
+- **Added E2E coverage for git baseline comparison** ([#143](https://github.com/LogicStamp/logicstamp-context/pull/143))  
+  - Covers branches, tags, commit hashes, cleanup behavior, and error scenarios
+
+---
+
 ## [0.7.1] - 2026-03-05
 
 ### Improved
@@ -1499,7 +1563,8 @@ First public release of LogicStamp Context - a fast, zero-config CLI tool that g
 ---
 
 ## Version links
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.7.1...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.7.2...HEAD
+[0.7.2]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.7.2
 [0.7.1]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.7.1
 [0.7.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.7.0
 [0.6.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.6.0

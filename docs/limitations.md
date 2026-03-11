@@ -718,11 +718,72 @@ These items were previously limitations but have been fixed. For detailed releas
 
 | Version | Fix | Description |
 |---------|-----|-------------|
+| v0.7.2 | Git baseline comparison | `--baseline git:<ref>` option enables comparing current working tree against any local git ref (branch, tag, commit) |
+| v0.7.2 | State/variables comparison | Compare command detects state and module-level variable changes |
+| v0.7.2 | API signature comparison | Compare command detects backend API parameter, return type, and request/response type changes |
+| v0.7.2 | Prop/emit type changes | Compare command detects when prop/emit types change (not just added/removed); only in direct file comparison mode |
+| v0.7.2 | Hash-only filtering | Git baseline mode filters out hash-only differences to prevent false positives from TypeScript resolution differences |
+| v0.7.2 | Symmetric file exclusion | Both baseline and current context generation use working directory's `.stampignore` for consistent file scanning |
+| v0.7.2 | Git-ignored file filtering | Git-ignored files automatically filtered from comparison results in git baseline mode |
+| v0.7.2 | Hash determinism | Fixed null handling and normalized nested objects/arrays for consistent hashing |
+| v0.7.2 | Additions as growth | Added components/folders treated as growth (PASS), not drift; only removals/modifications trigger DRIFT |
 | v0.7.0 | Style mode default | Default `stamp context style` output is now `--style-mode lean` (breaking change) |
 | v0.7.0 | Security awareness | `stamp context` warns when no security report is found |
 | v0.7.0 | Watch style cache | Incremental watch mode reuses cached style metadata, reducing redundant extraction |
 | v0.7.0 | Style error logging | Style extraction failures in watch mode now log errors when `LOGICSTAMP_DEBUG=1` |
 | v0.7.0 | File lock consistency | Added delay after stale lock removal for improved filesystem consistency on Windows |
+
+## Git Baseline Comparison
+
+**Status:** ✅ **Complete in v0.7.2**
+
+Git-based baseline support for context comparison, enabling meaningful drift detection against known reference points.
+
+**What Works (v0.7.2):**
+- ✅ `--baseline git:<ref>` option to compare against any local git ref (branch, tag, commit)
+- ✅ Uses git worktrees for clean isolation during comparison
+- ✅ Generates context for both baseline and current code, then compares
+- ✅ Automatic cleanup of worktrees and temp directories
+- ✅ Hash-only change filtering to prevent false positives from TypeScript resolution differences
+- ✅ Symmetric file exclusion using working directory's `.stampignore` for consistent comparison
+
+**How It Works:**
+Context files are gitignored by design - they don't exist in git history. Git baseline generates context at two points and compares them:
+
+```
+stamp context compare --baseline git:main
+
+1. Validate git repo and resolve ref
+2. Create git worktree at ref → temp/worktree/
+3. Generate context for baseline → .logicstamp/compare/baseline/
+4. Generate context for current working tree → .logicstamp/compare/current/
+5. Compare baseline vs current
+6. Report drift
+7. Cleanup worktree and temp directories
+```
+
+**Hash Behavior:**
+- **Hash-only changes are filtered**: When only the semantic hash differs (with no changes to imports, hooks, functions, components, props, emits, or exports), the hash change is ignored to prevent false positives
+- **Hash changes with other changes are reported**: When the hash differs AND there are other structural changes, the hash is still reported to provide context
+- **Why filter hash-only?** TypeScript project resolution can produce slightly different AST structures between worktree and working directory contexts (different absolute paths, module resolution contexts, or TypeScript compiler state) even for functionally identical code. Filtering hash-only changes ensures deterministic structural comparison while preserving hash information when there are real changes.
+
+**Prop/Emit Type Changes:**
+- **Type changes skipped in git baseline mode**: Prop and emit type changes (e.g., `string` → `number`) are only detected in direct file comparison mode, not in git baseline mode
+- **Added/removed always detected**: Added and removed props/emits are detected in all modes
+- **Why skip type changes?** TypeScript resolution can produce different type representations between worktree and working directory (e.g., `"string"` vs `{ type: "string" }`), causing false positives
+
+**Determinism:**
+✅ **The workflow is deterministic for detecting meaningful changes.** Even when semantic hashes differ between worktree and working directory (due to TypeScript resolution differences), the comparison will always produce the same result (PASS or DRIFT) for identical code. Hash-only differences are filtered out to ensure deterministic results, while hash changes that occur alongside other structural changes are still reported.
+
+**Use Cases:**
+- PR review: `stamp context compare --baseline git:main`
+- CI integration: `stamp context compare --baseline git:origin/main`
+- Release validation: `stamp context compare --baseline git:v1.0.0`
+- Pre-commit: `stamp context compare --baseline git:HEAD`
+
+**Impact:** Enables meaningful drift detection against stable reference points, making CI integration straightforward. Hash-only filtering prevents false positives while preserving hash information for real structural changes.
+
+**Related:** See [docs/cli/compare.md](../cli/compare.md) for complete documentation on git baseline comparison and hash behavior.
 
 ## Recent Fixes (v0.6.x)
 

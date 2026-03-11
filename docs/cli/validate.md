@@ -164,7 +164,7 @@ Warnings example (still exits 0):
 
 ## CI/CD Usage
 
-> ⚠️ **Git Baseline Automation Not Yet Implemented:** The `--baseline git:<ref>` option (e.g., `--baseline git:main`) for `stamp context compare` is **not yet implemented**. Until automation is available, CI/CD workflows require either committing context files (not recommended) or using the manual baseline generation workflow. See the [roadmap](https://logicstamp.dev/roadmap) for planned features.
+**Git baseline comparison** (v0.7.2): Use `stamp context compare --baseline git:main` for CI/CD workflows. This automatically generates context for both the baseline ref and current working tree, then compares them. See [compare.md](compare.md) for complete documentation.
 
 - Use with `stamp context` to block merges when context files become invalid
 - Use multi-file mode (no arguments) to validate **all** context files in one command
