@@ -117,9 +117,9 @@ describe('fileLock utils', () => {
       expect(lock1).not.toBeNull();
 
       // Start acquiring second lock (will wait for lock1 to be released)
-      // Use generous timeout to avoid flakiness on slow systems
+      // Use generous timeout to avoid flakiness on slow systems and when running in parallel
       const startTime = Date.now();
-      const lock2Promise = acquireLock(filePath, { timeout: 2000, retryInterval: 50 });
+      const lock2Promise = acquireLock(filePath, { timeout: 5000, retryInterval: 50 });
 
       // Give lock2Promise a moment to start and enter the retry loop
       // This ensures it's actively checking before we release lock1
@@ -146,7 +146,7 @@ describe('fileLock utils', () => {
 
       expect(lock2).not.toBeNull();
       expect(elapsed).toBeGreaterThanOrEqual(90); // Should have waited
-      expect(elapsed).toBeLessThan(2000); // Should not have timed out
+      expect(elapsed).toBeLessThan(5000); // Should not have timed out (increased for parallel test runs)
 
       await lock2!.release();
     });

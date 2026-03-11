@@ -3,7 +3,7 @@
  * Uses exclusive file creation with PID tracking for stale lock detection
  */
 
-import { open, unlink, readFile } from 'node:fs/promises';
+import { open, unlink, readFile, access } from 'node:fs/promises';
 import { constants } from 'node:fs';
 
 export interface LockOptions {
@@ -151,6 +151,42 @@ export async function acquireLock(
     timestamp: Date.now(),
   };
 
+  // Helper function to try acquiring lock immediately with retries (for Windows race condition)
+  const tryAcquireImmediately = async (): Promise<LockRelease | null> => {
+    for (let retry = 0; retry < 5; retry++) {
+      // Check timeout before each retry
+      if (Date.now() - startTime >= timeout) {
+        return null;
+      }
+      await new Promise(resolve => setTimeout(resolve, 10 + retry * 5)); // 10, 15, 20, 25, 30ms
+      try {
+        const handle = await open(lockPath, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY);
+        await handle.writeFile(JSON.stringify(lockContent));
+        await handle.close();
+        // Successfully acquired lock!
+        return {
+          release: async () => {
+            if (released) return;
+            released = true;
+            try {
+              await unlink(lockPath);
+            } catch {
+              // Ignore errors during release
+            }
+          },
+        };
+      } catch (retryErr) {
+        const retryError = retryErr as NodeJS.ErrnoException;
+        if (retryError.code !== 'EEXIST') {
+          // Not a file-exists error, something else went wrong - abort retry loop
+          return null;
+        }
+        // Still exists, continue retrying
+      }
+    }
+    return null; // Retry loop exhausted
+  };
+
   while (Date.now() - startTime < timeout) {
     try {
       // Try to create lock file exclusively (fails if exists)
@@ -175,18 +211,54 @@ export async function acquireLock(
 
       if (err.code === 'EEXIST') {
         // Lock file exists - check if it's stale
-        if (await isLockStale(lockPath, staleThreshold)) {
+        const stale = await isLockStale(lockPath, staleThreshold);
+        if (stale) {
           await removeStale(lockPath);
-          // Small delay after removing stale lock to let filesystem catch up
+          // Delay after removing stale lock to let filesystem catch up
           // Especially important on Windows where file deletion can be asynchronous
-          await new Promise(resolve => setTimeout(resolve, 10));
+          // Use longer delay under load (when tests run in parallel)
+          await new Promise(resolve => setTimeout(resolve, 20));
           // Retry immediately after removing stale lock
           continue;
         }
 
         // Lock is held by another active process - wait and retry
+        // On Windows, file deletion can be asynchronous, so we need to be more careful.
+        // Check if file still exists before waiting - if it's already gone, try to acquire immediately.
+        try {
+          await access(lockPath);
+        } catch {
+          // File no longer exists - try to acquire immediately with retries
+          // On Windows, there's a race where access() says file is gone but open() still sees it.
+          // Retry a few times with small delays to handle Windows filesystem propagation delays.
+          const immediateResult = await tryAcquireImmediately();
+          if (immediateResult) {
+            return immediateResult;
+          }
+          // Retry loop exhausted, continue to normal wait logic
+          continue;
+        }
+
+        // File exists, wait before retrying
         await new Promise(resolve => setTimeout(resolve, retryInterval));
-        continue;
+        
+        // After waiting, check again if file still exists
+        // On Windows, the file might have been deleted while we waited, but the
+        // filesystem hasn't fully propagated the deletion yet. Try to acquire immediately.
+        try {
+          await access(lockPath);
+          // File still exists, continue to next iteration (will check stale again)
+          continue;
+        } catch {
+          // File no longer exists - try to acquire immediately with retries
+          // Same retry logic as above to handle Windows race condition
+          const immediateResult = await tryAcquireImmediately();
+          if (immediateResult) {
+            return immediateResult;
+          }
+          // Retry loop exhausted, continue to normal wait/retry cycle
+          continue;
+        }
       }
 
       // Other error (e.g., permission denied, directory doesn't exist)
