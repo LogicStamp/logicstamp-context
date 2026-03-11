@@ -107,7 +107,7 @@ export function Button({ onClick, children }: ButtonProps) {
 - **llm-safe** – Depth 2, header-only source, max 30 nodes, allows missing dependencies. Smaller footprint.
 - **ci-strict** – No source code, strict dependency checks. Fails when contracts are missing.
 
-> ⚠️ **Note:** The `ci-strict` profile name implies CI/CD readiness, but full CI/CD integration requires git baseline automation (`--baseline git:main`, `--baseline git:HEAD~1`), which is **not yet implemented**. Currently, CI workflows can validate context files and detect changes, but only against disk snapshots, not git refs. Use the manual workflow shown in the compare command documentation until automation is available.
+> **Note:** The `ci-strict` profile works well with git baseline comparison (v0.7.2). Use `stamp context compare --baseline git:main` for CI/CD workflows to detect changes against git refs. See [compare.md](compare.md) for complete documentation.
 
 ## Example workflows
 

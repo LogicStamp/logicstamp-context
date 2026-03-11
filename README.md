@@ -226,7 +226,14 @@ stamp context compare --approve  # update (like jest -u)
 
 Useful for reviewing changes before committing or validating context is up-to-date.
 
-> ⚠️ **Note:** Context files are gitignored by default. For CI-based drift detection, the `--baseline git:<ref>` option (e.g., `--baseline git:main`) is **not yet implemented**. Until automation is available, use the manual workflow: generate context from current code, checkout baseline branch, generate context from baseline, then compare. See the [roadmap](https://logicstamp.dev/roadmap) for planned automation.
+**Git baseline comparison** *(v0.7.2)*: Compare against any git ref:
+```bash
+stamp context compare --baseline git:main      # Compare against main branch
+stamp context compare --baseline git:HEAD      # Compare against HEAD
+stamp context compare --baseline git:v1.0.0    # Compare against a tag
+```
+
+> **ℹ️ Note:** Context files are gitignored by default. Git baseline comparison uses git worktrees to generate context for both the baseline ref and the current working tree, then performs a structural contract comparison. See [docs/cli/compare.md](docs/cli/compare.md) for complete documentation.
 
 ## How it Works
 
@@ -285,6 +292,8 @@ npm install -g logicstamp-mcp
 ```
 
 Then configure your AI assistant to use the LogicStamp MCP Server.
+
+🔗 **See [LogicStamp MCP Server Repository](https://github.com/LogicStamp/logicstamp-mcp)**
 
 📋 **See [MCP Getting Started Guide](https://logicstamp.dev/docs/mcp/getting-started)** for setup instructions.
 
