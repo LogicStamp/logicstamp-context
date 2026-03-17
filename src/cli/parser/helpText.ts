@@ -323,6 +323,8 @@ OPTIONS:
   --approve                           Auto-approve updates (non-interactive, CI-safe)
   --clean-orphaned                    Auto-delete orphaned files with --approve
   --stats                             Show token count statistics per folder
+  --strict                            Detect breaking changes (removed props, events, functions)
+                                      and exit with code 1 if errors found
   --skip-gitignore                    Skip .gitignore setup when compiling fresh context (auto-mode only)
   --quiet                             Show only diffs (suppress summaries, PASS folders, and token analysis)
   -h, --help                          Show this help
@@ -385,6 +387,13 @@ EXAMPLES:
   stamp context compare --baseline git:v1.0.0
     Compare against a release tag
     → "What changed since last release?"
+
+  stamp context compare --strict
+    Detect breaking changes and fail if errors found
+    → Exit code 1 if removed props, events, or functions detected
+
+  stamp context compare --baseline git:main --strict
+    Compare against main with breaking change detection
 
 EXIT CODES:
   0                                   PASS - No drift OR drift approved and updated

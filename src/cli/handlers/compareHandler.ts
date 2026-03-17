@@ -14,6 +14,7 @@ import {
 import { parseCompareArgs, getCompareHelp } from '../parser/index.js';
 import { printFoxIcon } from './initHandler.js';
 import { debugLog, debugError } from '../../utils/debug.js';
+import { detectViolations, displayViolations, type Violation } from '../../core/violations.js';
 import {
   parseGitBaseline,
   isGitRepo,
@@ -68,7 +69,7 @@ export async function handleCompare(args: string[]): Promise<void> {
     return process.exit(1);
   }
 
-  const { stats, approve, cleanOrphaned, quiet, skipGitignore, baseline, positionalArgs } = parseCompareArgs(args);
+  const { stats, approve, cleanOrphaned, quiet, skipGitignore, strict, baseline, positionalArgs } = parseCompareArgs(args);
 
   // Git baseline mode: --baseline git:<ref>
   if (baseline) {
@@ -83,13 +84,14 @@ export async function handleCompare(args: string[]): Promise<void> {
       approve,
       quiet,
       skipGitignore,
+      strict,
     });
     return;
   }
 
   // Auto-mode: no files specified - use multi-file comparison with context_main.json
   if (positionalArgs.length === 0) {
-    await handleAutoCompareMode({ stats, approve, cleanOrphaned, quiet, skipGitignore });
+    await handleAutoCompareMode({ stats, approve, cleanOrphaned, quiet, skipGitignore, strict });
     return;
   }
 
@@ -107,9 +109,9 @@ export async function handleCompare(args: string[]): Promise<void> {
   const isMultiFileMode = oldFile.endsWith('context_main.json') || newFile.endsWith('context_main.json');
 
   if (isMultiFileMode) {
-    await handleMultiFileCompareMode({ oldFile, newFile, stats, approve, cleanOrphaned, quiet });
+    await handleMultiFileCompareMode({ oldFile, newFile, stats, approve, cleanOrphaned, quiet, strict });
   } else {
-    await handleSingleFileCompareMode({ oldFile, newFile, stats, approve, quiet });
+    await handleSingleFileCompareMode({ oldFile, newFile, stats, approve, quiet, strict });
   }
 }
 
@@ -119,8 +121,9 @@ async function handleAutoCompareMode(options: {
   cleanOrphaned: boolean;
   quiet: boolean;
   skipGitignore: boolean;
+  strict: boolean;
 }): Promise<void> {
-  const { stats, approve, cleanOrphaned, quiet, skipGitignore } = options;
+  const { stats, approve, cleanOrphaned, quiet, skipGitignore, strict } = options;
   const { tmpdir } = await import('node:os');
   const { join, dirname } = await import('node:path');
   const { copyFile, rm, mkdir } = await import('node:fs/promises');
@@ -194,6 +197,28 @@ async function handleAutoCompareMode(options: {
 
     const result = await multiFileCompare(multiCompareOptions);
     displayMultiFileCompareResult(result, stats, quiet);
+
+    // Strict mode: detect and report violations
+    if (strict && result.status === 'DRIFT') {
+      const allViolations: Violation[] = [];
+
+      for (const folder of result.folders) {
+        if (folder.componentResult && folder.status === 'DRIFT') {
+          const violations = detectViolations({ type: 'compare', result: folder.componentResult, gitBaseline: false });
+          allViolations.push(...violations);
+        }
+      }
+
+      if (allViolations.length > 0) {
+        displayViolations(allViolations, { quiet });
+        const errors = allViolations.filter(v => v.severity === 'error');
+        if (errors.length > 0) {
+          console.log(`\n❌ Strict mode: ${errors.length} error(s) detected`);
+          await rm(tempDir, { recursive: true, force: true });
+          return process.exit(1);
+        }
+      }
+    }
 
     // Handle drift approval
     if (result.status === 'DRIFT') {
@@ -343,8 +368,9 @@ async function handleGitBaselineCompare(options: {
   approve: boolean;
   quiet: boolean;
   skipGitignore: boolean;
+  strict: boolean;
 }): Promise<void> {
-  const { ref, stats, approve, quiet, skipGitignore } = options;
+  const { ref, stats, approve, quiet, skipGitignore, strict } = options;
   const { join } = await import('node:path');
   const { rm } = await import('node:fs/promises');
 
@@ -533,6 +559,28 @@ async function handleGitBaselineCompare(options: {
     
     displayMultiFileCompareResult(result, stats, quiet);
 
+    // Strict mode: detect and report violations
+    if (strict && result.status === 'DRIFT') {
+      const allViolations: Violation[] = [];
+
+      for (const folder of result.folders) {
+        if (folder.componentResult && folder.status === 'DRIFT') {
+          const violations = detectViolations({ type: 'compare', result: folder.componentResult, gitBaseline: true });
+          allViolations.push(...violations);
+        }
+      }
+
+      if (allViolations.length > 0) {
+        displayViolations(allViolations, { quiet });
+        const errors = allViolations.filter(v => v.severity === 'error');
+        if (errors.length > 0) {
+          console.log(`\n❌ Strict mode: ${errors.length} error(s) detected`);
+          await cleanupBaselinePaths(paths);
+          return process.exit(1);
+        }
+      }
+    }
+
     // Step 5: Clean up
     await cleanupBaselinePaths(paths);
 
@@ -572,8 +620,9 @@ async function handleMultiFileCompareMode(options: {
   approve: boolean;
   cleanOrphaned: boolean;
   quiet: boolean;
+  strict: boolean;
 }): Promise<void> {
-  const { oldFile, newFile, stats, approve, cleanOrphaned, quiet } = options;
+  const { oldFile, newFile, stats, approve, cleanOrphaned, quiet, strict } = options;
 
   // Multi-file comparison mode
   const multiCompareOptions: MultiFileCompareOptions = {
@@ -588,6 +637,27 @@ async function handleMultiFileCompareMode(options: {
   try {
     const result = await multiFileCompare(multiCompareOptions);
     displayMultiFileCompareResult(result, stats, quiet);
+
+    // Strict mode: detect and report violations
+    if (strict && result.status === 'DRIFT') {
+      const allViolations: Violation[] = [];
+
+      for (const folder of result.folders) {
+        if (folder.componentResult && folder.status === 'DRIFT') {
+          const violations = detectViolations({ type: 'compare', result: folder.componentResult, gitBaseline: false });
+          allViolations.push(...violations);
+        }
+      }
+
+      if (allViolations.length > 0) {
+        displayViolations(allViolations, { quiet });
+        const errors = allViolations.filter(v => v.severity === 'error');
+        if (errors.length > 0) {
+          console.log(`\n❌ Strict mode: ${errors.length} error(s) detected`);
+          return process.exit(1);
+        }
+      }
+    }
 
     // Handle drift approval in manual mode
     if (result.status === 'DRIFT') {
@@ -719,8 +789,9 @@ async function handleSingleFileCompareMode(options: {
   stats: boolean;
   approve: boolean;
   quiet: boolean;
+  strict: boolean;
 }): Promise<void> {
-  const { oldFile, newFile, stats, approve, quiet } = options;
+  const { oldFile, newFile, stats, approve, quiet, strict } = options;
 
   // Single-file comparison mode (backward compatible)
   const compareOptions: CompareOptions = {
@@ -733,6 +804,20 @@ async function handleSingleFileCompareMode(options: {
 
   try {
     const result = await compareCommand(compareOptions);
+
+    // Strict mode: detect and report violations
+    if (strict && result.status === 'DRIFT') {
+      const violations = detectViolations({ type: 'compare', result, gitBaseline: false });
+
+      if (violations.length > 0) {
+        displayViolations(violations, { quiet });
+        const errors = violations.filter(v => v.severity === 'error');
+        if (errors.length > 0) {
+          console.log(`\n❌ Strict mode: ${errors.length} error(s) detected`);
+          return process.exit(1);
+        }
+      }
+    }
 
     // Handle drift approval in manual mode
     if (result.status === 'DRIFT') {

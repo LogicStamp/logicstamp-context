@@ -513,8 +513,8 @@ describe('displayMultiFileCompareResult', () => {
                 deltas: [
                   {
                     type: 'props',
-                    old: ['label', 'disabled'],
-                    new: ['label', 'disabled', 'variant'],
+                    old: { label: 'string', disabled: 'boolean' },
+                    new: { label: 'string', disabled: 'boolean', variant: 'string' },
                   },
                 ],
               },
@@ -558,8 +558,8 @@ describe('displayMultiFileCompareResult', () => {
                 deltas: [
                   {
                     type: 'emits',
-                    old: ['onClick'],
-                    new: ['onClick', 'onHover'],
+                    old: { onClick: '() => void' },
+                    new: { onClick: '() => void', onHover: '() => void' },
                   },
                 ],
               },

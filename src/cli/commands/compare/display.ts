@@ -96,24 +96,36 @@ export function displayMultiFileCompareResult(result: MultiFileCompareResult, st
                 console.log(`            old: ${delta.old}`);
                 console.log(`            new: ${delta.new}`);
               } else if (delta.type === 'props' || delta.type === 'emits') {
-                // props/emits deltas now have old = removed names, new = added names
-                const removed = Array.isArray(delta.old) ? delta.old : [];
-                const added = Array.isArray(delta.new) ? delta.new : [];
+                // props/emits are now full objects - compute diff on display
+                const oldObj = (delta.old && typeof delta.old === 'object') ? delta.old as Record<string, any> : {};
+                const newObj = (delta.new && typeof delta.new === 'object') ? delta.new as Record<string, any> : {};
+                const oldKeys = Object.keys(oldObj);
+                const newKeys = Object.keys(newObj);
+                const oldSet = new Set(oldKeys);
+                const newSet = new Set(newKeys);
+
+                const removed = oldKeys.filter((key: string) => !newSet.has(key));
+                const added = newKeys.filter((key: string) => !oldSet.has(key));
+                const changed = oldKeys.filter((key: string) => {
+                  if (newSet.has(key)) {
+                    return JSON.stringify(oldObj[key]) !== JSON.stringify(newObj[key]);
+                  }
+                  return false;
+                });
 
                 if (removed.length > 0) {
-                  removed.forEach((item: string) => console.log(`            - ${item}`));
+                  removed.forEach((key: string) => console.log(`            - ${key}`));
                 }
                 if (added.length > 0) {
-                  added.forEach((item: string) => console.log(`            + ${item}`));
+                  added.forEach((key: string) => console.log(`            + ${key}`));
                 }
-              } else if (delta.type === 'propsChanged' || delta.type === 'emitsChanged') {
-                // Type changes: delta.new is array of {name, old, new}
-                const changes = Array.isArray(delta.new) ? delta.new : [];
-                changes.forEach((change: {name: string; old: any; new: any}) => {
-                  const oldStr = typeof change.old === 'string' ? change.old : JSON.stringify(change.old);
-                  const newStr = typeof change.new === 'string' ? change.new : JSON.stringify(change.new);
-                  console.log(`            ~ ${change.name}: ${oldStr} → ${newStr}`);
-                });
+                if (changed.length > 0) {
+                  changed.forEach((key: string) => {
+                    const oldStr = typeof oldObj[key] === 'string' ? oldObj[key] : JSON.stringify(oldObj[key]);
+                    const newStr = typeof newObj[key] === 'string' ? newObj[key] : JSON.stringify(newObj[key]);
+                    console.log(`            ~ ${key}: ${oldStr} → ${newStr}`);
+                  });
+                }
               } else if (delta.type === 'imports' || delta.type === 'hooks' || delta.type === 'functions' ||
                          delta.type === 'components' || delta.type === 'variables') {
                 const oldSet = new Set(delta.old);

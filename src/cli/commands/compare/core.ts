@@ -183,49 +183,25 @@ export function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>,
       const oldEmits = a.emits ?? {};
       const newEmits = b.emits ?? {};
 
-      // Compare props - detect added, removed, and type changes
-      // Note: Type changes are only detected when ignoreHashOnly=false (non-git-baseline mode)
-      // because prop values can differ between worktree and working tree due to TS resolution differences
-      const propsAdded: string[] = [];
-      const propsRemoved: string[] = [];
-      const propsChanged: Array<{name: string; old: any; new: any}> = [];
+      // Compare props, emits, and state
+      // In git baseline mode (ignoreHashOnly=true), only detect structural changes (added/removed keys)
+      // because type values can differ due to TypeScript resolution differences between worktree and working directory
+      const hasStructuralChanges = (oldObj: Record<string, any>, newObj: Record<string, any>) => {
+        const oldKeys = new Set(Object.keys(oldObj));
+        const newKeys = new Set(Object.keys(newObj));
+        for (const k of oldKeys) if (!newKeys.has(k)) return true;
+        for (const k of newKeys) if (!oldKeys.has(k)) return true;
+        return false;
+      };
 
-      for (const key of Object.keys(newProps)) {
-        if (!(key in oldProps)) {
-          propsAdded.push(key);
-        } else if (!ignoreHashOnly && !valuesEqual(oldProps[key], newProps[key])) {
-          // Only detect type changes in non-git-baseline mode
-          propsChanged.push({ name: key, old: oldProps[key], new: newProps[key] });
-        }
-      }
-      for (const key of Object.keys(oldProps)) {
-        if (!(key in newProps)) {
-          propsRemoved.push(key);
-        }
-      }
+      const propsHaveStructuralChanges = hasStructuralChanges(oldProps, newProps);
+      const emitsHaveStructuralChanges = hasStructuralChanges(oldEmits, newEmits);
+      const stateHasStructuralChanges = hasStructuralChanges(a.state, b.state);
 
-      // Compare emits - detect added, removed, and type changes
-      const emitsAdded: string[] = [];
-      const emitsRemoved: string[] = [];
-      const emitsChanged: Array<{name: string; old: any; new: any}> = [];
-
-      for (const key of Object.keys(newEmits)) {
-        if (!(key in oldEmits)) {
-          emitsAdded.push(key);
-        } else if (!ignoreHashOnly && !valuesEqual(oldEmits[key], newEmits[key])) {
-          // Only detect type changes in non-git-baseline mode
-          emitsChanged.push({ name: key, old: oldEmits[key], new: newEmits[key] });
-        }
-      }
-      for (const key of Object.keys(oldEmits)) {
-        if (!(key in newEmits)) {
-          emitsRemoved.push(key);
-        }
-      }
-
-      // Determine if props/emits have any changes
-      const propsHaveChanges = propsAdded.length > 0 || propsRemoved.length > 0 || propsChanged.length > 0;
-      const emitsHaveChanges = emitsAdded.length > 0 || emitsRemoved.length > 0 || emitsChanged.length > 0;
+      // Full comparison (includes type changes) - only when NOT in git baseline mode
+      const propsHaveChanges = ignoreHashOnly ? propsHaveStructuralChanges : !objectsEqual(oldProps, newProps);
+      const emitsHaveChanges = ignoreHashOnly ? emitsHaveStructuralChanges : !objectsEqual(oldEmits, newEmits);
+      const stateHasChanges = ignoreHashOnly ? stateHasStructuralChanges : !objectsEqual(a.state, b.state);
       
       const hasNonHashChanges =
         !arraysEqual(a.imports, b.imports, normalize) ||
@@ -235,7 +211,7 @@ export function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>,
         !arraysEqual(a.variables, b.variables, normalize) ||
         propsHaveChanges ||
         emitsHaveChanges ||
-        !objectsEqual(a.state, b.state) ||
+        stateHasChanges ||
         a.exportKind !== b.exportKind ||
         !objectsEqual(a.apiSignature ?? {}, b.apiSignature ?? {});
 
@@ -260,47 +236,21 @@ export function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>,
         deltas.push({ type: 'components', old: a.components, new: b.components });
       }
 
-      // Add props deltas for added/removed props
-      if (propsAdded.length > 0 || propsRemoved.length > 0) {
-        deltas.push({
-          type: 'props',
-          old: propsRemoved.sort(),
-          new: propsAdded.sort()
-        });
+      // Add props delta (full objects, diff computed on display)
+      if (propsHaveChanges) {
+        deltas.push({ type: 'props', old: oldProps, new: newProps });
       }
 
-      // Add propsChanged delta for type changes
-      if (propsChanged.length > 0) {
-        deltas.push({
-          type: 'propsChanged',
-          old: null,
-          new: propsChanged.sort((x, y) => x.name.localeCompare(y.name))
-        });
-      }
-
-      // Add emits deltas for added/removed emits
-      if (emitsAdded.length > 0 || emitsRemoved.length > 0) {
-        deltas.push({
-          type: 'emits',
-          old: emitsRemoved.sort(),
-          new: emitsAdded.sort()
-        });
-      }
-
-      // Add emitsChanged delta for type changes
-      if (emitsChanged.length > 0) {
-        deltas.push({
-          type: 'emitsChanged',
-          old: null,
-          new: emitsChanged.sort((x, y) => x.name.localeCompare(y.name))
-        });
+      // Add emits delta (full objects, diff computed on display)
+      if (emitsHaveChanges) {
+        deltas.push({ type: 'emits', old: oldEmits, new: newEmits });
       }
 
       if (!arraysEqual(a.variables, b.variables, normalize)) {
         deltas.push({ type: 'variables', old: a.variables, new: b.variables });
       }
 
-      if (!objectsEqual(a.state, b.state)) {
+      if (stateHasChanges) {
         deltas.push({ type: 'state', old: a.state, new: b.state });
       }
 
