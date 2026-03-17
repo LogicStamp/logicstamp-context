@@ -1345,8 +1345,9 @@ describe('diff', () => {
 
       const propsDelta = result.changed[0].deltas.find(d => d.type === 'props');
       expect(propsDelta).toBeDefined();
-      expect(propsDelta!.old).toEqual([]); // no removed
-      expect(propsDelta!.new).toEqual(['disabled']); // added
+      // Now stores full objects - old has onClick, new has onClick + disabled
+      expect(propsDelta!.old).toEqual({ onClick: 'function' });
+      expect(propsDelta!.new).toEqual({ onClick: 'function', disabled: 'boolean' });
     });
 
     it('should detect removed props', () => {
@@ -1414,11 +1415,12 @@ describe('diff', () => {
 
       const propsDelta = result.changed[0].deltas.find(d => d.type === 'props');
       expect(propsDelta).toBeDefined();
-      expect(propsDelta!.old).toEqual(['disabled']); // removed
-      expect(propsDelta!.new).toEqual([]); // no added
+      // Now stores full objects - old has onClick + disabled, new has only onClick
+      expect(propsDelta!.old).toEqual({ onClick: 'function', disabled: 'boolean' });
+      expect(propsDelta!.new).toEqual({ onClick: 'function' });
     });
 
-    it('should detect prop type changes with propsChanged delta', () => {
+    it('should detect prop type changes in props delta', () => {
       const oldBundles = [
         createBundle('src/Button.tsx', 'uif:hash123', {
           graph: {
@@ -1481,20 +1483,14 @@ describe('diff', () => {
       expect(result.status).toBe('DRIFT');
       expect(result.changed).toHaveLength(1);
 
-      // Should NOT have a props delta (no added/removed)
+      // Now props delta contains full objects - type changes are detected by comparing them
       const propsDelta = result.changed[0].deltas.find(d => d.type === 'props');
-      expect(propsDelta).toBeUndefined();
-
-      // Should have a propsChanged delta
-      const propsChangedDelta = result.changed[0].deltas.find(d => d.type === 'propsChanged');
-      expect(propsChangedDelta).toBeDefined();
-      expect(propsChangedDelta!.old).toBeNull();
-      expect(propsChangedDelta!.new).toEqual([
-        { name: 'value', old: 'string', new: 'number' }
-      ]);
+      expect(propsDelta).toBeDefined();
+      expect(propsDelta!.old).toEqual({ value: 'string', count: 'number' });
+      expect(propsDelta!.new).toEqual({ value: 'number', count: 'number' });
     });
 
-    it('should detect emit type changes with emitsChanged delta', () => {
+    it('should detect emit type changes in emits delta', () => {
       const oldBundles = [
         createBundle('src/Input.tsx', 'uif:hash123', {
           graph: {
@@ -1557,13 +1553,11 @@ describe('diff', () => {
       expect(result.status).toBe('DRIFT');
       expect(result.changed).toHaveLength(1);
 
-      // Should have emitsChanged delta
-      const emitsChangedDelta = result.changed[0].deltas.find(d => d.type === 'emitsChanged');
-      expect(emitsChangedDelta).toBeDefined();
-      expect(emitsChangedDelta!.old).toBeNull();
-      expect(emitsChangedDelta!.new).toEqual([
-        { name: 'onChange', old: '(value: string) => void', new: '(value: number) => void' }
-      ]);
+      // Now emits delta contains full objects - type changes are detected by comparing them
+      const emitsDelta = result.changed[0].deltas.find(d => d.type === 'emits');
+      expect(emitsDelta).toBeDefined();
+      expect(emitsDelta!.old).toEqual({ onChange: '(value: string) => void' });
+      expect(emitsDelta!.new).toEqual({ onChange: '(value: number) => void' });
     });
 
     it('should detect both added/removed props AND type changes together', () => {
@@ -1634,18 +1628,11 @@ describe('diff', () => {
       expect(result.status).toBe('DRIFT');
       expect(result.changed).toHaveLength(1);
 
-      // Should have props delta for added/removed
+      // Now props delta contains full objects - all changes detected by comparing them
       const propsDelta = result.changed[0].deltas.find(d => d.type === 'props');
       expect(propsDelta).toBeDefined();
-      expect(propsDelta!.old).toEqual(['deprecated']); // removed
-      expect(propsDelta!.new).toEqual(['variant']); // added
-
-      // Should also have propsChanged delta for type changes
-      const propsChangedDelta = result.changed[0].deltas.find(d => d.type === 'propsChanged');
-      expect(propsChangedDelta).toBeDefined();
-      expect(propsChangedDelta!.new).toEqual([
-        { name: 'size', old: 'string', new: 'number' }
-      ]);
+      expect(propsDelta!.old).toEqual({ onClick: 'function', size: 'string', deprecated: 'boolean' });
+      expect(propsDelta!.new).toEqual({ onClick: 'function', size: 'number', variant: 'string' });
     });
 
     it('should handle complex prop type objects', () => {
@@ -1715,12 +1702,11 @@ describe('diff', () => {
       expect(result.status).toBe('DRIFT');
       expect(result.changed).toHaveLength(1);
 
-      const propsChangedDelta = result.changed[0].deltas.find(d => d.type === 'propsChanged');
-      expect(propsChangedDelta).toBeDefined();
-      expect(propsChangedDelta!.new).toHaveLength(1);
-      expect(propsChangedDelta!.new[0].name).toBe('config');
-      expect(propsChangedDelta!.new[0].old).toEqual({ type: 'object', properties: { enabled: 'boolean' } });
-      expect(propsChangedDelta!.new[0].new).toEqual({ type: 'object', properties: { enabled: 'boolean', mode: 'string' } });
+      // Now props delta contains full objects
+      const propsDelta = result.changed[0].deltas.find(d => d.type === 'props');
+      expect(propsDelta).toBeDefined();
+      expect(propsDelta!.old).toEqual({ config: { type: 'object', properties: { enabled: 'boolean' } } });
+      expect(propsDelta!.new).toEqual({ config: { type: 'object', properties: { enabled: 'boolean', mode: 'string' } } });
     });
 
     it('should not report changes when props/emits are identical', () => {

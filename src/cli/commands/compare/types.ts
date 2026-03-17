@@ -25,7 +25,7 @@ export interface CompareResult {
   changed: Array<{
     id: string;
       deltas: Array<{
-        type: 'hash' | 'imports' | 'hooks' | 'exports' | 'functions' | 'components' | 'props' | 'emits' | 'propsChanged' | 'emitsChanged' | 'variables' | 'state' | 'apiSignature';
+        type: 'hash' | 'imports' | 'hooks' | 'exports' | 'functions' | 'components' | 'props' | 'emits' | 'variables' | 'state' | 'apiSignature';
         old: any;
         new: any;
       }>;
@@ -69,6 +69,7 @@ export interface CompareOptions {
   approve?: boolean;
   quiet?: boolean;
   gitBaseline?: boolean; // Enable tolerance for git baseline comparisons (normalizes paths)
+  strict?: boolean; // Detect breaking changes and exit with code 1 if errors found
 }
 
 export interface MultiFileCompareOptions {
@@ -79,4 +80,5 @@ export interface MultiFileCompareOptions {
   autoCleanOrphaned?: boolean; // Auto-delete orphaned files with --approve
   quiet?: boolean;
   gitBaseline?: boolean; // Enable tolerance for git baseline comparisons (normalizes paths)
+  strict?: boolean; // Detect breaking changes and exit with code 1 if errors found
 }

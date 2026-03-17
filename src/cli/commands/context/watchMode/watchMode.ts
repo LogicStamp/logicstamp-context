@@ -21,10 +21,9 @@ import {
 import { registerCleanup, gracefulShutdown, registerSyncCleanupPath, registerSignalHandlers } from '../../../../utils/cleanup.js';
 import type {
   WatchLogEntry,
-  Violation,
-  ViolationsSummary,
   StrictWatchStatus,
 } from '../../../../utils/config.js';
+import { detectViolations, displayViolations } from '../../../../core/violations.js';
 import { getChanges, showChanges, type BundleChanges, type ContractDiff } from './watchDiff.js';
 import {
   initializeWatchCache,
@@ -40,125 +39,6 @@ import {
   displayProjectRoot,
 } from '../index.js';
 import { contextCommand, type ContextOptions } from '../../context.js';
-
-/**
- * Detect violations from bundle changes
- * Breaking changes are treated as errors, additions as info (not violations)
- * Note: Missing dependencies are not tracked as violations (they're expected for third-party packages)
- */
-function detectViolations(changes: BundleChanges): Violation[] {
-  const violations: Violation[] = [];
-
-  // Check for removed contracts (breaking change)
-  for (const entryId of changes.removed) {
-    violations.push({
-      type: 'contract_removed',
-      severity: 'error',
-      entryId,
-      message: `Contract removed: ${entryId}`,
-    });
-  }
-
-  // Check for breaking changes in modified contracts
-  for (const change of changes.changed) {
-    const { entryId, contractDiff } = change;
-    if (!contractDiff) continue;
-
-    // Removed props are breaking changes
-    for (const propName of contractDiff.props.removed) {
-      violations.push({
-        type: 'breaking_change_prop_removed',
-        severity: 'error',
-        entryId,
-        message: `Breaking change: prop '${propName}' removed from ${entryId}`,
-        details: { name: propName },
-      });
-    }
-
-    // Changed prop types are breaking changes
-    for (const prop of contractDiff.props.changed) {
-      violations.push({
-        type: 'breaking_change_prop_type',
-        severity: 'warning',
-        entryId,
-        message: `Prop '${prop.name}' type changed in ${entryId}`,
-        details: { name: prop.name, oldValue: prop.old, newValue: prop.new },
-      });
-    }
-
-    // Removed events are breaking changes
-    for (const eventName of contractDiff.emits.removed) {
-      violations.push({
-        type: 'breaking_change_event_removed',
-        severity: 'error',
-        entryId,
-        message: `Breaking change: event '${eventName}' removed from ${entryId}`,
-        details: { name: eventName },
-      });
-    }
-
-    // Removed state is a breaking change
-    for (const stateName of contractDiff.state.removed) {
-      violations.push({
-        type: 'breaking_change_state_removed',
-        severity: 'warning',
-        entryId,
-        message: `State '${stateName}' removed from ${entryId}`,
-        details: { name: stateName },
-      });
-    }
-
-    // Removed functions are breaking changes
-    for (const funcName of contractDiff.functions.removed) {
-      violations.push({
-        type: 'breaking_change_function_removed',
-        severity: 'error',
-        entryId,
-        message: `Breaking change: function '${funcName}' removed from ${entryId}`,
-        details: { name: funcName },
-      });
-    }
-
-    // Removed variables are breaking changes
-    for (const varName of contractDiff.variables.removed) {
-      violations.push({
-        type: 'breaking_change_variable_removed',
-        severity: 'warning',
-        entryId,
-        message: `Variable '${varName}' removed from ${entryId}`,
-        details: { name: varName },
-      });
-    }
-  }
-
-  return violations;
-}
-
-/**
- * Display violations to console
- */
-function displayViolations(violations: Violation[], options: { quiet?: boolean } = {}): void {
-  if (violations.length === 0) return;
-
-  const errors = violations.filter(v => v.severity === 'error');
-  const warnings = violations.filter(v => v.severity === 'warning');
-
-  console.log(`\n⚠️  Strict Watch: ${violations.length} violation(s) detected`);
-
-  if (errors.length > 0) {
-    console.log(`\n   ❌ Errors (${errors.length}):`);
-    errors.forEach(v => {
-      console.log(`      ${v.message}`);
-    });
-  }
-
-  if (warnings.length > 0) {
-    console.log(`\n   ⚠️  Warnings (${warnings.length}):`);
-    warnings.forEach(v => {
-      console.log(`      ${v.message}`);
-    });
-  }
-}
 
 /**
  * Display session status block
@@ -404,7 +284,7 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
         const hadActiveViolations = previousActiveErrors > 0 || previousActiveWarnings > 0;
 
         if (hasChanges) {
-          const violations = detectViolations(changes);
+          const violations = detectViolations({ type: 'watch', changes });
           const errors = violations.filter(v => v.severity === 'error');
           const warnings = violations.filter(v => v.severity === 'warning');
 

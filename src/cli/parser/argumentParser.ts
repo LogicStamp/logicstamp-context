@@ -13,6 +13,7 @@ export interface CompareArgs {
   cleanOrphaned: boolean;
   quiet: boolean;
   skipGitignore: boolean;
+  strict: boolean;
   baseline?: string;
   positionalArgs: string[];
 }
@@ -164,6 +165,7 @@ export function parseCompareArgs(args: string[]): CompareArgs {
   const cleanOrphaned = args.includes('--clean-orphaned');
   const quiet = args.includes('--quiet') || args.includes('-q');
   const skipGitignore = args.includes('--skip-gitignore');
+  const strict = args.includes('--strict');
 
   // Extract --baseline value
   let baseline: string | undefined;
@@ -187,6 +189,7 @@ export function parseCompareArgs(args: string[]): CompareArgs {
     cleanOrphaned,
     quiet,
     skipGitignore,
+    strict,
     baseline,
     positionalArgs,
   };
