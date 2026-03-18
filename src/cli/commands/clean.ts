@@ -1,6 +1,7 @@
 /**
  * Clean command - Removes all compiled context artifacts
- * Deletes context_main.json, all folder context.json files, and optionally .logicstamp/ cache
+ * Deletes context_main.json, all folder context.json files, context.toon files,
+ * context_*.toon variants, and optionally .logicstamp/ cache
  */
 
 import { glob } from 'glob';
@@ -14,6 +15,8 @@ export interface CleanOptions {
   yes?: boolean;
   quiet?: boolean;
 }
+
+const GLOB_IGNORE = ['**/node_modules/**', '**/dist/**', '**/build/**', '**/.next/**'];
 
 /**
  * Normalize path for display (convert backslashes to forward slashes)
@@ -30,11 +33,34 @@ async function findContextFiles(projectRoot: string): Promise<string[]> {
   const contextFiles = await glob('**/context.json', {
     cwd: projectRoot,
     absolute: false,
-    ignore: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/.next/**'],
+    ignore: GLOB_IGNORE,
   });
 
   // Convert to normalized relative paths
   return contextFiles.map(file => normalizeEntryId(file)).sort();
+}
+
+/**
+ * Find all context.toon and context_*.toon files in the project
+ * Returns relative paths from projectRoot
+ */
+async function findContextToonFiles(projectRoot: string): Promise<string[]> {
+  const [toonFiles, toonVariants] = await Promise.all([
+    glob('**/context.toon', {
+      cwd: projectRoot,
+      absolute: false,
+      ignore: GLOB_IGNORE,
+    }),
+    glob('**/context_*.toon', {
+      cwd: projectRoot,
+      absolute: false,
+      ignore: GLOB_IGNORE,
+    }),
+  ]);
+
+  // Combine and deduplicate (context.toon could theoretically match in some edge cases)
+  const allToon = new Set([...toonFiles, ...toonVariants]);
+  return [...allToon].map(file => normalizeEntryId(file)).sort();
 }
 
 /**
@@ -72,6 +98,7 @@ export async function cleanCommand(options: CleanOptions): Promise<void> {
 
   // Find all files to remove
   const contextFiles = await findContextFiles(projectRoot);
+  const contextToonFiles = await findContextToonFiles(projectRoot);
   const mainContextFile = await findMainContextFile(projectRoot);
   const logicStampDir = await findLogicStampDir(projectRoot);
 
@@ -82,6 +109,7 @@ export async function cleanCommand(options: CleanOptions): Promise<void> {
     filesToRemove.push(relative(projectRoot, mainContextFile));
   }
   filesToRemove.push(...contextFiles);
+  filesToRemove.push(...contextToonFiles);
 
   // If no files found, exit early
   if (filesToRemove.length === 0 && !logicStampDir) {
@@ -102,6 +130,9 @@ export async function cleanCommand(options: CleanOptions): Promise<void> {
     }
     for (const file of contextFiles) {
       // file is already relative
+      console.log(`  - ${displayPath(file)}`);
+    }
+    for (const file of contextToonFiles) {
       console.log(`  - ${displayPath(file)}`);
     }
     if (logicStampDir) {
