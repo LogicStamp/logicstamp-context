@@ -615,16 +615,26 @@ See [docs/limitations.md](docs/limitations.md).
 ---
 
 
-## Version links
 [Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.8.0...HEAD
+
 [0.8.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.0
+
 [0.7.2]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.7.2
+
 [0.7.1]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.7.1
+
 [0.7.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.7.0
+
 [0.6.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.6.0
+
 [0.5.5]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.5
+
 [0.5.4]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.4
+
 [0.5.3]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.3
+
 [0.5.2]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.2
+
 [0.5.1]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.1
+
 [0.5.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.5.0
