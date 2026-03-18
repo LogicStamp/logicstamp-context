@@ -612,7 +612,6 @@ See [docs/limitations.md](docs/limitations.md).
 - Performance optimizations are internal - same output, faster execution
 - New types (`Violation`, `ViolationType`, `StrictWatchStatus`) are additive exports
 
----
 
 
 [Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.8.0...HEAD
