@@ -4,11 +4,13 @@ This roadmap outlines the planned features, improvements, and known limitations 
 
 ## Current Status
 
-**Current Version:** v0.7.2 (Beta)
+**Current Version:** v0.8.0 (Beta)
 
 For detailed release notes and completed features, see [CHANGELOG.md](CHANGELOG.md).
 
 Recent major milestones include:
+- ✅ `--strict` flag for compare command (v0.8.0) - Shared violation detection, exit code 1 on breaking changes
+- ✅ Clean command removes TOON format files (v0.8.0) - Aligns with gitignore and TOON support
 - ✅ Git baseline comparison (v0.7.2) - Compare against any git ref with `--baseline git:<ref>`
 - ✅ Full contract comparison (v0.7.2) - State, variables, API signatures, prop/emit type changes
 - ✅ Strict watch mode enhancements (v0.7.1) - Session status tracking, automatic watch enablement, enhanced summaries
@@ -353,13 +355,13 @@ Add support for Svelte components (`.svelte` files).
 ---
 
 #### 6. Python Support
-**Status:** 🔴 Planned for v0.9.x
+**Status:** 🔴 Planned
 
 Add support for Python codebases (experimental).
 
 **Prerequisites:**
-- ✅ Conditional schema by language (v0.8.x development, v0.9.x stabilization)
-- ✅ JS/JSX support (for multi-language feedback)
+- Conditional schema by language (in development)
+- JS/JSX support (for multi-language feedback)
 
 **Planned Implementation:**
 - Parse Python AST using `ast` module
@@ -371,18 +373,18 @@ Add support for Python codebases (experimental).
 
 **Impact:** Expands LogicStamp Context beyond JavaScript/TypeScript ecosystems.
 
-**Priority:** Medium (Targeted for v0.9.x release candidate, depends on conditional schema stabilization)
+**Priority:** Medium (Depends on conditional schema stabilization)
 
 ---
 
 #### 7. Java Support
-**Status:** 🔴 Planned for v0.9.x
+**Status:** 🔴 Planned
 
 Add support for Java codebases (experimental).
 
 **Prerequisites:**
-- ✅ Conditional schema by language (v0.8.x development, v0.9.x stabilization)
-- ✅ JS/JSX support (for multi-language feedback)
+- Conditional schema by language (in development)
+- JS/JSX support (for multi-language feedback)
 
 **Planned Implementation:**
 - Parse Java source files
@@ -395,7 +397,7 @@ Add support for Java codebases (experimental).
 
 **Impact:** Expands LogicStamp Context to enterprise Java codebases.
 
-**Priority:** Medium (Targeted for v0.9.x release candidate, depends on conditional schema stabilization)
+**Priority:** Medium (Depends on conditional schema stabilization)
 
 ---
 
@@ -478,7 +480,7 @@ The filtering only suppresses hash-only noise in git baseline mode—hashes stil
 - No caching yet (regenerates on every run)
 
 **Future Enhancements:**
-- `--fail-on-breaking` flag for `stamp context compare` (exit non-zero on breaking changes)
+- ~~`--fail-on-breaking` flag~~ → Implemented as `--strict` in v0.8.0
 - Baseline caching when ref hasn't changed (optimization)
 - Remote ref auto-fetch option
 
@@ -510,7 +512,7 @@ Full contract comparison support for all contract fields, aligning compare comma
 ### Schema & Architecture
 
 #### Conditional Schema by Language
-**Status:** 🔴 Planned for v0.8.x
+**Status:** 🔴 Planned
 
 Make the UIFContract schema conditional based on the `kind` field, ensuring that language-specific fields are only present when relevant and properly validated.
 
@@ -524,7 +526,7 @@ Make the UIFContract schema conditional based on the `kind` field, ensuring that
 **Why This Matters:**
 The current schema is language-agnostic but allows invalid field combinations. For example, a `node:api` contract could theoretically have `style` metadata or `hooks`, which doesn't make sense. While the tool doesn't generate these invalid combinations, the schema doesn't enforce correctness.
 
-**Planned Implementation (v0.8.x):**
+**Planned Implementation:**
 
 **1. TypeScript Discriminated Unions:**
 ```typescript
@@ -584,21 +586,21 @@ export type UIFContract = ReactUIFContract | BackendUIFContract | VueUIFContract
 - Support reading old flat schema format (with warnings)
 - Auto-migrate contracts when possible (add defaults, remove invalid fields)
 
-**Why v0.8.x:**
-- **Breaking change** - Schema structure changes require migration, better to do in minor version series
-- **Prerequisite for Python/Java** - Conditional schema must be in place before adding Python and Java support in v1.0.0
+**Rationale:**
+- **Breaking change** - Schema structure changes require migration, better to do in a dedicated minor version series
+- **Prerequisite for Python/Java** - Conditional schema must be in place before adding Python and Java support
 - **Better timing** - After gathering feedback from multi-language usage (JS/JSX support)
-- **Iterative development** - v0.8.x allows for multiple releases to refine and stabilize the schema
-- **Migration support** - Can provide proper migration tooling and documentation across v0.8.x releases
+- **Iterative development** - Allows for multiple releases to refine and stabilize the schema
+- **Migration support** - Proper migration tooling and documentation across releases
 
 **Dependencies:**
-- Must be completed before Python/Java support (v1.0.0)
+- Must be completed before Python/Java support
 - JS/JSX support should be completed first to gather multi-language feedback
 
-**Implementation Timeline:**
-- **v0.8.x:** Conditional schema development, testing, and refinement with migration support
-- **v0.9.x:** Schema stabilization and finalization + Python/Java support (release candidate phase)
-- **v1.0.0:** Stable release with multi-language support fully tested and validated
+**Implementation Phases:**
+- Conditional schema development, testing, and refinement with migration support
+- Schema stabilization and finalization
+- Python/Java support added once schema is stable
 
 **Impact:**
 - **Type Safety:** Better TypeScript type checking prevents invalid contracts at compile time
@@ -607,9 +609,9 @@ export type UIFContract = ReactUIFContract | BackendUIFContract | VueUIFContract
 - **Future-proofing:** Easier to add new languages with their own field requirements
 - **Enables Python/Java:** Required foundation for adding Python and Java support
 
-**Priority:** High (Planned for v0.8.x, prerequisite for Python/Java support in v0.9.x)
+**Priority:** High (Prerequisite for Python/Java support)
 
-**Note:** Conditional schema is planned for v0.8.x development series, with stabilization in v0.9.x release candidate phase. Python and Java support will be added in v0.9.x to allow testing alongside the schema before the stable v1.0.0 release.
+**Note:** Conditional schema will go through a development and stabilization phase. Python and Java support will be added once the schema is stable.
 
 ---
 
