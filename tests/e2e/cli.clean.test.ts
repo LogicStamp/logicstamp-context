@@ -153,6 +153,51 @@ describe('CLI Clean Command Tests', () => {
       }
     }, 30000);
 
+    it('should delete context.toon files with --all --yes', async () => {
+      const testDir = join(outputPath, 'clean-toon');
+      await mkdir(testDir, { recursive: true });
+
+      // Generate context in TOON format
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${testDir} --format toon`
+      );
+
+      // Verify TOON files exist (index lists context.toon paths when format is toon)
+      const mainContextPath = join(testDir, 'context_main.json');
+      await access(mainContextPath);
+      const index = JSON.parse(await readFile(mainContextPath, 'utf-8'));
+      const toonFiles: string[] = [];
+      for (const folder of index.folders) {
+        const toonPath = join(testDir, folder.contextFile);
+        try {
+          await access(toonPath);
+          toonFiles.push(toonPath);
+        } catch {
+          // Skip if file doesn't exist
+        }
+      }
+      expect(toonFiles.length).toBeGreaterThan(0);
+
+      // Run clean with --all --yes
+      const { stdout } = await execAsync(
+        `node dist/cli/stamp.js context clean ${testDir} --all --yes`
+      );
+
+      expect(stdout).toContain('Removed');
+      expect(stdout).toContain('Cleaned');
+
+      // Verify TOON files are deleted
+      for (const toonPath of toonFiles) {
+        let exists = true;
+        try {
+          await access(toonPath);
+        } catch {
+          exists = false;
+        }
+        expect(exists).toBe(false);
+      }
+    }, 30000);
+
     it('should not delete files without --all --yes flags', async () => {
       const testDir = join(outputPath, 'clean-no-flags');
       await mkdir(testDir, { recursive: true });

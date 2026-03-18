@@ -448,6 +448,8 @@ BEHAVIOR:
 FILES REMOVED:
   • context_main.json                 Main index file
   • **/context.json                   All folder context files
+  • **/context.toon                   All folder TOON format bundles
+  • **/context_*.toon                 TOON format variants
   • .logicstamp/                      Cache directory (if present)
 
 EXAMPLES:

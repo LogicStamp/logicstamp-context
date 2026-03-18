@@ -16,6 +16,20 @@ vi.mock('../../../src/utils/fsx.js', () => ({
 vi.mock('node:fs/promises');
 vi.mock('glob');
 
+/** Helper: mock glob to return pattern-specific results (clean now calls glob 3x: context.json, context.toon, context_*.toon) */
+function mockGlob(
+  contextJson: string[] = [],
+  contextToon: string[] = [],
+  contextToonVariants: string[] = []
+) {
+  vi.mocked(glob).mockImplementation((pattern: string) => {
+    if (pattern === '**/context.json') return Promise.resolve(contextJson);
+    if (pattern === '**/context.toon') return Promise.resolve(contextToon);
+    if (pattern === '**/context_*.toon') return Promise.resolve(contextToonVariants);
+    return Promise.resolve([]);
+  });
+}
+
 describe('cleanCommand', () => {
   let originalConsoleLog: typeof console.log;
   let originalConsoleError: typeof console.error;
@@ -40,7 +54,7 @@ describe('cleanCommand', () => {
       return String(path).replace(/\\/g, '/');
     });
     vi.mocked(fsx.fileExists).mockResolvedValue(false);
-    vi.mocked(glob).mockResolvedValue([]);
+    mockGlob();
     vi.mocked(stat).mockRejectedValue(new Error('Not found'));
     vi.mocked(unlink).mockResolvedValue(undefined);
     vi.mocked(rm).mockResolvedValue(undefined);
@@ -58,7 +72,7 @@ describe('cleanCommand', () => {
       const projectRoot = '/test/project';
       const testFile = 'context_main.json';
 
-      vi.mocked(glob).mockResolvedValue([]);
+      mockGlob();
       vi.mocked(fsx.fileExists).mockResolvedValue(true);
       vi.mocked(stat).mockRejectedValue(new Error('Directory not found'));
       vi.mocked(unlink).mockRejectedValue(new Error('Permission denied'));
@@ -81,7 +95,7 @@ describe('cleanCommand', () => {
       const projectRoot = '/test/project';
       const logicStampPath = '/test/project/.logicstamp';
 
-      vi.mocked(glob).mockResolvedValue([]);
+      mockGlob();
       vi.mocked(fsx.fileExists).mockResolvedValue(false);
       vi.mocked(stat).mockResolvedValue({
         isDirectory: () => true,
@@ -106,7 +120,7 @@ describe('cleanCommand', () => {
       const projectRoot = '/test/project';
       const files = ['context_main.json', 'src/context.json'];
 
-      vi.mocked(glob).mockResolvedValue(['src/context.json']);
+      mockGlob(['src/context.json']);
       vi.mocked(fsx.fileExists).mockResolvedValue(true);
       vi.mocked(stat).mockRejectedValue(new Error('Directory not found'));
       
@@ -132,7 +146,7 @@ describe('cleanCommand', () => {
     it('should handle .logicstamp as file (not directory)', async () => {
       const projectRoot = '/test/project';
 
-      vi.mocked(glob).mockResolvedValue([]);
+      mockGlob();
       vi.mocked(fsx.fileExists).mockResolvedValue(false);
       // stat succeeds but isDirectory returns false (it's a file, not a directory)
       vi.mocked(stat).mockResolvedValue({
@@ -155,7 +169,7 @@ describe('cleanCommand', () => {
     it('should show correct message when only .logicstamp exists (no context files)', async () => {
       const projectRoot = '/test/project';
 
-      vi.mocked(glob).mockResolvedValue([]);
+      mockGlob();
       vi.mocked(fsx.fileExists).mockResolvedValue(false);
       vi.mocked(stat).mockResolvedValue({
         isDirectory: () => true,
@@ -177,7 +191,7 @@ describe('cleanCommand', () => {
     it('should show correct message when only context files exist (no .logicstamp)', async () => {
       const projectRoot = '/test/project';
 
-      vi.mocked(glob).mockResolvedValue(['src/context.json']);
+      mockGlob(['src/context.json']);
       vi.mocked(fsx.fileExists).mockResolvedValue(true);
       vi.mocked(stat).mockRejectedValue(new Error('Directory not found'));
 
@@ -203,7 +217,7 @@ describe('cleanCommand', () => {
     it('should handle case when mainContextFile is null in display section', async () => {
       const projectRoot = '/test/project';
 
-      vi.mocked(glob).mockResolvedValue(['src/context.json']);
+      mockGlob(['src/context.json']);
       vi.mocked(fsx.fileExists).mockResolvedValue(false); // mainContextFile doesn't exist
       vi.mocked(stat).mockRejectedValue(new Error('Directory not found'));
 
@@ -224,7 +238,7 @@ describe('cleanCommand', () => {
     it('should handle case when logicStampDir is null in display section', async () => {
       const projectRoot = '/test/project';
 
-      vi.mocked(glob).mockResolvedValue(['src/context.json']);
+      mockGlob(['src/context.json']);
       vi.mocked(fsx.fileExists).mockResolvedValue(true);
       vi.mocked(stat).mockRejectedValue(new Error('Directory not found')); // .logicstamp doesn't exist
 
@@ -243,7 +257,7 @@ describe('cleanCommand', () => {
     it('should suppress verbose output in quiet mode during deletion', async () => {
       const projectRoot = '/test/project';
 
-      vi.mocked(glob).mockResolvedValue(['src/context.json']);
+      mockGlob(['src/context.json']);
       vi.mocked(fsx.fileExists).mockResolvedValue(true);
       vi.mocked(stat).mockRejectedValue(new Error('Directory not found'));
       vi.mocked(unlink).mockResolvedValue(undefined);
@@ -276,7 +290,7 @@ describe('cleanCommand', () => {
     it('should output ✓ when no files found in quiet mode', async () => {
       const projectRoot = '/test/project';
 
-      vi.mocked(glob).mockResolvedValue([]);
+      mockGlob();
       vi.mocked(fsx.fileExists).mockResolvedValue(false);
       vi.mocked(stat).mockRejectedValue(new Error('Directory not found'));
 
@@ -292,7 +306,7 @@ describe('cleanCommand', () => {
     it('should still show errors in quiet mode', async () => {
       const projectRoot = '/test/project';
 
-      vi.mocked(glob).mockResolvedValue(['src/context.json']);
+      mockGlob(['src/context.json']);
       vi.mocked(fsx.fileExists).mockResolvedValue(true);
       vi.mocked(stat).mockRejectedValue(new Error('Directory not found'));
       vi.mocked(unlink).mockRejectedValue(new Error('Permission denied'));
@@ -315,7 +329,7 @@ describe('cleanCommand', () => {
     it('should show correct message when files and directory are cleaned', async () => {
       const projectRoot = '/test/project';
 
-      vi.mocked(glob).mockResolvedValue(['src/context.json']);
+      mockGlob(['src/context.json']);
       vi.mocked(fsx.fileExists).mockResolvedValue(true);
       vi.mocked(stat).mockResolvedValue({
         isDirectory: () => true,
@@ -337,7 +351,7 @@ describe('cleanCommand', () => {
     it('should show correct message when only files are cleaned (no directory)', async () => {
       const projectRoot = '/test/project';
 
-      vi.mocked(glob).mockResolvedValue(['src/context.json']);
+      mockGlob(['src/context.json']);
       vi.mocked(fsx.fileExists).mockResolvedValue(true);
       vi.mocked(stat).mockRejectedValue(new Error('Directory not found'));
       vi.mocked(unlink).mockResolvedValue(undefined);
@@ -361,7 +375,7 @@ describe('cleanCommand', () => {
     it('should not delete files without --all --yes flags', async () => {
       const projectRoot = '/test/project';
 
-      vi.mocked(glob).mockResolvedValue(['src/context.json']);
+      mockGlob(['src/context.json']);
       vi.mocked(fsx.fileExists).mockResolvedValue(true);
       vi.mocked(stat).mockRejectedValue(new Error('Directory not found'));
 
@@ -379,7 +393,7 @@ describe('cleanCommand', () => {
     it('should not delete files with only --all flag (missing --yes)', async () => {
       const projectRoot = '/test/project';
 
-      vi.mocked(glob).mockResolvedValue(['src/context.json']);
+      mockGlob(['src/context.json']);
       vi.mocked(fsx.fileExists).mockResolvedValue(true);
       vi.mocked(stat).mockRejectedValue(new Error('Directory not found'));
 
@@ -398,7 +412,7 @@ describe('cleanCommand', () => {
     it('should not delete files with only --yes flag (missing --all)', async () => {
       const projectRoot = '/test/project';
 
-      vi.mocked(glob).mockResolvedValue(['src/context.json']);
+      mockGlob(['src/context.json']);
       vi.mocked(fsx.fileExists).mockResolvedValue(true);
       vi.mocked(stat).mockRejectedValue(new Error('Directory not found'));
 
@@ -417,7 +431,7 @@ describe('cleanCommand', () => {
     it('should suppress dry run message in quiet mode', async () => {
       const projectRoot = '/test/project';
 
-      vi.mocked(glob).mockResolvedValue(['src/context.json']);
+      mockGlob(['src/context.json']);
       vi.mocked(fsx.fileExists).mockResolvedValue(true);
       vi.mocked(stat).mockRejectedValue(new Error('Directory not found'));
 
@@ -436,7 +450,7 @@ describe('cleanCommand', () => {
     it('should normalize paths for display (backslashes to forward slashes)', async () => {
       const projectRoot = 'C:\\test\\project';
 
-      vi.mocked(glob).mockResolvedValue(['src\\components\\context.json']);
+      mockGlob(['src\\components\\context.json']);
       vi.mocked(fsx.fileExists).mockResolvedValue(true);
       vi.mocked(stat).mockRejectedValue(new Error('Directory not found'));
 
@@ -454,11 +468,57 @@ describe('cleanCommand', () => {
     });
   });
 
+  describe('TOON files', () => {
+    it('should find and display context.toon and context_*.toon files', async () => {
+      const projectRoot = '/test/project';
+
+      mockGlob([], ['src/context.toon'], ['context_main.toon']);
+      vi.mocked(fsx.fileExists).mockResolvedValue(false);
+      vi.mocked(stat).mockRejectedValue(new Error('Directory not found'));
+
+      await cleanCommand({
+        projectRoot,
+      });
+
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining('🧹 This will remove:')
+      );
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining('src/context.toon')
+      );
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining('context_main.toon')
+      );
+    });
+
+    it('should delete context.toon files with --all --yes', async () => {
+      const projectRoot = '/test/project';
+
+      mockGlob([], ['src/context.toon']);
+      vi.mocked(fsx.fileExists).mockResolvedValue(false);
+      vi.mocked(stat).mockRejectedValue(new Error('Directory not found'));
+      vi.mocked(unlink).mockResolvedValue(undefined);
+
+      await cleanCommand({
+        projectRoot,
+        all: true,
+        yes: true,
+      });
+
+      expect(unlink).toHaveBeenCalledWith(
+        expect.stringContaining('context.toon')
+      );
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining('Cleaned 1 file(s)')
+      );
+    });
+  });
+
   describe('Early exit when no files', () => {
     it('should exit early when no files and no .logicstamp directory', async () => {
       const projectRoot = '/test/project';
 
-      vi.mocked(glob).mockResolvedValue([]);
+      mockGlob();
       vi.mocked(fsx.fileExists).mockResolvedValue(false);
       vi.mocked(stat).mockRejectedValue(new Error('Directory not found'));
 
@@ -476,7 +536,7 @@ describe('cleanCommand', () => {
     it('should not exit early when .logicstamp exists even if no files', async () => {
       const projectRoot = '/test/project';
 
-      vi.mocked(glob).mockResolvedValue([]);
+      mockGlob();
       vi.mocked(fsx.fileExists).mockResolvedValue(false);
       vi.mocked(stat).mockResolvedValue({
         isDirectory: () => true,
