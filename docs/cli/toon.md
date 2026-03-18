@@ -173,9 +173,9 @@ These patterns prevent generated TOON files from being committed to version cont
 
 ## Working with TOON Files
 
-**Note:** Currently, TOON format is only supported for generation (`stamp context --format toon`). The `validate`, `compare`, and `clean` commands do not yet support TOON format files.
+**Note:** The `validate` and `compare` commands do not yet support TOON format files. The `clean` command removes TOON files (`context.toon`, `context_*.toon`) along with JSON files.
 
-To work with TOON files using these commands, you'll need to decode them to JSON first:
+To work with TOON files using validate/compare, you'll need to decode them to JSON first:
 
 ```javascript
 import { decode } from '@toon-format/toon';
@@ -196,7 +196,7 @@ await writeFile('src/components/context.json', jsonContent);
 - **Human readability** - TOON files are human-readable but less readable than JSON. While you can inspect TOON files directly, JSON format is better for manual inspection and debugging.
 - **Tool compatibility** - Some tools may not support TOON format. JSON is more universally supported.
 - **Index file** - The main index (`context_main.json`) is always JSON, even when using TOON format for bundles.
-- **Command support** - Currently, only the `stamp context` command supports TOON format for generation. The `validate`, `compare`, and `clean` commands do not yet support TOON files and will only work with JSON format.
+- **Command support** - The `stamp context` command supports TOON format for generation. The `clean` command removes TOON files. The `validate` and `compare` commands do not yet support TOON files and will only work with JSON format.
 - **Deeply nested data** - For structures with minimal tabular arrays, JSON-compact may be more token-efficient than TOON.
 
 ## TOON Format Specification

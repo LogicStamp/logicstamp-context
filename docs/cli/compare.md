@@ -27,6 +27,10 @@ stamp context compare --baseline git:main
 stamp context compare --baseline git:HEAD
 stamp context compare --baseline git:v1.0.0
 
+# Strict mode: Detect breaking changes
+stamp context compare --strict
+stamp context compare --baseline git:main --strict
+
 # With token statistics
 stamp context compare --stats
 
@@ -498,6 +502,60 @@ stamp context compare --approve --clean-orphaned
 
 ---
 
+### Strict Mode (Breaking Change Detection)
+
+Use `--strict` to detect breaking changes and exit with code 1 if errors are found. This is useful for CI pipelines where you want to fail the build if component contracts are broken.
+
+```bash
+# Detect breaking changes in auto-compare mode
+stamp context compare --strict
+
+# Detect breaking changes against a git baseline
+stamp context compare --baseline git:main --strict
+```
+
+**What it detects:**
+- **Removed props** (error) - Props that were removed from components
+- **Removed events/emits** (error) - Event handlers that were removed
+- **Removed functions** (error) - Exported functions that were removed
+- **Contract removed** (error) - Entire component/module removed
+- **Prop type changes** (warning) - Props whose types changed
+- **State removed** (warning) - Component state that was removed
+- **Variable removed** (warning) - Module-level variables that were removed
+
+**Example output:**
+```bash
+⚠️  DRIFT
+
+📁 Folder Summary:
+   Total folders: 5
+   ~  Changed folders: 1
+
+   ⚠️  Strict Mode: 3 violation(s) detected
+
+   ❌ Errors (2):
+      Breaking change: prop 'onClick' removed from src/components/Button.tsx
+      Breaking change: function 'useAuth' removed from src/hooks/auth.ts
+
+   ⚠️  Warnings (1):
+      Prop 'variant' type changed in src/components/Button.tsx
+
+❌ Strict mode: 2 error(s) detected
+```
+
+**Exit codes:**
+- Exit 0 if no breaking changes (errors) detected
+- Exit 1 if any errors detected (even with warnings)
+
+**Use cases:**
+- **CI/CD pipelines** - Fail builds when breaking changes are introduced
+- **PR validation** - Prevent merging PRs with breaking API changes
+- **Release checks** - Verify no breaking changes since last release
+
+> **Tip:** For real-time breaking change detection during development, use `stamp context --strict-watch` instead.
+
+---
+
 ### With Token Statistics
 
 Add `--stats` to see per-folder token cost impact:
@@ -552,6 +610,7 @@ Token stats show the delta for each folder with changes.
 | `0` | DRIFT approved and updated | User approved changes or `--approve` used |
 | `1` | DRIFT – Changes detected but not approved (removals/modifications) | CI validation failed |
 | `1` | DRIFT – User declined update (typed `n`) | Local dev declined changes |
+| `1` | `--strict` – Breaking changes (errors) detected | Strict mode validation failed |
 | `1` | Error (file not found, invalid JSON, generation failed) | Fatal error occurred |
 
 **Key Points:**
