@@ -44,6 +44,8 @@ See [docs/limitations.md](docs/limitations.md).
   - Aligns with existing delta structure
   - ⚠️ **Breaking for programmatic consumers** (CLI output unchanged)
 
+- **Improve TypeScript consumer experience** (`types` field in package.json) ([#151](https://github.com/LogicStamp/logicstamp-context/pull/151))
+
 ### Fixed
 
 - **Windows file lock race condition** ([#146](https://github.com/LogicStamp/logicstamp-context/pull/146))
