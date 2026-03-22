@@ -160,12 +160,14 @@ export async function generateSummary(
   }
   
   // Calculate savings percentages vs raw source (use improved estimation)
-  const headerSavingsGPT4 = estimatedRawSourceGPT4 > 0
-    ? ((estimatedRawSourceGPT4 - headerNoStyleGPT4) / estimatedRawSourceGPT4 * 100).toFixed(0)
-    : '0';
-  const headerStyleSavingsGPT4 = estimatedRawSourceGPT4 > 0
-    ? ((estimatedRawSourceGPT4 - headerWithStyleGPT4) / estimatedRawSourceGPT4 * 100).toFixed(0)
-    : '0';
+  // Clamp to valid range [0, 100] to handle edge cases where estimates may be off
+  const calculateSavings = (raw: number, current: number): string => {
+    if (raw <= 0 || current < 0) return '0';
+    const savings = ((raw - current) / raw) * 100;
+    return Math.max(0, Math.min(100, savings)).toFixed(0);
+  };
+  const headerSavingsGPT4 = calculateSavings(estimatedRawSourceGPT4, headerNoStyleGPT4);
+  const headerStyleSavingsGPT4 = calculateSavings(estimatedRawSourceGPT4, headerWithStyleGPT4);
   
   // Check tokenizer status and display it
   const tokenizerStatus = await getTokenizerStatus();
