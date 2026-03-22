@@ -46,6 +46,38 @@ describe('parseContextArgs', () => {
     expect(options.depth).toBe(1);
   });
 
+  it('should exit on invalid depth value (non-numeric)', () => {
+    parseContextArgs(['--depth', 'abc']);
+    expect(process.exit).toHaveBeenCalledWith(1);
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('Invalid depth value')
+    );
+  });
+
+  it('should exit on negative depth value', () => {
+    parseContextArgs(['--depth', '-5']);
+    expect(process.exit).toHaveBeenCalledWith(1);
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('Invalid depth value')
+    );
+  });
+
+  it('should exit on missing depth value', () => {
+    parseContextArgs(['--depth']);
+    expect(process.exit).toHaveBeenCalledWith(1);
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('Invalid depth value')
+    );
+  });
+
+  it('should exit on invalid depth value using short flag', () => {
+    parseContextArgs(['-d', 'abc']);
+    expect(process.exit).toHaveBeenCalledWith(1);
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('Invalid depth value')
+    );
+  });
+
   it('should parse format flag', () => {
     const options = parseContextArgs(['--format', 'pretty']);
     expect(options.format).toBe('pretty');
@@ -84,6 +116,46 @@ describe('parseContextArgs', () => {
   it('should parse max-nodes short flag', () => {
     const options = parseContextArgs(['-m', '50']);
     expect(options.maxNodes).toBe(50);
+  });
+
+  it('should exit on invalid max-nodes value (non-numeric)', () => {
+    parseContextArgs(['--max-nodes', 'xyz']);
+    expect(process.exit).toHaveBeenCalledWith(1);
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('Invalid max-nodes value')
+    );
+  });
+
+  it('should exit on zero max-nodes value', () => {
+    parseContextArgs(['--max-nodes', '0']);
+    expect(process.exit).toHaveBeenCalledWith(1);
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('Invalid max-nodes value')
+    );
+  });
+
+  it('should exit on negative max-nodes value', () => {
+    parseContextArgs(['--max-nodes', '-10']);
+    expect(process.exit).toHaveBeenCalledWith(1);
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('Invalid max-nodes value')
+    );
+  });
+
+  it('should exit on missing max-nodes value', () => {
+    parseContextArgs(['--max-nodes']);
+    expect(process.exit).toHaveBeenCalledWith(1);
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('Invalid max-nodes value')
+    );
+  });
+
+  it('should exit on zero max-nodes value using short flag', () => {
+    parseContextArgs(['-m', '0']);
+    expect(process.exit).toHaveBeenCalledWith(1);
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('Invalid max-nodes value')
+    );
   });
 
   it('should parse profile flag', () => {
