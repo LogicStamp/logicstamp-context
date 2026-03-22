@@ -78,6 +78,25 @@ describe('normalizeName', () => {
     expect(normalizeName('Button')).toBe('button');
     expect(normalizeName('useState')).toBe('usestate');
   });
+
+  it('should handle empty string', () => {
+    expect(normalizeName('')).toBe('');
+  });
+
+  it('should handle string with only slashes', () => {
+    expect(normalizeName('/')).toBe('');
+    expect(normalizeName('//')).toBe('');
+  });
+
+  it('should handle trailing slash', () => {
+    expect(normalizeName('src/components/')).toBe('');
+    expect(normalizeName('Button/')).toBe('');
+  });
+
+  it('should handle path with empty basename after relative prefix stripping', () => {
+    expect(normalizeName('./')).toBe('');
+    expect(normalizeName('../')).toBe('');
+  });
 });
 
 describe('normalizeNames', () => {
