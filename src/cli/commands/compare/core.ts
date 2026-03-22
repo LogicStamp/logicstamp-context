@@ -16,7 +16,8 @@ export function normalizeName(name: string): string {
     stripped = stripped.replace(/^\.\.?\//, '');
   }
   // Extract just the basename (last part after /)
-  const basename = stripped.includes('/') ? stripped.split('/').pop()! : stripped;
+  const parts = stripped.split('/');
+  const basename = stripped.includes('/') ? (parts[parts.length - 1] ?? stripped) : stripped;
   // Normalize to lowercase for case-insensitive comparison
   return basename.toLowerCase();
 }
