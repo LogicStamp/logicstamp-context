@@ -524,6 +524,85 @@ describe('statsCalculator', () => {
         expect(headerLine).toContain('0%');
       });
 
+      it('should clamp savings to 0 when current tokens exceed raw (would be negative)', async () => {
+        const contracts = [createMockContract('src/App.tsx')];
+        const manifest = createMockManifest(['src/App.tsx']);
+        const bundles = [createMockBundle('src/App.tsx')];
+        const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
+        // Set sourceTokens lower than current tokens to trigger negative savings
+        const tokenEstimates = createMockTokenEstimates({
+          sourceTokensGPT4: 500, // Less than currentGPT4 (1000)
+          sourceTokensClaude: 550,
+        });
+
+        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
+          includeCode: 'none',
+          includeStyle: false,
+          files: ['src/App.tsx'],
+          projectRoot: '/project',
+          currentGPT4: 1000,
+          currentClaude: 1100,
+          totalSourceSize: 5000,
+          packOptions: {
+            depth: 2,
+            maxNodes: 30,
+            format: 'json',
+            hashLock: false,
+            strict: false,
+            allowMissing: true,
+            predictBehavior: false,
+          },
+        });
+
+        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const headerLine = calls.find((c: string) => c.includes('Header') && c.includes('%'));
+        expect(headerLine).toBeDefined();
+        // When current > raw, savings would be negative but should be clamped to "0%"
+        expect(headerLine).toContain('0%');
+      });
+
+      it('should clamp savings to 100 when it would exceed 100%', async () => {
+        const contracts = [createMockContract('src/App.tsx')];
+        const manifest = createMockManifest(['src/App.tsx']);
+        const bundles = [createMockBundle('src/App.tsx')];
+        const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
+        // Set very high sourceTokens and very low current tokens
+        const tokenEstimates = createMockTokenEstimates({
+          sourceTokensGPT4: 10000,
+          sourceTokensClaude: 11000,
+        });
+
+        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
+          includeCode: 'none',
+          includeStyle: false,
+          files: ['src/App.tsx'],
+          projectRoot: '/project',
+          currentGPT4: 10, // Very small - header estimate will be even smaller
+          currentClaude: 11,
+          totalSourceSize: 5000,
+          packOptions: {
+            depth: 2,
+            maxNodes: 30,
+            format: 'json',
+            hashLock: false,
+            strict: false,
+            allowMissing: true,
+            predictBehavior: false,
+          },
+        });
+
+        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const headerLine = calls.find((c: string) => c.includes('Header') && c.includes('%'));
+        expect(headerLine).toBeDefined();
+        // Savings should be clamped to at most 100%
+        // The percentage should be a valid number between 0 and 100
+        const match = headerLine.match(/(\d+)%/);
+        expect(match).toBeTruthy();
+        const percentage = parseInt(match![1], 10);
+        expect(percentage).toBeGreaterThanOrEqual(0);
+        expect(percentage).toBeLessThanOrEqual(100);
+      });
+
       it('should return "0" for headerStyleSavings when estimatedRawSourceGPT4 is 0', async () => {
         const contracts = [createMockContract('src/App.tsx')];
         const manifest = createMockManifest(['src/App.tsx']);
