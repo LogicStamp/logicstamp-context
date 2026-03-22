@@ -62,10 +62,16 @@ export function parseContextArgs(args: string[]): ContextOptions {
 
       switch (key) {
         case 'depth':
-        case 'd':
-          options.depth = parseInt(value, 10);
+        case 'd': {
+          const parsed = parseInt(value, 10);
+          if (isNaN(parsed) || parsed < 0) {
+            console.error(`❌ Invalid depth value: ${value}. Must be a non-negative integer.`);
+            process.exit(1);
+          }
+          options.depth = parsed;
           i++;
           break;
+        }
         case 'include-code':
         case 'c':
           options.includeCode = value as 'none' | 'header' | 'full';
@@ -82,10 +88,16 @@ export function parseContextArgs(args: string[]): ContextOptions {
           i++;
           break;
         case 'max-nodes':
-        case 'm':
-          options.maxNodes = parseInt(value, 10);
+        case 'm': {
+          const parsed = parseInt(value, 10);
+          if (isNaN(parsed) || parsed < 1) {
+            console.error(`❌ Invalid max-nodes value: ${value}. Must be a positive integer.`);
+            process.exit(1);
+          }
+          options.maxNodes = parsed;
           i++;
           break;
+        }
         case 'profile':
           options.profile = value as 'llm-safe' | 'llm-chat' | 'ci-strict' | 'watch-fast';
           i++;
