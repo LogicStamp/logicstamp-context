@@ -81,7 +81,7 @@ Recent milestones:
 ### Performance & Optimization
 
 - ✅ Incremental bundle caching (watch mode)
-- **Style verbosity reduction** 🔴 — Less verbose style for nested components with `depth=2`; `--full-style` for full. ~30-40% token reduction.
+- **Style verbosity reduction** 🔴 — Less verbose style for nested components with `depth=2`; planned `--full-style` flag for full extraction (distinct from `--style-mode full`). ~30-40% token reduction.
 - **Output size optimization** — Further token reduction
 
 ### Configuration & DX

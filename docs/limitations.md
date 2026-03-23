@@ -59,13 +59,14 @@ These are no longer limitations. See [CHANGELOG](../CHANGELOG.md) for details.
 **Missing** — No cross-folder relationships or project-wide stats in `context_main.json`. Only folder index with token estimates. Location: `src/cli/commands/context/fileWriter.ts`.
 
 ### Other Gaps
+- **JavaScript files** — Only `.ts` and `.tsx` are analyzed; `.js` and `.jsx` are ignored.
 - **Comments** — JSDoc only (header mode). No `//`, `/* */`, TODOs.
 - **Test files** — Excluded by design. Optional flag if requested.
 - **Runtime behavior** — Static analysis only (expected).
 - **Route extraction** — May miss routes when JSX attribute values have unusual formatting (e.g., `{"\/x"}`). Location: `src/extractors/react/eventExtractor.ts` (`extractJsxRoutes`). Extractor only matches quoted strings to avoid false positives from variables.
 - **Code content** — Not captured (by design for token efficiency).
 - **Backend** — Middleware, guards, validation schemas not extracted. See [express.md](frameworks/express.md) and framework docs.
-- **Dependency graph edges** — Edges are built; empty `edges: []` can mean no dependencies, unresolved imports, or internal-only components. See [usage.md](usage.md#dependency-graph).
+- **Dependency graph edges** — Edges are built; empty `edges: []` can mean no dependencies, unresolved imports, or internal-only components. Default `--depth` is 2 (depth 1 = no nested edges). See [usage.md](usage.md#dependency-graph).
 - **Strict watch** — Baseline is session-scoped (doesn't update during a run). New/empty projects show all changes as "added."
 
 ---
