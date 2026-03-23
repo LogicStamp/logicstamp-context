@@ -402,7 +402,7 @@ stamp context clean [path]         # Remove generated files
 | **React** | Full | Components, hooks, props, styles |
 | **Next.js** | Full | App Router roles, segment paths, metadata |
 | **Vue 3** | Partial | Composition API (TS/TSX only, not .vue SFC) |
-| **Express.js** | Full | Routes, middleware, API signatures |
+| **Express.js** | Full | Routes, API signatures (middleware not extracted; see [limitations](docs/limitations.md)) |
 | **NestJS** | Full | Controllers, decorators, API signatures |
 | **UI Libraries** | Full | Material UI, ShadCN, Radix, Tailwind, Styled Components, SCSS, Chakra UI, Ant Design (component usage, props, composition; not raw CSS) |
 

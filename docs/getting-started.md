@@ -114,7 +114,7 @@ LogicStamp Context generates structured JSON bundles:
 
 ## Requirements
 
-- **Node.js** >= 18.18.0 (Node 20+ recommended)
+- **Node.js** >= 20
 - **TypeScript codebase** (React, Next.js, Vue, Express, or NestJS)
 
 ## Framework Support
@@ -124,7 +124,7 @@ LogicStamp Context generates structured JSON bundles:
 | **React** | Full | Components, hooks, props, styles |
 | **Next.js** | Full | App Router roles, segment paths, metadata |
 | **Vue 3** | Partial | Composition API (TS/TSX only, not .vue SFC) |
-| **Express.js** | Full | Routes, middleware, API signatures |
+| **Express.js** | Full | Routes, API signatures (middleware not extracted; see [limitations](limitations.md)) |
 | **NestJS** | Full | Controllers, decorators, API signatures |
 | **UI Libraries** | Full | Material UI, ShadCN, Radix, Tailwind, Styled Components, SCSS, Chakra UI, Ant Design |
 

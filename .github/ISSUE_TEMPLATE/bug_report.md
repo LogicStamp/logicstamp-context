@@ -26,7 +26,7 @@ If applicable, add screenshots to help explain your problem.
 
 ## Environment
 - OS: [e.g. Windows 10, macOS 13, Ubuntu 22.04]
-- Node Version: [e.g. 18.17.0]
+- Node Version: [e.g. 20.18.0]
 - Browser: [e.g. Chrome 120, Firefox 121]
 - Version: [e.g. 0.1.0]
 
