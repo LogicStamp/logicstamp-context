@@ -16,9 +16,8 @@
 
 LogicStamp Context is a CLI that compiles TypeScript codebases into deterministic, diffable architectural contracts and dependency graphs - a compact, structured source of truth for AI coding workflows.
 
-Watch mode. Strict, auditable diffs. Real-time breaking change detection. AST-based contract extraction.
-
-**Includes an MCP server. Works with Claude, Cursor, Copilot Chat, and any MCP-compatible agent.**
+Includes watch mode, strict, auditable diffs, and real-time breaking change detection.
+Use with [logicstamp-mcp](https://github.com/LogicStamp/logicstamp-mcp) to feed structured context into **Claude**, **Cursor**, and other MCP-compatible assistants.
 
 <div align="center">
 
@@ -213,7 +212,7 @@ The status block only appears when violations change (not on every file change),
 
 *Example terminal output showing violations and session status.*
 
-> ℹ️ **Note:** Strict Watch currently detects breaking changes at the source. Next step: a symbol-level import/export reverse index to trace which consumer files will break.
+> ℹ️ **Note:** Strict Watch currently detects breaking changes at the source. Next step: a symbol-level import/export reverse index to trace which consumer files will break. See [docs/cli/watch.md](docs/cli/watch.md) for complete documentation.
 
 ### One-time Comparison
 
