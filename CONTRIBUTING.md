@@ -9,7 +9,7 @@ This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participatin
 ## Getting Started
 
 ### Prerequisites
-- Node.js >= 18.18.0 (**Node 20+ recommended**)
+- Node.js >= 20
 - npm or yarn
 - Git
 
