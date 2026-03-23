@@ -4,11 +4,12 @@ This roadmap outlines the planned features, improvements, and known limitations 
 
 ## Current Status
 
-**Current Version:** v0.8.0 (Beta)
+**Current Version:** v0.8.1 (Beta)
 
 For detailed release notes and completed features, see [CHANGELOG.md](CHANGELOG.md).
 
 Recent major milestones include:
+- ✅ CLI argument validation and robustness fixes (v0.8.1) - Numeric arg validation for `--depth`/`--max-nodes`, safe compare normalization, token savings bounds
 - ✅ `--strict` flag for compare command (v0.8.0) - Shared violation detection, exit code 1 on breaking changes
 - ✅ Clean command removes TOON format files (v0.8.0) - Aligns with gitignore and TOON support
 - ✅ Git baseline comparison (v0.7.2) - Compare against any git ref with `--baseline git:<ref>`

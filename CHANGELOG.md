@@ -21,6 +21,26 @@ See [docs/limitations.md](docs/limitations.md).
 
 ---
 
+## [0.8.1] - 2026-03-23
+
+### Fixed
+
+- **Validate numeric CLI arguments** ([#154](https://github.com/LogicStamp/logicstamp-context/pull/154))
+  - Added validation for `--depth` and `--max-nodes` CLI arguments
+  - Invalid values (NaN, negative numbers) now show clear error messages and exit
+  - Prevents potential infinite loops from invalid input
+
+- **Fix unsafe array access in compare normalization** ([#155](https://github.com/LogicStamp/logicstamp-context/pull/155))
+  - Replaced unsafe `pop()!` with safe array index access in `normalizeName()`
+  - Prevents potential crashes on edge cases with malformed path strings
+
+- **Add bounds check for token savings calculation** ([#156](https://github.com/LogicStamp/logicstamp-context/pull/156))
+  - Added `calculateSavings()` helper with proper bounds checking
+  - Clamps percentage to valid range [0, 100] to handle edge cases
+  - Prevents Infinity/NaN in stats output when estimates are invalid
+
+---
+
 ## [0.8.0] - 2026-03-18
 
 ### Added
@@ -616,7 +636,9 @@ See [docs/limitations.md](docs/limitations.md).
 
 
 
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.8.1...HEAD
+
+[0.8.1]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.1
 
 [0.8.0]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.0
 
