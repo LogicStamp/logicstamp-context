@@ -133,7 +133,7 @@ The schema completeness test runs as part of the test suite. To ensure schema st
 
 - **Deprecated fields**: Fields marked `@deprecated` in TypeScript (e.g., `entryPathAbs`, `entryPathRel`, `os`) may not be in the schema if they're no longer generated. This is intentional for backward compatibility - old files with these fields may still exist.
 
-- **Conditional validation**: The schema doesn't currently validate language-specific field combinations (e.g., `style` shouldn't exist on `node:api` contracts). This is planned for v0.8.x (see ROADMAP.md).
+- **Conditional validation**: The schema doesn't currently validate language-specific field combinations (e.g., `style` shouldn't exist on `node:api` contracts). This is planned for a future release (see [ROADMAP.md](../ROADMAP.md)).
 
 - **Style mode variants**: The schema supports both `lean` and `full` style modes. Lean mode uses count fields (e.g., `selectorCount`, `componentCount`), while full mode uses arrays (e.g., `selectors`, `components`). Both formats are valid and should be tested separately.
 
