@@ -365,7 +365,7 @@ Page-level layout metadata:
 2. Style information is detected in the component
 3. Components without any style usage will not have a `style` field
 
-See [style.md](./cli/style.md) for detailed documentation on style extraction.
+See [style.md](../cli/style.md) for detailed documentation on style extraction.
 
 ### `semanticHash`
 Unique hash based on the component's logic and contract. Changes when:
@@ -545,6 +545,6 @@ Each node in a bundle's dependency graph contains a contract for that component.
 
 - [hashes.md](./hashes.md) – Detailed information about semantic and file hashes
 - [schema.md](./schema.md) – Complete schema reference for all LogicStamp types
-- [usage.md](./usage.md) – How to generate and use context files with contracts
-- [validate.md](./cli/validate.md) – Contract validation guide
+- [usage.md](../guides/usage.md) – How to generate and use context files with contracts
+- [validate.md](../cli/validate.md) – Contract validation guide
 

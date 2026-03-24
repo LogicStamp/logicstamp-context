@@ -821,7 +821,7 @@ export class PostsController { }   // ❌ Not extracted
 - [Express.js Support](./express.md) - Express.js framework features
 - [TypeScript Support](./typescript.md) - TypeScript-specific features
 - [CLI Reference](../cli/context.md) - Command-line usage
-- [Contract Schema](../schema.md) - UIFContract format
+- [Contract Schema](../reference/schema.md) - UIFContract format
 
 ## NestJS Ecosystem Support
 

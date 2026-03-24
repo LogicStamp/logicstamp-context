@@ -209,4 +209,4 @@ stamp context ./src --out examples/my-nestjs-example.json
 
 - [../README.md](../README.md) - Main documentation
 - [../schema/logicstamp.context.schema.json](../schema/logicstamp.context.schema.json) - JSON Schema
-- [../docs/usage.md](../docs/usage.md) - Detailed usage guide
+- [../docs/guides/usage.md](../docs/guides/usage.md) - Detailed usage guide

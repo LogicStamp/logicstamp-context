@@ -23,8 +23,8 @@ Recent milestones:
 
 | Item | Status | Notes |
 |------|--------|-------|
-| **Emit Detection** | ✅ v0.3.7 | Only extracts prop-based handlers. See [limitations.md](docs/limitations.md#fixed--resolved) |
-| **Dynamic Class Parsing** | ✅ Phase 1 (v0.3.9), 🟡 Phase 2 planned | ~70-80% coverage. Phase 2: object lookups, cross-file refs. See [limitations.md](docs/limitations.md#dynamic-class-parsing) |
+| **Emit Detection** | ✅ v0.3.7 | Only extracts prop-based handlers. See [limitations.md](docs/reference/limitations.md#fixed--resolved) |
+| **Dynamic Class Parsing** | ✅ Phase 1 (v0.3.9), 🟡 Phase 2 planned | ~70-80% coverage. Phase 2: object lookups, cross-file refs. See [limitations.md](docs/reference/limitations.md#dynamic-class-parsing) |
 
 ### Medium Priority
 
@@ -32,7 +32,7 @@ Recent milestones:
 |------|--------|-------|
 | **CSS-in-JS** | ✅ v0.5.1 | All major libs: styled-components, Emotion, MUI, ShadCN, Radix, Framer, Chakra, Ant Design |
 | **Third-Party Info** | 🟡 Phase 1 done | Package names + versions. Phase 2: prop types from `.d.ts` |
-| **TypeScript Types** | 🟡 Partial | Missing: generics, complex unions/intersections. See [limitations.md](docs/limitations.md#typescript-types) |
+| **TypeScript Types** | 🟡 Partial | Missing: generics, complex unions/intersections. See [limitations.md](docs/reference/limitations.md#typescript-types) |
 | **Project-Level Insights** | 🔴 Not started | Cross-folder relationships, project-wide stats in `context_main.json` |
 
 ### Low Priority
@@ -95,7 +95,7 @@ Recent milestones:
 
 ## Known Limitations
 
-See [docs/limitations.md](docs/limitations.md) for full details with code evidence.
+See [docs/reference/limitations.md](docs/reference/limitations.md) for full details with code evidence.
 
 **Summary:** Dynamic classes Phase 1 done (~70-80%); TypeScript generics/complex unions missing; third-party prop types missing (names/versions done); no project-level insights; JSDoc only for comments; test files excluded by design.
 

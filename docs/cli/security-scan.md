@@ -341,6 +341,6 @@ If legitimate secrets aren't being detected:
 ## See Also
 
 - [Security Policy](../../SECURITY.md) - Complete security policy, best practices, and handling of sensitive information
-- [.stampignore Format](../stampignore.md) - Documentation on `.stampignore` file format (optional, independent of security scan)
+- [.stampignore Format](../reference/stampignore.md) - Documentation on `.stampignore` file format (optional, independent of security scan)
 - [`stamp context`](./context.md) - Generate context
 

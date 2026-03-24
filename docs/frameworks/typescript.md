@@ -253,5 +253,5 @@ LogicStamp respects your `tsconfig.json`:
 
 - [React Support](./react.md) - TypeScript with React
 - [Next.js Support](./nextjs.md) - TypeScript with Next.js
-- [UIF Contracts](../uif_contracts.md) - Component contract types
+- [UIF Contracts](../reference/uif-contracts.md) - Component contract types
 
