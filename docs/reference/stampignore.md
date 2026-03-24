@@ -124,7 +124,7 @@ The `stamp ignore` command:
 - Prevents duplicate entries
 - Normalizes paths correctly
 
-**See [ignore.md](cli/ignore.md) for complete documentation on the `stamp ignore` command.**
+**See [ignore.md](../cli/ignore.md) for complete documentation on the `stamp ignore` command.**
 
 ### Manual Creation
 
@@ -306,13 +306,13 @@ Or edit it to remove entries you no longer need.
 
 ## Related Commands
 
-- [`stamp ignore`](cli/ignore.md) - Add files/folders to `.stampignore` (recommended way to manage exclusions)
-- [`stamp context`](cli/context.md) - Compile context (respects `.stampignore`)
-- [`stamp context style`](cli/style.md) - Compile context with style metadata (respects `.stampignore`, equivalent to `stamp context --include-style`)
-- [`stamp security scan`](cli/security-scan.md) - Scan for secrets in your codebase
+- [`stamp ignore`](../cli/ignore.md) - Add files/folders to `.stampignore` (recommended way to manage exclusions)
+- [`stamp context`](../cli/context.md) - Compile context (respects `.stampignore`)
+- [`stamp context style`](../cli/style.md) - Compile context with style metadata (respects `.stampignore`, equivalent to `stamp context --include-style`)
+- [`stamp security scan`](../cli/security-scan.md) - Scan for secrets in your codebase
 
 ## See Also
 
-- [Context Compilation](cli/context.md) - How context compilation works with file exclusion
-- [Init Command](cli/init.md) - Project initialization
+- [Context Compilation](../cli/context.md) - How context compilation works with file exclusion
+- [Init Command](../cli/init.md) - Project initialization
 

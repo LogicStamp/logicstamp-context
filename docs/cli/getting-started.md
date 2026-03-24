@@ -171,7 +171,7 @@ Each folder's `context.json` contains component contracts:
 }
 ```
 
-📋 **See [Schema Documentation](../schema.md)** for complete format details.
+📋 **See [Schema Documentation](../reference/schema.md)** for complete format details.
 
 ## Common Options
 
@@ -421,11 +421,11 @@ stamp context --strict-missing || exit 1
 
 ## Next Steps
 
-- **[Usage Guide](../usage.md)** - Comprehensive command reference
+- **[Usage Guide](../guides/usage.md)** - Comprehensive command reference
 - **[Watch Mode](watch.md)** - Auto-regenerate context as you code
-- **[Schema Documentation](../schema.md)** - Understanding output format
+- **[Schema Documentation](../reference/schema.md)** - Understanding output format
 - **[Framework Guides](../frameworks/)** - Framework-specific documentation
-- **[Troubleshooting](../usage.md#troubleshooting)** - Common issues and solutions
+- **[Troubleshooting](../guides/usage.md#troubleshooting)** - Common issues and solutions
 
 ## Quick Reference
 
@@ -460,4 +460,4 @@ stamp ignore <file>
 
 ---
 
-**Ready to dive deeper?** Check out the [Usage Guide](../usage.md) for comprehensive documentation on all commands and options.
+**Ready to dive deeper?** Check out the [Usage Guide](../guides/usage.md) for comprehensive documentation on all commands and options.

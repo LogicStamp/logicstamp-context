@@ -181,7 +181,7 @@ This ensures consistent formatting regardless of how you specify paths.
 - `src/**/*.test.ts` - Matches all `.test.ts` files under `src/`
 - `config/*.json` - Matches all `.json` files directly in `config/`
 
-See [stampignore.md](../stampignore.md) for more details on glob pattern syntax.
+See [stampignore.md](../reference/stampignore.md) for more details on glob pattern syntax.
 
 ## Best Practices
 
@@ -193,7 +193,7 @@ See [stampignore.md](../stampignore.md) for more details on glob pattern syntax.
 
 ## See Also
 
-- [stampignore.md](../stampignore.md) - Complete `.stampignore` file format and usage guide
+- [stampignore.md](../reference/stampignore.md) - Complete `.stampignore` file format and usage guide
 - [context.md](context.md) - How `.stampignore` affects context compilation
 - [security-scan.md](security-scan.md) - Security scanning to detect secrets in your codebase
 

@@ -328,7 +328,7 @@ LogicStamp Context generates structured JSON bundles organized by folder:
 }
 ```
 
-📋 **See [docs/schema.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/schema.md)** for complete format documentation.
+📋 **See [docs/reference/schema.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/reference/schema.md)** for complete format documentation.
 
 ## Installation
 
@@ -402,7 +402,7 @@ stamp context clean [path]         # Remove generated files
 | **React** | Full | Components, hooks, props, styles |
 | **Next.js** | Full | App Router roles, segment paths, metadata |
 | **Vue 3** | Partial | Composition API (TS/TSX only, not .vue SFC) |
-| **Express.js** | Full | Routes, API signatures (middleware not extracted; see [limitations](docs/limitations.md)) |
+| **Express.js** | Full | Routes, API signatures (middleware not extracted; see [limitations](docs/reference/limitations.md)) |
 | **NestJS** | Full | Controllers, decorators, API signatures |
 | **UI Libraries** | Full | Material UI, ShadCN, Radix, Tailwind, Styled Components, SCSS, Chakra UI, Ant Design (component usage, props, composition; not raw CSS) |
 
@@ -413,18 +413,18 @@ stamp context clean [path]         # Remove generated files
 **Full documentation at [logicstamp.dev/docs](https://logicstamp.dev/docs)**
 
 - [Getting Started Guide](https://logicstamp.dev/docs/getting-started)
-- [Usage Guide](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md)
-- [Monorepo Support](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/monorepo.md)
-- [Output Schema](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/schema.md)
-- [UIF Contracts](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/uif_contracts.md)
+- [Usage Guide](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/guides/usage.md)
+- [Monorepo Support](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/guides/monorepo.md)
+- [Output Schema](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/reference/schema.md)
+- [UIF Contracts](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/reference/uif-contracts.md)
 - [Watch Mode](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/cli/watch.md)
-- [Troubleshooting](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/usage.md#troubleshooting)
+- [Troubleshooting](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/guides/usage.md#troubleshooting)
 
 ## Known Limitations
 
 LogicStamp Context is in beta. Some edge cases are not fully supported.
 
-📋 **See [docs/limitations.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/limitations.md)** for the full list.
+📋 **See [docs/reference/limitations.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/reference/limitations.md)** for the full list.
 
 ## Requirements
 

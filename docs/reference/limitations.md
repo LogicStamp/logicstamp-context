@@ -1,10 +1,10 @@
 # Known Limitations
 
-Things that don't work perfectly yet. See [CHANGELOG.md](../CHANGELOG.md) for release notes and completed fixes.
+Things that don't work perfectly yet. See [CHANGELOG.md](../../CHANGELOG.md) for release notes and completed fixes.
 
 ## ⚠️ Breaking Changes
 
-**v0.7.0** — `stamp context style` default is now `--style-mode lean` instead of `full`. Use `--style-mode full` for previous behavior. [Details](../CHANGELOG.md#070---2026-03-03)
+**v0.7.0** — `stamp context style` default is now `--style-mode lean` instead of `full`. Use `--style-mode full` for previous behavior. [Details](../../CHANGELOG.md#070---2026-03-03)
 
 ## Overview
 
@@ -18,7 +18,7 @@ Things that don't work perfectly yet. See [CHANGELOG.md](../CHANGELOG.md) for re
 
 ## Fixed / Resolved
 
-These are no longer limitations. See [CHANGELOG](../CHANGELOG.md) for details.
+These are no longer limitations. See [CHANGELOG](../../CHANGELOG.md) for details.
 
 | Fix | Version |
 |-----|---------|
@@ -53,7 +53,7 @@ These are no longer limitations. See [CHANGELOG](../CHANGELOG.md) for details.
 **Phase 2 pending** — Prop types from `.d.ts` in node_modules.
 
 ### Next.js
-**Partial** — Route roles, segment paths, metadata exports ✅ (v0.3.10). Missing: layout hierarchy, data fetching types, route handler request/response types, middleware analysis. See [frameworks/nextjs.md](frameworks/nextjs.md).
+**Partial** — Route roles, segment paths, metadata exports ✅ (v0.3.10). Missing: layout hierarchy, data fetching types, route handler request/response types, middleware analysis. See [frameworks/nextjs.md](../frameworks/nextjs.md).
 
 ### Project-Level Insights
 **Missing** — No cross-folder relationships or project-wide stats in `context_main.json`. Only folder index with token estimates. Location: `src/cli/commands/context/fileWriter.ts`.
@@ -65,8 +65,8 @@ These are no longer limitations. See [CHANGELOG](../CHANGELOG.md) for details.
 - **Runtime behavior** — Static analysis only (expected).
 - **Route extraction** — May miss routes when JSX attribute values have unusual formatting (e.g., `{"\/x"}`). Location: `src/extractors/react/eventExtractor.ts` (`extractJsxRoutes`). Extractor only matches quoted strings to avoid false positives from variables.
 - **Code content** — Not captured (by design for token efficiency).
-- **Backend** — Middleware, guards, validation schemas not extracted. See [express.md](frameworks/express.md) and framework docs.
-- **Dependency graph edges** — Edges are built; empty `edges: []` can mean no dependencies, unresolved imports, or internal-only components. Default `--depth` is 2 (depth 1 = no nested edges). See [usage.md](usage.md#dependency-graph).
+- **Backend** — Middleware, guards, validation schemas not extracted. See [express.md](../frameworks/express.md) and framework docs.
+- **Dependency graph edges** — Edges are built; empty `edges: []` can mean no dependencies, unresolved imports, or internal-only components. Default `--depth` is 2 (depth 1 = no nested edges). See [usage.md](../guides/usage.md#dependency-graph).
 - **Strict watch** — Baseline is session-scoped (doesn't update during a run). New/empty projects show all changes as "added."
 
 ---
@@ -81,13 +81,13 @@ These are no longer limitations. See [CHANGELOG](../CHANGELOG.md) for details.
 
 ## Git Baseline Comparison
 
-✅ **v0.7.2** — `stamp context compare --baseline git:<ref>` compares current code against any git ref. Uses worktrees; hash-only changes filtered to avoid TypeScript resolution false positives. Prop/emit type changes only detected in direct file mode, not git baseline. See [compare.md](cli/compare.md).
+✅ **v0.7.2** — `stamp context compare --baseline git:<ref>` compares current code against any git ref. Uses worktrees; hash-only changes filtered to avoid TypeScript resolution false positives. Prop/emit type changes only detected in direct file mode, not git baseline. See [compare.md](../cli/compare.md).
 
 ---
 
 ## Roadmap
 
-See [ROADMAP.md](../ROADMAP.md) for priorities and implementation plans.
+See [ROADMAP.md](../../ROADMAP.md) for priorities and implementation plans.
 
 **High:** Dynamic class Phase 2.
 

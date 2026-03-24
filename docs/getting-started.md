@@ -110,7 +110,7 @@ LogicStamp Context generates structured JSON bundles:
 }
 ```
 
-📋 **See [Schema Documentation](schema.md)** for complete format details.
+📋 **See [Schema Documentation](reference/schema.md)** for complete format details.
 
 ## Requirements
 
@@ -124,7 +124,7 @@ LogicStamp Context generates structured JSON bundles:
 | **React** | Full | Components, hooks, props, styles |
 | **Next.js** | Full | App Router roles, segment paths, metadata |
 | **Vue 3** | Partial | Composition API (TS/TSX only, not .vue SFC) |
-| **Express.js** | Full | Routes, API signatures (middleware not extracted; see [limitations](limitations.md)) |
+| **Express.js** | Full | Routes, API signatures (middleware not extracted; see [limitations](reference/limitations.md)) |
 | **NestJS** | Full | Controllers, decorators, API signatures |
 | **UI Libraries** | Full | Material UI, ShadCN, Radix, Tailwind, Styled Components, SCSS, Chakra UI, Ant Design |
 
@@ -134,9 +134,9 @@ LogicStamp Context generates structured JSON bundles:
 
 ### For CLI Users
 1. **[CLI Getting Started Guide](cli/getting-started.md)** - Complete CLI setup and usage
-2. **[Usage Guide](usage.md)** - Comprehensive command reference
+2. **[Usage Guide](guides/usage.md)** - Comprehensive command reference
 3. **[Watch Mode](cli/watch.md)** - Auto-regenerate context as you code (includes strict watch mode)
-4. **[Schema Documentation](schema.md)** - Understanding output format
+4. **[Schema Documentation](reference/schema.md)** - Understanding output format
 
 ### For MCP Users
 1. **[MCP Getting Started Guide](mcp/getting-started.md)** - MCP server setup
@@ -201,8 +201,8 @@ LogicStamp Context includes **automatic secret protection**:
 
 - **New to LogicStamp?** → Start with [CLI Getting Started](cli/getting-started.md)
 - **Using AI Assistants?** → Check out [MCP Getting Started](https://logicstamp.dev/docs/mcp/getting-started)
-- **Want to understand output?** → Read [Schema Documentation](schema.md)
-- **Need command reference?** → See [Usage Guide](usage.md)
+- **Want to understand output?** → Read [Schema Documentation](reference/schema.md)
+- **Need command reference?** → See [Usage Guide](guides/usage.md)
 
 ---
 

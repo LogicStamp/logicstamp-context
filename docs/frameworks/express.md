@@ -606,7 +606,7 @@ app.get('/users', getUsers);
 - [NestJS Support](./nestjs.md) - NestJS framework features
 - [TypeScript Support](./typescript.md) - TypeScript-specific features
 - [CLI Reference](../cli/context.md) - Command-line usage
-- [Contract Schema](../schema.md) - UIFContract format
+- [Contract Schema](../reference/schema.md) - UIFContract format
 
 ## Express Ecosystem Support
 
