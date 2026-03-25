@@ -130,21 +130,54 @@ function Header() {
 
 ## Style Extraction
 
-When using `stamp context --include-style`, CSS/SCSS Module information is included:
+**Style output shape:** Style metadata lives on the contract under `style`, with SCSS module paths and details under `style.styleSources` (see [UIF contracts](../reference/uif-contracts.md)). Default is **`--style-mode lean`**: `scssModule` path is kept and `scssDetails` keeps **feature flags only** (`selectors` / `properties` arrays are omitted). **`--style-mode full`** includes selector and property arrays when available. See [Style mode: lean vs full](../cli/style.md#style-mode-lean-vs-full).
+
+When using `stamp context --include-style`, CSS/SCSS Module information is included under `style.styleSources`.
+
+**Example (`--style-mode full`):**
 
 ```json
 {
   "style": {
-    "sources": ["scssModule"],
-    "scssModule": "./Button.module.scss",
-    "scssDetails": {
-      "selectors": [".button", ".button:hover"],
-      "properties": ["padding", "background-color", "color", "border-radius"],
-      "features": {
-        "variables": true,
-        "nesting": true,
-        "mixins": false
+    "styleSources": {
+      "scssModule": "./Button.module.scss",
+      "scssDetails": {
+        "selectors": [".button", ".button:hover"],
+        "properties": ["padding", "background-color", "color", "border-radius"],
+        "features": {
+          "variables": true,
+          "nesting": true,
+          "mixins": false
+        }
       }
+    },
+    "summary": {
+      "mode": "full",
+      "sources": ["scss"]
+    }
+  }
+}
+```
+
+**Example (`--style-mode lean`, default):**
+
+```json
+{
+  "style": {
+    "styleSources": {
+      "scssModule": "./Button.module.scss",
+      "scssDetails": {
+        "features": {
+          "variables": true,
+          "nesting": true,
+          "mixins": false
+        }
+      }
+    },
+    "summary": {
+      "mode": "lean",
+      "sources": ["scss"],
+      "fullModeBytes": 890
     }
   }
 }
@@ -262,11 +295,14 @@ $primary-color: #007bff;
 ## Usage
 
 ```bash
-# Extract CSS/SCSS Module information
+# Extract CSS/SCSS Module information (lean style output by default)
 stamp context --include-style
 
 # Or use the style command
 stamp context style
+
+# Include selector/property arrays in style JSON
+stamp context style --style-mode full
 ```
 
 ## Project Structure

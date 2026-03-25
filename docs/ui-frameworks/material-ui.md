@@ -262,22 +262,56 @@ function Variants() {
 
 ## Style Extraction
 
-When using `stamp context --include-style`, Material UI styling is included:
+**Style output shape:** Material UI data is under `style.styleSources.materialUI` (camelCase; see [UIF contracts](../reference/uif-contracts.md)). Default **`--style-mode lean`** keeps **`features` only** (drops `components` and `packages` arrays). **`--style-mode full`** includes ranked component and package arrays. See [Style mode: lean vs full](../cli/style.md#style-mode-lean-vs-full).
+
+When using `stamp context --include-style`, Material UI styling is included.
+
+**Example (`--style-mode full`):**
 
 ```json
 {
   "style": {
-    "sources": ["material-ui"],
-    "material-ui": {
-      "components": ["Button", "Card", "TextField"],
-      "packages": ["@mui/material"],
-      "features": {
-        "usesTheme": true,
-        "usesSxProp": true,
-        "usesStyled": false,
-        "usesMakeStyles": false,
-        "usesSystemProps": true
+    "styleSources": {
+      "materialUI": {
+        "components": ["Button", "Card", "TextField"],
+        "packages": ["@mui/material"],
+        "features": {
+          "usesTheme": true,
+          "usesSxProp": true,
+          "usesStyled": false,
+          "usesMakeStyles": false,
+          "usesSystemProps": true
+        }
       }
+    },
+    "summary": {
+      "mode": "full",
+      "sources": ["material-ui"]
+    }
+  }
+}
+```
+
+**Example (`--style-mode lean`, default):**
+
+```json
+{
+  "style": {
+    "styleSources": {
+      "materialUI": {
+        "features": {
+          "usesTheme": true,
+          "usesSxProp": true,
+          "usesStyled": false,
+          "usesMakeStyles": false,
+          "usesSystemProps": true
+        }
+      }
+    },
+    "summary": {
+      "mode": "lean",
+      "sources": ["material-ui"],
+      "fullModeBytes": 480
     }
   }
 }
@@ -358,11 +392,14 @@ function Responsive() {
 ## Usage
 
 ```bash
-# Extract Material UI components and styles
+# Extract Material UI components and styles (lean style output by default)
 stamp context --include-style
 
 # Or use the style command
 stamp context style
+
+# Include full component/package arrays in style JSON
+stamp context style --style-mode full
 ```
 
 ## Material UI Project Structure

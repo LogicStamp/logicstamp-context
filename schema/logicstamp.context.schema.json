@@ -550,6 +550,7 @@
           "$ref": "#/definitions/AnimationMetadata"
         },
         "pageLayout": {
+          "description": "Reserved in schema. Not emitted by stamp context style extraction in current releases; forward-compatible optional field.",
           "$ref": "#/definitions/PageLayoutMetadata"
         },
         "summary": {
@@ -1162,6 +1163,7 @@
     },
     "PageLayoutMetadata": {
       "type": "object",
+      "description": "Optional page-level layout metadata. Schema shape for validation and future use; stamp context does not populate this object today.",
       "properties": {
         "pageRole": {
           "type": "string",

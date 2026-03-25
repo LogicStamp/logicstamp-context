@@ -276,21 +276,54 @@ function SystemProps() {
 
 ## Style Extraction
 
-When using `stamp context --include-style`, Chakra UI styling is included:
+**Style output shape:** Chakra UI data is under `style.styleSources.chakraUI` (see [UIF contracts](../reference/uif-contracts.md)). Default **`--style-mode lean`** keeps **`features` only**. **`--style-mode full`** adds `components` and `packages` arrays. See [Style mode: lean vs full](../cli/style.md#style-mode-lean-vs-full).
+
+When using `stamp context --include-style`, Chakra UI styling is included.
+
+**Example (`--style-mode full`):**
 
 ```json
 {
   "style": {
-    "sources": ["chakra"],
-    "chakra": {
-      "components": ["Button", "Card", "Box", "Stack", "Input"],
-      "packages": ["@chakra-ui/react"],
-      "features": {
-        "usesTheme": true,
-        "usesColorMode": true,
-        "usesResponsiveProps": true,
-        "usesSystemProps": true
+    "styleSources": {
+      "chakraUI": {
+        "components": ["Button", "Card", "Box", "Stack", "Input"],
+        "packages": ["@chakra-ui/react"],
+        "features": {
+          "usesTheme": true,
+          "usesColorMode": true,
+          "usesResponsiveProps": true,
+          "usesSystemProps": true
+        }
       }
+    },
+    "summary": {
+      "mode": "full",
+      "sources": ["chakra"]
+    }
+  }
+}
+```
+
+**Example (`--style-mode lean`, default):**
+
+```json
+{
+  "style": {
+    "styleSources": {
+      "chakraUI": {
+        "features": {
+          "usesTheme": true,
+          "usesColorMode": true,
+          "usesResponsiveProps": true,
+          "usesSystemProps": true
+        }
+      }
+    },
+    "summary": {
+      "mode": "lean",
+      "sources": ["chakra"],
+      "fullModeBytes": 495
     }
   }
 }
@@ -390,11 +423,14 @@ function MyComponent() {
 ## Usage
 
 ```bash
-# Extract Chakra UI components and styles
+# Extract Chakra UI components and styles (lean style output by default)
 stamp context --include-style
 
 # Or use the style command
 stamp context style
+
+# Include full component/package arrays in style JSON
+stamp context style --style-mode full
 ```
 
 ## Chakra UI Project Structure

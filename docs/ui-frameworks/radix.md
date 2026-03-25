@@ -142,6 +142,8 @@ function AccessibleDialog() {
 
 ## Style Extraction
 
+**Style output shape:** Radix usage is under `style.styleSources.radixUI` (`primitives`, `patterns`, `accessibility`, `features` — see [UIF contracts](../reference/uif-contracts.md)). Default **`--style-mode lean`** keeps **`accessibility`** and **`features`** and omits verbose **`primitives`** / **`patterns`** structures. **`--style-mode full`** includes those objects. Tailwind or CSS classes on Radix primitives are reflected separately (e.g. under `tailwind` or SCSS fields) when applicable. See [Style mode: lean vs full](../cli/style.md#style-mode-lean-vs-full).
+
 Radix components are analyzed for their styling (typically Tailwind or CSS):
 
 ```tsx
@@ -171,25 +173,66 @@ function StyledDialog() {
 
 ### Package Detection
 
-LogicStamp identifies which Radix packages are used:
+LogicStamp records Radix primitives as a map from package suffix (e.g. `react-dialog`) to component names used in the file.
+
+**Example (`--style-mode full`):**
 
 ```json
 {
   "style": {
-    "sources": ["radix"],
-    "radix": {
-      "packages": [
-        "@radix-ui/react-dialog",
-        "@radix-ui/react-dropdown-menu",
-        "@radix-ui/react-popover"
-      ],
-      "components": [
-        "Dialog",
-        "DialogTrigger",
-        "DialogContent",
-        "DropdownMenu",
-        "DropdownMenuItem"
-      ]
+    "styleSources": {
+      "radixUI": {
+        "primitives": {
+          "react-dialog": ["Dialog", "DialogTrigger", "DialogContent"],
+          "react-dropdown-menu": ["DropdownMenu", "DropdownMenuItem"]
+        },
+        "patterns": {
+          "controlled": ["Dialog"],
+          "uncontrolled": [],
+          "portals": 1,
+          "asChild": 2
+        },
+        "accessibility": {
+          "usesFocusManagement": true,
+          "usesKeyboardNav": true,
+          "usesModal": true
+        },
+        "features": {
+          "primitiveCount": 5,
+          "compositionDepth": "moderate"
+        }
+      }
+    },
+    "summary": {
+      "mode": "full",
+      "sources": ["radix"]
+    }
+  }
+}
+```
+
+**Example (`--style-mode lean`, default):**
+
+```json
+{
+  "style": {
+    "styleSources": {
+      "radixUI": {
+        "accessibility": {
+          "usesFocusManagement": true,
+          "usesKeyboardNav": true,
+          "usesModal": true
+        },
+        "features": {
+          "primitiveCount": 5,
+          "compositionDepth": "moderate"
+        }
+      }
+    },
+    "summary": {
+      "mode": "lean",
+      "sources": ["radix"],
+      "fullModeBytes": 640
     }
   }
 }
@@ -225,11 +268,14 @@ function ControlledDialog() {
 ## Usage
 
 ```bash
-# Extract Radix components and styles
+# Extract Radix components and styles (lean style output by default)
 stamp context --include-style
 
 # Or use the style command
 stamp context style
+
+# Include primitives/patterns maps in style JSON
+stamp context style --style-mode full
 ```
 
 ## Radix Project Structure

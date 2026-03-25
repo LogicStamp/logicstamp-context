@@ -244,24 +244,56 @@ function MyComponent() {
 
 ## Style Extraction
 
-When using `stamp context --include-style`, styled-components information is included:
+**Style output shape:** styled-components / Emotion data is under `style.styleSources.styledComponents` on the contract (see [UIF contracts](../reference/uif-contracts.md)). Default **`--style-mode lean`** replaces the `components` array with **`componentCount`**. **`--style-mode full`** includes the sorted `components` array (capped in extraction). See [Style mode: lean vs full](../cli/style.md#style-mode-lean-vs-full).
+
+When using `stamp context --include-style`, styled-components information is included.
+
+**Example (`--style-mode full`):**
 
 ```json
 {
-  "styleSources": {
-    "styledComponents": {
-      "components": ["button", "div", "section"],
-      "usesTheme": true,
-      "usesCssProp": false
+  "style": {
+    "styleSources": {
+      "styledComponents": {
+        "components": ["button", "div", "section"],
+        "usesTheme": true,
+        "usesCssProp": false
+      }
+    },
+    "summary": {
+      "mode": "full",
+      "sources": ["styled-components"]
+    }
+  }
+}
+```
+
+**Example (`--style-mode lean`, default):**
+
+```json
+{
+  "style": {
+    "styleSources": {
+      "styledComponents": {
+        "componentCount": 3,
+        "usesTheme": true,
+        "usesCssProp": false
+      }
+    },
+    "summary": {
+      "mode": "lean",
+      "sources": ["styled-components"],
+      "fullModeBytes": 180
     }
   }
 }
 ```
 
 **Fields:**
-- `components`: Array of base element/component names (e.g., `"button"`, `"div"`, `"Button"`) extracted from styled declarations, sorted and limited to 10
-- `usesTheme`: Boolean indicating if theme usage is detected (via `props.theme`, `useTheme()` hook, or theme references in template literals)
-- `usesCssProp`: Boolean indicating if `css` prop is used (Emotion feature)
+- **Full mode:** `components` — array of base element/component names (e.g., `"button"`, `"div"`, `"Button"`) from styled declarations, sorted and limited to **10**
+- **Lean mode:** `componentCount` — number of styled targets (no name list)
+- `usesTheme`: Boolean when theme usage is detected (via `props.theme`, `useTheme()`, or theme references in template literals)
+- `usesCssProp`: Boolean when the `css` prop is used (Emotion)
 
 ## Styled Components-Specific Features
 
@@ -351,11 +383,14 @@ const AnimatedBox = styled.div`
 ## Usage
 
 ```bash
-# Extract styled-components/Emotion information
+# Extract styled-components/Emotion information (lean style output by default)
 stamp context --include-style
 
 # Or use the style command
 stamp context style
+
+# Include styled target name arrays in style JSON
+stamp context style --style-mode full
 ```
 
 ## Project Structure

@@ -74,10 +74,6 @@
                 library: framer-motion
                 type: fade-in
                 trigger: inView
-              pageLayout:
-                pageRole: hero
-                sections[1]: hero
-                ctaCount: 1
           codeHeader: "/**\n * @uif Contract 0.3\n *\n * Description: HeroSection - Landing page hero with animated content\n *\n * Version (Component Composition):\n *   variables: []\n *   hooks: [\"useInView\"]\n *   components: [\"motion.div\",\"Button\"]\n *   functions: [\"HeroSection\"]\n *   imports: [\"framer-motion\",\"./Button\",\"react\"]\n *\n * Logic Signature:\n *   props: {\"title\":\"string\",\"subtitle\":{\"type\":\"string\",\"optional\":true},\"ctaText\":\"string\"}\n *   emits: {}\n *   state: {}\n *\n * Hashes:\n *   semantic: uif:b2c3d4e5f6g7h8i9j0k1l2m3\n *   file: uif:n4o5p6q7r8s9t0u1v2w3x4y5\n *\n * Style Metadata:\n *   - Tailwind CSS: 22 classes (layout, spacing, colors, typography)\n *   - Framer Motion: viewport animations with fadeIn/slideUp variants\n *   - Hero pattern: flex layout with centered content\n *   - Visual: blue-purple gradient, white text, responsive breakpoints\n */"
         -
           entryId: src/components/Button.tsx

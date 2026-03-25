@@ -240,49 +240,80 @@ Custom classes from your Tailwind configuration are detected:
 
 ## Style Extraction
 
-When using `stamp context --include-style`, Tailwind classes are included in the style metadata:
+**Style output shape:** Contracts expose style data under `style` (see [UIF contracts](../reference/uif-contracts.md)). `stamp context style` and `stamp context --include-style` default to **`--style-mode lean`**: Tailwind output keeps `classCount`, `categoriesUsed`, and optional `breakpoints`, and omits per-category class arrays. Use **`--style-mode full`** for `style.styleSources.tailwind.categories` (record of category name → class arrays). Both modes use the same extraction. See [Style mode: lean vs full](../cli/style.md#style-mode-lean-vs-full).
+
+When style extraction is enabled, Tailwind classes are included under `style.styleSources.tailwind`.
+
+**Example (`--style-mode full`):**
 
 ```json
 {
   "style": {
-    "sources": ["tailwind"],
-    "tailwind": {
-      "layout": ["flex", "flex-col"],
-      "spacing": ["p-6", "gap-4"],
-      "sizing": ["w-full"],
-      "typography": ["text-2xl", "font-bold", "text-gray-900"],
-      "colors": ["bg-white", "bg-blue-500", "text-gray-600"],
-      "borders": ["rounded-lg", "ring-2"],
-      "effects": ["shadow-md", "opacity-50"],
-      "transitions": ["transition-colors"],
-      "transforms": ["scale-105"],
-      "interactivity": ["cursor-pointer"],
-      "svg": ["fill-blue-500"],
-      "other": ["custom-class"],
-      "breakpoints": ["sm", "md", "lg"]
+    "styleSources": {
+      "tailwind": {
+        "categories": {
+          "layout": ["flex", "flex-col"],
+          "spacing": ["gap-4", "p-6"],
+          "sizing": ["w-full"],
+          "typography": ["font-bold", "text-2xl", "text-gray-900"],
+          "colors": ["bg-blue-500", "bg-white", "text-gray-600"],
+          "borders": ["ring-2", "rounded-lg"],
+          "effects": ["opacity-50", "shadow-md"],
+          "transitions": ["transition-colors"],
+          "transforms": ["scale-105"],
+          "interactivity": ["cursor-pointer"],
+          "svg": ["fill-blue-500"],
+          "other": ["custom-class"]
+        },
+        "breakpoints": ["sm", "md", "lg"],
+        "classCount": 42
+      }
+    },
+    "summary": {
+      "mode": "full",
+      "sources": ["tailwind"]
+    }
+  }
+}
+```
+
+**Example (`--style-mode lean`, default):**
+
+```json
+{
+  "style": {
+    "styleSources": {
+      "tailwind": {
+        "classCount": 42,
+        "categoriesUsed": ["layout", "spacing", "colors", "typography", "borders", "effects"],
+        "breakpoints": ["sm", "md", "lg"]
+      }
+    },
+    "summary": {
+      "mode": "lean",
+      "sources": ["tailwind"],
+      "fullModeBytes": 2100
     }
   }
 }
 ```
 
 **Output format:**
-- All categories return **arrays** of class names (JSON-ready)
-- Arrays are **sorted** alphabetically
-- Up to **15 classes per category** are returned to keep context bundles focused
-- Classes include their full variant prefixes (e.g., `md:hover:bg-blue-500`)
-- Breakpoints are extracted separately as an array of breakpoint names
-- Uncategorized classes go into the `other` category
-
-**Note:** Unlike component libraries that limit total components, Tailwind limits classes per category (layout, spacing, colors, etc.). This means you can have up to 15 layout classes, 15 spacing classes, 15 color classes, etc., providing comprehensive coverage while maintaining token efficiency.
+- **Full mode:** `categories` is a record of category → **sorted** class arrays (up to **15 classes per category**). Classes keep full variant prefixes (e.g., `md:hover:bg-blue-500`). Breakpoints are listed separately. Uncategorized utilities go under `other`.
+- **Lean mode:** No `categories` object; `categoriesUsed` lists which category keys had classes. `classCount` is the total number of distinct classes collected. `summary.fullModeBytes` (when present) estimates serialized size of the full-mode tailwind object for comparison.
+- **Note:** Unlike component libraries that cap total components, Tailwind caps **per category** in full mode (up to 15 layout, 15 spacing, etc.).
 
 ## Usage
 
 ```bash
-# Extract Tailwind classes
+# Extract Tailwind classes (lean style output by default)
 stamp context --include-style
 
 # Or use the style command
 stamp context style
+
+# Verbose per-category class arrays
+stamp context style --style-mode full
 ```
 
 ## Tailwind Configuration
