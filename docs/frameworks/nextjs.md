@@ -4,18 +4,17 @@ LogicStamp Context provides enhanced support for Next.js applications, automatic
 
 ## Next.js Detection
 
-LogicStamp automatically identifies Next.js projects by:
+LogicStamp scans TypeScript and TSX files anywhere in the project, including Next.js folders.
 
-- **File structure**: Detects `app/`, `pages/`, and `src/app/` directories
-- **Next.js imports**: Detects imports from `next`, `next/link`, `next/router`, etc.
-- **Route files**: Identifies page and layout files based on Next.js conventions
-- **API routes**: Detects API route handlers in `pages/api/` or `app/api/`
+- **Imports**: `next`, `next/link`, `next/router`, etc. appear in extracted import lists like any other module.
+- **App Router metadata** (`isInAppDir`, `routeRole`, `segmentPath`, and `metadata` / `generateMetadata` handling) is only produced for files under an App Router tree: path contains `app/` or `src/app/` as a directory segment (see **App Router** below). This is path-based, not import-based.
+- **Pages Router** (`pages/`, `pages/api/`): files are still analyzed as React or TypeScript modules, but they do **not** receive those App Router fields. Filename conventions like `pages/index.tsx` do not map to `routeRole: 'page'` or a computed `segmentPath` in the contract.
 
 ## What Gets Extracted
 
 ### App Router (Next.js 13+)
 
-LogicStamp detects and extracts App Router patterns:
+For files under `app/` or `src/app/`, LogicStamp fills the `nextjs` metadata object where applicable:
 
 ```
 app/
@@ -29,49 +28,58 @@ app/
       route.ts        → API route
 ```
 
-**Detected metadata:**
-- `isInAppDir: true` - File is in `/app/` directory
-- `directive: 'client' | 'server'` - 'use client' or 'use server' directive
-- `routeRole: 'page' | 'layout' | 'loading' | 'error' | 'not-found' | 'template' | 'default' | 'route'` - Route role based on filename
-- `segmentPath: string` - Route path derived from file structure (e.g., `/blog/[slug]`, `/api/users`)
-- `metadata` - Metadata exports (static and/or dynamic)
+**Detected metadata (App Router paths only):**
+- `isInAppDir: true` - File is under `app/` or `src/app/`
+- `directive: 'client' | 'server'` - `'use client'` or `'use server'` at the top of the file (before imports)
+- `routeRole: 'page' | 'layout' | 'loading' | 'error' | 'not-found' | 'template' | 'default' | 'route'` - Derived from the **basename** of the file (`page.tsx` → `page`, `layout.tsx` → `layout`, etc.)
+- `segmentPath: string` - Route path derived from the directory under `app/` (e.g., `/blog/[slug]`, `/api/users`); route groups `(folder)` are stripped
+- `metadata` - `export const metadata` and/or `export function generateMetadata` (static keys when parsable; dynamic flag when `generateMetadata` exists)
 
 ### Pages Router (Next.js 12 and earlier)
 
-LogicStamp also supports the Pages Router:
+Files under `pages/` and `pages/api/` are parsed like any other `.ts` / `.tsx` source: components, hooks, props, exports, etc.
+
+**`nextjs` metadata for Pages Router paths:**
+- **`directive`**: Still detected if `'use client'` or `'use server'` appears at the top of the file (same rule as App Router).
+- **`isInAppDir`, `routeRole`, `segmentPath`, `metadata`**: Not populated for `pages/` paths, because those fields are implemented for the App Router directory layout only.
+- **Routing**: URL structure, dynamic segments, `pages/api` routes, and data-fetching helpers (`getServerSideProps`, `getStaticProps`, `getStaticPaths`) are **not** inferred or extracted as Next-specific metadata.
 
 ```
 pages/
-  index.tsx           → Home page (/)
-  about.tsx           → About page (/about)
-  blog/
-    [slug].tsx        → Dynamic route (/blog/:slug)
-  api/
-    users.ts          → API route (/api/users)
+  index.tsx           → Analyzed as a React/TS module (not `routeRole: 'page'`)
+  about.tsx           → Same
+  blog/[slug].tsx     → Same (no extracted segment path in `nextjs`)
+  api/users.ts        → Same (no App Router-style `segmentPath`)
 ```
-
-**Detected metadata:**
-- `isInAppDir: true` - File is in `/app/` directory (if applicable)
-- `directive: 'client' | 'server'` - 'use client' or 'use server' directive (if present)
-- Note: Route paths, dynamic routes, API routes, and `getServerSideProps`/`getStaticProps`/`getStaticPaths` are not extracted, only directory location and directives are detected
 
 ### Next.js Components
 
 #### Pages
 
+**App Router — `app/page.tsx` (or `src/app/page.tsx`):**
+
 ```tsx
-// app/page.tsx or pages/index.tsx
 export default function HomePage() {
   return <div>Home</div>;
 }
 ```
 
-**Detected as:** `react:component` with Next.js metadata:
-- `isInAppDir: true` - File is in `/app/` directory
-- `routeRole: 'page'` - Detected from `page.tsx` filename
-- `segmentPath: '/'` - Root route path (or nested path like `/blog/[slug]`)
+**Detected as:** `react:component` with `nextjs` metadata including:
+- `isInAppDir: true`
+- `routeRole: 'page'` (filename is `page.tsx`)
+- `segmentPath: '/'` at the app root, or e.g. `/blog/[slug]` for `app/blog/[slug]/page.tsx`
 
-**Note:** All React components (including pages) are classified as `react:component`. Next.js-specific information is stored in the `nextjs` metadata field, not as a separate component kind.
+**Pages Router — `pages/index.tsx`:**
+
+```tsx
+export default function HomePage() {
+  return <div>Home</div>;
+}
+```
+
+**Detected as:** `react:component` (when it matches React rules). The basename is `index`, not `page`, so **`routeRole` is not set**. **`isInAppDir`** and **`segmentPath`** are not set for `pages/` paths. Optional: `directive` if you add `'use client'` / `'use server'` at the top.
+
+**Note:** All React components (including pages) use the kind `react:component`. Next.js-specific information is stored in the `nextjs` field when present, not as a separate component kind.
 
 #### Layouts
 
@@ -110,18 +118,20 @@ export async function POST(request: Request) {
 }
 ```
 
-**Detected as:** `react:component` or `ts:module` (based on content) with Next.js metadata:
-- `isInAppDir: true` - File is in `/app/api/` directory
-- `routeRole: 'route'` - Detected from `route.ts` or `route.tsx` filename
-- `segmentPath: '/api/users'` - API route path
+**Detected as:** `react:component` or `ts:module` (based on content). For **`app/api/.../route.ts`** under the App Router, `nextjs` can include:
+- `isInAppDir: true`
+- `routeRole: 'route'` (basename `route`)
+- `segmentPath` such as `/api/users`
 
-**Note:** API routes are classified based on their content (React components vs TypeScript modules). Next.js-specific information is stored in the `nextjs` metadata field.
+**Pages Router** handlers under `pages/api/` do **not** get `isInAppDir`, `routeRole`, or `segmentPath` from this logic.
+
+**Note:** Next.js-specific information is stored in the `nextjs` metadata field when the file path is under `app/` or `src/app/`.
 
 ## Next.js-Specific Features
 
 ### Route Roles
 
-LogicStamp detects route roles based on special Next.js filenames:
+Under **`app/`** or **`src/app/`**, LogicStamp detects route roles from special filenames:
 
 | Filename | Route Role | Description |
 |----------|-----------|-------------|
@@ -133,6 +143,8 @@ LogicStamp detects route roles based on special Next.js filenames:
 | `template.tsx` | `template` | Template component |
 | `default.tsx` | `default` | Default parallel route |
 | `route.ts` | `route` | API route handler |
+
+These roles are **not** assigned from `pages/` filenames (e.g. `pages/index.tsx` does not produce `routeRole: 'page'`).
 
 ### Segment Paths
 
@@ -318,35 +330,35 @@ stamp context ./app
 
 ## Next.js Project Structure
 
-LogicStamp respects Next.js conventions:
+Typical layouts LogicStamp can scan (subject to your include patterns and ignore rules):
 
 ```
 my-nextjs-app/
-  app/                    # App Router (Next.js 13+)
+  app/                    # App Router — `nextjs` routing metadata filled here
     layout.tsx
     page.tsx
     components/
       Button.tsx
-  pages/                  # Pages Router (if used)
+  pages/                  # Pages Router — TS/TSX analysis only; no App Router `nextjs` fields
     index.tsx
     api/
       users.ts
-  public/                 # Static assets (ignored)
-  node_modules/             # Dependencies (ignored)
+  public/                 # Static assets (usually ignored)
+  node_modules/           # Dependencies (usually ignored)
 ```
 
 ## Best Practices
 
-1. **Use App Router**: LogicStamp has better support for App Router patterns
+1. **App Router metadata**: Rich `nextjs` routing metadata is only filled for files under `app/` or `src/app/`
 2. **Type your routes**: Type route params and search params for better extraction
 3. **Organize components**: Keep components in `components/` directory
 4. **API routes**: Use TypeScript for API route handlers
 
 ## Limitations
 
-- Middleware files are detected but not fully analyzed
-- `getServerSideProps` and `getStaticProps` are identified but their return types may not be fully extracted
-- Dynamic imports in routes are tracked but not resolved
+- **`middleware.ts`**: Not specially detected or summarized as a Next.js entry type.
+- **Pages Router**: No contract fields for URL patterns, `getServerSideProps` / `getStaticProps` / `getStaticPaths`, or `pages/api` route paths in the `nextjs` object (those files are still parsed as normal TS/TSX).
+- **Dynamic `import()`**: May appear in imports or code shape like other patterns; dynamic targets are not resolved to modules.
 
 ## Related Documentation
 
