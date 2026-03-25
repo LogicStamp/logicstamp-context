@@ -8,7 +8,7 @@ import type { UIFContract } from '../../types/UIFContract.js';
 import type { ProjectManifest } from '../manifest.js';
 import { bundleHash as computeBundleHashStable } from '../../utils/hash.js';
 import { resolveDependency } from './resolver.js';
-import { normalizeEntryId } from '../../utils/fsx.js';
+import { normalizeEntryId, isPathWithinRoot } from '../../utils/fsx.js';
 
 /**
  * A node in the bundle graph
@@ -97,6 +97,9 @@ export function computeBundleHash(nodes: BundleNode[], depth: number): string {
  */
 export async function validateHashLock(contract: UIFContract, entryId: string, projectRoot: string): Promise<boolean> {
   try {
+    if (!isPathWithinRoot(entryId, projectRoot)) {
+      return false;
+    }
     // Read the actual source file
     const absolutePath = isAbsolute(entryId) ? entryId : resolve(projectRoot, entryId);
     const sourceContent = await readFile(absolutePath, 'utf8');

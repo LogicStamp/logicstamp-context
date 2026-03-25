@@ -3,10 +3,11 @@
  */
 
 import { readFile } from 'node:fs/promises';
-import { join, resolve, isAbsolute, relative } from 'node:path';
+import { join, resolve, isAbsolute } from 'node:path';
 import type { UIFContract } from '../../types/UIFContract.js';
 import type { ProjectManifest } from '../manifest.js';
 import { debugError } from '../../utils/debug.js';
+import { isPathWithinRoot } from '../../utils/fsx.js';
 import { validateUIFContract } from '../../utils/schemaValidator.js';
 import { loadSecurityReport, sanitizeCode, type SanitizeResult } from '../../utils/codeSanitizer.js';
 import type { SecurityReport } from '../../cli/commands/security.js';
@@ -243,19 +244,6 @@ export async function loadContract(entryId: string, projectRoot: string): Promis
   }
 
   return data;
-}
-
-/**
- * Check if a file path is within the project root directory
- * Prevents path traversal attacks (e.g., `../../../sensitive.json`)
- */
-function isPathWithinRoot(filePath: string, rootPath: string): boolean {
-  const resolvedPath = resolve(rootPath, filePath);
-  const relativePath = relative(rootPath, resolvedPath);
-
-  // Path is outside root if relative path starts with '..' or is absolute
-  // On Windows, also check for drive letter changes (e.g., C: to D:)
-  return !relativePath.startsWith('..') && !isAbsolute(relativePath);
 }
 
 /**

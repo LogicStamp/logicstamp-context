@@ -1076,6 +1076,16 @@ describe('validateHashLock', () => {
     // Should not throw, just return false
     expect(typeof result).toBe('boolean');
   });
+
+  it('should return false for path traversal outside project root', async () => {
+    const contract = createMockContract('somehash');
+    const result = await validateHashLock(
+      contract,
+      '../../../package.json',
+      process.cwd()
+    );
+    expect(result).toBe(false);
+  });
 });
 
 // ============================================================================

@@ -7,7 +7,7 @@
  *   variables: []
  *   hooks: []
  *   components: []
- *   functions: ["deleteSidecar","fileExists","findSidecarFiles","getRelativePath","getSidecarPath","globFiles","normalizeEntryId","readFileWithText","resolvePath"]
+ *   functions: ["deleteSidecar","fileExists","findSidecarFiles","getRelativePath","getSidecarPath","globFiles","isPathWithinRoot","normalizeEntryId","readFileWithText","resolvePath"]
  *   imports: ["glob","node:fs/promises","node:path"]
  *
  * Logic Signature:
@@ -269,6 +269,15 @@ export function normalizeEntryId(entryId: string): string {
   // Remove leading ./ if present
   result = result.replace(/^\.\//, '');
   return result;
+}
+
+/**
+ * True if filePath resolves under rootPath (blocks `../` escapes from project-relative entryIds).
+ */
+export function isPathWithinRoot(filePath: string, rootPath: string): boolean {
+  const resolvedPath = resolve(rootPath, filePath);
+  const rel = relative(rootPath, resolvedPath);
+  return !rel.startsWith('..') && !isAbsolute(rel);
 }
 
 /**
