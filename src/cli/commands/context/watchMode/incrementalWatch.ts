@@ -167,9 +167,13 @@ export async function incrementalRebuild(
       const normalizedEntryId = normalizeEntryId(file);
 
       // Check if file actually changed (compare hash)
-      const existingContract = Array.from(cache.contracts.values()).find(
-        c => normalizeEntryId(c.entryId) === normalizedEntryId
-      );
+      let existingContract: UIFContract | undefined;
+      for (const c of cache.contracts.values()) {
+        if (normalizeEntryId(c.entryId) === normalizedEntryId) {
+          existingContract = c;
+          break;
+        }
+      }
 
       if (existingContract && existingContract.fileHash === currentFileHash) {
         // File hash unchanged - check if we need to backfill styles
