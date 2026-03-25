@@ -26,6 +26,7 @@ vi.mock('glob', () => ({
 import {
   globFiles,
   normalizeEntryId,
+  isPathWithinRoot,
   getRelativePath,
   fileExists,
   readFileWithText,
@@ -78,6 +79,24 @@ describe('fsx utilities', () => {
     it('should handle paths with .. segments', () => {
       const normalized = normalizeEntryId('src/../components/file.ts');
       expect(normalized).toBe('components/file.ts');
+    });
+  });
+
+  describe('isPathWithinRoot', () => {
+    it('should allow nested paths under root', () => {
+      expect(isPathWithinRoot('src/components/App.tsx', testDir)).toBe(true);
+    });
+
+    it('should allow a file at project root', () => {
+      expect(isPathWithinRoot('package.json', testDir)).toBe(true);
+    });
+
+    it('should reject traversal outside root', () => {
+      expect(isPathWithinRoot('../../../etc/passwd', testDir)).toBe(false);
+    });
+
+    it('should reject pure parent hops', () => {
+      expect(isPathWithinRoot('..', testDir)).toBe(false);
     });
   });
 

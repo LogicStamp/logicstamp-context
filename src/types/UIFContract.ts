@@ -319,6 +319,7 @@ export interface AnimationMetadata {
   trigger?: string;
 }
 
+/** Reserved shape for page-level layout; not produced by extractStyleMetadata today */
 export interface PageLayoutMetadata {
   pageRole?: string;
   sections?: string[];
@@ -346,6 +347,7 @@ export interface StyleMetadata {
   layout?: LayoutMetadata;
   visual?: VisualMetadata;
   animation?: AnimationMetadata;
+  /** Schema-validated optional field; stamp context style extraction does not set this yet */
   pageLayout?: PageLayoutMetadata;
   summary?: StyleSummary;   // Style extraction summary
 }
