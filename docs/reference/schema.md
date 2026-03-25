@@ -64,6 +64,7 @@ interface StyleMetadata {
   layout?: LayoutMetadata;
   visual?: VisualMetadata;
   animation?: AnimationMetadata;
+  /** Reserved: allowed by schema; not populated by `stamp context` style extraction today */
   pageLayout?: PageLayoutMetadata;
 }
 
@@ -197,6 +198,7 @@ interface AnimationMetadata {
   trigger?: string; // Trigger type (e.g., "inView", "hover")
 }
 
+/** Shape for optional page-level layout metadata (schema-reserved; CLI does not emit yet). */
 interface PageLayoutMetadata {
   pageRole?: string;
   sections?: string[];
@@ -331,7 +333,9 @@ Animation and motion information:
 
 #### Page Layout Metadata (`style.pageLayout`)
 
-Page-level layout information:
+**Not populated by `stamp context` today.** Present in the schema and TypeScript types for forward compatibility and manual or future tooling.
+
+When present, the intended fields are:
 
 - **`pageRole`** - Page role (e.g., "landing", "dashboard")
 - **`sections`** - Array of page sections

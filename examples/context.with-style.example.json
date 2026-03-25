@@ -147,13 +147,6 @@
                 "library": "framer-motion",
                 "type": "fade-in",
                 "trigger": "inView"
-              },
-              "pageLayout": {
-                "pageRole": "hero",
-                "sections": [
-                  "hero"
-                ],
-                "ctaCount": 1
               }
             }
           },

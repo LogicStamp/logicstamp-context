@@ -154,6 +154,8 @@ function Menu() {
 
 ## Style Extraction
 
+**Style output shape:** ShadCN-specific fields live under `style.styleSources.shadcnUI` (`components`, `variants`, `sizes`, `features`). Default **`--style-mode lean`** keeps **`features` only** (drops `components`, `variants`, and `sizes`). Tailwind classes are still reported separately under `style.styleSources.tailwind` when present. See [UIF contracts](../reference/uif-contracts.md) and [Style mode: lean vs full](../cli/style.md#style-mode-lean-vs-full).
+
 ShadCN components are analyzed for their Tailwind styling:
 
 ```tsx
@@ -180,15 +182,55 @@ function MyCard() {
 
 ### Component Library Detection
 
-LogicStamp identifies when ShadCN is the primary UI library:
+LogicStamp identifies when ShadCN is in use and merges that with Tailwind (and other sources) in `style.summary.sources`.
+
+**Example (`--style-mode full`):**
 
 ```json
 {
   "style": {
-    "sources": ["tailwind", "shadcn"],
-    "shadcn": {
-      "components": ["Button", "Card", "Dialog"],
-      "packages": ["@/components/ui"]
+    "styleSources": {
+      "shadcnUI": {
+        "components": ["Button", "Card", "Dialog"],
+        "variants": {
+          "Button": ["default", "outline"]
+        },
+        "sizes": ["default", "sm"],
+        "features": {
+          "usesTheme": true,
+          "usesIcons": true,
+          "usesForm": false,
+          "componentDensity": "medium"
+        }
+      }
+    },
+    "summary": {
+      "mode": "full",
+      "sources": ["shadcn", "tailwind"]
+    }
+  }
+}
+```
+
+**Example (`--style-mode lean`, default):**
+
+```json
+{
+  "style": {
+    "styleSources": {
+      "shadcnUI": {
+        "features": {
+          "usesTheme": true,
+          "usesIcons": true,
+          "usesForm": false,
+          "componentDensity": "medium"
+        }
+      }
+    },
+    "summary": {
+      "mode": "lean",
+      "sources": ["shadcn", "tailwind"],
+      "fullModeBytes": 1750
     }
   }
 }
@@ -260,11 +302,14 @@ function App() {
 ## Usage
 
 ```bash
-# Extract ShadCN components and styles
+# Extract ShadCN components and styles (lean style output by default)
 stamp context --include-style
 
 # Or use the style command
 stamp context style
+
+# Include shadcnUI components/variants/sizes arrays in style JSON
+stamp context style --style-mode full
 ```
 
 ## ShadCN Project Structure

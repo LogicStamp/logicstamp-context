@@ -274,22 +274,56 @@ function MyComponent() {
 
 ## Style Extraction
 
-When using `stamp context --include-style`, Ant Design styling is included:
+**Style output shape:** Ant Design data is under `style.styleSources.antd` (see [UIF contracts](../reference/uif-contracts.md)). Default **`--style-mode lean`** keeps **`features` only**. **`--style-mode full`** adds `components` and `packages` arrays. See [Style mode: lean vs full](../cli/style.md#style-mode-lean-vs-full).
+
+When using `stamp context --include-style`, Ant Design styling is included.
+
+**Example (`--style-mode full`):**
 
 ```json
 {
   "style": {
-    "sources": ["antd"],
-    "antd": {
-      "components": ["Button", "Card", "Form", "Input", "Table"],
-      "packages": ["antd", "@ant-design/icons"],
-      "features": {
-        "usesTheme": true,
-        "usesConfigProvider": true,
-        "usesForm": true,
-        "usesLocale": true,
-        "usesIcons": true
+    "styleSources": {
+      "antd": {
+        "components": ["Button", "Card", "Form", "Input", "Table"],
+        "packages": ["antd", "@ant-design/icons"],
+        "features": {
+          "usesTheme": true,
+          "usesConfigProvider": true,
+          "usesForm": true,
+          "usesLocale": true,
+          "usesIcons": true
+        }
       }
+    },
+    "summary": {
+      "mode": "full",
+      "sources": ["antd"]
+    }
+  }
+}
+```
+
+**Example (`--style-mode lean`, default):**
+
+```json
+{
+  "style": {
+    "styleSources": {
+      "antd": {
+        "features": {
+          "usesTheme": true,
+          "usesConfigProvider": true,
+          "usesForm": true,
+          "usesLocale": true,
+          "usesIcons": true
+        }
+      }
+    },
+    "summary": {
+      "mode": "lean",
+      "sources": ["antd"],
+      "fullModeBytes": 520
     }
   }
 }
@@ -357,11 +391,14 @@ import Button from 'antd/es/button';
 ## Usage
 
 ```bash
-# Extract Ant Design components and styles
+# Extract Ant Design components and styles (lean style output by default)
 stamp context --include-style
 
 # Or use the style command
 stamp context style
+
+# Include full component/package arrays in style JSON
+stamp context style --style-mode full
 ```
 
 ## Ant Design Project Structure

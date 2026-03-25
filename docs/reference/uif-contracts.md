@@ -122,138 +122,102 @@ This metadata is used to improve dependency tracking accuracy by distinguishing 
 ```
 
 ### `style` (optional)
-Style metadata extracted from the component. This field is only present when style extraction is enabled (via `stamp context style` or `--include-style` flag). Contains visual, layout, and animation information to enable design-aware AI context compilation.
+Style metadata extracted from the component. This field is only present when style extraction is enabled (via `stamp context style` or `--include-style`). It can include library-specific `styleSources`, structural `layout` / `visual` hints, high-level `animation`, and a **`summary`** of what was detected. The JSON schema also allows **`pageLayout`**, but **`stamp context` does not populate it yet** (reserved for future extraction).
 
-The `style` field contains four categories of metadata:
+**Style mode (`--style-mode`):** Serialization is **`lean` by default** (compact: counts, flags, and category names; large arrays omitted). **`full`** keeps verbose arrays and lists. Extraction logic is the same in both modes; only the JSON shape changes. Use `stamp context style --style-mode full` (or `stamp context --include-style --style-mode full`) for the verbose shape. See [Style mode: lean vs full](../cli/style.md#style-mode-lean-vs-full).
+
+The `style` object may contain:
+
+#### `summary`
+Present when style metadata is emitted for the component.
+
+- `mode` – `"lean"` or `"full"` (matches the CLI flag used when generating)
+- `sources` – List of detected style kinds (e.g. `tailwind`, `scss`, `material-ui`, `chakra`, `framer-motion`, `styled-components`, `shadcn`, `radix`, `antd`)
+
+In **`lean`** mode, when applicable:
+
+- `fullModeBytes` – Approximate serialized size (bytes) of the **full-mode** `styleSources` object for the same file (for comparing verbosity vs token cost)
 
 #### `styleSources`
-Identifies which styling approaches are used in the component:
+Identifies which styling approaches are used in the component. Fields below note **full** vs **lean** where they differ.
 
 - **`tailwind`** – Tailwind CSS utility classes:
-  - `categories` – Object mapping category names (e.g., "layout", "spacing", "colors", "typography") to arrays of class names
-  - `breakpoints` – Array of responsive breakpoints used (e.g., `["sm", "md", "lg"]`)
-  - `classCount` – Total number of Tailwind classes detected
+  - **Full:** `categories` – Object mapping category names (e.g. `"layout"`, `"spacing"`, `"colors"`) to sorted arrays of class names (capped per category in extraction)
+  - **Lean:** `categoriesUsed` – Array of category keys that had classes (no per-class arrays)
+  - `breakpoints` – Breakpoint names (both modes, when present)
+  - `classCount` – Total distinct classes collected (both modes)
 
-- **`scssModule`** – Path to imported SCSS module file (if any)
+- **`scssModule`** – Path to imported SCSS module file (if any; both modes)
 - **`scssDetails`** – Parsed SCSS module information:
-  - `selectors` – Array of CSS selectors found in the SCSS file
-  - `properties` – Array of CSS properties used
-  - `features` – Object indicating SCSS features used:
-    - `variables` – Boolean if SCSS variables are used
-    - `nesting` – Boolean if SCSS nesting is used
-    - `mixins` – Boolean if SCSS mixins are used
+  - **Full:** `selectors`, `properties`, and `features` (`variables`, `nesting`, `mixins`)
+  - **Lean:** `features` only (same flags; no `selectors` / `properties` arrays)
 
-- **`cssModule`** – Path to imported CSS module file (if any)
-- **`cssDetails`** – Parsed CSS module information:
-  - `selectors` – Array of CSS selectors
-  - `properties` – Array of CSS properties
+- **`cssModule`** – Path to imported CSS module file (if any; both modes)
+- **`cssDetails`** – **Full mode only:** `selectors`, `properties`. Omitted in **lean** (module path still appears on `cssModule`).
 
-- **`inlineStyles`** – Inline style usage. Can be `boolean` (legacy format) or an object with:
-  - `properties` – Array of CSS property names (e.g., `['animationDelay', 'color', 'padding']`)
-  - `values` – Record of property-value pairs for literal values (e.g., `{ animationDelay: '2s', color: 'blue' }`)
+- **`inlineStyles`** – Inline `style={{...}}` usage. Can be `boolean` (legacy) or an object with `properties` and optional `values`. **Same shape in lean and full** (already compact).
 
-- **`styledJsx`** – Styled JSX CSS content extracted from `<style jsx>` blocks:
-  - `css` – Extracted CSS content string
-  - `global` – Boolean indicating if the style block has `global` attribute
-  - `selectors` – Array of CSS selectors found in the extracted CSS
-  - `properties` – Array of CSS properties found in the extracted CSS
+- **`styledJsx`** – Styled JSX (`<style jsx>`) extraction:
+  - **Full:** `css`, `global`, `selectors`, `properties`
+  - **Lean:** `global`, `selectorCount`, `propertyCount` (no `css` string or selector/property arrays)
 
-- **`styledComponents`** – Styled-components/Emotion information:
-  - `components` – Array of styled component names (e.g., `["div", "Button"]`)
-  - `usesTheme` – Boolean if theme is used
-  - `usesCssProp` – Boolean if CSS prop is used
+- **`styledComponents`** – Styled-components / Emotion:
+  - **Full:** `components` (sorted, capped), `usesTheme`, `usesCssProp`
+  - **Lean:** `componentCount`, `usesTheme`, `usesCssProp`
 
-- **`motion`** – Framer Motion animation information:
-  - `components` – Array of motion component names (e.g., `["div", "button"]`)
-  - `variants` – Array of variant names used
-  - `features` – Object indicating motion features:
-    - `gestures` – Boolean if gesture handlers are used (whileHover, whileTap, etc.)
-    - `layoutAnimations` – Boolean if layout animations are used
-    - `viewportAnimations` – Boolean if viewport-triggered animations are used
+- **`motion`** – Framer Motion (`style.styleSources.motion`, distinct from high-level `style.animation`):
+  - **Full:** `components`, `variants`, `features` (`gestures`, `layoutAnimations`, `viewportAnimations`)
+  - **Lean:** `features` only
 
-- **`materialUI`** – Material UI component library information:
-  - `components` – Array of Material UI component names used (e.g., `["Button", "TextField", "Card"]`)
-  - `packages` – Array of Material UI packages imported (e.g., `["@mui/material", "@mui/icons-material"]`)
-  - `features` – Object indicating Material UI styling features:
-    - `usesTheme` – Boolean if theme is used (useTheme, ThemeProvider, createTheme)
-    - `usesSxProp` – Boolean if sx prop is used for styling
-    - `usesStyled` – Boolean if styled from @mui/material/styles is used
-    - `usesMakeStyles` – Boolean if makeStyles (legacy) is used
-    - `usesSystemProps` – Boolean if system props are used on Box/Stack components
+- **`materialUI`** – Material UI:
+  - **Full:** `components`, `packages`, `features` (`usesTheme`, `usesSxProp`, `usesStyled`, `usesMakeStyles`, `usesSystemProps`)
+  - **Lean:** `features` only
 
-- **`antd`** – Ant Design component library information:
-  - `components` – Array of Ant Design component names used (e.g., `["Button", "Card", "Form", "Input", "Table"]`)
-  - `packages` – Array of Ant Design packages imported (e.g., `["antd", "@ant-design/icons"]`)
-  - `features` – Object indicating Ant Design features:
-    - `usesTheme` – Boolean if theme is used (useToken, ConfigProvider, getDesignToken)
-    - `usesConfigProvider` – Boolean if ConfigProvider is used
-    - `usesForm` – Boolean if Form components are used
-    - `usesLocale` – Boolean if locale/internationalization features are used
-    - `usesIcons` – Boolean if @ant-design/icons are used
+- **`antd`** – Ant Design:
+  - **Full:** `components`, `packages`, `features` (`usesTheme`, `usesConfigProvider`, `usesForm`, `usesLocale`, `usesIcons`)
+  - **Lean:** `features` only
 
-- **`chakraUI`** – Chakra UI component library information:
-  - `components` – Array of Chakra UI component names used (e.g., `["Button", "Card", "Box", "Stack", "Input"]`)
-  - `packages` – Array of Chakra UI packages imported (e.g., `["@chakra-ui/react"]`)
-  - `features` – Object indicating Chakra UI features:
-    - `usesTheme` – Boolean if theme is used (useTheme, ChakraProvider, extendTheme)
-    - `usesColorMode` – Boolean if color mode (dark/light) is used
-    - `usesResponsiveProps` – Boolean if responsive props (array syntax) are used
-    - `usesSystemProps` – Boolean if system props are used on layout components
+- **`chakraUI`** – Chakra UI:
+  - **Full:** `components`, `packages`, `features` (`usesTheme`, `usesColorMode`, `usesResponsiveProps`, `usesSystemProps`)
+  - **Lean:** `features` only
 
-- **`shadcnUI`** – ShadCN/UI component library information:
-  - `components` – Array of ShadCN component names used (e.g., `["Button", "Card", "Dialog", "Sheet"]`)
-  - `variants` – Record of variant usage per component type (e.g., `{ button: ["default", "outline"], badge: ["secondary"] }`)
-  - `sizes` – Array of size prop values used (e.g., `["sm", "lg", "icon"]`)
-  - `features` – Object indicating ShadCN features:
-    - `usesForm` – Boolean if react-hook-form integration is used
-    - `usesTheme` – Boolean if theme is used (next-themes or dark mode)
-    - `usesIcons` – Boolean if icons are used (lucide-react or radix icons)
-    - `componentDensity` – String indicating component density: `"low"`, `"medium"`, or `"high"`
+- **`shadcnUI`** – ShadCN/UI:
+  - **Full:** `components`, `variants`, `sizes`, `features` (`usesForm`, `usesTheme`, `usesIcons`, `componentDensity`)
+  - **Lean:** `features` only
 
-- **`radixUI`** – Radix UI primitive component library information:
-  - `primitives` – Record of primitive components by package (e.g., `{ "react-dialog": ["Dialog", "DialogContent"], "react-popover": ["Popover", "PopoverTrigger"] }`)
-  - `patterns` – Object indicating usage patterns:
-    - `controlled` – Array of components using controlled pattern
-    - `uncontrolled` – Array of components using uncontrolled pattern
-    - `portals` – Number indicating portal usage count
-    - `asChild` – Number indicating asChild composition pattern count
-  - `accessibility` – Object indicating accessibility features:
-    - `usesDirection` – Boolean if RTL/LTR support is used
-    - `usesFocusManagement` – Boolean if focus trapping is used
-    - `usesKeyboardNav` – Boolean if keyboard navigation is used (loop, orientation, etc.)
-    - `usesModal` – Boolean if modal dialogs are used
-  - `features` – Object indicating Radix UI features:
-    - `primitiveCount` – Number indicating total unique primitives used
-    - `compositionDepth` – String indicating composition complexity: `"simple"`, `"moderate"`, or `"complex"`
+- **`radixUI`** – Radix UI:
+  - **Full:** `primitives`, `patterns` (`controlled`, `uncontrolled`, `portals`, `asChild`), `accessibility`, `features` (`primitiveCount`, `compositionDepth`)
+  - **Lean:** `accessibility` and `features` only (`primitives` / `patterns` omitted)
 
 #### `layout`
 Structural layout information:
-- `type` – Layout type: `"flex"`, `"grid"`, `"relative"`, or `"absolute"`
-- `cols` – Grid column pattern (e.g., `"grid-cols-2 md:grid-cols-3"`)
-- `hasHeroPattern` – Boolean indicating hero section pattern
-- `hasFeatureCards` – Boolean indicating feature card grid pattern
-- `sections` – Array of section identifiers (if applicable)
+
+- `type`, `cols`, `hasHeroPattern`, `hasFeatureCards` – Both modes when present
+- **Full:** `sections` – Array of section identifiers
+- **Lean:** `sectionCount` instead of `sections` when sections were detected
 
 #### `visual`
 Visual design patterns:
-- `colors` – Array of color utility classes (sorted, limited to top 10)
-- `spacing` – Array of spacing utility classes (sorted, limited to top 10)
-- `radius` – Most common border radius pattern
-- `typography` – Array of typography classes (sorted, limited to top 10)
+
+- `radius` – Both modes when present
+- **Full:** `colors`, `spacing`, `typography` arrays (sorted, capped in extraction)
+- **Lean:** `colorCount`, `spacingCount`, `typographyCount` instead of those arrays
 
 #### `animation`
-Animation and motion information:
-- `type` – Animation type (e.g., `"fade-in"`, `"slide"`)
-- `library` – Animation library: `"framer-motion"` or `"css"`
-- `trigger` – Trigger type: `"inView"`, `"hover"`, `"click"`, etc.
+High-level animation hints (e.g. fade-in, library, trigger). **Not** trimmed by style mode in the same way as `styleSources.motion`; shape is unchanged between lean and full when present.
 
-#### `pageLayout` (optional)
-Page-level layout metadata:
-- `pageRole` – Page role identifier (if applicable)
-- `sections` – Array of page section identifiers
+- `type` – Animation type (e.g., `"fade-in"`, `"slide"`)
+- `library` – `"framer-motion"` or `"css"`
+- `trigger` – e.g. `"inView"`, `"hover"`, `"click"`
+
+#### `pageLayout` (optional, schema only today)
+**Not emitted by the current CLI.** The field exists on `StyleMetadata` and in the JSON schema so validated documents may include it or future extractors can populate it without a breaking schema change. Intended shape when used:
+
+- `pageRole` – Page role (e.g. landing, dashboard)
+- `sections` – Page section identifiers
 - `ctaCount` – Number of call-to-action elements
 
-**Example style metadata:**
+**Example (`--style-mode full`):** Combined illustration only; real contracts include a subset of keys.
 
 ```json
 {
@@ -328,6 +292,7 @@ Page-level layout metadata:
         },
         "patterns": {
           "controlled": ["Dialog"],
+          "uncontrolled": [],
           "portals": 2,
           "asChild": 1
         },
@@ -343,7 +308,8 @@ Page-level layout metadata:
     },
     "layout": {
       "type": "flex",
-      "hasHeroPattern": true
+      "hasHeroPattern": true,
+      "sections": ["hero", "features"]
     },
     "visual": {
       "colors": ["bg-black", "text-white"],
@@ -355,17 +321,72 @@ Page-level layout metadata:
       "library": "framer-motion",
       "type": "fade-in",
       "trigger": "inView"
+    },
+    "summary": {
+      "mode": "full",
+      "sources": ["tailwind", "framer-motion", "material-ui"]
+    }
+  }
+}
+```
+
+**Example (`--style-mode lean`, default):** Same file would omit verbose arrays and include `summary.mode` / optional `fullModeBytes`:
+
+```json
+{
+  "style": {
+    "styleSources": {
+      "tailwind": {
+        "classCount": 15,
+        "categoriesUsed": ["layout", "spacing", "colors", "typography"],
+        "breakpoints": ["md", "lg"]
+      },
+      "motion": {
+        "features": {
+          "gestures": true,
+          "viewportAnimations": true
+        }
+      },
+      "materialUI": {
+        "features": {
+          "usesTheme": true,
+          "usesSxProp": true,
+          "usesSystemProps": true
+        }
+      }
+    },
+    "layout": {
+      "type": "flex",
+      "hasHeroPattern": true,
+      "sectionCount": 2
+    },
+    "visual": {
+      "colorCount": 2,
+      "spacingCount": 2,
+      "radius": "xl",
+      "typographyCount": 2
+    },
+    "animation": {
+      "library": "framer-motion",
+      "type": "fade-in",
+      "trigger": "inView"
+    },
+    "summary": {
+      "mode": "lean",
+      "sources": ["tailwind", "framer-motion", "material-ui"],
+      "fullModeBytes": 1840
     }
   }
 }
 ```
 
 **Note:** Style metadata is only included when:
+
 1. Style extraction is enabled (`stamp context style` or `--include-style`)
 2. Style information is detected in the component
 3. Components without any style usage will not have a `style` field
 
-See [style.md](../cli/style.md) for detailed documentation on style extraction.
+See [style.md](../cli/style.md) (especially [Style mode: lean vs full](../cli/style.md#style-mode-lean-vs-full)) for CLI flags and extraction behavior.
 
 ### `semanticHash`
 Unique hash based on the component's logic and contract. Changes when:

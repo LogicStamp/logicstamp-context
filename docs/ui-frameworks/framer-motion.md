@@ -196,37 +196,67 @@ function DraggableCard() {
 ```
 
 **Detected:**
-- Drag prop presence (boolean flag: `hasGestures: true` when drag-related props are present)
+- Drag prop presence (reflected as `style.styleSources.motion.features.gestures: true` when drag-related props are present)
 - Note: Drag configuration, constraints, and event handlers are not extracted, only the presence of drag-related props is detected
 
 ## Style Extraction
 
-When using `stamp context --include-style`, Framer Motion information is included:
+**Style output shape:** Framer Motion usage appears under `style.styleSources.motion` (components, variants, and `features.gestures` / `layoutAnimations` / `viewportAnimations`). High-level animation hints may also appear under `style.animation` (`library`, `type`, `trigger`). Default **`--style-mode lean`** drops `motion.components` and `motion.variants` arrays but keeps `motion.features`. See [UIF contracts](../reference/uif-contracts.md) and [Style mode: lean vs full](../cli/style.md#style-mode-lean-vs-full).
+
+When using `stamp context --include-style`, Framer Motion information is included.
+
+**Example (`--style-mode full`):**
 
 ```json
 {
   "style": {
+    "styleSources": {
+      "motion": {
+        "components": ["div", "button"],
+        "variants": ["hidden", "visible"],
+        "features": {
+          "gestures": true,
+          "layoutAnimations": false,
+          "viewportAnimations": true
+        }
+      }
+    },
     "animation": {
       "library": "framer-motion",
       "type": "fade-in",
       "trigger": "inView"
+    },
+    "summary": {
+      "mode": "full",
+      "sources": ["framer-motion"]
     }
   }
 }
 ```
 
-For motion components:
+**Example (`--style-mode lean`, default):**
 
 ```json
 {
   "style": {
-    "sources": ["motion"],
-    "motion": {
-      "components": ["div", "button"],
-      "variants": ["hidden", "visible"],
-      "hasGestures": true,
-      "hasLayout": false,
-      "hasViewport": true
+    "styleSources": {
+      "motion": {
+        "features": {
+          "gestures": true,
+          "layoutAnimations": false,
+          "viewportAnimations": true
+        }
+      }
+    },
+    "animation": {
+      "library": "framer-motion",
+      "type": "fade-in",
+      "trigger": "inView"
+    },
+    "summary": {
+      "mode": "lean",
+      "sources": ["framer-motion"],
+      "fullModeBytes": 512
     }
   }
 }
@@ -339,11 +369,14 @@ function SpringAnimation() {
 ## Usage
 
 ```bash
-# Extract Framer Motion animations
+# Extract Framer Motion animations (lean style output by default)
 stamp context --include-style
 
 # Or use the style command
 stamp context style
+
+# Include motion component/variant arrays in style JSON
+stamp context style --style-mode full
 ```
 
 ## Project Structure
