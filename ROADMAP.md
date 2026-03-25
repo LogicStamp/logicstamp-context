@@ -4,7 +4,7 @@ Planned features, improvements, and known limitations. See [CHANGELOG.md](CHANGE
 
 ## Current Status
 
-**Version:** v0.8.1 (Beta)
+**Version:** v0.8.2 (Beta)
 
 Recent milestones:
 - ✅ CLI argument validation and robustness fixes (v0.8.1) - Numeric arg validation for `--depth`/`--max-nodes`, safe compare normalization, token savings bounds
@@ -79,6 +79,18 @@ Recent milestones:
 **Conditional Schema by Language** 🔴 Planned — Make `UIFContract` schema conditional on `kind` (e.g., `style` only for frontend, `apiSignature` required for backend). Prerequisite for Python/Java. Depends on JS/JSX support first. **High priority**.
 
 ### Performance & Optimization
+
+- **Incremental watch optimization** ✅ v0.8.2  
+  - Avoid unnecessary array allocations during incremental rebuilds  
+  - Direct `Map` iteration for contract lookups reduces per-change overhead  
+  - Improves performance for large codebases in watch mode
+
+### Security & Reliability
+
+- **Path traversal protection hardening** ✅ v0.8.2  
+  - Centralized `isPathWithinRoot` for consistent project boundary enforcement  
+  - Prevents file access outside project root in pack loader and hash-lock flows  
+  - Aligns validation across `loadContract`, `readSourceCode`, and related fs operations
 
 - ✅ Incremental bundle caching (watch mode)
 - **Style verbosity reduction** 🔴 — Less verbose style for nested components with `depth=2`; planned `--full-style` flag for full extraction (distinct from `--style-mode full`). ~30-40% token reduction.

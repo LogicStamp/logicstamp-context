@@ -17,7 +17,27 @@ For a comprehensive roadmap with detailed status, priorities, and implementation
 
 ### Known Limitations
 
-See [docs/limitations.md](docs/limitations.md).
+See [docs/limitations.md](docs/reference/limitations.md).
+
+---
+
+## [0.8.2] - 2026-03-26
+
+### Changed
+
+- **Documentation updates and alignment** ([#162](https://github.com/LogicStamp/logicstamp-context/pull/162), [#163](https://github.com/LogicStamp/logicstamp-context/pull/163), [#164](https://github.com/LogicStamp/logicstamp-context/pull/164))
+  - Moved core docs to `docs/guides/` and `docs/reference/` and updated internal links
+  - Aligned style docs with lean/full modes and CLI output
+  - Synced framework docs (Next.js, TypeScript) with implementation details and limitations
+
+- **Incremental watch: avoid `Array.from` on contract map** ([#165](https://github.com/LogicStamp/logicstamp-context/pull/165))
+  - Looks up existing contracts by iterating `Map` values directly instead of allocating an array each changed file
+
+### Fixed
+
+- **Harden path traversal protection for pack loader and hash-lock** ([#166](https://github.com/LogicStamp/logicstamp-context/pull/166))
+  - Centralized `isPathWithinRoot` in `fsx` for consistent path boundary enforcement across `loadContract`, `extractCodeHeader`, and `readSourceCode`
+  - Updated `validateHashLock` to enforce the same check, preventing `--hash-lock` from accessing files outside the project root when using `contractsMap` (watch / standalone paths)
 
 ---
 
@@ -636,7 +656,9 @@ See [docs/limitations.md](docs/limitations.md).
 
 
 
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.8.2...HEAD
+
+[0.8.2]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.2
 
 [0.8.1]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.1
 
