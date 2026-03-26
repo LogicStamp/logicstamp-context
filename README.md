@@ -272,11 +272,11 @@ One command. No build step required.
 
 ❌ **A documentation generator** - It produces structured contracts, not documentation.
 
-❌ **A build or runtime tool** - It compiles contracts from static source code; it does not execute or bundle your application.
+❌ **A build or runtime tool** - It compiles contracts from static source code. it does not execute or bundle your application.
 
 ❌ **A linter, formatter, or testing framework** - It does not check code quality or run tests.
 
-❌ **An AI behavior controller** - It provides structured context; it does not alter AI responses.
+❌ **An AI behavior controller** - It provides structured context. it does not alter AI responses.
 
 ❌ **A replacement for reading code** - It accelerates understanding without replacing engineering judgment.
 
@@ -402,9 +402,9 @@ stamp context clean [path]         # Remove generated files
 | **React** | Full | Components, hooks, props, styles |
 | **Next.js** | Full | App Router roles, segment paths, metadata |
 | **Vue 3** | Partial | Composition API (TS/TSX only, not .vue SFC) |
-| **Express.js** | Full | Routes, API signatures (middleware not extracted; see [limitations](docs/reference/limitations.md)) |
+| **Express.js** | Full | Routes, API signatures (middleware not extracted. see [limitations](docs/reference/limitations.md)) |
 | **NestJS** | Full | Controllers, decorators, API signatures |
-| **UI Libraries** | Full | Material UI, ShadCN, Radix, Tailwind, Styled Components, SCSS, Chakra UI, Ant Design (component usage, props, composition; not raw CSS) |
+| **UI Libraries** | Full | Material UI, ShadCN, Radix, Tailwind, Styled Components, SCSS, Chakra UI, Ant Design (component usage, props, composition. not raw CSS) |
 
 > **ℹ️ Note:** LogicStamp Context analyzes `.ts` and `.tsx` files only. JavaScript files are not analyzed.
 
