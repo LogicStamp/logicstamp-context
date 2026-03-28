@@ -91,6 +91,8 @@ Now generate context files for your project:
 stamp context
 ```
 
+> **Stack fit:** LogicStamp runs **alongside** `tsc` and your build—it compiles AI-oriented contracts and graphs, not a full-program typecheck. See [Relationship to TypeScript](../getting-started.md#relationship-to-typescript-tsc).
+
 **What you get:**
 
 - 📁 **`context.json` files** - One per folder containing components, preserving your directory structure
@@ -339,6 +341,8 @@ stamp init
 
 # 2. Start watch mode (keeps context fresh)
 stamp context --watch
+# Or strict watch: breaking changes + violations (implies watch)
+stamp context --strict-watch
 
 # 3. Code normally - context regenerates automatically
 ```
@@ -441,6 +445,9 @@ stamp context
 
 # Watch mode
 stamp context --watch
+
+# Watch + breaking-change detection (implies --watch)
+stamp context --strict-watch
 
 # With style metadata
 stamp context style

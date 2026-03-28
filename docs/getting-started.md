@@ -20,6 +20,18 @@ LogicStamp Context compiles TypeScript codebases into **deterministic architectu
 - ✅ **Strict watch** - Detects breaking changes during development
 - ✅ **MCP-ready** - Works seamlessly with AI assistants via MCP protocol
 
+## Relationship to TypeScript (`tsc`)
+
+LogicStamp is **additive**: it produces **architectural contracts** and graphs for AI workflows and diffs, **alongside** your normal toolchain. Keep **`tsc --noEmit`** (or your CI typecheck) for **program-wide** type errors—your **`tsconfig`** and compiler pipeline stay the authority there.
+
+**Beyond `.d.ts`:** Declaration files capture surfaces for consumers; LogicStamp adds semantic contracts, dependency relationships, and change hashes (`semanticHash`/`bundleHash`) for diffable LLM context.
+
+**Strict** modes (`stamp context compare --strict`, `stamp context --strict-watch`) detect **contract-level** breaking changes (e.g. removed props) against a baseline—they do not replicate the full TypeScript checker.
+
+**Backend (Express / NestJS) vs `tsc`:** The compiler checks types in handlers and DTOs, not HTTP wiring. Renaming a path or method while types stay the same often produces **no `tsc` error**, but it **does** break external callers. LogicStamp records routes, methods, and related metadata in contracts and in **`semanticHash`**, so **`stamp context compare`** (and watch) can show that drift in diffs. **Strict** modes today focus on removals like props, events, exported functions, or whole contracts; **route and API-signature changes** usually appear in **compare output** and hashes first—see [API signature handling in strict modes](cli/strict-modes.md#api-signature-handling).
+
+For how extraction differs from your project compiler settings (e.g. path aliases), see **[TypeScript support](frameworks/typescript.md)**.
+
 ## Choose Your Path
 
 LogicStamp Context can be used in two ways:

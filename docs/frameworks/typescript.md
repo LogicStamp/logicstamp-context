@@ -2,6 +2,10 @@
 
 LogicStamp Context is built with TypeScript in mind and provides comprehensive support for TypeScript features, type extraction, and type-safe patterns.
 
+**Works alongside `tsc`:** LogicStamp uses the TypeScript compiler API (via ts-morph) to **extract** contracts. It complements **`tsc --noEmit`** (or equivalent) in CI—extraction does **not** mirror your full-project **`tsconfig`** typecheck. **Strict** compare/watch modes detect **contract** breaking changes vs a baseline, not every TS error. See [Known limitations](../reference/limitations.md#typescript-compiler-tsc).
+
+**Extends beyond `.d.ts` surfaces:** `.d.ts` files describe type surfaces for consumers. LogicStamp adds semantic contracts, dependency graphs (`graph.nodes`/`graph.edges`), and diffable change hashes (`semanticHash`/`bundleHash`) for LLM workflows. Prop types from third-party `.d.ts` in `node_modules` are [partially supported](../reference/limitations.md#third-party-components) (Phase 2 pending).
+
 ## TypeScript Detection
 
 LogicStamp automatically works with TypeScript projects:
