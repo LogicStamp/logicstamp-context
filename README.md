@@ -131,17 +131,18 @@ stamp context
 
 | Without LogicStamp Context | With LogicStamp Context |
 |-------------------|-----------------|
-| AI parses 200 lines of implementation to infer a component's interface | AI reads a 20-line interface contract |
+| AI parses ~200 lines of implementation to infer a component's interface | AI reads a ~20-line interface contract |
 | Props/hooks inferred (often wrong) | Props/hooks explicit and verified |
 | No way to know if context is stale | Watch mode catches changes in real-time |
 | Different prompts = different understanding | Deterministic: same code = same contract |
 | Manual context gathering: "Here's my Button component..." | Structured contracts: AI understands architecture automatically |
 
-**The key insight:** AI assistants don't need your implementation - they need your *interfaces*. LogicStamp Context extracts what matters and discards the noise.
+**Key insight:** AI assistants don’t need your implementation - they need your *interfaces*.  
+LogicStamp extracts what matters and discards the noise.
 
 ### What "Structured" Means
 
-Instead of shipping raw source code to AI:
+Instead of sending raw source code to AI:
 
 ```typescript
 // Raw: AI must parse and infer
