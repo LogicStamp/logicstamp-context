@@ -14,6 +14,12 @@ Things that don't work perfectly yet. See [CHANGELOG.md](../../CHANGELOG.md) for
 - **~100%** — Imports
 - **~90-95%** — Style metadata (static ~100%, dynamic Phase 1 ~70-80%, CSS-in-JS 9/9 libs ✅ v0.5.1)
 
+### Performance benchmarks
+
+**Already available:** `stamp context --compare-modes` measures **your project’s** context bundle tokens across modes (`none`, `header`, `header+style`, `full`) with accurate regeneration per mode; with `--stats` it can write `context_compare_modes.json`. That is **per-repo mode comparison** (token cost analysis), not a published reference result. See [compare-modes.md](../cli/compare-modes.md).
+
+The accuracy and token ranges in the overview above reflect what we observe in development and everyday use. We are planning **published benchmarks** with a clear, repeatable methodology: **tool-side** (runtime, memory, watch overhead, scaling with repo size) and **LLM-side** — especially **assistants with LogicStamp context vs without** (same tasks and prompts; baseline = raw or minimal context; treatment = structured bundles), plus metrics that make the comparison fair and repeatable. Details: [ROADMAP.md](../../ROADMAP.md#performance--optimization).
+
 ---
 
 ## Fixed / Resolved
@@ -37,6 +43,16 @@ These are no longer limitations. See [CHANGELOG](../../CHANGELOG.md) for details
 
 ## Active Limitations
 
+### TypeScript compiler (tsc)
+
+**Works alongside `tsc`:** Extraction runs in a **separate** ts-morph project and does not apply your repo’s **`tsconfig`** the same way the compiler does, so it complements—rather than replaces—**`tsc --noEmit`** (or your build’s typecheck) for whole-program validation.
+
+- Use **`tsc` / your usual CI typecheck** for “does this code type-check?”
+- Use LogicStamp for **structured contracts**, **dependency graphs**, and optional **contract drift** / **breaking-change** checks (`compare --strict`, `--strict-watch`)
+- **HTTP wire vs types (Express / NestJS):** Path and method strings are part of the extracted backend contract and feed **`semanticHash`**. A refactor can leave **`tsc` green** while **`compare`** still shows a contract change. What counts as a **strict violation** vs an informational delta for APIs is documented under [API signature handling](../cli/strict-modes.md#api-signature-handling).
+
+Details: [TypeScript support](../frameworks/typescript.md).
+
 ### Dynamic Class Parsing
 **Phase 1 ✅ (v0.3.9)** — Resolves `const`/`let`, object properties, conditionals (~70-80% of patterns).
 
@@ -51,6 +67,8 @@ These are no longer limitations. See [CHANGELOG](../../CHANGELOG.md) for details
 **Phase 1 ✅** — Package names and versions from imports/package.json. Location: `src/core/pack/collector.ts`.
 
 **Phase 2 pending** — Prop types from `.d.ts` in node_modules.
+
+**Scope note** — `.d.ts` support here targets third-party prop extraction (Phase 2). More broadly, LogicStamp **extends** declaration-style information with semantic contracts, dependency graphs, and diffable hashes for change tracking.
 
 ### Next.js
 **Partial** — Route roles, segment paths, metadata exports ✅ (v0.3.10). Missing: layout hierarchy, data fetching types, route handler request/response types, middleware analysis. See [frameworks/nextjs.md](../frameworks/nextjs.md).

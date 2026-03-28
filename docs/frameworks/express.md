@@ -90,6 +90,18 @@ LogicStamp categorizes Express files into different kinds:
 - **`node:api`** - Express route files with route definitions
 - **`ts:module`** - TypeScript modules/utilities (non-route files)
 
+## Routes and `tsc`
+
+TypeScript validates handler types, not whether clients still call the correct URL. If you only change the path and keep the same handler, types often stay valid:
+
+```typescript
+router.get('/users', listUsers);
+// →
+router.get('/user', listUsers);
+```
+
+That is still an HTTP breaking change for callers. LogicStamp includes **path**, **method**, and **handler** in extracted routes, which feed **`semanticHash`**, so **`stamp context compare`** can surface the drift. For **strict** violations vs informational API deltas, see [API signature handling](../cli/strict-modes.md#api-signature-handling).
+
 ## Express-Specific Features
 
 ### Route Extraction

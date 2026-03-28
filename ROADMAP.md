@@ -1,4 +1,4 @@
-# LogicStamp Context Roadmap
+# Roadmap
 
 Planned features, improvements, and known limitations. See [CHANGELOG.md](CHANGELOG.md) for release notes.
 
@@ -79,6 +79,10 @@ Recent milestones:
 **Conditional Schema by Language** 🔴 Planned — Make `UIFContract` schema conditional on `kind` (e.g., `style` only for frontend, `apiSignature` required for backend). Prerequisite for Python/Java. Depends on JS/JSX support first. **High priority**.
 
 ### Performance & Optimization
+
+- **Formal benchmarks** 🔴 Planned — **Today:** [`stamp context --compare-modes`](docs/cli/compare-modes.md) already compares bundle token costs across modes on **your** repo (optional `context_compare_modes.json` with `--stats`). **Planned** work adds **published** baselines and methodology: fixed reference corpora, reproducible tables, CI or scheduled runs, and assistant-side task evals. Two tracks where possible:
+  - **Tool / runtime** — Cold/warm `stamp context`, watch incremental cost, memory, scaling with repo size.
+  - **LLM / workflow (with vs without LogicStamp)** — The main question: **do models do better when given LogicStamp bundles than when they only see raw source (or minimal repo context)?** Planned evals hold tasks and prompts fixed, vary only the context channel (bundles vs baseline), and report metrics such as task success, prop/API factual accuracy, tokens to a correct answer, and hallucination rate. Complements per-repo token comparison from `--compare-modes`; extends the docs with **published** numbers others can reproduce on reference corpora.
 
 - **Incremental watch optimization** ✅ v0.8.2  
   - Avoid unnecessary array allocations during incremental rebuilds  
