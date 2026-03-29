@@ -1,9 +1,9 @@
 <div align="center">
   <a href="https://logicstamp.dev">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="assets/logicstamp-woodmark-dark.png">
-      <source media="(prefers-color-scheme: light)" srcset="assets/logicstamp-woodmark-light.png">
-      <img src="assets/logicstamp-woodmark-light.png" alt="LogicStamp" width="400" height="auto">
+      <source media="(prefers-color-scheme: dark)" srcset="assets/logicstamp-wordmark-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="assets/logicstamp-wordmark-light.png">
+      <img src="assets/logicstamp-wordmark-light.png" alt="LogicStamp" width="400" height="auto">
     </picture>
   </a>
 
@@ -40,14 +40,11 @@ Use with [logicstamp-mcp](https://github.com/LogicStamp/logicstamp-mcp) to feed 
 
 - [The Problem](#the-problem)
 - [Quick Start](#quick-start)
-- [What LogicStamp does](#what-logicstamp-does)
 - [Why Structured Context?](#why-structured-context)
 - [Features](#-features)
 - [Watch Mode](#watch-mode)
 - [How it Works](#how-it-works)
 - [MCP Server](#mcp-server)
-- [Example Output](#example-output)
-- [Installation](#installation)
 - [Security](#security)
 - [Usage](#usage)
 - [Framework Support](#framework-support)
@@ -66,19 +63,10 @@ They hallucinate props, miss dependencies, and can’t detect when a breaking ch
 
 Example: your `Button` accepts `variant` and `disabled`, but the AI suggests `isLoading` because it saw that pattern elsewhere. Without a structured contract, there is no reliable source of truth.
 
-**LogicStamp Context** compiles TypeScript into deterministic architectural contracts and dependency graphs - a machine-readable representation of your system that AI tools can consume instead of parsing raw implementation code.
-
-These contracts:
-
-- Stay in sync with your code (watch mode auto-regenerates)
-- Expose interfaces (props, hooks, APIs) without implementation noise
-- Are deterministic, diffable, and auditable
-- Enable early detection of architectural drift and breaking changes
+**LogicStamp Context** derives that layer from your TypeScript - explicit interfaces and dependency structure for tools to consume instead of inferring from implementation.
 
 ![LogicStamp MCP Workflow](./assets/logicstamp-workflow.gif)
 *Example workflow: `stamp context --strict-watch` generates context bundles that MCP-powered assistants use to explain component architecture (ThemeContext shown here).*
-
-**Same code ⇒ same context output.** Contracts are diffable, so you can detect drift and breaking changes.
 
 ```
 TypeScript Code  →  Compilation  →  Deterministic Contracts  →  AI Assistant
@@ -89,7 +77,8 @@ TypeScript Code  →  Compilation  →  Deterministic Contracts  →  AI Assista
 
 ## Quick Start
 
-**Try it in 30 seconds (no install required):**
+No install required:
+
 ```bash
 npx logicstamp-context context
 ```
@@ -100,32 +89,24 @@ Scans your repo and writes `context.json` files + `context_main.json` for AI too
 - 📁 `context.json` files - one per folder with components, preserving your directory structure
 - 📋 `context_main.json` - index file with project overview and folder metadata
 
-**For a complete setup (recommended):**
+### Installation
+
+For ongoing use, install the CLI globally:
+
 ```bash
 npm install -g logicstamp-context
+```
+
+The `stamp` command is then available everywhere. Initialize and generate context:
+
+```bash
 stamp init        # sets up .gitignore, scans for secrets
 stamp context
 ```
 
-> **ℹ️ Note:** With `npx`, run `npx logicstamp-context context`. After global install, use `stamp context`.
+> **ℹ️ Note:** With `npx`, run `npx logicstamp-context context`. After a global install, use `stamp context`.
 
 📋 **For detailed setup instructions, see the [Getting Started Guide](https://logicstamp.dev/docs/getting-started).**
-
-## What LogicStamp does
-
-- **Context compiler** - Compiles TypeScript codebases into deterministic, diffable architectural contracts using the TypeScript compiler API (via ts-morph).
-- **Deterministic & diffable** - Same code → same output. Contracts are auditable, comparable, and stable across runs.
-- **Framework-aware** - Understands React, Next.js, Vue, Express, and NestJS patterns and extracts structured metadata.
-- **LLM-oriented** - Produces structured contracts and dependency graphs (not raw code) with token estimates and modes for AI workflows.
-- **Analysis-only** - Describes your system without modifying code or enforcing patterns.
-
-### How it fits your stack
-
-- **Works alongside `tsc`** - Focuses on contract structure and change detection, not type-checking. Use `tsc --noEmit` for compiler errors. `compare --strict` and `--strict-watch` flag **contract-level** breaking changes.
-- **Beyond `.d.ts`** - Adds semantic contracts, dependency graphs, and diffable hashes (`semanticHash`, `bundleHash`) alongside declaration surfaces.
-- **Context, not control** - Feeds structured context to assistants. decisions stay with you.
-
-📋 **For detailed behavior, CLI options, and workflows, see the [Usage guide](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/guides/usage.md).**
 
 ## Why Structured Context?
 
@@ -170,7 +151,11 @@ LogicStamp Context generates:
 
 Pre-parsed. Categorized. Stable. The AI reads contracts, not implementations.
 
+On disk, each folder’s `context.json` is a **LogicStampBundle**: contracts live under `graph.nodes`, with `graph.edges` for dependencies. **`context_main.json`** indexes folders and metadata. **Full JSON shape:** [docs/reference/schema.md](docs/reference/schema.md).
+
 ## ⚡ Features
+
+**Under the hood:** the TypeScript compiler API (via ts-morph). **Analysis-only** - it describes your codebase and emits context files. it does not transform or refactor your source.
 
 **Core:**
 - **Deterministic contracts** - Same input = same output, auditable in version control
@@ -190,6 +175,14 @@ Pre-parsed. Categorized. Stable. The AI reads contracts, not implementations.
 - Accurate token estimates (GPT/Claude)
 - Security-first: automatic secret detection and sanitization
 - Zero config required - sensible defaults, works out of the box
+
+### How it fits your stack
+
+- **Works alongside `tsc`** - Focuses on contract structure and change detection, not type-checking. Use `tsc --noEmit` for compiler errors. `compare --strict` and `--strict-watch` flag **contract-level** breaking changes.
+- **Beyond `.d.ts`** - Adds semantic contracts, dependency graphs, and diffable hashes (`semanticHash`, `bundleHash`) alongside declaration surfaces.
+- **Context, not control** - Feeds structured context to assistants. Decisions stay with you.
+
+📋 **For detailed behavior, CLI options, and workflows, see the [Usage guide](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/guides/usage.md).**
 
 ## Watch Mode
 
@@ -264,8 +257,6 @@ The compilation pipeline:
 5. **Emit** - Outputs `context.json` bundles per folder
 6. **Index** - Generates `context_main.json` with metadata and statistics
 
-**Why AST-based compilation matters:** LogicStamp leverages the full TypeScript compiler (via ts-morph) for deterministic, type-aware contract extraction. Prop types, hooks, and composition patterns are resolved structurally - not inferred from text or retrieval.
-
 One command. No build step required.
 
 > **💡Tip:** Use `stamp context` for basic contracts. Use `stamp context style` when you need style metadata (Tailwind classes, SCSS selectors, layout patterns). Use `--style-mode lean` (default) for compact output or `--style-mode full` for detailed arrays.
@@ -283,48 +274,6 @@ Then configure your AI assistant to use the LogicStamp MCP Server.
 🔗 **See [LogicStamp MCP Server Repository](https://github.com/LogicStamp/logicstamp-mcp)**
 
 📋 **See [MCP Getting Started Guide](https://logicstamp.dev/docs/mcp/getting-started)** for setup instructions.
-
-## Example Output
-
-LogicStamp Context generates structured JSON bundles organized by folder:
-
-```json
-{
-  "type": "LogicStampBundle",
-  "entryId": "src/components/Button.tsx",
-  "graph": {
-    "nodes": [
-      {
-        "entryId": "src/components/Button.tsx",
-        "contract": {
-          "kind": "react:component",
-          "interface": {
-            "props": {
-              "variant": { "type": "literal-union", "literals": ["primary", "secondary"] },
-              "onClick": { "type": "function", "signature": "() => void" }
-            }
-          },
-          "composition": {
-            "hooks": ["useState"],
-            "components": ["./Icon"]
-          }
-        }
-      }
-    ],
-    "edges": [["src/components/Button.tsx", "./Icon"]]
-  }
-}
-```
-
-📋 **See [docs/reference/schema.md](https://github.com/LogicStamp/logicstamp-context/blob/main/docs/reference/schema.md)** for complete format documentation.
-
-## Installation
-
-```bash
-npm install -g logicstamp-context
-```
-
-After installation, the `stamp` command is available globally.
 
 ## Security
 
@@ -424,8 +373,8 @@ You can compare bundle token costs across modes on your repo with `stamp context
 
 ## Requirements
 
-- Node.js >= 20
-- TypeScript codebase (React, Next.js, Vue (TS/TSX), Express, or NestJS)
+- **Node.js** >= 20
+- **TypeScript codebase** - `.ts` / `.tsx` only (JavaScript is not yet analyzed). Frameworks, UI libraries, and limits: **[Framework support](#framework-support)**.
 
 ## Need Help?
 
