@@ -1415,13 +1415,20 @@ describe('config utils', () => {
     it('should use default maxEntries when missing', async () => {
       // Test logs.maxEntries || 100 branch (line 390)
       await mkdir(join(testDir, '.logicstamp'), { recursive: true });
+
+      // Pre-populate with 99 entries to reduce iterations needed
+      const existingEntries = Array.from({ length: 99 }, (_, i) => ({
+        timestamp: new Date().toISOString(),
+        changedFiles: [`existing${i}.tsx`],
+        fileCount: 1,
+      }));
       await writeFile(
         join(testDir, '.logicstamp', 'context_watch-mode-logs.json'),
-        JSON.stringify({ entries: [] }) // maxEntries is missing
+        JSON.stringify({ entries: existingEntries }) // maxEntries is missing
       );
 
-      // Add entries beyond default 100
-      for (let i = 0; i < 105; i++) {
+      // Add 3 more entries to exceed default 100 and trigger trim
+      for (let i = 0; i < 3; i++) {
         await appendWatchLog(testDir, {
           timestamp: new Date().toISOString(),
           changedFiles: [`file${i}.tsx`],
