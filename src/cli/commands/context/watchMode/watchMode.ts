@@ -40,6 +40,10 @@ import {
 } from '../index.js';
 import { contextCommand, type ContextOptions } from '../../context.js';
 
+function formatErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 /**
  * Display session status block
  */
@@ -98,10 +102,10 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
   let debounceTimer: NodeJS.Timeout | null = null;
   let regenerationPromise: Promise<void> | null = null; // Promise-based lock to prevent race conditions
   let changedFiles: Set<string> = new Set();
-  let baselineBundles: LogicStampBundle[] | null = null; // Initial state - never changes (like git HEAD)
+  /** Snapshot for `getChanges` / strict-watch: set on first load; reset when watch cache is recovered after an error (new stable tree). */
+  let baselineBundles: LogicStampBundle[] | null = null;
   let previousBundles: LogicStampBundle[] | null = null; // Last state - for incremental tracking
   let watchCache: WatchCache | null = initialCache;
-  let isFirstRun = false; // Set to false since cache is already initialized
 
   // Strict watch mode state
   let strictWatchStatus: StrictWatchStatus | null = options.strictWatch ? {
@@ -121,31 +125,93 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
 
   // Helper to load all bundles from context files
   const loadAllBundles = async (outputDir: string): Promise<LogicStampBundle[]> => {
+    const mainIndexPath = join(outputDir, 'context_main.json');
+    let mainIndexContent: string;
     try {
-      const mainIndexPath = join(outputDir, 'context_main.json');
-      const mainIndexContent = await readFile(mainIndexPath, 'utf8');
-      const mainIndex = JSON.parse(mainIndexContent) as { folders?: Array<{ contextFile?: string }> };
-      
-      const allBundles: LogicStampBundle[] = [];
-      
-      if (mainIndex.folders) {
-        for (const folder of mainIndex.folders) {
-          if (folder.contextFile) {
-            const contextPath = join(outputDir, folder.contextFile);
-            try {
-              const contextContent = await readFile(contextPath, 'utf8');
-              const bundles = JSON.parse(contextContent) as LogicStampBundle[];
-              allBundles.push(...bundles);
-            } catch {
-              // Skip if file doesn't exist or can't be read
+      mainIndexContent = await readFile(mainIndexPath, 'utf8');
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException)?.code;
+      if (code === 'ENOENT') {
+        return [];
+      }
+      if (!options.quiet) {
+        console.warn(`   ⚠️  Watch: could not read context index (${mainIndexPath}): ${formatErrorMessage(error)}`);
+      }
+      return [];
+    }
+
+    let mainIndex: { folders?: Array<{ contextFile?: string }> };
+    try {
+      mainIndex = JSON.parse(mainIndexContent) as { folders?: Array<{ contextFile?: string }> };
+    } catch (error) {
+      if (!options.quiet) {
+        console.warn(`   ⚠️  Watch: context index is not valid JSON (${mainIndexPath}): ${formatErrorMessage(error)}`);
+      }
+      return [];
+    }
+
+    const allBundles: LogicStampBundle[] = [];
+
+    if (mainIndex.folders) {
+      for (const folder of mainIndex.folders) {
+        if (folder.contextFile) {
+          const contextPath = join(outputDir, folder.contextFile);
+          try {
+            const contextContent = await readFile(contextPath, 'utf8');
+            const bundles = JSON.parse(contextContent) as LogicStampBundle[];
+            allBundles.push(...bundles);
+          } catch (error) {
+            if (!options.quiet) {
+              console.warn(`   ⚠️  Watch: could not load folder context ${contextPath}: ${formatErrorMessage(error)}`);
             }
           }
         }
       }
-      
-      return allBundles;
-    } catch {
-      return [];
+    }
+
+    return allBundles;
+  };
+
+  /** After incremental failure, run a full rebuild and re-init cache so watch mode can recover. */
+  const attemptWatchCacheRecovery = async (): Promise<{ cache: WatchCache; bundles: LogicStampBundle[] } | null> => {
+    try {
+      const outPathResolved = resolve(options.out);
+      const outputDirResolved = outPathResolved.endsWith('.json') ? dirname(outPathResolved) : outPathResolved;
+      const regenerateOptions: ContextOptions = {
+        ...options,
+        watch: false,
+        strictMissing: false,
+        quiet: true,
+        suppressSuccessIndicator: true,
+      };
+      await contextCommand(regenerateOptions);
+      const newBundles = await loadAllBundles(outputDirResolved);
+      if (newBundles.length === 0) {
+        if (!options.quiet) {
+          console.warn('   ⚠️  Full rebuild after error produced no bundles; incremental watch stays disabled.');
+        }
+        return null;
+      }
+      const files = await globFiles(projectRoot);
+      const stampignore = await readStampignore(projectRoot);
+      const filteredFiles = stampignore ? filterIgnoredFiles(files, stampignore.ignore, projectRoot) : files;
+      const { contracts } = await buildContractsFromFiles(filteredFiles, projectRoot, {
+        includeStyle: options.includeStyle,
+        styleMode: options.styleMode,
+        predictBehavior: options.predictBehavior,
+        quiet: true,
+      });
+      const manifest = buildDependencyGraph(contracts);
+      const cache = await initializeWatchCache(filteredFiles, contracts, manifest, newBundles, projectRoot);
+      if (cache == null) {
+        return null;
+      }
+      return { cache, bundles: newBundles };
+    } catch (error) {
+      if (!options.quiet) {
+        console.warn(`   ⚠️  Watch: full rebuild recovery failed: ${formatErrorMessage(error)}`);
+      }
+      return null;
     }
   };
 
@@ -172,8 +238,8 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
       const outPath = resolve(options.out);
       const outputDir = outPath.endsWith('.json') ? dirname(outPath) : outPath;
 
-      // Load baseline bundles for state-based comparison (like git diff)
-      // Baseline is set once and never changes - represents the starting state
+      // Load baseline bundles for state-based comparison (like git diff).
+      // Set on first successful load; also updated after error recovery (full rebuild) so diffs stay meaningful.
       if (!baselineBundles) {
         baselineBundles = await loadAllBundles(outputDir);
         previousBundles = baselineBundles;
@@ -427,27 +493,45 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
       }
     } catch (error) {
       const durationMs = Date.now() - startTime;
-      const errorMessage = (error as Error).message;
+      const errorMessage = formatErrorMessage(error);
 
       if (!options.quiet) {
         console.error(`   ❌ Error: ${errorMessage}\n`);
       }
 
-      // Log error to watch logs (only if --log-file flag is set)
       if (options.logFile) {
-        const logEntry: WatchLogEntry = {
-          timestamp: new Date().toISOString(),
-          changedFiles: changedFileList,
-          fileCount: changedFileList.length,
-          durationMs,
-          error: errorMessage,
-        };
-        await appendWatchLog(projectRoot, logEntry);
+        try {
+          const logEntry: WatchLogEntry = {
+            timestamp: new Date().toISOString(),
+            changedFiles: changedFileList,
+            fileCount: changedFileList.length,
+            durationMs,
+            error: errorMessage,
+          };
+          await appendWatchLog(projectRoot, logEntry);
+        } catch (logError) {
+          if (!options.quiet) {
+            console.warn(`   ⚠️  Watch: could not append watch log: ${formatErrorMessage(logError)}`);
+          }
+        }
       }
 
-      // Fall back to full rebuild on error
-      watchCache = null;
-      isFirstRun = true;
+      const recovery = await attemptWatchCacheRecovery();
+      if (recovery != null) {
+        watchCache = recovery.cache;
+        baselineBundles = recovery.bundles;
+        previousBundles = recovery.bundles;
+        if (!options.quiet) {
+          console.log(`   ✅ Watch cache restored after full rebuild.\n`);
+        }
+      } else {
+        watchCache = null;
+        if (!options.quiet) {
+          console.warn(
+            '   ⚠️  Each file change will run a full context rebuild until a rebuild succeeds.\n',
+          );
+        }
+      }
     }
     };
 
@@ -463,7 +547,9 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
       clearTimeout(debounceTimer);
     }
     debounceTimer = setTimeout(() => {
-      regenerate();
+      void regenerate().catch((err) => {
+        console.error(`   ❌ Watch: unexpected regenerate failure: ${formatErrorMessage(err)}\n`);
+      });
     }, DEBOUNCE_DELAY);
   };
 

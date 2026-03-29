@@ -85,7 +85,7 @@ Details: [TypeScript support](../frameworks/typescript.md).
 - **Code content** — Not captured (by design for token efficiency).
 - **Backend** — Middleware, guards, validation schemas not extracted. See [express.md](../frameworks/express.md) and framework docs.
 - **Dependency graph edges** — Edges are built; empty `edges: []` can mean no dependencies, unresolved imports, or internal-only components. Default `--depth` is 2 (depth 1 = no nested edges). See [usage.md](../guides/usage.md#dependency-graph).
-- **Strict watch** — Baseline is session-scoped (doesn't update during a run). New/empty projects show all changes as "added."
+- **Strict watch** — Diffs and violations use a **baseline** snapshot loaded on the first rebuild in a session (and after a successful **recovery** from a failed incremental rebuild; see [watch.md](../cli/watch.md#errors-and-recovery)). Session totals (`totalErrorsDetected`, etc.) are not reset by recovery. New/empty projects show all changes as "added."
 
 ---
 
