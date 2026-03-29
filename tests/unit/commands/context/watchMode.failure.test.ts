@@ -98,6 +98,8 @@ import * as watchModeModule from '../../../../src/cli/commands/context/watchMode
 import * as contextHelpersModule from '../../../../src/cli/commands/context/index.js';
 import chokidar from 'chokidar';
 import { readFile } from 'node:fs/promises';
+import { globFiles } from '../../../../src/utils/fsx.js';
+import { contextCommand } from '../../../../src/cli/commands/context.js';
 
 // Helper to create mock bundle changes
 function createMockBundleChanges(overrides?: Partial<BundleChanges>): BundleChanges {
@@ -1065,6 +1067,114 @@ describe('Watch Mode Failure Modes', () => {
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Error'));
       consoleErrorSpy.mockRestore();
+    });
+
+    it('should run full rebuild recovery after incremental failure and re-init cache when recovery succeeds', async () => {
+      let changeHandler: ((path: string) => void) | undefined;
+      const mockWatcher = {
+        on: vi.fn((event: string, handler: (path: string) => void) => {
+          if (event === 'change') {
+            changeHandler = handler;
+          }
+          return mockWatcher;
+        }),
+        close: vi.fn().mockResolvedValue(undefined),
+      };
+      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+
+      vi.mocked(watchModeModule.incrementalRebuild).mockRejectedValueOnce(new Error('Incremental failed'));
+
+      const recoveredCache: WatchCache = {
+        contracts: new Map(),
+        astCache: new Map(),
+        styleCache: new Map(),
+        fileList: new Set(['src/App.tsx']),
+        componentToBundles: new Map(),
+        manifest: {
+          version: '0.3',
+          generatedAt: new Date().toISOString(),
+          totalComponents: 0,
+          components: {},
+          graph: { roots: [], leaves: [] },
+        },
+        allBundles: [],
+      };
+      vi.mocked(watchModeModule.initializeWatchCache).mockResolvedValue(recoveredCache);
+
+      const recoveredBundle: LogicStampBundle = {
+        type: 'LogicStampBundle',
+        schemaVersion: '0.1',
+        entryId: 'src/App.tsx',
+        depth: 2,
+        createdAt: new Date().toISOString(),
+        bundleHash: 'recovered',
+        graph: { nodes: [], edges: [] },
+        meta: { missing: [], source: 'test' },
+      };
+
+      vi.mocked(readFile).mockImplementation(async (path: unknown) => {
+        const p = String(path).replace(/\\/g, '/');
+        if (p.includes('context_main.json')) {
+          return JSON.stringify({
+            folders: [{ contextFile: 'context.json' }],
+          });
+        }
+        if (p.includes('context.json') && !p.includes('context_main')) {
+          return JSON.stringify([recoveredBundle]);
+        }
+        return '';
+      });
+
+      vi.mocked(globFiles).mockResolvedValue(['src/App.tsx']);
+      vi.mocked(contextHelpersModule.buildContractsFromFiles).mockResolvedValue({ contracts: [] } as never);
+
+      vi.mocked(contextCommand).mockClear();
+
+      const mockCache: WatchCache = {
+        contracts: new Map(),
+        astCache: new Map(),
+        styleCache: new Map(),
+        fileList: new Set(),
+        componentToBundles: new Map(),
+        manifest: {
+          version: '0.3',
+          generatedAt: new Date().toISOString(),
+          totalComponents: 0,
+          components: {},
+          graph: { roots: [], leaves: [] },
+        },
+        allBundles: [],
+      };
+
+      const options: ContextOptions = {
+        out: '.logicstamp',
+        depth: 2,
+        includeCode: 'header',
+        format: 'json',
+        hashLock: false,
+        strict: false,
+        allowMissing: true,
+        maxNodes: 100,
+        profile: 'llm-chat',
+        predictBehavior: false,
+        dryRun: false,
+        stats: false,
+        strictMissing: false,
+        compareModes: false,
+        watch: true,
+        quiet: false,
+      };
+
+      void startWatchMode(options, '/project', mockCache);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      if (changeHandler) {
+        changeHandler('/project/src/App.tsx');
+      }
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      expect(vi.mocked(contextCommand)).toHaveBeenCalled();
+      expect(vi.mocked(watchModeModule.initializeWatchCache)).toHaveBeenCalled();
     });
 
     it('should log errors when logFile is enabled', async () => {

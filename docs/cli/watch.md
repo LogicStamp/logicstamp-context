@@ -50,6 +50,20 @@ Watch mode maintains a cache of contracts, AST data, and style metadata. When a 
 
 This makes rebuilds significantly faster than full regeneration.
 
+### Errors and recovery
+
+If an **incremental** rebuild throws (parse error, I/O, etc.), watch mode:
+
+1. Logs the error (and appends to the watch log when `--log-file` is set).
+2. Runs a **full** `stamp context` rebuild (same as the non-watch command) and reloads output from disk.
+3. **Re-initializes the watch cache** when that succeeds so later edits use incremental rebuilds again.
+
+If step 2 or 3 fails, the in-memory cache is cleared. each subsequent change triggers a full rebuild until one completes successfully.
+
+**Diff / strict-watch baseline:** The snapshot used for “what changed” and for strict violations is normally fixed for the session (from the first successful load). After a **successful recovery**, that baseline is updated to match the recovered output so comparisons stay aligned with what is on disk. Strict-watch **session counters** (errors/warnings detected, resolved count, etc.) are **not** reset by recovery.
+
+**Corrupted or missing context files:** When the context index or a folder context file cannot be read or parsed, watch mode emits a warning (suppressed when `--quiet` is set), except a missing main index before any output exists (`ENOENT`), which still returns empty bundles without a warning.
+
 ### Change Detection
 
 Watch mode detects and displays what changed in your components (informational):
@@ -310,7 +324,7 @@ When violations are detected, strict watch mode creates a structured JSON report
 }
 ```
 
-**State-based semantics (v0.5.5+):** The violations report shows **current** violations relative to the baseline (state when watch mode started), not cumulative history:
+**State-based semantics (v0.5.5+):** The violations report shows **current** violations relative to the **baseline** snapshot used for diffs (normally from the first successful rebuild in the session; updated after [successful error recovery](#errors-and-recovery)), not cumulative history:
 - `cumulativeViolations/Errors/Warnings` reflect the current state, not a running total
 - **File lifecycle**: The file is created when violations are detected and automatically deleted when all violations are resolved (reverted back to baseline)
 - This works like `git diff` - only shows what's currently different from baseline
