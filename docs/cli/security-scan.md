@@ -313,6 +313,7 @@ stamp security --hard-reset --force
 
 - Pattern-based detection (may have false positives or miss some formats)
 - Only scans TypeScript, JavaScript, and JSON files
+- Lines longer than 1000 characters are skipped during pattern matching (performance and safety); secrets confined to such lines may not be detected or sanitized
 - Files larger than 10MB are skipped (you'll see a warning)
 - Doesn't detect encrypted secrets or secrets in environment-specific files
 - Static analysis only (can't detect secrets passed at runtime)

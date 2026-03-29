@@ -21,6 +21,22 @@ See [docs/limitations.md](docs/reference/limitations.md).
 
 ---
 
+## [0.8.3] - 2026-03-29
+
+### Fixed
+
+- **Secret detector: performance and safety improvements** ([#172](https://github.com/LogicStamp/logicstamp-context/pull/172))
+  - Skip very long lines (`MAX_LINE_LENGTH = 1000`) to avoid slow regex evaluation
+  - Remove per-line `RegExp` allocations (~10k fewer per 1000-line file)
+  - Simplify overlapping patterns to reduce backtracking (`api[_-]?key` unifies variants)
+
+- **Watch mode: error handling and recovery improvements** ([#171](https://github.com/LogicStamp/logicstamp-context/pull/171))
+  - Improve logging for context load/read failures (respects `--quiet`)
+  - Add full rebuild fallback after incremental errors to restore consistent state
+  - Harden async/error handling to prevent masked errors and unhandled rejections
+
+---
+
 ## [0.8.2] - 2026-03-26
 
 ### Changed
@@ -656,7 +672,9 @@ See [docs/limitations.md](docs/reference/limitations.md).
 
 
 
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.8.2...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.8.3...HEAD
+
+[0.8.3]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.3
 
 [0.8.2]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.2
 
