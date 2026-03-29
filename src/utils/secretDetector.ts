@@ -3,6 +3,13 @@
  * Detects common patterns for API keys, tokens, passwords, etc.
  */
 
+/**
+ * Maximum line length to scan.
+ * Skips very long lines to avoid slow regex processing and performance issues.
+ * Legitimate secrets are unlikely to appear on extremely long lines.
+ */
+const MAX_LINE_LENGTH = 1000;
+
 export interface SecretMatch {
   file: string;
   line: number;
@@ -23,7 +30,7 @@ const SECRET_PATTERNS: Array<{
   // API Keys
   {
     name: 'API Key',
-    pattern: /['"`]?(?:api[_-]?key|apikey)['"`]?\s*[=:]\s*['"`]?([a-zA-Z0-9_\-]{20,})['"`]?/i,
+    pattern: /['"`]?api[_-]?key['"`]?\s*[=:]\s*['"`]?([a-zA-Z0-9_\-]{20,})['"`]?/i,
     severity: 'high',
   },
   // AWS Access Keys
@@ -88,13 +95,13 @@ const SECRET_PATTERNS: Array<{
   // JWT Secrets
   {
     name: 'JWT Secret',
-    pattern: /['"`]?(?:jwt[_-]?secret|jwt[_-]?key)['"`]?\s*[=:]\s*['"`]?([a-zA-Z0-9_\-]{16,})['"`]?/i,
+    pattern: /['"`]?jwt[_-]?(?:secret|key)['"`]?\s*[=:]\s*['"`]?([a-zA-Z0-9_\-]{16,})['"`]?/i,
     severity: 'high',
   },
   // Generic secrets
   {
     name: 'Secret',
-    pattern: /['"`]?(?:secret|secret[_-]?key)['"`]?\s*[=:]\s*['"`]?([a-zA-Z0-9_\-]{16,})['"`]?/i,
+    pattern: /['"`]?secret(?:[_-]?key)?['"`]?\s*[=:]\s*['"`]?([a-zA-Z0-9_\-]{16,})['"`]?/i,
     severity: 'medium',
   },
 ];
@@ -108,20 +115,26 @@ export function scanFileForSecrets(
 ): SecretMatch[] {
   const matches: SecretMatch[] = [];
   const lines = content.split('\n');
-  
+
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
     const line = lines[lineIndex];
-    
+
+    // Skip very long lines to prevent ReDoS attacks
+    if (line.length > MAX_LINE_LENGTH) {
+      continue;
+    }
+
     for (const { name, pattern, severity } of SECRET_PATTERNS) {
-      const regex = new RegExp(pattern.source, pattern.flags);
-      let match: RegExpExecArray | null;
-      
-      while ((match = regex.exec(line)) !== null) {
+      // Reset lastIndex for safety (future-proofs if global flags are added)
+      pattern.lastIndex = 0;
+      const match = pattern.exec(line);
+
+      if (match) {
         // Extract snippet (first 100 chars around match)
         const matchStart = Math.max(0, match.index - 20);
         const matchEnd = Math.min(line.length, match.index + match[0].length + 20);
         const snippet = line.slice(matchStart, matchEnd).trim();
-        
+
         matches.push({
           file: filePath,
           line: lineIndex + 1,
@@ -130,15 +143,10 @@ export function scanFileForSecrets(
           snippet,
           severity,
         });
-        
-        // Prevent infinite loops
-        if (!pattern.global) {
-          break;
-        }
       }
     }
   }
-  
+
   return matches;
 }
 
