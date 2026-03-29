@@ -212,6 +212,19 @@ const auth = {
       expect(matches).toHaveLength(0);
     });
 
+    it('should skip very long lines to prevent ReDoS', () => {
+      // Create a line longer than MAX_LINE_LENGTH (1000 chars) with a secret
+      const longPrefix = 'x'.repeat(1001);
+      const secretLine = `${longPrefix}apiKey = 'FAKE_API_KEY_DO_NOT_USE_1234567890abcdefghijklmnop';`;
+      const normalLine = "const apiKey = 'FAKE_API_KEY_DO_NOT_USE_1234567890abcdefghijklmnop';";
+      const content = `${secretLine}\n${normalLine}`;
+      const matches = scanFileForSecrets('test.ts', content);
+
+      // Should only detect the secret on the normal line (line 2), not the long line
+      expect(matches.length).toBe(1);
+      expect(matches[0].line).toBe(2);
+    });
+
     it('should detect secrets with different quote types', () => {
       const content = `const apiKey = "FAKE_API_KEY_DO_NOT_USE_1234567890abcdefghijklmnop";
 const api_key = 'FAKE_API_KEY_DO_NOT_USE_1234567890abcdefghijklmnop';
