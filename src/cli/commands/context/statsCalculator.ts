@@ -62,8 +62,22 @@ export function generateStatsOutput(
 }
 
 /**
- * Generate summary output for console
- * Uses accurate token counting (recompiles contracts) like --compare-modes
+ * Determines the display label for the current mode combination
+ */
+function getModeLabel(includeCode: 'none' | 'header' | 'full', hasStyle: boolean): string {
+  if (includeCode === 'header') {
+    return hasStyle ? 'header+style' : 'header';
+  }
+  if (includeCode === 'full') {
+    return hasStyle ? 'full+style' : 'full';
+  }
+  return includeCode;
+}
+
+/**
+ * Generate summary output for console.
+ * Shows accurate token counts for the current mode only.
+ * For detailed mode comparisons, use `stamp context --compare-modes`.
  */
 export async function generateSummary(
   contracts: UIFContract[],
@@ -91,6 +105,9 @@ export async function generateSummary(
     quiet?: boolean;
   }
 ): Promise<void> {
+  const modeLabel = getModeLabel(options.includeCode, options.includeStyle === true);
+
+  // Print component summary
   console.log('\n📊 Summary:');
   console.log(`   Total components: ${contracts.length}`);
   console.log(`   Root components: ${manifest.graph.roots.length}`);
@@ -99,126 +116,52 @@ export async function generateSummary(
   console.log(`   Total nodes in context: ${stats.totalNodes}`);
   console.log(`   Total edges: ${stats.totalEdges}`);
   console.log(`   Missing dependencies: ${stats.totalMissing}`);
-  
-  // Determine mode label
-  const hasStyle = options.includeStyle === true;
-  const isHeaderMode = options.includeCode === 'header';
-  
-  let modeLabel: string;
-  if (isHeaderMode && hasStyle) {
-    modeLabel = 'header+style';
-  } else if (isHeaderMode && !hasStyle) {
-    modeLabel = 'header';
-  } else {
-    modeLabel = options.includeCode === 'full' ? 'full+style' : options.includeCode;
-  }
-  
-  // Calculate header token estimates (use estimates for performance, accurate recompilation only in --compare-modes)
-  let headerNoStyleGPT4: number;
-  let headerNoStyleClaude: number;
-  let headerWithStyleGPT4: number;
-  let headerWithStyleClaude: number;
-  
-  // Improve raw source estimation: if we're in header mode, use header tokens to estimate raw source
-  // Header mode is approximately 30% of raw source tokens, so raw ≈ header / 0.30
-  let estimatedRawSourceGPT4 = tokenEstimates.sourceTokensGPT4;
-  let estimatedRawSourceClaude = tokenEstimates.sourceTokensClaude;
-  
-  if (isHeaderMode && !hasStyle) {
-    // We're in header mode, so we can estimate raw source more accurately
-    // Header is ~30% of raw source, so raw source ≈ header / 0.30
-    estimatedRawSourceGPT4 = Math.ceil(options.currentGPT4 / 0.30);
-    estimatedRawSourceClaude = Math.ceil(options.currentClaude / 0.30);
-  } else if (isHeaderMode && hasStyle) {
-    // We're in header+style mode, estimate header without style first
-    // Style adds ~105% overhead (170k vs 83k), so header ≈ header+style / 2.05
-    const estimatedHeaderGPT4 = Math.ceil(options.currentGPT4 / 2.05);
-    const estimatedHeaderClaude = Math.ceil(options.currentClaude / 2.05);
-    // Then estimate raw source from header
-    estimatedRawSourceGPT4 = Math.ceil(estimatedHeaderGPT4 / 0.30);
-    estimatedRawSourceClaude = Math.ceil(estimatedHeaderClaude / 0.30);
-  }
-  
-  if (isHeaderMode && hasStyle) {
-    // Current output IS header+style, estimate header without style
-    headerNoStyleGPT4 = Math.ceil(options.currentGPT4 / 2.05); // Style typically doubles the size
-    headerNoStyleClaude = Math.ceil(options.currentClaude / 2.05);
-    headerWithStyleGPT4 = options.currentGPT4;
-    headerWithStyleClaude = options.currentClaude;
-  } else if (isHeaderMode && !hasStyle) {
-    // Current output IS header without style, estimate header+style
-    headerNoStyleGPT4 = options.currentGPT4;
-    headerNoStyleClaude = options.currentClaude;
-    headerWithStyleGPT4 = Math.ceil(options.currentGPT4 * 2.05); // Style adds ~105%
-    headerWithStyleClaude = Math.ceil(options.currentClaude * 2.05);
-  } else {
-    // For non-header modes, use estimates
-    headerNoStyleGPT4 = Math.ceil(options.currentGPT4 * 0.75);
-    headerNoStyleClaude = Math.ceil(options.currentClaude * 0.75);
-    headerWithStyleGPT4 = Math.ceil(options.currentGPT4 * 0.85);
-    headerWithStyleClaude = Math.ceil(options.currentClaude * 0.85);
-  }
-  
-  // Calculate savings percentages vs raw source (use improved estimation)
-  // Clamp to valid range [0, 100] to handle edge cases where estimates may be off
-  const calculateSavings = (raw: number, current: number): string => {
-    if (raw <= 0 || current < 0) return '0';
-    const savings = ((raw - current) / raw) * 100;
-    return Math.max(0, Math.min(100, savings)).toFixed(0);
-  };
-  const headerSavingsGPT4 = calculateSavings(estimatedRawSourceGPT4, headerNoStyleGPT4);
-  const headerStyleSavingsGPT4 = calculateSavings(estimatedRawSourceGPT4, headerWithStyleGPT4);
-  
-  // Check tokenizer status and display it
+
+  // Print token counts for current mode
   const tokenizerStatus = await getTokenizerStatus();
   const gpt4Method = tokenizerStatus.gpt4 ? 'tiktoken' : 'approximation';
   const claudeMethod = tokenizerStatus.claude ? 'tokenizer' : 'approximation';
-  
-  console.log(`\n📏 Token Estimates (${modeLabel} mode):`);
-  console.log(`   Token estimation: GPT-4o (${gpt4Method}) | Claude (${claudeMethod})`);
+
+  // Calculate savings vs raw source
+  const rawGPT4 = tokenEstimates.sourceTokensGPT4;
+  const rawClaude = tokenEstimates.sourceTokensClaude;
+  const savingsGPT4 = rawGPT4 > 0
+    ? Math.round(((rawGPT4 - tokenEstimates.currentGPT4) / rawGPT4) * 100)
+    : 0;
+  const savingsClaude = rawClaude > 0
+    ? Math.round(((rawClaude - tokenEstimates.currentClaude) / rawClaude) * 100)
+    : 0;
+
+  console.log(`\n📏 Token Count (${modeLabel} mode):`);
+  console.log(`   Raw source:  ${formatTokenCount(rawGPT4)} GPT-4o / ${formatTokenCount(rawClaude)} Claude`);
+  console.log(`   ${modeLabel.padEnd(12)} ${formatTokenCount(tokenEstimates.currentGPT4)} GPT-4o / ${formatTokenCount(tokenEstimates.currentClaude)} Claude`);
+  console.log(`   Savings:     ~${savingsGPT4}% GPT-4o / ~${savingsClaude}% Claude`);
+  console.log(`   Method: GPT-4o (${gpt4Method}) | Claude (${claudeMethod})`);
+
+  // Show tip for missing tokenizers
   if (!tokenizerStatus.gpt4 || !tokenizerStatus.claude) {
     const missing: string[] = [];
-    if (!tokenizerStatus.gpt4) {
-      missing.push('@dqbd/tiktoken (GPT-4)');
-    }
-    if (!tokenizerStatus.claude) {
-      missing.push('@anthropic-ai/tokenizer (Claude)');
-    }
-    console.log(`   💡 Tip: Tokenizers are included as optional dependencies. If installation failed, manually install ${missing.join(' and/or ')} for accurate token counts`);
+    if (!tokenizerStatus.gpt4) missing.push('@dqbd/tiktoken');
+    if (!tokenizerStatus.claude) missing.push('@anthropic-ai/tokenizer');
+    console.log(`   💡 Install ${missing.join(' and ')} for accurate counts`);
   }
-  console.log(`   ⚠️  Current mode = tokenizer-based.`);
-  console.log(`      Other modes / raw source = heuristic.`);
-  console.log(`      For precise per-mode breakdown, use "stamp context --compare-modes".`);
-  console.log(`   GPT-4o-mini: ${formatTokenCount(tokenEstimates.currentGPT4)} tokens`);
-  console.log(`   Claude:      ${formatTokenCount(tokenEstimates.currentClaude)} tokens`);
-  console.log(`\n   Comparison:`);
-  console.log(`     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Raw Source`);
-  console.log(`     -------------|---------------|---------------|------------------------`);
-  console.log(`     Raw source   | ${formatTokenCount(estimatedRawSourceGPT4).padStart(13)} | ${formatTokenCount(estimatedRawSourceClaude).padStart(13)} | 0%`);
-  console.log(`     Header       | ${formatTokenCount(headerNoStyleGPT4).padStart(13)} | ${formatTokenCount(headerNoStyleClaude).padStart(13)} | ${headerSavingsGPT4}%`);
-  console.log(`     Header+style | ${formatTokenCount(headerWithStyleGPT4).padStart(13)} | ${formatTokenCount(headerWithStyleClaude).padStart(13)} | ${headerStyleSavingsGPT4}%`);
-  console.log(`\n   Full context (code+style): ~${formatTokenCount(tokenEstimates.modeEstimates.full.gpt4)} GPT-4o-mini / ~${formatTokenCount(tokenEstimates.modeEstimates.full.claude)} Claude`);
 
-  console.log(`\n📊 Current Mode Comparison:`);
-  console.log(`   ⚠️  Current mode = tokenizer-based.`);
-  console.log(`      Other modes / raw source = heuristic.`);
-  console.log(`      For precise per-mode breakdown, use "stamp context --compare-modes".`);
-  console.log(`   none:       ~${formatTokenCount(tokenEstimates.modeEstimates.none.gpt4)} tokens`);
-  // Show current mode with honest labeling - reflects actual mode (header or header+style)
-  const currentModeLabel = modeLabel;
-  console.log(`   ${currentModeLabel.padEnd(13)} ~${formatTokenCount(tokenEstimates.currentGPT4)} tokens`);
-  console.log(`   full:       ~${formatTokenCount(tokenEstimates.modeEstimates.full.gpt4)} tokens`);
+  // Point to --compare-modes for detailed breakdown
+  console.log(`\n   For detailed mode comparison, run: stamp context --compare-modes`);
 
+  // Print missing dependencies if any
   if (stats.totalMissing > 0) {
     console.log('\n⚠️  Missing dependencies (external/third-party):');
     const allMissing = new Set<string>();
     bundles.forEach(b => {
       b.meta.missing.forEach(dep => allMissing.add(dep.name));
     });
-    Array.from(allMissing).slice(0, 10).forEach(name => console.log(`   - ${name}`));
-    if (allMissing.size > 10) {
-      console.log(`   ... and ${allMissing.size - 10} more`);
+
+    const MAX_DISPLAY = 10;
+    Array.from(allMissing).slice(0, MAX_DISPLAY).forEach(name => console.log(`   - ${name}`));
+
+    if (allMissing.size > MAX_DISPLAY) {
+      console.log(`   ... and ${allMissing.size - MAX_DISPLAY} more`);
     }
   }
 }
-

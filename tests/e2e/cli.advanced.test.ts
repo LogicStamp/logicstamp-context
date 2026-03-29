@@ -37,20 +37,14 @@ describe('CLI Advanced Features Tests', () => {
         `node dist/cli/stamp.js context ${fixturesPath} --out ${outFile}`
       );
 
-      // Verify token estimates section
-      expect(stdout).toContain('📏 Token Estimates');
-      expect(stdout).toContain('GPT-4o-mini:');
-      expect(stdout).toContain('Claude:');
-      expect(stdout).toContain('Comparison:');
-      expect(stdout).toContain('Full context (code+style):');
-
-      // Verify mode comparison block
-      expect(stdout).toContain('📊 Current Mode Comparison:');
-      expect(stdout).toContain('none:');
-      // Current mode will be shown (could be "header" or "header+style" depending on mode)
-      expect(stdout).toMatch(/header|header\+style/);
-      expect(stdout).toContain('full:');
-      expect(stdout).toContain('tokens');
+      // Verify token count section (simplified output)
+      expect(stdout).toContain('📏 Token Count');
+      expect(stdout).toContain('Raw source:');
+      expect(stdout).toContain('Savings:');
+      expect(stdout).toContain('GPT-4o');
+      expect(stdout).toContain('Claude');
+      // Points to --compare-modes for detailed breakdown
+      expect(stdout).toContain('--compare-modes');
     }, 30000);
 
     it('should include token estimates in --stats JSON output', async () => {
@@ -662,8 +656,8 @@ export function ComponentA() {
       );
 
       expect(stdout).toContain('context files written successfully');
-      expect(stdout).toContain('Token Estimates');
-      expect(stdout).toContain('Mode Comparison');
+      expect(stdout).toContain('Token Count');
+      expect(stdout).toContain('--compare-modes');
 
       // Read all bundles from all folders
       const mainIndex = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));

@@ -402,11 +402,12 @@ describe('CLI Style Command Tests', () => {
         `node dist/cli/stamp.js context style ${fixturesPath} --out ${outDir}`
       );
 
-      // Verify token estimates are shown
-      expect(stdout).toContain('Token Estimates');
-      expect(stdout).toContain('GPT-4o-mini:');
-      expect(stdout).toContain('Claude:');
-      expect(stdout).toContain('Full context (code+style):');
+      // Verify token count is shown (simplified output)
+      expect(stdout).toContain('Token Count');
+      expect(stdout).toContain('Raw source:');
+      expect(stdout).toContain('Savings:');
+      expect(stdout).toContain('GPT-4o');
+      expect(stdout).toContain('Claude');
     }, 30000);
   });
 
