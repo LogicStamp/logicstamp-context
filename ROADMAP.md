@@ -4,9 +4,10 @@ Planned features, improvements, and known limitations. See [CHANGELOG.md](CHANGE
 
 ## Current Status
 
-**Version:** v0.8.2 (Beta)
+**Version:** v0.8.3 (Beta)
 
 Recent milestones:
+- ✅ Secret scanner & watch reliability (v0.8.3) - Long-line skip and regex optimizations in secret detection; watch logging, full rebuild fallback after incremental errors, async/error hardening
 - ✅ CLI argument validation and robustness fixes (v0.8.1) - Numeric arg validation for `--depth`/`--max-nodes`, safe compare normalization, token savings bounds
 - ✅ `--strict` flag for compare (v0.8.0) - Exit code 1 on breaking changes
 - ✅ Git baseline comparison (v0.7.2) - `--baseline git:<ref>` for drift detection
@@ -95,6 +96,15 @@ Recent milestones:
   - Centralized `isPathWithinRoot` for consistent project boundary enforcement  
   - Prevents file access outside project root in pack loader and hash-lock flows  
   - Aligns validation across `loadContract`, `readSourceCode`, and related fs operations
+
+- **Secret detection performance & safety** ✅ v0.8.3  
+  - Skips very long lines (1000+ characters) to avoid pathological regex cost  
+  - Fewer per-line `RegExp` allocations; simplified overlapping patterns (`api[_-]?key`, etc.)
+
+- **Watch mode error handling** ✅ v0.8.3  
+  - Clearer logging for context load/read failures (respects `--quiet`)  
+  - Full rebuild fallback after incremental errors to restore consistent state  
+  - Hardened async/error paths to avoid masked failures and unhandled rejections
 
 - ✅ Incremental bundle caching (watch mode)
 - **Style verbosity reduction** 🔴 — Less verbose style for nested components with `depth=2`; planned `--full-style` flag for full extraction (distinct from `--style-mode full`). ~30-40% token reduction.

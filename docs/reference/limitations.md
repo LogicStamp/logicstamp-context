@@ -77,6 +77,7 @@ Details: [TypeScript support](../frameworks/typescript.md).
 **Missing** — No cross-folder relationships or project-wide stats in `context_main.json`. Only folder index with token estimates. Location: `src/cli/commands/context/fileWriter.ts`.
 
 ### Other Gaps
+- **Security scan** — Single lines longer than 1000 characters are skipped during secret pattern matching (performance). See [security-scan limitations](../cli/security-scan.md#limitations).
 - **JavaScript files** — Only `.ts` and `.tsx` are analyzed; `.js` and `.jsx` are ignored.
 - **Comments** — JSDoc only (header mode). No `//`, `/* */`, TODOs.
 - **Test files** — Excluded by design. Optional flag if requested.
