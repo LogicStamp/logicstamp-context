@@ -205,10 +205,18 @@ export async function deleteSidecar(sidecarPath: string): Promise<void> {
 }
 
 /**
+ * Convert backslashes to forward slashes for cross-platform path display.
+ * Use this for simple display purposes. For entryId normalization, use normalizeEntryId.
+ */
+export function toForwardSlashes(path: string): string {
+  return path.replace(/\\/g, '/');
+}
+
+/**
  * Get relative path from base directory
  */
 export function getRelativePath(from: string, to: string): string {
-  return relative(from, to).replace(/\\/g, '/');
+  return toForwardSlashes(relative(from, to));
 }
 
 /**
@@ -262,7 +270,7 @@ export function getSidecarPath(sourcePath: string, outRoot: string): string {
  * All entryId fields in contracts and manifest keys use this normalization.
  */
 export function normalizeEntryId(entryId: string): string {
-  const normalized = normalize(entryId).replace(/\\/g, '/');
+  const normalized = toForwardSlashes(normalize(entryId));
   // On Windows, normalize drive letter to lowercase for consistency
   // This ensures manifest keys match across different input formats
   let result = normalized.replace(/^([A-Z]):/, (_, drive) => `${drive.toLowerCase()}:`);

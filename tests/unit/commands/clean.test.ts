@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { cleanCommand, type CleanOptions } from '../../../src/cli/commands/clean.js';
 import * as fsx from '../../../src/utils/fsx.js';
 import { unlink, rm, stat } from 'node:fs/promises';
-import { glob } from 'glob';
+import { glob, type GlobOptions } from 'glob';
 import { relative } from 'node:path';
 
 // Mock dependencies
@@ -12,6 +12,7 @@ vi.mock('../../../src/utils/fsx.js', () => ({
     if (!path) return '';
     return String(path).replace(/\\/g, '/');
   }),
+  toForwardSlashes: (path: string) => path ? path.replace(/\\/g, '/') : '',
 }));
 vi.mock('node:fs/promises');
 vi.mock('glob');
@@ -22,12 +23,15 @@ function mockGlob(
   contextToon: string[] = [],
   contextToonVariants: string[] = []
 ) {
-  vi.mocked(glob).mockImplementation((pattern: string) => {
-    if (pattern === '**/context.json') return Promise.resolve(contextJson);
-    if (pattern === '**/context.toon') return Promise.resolve(contextToon);
-    if (pattern === '**/context_*.toon') return Promise.resolve(contextToonVariants);
-    return Promise.resolve([]);
-  });
+  vi.mocked(glob).mockImplementation(
+    (pattern: string | string[], _options?: GlobOptions) => {
+      const pat = Array.isArray(pattern) ? (pattern[0] ?? '') : pattern;
+      if (pat === '**/context.json') return Promise.resolve(contextJson);
+      if (pat === '**/context.toon') return Promise.resolve(contextToon);
+      if (pat === '**/context_*.toon') return Promise.resolve(contextToonVariants);
+      return Promise.resolve([]);
+    }
+  );
 }
 
 describe('cleanCommand', () => {

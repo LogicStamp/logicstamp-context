@@ -7,6 +7,7 @@ import { resolve, isAbsolute, normalize } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import type { SecretMatch } from './secretDetector.js';
 import type { SecurityReport } from '../cli/commands/security.js';
+import { toForwardSlashes } from './fsx.js';
 
 /**
  * Load security report from file
@@ -31,9 +32,9 @@ function normalizePathForComparison(path: string): string {
   // On Windows, paths are case-insensitive, so lowercase for comparison
   // Also normalize separators to forward slashes for consistency
   if (process.platform === 'win32') {
-    return normalized.toLowerCase().replace(/\\/g, '/');
+    return toForwardSlashes(normalized.toLowerCase());
   }
-  return normalized.replace(/\\/g, '/');
+  return toForwardSlashes(normalized);
 }
 
 /**

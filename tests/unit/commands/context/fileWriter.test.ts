@@ -21,6 +21,7 @@ vi.mock('../../../../src/utils/fsx.js', () => ({
     return parts.join('/') || '.';
   }),
   normalizeEntryId: (id: string) => id.replace(/\\/g, '/'),
+  toForwardSlashes: (path: string) => path.replace(/\\/g, '/'),
 }));
 
 // Mock debug module

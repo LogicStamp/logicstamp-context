@@ -6,6 +6,7 @@ import { readFile, writeFile, access } from 'node:fs/promises';
 import { join } from 'node:path';
 import { readConfig, updateConfig } from './config.js';
 import { debugError } from './debug.js';
+import { toForwardSlashes } from './fsx.js';
 
 /**
  * Patterns that should be added to .gitignore for LogicStamp context & security files
@@ -265,7 +266,7 @@ export async function ensurePatternInGitignore(
   const content = await readGitignore(targetDir);
   
   // Normalize pattern (forward slashes, no leading slash)
-  const normalizedPattern = pattern.replace(/\\/g, '/').replace(/^\//, '').trim();
+  const normalizedPattern = toForwardSlashes(pattern).replace(/^\//, '').trim();
   
   // Check if pattern already exists
   if (hasPattern(content, normalizedPattern)) {

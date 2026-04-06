@@ -7,7 +7,7 @@ import { dirname, join, resolve, relative, basename } from 'node:path';
 import { cwd } from 'node:process';
 import { createRequire } from 'module';
 import type { LogicStampBundle, LogicStampIndex, FolderInfo } from '../../../core/pack.js';
-import { getFolderPath, normalizeEntryId } from '../../../utils/fsx.js';
+import { getFolderPath, normalizeEntryId, toForwardSlashes } from '../../../utils/fsx.js';
 import { estimateGPT4Tokens } from '../../../utils/tokens.js';
 import { formatBundlesForFolder } from './bundleFormatter.js';
 import { debugError } from '../../../utils/debug.js';
@@ -27,7 +27,7 @@ try {
  * Normalize path for display (convert backslashes to forward slashes)
  */
 export function displayPath(path: string): string {
-  return path.replace(/\\/g, '/');
+  return toForwardSlashes(path);
 }
 
 /**
