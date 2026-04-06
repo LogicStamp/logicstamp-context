@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 
 /**
- * LogicStamp Context CLI - The context compiler for TypeScript
- * Compiles TypeScript codebases into deterministic architectural contracts
+ * Standalone context/compare entry (path-first argv, no `stamp` / `context` subcommands).
+ *
+ * The supported product CLI is `stamp.ts` (`stamp context`, etc.), registered in package.json `bin`
+ * alongside `logicstamp-context` → `stamp.js`. This file stays for e2e tests and examples that run
+ * `node dist/cli/index.js <dir> [flags]`. It duplicates a subset of `parser/argumentParser.ts`; new
+ * flags should be added there first, then mirrored here if tests still need them.
  */
 
 import { contextCommand, type ContextOptions } from './commands/context.js';

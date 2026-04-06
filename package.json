@@ -9,6 +9,7 @@
     ".": "./dist/index.js"
   },
   "bin": {
+    "logicstamp-context": "dist/cli/stamp.js",
     "stamp": "dist/cli/stamp.js"
   },
   "files": [

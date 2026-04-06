@@ -104,7 +104,7 @@ stamp init        # sets up .gitignore, scans for secrets
 stamp context
 ```
 
-> **ℹ️ Note:** With `npx`, run `npx logicstamp-context context`. After a global install, use `stamp context`.
+> **ℹ️ Note:** With `npx`, run `npx logicstamp-context context`. after a global install, use `stamp context`. If `npx` breaks but `stamp` works, remove the stale global CLI (`npm uninstall -g logicstamp-context`) and reinstall or run `npx logicstamp-context@latest context`.
 
 📋 **For detailed setup instructions, see the [Getting Started Guide](https://logicstamp.dev/docs/getting-started).**
 
