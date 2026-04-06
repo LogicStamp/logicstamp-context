@@ -7,7 +7,7 @@ import { join, resolve, isAbsolute } from 'node:path';
 import type { UIFContract } from '../../types/UIFContract.js';
 import type { ProjectManifest } from '../manifest.js';
 import { debugError } from '../../utils/debug.js';
-import { isPathWithinRoot } from '../../utils/fsx.js';
+import { isPathWithinRoot, toForwardSlashes } from '../../utils/fsx.js';
 import { validateUIFContract } from '../../utils/schemaValidator.js';
 import { loadSecurityReport, sanitizeCode, type SanitizeResult } from '../../utils/codeSanitizer.js';
 import type { SecurityReport } from '../../cli/commands/security.js';
@@ -253,9 +253,9 @@ function normalizeProjectRoot(path: string): string {
   const normalized = resolve(path);
   // On Windows, paths are case-insensitive, so lowercase for comparison
   if (process.platform === 'win32') {
-    return normalized.toLowerCase().replace(/\\/g, '/');
+    return toForwardSlashes(normalized.toLowerCase());
   }
-  return normalized.replace(/\\/g, '/');
+  return toForwardSlashes(normalized);
 }
 
 /**

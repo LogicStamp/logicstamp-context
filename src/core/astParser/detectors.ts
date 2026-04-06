@@ -5,6 +5,7 @@
 import { SourceFile, SyntaxKind, FunctionDeclaration, VariableStatement, ArrowFunction, ObjectLiteralExpression, PropertyAssignment, StringLiteral, ClassDeclaration } from 'ts-morph';
 import type { ContractKind, NextJSMetadata } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
+import { toForwardSlashes } from '../../utils/fsx.js';
 import { basename, dirname } from 'node:path';
 
 /**
@@ -70,7 +71,7 @@ export function detectNextJsDirective(source: SourceFile): 'client' | 'server' |
  */
 export function isInNextAppDir(filePath: string): boolean {
   // Normalize path separators and check for /app/ directory
-  const normalizedPath = filePath.replace(/\\/g, '/');
+  const normalizedPath = toForwardSlashes(filePath);
 
   // Match /app/ directory (not just any path containing 'app')
   // Must be a directory boundary, not part of another word
@@ -111,7 +112,7 @@ export function detectNextJsRouteRole(filePath: string): NextJSMetadata['routeRo
  */
 export function extractNextJsSegmentPath(filePath: string): string | undefined {
   try {
-    const normalizedPath = filePath.replace(/\\/g, '/');
+    const normalizedPath = toForwardSlashes(filePath);
     
     // Find the app directory in the path
     const appDirMatch = normalizedPath.match(/(?:^|\/)(?:src\/)?app(\/.*)$/);

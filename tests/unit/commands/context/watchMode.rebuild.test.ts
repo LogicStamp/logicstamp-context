@@ -35,6 +35,7 @@ vi.mock('chokidar', () => ({
 vi.mock('../../../../src/utils/fsx.js', () => ({
   globFiles: vi.fn(),
   normalizeEntryId: (id: string) => id.replace(/\\/g, '/'),
+  toForwardSlashes: (path: string) => path.replace(/\\/g, '/'),
 }));
 
 vi.mock('../../../../src/utils/stampignore.js', () => ({

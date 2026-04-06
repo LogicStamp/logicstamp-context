@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { access, rm, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { debugLog, debugError } from './debug.js';
+import { toForwardSlashes } from './fsx.js';
 
 /**
  * Result from creating a git worktree
@@ -487,7 +488,7 @@ export async function filterGitIgnoredFiles(
       let relativePath: string;
       if (filePath.startsWith('/') || filePath.match(/^[A-Z]:/)) {
         // Absolute path - convert to relative
-        relativePath = relative(projectRoot, filePath).replace(/\\/g, '/');
+        relativePath = toForwardSlashes(relative(projectRoot, filePath));
       } else {
         relativePath = filePath;
       }

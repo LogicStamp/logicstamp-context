@@ -6,13 +6,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve, join, dirname } from 'node:path';
 import type { LogicStampBundle, LogicStampIndex } from '../../core/pack.js';
 import { debugError } from '../../utils/debug.js';
-
-/**
- * Normalize path for display (convert backslashes to forward slashes)
- */
-function displayPath(path: string): string {
-  return path.replace(/\\/g, '/');
-}
+import { displayPath } from './context/index.js';
 
 export interface ValidationResult {
   valid: boolean;

@@ -8,6 +8,7 @@ import { glob } from 'glob';
 import { unlink, rm, stat } from 'node:fs/promises';
 import { resolve, join, relative } from 'node:path';
 import { fileExists, normalizeEntryId } from '../../utils/fsx.js';
+import { displayPath } from './context/index.js';
 
 export interface CleanOptions {
   projectRoot?: string;
@@ -17,13 +18,6 @@ export interface CleanOptions {
 }
 
 const GLOB_IGNORE = ['**/node_modules/**', '**/dist/**', '**/build/**', '**/.next/**'];
-
-/**
- * Normalize path for display (convert backslashes to forward slashes)
- */
-function displayPath(path: string): string {
-  return path.replace(/\\/g, '/');
-}
 
 /**
  * Find all context.json files in the project

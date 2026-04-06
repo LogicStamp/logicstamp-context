@@ -6,7 +6,7 @@ import { resolve, dirname, join, relative } from 'node:path';
 import { readFile, writeFile, mkdir, unlink, stat } from 'node:fs/promises';
 import { createInterface } from 'node:readline';
 import { stdin, stdout } from 'node:process';
-import { globFiles, readFileWithText, getRelativePath } from '../../utils/fsx.js';
+import { globFiles, readFileWithText, getRelativePath, toForwardSlashes } from '../../utils/fsx.js';
 import { scanFileForSecrets, filterFalsePositives, type SecretMatch } from '../../utils/secretDetector.js';
 import { STAMPIGNORE_FILENAME } from '../../utils/stampignore.js';
 import { ensureGitignorePatterns, ensurePatternInGitignore } from '../../utils/gitignore.js';
@@ -180,7 +180,7 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
 
       // Automatically ensure report file is in .gitignore to prevent accidental commits
       try {
-        const reportPathRelative = relative(projectRoot, resolvedOutputFile).replace(/\\/g, '/');
+        const reportPathRelative = toForwardSlashes(relative(projectRoot, resolvedOutputFile));
         const isDefaultPath = outputPath === 'stamp_security_report.json' || 
                               (outputPath.endsWith('.json') && resolvedOutputFile.endsWith('stamp_security_report.json'));
         
@@ -284,7 +284,7 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
   // Automatically ensure report file is in .gitignore to prevent accidental commits
   // The report contains sensitive information (locations of secrets)
   try {
-    const reportPathRelative = relative(projectRoot, resolvedOutputFile).replace(/\\/g, '/');
+    const reportPathRelative = toForwardSlashes(relative(projectRoot, resolvedOutputFile));
     const isDefaultPath = outputPath === 'stamp_security_report.json' || 
                           (outputPath.endsWith('.json') && resolvedOutputFile.endsWith('stamp_security_report.json'));
     

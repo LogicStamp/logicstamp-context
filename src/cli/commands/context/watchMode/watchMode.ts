@@ -5,7 +5,7 @@
 import { resolve, dirname, join, relative } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import chokidar from 'chokidar';
-import { globFiles } from '../../../../utils/fsx.js';
+import { globFiles, toForwardSlashes } from '../../../../utils/fsx.js';
 import { readStampignore, filterIgnoredFiles } from '../../../../utils/stampignore.js';
 import { buildDependencyGraph } from '../../../../core/manifest.js';
 import type { LogicStampBundle } from '../../../../core/pack.js';
@@ -585,7 +585,7 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
         /context_main\.json$/,
         /context_compare_modes\.json$/,
         // Ignore output directory if different from project root
-        ...(outputDir !== projectRoot ? [new RegExp('^' + relative(projectRoot, normalizedOutputDir).replace(/\\/g, '/'))] : []),
+        ...(outputDir !== projectRoot ? [new RegExp('^' + toForwardSlashes(relative(projectRoot, normalizedOutputDir)))] : []),
         // Ignore common build/dependency directories
         /node_modules/,
         /dist/,
@@ -605,7 +605,7 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
     // Helper to check if a file should trigger regeneration
     const shouldTrigger = (filePath: string): boolean => {
       // Normalize path separators
-      const normalizedPath = filePath.replace(/\\/g, '/');
+      const normalizedPath = toForwardSlashes(filePath);
       
       // Debug logging (can be enabled with LOGICSTAMP_DEBUG=1)
       if (process.env.LOGICSTAMP_DEBUG === '1' && !options.quiet) {
