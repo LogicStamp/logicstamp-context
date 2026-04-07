@@ -7,16 +7,16 @@ Planned features, improvements, and known limitations. See [CHANGELOG.md](CHANGE
 **Version:** v0.8.4 (Beta)
 
 Recent milestones:
-- CLI packaging, paths, and token summary (v0.8.4) — `logicstamp-context` registered as npm bin (fixes `npx logicstamp-context`); centralized `normalizeEntryId` / `toForwardSlashes` across CLI, watch, pack loader, and AST; `stamp context` summary shows the current mode’s exact token count vs raw source with savings % (use `--compare-modes` for full breakdown); tag-based npm publish via GitHub Actions and updated contributing/release docs
-- Secret scanner & watch reliability (v0.8.3) - Long-line skip and regex optimizations in secret detection; watch logging, full rebuild fallback after incremental errors, async/error hardening
-- Documentation layout, watch perf, path boundaries (v0.8.2) - Core docs under `docs/guides/` and `docs/reference/` with link updates; style/framework docs aligned with CLI; watch mode avoids `Array.from` on the contract map (direct `Map` iteration per change); centralized `isPathWithinRoot` for pack loader and hash-lock
-- CLI argument validation and robustness fixes (v0.8.1) - Numeric arg validation for `--depth`/`--max-nodes`, safe compare normalization, token savings bounds
-- `--strict` flag for compare (v0.8.0) - Exit code 1 on breaking changes
-- Git baseline comparison (v0.7.2) - `--baseline git:<ref>` for drift detection
-- Full contract comparison (v0.7.2) - State, variables, API signatures, prop/emit types
-- Strict watch enhancements (v0.7.1) - Session tracking, `--strict-watch`, `--verbose`
-- Backend support (v0.4.0) - Express.js, NestJS
-- Watch mode (v0.4.1) - Incremental rebuilds, change detection
+- **CLI packaging, paths, and token summary (v0.8.4)** — `logicstamp-context` registered as npm bin (fixes `npx logicstamp-context`). centralized `normalizeEntryId` / `toForwardSlashes` across CLI, watch, pack loader, and AST; `stamp context` summary shows the current mode’s exact token count vs raw source with savings % (use `--compare-modes` for full breakdown). tag-based npm publish via GitHub Actions and updated contributing/release docs
+- **Secret scanner & watch reliability (v0.8.3)** - Long-line skip and regex optimizations in secret detection. watch logging, full rebuild fallback after incremental errors, async/error hardening
+- **Documentation layout, watch perf, path boundaries (v0.8.2)** - Core docs under `docs/guides/` and `docs/reference/` with link updates; style/framework docs aligned with CLI; watch mode avoids `Array.from` on the contract map (direct `Map` iteration per change); centralized `isPathWithinRoot` for pack loader and hash-lock
+- **CLI argument validation and robustness fixes (v0.8.1)** - Numeric arg validation for `--depth`/`--max-nodes`, safe compare normalization, token savings bounds
+- **`--strict` flag for compare (v0.8.0)** - Exit code 1 on breaking changes
+- **Git baseline comparison (v0.7.2)** - `--baseline git:<ref>` for drift detection
+- **Full contract comparison (v0.7.2)** - State, variables, API signatures, prop/emit types
+- **Strict watch enhancements (v0.7.1)** - Session tracking, `--strict-watch`, `--verbose`
+- **Watch mode (v0.4.1)** - Incremental rebuilds, change detection
+- **Backend support (v0.4.0)** - Express.js, NestJS
 
 ---
 

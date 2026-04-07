@@ -80,7 +80,7 @@ TypeScript Code  →  Compilation  →  Deterministic Contracts  →  AI Assista
 No install required:
 
 ```bash
-npx logicstamp-context context
+npx -y logicstamp-context@latest context
 ```
 
 Scans your repo and writes `context.json` files + `context_main.json` for AI tools.
@@ -104,7 +104,7 @@ stamp init        # sets up .gitignore, scans for secrets
 stamp context
 ```
 
-> **ℹ️ Note:** With `npx`, run `npx logicstamp-context context`. after a global install, use `stamp context`. If `npx` breaks but `stamp` works, remove the stale global CLI (`npm uninstall -g logicstamp-context`) and reinstall or run `npx logicstamp-context@latest context`.
+> **ℹ️ Note:** Without a global install, use `npx -y logicstamp-context@latest context`. After `npm install -g logicstamp-context`, use `stamp context`.
 
 📋 **For detailed setup instructions, see the [Getting Started Guide](https://logicstamp.dev/docs/getting-started).**
 
