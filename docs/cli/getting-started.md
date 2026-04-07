@@ -39,8 +39,18 @@ npx stamp context
 You can also try LogicStamp Context without installing:
 
 ```bash
-npx logicstamp-context context
+npx -y logicstamp-context@latest context
 ```
+
+### Troubleshooting: `npx` vs global `stamp`
+
+If `npx` misbehaves but `stamp` works (or the opposite), an outdated or conflicting global install may be involved. Remove it and stick to one workflow:
+
+```bash
+npm uninstall -g logicstamp-context
+```
+
+Then either reinstall globally (`npm install -g logicstamp-context`) or run via `npx` only (for example `npx -y logicstamp-context@latest context`).
 
 ## Step 1: Initialize Your Project (Recommended)
 
