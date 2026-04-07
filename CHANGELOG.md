@@ -16,8 +16,35 @@ Older releases (0.1.0–0.4.1) are archived in [docs/changelog/0.1.0-0.4.1.md](d
 For a comprehensive roadmap with detailed status, priorities, and implementation plans, see [ROADMAP.md](ROADMAP.md).
 
 ### Known Limitations
+See [docs/reference/limitations.md](docs/reference/limitations.md).
 
-See [docs/limitations.md](docs/reference/limitations.md).
+---
+
+## [0.8.4] - 2026-04-07
+
+### Fixed
+
+- Register `logicstamp-context` as a CLI binary (same as `stamp`) ([#177](https://github.com/LogicStamp/logicstamp-context/pull/177)), fixing `npx logicstamp-context` failures caused by a missing `bin` mapping.
+
+### Changed
+
+- **Centralize path normalization** ([#178](https://github.com/LogicStamp/logicstamp-context/pull/178))
+  - Standardize `normalizeEntryId` and `toForwardSlashes` usage across CLI, watch mode, pack loader, and AST handling
+  - `displayPath()` now delegates to `toForwardSlashes()`
+  - `normalizeName()` unchanged (bundle diff only, not filesystem paths)
+
+- **Simplify token output in `stamp context` summary** ([#176](https://github.com/LogicStamp/logicstamp-context/pull/176))
+  - Show only current mode’s exact token count (no heuristics)
+  - Compare against raw source with savings %
+  - Use `--compare-modes` for detailed breakdown
+
+### Chore
+
+- **Update contributing guidelines and release workflow** ([#179](https://github.com/LogicStamp/logicstamp-context/pull/179))
+  - Move npm publishing to GitHub Actions (tag-based releases)
+  - Clarify version bump and tagging process for `main`
+  - Add automated npm publish workflow
+  - Simplify CI by removing redundant dependency checks
 
 ---
 
@@ -672,7 +699,9 @@ See [docs/limitations.md](docs/reference/limitations.md).
 
 
 
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.8.3...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.8.4...HEAD
+
+[0.8.4]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.4
 
 [0.8.3]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.3
 
