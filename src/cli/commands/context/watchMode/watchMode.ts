@@ -100,7 +100,7 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
   }
 
   let debounceTimer: NodeJS.Timeout | null = null;
-  let regenerationPromise: Promise<void> | null = null; // Promise-based lock to prevent race conditions
+  let isRegenerating = false; // Flag-based lock to prevent race conditions
   let changedFiles: Set<string> = new Set();
   /** Snapshot for `getChanges` / strict-watch: set on first load; reset when watch cache is recovered after an error (new stable tree). */
   let baselineBundles: LogicStampBundle[] | null = null;
@@ -216,24 +216,21 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
   };
 
   const regenerate = async () => {
-    // Use Promise-based lock to prevent race conditions
-    // If already regenerating, wait for it to complete then check if more changes came in
-    if (regenerationPromise) {
-      await regenerationPromise;
-      // After waiting, if no new changes accumulated, skip
-      if (changedFiles.size === 0) {
-        return;
-      }
-      // Otherwise, fall through to process new changes
+    // Synchronous flag check - safe in JS single-threaded event loop
+    // If already regenerating, return - the while loop will pick up new changes
+    if (isRegenerating) {
+      return;
     }
 
-    const changedFileList = Array.from(changedFiles);
-    changedFiles.clear(); // Clear for next batch
-    const startTime = Date.now();
+    isRegenerating = true;
+    try {
+      // Loop to process any changes that arrive during regeneration
+      while (changedFiles.size > 0) {
+        const changedFileList = Array.from(changedFiles);
+        changedFiles.clear(); // Clear for next batch
+        const startTime = Date.now();
 
-    // Create a promise for this regeneration cycle (used for lock)
-    const doRegenerate = async () => {
-      try {
+        try {
         // Determine output directory
       const outPath = resolve(options.out);
       const outputDir = outPath.endsWith('.json') ? dirname(outPath) : outPath;
@@ -533,13 +530,10 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
         }
       }
     }
-    };
-
-    // Execute and track the regeneration promise
-    regenerationPromise = doRegenerate().finally(() => {
-      regenerationPromise = null;
-    });
-    await regenerationPromise;
+      }
+    } finally {
+      isRegenerating = false;
+    }
   };
 
   const debouncedRegenerate = () => {
