@@ -67,24 +67,9 @@ There is **no `develop` branch**. All changes go through short‑lived feature b
 
 ### Releasing to npm
 
-When you want to publish a new version:
+**Routine publishes go through GitHub Actions**, not a local `npm publish`. Pushing a tag `v*.*.*` runs [`.github/workflows/release.yml`](.github/workflows/release.yml), which builds, tests, and publishes to npm using **trusted publishing (OIDC)**—no `NPM_TOKEN` secret is used for that step.
 
-```bash
-# From main, with a clean working tree
-git checkout main
-git pull origin main
-
-# Bump version (pick one)
-npm version patch   # or: minor / major
-
-# Push commit + tag
-git push --follow-tags
-
-# Publish to npm
-npm publish
-```
-
-`main` always reflects what is currently released (or ready to be released), and Git tags map to npm versions.
+The version bump should land on **`main` via a pull request** (typical with branch protection). **Create and push the tag only after that merge**, from the `main` commit that contains the new `package.json` version. See [Release Process](#release-process) for the full maintainer checklist. `main` should stay release-ready; tags map to npm versions.
 
 ---
 
@@ -397,13 +382,37 @@ Found a bug? Help us fix it!
 
 (For maintainers)
 
-1. Update version in `package.json`
-2. Update `CHANGELOG.md`
-3. Build: `npm run build`
-4. Commit: `git commit -am "Release v0.x.0"`
-5. Tag: `git tag v0.x.0`
-6. Push: `git push && git push --tags`
-7. Publish: `npm publish`
+Releases publish to npm when you push a tag matching `v*.*.*` (see **Release** in GitHub Actions). **Do not create a tag until after the version bump is on `main`**, especially with **squash merge**: the tag must point at the squash commit on `main`, not at an old branch tip.
+
+1. **Branch from `main`**, bump `"version"` in `package.json`, update **`CHANGELOG.md`**, then refresh the lockfile:
+
+   ```bash
+   git checkout main && git pull origin main
+   git checkout -b chore/release-0.8.4   # rename to match the version
+
+   npm install   # sync package-lock.json after the version change
+   git add CHANGELOG.md package.json package-lock.json
+   git commit -m "chore: release v0.8.4"
+   git push -u origin chore/release-0.8.4
+   ```
+
+2. Open a PR to **`main`**, wait for CI, **squash merge**.
+
+3. **Tag from updated `main`** (so the tag matches `package.json` on the commit you merged):
+
+   ```bash
+   git checkout main && git pull origin main
+   git tag "v$(node -p "require('./package.json').version")"
+   git push origin "v$(node -p "require('./package.json').version")"
+   ```
+
+   The tag must be `vMAJOR.MINOR.PATCH` and **exactly match** `package.json` (no `v` in the file). The release workflow errors if they differ.
+
+4. In **Actions**, confirm the **Release** run for that tag and **Publish to npm** succeeded.
+
+Trusted Publishing on [npmjs.com](https://www.npmjs.com/) must list this GitHub repo and workflow file **`release.yml`**. Rename the workflow file on GitHub only after updating npm.
+
+**Emergency:** If Actions is down, you may `npm publish` locally **once** for that version—avoid double-publishing the same version; use tokens/2FA as npm requires for your package.
 
 ## Questions?
 

@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Trusted publishing: npm requires Node >= 22.14 and npm CLI >= 11.5.1
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
+
+      - name: Upgrade npm
+        run: npm install -g npm@11.5.1
+
+      - name: Verify tag matches package.json version
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF#refs/tags/v}"
+          PKG="$(node -p "require('./package.json').version")"
+          if [[ "$TAG" != "$PKG" ]]; then
+            echo "::error::Git tag v${TAG} must match package.json version ${PKG}. Bump version on main, then tag that commit."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Run tests
+        run: npm test
+
+      # Publishes via OIDC when the package is configured as a Trusted Publisher on npmjs.com (no NPM_TOKEN required).
+      - name: Publish to npm
+        run: npm publish
