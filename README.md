@@ -341,9 +341,9 @@ stamp context clean [path]         # Remove generated files
 | **Vue 3** | Partial | Composition API (TS/TSX only, not .vue SFC) |
 | **Express.js** | Full | Routes, API signatures (middleware not extracted. see [limitations](docs/reference/limitations.md)) |
 | **NestJS** | Full | Controllers, decorators, API signatures |
-| **UI Libraries** | Full | Material UI, ShadCN, Radix, Tailwind, Styled Components, SCSS, Chakra UI, Ant Design (component usage, props, composition. not raw CSS) |
+| **UI Libraries** | Full | Material UI, ShadCN, Radix, Tailwind, Styled Components, CSS/SCSS (modules & imports), Chakra UI, Ant Design |
 
-> **ℹ️ Note:** LogicStamp Context analyzes `.ts` and `.tsx` files only. JavaScript files are not analyzed.
+> ℹ️ **Note:** LogicStamp Context analyzes `.ts` and `.tsx` files only (JavaScript is not analyzed). Styling (Tailwind, SCSS, CSS Modules, UI libraries) is extracted as **structured style metadata**, not raw CSS. See the [Style command](docs/cli/style.md).
 
 ## Documentation
 

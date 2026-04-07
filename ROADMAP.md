@@ -4,17 +4,19 @@ Planned features, improvements, and known limitations. See [CHANGELOG.md](CHANGE
 
 ## Current Status
 
-**Version:** v0.8.3 (Beta)
+**Version:** v0.8.4 (Beta)
 
 Recent milestones:
-- ✅ Secret scanner & watch reliability (v0.8.3) - Long-line skip and regex optimizations in secret detection; watch logging, full rebuild fallback after incremental errors, async/error hardening
-- ✅ CLI argument validation and robustness fixes (v0.8.1) - Numeric arg validation for `--depth`/`--max-nodes`, safe compare normalization, token savings bounds
-- ✅ `--strict` flag for compare (v0.8.0) - Exit code 1 on breaking changes
-- ✅ Git baseline comparison (v0.7.2) - `--baseline git:<ref>` for drift detection
-- ✅ Full contract comparison (v0.7.2) - State, variables, API signatures, prop/emit types
-- ✅ Strict watch enhancements (v0.7.1) - Session tracking, `--strict-watch`, `--verbose`
-- ✅ Backend support (v0.4.0) - Express.js, NestJS
-- ✅ Watch mode (v0.4.1) - Incremental rebuilds, change detection
+- CLI packaging, paths, and token summary (v0.8.4) — `logicstamp-context` registered as npm bin (fixes `npx logicstamp-context`); centralized `normalizeEntryId` / `toForwardSlashes` across CLI, watch, pack loader, and AST; `stamp context` summary shows the current mode’s exact token count vs raw source with savings % (use `--compare-modes` for full breakdown); tag-based npm publish via GitHub Actions and updated contributing/release docs
+- Secret scanner & watch reliability (v0.8.3) - Long-line skip and regex optimizations in secret detection; watch logging, full rebuild fallback after incremental errors, async/error hardening
+- Documentation layout, watch perf, path boundaries (v0.8.2) - Core docs under `docs/guides/` and `docs/reference/` with link updates; style/framework docs aligned with CLI; watch mode avoids `Array.from` on the contract map (direct `Map` iteration per change); centralized `isPathWithinRoot` for pack loader and hash-lock
+- CLI argument validation and robustness fixes (v0.8.1) - Numeric arg validation for `--depth`/`--max-nodes`, safe compare normalization, token savings bounds
+- `--strict` flag for compare (v0.8.0) - Exit code 1 on breaking changes
+- Git baseline comparison (v0.7.2) - `--baseline git:<ref>` for drift detection
+- Full contract comparison (v0.7.2) - State, variables, API signatures, prop/emit types
+- Strict watch enhancements (v0.7.1) - Session tracking, `--strict-watch`, `--verbose`
+- Backend support (v0.4.0) - Express.js, NestJS
+- Watch mode (v0.4.1) - Incremental rebuilds, change detection
 
 ---
 
@@ -81,6 +83,8 @@ Recent milestones:
 
 ### Performance & Optimization
 
+- **Context summary token display** ✅ v0.8.4 — Summary uses the current mode’s measured token count only (no blended heuristics), compares to raw source with savings %, and points to [`--compare-modes`](docs/cli/compare-modes.md) for per-mode detail.
+
 - **Formal benchmarks** 🔴 Planned — **Today:** [`stamp context --compare-modes`](docs/cli/compare-modes.md) already compares bundle token costs across modes on **your** repo (optional `context_compare_modes.json` with `--stats`). **Planned** work adds **published** baselines and methodology: fixed reference corpora, reproducible tables, CI or scheduled runs, and assistant-side task evals. Two tracks where possible:
   - **Tool / runtime** — Cold/warm `stamp context`, watch incremental cost, memory, scaling with repo size.
   - **LLM / workflow (with vs without LogicStamp)** — The main question: **do models do better when given LogicStamp bundles than when they only see raw source (or minimal repo context)?** Planned evals hold tasks and prompts fixed, vary only the context channel (bundles vs baseline), and report metrics such as task success, prop/API factual accuracy, tokens to a correct answer, and hallucination rate. Complements per-repo token comparison from `--compare-modes`; extends the docs with **published** numbers others can reproduce on reference corpora.
@@ -96,6 +100,10 @@ Recent milestones:
   - Centralized `isPathWithinRoot` for consistent project boundary enforcement  
   - Prevents file access outside project root in pack loader and hash-lock flows  
   - Aligns validation across `loadContract`, `readSourceCode`, and related fs operations
+
+- **Path normalization consistency** ✅ v0.8.4  
+  - Standardizes `normalizeEntryId` and `toForwardSlashes` across CLI, watch mode, pack loader, and AST handling  
+  - `displayPath()` delegates to `toForwardSlashes()` (bundle diff still uses `normalizeName()` where appropriate)
 
 - **Secret detection performance & safety** ✅ v0.8.3  
   - Skips very long lines (1000+ characters) to avoid pathological regex cost  
@@ -113,6 +121,8 @@ Recent milestones:
 ### Configuration & DX
 
 - ✅ Normalized paths, `--verbose` (v0.7.1)
+- **npm CLI entry (`npx`)** ✅ v0.8.4 — `package.json` `bin` maps `logicstamp-context` to the same CLI as `stamp`, so `npx logicstamp-context` works reliably.
+- **Release & publish workflow** ✅ v0.8.4 — Tag-based npm publishing in GitHub Actions; contributing guidelines aligned with the new release process.
 - **Custom profiles** — User-defined beyond presets
 - **Integration examples** — Cursor, Claude, Copilot
 - **Debugging tools** — Better diagnostics
