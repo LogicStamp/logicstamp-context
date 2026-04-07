@@ -30,16 +30,7 @@ jobs:
           cache-dependency-path: 'package-lock.json'
 
       - name: Install dependencies
-        shell: bash
-        run: |
-          set -e
-          npm ci
-          # Verify Rollup native module works (npm ci silently skips optional deps)
-          node -e "require('rollup')" 2>/dev/null || (
-            echo "Rollup native module missing. Regenerating lockfile..."
-            rm -rf node_modules package-lock.json
-            npm install
-          )
+        run: npm ci
 
       - name: Build project
         run: npm run build
@@ -70,16 +61,7 @@ jobs:
           cache-dependency-path: 'package-lock.json'
 
       - name: Install dependencies
-        shell: bash
-        run: |
-          set -e
-          npm ci
-          # Verify Rollup native module works (npm ci silently skips optional deps)
-          node -e "require('rollup')" 2>/dev/null || (
-            echo "Rollup native module missing. Regenerating lockfile..."
-            rm -rf node_modules package-lock.json
-            npm install
-          )
+        run: npm ci
 
       - name: Build project
         run: npm run build
