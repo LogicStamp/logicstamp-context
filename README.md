@@ -65,11 +65,11 @@ Example: your `Button` accepts `variant` and `disabled`, but the AI suggests `is
 
 **LogicStamp Context** derives that layer from your TypeScript - explicit interfaces and dependency structure for tools to consume instead of inferring from implementation.
 
-#### Key Capabilities
+#### Key Capabilities:
 
 - **Contracts, not raw source** - Props, hooks, routes, and dependency edges extracted for tools
 - **Deterministic & diffable** - Same code → same bundles, track changes like any artifact
-- **Always up to date** - Watch mode keeps context aligned with your codebase
+- **Stays current** - Watch mode keeps context aligned with your codebase
 - **MCP-ready** - Works with Claude, Cursor, and MCP-compatible assistants
 
 See the full list in [Features](#-features).

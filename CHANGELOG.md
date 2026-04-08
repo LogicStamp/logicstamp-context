@@ -20,6 +20,31 @@ See [docs/reference/limitations.md](docs/reference/limitations.md).
 
 ---
 
+## [0.8.5] - 2026-04-08
+
+### Fixed
+
+- **Watch mode: fix promise-based lock race condition** ([#182](https://github.com/LogicStamp/logicstamp-context/pull/182))
+  - Replace `regenerationPromise` lock with synchronous `isRegenerating` flag
+  - Use `while` loop to process changes that arrive during regeneration
+  - Prevents multiple callers from racing to process the same file changes
+
+- **File lock: cleanup when write or close fails after exclusive create** ([#183](https://github.com/LogicStamp/logicstamp-context/pull/183))
+  - Add `writeLockFileExclusive()` so a failed `writeFile`/`close` no longer leaves an empty or partial `.lock` file blocking acquisition
+
+- **File lock: reliable process liveness on Windows** ([#184](https://github.com/LogicStamp/logicstamp-context/pull/184))
+  - Use `tasklist` to detect whether the lock PID still exists instead of relying on `process.kill(pid, 0)` signal semantics
+  - Treat the current process as always alive for lock checks; treat empty or unparseable `tasklist` output as indeterminate so valid locks are not dropped (fixes lost updates when many in-process waiters contend, e.g. concurrent `appendWatchLog`)
+
+- **Secret scanner: consistent case handling and safer match indexing** ([#185](https://github.com/LogicStamp/logicstamp-context/pull/185))
+  - Use case-insensitive matching for AWS-style keys, GitHub token prefixes, and PEM private-key headers (aligned with other patterns)
+  - Skip recording a match when `match.index` or full match text is invalid before building snippets
+
+- **`stamp compare`: correct `exportKind` when `exports.named` is malformed** ([#186](https://github.com/LogicStamp/logicstamp-context/pull/186))
+  - Classify `named` exports only when `named` is a non-empty array (`Array.isArray`), so invalid shapes (e.g. string or object) map to `none` instead of a false `named` match
+
+---
+
 ## [0.8.4] - 2026-04-07
 
 ### Fixed
@@ -699,7 +724,9 @@ See [docs/reference/limitations.md](docs/reference/limitations.md).
 
 
 
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.8.4...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.8.5...HEAD
+
+[0.8.5]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.5
 
 [0.8.4]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.4
 
