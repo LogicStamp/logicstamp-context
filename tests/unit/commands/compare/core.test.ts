@@ -422,6 +422,56 @@ describe('index', () => {
     expect(idx.get('src/utils.ts')!.exportKind).toBe('named');
     expect(idx.get('src/config.ts')!.exportKind).toBe('none');
   });
+
+  it('should treat non-array exports.named as exportKind none', () => {
+    const malformed = createBundle('src/bad.ts', 'uif:hash-mal', {
+      graph: {
+        nodes: [
+          {
+            entryId: 'src/bad.ts',
+            contract: {
+              entryId: 'src/bad.ts',
+              type: 'UIFContract',
+              schemaVersion: '0.4',
+              kind: 'ts:module',
+              description: 'Malformed named',
+              semanticHash: 'uif:hash-mal',
+              fileHash: 'fileHash-bad',
+              composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+              interface: { props: {}, emits: {} },
+              exports: { named: 'foo' as unknown as string[] },
+            },
+          },
+        ],
+        edges: [],
+      },
+    });
+    const emptyNamed = createBundle('src/empty-named.ts', 'uif:hash-empty', {
+      graph: {
+        nodes: [
+          {
+            entryId: 'src/empty-named.ts',
+            contract: {
+              entryId: 'src/empty-named.ts',
+              type: 'UIFContract',
+              schemaVersion: '0.4',
+              kind: 'ts:module',
+              description: 'Empty named array',
+              semanticHash: 'uif:hash-empty',
+              fileHash: 'fileHash-empty',
+              composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+              interface: { props: {}, emits: {} },
+              exports: { named: [] },
+            },
+          },
+        ],
+        edges: [],
+      },
+    });
+    const idx = index([malformed, emptyNamed]);
+    expect(idx.get('src/bad.ts')!.exportKind).toBe('none');
+    expect(idx.get('src/empty-named.ts')!.exportKind).toBe('none');
+  });
 });
 
 describe('arraysEqual', () => {
