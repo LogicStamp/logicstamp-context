@@ -49,6 +49,13 @@ describe('secretDetector utilities', () => {
       expect(awsMatch?.severity).toBe('high');
     });
 
+    it('should detect AWS-style keys case-insensitively', () => {
+      const prefix = 'ak' + 'ia';
+      const content = `const x = '${prefix}faketest00000000';`;
+      const matches = scanFileForSecrets('config.ts', content);
+      expect(matches.some((m) => m.type === 'AWS Access Key')).toBe(true);
+    });
+
     it('should detect GitHub tokens', () => {
       // Use string concatenation to avoid GitHub push protection blocking
       const prefix = 'gh' + 'p_';
@@ -58,6 +65,13 @@ describe('secretDetector utilities', () => {
       const githubMatch = matches.find((m) => m.type === 'GitHub Token');
       expect(githubMatch).toBeDefined();
       expect(githubMatch?.severity).toBe('high');
+    });
+
+    it('should detect GitHub token prefixes case-insensitively', () => {
+      const prefix = 'GH' + 'P_';
+      const content = `const t = '${prefix}FAKETEST0000000000000000000000000000';`;
+      const matches = scanFileForSecrets('config.ts', content);
+      expect(matches.some((m) => m.type === 'GitHub Token')).toBe(true);
     });
 
     it('should detect different GitHub token types', () => {
@@ -87,6 +101,12 @@ describe('secretDetector utilities', () => {
       const privateKeyMatch = matches.find((m) => m.type === 'Private Key');
       expect(privateKeyMatch).toBeDefined();
       expect(privateKeyMatch?.severity).toBe('high');
+    });
+
+    it('should detect PEM private key header case-insensitively on one line', () => {
+      const content = "const k = '-----begin rsa private key-----';";
+      const matches = scanFileForSecrets('keys.ts', content);
+      expect(matches.some((m) => m.type === 'Private Key')).toBe(true);
     });
 
     it('should detect passwords', () => {

@@ -12,6 +12,58 @@ The security scan helps prevent accidentally exposing sensitive credentials by:
 - Generating detailed reports of detected secrets
 - Integrating with the `stamp init` command for automated security checks
 
+The scan is useful regardless of `stamp context --include-code` mode (CI and source hygiene). **Leaking implementation secrets into generated context files** is mainly a risk when using **`--include-code full`**. the following section explains how reports connect to `stamp context`.
+
+## Automatic Secret Sanitization in Context Generation
+
+When you run `stamp context` or `stamp context style`, LogicStamp automatically sanitizes secrets in the generated JSON files if a security report exists.
+
+**How it works:**
+
+1. If `stamp_security_report.json` exists in your project root, it's automatically loaded
+2. When generating context JSON files, any secrets detected in the security report are replaced with `"PRIVATE_DATA"` in the generated files
+3. **Your source code files are never modified** - only the generated JSON files contain sanitized values
+
+**Example:**
+
+If your source code contains:
+```typescript
+const apiKey = 'PLACEHOLDER_KEY_1234567890abcdef';
+```
+
+The generated `context.json` will contain:
+```json
+{
+  "code": "const apiKey = 'PRIVATE_DATA';"
+}
+```
+
+**Important notes:**
+
+- ✅ **Source files are never modified** - your actual code remains unchanged
+- ✅ **Automatic** - happens automatically when a security report exists
+- ✅ **Safe** - secrets are replaced only in generated JSON files, never in source code
+- ✅ **Sanitization runs whenever a report exists** — any secret text that *does* appear in generated output is replaced. in practice, **raw source (and typical inline secrets) only appear when using `--include-code full`**
+
+**Code inclusion modes and credentials:**
+
+- **`none` mode**: No code is included, so credentials cannot appear in bundles
+- **`header` mode**: Only JSDoc `@uif` metadata blocks are included (not implementation code), so credentials in your source code will not appear in bundles
+- **`header+style` mode**: Same as `header` mode (only metadata), plus style information in contracts (not code), so credentials will not appear in bundles
+- **`full` mode**: Full source code is included, so credentials could appear unless sanitized. Sanitization automatically replaces detected secrets with `"PRIVATE_DATA"` when a security report exists
+
+**Even if credentials exist in your source files (which they shouldn't), they can only be included in generated bundles when using `--include-code full` mode. The other modes (`none`, `header`, `header+style`) only include metadata and contracts, not actual implementation code where credentials would typically be found.**
+
+**When sanitization happens:**
+
+- `stamp context` - Secrets are sanitized in generated context files
+- `stamp context style` - Secrets are sanitized in generated context files (same behavior)
+- If no security report exists, code is included as-is (no sanitization)
+
+This ensures that sensitive credentials never appear in your context JSON files, even if they exist in your source code.
+
+---
+
 ## Usage
 
 ### Basic Scan
@@ -202,54 +254,6 @@ Useful for:
 - CI/CD pipelines that need automated security validation
 - Ensuring security best practices are followed from project initialization
 
-## Automatic Secret Sanitization in Context Generation
-
-When you run `stamp context` or `stamp context style`, LogicStamp automatically sanitizes secrets in the generated JSON files if a security report exists.
-
-**How it works:**
-
-1. If `stamp_security_report.json` exists in your project root, it's automatically loaded
-2. When generating context JSON files, any secrets detected in the security report are replaced with `"PRIVATE_DATA"` in the generated files
-3. **Your source code files are never modified** - only the generated JSON files contain sanitized values
-
-**Example:**
-
-If your source code contains:
-```typescript
-const apiKey = 'sk_live_1234567890abcdef';
-```
-
-The generated `context.json` will contain:
-```json
-{
-  "code": "const apiKey = 'PRIVATE_DATA';"
-}
-```
-
-**Important notes:**
-
-- ✅ **Source files are never modified** - your actual code remains unchanged
-- ✅ **Automatic** - happens automatically when a security report exists
-- ✅ **Safe** - secrets are replaced only in generated JSON files, never in source code
-- ✅ **Works with all code inclusion modes** - applies to both `--include-code header` and `--include-code full`
-
-**Code inclusion modes and credentials:**
-
-- **`none` mode**: No code is included, so credentials cannot appear in bundles
-- **`header` mode**: Only JSDoc `@uif` metadata blocks are included (not implementation code), so credentials in your source code will not appear in bundles
-- **`header+style` mode**: Same as `header` mode (only metadata), plus style information in contracts (not code), so credentials will not appear in bundles
-- **`full` mode**: Full source code is included, so credentials could appear unless sanitized. Sanitization automatically replaces detected secrets with `"PRIVATE_DATA"` when a security report exists
-
-**Even if credentials exist in your source files (which they shouldn't), they can only be included in generated bundles when using `--include-code full` mode. The other modes (`none`, `header`, `header+style`) only include metadata and contracts, not actual implementation code where credentials would typically be found.**
-
-**When sanitization happens:**
-
-- `stamp context` - Secrets are sanitized in generated context files
-- `stamp context style` - Secrets are sanitized in generated context files (same behavior)
-- If no security report exists, code is included as-is (no sanitization)
-
-This ensures that sensitive credentials never appear in your context JSON files, even if they exist in your source code.
-
 ## Exit Codes
 
 - **0**: No secrets found
@@ -313,7 +317,7 @@ stamp security --hard-reset --force
 
 - Pattern-based detection (may have false positives or miss some formats)
 - Only scans TypeScript, JavaScript, and JSON files
-- Lines longer than 1000 characters are skipped during pattern matching (performance and safety); secrets confined to such lines may not be detected or sanitized
+- Lines longer than 1000 characters are skipped during pattern matching (performance and safety). secrets confined to such lines may not be detected or sanitized
 - Files larger than 10MB are skipped (you'll see a warning)
 - Doesn't detect encrypted secrets or secrets in environment-specific files
 - Static analysis only (can't detect secrets passed at runtime)

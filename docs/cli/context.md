@@ -205,8 +205,8 @@ When generating context files, LogicStamp automatically sanitizes secrets if a s
 
 Source code:
 ```typescript
-const apiKey = 'sk_live_1234567890abcdef';
-const password = 'mySecretPassword123';
+const apiKey = 'PLACEHOLDER_KEY_1234567890abcdef';
+const password = 'FAKE_PASSWORD_FOR_DOCS_12345678';
 ```
 
 Generated `context.json`:
