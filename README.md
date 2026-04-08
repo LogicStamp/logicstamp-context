@@ -68,7 +68,7 @@ Example: your `Button` accepts `variant` and `disabled`, but the AI suggests `is
 #### Key Capabilities:
 
 - **Contracts, not raw source** - Props, hooks, routes, and dependency edges extracted for tools
-- **Deterministic & diffable** - Same code → same bundles, track changes like any artifact
+- **Deterministic & diffable** - Same code → same bundles
 - **Stays current** - Watch mode keeps context aligned with your codebase
 - **MCP-ready** - Works with Claude, Cursor, and MCP-compatible assistants
 
