@@ -41,7 +41,7 @@ const SECRET_PATTERNS: Array<{
     pattern: (() => {
       const part1 = 'A'.concat('K');
       const part2 = 'I'.concat('A');
-      return new RegExp(part1 + part2 + '[0-9A-Z]{16}');
+      return new RegExp(part1 + part2 + '[0-9A-Za-z]{16}', 'i');
     })(),
     severity: 'high',
   },
@@ -58,14 +58,14 @@ const SECRET_PATTERNS: Array<{
         'g'.concat('h').concat('s_'),
         'g'.concat('h').concat('r_'),
       ];
-      return new RegExp(prefixes.map(prefix => `${prefix}[a-zA-Z0-9]{36}`).join('|'));
+      return new RegExp(prefixes.map(prefix => `${prefix}[a-zA-Z0-9]{36}`).join('|'), 'i');
     })(),
     severity: 'high',
   },
   // Private Keys
   {
     name: 'Private Key',
-    pattern: /-----BEGIN\s+(?:RSA\s+)?PRIVATE\s+KEY-----/,
+    pattern: /-----BEGIN\s+(?:RSA\s+)?PRIVATE\s+KEY-----/i,
     severity: 'high',
   },
   // Passwords
@@ -130,15 +130,21 @@ export function scanFileForSecrets(
       const match = pattern.exec(line);
 
       if (match) {
+        const matchIndex = match.index;
+        const matchedText = match[0];
+        if (typeof matchIndex !== 'number' || matchIndex < 0 || !matchedText) {
+          continue;
+        }
+
         // Extract snippet (first 100 chars around match)
-        const matchStart = Math.max(0, match.index - 20);
-        const matchEnd = Math.min(line.length, match.index + match[0].length + 20);
+        const matchStart = Math.max(0, matchIndex - 20);
+        const matchEnd = Math.min(line.length, matchIndex + matchedText.length + 20);
         const snippet = line.slice(matchStart, matchEnd).trim();
 
         matches.push({
           file: filePath,
           line: lineIndex + 1,
-          column: match.index + 1,
+          column: matchIndex + 1,
           type: name,
           snippet,
           severity,
