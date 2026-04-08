@@ -4,10 +4,11 @@ Planned features, improvements, and known limitations. See [CHANGELOG.md](CHANGE
 
 ## Current Status
 
-**Version:** v0.8.4 (Beta)
+**Version:** v0.8.5 (Beta)
 
 Recent milestones:
-- **CLI packaging, paths, and token summary (v0.8.4)** — `logicstamp-context` registered as npm bin (fixes `npx logicstamp-context`). centralized `normalizeEntryId` / `toForwardSlashes` across CLI, watch, pack loader, and AST; `stamp context` summary shows the current mode’s exact token count vs raw source with savings % (use `--compare-modes` for full breakdown). tag-based npm publish via GitHub Actions and updated contributing/release docs
+- **Watch lock, file lock, secrets, compare fixes (v0.8.5)** - Watch: synchronous `isRegenerating` flag and queued change processing instead of a promise-based lock race. File lock: exclusive write helper with cleanup on failed write/close; Windows PID liveness via `tasklist` (with safe fallbacks) instead of `process.kill(pid, 0)`. Secret scanner: case-insensitive AWS/GitHub/PEM patterns. skip invalid match indices before snippets. Compare: `exportKind` treats `exports.named` as named only when it is a non-empty array
+- **CLI packaging, paths, and token summary (v0.8.4)** - `logicstamp-context` registered as npm bin (fixes `npx logicstamp-context`). centralized `normalizeEntryId` / `toForwardSlashes` across CLI, watch, pack loader, and AST; `stamp context` summary shows the current mode’s exact token count vs raw source with savings % (use `--compare-modes` for full breakdown). tag-based npm publish via GitHub Actions and updated contributing/release docs
 - **Secret scanner & watch reliability (v0.8.3)** - Long-line skip and regex optimizations in secret detection. watch logging, full rebuild fallback after incremental errors, async/error hardening
 - **Documentation layout, watch perf, path boundaries (v0.8.2)** - Core docs under `docs/guides/` and `docs/reference/` with link updates; style/framework docs aligned with CLI; watch mode avoids `Array.from` on the contract map (direct `Map` iteration per change); centralized `isPathWithinRoot` for pack loader and hash-lock
 - **CLI argument validation and robustness fixes (v0.8.1)** - Numeric arg validation for `--depth`/`--max-nodes`, safe compare normalization, token savings bounds
@@ -77,6 +78,8 @@ Recent milestones:
 
 **Enhanced Compare** ✅ v0.7.2 — Full contract comparison: state, variables, API signatures, prop/emit type changes. Matches watch mode behavior.
 
+**Compare export classification** ✅ v0.8.5 — `exportKind` classifies `named` exports only when `exports.named` is a non-empty array; malformed shapes map to `none` instead of a false `named` match.
+
 ### Schema & Architecture
 
 **Conditional Schema by Language** 🔴 Planned — Make `UIFContract` schema conditional on `kind` (e.g., `style` only for frontend, `apiSignature` required for backend). Prerequisite for Python/Java. Depends on JS/JSX support first. **High priority**.
@@ -109,10 +112,22 @@ Recent milestones:
   - Skips very long lines (1000+ characters) to avoid pathological regex cost  
   - Fewer per-line `RegExp` allocations; simplified overlapping patterns (`api[_-]?key`, etc.)
 
+- **Secret detection consistency** ✅ v0.8.5  
+  - Case-insensitive matching for AWS-style keys, GitHub token prefixes, and PEM private-key headers (aligned with other patterns)  
+  - Skip recording a match when `match.index` or full match text is invalid before building snippets
+
 - **Watch mode error handling** ✅ v0.8.3  
   - Clearer logging for context load/read failures (respects `--quiet`)  
   - Full rebuild fallback after incremental errors to restore consistent state  
   - Hardened async/error paths to avoid masked failures and unhandled rejections
+
+- **Watch mode regeneration lock** ✅ v0.8.5  
+  - Synchronous `isRegenerating` flag replaces promise-based lock to avoid races when multiple callers process the same file changes  
+  - `while` loop drains changes that arrive during regeneration
+
+- **File lock robustness** ✅ v0.8.5  
+  - `writeLockFileExclusive()` removes empty or partial `.lock` files if write or close fails after exclusive create  
+  - Windows: use `tasklist` to detect whether the lock PID still exists; treat current process as alive; indeterminate `tasklist` output does not drop valid locks (fixes lost updates under heavy concurrent waiters, e.g. `appendWatchLog`)
 
 - ✅ Incremental bundle caching (watch mode)
 - **Style verbosity reduction** 🔴 — Less verbose style for nested components with `depth=2`; planned `--full-style` flag for full extraction (distinct from `--style-mode full`). ~30-40% token reduction.
