@@ -122,7 +122,7 @@ export function index(bundles: LogicStampBundle[], normalize = false): Map<strin
         variables: normalize ? normalizeNames(c.composition?.variables ?? []) : (c.composition?.variables ?? []),
         state: c.interface?.state ?? {},
         exportKind: typeof c.exports === 'string' ? 'default'
-                   : c.exports?.named?.length ? 'named' : 'none',
+                   : Array.isArray(c.exports?.named) && c.exports.named.length > 0 ? 'named' : 'none',
         apiSignature: c.interface?.apiSignature,
       };
       m.set(c.entryId.toLowerCase(), sig);
