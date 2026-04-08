@@ -3,6 +3,7 @@
  * Uses exclusive file creation with PID tracking for stale lock detection
  */
 
+import { execFileSync } from 'node:child_process';
 import { open, unlink, readFile, access } from 'node:fs/promises';
 import { constants } from 'node:fs';
 
@@ -26,6 +27,36 @@ interface LockFileContent {
 }
 
 /**
+ * Windows: `process.kill(pid, 0)` is unreliable (libuv/permission quirks). Use tasklist for *other* processes.
+ * Never treat empty/unparseable tasklist output as "dead" — that can delete a valid lock and corrupt read-modify-write.
+ */
+function isWindowsProcessRunning(pid: number): boolean | 'unknown' {
+  try {
+    const out = execFileSync('tasklist', ['/FI', `PID eq ${pid}`, '/NH'], {
+      encoding: 'utf8',
+      windowsHide: true,
+      timeout: 5000,
+    });
+    const trimmed = out.trim();
+    // Reliable: localized "no tasks" banner when the PID does not exist
+    if (/^INFO:/i.test(trimmed)) {
+      return false;
+    }
+    // Ambiguous: empty or unexpected output — do not assume the process exited (avoids stale-lock false positives)
+    if (!trimmed) {
+      return 'unknown';
+    }
+    const re = new RegExp(`(?:^|\\s)${pid}(?:\\s|$)`);
+    if (re.test(trimmed)) {
+      return true;
+    }
+    return 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
+/**
  * Check if a process is still running
  * Returns: true = alive, false = dead, 'unknown' = can't determine (e.g., permission denied)
  */
@@ -34,6 +65,15 @@ function isProcessAlive(pid: number): boolean | 'unknown' {
   // Windows max PID is around 4 million, Unix typically higher but still bounded
   if (!Number.isInteger(pid) || pid <= 0 || pid > 4194304) {
     return false;
+  }
+
+  // Same process is always alive; avoids Windows tasklist false negatives racing with our own file locks
+  if (pid === process.pid) {
+    return true;
+  }
+
+  if (process.platform === 'win32') {
+    return isWindowsProcessRunning(pid);
   }
 
   try {
