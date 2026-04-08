@@ -113,6 +113,37 @@ async function removeStale(lockPath: string): Promise<void> {
 }
 
 /**
+ * Create lock file exclusively, write payload, and close. If open succeeded but write/close
+ * fails, remove the file so we do not leave an empty or partial lock blocking others.
+ */
+async function writeLockFileExclusive(
+  lockPath: string,
+  content: LockFileContent
+): Promise<void> {
+  let handle: Awaited<ReturnType<typeof open>> | undefined;
+  try {
+    handle = await open(lockPath, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY);
+    await handle.writeFile(JSON.stringify(content));
+    await handle.close();
+    handle = undefined;
+  } catch (e) {
+    if (handle !== undefined) {
+      try {
+        await handle.close();
+      } catch {
+        // Ignore — best effort before unlink
+      }
+      try {
+        await unlink(lockPath);
+      } catch {
+        // Ignore — another process may have taken over
+      }
+    }
+    throw e;
+  }
+}
+
+/**
  * Acquire an exclusive lock on a file
  *
  * @param filePath - Path to the file to lock (lock file will be filePath + '.lock')
@@ -160,9 +191,7 @@ export async function acquireLock(
       }
       await new Promise(resolve => setTimeout(resolve, 10 + retry * 5)); // 10, 15, 20, 25, 30ms
       try {
-        const handle = await open(lockPath, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY);
-        await handle.writeFile(JSON.stringify(lockContent));
-        await handle.close();
+        await writeLockFileExclusive(lockPath, lockContent);
         // Successfully acquired lock!
         return {
           release: async () => {
@@ -190,9 +219,7 @@ export async function acquireLock(
   while (Date.now() - startTime < timeout) {
     try {
       // Try to create lock file exclusively (fails if exists)
-      const handle = await open(lockPath, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY);
-      await handle.writeFile(JSON.stringify(lockContent));
-      await handle.close();
+      await writeLockFileExclusive(lockPath, lockContent);
 
       // Lock acquired
       return {
