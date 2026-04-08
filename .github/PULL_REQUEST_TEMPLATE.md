@@ -4,6 +4,12 @@
 
 ---
 
+## What’s Changed
+
+<!-- Clear bullet list of WHAT changed -->
+
+---
+
 ## Type of Change
 
 - [ ] Bug fix
@@ -22,10 +28,10 @@
 - [ ] No contract/output changes
 - [ ] Contract/output changed (describe below)
 
-If contract/output changed, explain the impact on:
+<!-- If contract/output changed, explain the impact on:
 - Bundle structure
 - CLI flags
-- Watch/strict behavior
+- Watch/strict behavior -->
 
 ---
 
@@ -39,8 +45,9 @@ If contract/output changed, explain the impact on:
 
 ## Related Issues
 
-<!-- Link to related issues using #issue-number -->
-<!-- Example: Fixes #123, Closes #456 -->
+<!-- Fixes #123 -->
+
+---
 
 ## Checklist
 

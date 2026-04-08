@@ -65,6 +65,15 @@ Example: your `Button` accepts `variant` and `disabled`, but the AI suggests `is
 
 **LogicStamp Context** derives that layer from your TypeScript - explicit interfaces and dependency structure for tools to consume instead of inferring from implementation.
 
+#### Key Capabilities
+
+- **Contracts, not raw source** - Props, hooks, routes, and dependency edges extracted for tools
+- **Deterministic & diffable** - Same code → same bundles, track changes like any artifact
+- **Always up to date** - Watch mode keeps context aligned with your codebase
+- **MCP-ready** - Works with Claude, Cursor, and MCP-compatible assistants
+
+See the full list in [Features](#-features).
+
 ![LogicStamp MCP Workflow](./assets/logicstamp-workflow.gif)
 *Example workflow: `stamp context --strict-watch` generates context bundles that MCP-powered assistants use to explain component architecture (ThemeContext shown here).*
 
@@ -155,7 +164,7 @@ On disk, each folder’s `context.json` is a **LogicStampBundle**: contracts liv
 
 ## ⚡ Features
 
-**Under the hood:** the TypeScript compiler API (via ts-morph). **Analysis-only** - it describes your codebase and emits context files. it does not transform or refactor your source.
+**Under the hood:** the TypeScript compiler API (via ts-morph). **Analysis-only** - it describes your codebase and emits context files. It does not transform or refactor your source.
 
 **Core:**
 - **Deterministic contracts** - Same input = same output, auditable in version control
@@ -259,7 +268,7 @@ The compilation pipeline:
 
 One command. No build step required.
 
-> **💡Tip:** Use `stamp context` for basic contracts. Use `stamp context style` when you need style metadata (Tailwind classes, SCSS selectors, layout patterns). Use `--style-mode lean` (default) for compact output or `--style-mode full` for detailed arrays.
+> **💡 Tip:** Use `stamp context` for basic contracts. Use `stamp context style` when you need style metadata (Tailwind classes, SCSS selectors, layout patterns). Use `--style-mode lean` (default) for compact output or `--style-mode full` for detailed arrays.
 
 ## MCP Server
 
