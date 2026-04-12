@@ -76,7 +76,7 @@ function getModeLabel(includeCode: 'none' | 'header' | 'full', hasStyle: boolean
 
 /**
  * Generate summary output for console.
- * Shows accurate token counts for the current mode only.
+ * Shows tokenizer-based or approximate token counts for the current mode only.
  * For detailed mode comparisons, use `stamp context --compare-modes`.
  */
 export async function generateSummary(
@@ -137,13 +137,18 @@ export async function generateSummary(
   console.log(`   ${modeLabel.padEnd(12)} ${formatTokenCount(tokenEstimates.currentGPT4)} GPT-4o / ${formatTokenCount(tokenEstimates.currentClaude)} Claude`);
   console.log(`   Savings:     ~${savingsGPT4}% GPT-4o / ~${savingsClaude}% Claude`);
   console.log(`   Method: GPT-4o (${gpt4Method}) | Claude (${claudeMethod})`);
+  if (claudeMethod === 'tokenizer') {
+    console.log(
+      '   Note: Claude counts use @anthropic-ai/tokenizer (approximate for Claude 3+; see package readme).',
+    );
+  }
 
   // Show tip for missing tokenizers
   if (!tokenizerStatus.gpt4 || !tokenizerStatus.claude) {
     const missing: string[] = [];
     if (!tokenizerStatus.gpt4) missing.push('@dqbd/tiktoken');
     if (!tokenizerStatus.claude) missing.push('@anthropic-ai/tokenizer');
-    console.log(`   💡 Install ${missing.join(' and ')} for accurate counts`);
+    console.log(`   💡 Install ${missing.join(' and ')} for tokenizer-based estimates`);
   }
 
   // Point to --compare-modes for detailed breakdown

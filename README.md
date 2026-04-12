@@ -181,7 +181,7 @@ On disk, each folder’s `context.json` is a **LogicStampBundle**: contracts liv
 
 **Developer experience:**
 - Per-folder bundles matching your project structure
-- Accurate token estimates (GPT/Claude)
+- Token estimates: GPT-4o via tiktoken when installed (`o200k_base`, same as `gpt-5` in tiktoken’s bundled table). Not every OpenAI model uses that encoding, and very new model IDs may require a newer `@dqbd/tiktoken`. Claude via optional Anthropic tokenizer (approximate for Claude 3+ per vendor docs) or char fallback
 - Security-first: automatic secret detection and sanitization
 - Zero config required - sensible defaults, works out of the box
 

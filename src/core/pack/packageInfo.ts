@@ -3,36 +3,101 @@
  */
 
 import { readFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 
-/**
- * Cache for package.json content to avoid repeated file reads
- */
-let packageJsonCache: {
+export type PackageJsonDeps = {
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+};
+
+type PackageJsonCacheEntry = {
   path: string;
-  content: {
-    dependencies?: Record<string, string>;
-    devDependencies?: Record<string, string>;
-    peerDependencies?: Record<string, string>;
-  } | null;
-} | null = null;
+  content: PackageJsonDeps | null;
+};
+
+/**
+ * Loads and caches package.json dependency fields per project root.
+ * Use one instance per process (or per test) instead of module-level globals.
+ */
+export class PackageJsonLoader {
+  private cache: PackageJsonCacheEntry | null = null;
+
+  clear(): void {
+    this.cache = null;
+  }
+
+  async load(projectRoot: string): Promise<PackageJsonDeps | null> {
+    if (this.cache && this.cache.path === projectRoot) {
+      return this.cache.content;
+    }
+
+    const packageJsonPath = join(projectRoot, 'package.json');
+
+    if (!existsSync(packageJsonPath)) {
+      this.cache = { path: projectRoot, content: null };
+      return null;
+    }
+
+    try {
+      const raw = await readFile(packageJsonPath, 'utf-8');
+      const packageJson = JSON.parse(raw) as Record<string, unknown>;
+
+      const result: PackageJsonDeps = {
+        dependencies: packageJson.dependencies as Record<string, string> | undefined,
+        devDependencies: packageJson.devDependencies as Record<string, string> | undefined,
+        peerDependencies: packageJson.peerDependencies as Record<string, string> | undefined,
+      };
+
+      this.cache = { path: projectRoot, content: result };
+      return result;
+    } catch {
+      this.cache = { path: projectRoot, content: null };
+      return null;
+    }
+  }
+
+  async getPackageVersion(packageName: string, projectRoot: string): Promise<string | undefined> {
+    const packageJson = await this.load(projectRoot);
+
+    if (!packageJson) {
+      return undefined;
+    }
+
+    if (packageJson.dependencies?.[packageName]) {
+      return packageJson.dependencies[packageName];
+    }
+    if (packageJson.devDependencies?.[packageName]) {
+      return packageJson.devDependencies[packageName];
+    }
+    if (packageJson.peerDependencies?.[packageName]) {
+      return packageJson.peerDependencies[packageName];
+    }
+
+    return undefined;
+  }
+}
+
+const defaultPackageJsonLoader = new PackageJsonLoader();
+
+/** @internal For tests or isolated loaders; normal use goes through {@link defaultPackageJsonLoader}. */
+export function createPackageJsonLoader(): PackageJsonLoader {
+  return new PackageJsonLoader();
+}
 
 /**
  * Check if an import specifier is a third-party package (not a relative path)
  */
 export function isThirdPartyPackage(importSpecifier: string): boolean {
-  // Relative imports start with . or /
   if (importSpecifier.startsWith('.') || importSpecifier.startsWith('/')) {
     return false;
   }
-  
-  // Absolute paths (Windows or Unix)
+
   if (importSpecifier.includes(':') || importSpecifier.startsWith('/')) {
     return false;
   }
-  
-  // Everything else is likely a third-party package
+
   return true;
 }
 
@@ -41,17 +106,14 @@ export function isThirdPartyPackage(importSpecifier: string): boolean {
  * Handles scoped packages (@scope/package) and subpath imports (@scope/package/path)
  */
 export function extractPackageName(importSpecifier: string): string | null {
-  // Handle empty string
   if (!importSpecifier || importSpecifier.trim() === '') {
     return null;
   }
-  
+
   if (!isThirdPartyPackage(importSpecifier)) {
     return null;
   }
-  
-  // Handle scoped packages: @scope/package -> @scope/package
-  // Handle subpath imports: @scope/package/path -> @scope/package
+
   if (importSpecifier.startsWith('@')) {
     const parts = importSpecifier.split('/');
     if (parts.length >= 2) {
@@ -59,57 +121,13 @@ export function extractPackageName(importSpecifier: string): string | null {
     }
     return null;
   }
-  
-  // Handle regular packages: package -> package
-  // Handle subpath imports: package/path -> package
+
   const firstSlash = importSpecifier.indexOf('/');
   if (firstSlash === -1) {
     return importSpecifier;
   }
-  
-  return importSpecifier.substring(0, firstSlash);
-}
 
-/**
- * Load package.json from project root
- * Caches the result to avoid repeated file reads
- */
-async function loadPackageJson(projectRoot: string): Promise<{
-  dependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
-  peerDependencies?: Record<string, string>;
-} | null> {
-  // Use cached version if available and path matches
-  if (packageJsonCache && packageJsonCache.path === projectRoot) {
-    return packageJsonCache.content;
-  }
-  
-  const packageJsonPath = join(projectRoot, 'package.json');
-  
-  // Check if package.json exists
-  if (!existsSync(packageJsonPath)) {
-    packageJsonCache = { path: projectRoot, content: null };
-    return null;
-  }
-  
-  try {
-    const content = await readFile(packageJsonPath, 'utf-8');
-    const packageJson = JSON.parse(content);
-    
-    const result = {
-      dependencies: packageJson.dependencies,
-      devDependencies: packageJson.devDependencies,
-      peerDependencies: packageJson.peerDependencies,
-    };
-    
-    // Cache the result
-    packageJsonCache = { path: projectRoot, content: result };
-    return result;
-  } catch (error) {
-    // If parsing fails, cache null to avoid repeated attempts
-    packageJsonCache = { path: projectRoot, content: null };
-    return null;
-  }
+  return importSpecifier.substring(0, firstSlash);
 }
 
 /**
@@ -120,33 +138,12 @@ export async function getPackageVersion(
   packageName: string,
   projectRoot: string
 ): Promise<string | undefined> {
-  const packageJson = await loadPackageJson(projectRoot);
-  
-  if (!packageJson) {
-    return undefined;
-  }
-  
-  // Check dependencies first (most common)
-  if (packageJson.dependencies && packageJson.dependencies[packageName]) {
-    return packageJson.dependencies[packageName];
-  }
-  
-  // Check devDependencies
-  if (packageJson.devDependencies && packageJson.devDependencies[packageName]) {
-    return packageJson.devDependencies[packageName];
-  }
-  
-  // Check peerDependencies
-  if (packageJson.peerDependencies && packageJson.peerDependencies[packageName]) {
-    return packageJson.peerDependencies[packageName];
-  }
-  
-  return undefined;
+  return defaultPackageJsonLoader.getPackageVersion(packageName, projectRoot);
 }
 
 /**
- * Clear the package.json cache (useful for testing)
+ * Clear the package.json cache (useful for testing or after edits on disk)
  */
 export function clearPackageJsonCache(): void {
-  packageJsonCache = null;
+  defaultPackageJsonLoader.clear();
 }

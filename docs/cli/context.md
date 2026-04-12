@@ -364,26 +364,26 @@ For comprehensive watch mode documentation, see [watch.md](watch.md).
 - Run `stamp context validate` after generation to catch schema drift early.
 - Use `stamp context clean` to remove all context artifacts when resetting or switching branches.
 - Use `stamp context style` or `--include-style` to extract visual and layout metadata for design-aware context bundles. Use `--style-mode lean` (default) for compact output or `--style-mode full` for detailed arrays. See [style.md](style.md) for detailed documentation.
-- Use `--compare-modes` to see accurate token estimates across all modes (none/header/header+style/full) and understand the cost impact of including style metadata.
+- Use `--compare-modes` to see tokenizer-based or approximate token estimates across all modes (none/header/header+style/full) and understand the cost impact of including style metadata.
 - Use `--watch` during development for automatic context regeneration on file changes. See [watch.md](watch.md) for details.
 
 ## Token Estimation
 
-Token counts are estimated using character-based approximations by default (~4 characters per token for GPT-4, ~4.5 for Claude). 
+Token counts are estimated using character-based approximations by default (~4 characters per token for GPT-4o, ~4.5 for Claude). 
 
-**Optional Tokenizers:** LogicStamp Context includes `@dqbd/tiktoken` (GPT-4) and `@anthropic-ai/tokenizer` (Claude) as optional dependencies. npm installs them automatically when you install `logicstamp-context`. If that works, you get model-accurate token counts. If it fails or is skipped (normal for optional dependencies), it falls back to character-based estimation.
+**Optional Tokenizers:** LogicStamp Context includes `@dqbd/tiktoken` (GPT-4o encoding) and `@anthropic-ai/tokenizer` (Claude) as optional dependencies. npm installs them automatically when you install `logicstamp-context`. When load succeeds, GPT-4o counts follow that tiktoken encoding. **Claude:** Anthropic’s package is documented as aligned with older models; for Claude 3+ it is only a rough local approximation—use `usage` in API responses when you need billing-accurate counts. If optional install fails or is skipped, the tool falls back to character-based estimation (~4 chars/token GPT-4o, ~4.5 Claude).
 
-If you need accurate token counts and the automatic installation failed, you can manually install them:
+If the automatic installation failed, you can manually install them:
 
 ```bash
-# For accurate GPT-4 token counts
+# GPT-4o-aligned counts (tiktoken)
 npm install @dqbd/tiktoken
 
-# For accurate Claude token counts
+# Claude: rough local estimate (see @anthropic-ai/tokenizer readme)
 npm install @anthropic-ai/tokenizer
 ```
 
-If these packages are installed, `--compare-modes` and token estimates throughout the tool will automatically use them for precise token counting.
+If these packages are installed and load successfully, `--compare-modes` and token summaries use them instead of the character fallback.
 
 ## Error Handling
 

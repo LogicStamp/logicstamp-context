@@ -413,6 +413,11 @@ export async function displayModeComparison(
   
   console.log('\n📊 Mode Comparison\n');
   console.log(`   Token estimation: GPT-4o (${gpt4Method}) | Claude (${claudeMethod})`);
+  if (claudeMethod === 'tokenizer') {
+    console.log(
+      '   Note: Claude counts use @anthropic-ai/tokenizer (approximate for Claude 3+; see package readme).',
+    );
+  }
   console.log(`   Files analyzed: ${totalFiles} total (${tsFiles} .ts, ${tsxFiles} .tsx)`);
   console.log(`   Scope: TypeScript source files only (test files excluded)`);
   if (!tokenizerStatus.gpt4 || !tokenizerStatus.claude) {
@@ -423,7 +428,9 @@ export async function displayModeComparison(
     if (!tokenizerStatus.claude) {
       missing.push('@anthropic-ai/tokenizer (Claude)');
     }
-    console.log(`   💡 Tip: Tokenizers are included as optional dependencies. If installation failed, manually install ${missing.join(' and/or ')} for accurate token counts`);
+    console.log(
+      `   💡 Tip: Tokenizers are optional dependencies. If installation failed, install ${missing.join(' and/or ')} for tokenizer-based estimates.`,
+    );
   }
   console.log('\n   Comparison vs Raw Source:');
   console.log('');
