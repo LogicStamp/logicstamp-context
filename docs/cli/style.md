@@ -594,9 +594,9 @@ For comprehensive watch mode documentation, see [watch.md](watch.md).
 
 Style metadata adds a small token overhead to context bundles. **Note:** `--compare-modes` is not available for `stamp context style`. Use `stamp context --compare-modes` (without the `style` subcommand) to see the token impact across different modes.
 
-The `--compare-modes` flag automatically regenerates contracts with and without style metadata to provide accurate token counts. This shows you:
+The `--compare-modes` flag automatically regenerates contracts with and without style metadata to show tokenizer-based or approximate token counts (see [compare-modes.md](compare-modes.md) for Claude caveats). This shows you:
 
-- **Exact token overhead** of including style metadata (header vs header+style)
+- **Token overhead** of including style metadata (header vs header+style)
 - **Comparison across all modes** – none, header, header+style, and full
 - **Savings percentages** compared to both raw source and full context
 

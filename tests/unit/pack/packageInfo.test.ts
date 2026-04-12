@@ -1,24 +1,22 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
-  isThirdPartyPackage, 
-  extractPackageName, 
+import {
+  isThirdPartyPackage,
+  extractPackageName,
   getPackageVersion,
-  clearPackageJsonCache 
+  clearPackageJsonCache,
+  createPackageJsonLoader,
 } from '../../../src/core/pack/packageInfo.js';
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 
 describe('Package Info Utilities', () => {
   let testProjectRoot: string;
-  let originalCwd: string;
 
   beforeEach(async () => {
     // Create a temporary directory for testing
     testProjectRoot = join(tmpdir(), `logicstamp-test-${Date.now()}`);
     await mkdir(testProjectRoot, { recursive: true });
-    originalCwd = process.cwd();
     clearPackageJsonCache();
   });
 
@@ -217,6 +215,28 @@ describe('Package Info Utilities', () => {
       clearPackageJsonCache();
       const version3 = await getPackageVersion('react', testProjectRoot);
       expect(version3).toBe('^19.0.0'); // Fresh read
+    });
+
+    it('should use a fresh cache per PackageJsonLoader instance', async () => {
+      const packageJson = {
+        dependencies: { react: '^18.2.0' },
+      };
+      await writeFile(
+        join(testProjectRoot, 'package.json'),
+        JSON.stringify(packageJson, null, 2)
+      );
+
+      expect(await getPackageVersion('react', testProjectRoot)).toBe('^18.2.0');
+
+      packageJson.dependencies.react = '^19.0.0';
+      await writeFile(
+        join(testProjectRoot, 'package.json'),
+        JSON.stringify(packageJson, null, 2)
+      );
+
+      const isolated = createPackageJsonLoader();
+      expect(await isolated.getPackageVersion('react', testProjectRoot)).toBe('^19.0.0');
+      expect(await getPackageVersion('react', testProjectRoot)).toBe('^18.2.0');
     });
 
     it('should handle scoped packages', async () => {

@@ -46,7 +46,7 @@ Example tables:
 
 ## Token Estimation
 
-Defaults use ~4 chars/token (GPT-4o) and ~4.5 (Claude). Optional deps `@dqbd/tiktoken` and `@anthropic-ai/tokenizer` give exact counts when install succeeds.
+Defaults use ~4 chars/token (GPT-4o) and ~4.5 (Claude). Optional `@dqbd/tiktoken` gives GPT-4o-aligned counts when it loads. **`@anthropic-ai/tokenizer`** is documented by Anthropic as for older models; for Claude 3+ treat its counts as a rough guide only (API `usage` is authoritative for billing).
 
 ```bash
 npm install @dqbd/tiktoken @anthropic-ai/tokenizer
@@ -90,6 +90,8 @@ stamp context --compare-modes --stats   # writes context_compare_modes.json
 **Why don’t tokens match file size?** Tokens ≠ bytes; tokenizers split code and prose unevenly.
 
 **When are tokenizers worth it?** Tight budgets, production gates, comparing tools. Approximations are fine for day-to-day.
+
+**Do Claude numbers match the API?** Not necessarily. The optional Anthropic tokenizer can diverge from current Claude models; rely on response `usage` when exact counts matter.
 
 **`full` overhead?** JSON + metadata on top of embedded source; `header` avoids most of that.
 

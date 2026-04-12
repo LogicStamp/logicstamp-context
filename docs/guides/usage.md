@@ -790,7 +790,7 @@ stamp context --compare-modes
 stamp context --compare-modes --stats  # Creates context_compare_modes.json for MCP
 ```
 
-Shows two comparison tables: savings vs raw source, and mode breakdown vs full context. Automatically regenerates contracts with/without style for accurate comparisons. Optional tokenizers (`@dqbd/tiktoken`, `@anthropic-ai/tokenizer`) provide exact counts if installed; otherwise uses approximations.
+Shows two comparison tables: savings vs raw source, and mode breakdown vs full context. Automatically regenerates contracts with/without style for comparable token breakdowns. Optional `@dqbd/tiktoken` improves GPT-4o alignment; optional `@anthropic-ai/tokenizer` gives a rough Claude estimate (Anthropic notes it is not accurate for Claude 3+—use API `usage` for billing). Otherwise the tool uses character-based approximations.
 
 **Note:** Token counts vary by technology (Tailwind is already efficient; regular CSS shows larger gains). The real value is in structured processing—faster parsing, explicit relationships, and categorized information make AI assistants more effective.
 

@@ -1,5 +1,11 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { estimateGPT4Tokens, estimateClaudeTokens, formatTokenCount, clearTokenizerCache } from '../../src/utils/tokens.js';
+import { describe, it, expect } from 'vitest';
+import {
+  estimateGPT4Tokens,
+  estimateClaudeTokens,
+  formatTokenCount,
+  clearTokenizerCache,
+  createTokenizerRuntime,
+} from '../../src/utils/tokens.js';
 
 describe('Token Estimation Utilities', () => {
   describe('formatTokenCount', () => {
@@ -197,6 +203,21 @@ Line 3`;
         clearTokenizerCache();
         clearTokenizerCache();
       }).not.toThrow();
+    });
+  });
+
+  describe('createTokenizerRuntime', () => {
+    it('should keep its own cache when the default runtime is cleared', async () => {
+      const text = 'isolated tokenizer runtime';
+      const local = createTokenizerRuntime();
+      const beforeClear = await local.estimateGPT4Tokens(text);
+      expect(beforeClear).toBeGreaterThan(0);
+
+      await estimateGPT4Tokens(text);
+      clearTokenizerCache();
+
+      const afterClear = await local.estimateGPT4Tokens(text);
+      expect(afterClear).toBe(beforeClear);
     });
   });
 });

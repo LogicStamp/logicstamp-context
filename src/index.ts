@@ -50,4 +50,14 @@ export type { WatchStatus, WatchLogEntry, WatchLogs } from './utils/config.js';
 
 // Cache management (for long-running processes)
 export { clearSecurityReportCache } from './core/pack/loader.js';
-export { clearTokenizerCache } from './utils/tokens.js';
+export {
+  clearTokenizerCache,
+  createTokenizerRuntime,
+  TokenizerRuntime,
+} from './utils/tokens.js';
+export type { PackageJsonDeps } from './core/pack/packageInfo.js';
+export {
+  clearPackageJsonCache,
+  createPackageJsonLoader,
+  PackageJsonLoader,
+} from './core/pack/packageInfo.js';
