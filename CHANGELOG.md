@@ -745,7 +745,7 @@ See [docs/reference/limitations.md](docs/reference/limitations.md).
 
 [Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.8.6...HEAD
 
-[0.8.5]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.6
+[0.8.6]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.6
 
 [0.8.5]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.5
 
