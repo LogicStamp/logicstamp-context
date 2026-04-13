@@ -6,11 +6,14 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
   "bin": {
-    "logicstamp-context": "dist/cli/stamp.js",
-    "stamp": "dist/cli/stamp.js"
+    "logicstamp-context": "./dist/cli/stamp.js",
+    "stamp": "./dist/cli/stamp.js"
   },
   "files": [
     "dist",

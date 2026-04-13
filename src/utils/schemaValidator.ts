@@ -3,7 +3,7 @@
  * Validates JSON data against LogicStamp schemas at runtime
  */
 
-import Ajv, { type ValidateFunction, type ErrorObject } from 'ajv';
+import { Ajv, type ValidateFunction, type ErrorObject } from 'ajv';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';

@@ -67,7 +67,7 @@ Example: your `Button` accepts `variant` and `disabled`, but the AI suggests `is
 
 #### Key Capabilities:
 
-- **Contracts, not raw source** - Props, hooks, routes, and dependency edges extracted for tools
+- **Contracts, not raw source code** - Props, hooks, routes, and dependency edges extracted for tools
 - **Deterministic & diffable** - Same code → same bundles
 - **Stays current** - Watch mode keeps context aligned with your codebase
 - **MCP-ready** - Works with Claude, Cursor, and MCP-compatible assistants
@@ -383,6 +383,7 @@ You can compare bundle token costs across modes on your repo with `stamp context
 ## Requirements
 
 - **Node.js** >= 20
+- **ESM-only** - This package is ESM-only (`"type": "module"`). CommonJS `require()` is not supported. In CommonJS environments, use dynamic `import()` or an ESM-compatible setup.
 - **TypeScript codebase** - `.ts` / `.tsx` only (JavaScript is not yet analyzed). Frameworks, UI libraries, and limits: **[Framework support](#framework-support)**.
 
 ## Need Help?
