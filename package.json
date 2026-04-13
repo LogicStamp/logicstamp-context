@@ -1,6 +1,6 @@
 {
   "name": "logicstamp-context",
-  "version": "0.8.5",
+  "version": "0.8.6",
   "description": "The context compiler for TypeScript. Compile your codebase into deterministic architectural contracts and dependency graphs for AI coding workflows.",
   "type": "module",
   "main": "./dist/index.js",

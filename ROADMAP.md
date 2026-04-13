@@ -4,9 +4,10 @@ Planned features, improvements, and known limitations. See [CHANGELOG.md](CHANGE
 
 ## Current Status
 
-**Version:** v0.8.5 (Beta)
+**Version:** v0.8.6 (Beta)
 
 Recent milestones:
+- **Runtime caches, NodeNext/ESM alignment, dependency refresh (v0.8.6)** - Encapsulated tokenizer and package.json caches behind runtime/loader helpers. Switched TypeScript `module` and `moduleResolution` to `NodeNext`, added conditional `exports` (`types` + `import`), normalized `bin` paths, and updated dependencies to current compatible versions
 - **Watch lock, file lock, secrets, compare fixes (v0.8.5)** - Watch: synchronous `isRegenerating` flag and queued change processing instead of a promise-based lock race. File lock: exclusive write helper with cleanup on failed write/close; Windows PID liveness via `tasklist` (with safe fallbacks) instead of `process.kill(pid, 0)`. Secret scanner: case-insensitive AWS/GitHub/PEM patterns. skip invalid match indices before snippets. Compare: `exportKind` treats `exports.named` as named only when it is a non-empty array
 - **CLI packaging, paths, and token summary (v0.8.4)** - `logicstamp-context` registered as npm bin (fixes `npx logicstamp-context`). centralized `normalizeEntryId` / `toForwardSlashes` across CLI, watch, pack loader, and AST; `stamp context` summary shows the current mode’s exact token count vs raw source with savings % (use `--compare-modes` for full breakdown). tag-based npm publish via GitHub Actions and updated contributing/release docs
 - **Secret scanner & watch reliability (v0.8.3)** - Long-line skip and regex optimizations in secret detection. watch logging, full rebuild fallback after incremental errors, async/error hardening
@@ -84,6 +85,8 @@ Recent milestones:
 
 **Conditional Schema by Language** 🔴 Planned — Make `UIFContract` schema conditional on `kind` (e.g., `style` only for frontend, `apiSignature` required for backend). Prerequisite for Python/Java. Depends on JS/JSX support first. **High priority**.
 
+- **Tokenizer/package cache encapsulation** ✅ v0.8.6 — Replaced module-level tokenizer and `package.json` caches with `TokenizerRuntime` and `PackageJsonLoader`, plus `create*` / `clear*` helpers re-exported from the package root.
+
 ### Performance & Optimization
 
 - **Context summary token display** ✅ v0.8.4 — Summary uses the current mode’s measured token count only (no blended heuristics), compares to raw source with savings %, and points to [`--compare-modes`](docs/cli/compare-modes.md) for per-mode detail.
@@ -135,6 +138,7 @@ Recent milestones:
 
 ### Configuration & DX
 
+- **NodeNext / ESM package alignment** ✅ v0.8.6 — `tsconfig.json` now uses `NodeNext` for both `module` and `moduleResolution`; package `exports` include `types` and `import`; `bin` paths normalized for cleaner ESM-aware publishing and consumption.
 - ✅ Normalized paths, `--verbose` (v0.7.1)
 - **npm CLI entry (`npx`)** ✅ v0.8.4 — `package.json` `bin` maps `logicstamp-context` to the same CLI as `stamp`, so `npx logicstamp-context` works reliably.
 - **Release & publish workflow** ✅ v0.8.4 — Tag-based npm publishing in GitHub Actions; contributing guidelines aligned with the new release process.

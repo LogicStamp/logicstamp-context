@@ -20,6 +20,25 @@ See [docs/reference/limitations.md](docs/reference/limitations.md).
 
 ---
 
+## [0.8.6] - 2026-04-14
+
+### Changed
+
+- **Encapsulate tokenizer & package.json caches** ([#190](https://github.com/LogicStamp/logicstamp-context/pull/190))  
+  - Replace module-level caches with `TokenizerRuntime` and `PackageJsonLoader`  
+  - Add `create*` / `clear*` helpers and re-export from package root  
+  - Clarify tokenizer accuracy for Claude
+
+- **Align ESM resolution with package metadata** ([#191](https://github.com/LogicStamp/logicstamp-context/pull/191))  
+  - Switch `tsconfig.json` to `NodeNext` for `module` and `moduleResolution`  
+  - Add conditional `exports` (`types` + `import`)  
+  - Normalize `bin` paths  
+  - Fix `Ajv` import typing for ESM/NodeNext compatibility
+
+- **Update dependencies to latest compatible versions** ([#192](https://github.com/LogicStamp/logicstamp-context/pull/192))
+
+---
+
 ## [0.8.5] - 2026-04-08
 
 ### Fixed
@@ -724,7 +743,9 @@ See [docs/reference/limitations.md](docs/reference/limitations.md).
 
 
 
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.8.5...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.8.6...HEAD
+
+[0.8.6]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.6
 
 [0.8.5]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.5
 
