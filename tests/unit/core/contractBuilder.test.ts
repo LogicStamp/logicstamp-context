@@ -4,7 +4,10 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { AstExtract } from '../../../src/core/astParser.js';
-import type { UIFContract, StyleMetadata } from '../../../src/types/UIFContract.js';
+import type {
+  UIFContract,
+  StyleMetadata,
+} from '../../../src/types/UIFContract.js';
 
 // Mock dependencies
 vi.mock('../../../src/core/signature.js', () => ({
@@ -23,7 +26,10 @@ vi.mock('../../../src/utils/fsx.js', () => ({
 }));
 
 // Import after mocks
-import { buildContract, mergeContractUpdate } from '../../../src/core/contractBuilder.js';
+import {
+  buildContract,
+  mergeContractUpdate,
+} from '../../../src/core/contractBuilder.js';
 import {
   buildLogicSignature,
   generateBehavioralPredictions,
@@ -172,7 +178,9 @@ describe('core/contractBuilder', () => {
           sourceText: 'const Button = () => {}',
         });
 
-        expect(normalizeEntryId).toHaveBeenCalledWith('src\\components\\Button.tsx');
+        expect(normalizeEntryId).toHaveBeenCalledWith(
+          'src\\components\\Button.tsx',
+        );
       });
     });
 
@@ -214,8 +222,12 @@ describe('core/contractBuilder', () => {
         });
 
         expect(generateBehavioralPredictions).toHaveBeenCalledWith(ast);
-        expect(result.contract.prediction).toContain('Includes form validation logic');
-        expect(result.contract.prediction).toContain('Has side effects managed by useEffect');
+        expect(result.contract.prediction).toContain(
+          'Includes form validation logic',
+        );
+        expect(result.contract.prediction).toContain(
+          'Has side effects managed by useEffect',
+        );
       });
 
       it('should combine preset predictions with behavioral predictions', () => {
@@ -235,8 +247,12 @@ describe('core/contractBuilder', () => {
           enablePredictions: true,
         });
 
-        expect(result.contract.prediction).toContain('Contract preset: submit-only');
-        expect(result.contract.prediction).toContain('Includes form validation logic');
+        expect(result.contract.prediction).toContain(
+          'Contract preset: submit-only',
+        );
+        expect(result.contract.prediction).toContain(
+          'Includes form validation logic',
+        );
       });
 
       it('should set prediction to undefined when no predictions exist', () => {
@@ -267,7 +283,9 @@ describe('core/contractBuilder', () => {
           sourceText: 'export const Component = () => {}',
         });
 
-        expect(result.contract.exports).toEqual({ named: ['Component', 'helper'] });
+        expect(result.contract.exports).toEqual({
+          named: ['Component', 'helper'],
+        });
       });
 
       it('should handle default export', () => {
@@ -321,7 +339,9 @@ describe('core/contractBuilder', () => {
           sourceText: 'export function func1() {} export function func2() {}',
         });
 
-        expect(result.contract.exports).toEqual({ named: ['func1', 'func2', 'func3'] });
+        expect(result.contract.exports).toEqual({
+          named: ['func1', 'func2', 'func3'],
+        });
       });
 
       it('should return undefined exports when no exports metadata available', () => {

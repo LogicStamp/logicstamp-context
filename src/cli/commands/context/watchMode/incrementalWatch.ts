@@ -18,7 +18,12 @@ import { fileHash } from '../../../../utils/hash.js';
 import { debugError } from '../../../../utils/debug.js';
 import { Project } from 'ts-morph';
 import { buildContractsFromFiles } from '../contractBuilder.js';
-import { writeContextFiles, writeMainIndex, groupBundlesByFolder, displayPath } from '../fileWriter.js';
+import {
+  writeContextFiles,
+  writeMainIndex,
+  groupBundlesByFolder,
+  displayPath,
+} from '../fileWriter.js';
 import { formatBundles } from '../bundleFormatter.js';
 import { calculateStats } from '../statsCalculator.js';
 import { validateBundles } from '../../validate.js';
@@ -52,7 +57,7 @@ export async function initializeWatchCache(
   contracts: UIFContract[],
   manifest: ProjectManifest,
   bundles: LogicStampBundle[],
-  projectRoot: string
+  projectRoot: string,
 ): Promise<WatchCache> {
   const cache: WatchCache = {
     contracts: new Map(),
@@ -93,7 +98,11 @@ function styleCacheKey(contentHash: string, options: ContextOptions): string {
 /**
  * Check if style metadata is already cached for a given content hash
  */
-function hasStyleCached(contentHash: string, cache: WatchCache, options: ContextOptions): boolean {
+function hasStyleCached(
+  contentHash: string,
+  cache: WatchCache,
+  options: ContextOptions,
+): boolean {
   if (!options.includeStyle) return true;
   return cache.styleCache.has(styleCacheKey(contentHash, options));
 }
@@ -106,7 +115,7 @@ async function extractAndCacheStyle(
   absoluteFilePath: string,
   contentHash: string,
   cache: WatchCache,
-  options: ContextOptions
+  options: ContextOptions,
 ): Promise<any> {
   if (!options.includeStyle) {
     return undefined;
@@ -129,7 +138,11 @@ async function extractAndCacheStyle(
       compilerOptions: { jsx: 1, target: 99 },
     });
     const sourceFile = styleProject.addSourceFileAtPath(absoluteFilePath);
-    const styleMetadata = await extractStyleMetadata(sourceFile, absoluteFilePath, options.styleMode ?? 'lean');
+    const styleMetadata = await extractStyleMetadata(
+      sourceFile,
+      absoluteFilePath,
+      options.styleMode ?? 'lean',
+    );
     // Cache style extraction result (use null as sentinel for undefined to avoid retrying failures)
     cache.styleCache.set(key, styleMetadata ?? null);
     return styleMetadata;
@@ -152,14 +165,14 @@ export async function incrementalRebuild(
   changedFiles: string[],
   cache: WatchCache,
   options: ContextOptions,
-  projectRoot: string
+  projectRoot: string,
 ): Promise<{ bundles: LogicStampBundle[]; updatedBundles: Set<string> }> {
   const updatedBundles = new Set<string>();
 
   // Step 1: Rebuild contracts for changed files
   for (const file of changedFiles) {
     const absoluteFilePath = isAbsolute(file) ? file : join(projectRoot, file);
-    
+
     try {
       // Read file content
       const { text } = await readFileWithText(absoluteFilePath);
@@ -184,15 +197,25 @@ export async function incrementalRebuild(
         }
 
         // Fast path: only backfill styles, skip AST/contract rebuild
-        await extractAndCacheStyle(absoluteFilePath, currentFileHash, cache, options);
+        await extractAndCacheStyle(
+          absoluteFilePath,
+          currentFileHash,
+          cache,
+          options,
+        );
         continue;
       }
 
       // Rebuild contract for this file
       const ast = await extractFromFile(absoluteFilePath);
-      
+
       // Extract style if needed (with caching)
-      const styleMetadata = await extractAndCacheStyle(absoluteFilePath, currentFileHash, cache, options);
+      const styleMetadata = await extractAndCacheStyle(
+        absoluteFilePath,
+        currentFileHash,
+        cache,
+        options,
+      );
 
       const result = buildContract(file, ast, {
         preset: 'none',
@@ -204,20 +227,23 @@ export async function incrementalRebuild(
       if (result.contract) {
         // Remove old contract with different hash but same entryId to prevent duplicates
         // normalizedEntryId already computed above
-        
+
         // Capture old hashes BEFORE deleting contracts (so we can clean up style cache)
         const oldHashes: string[] = [];
         for (const [hash, contract] of cache.contracts.entries()) {
-          if (normalizeEntryId(contract.entryId) === normalizedEntryId && hash !== result.contract.fileHash) {
+          if (
+            normalizeEntryId(contract.entryId) === normalizedEntryId &&
+            hash !== result.contract.fileHash
+          ) {
             oldHashes.push(hash);
           }
         }
-        
+
         // Remove old contracts
         for (const h of oldHashes) {
           cache.contracts.delete(h);
         }
-        
+
         // Clean up old style cache entries for the same entryId (different hash)
         // This prevents cache growth when files change repeatedly
         // Delete all style mode variants for each old hash
@@ -230,31 +256,32 @@ export async function incrementalRebuild(
             }
           }
         }
-        
+
         // Update cache with new contract
         cache.contracts.set(result.contract.fileHash, result.contract);
 
         // Find all bundles that include this component
-        const bundlesForComponent = cache.componentToBundles.get(normalizedEntryId) || new Set();
+        const bundlesForComponent =
+          cache.componentToBundles.get(normalizedEntryId) || new Set();
         for (const bundleId of bundlesForComponent) {
           updatedBundles.add(bundleId);
         }
-        
+
         // Also check if this component has its own bundle (root component)
         // This handles cases where componentToBundles doesn't include the component's own bundle
         const existingBundle = cache.allBundles.find(
-          b => normalizeEntryId(b.entryId) === normalizedEntryId
+          (b) => normalizeEntryId(b.entryId) === normalizedEntryId,
         );
         // bundlesForComponent contains unnormalized bundle IDs, so check with unnormalized ID
         // but ensure we normalize for comparison consistency
-        if (existingBundle && !bundlesForComponent.has(existingBundle.entryId)) {
+        if (
+          existingBundle &&
+          !bundlesForComponent.has(existingBundle.entryId)
+        ) {
           updatedBundles.add(existingBundle.entryId);
         }
       }
-    } catch (error) {
-      // Skip files that can't be analyzed
-      continue;
-    }
+    } catch (error) {}
   }
 
   // Step 2: Update manifest with new contracts
@@ -272,25 +299,29 @@ export async function incrementalRebuild(
     }
   }
   const allContracts = Array.from(contractsByEntryId.values());
-  
+
   // Update contracts cache to only contain deduplicated contracts
   cache.contracts.clear();
   for (const contract of allContracts) {
     cache.contracts.set(contract.fileHash, contract);
   }
-  
+
   const updatedManifest = buildDependencyGraph(allContracts);
-  
+
   // Check for new root components that need bundles
-  const oldRoots = cache.manifest ? new Set(cache.manifest.graph.roots.map(r => normalizeEntryId(r))) : new Set();
-  const newRoots = new Set(updatedManifest.graph.roots.map(r => normalizeEntryId(r)));
+  const oldRoots = cache.manifest
+    ? new Set(cache.manifest.graph.roots.map((r) => normalizeEntryId(r)))
+    : new Set();
+  const newRoots = new Set(
+    updatedManifest.graph.roots.map((r) => normalizeEntryId(r)),
+  );
   for (const rootId of newRoots) {
     if (!oldRoots.has(rootId)) {
       // New root component - needs a bundle
       updatedBundles.add(rootId);
     }
   }
-  
+
   // Update manifest cache
   cache.manifest = updatedManifest;
 
@@ -303,17 +334,22 @@ export async function incrementalRebuild(
     strict: options.strict,
     allowMissing: options.allowMissing,
     maxNodes: options.maxNodes,
-    contractsMap: new Map(allContracts.map(c => [c.entryId, c])),
+    contractsMap: new Map(allContracts.map((c) => [c.entryId, c])),
   };
 
   const rebuiltBundles: LogicStampBundle[] = [];
-  const newRootSet = new Set(updatedManifest.graph.roots.map(r => normalizeEntryId(r)));
+  const newRootSet = new Set(
+    updatedManifest.graph.roots.map((r) => normalizeEntryId(r)),
+  );
 
   // Keep existing bundles that weren't affected AND are still roots
   // (Remove bundles for components that are no longer roots)
   for (const bundle of cache.allBundles) {
     const normalizedEntryId = normalizeEntryId(bundle.entryId);
-    if (!updatedBundles.has(bundle.entryId) && newRootSet.has(normalizedEntryId)) {
+    if (
+      !updatedBundles.has(bundle.entryId) &&
+      newRootSet.has(normalizedEntryId)
+    ) {
       rebuiltBundles.push(bundle);
     }
   }
@@ -321,14 +357,19 @@ export async function incrementalRebuild(
   // Rebuild affected bundles
   for (const bundleId of updatedBundles) {
     try {
-      const bundle = await pack(bundleId, updatedManifest, packOptions, projectRoot);
+      const bundle = await pack(
+        bundleId,
+        updatedManifest,
+        packOptions,
+        projectRoot,
+      );
       rebuiltBundles.push(bundle);
-      
+
       // Update reverse index - remove old entries first
       for (const [entryId, bundles] of cache.componentToBundles.entries()) {
         bundles.delete(bundleId);
       }
-      
+
       // Add new entries
       for (const node of bundle.graph.nodes) {
         const entryId = normalizeEntryId(node.contract.entryId);
@@ -339,7 +380,7 @@ export async function incrementalRebuild(
       }
     } catch (error) {
       // If bundle rebuild fails, keep the old one and restore its contracts
-      const oldBundle = cache.allBundles.find(b => b.entryId === bundleId);
+      const oldBundle = cache.allBundles.find((b) => b.entryId === bundleId);
       if (oldBundle) {
         rebuiltBundles.push(oldBundle);
         // Restore contracts from old bundle to maintain cache consistency
@@ -372,7 +413,9 @@ export async function incrementalRebuild(
   cache.contracts = finalContracts;
 
   // Rebuild manifest from final contracts to ensure consistency
-  const consistentManifest = buildDependencyGraph(Array.from(finalContracts.values()));
+  const consistentManifest = buildDependencyGraph(
+    Array.from(finalContracts.values()),
+  );
 
   // Update cache
   cache.allBundles = rebuiltBundles;

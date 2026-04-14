@@ -23,7 +23,10 @@ export interface BundleNode {
 /**
  * Build edges from nodes based on dependencies
  */
-export function buildEdges(nodes: BundleNode[], manifest: ProjectManifest): [string, string][] {
+export function buildEdges(
+  nodes: BundleNode[],
+  manifest: ProjectManifest,
+): [string, string][] {
   const edges: [string, string][] = [];
   // Node entryIds are normalized relative paths
   const nodeIds = new Set(nodes.map((n) => n.entryId));
@@ -32,7 +35,7 @@ export function buildEdges(nodes: BundleNode[], manifest: ProjectManifest): [str
     // Find component node - node.entryId is normalized, so normalize manifest keys for lookup
     let componentNode = manifest.components[node.entryId];
     let manifestKeyForNode = node.entryId;
-    
+
     if (!componentNode) {
       // Try to find by normalizing manifest keys
       for (const [key, comp] of Object.entries(manifest.components)) {
@@ -44,7 +47,7 @@ export function buildEdges(nodes: BundleNode[], manifest: ProjectManifest): [str
         }
       }
     }
-    
+
     if (!componentNode) continue;
 
     for (const dep of componentNode.dependencies) {
@@ -80,7 +83,7 @@ export function stableSort(nodes: BundleNode[]): BundleNode[] {
  */
 export function computeBundleHash(nodes: BundleNode[], depth: number): string {
   // Use the stable bundleHash function from utils/hash
-  const nodeData = nodes.map(n => ({
+  const nodeData = nodes.map((n) => ({
     entryId: n.entryId,
     semanticHash: n.contract.semanticHash,
   }));
@@ -95,13 +98,19 @@ export function computeBundleHash(nodes: BundleNode[], depth: number): string {
  * (authoritative, not from header). fileHash() automatically strips @uif header block
  * before hashing, so header updates won't cause hash churn.
  */
-export async function validateHashLock(contract: UIFContract, entryId: string, projectRoot: string): Promise<boolean> {
+export async function validateHashLock(
+  contract: UIFContract,
+  entryId: string,
+  projectRoot: string,
+): Promise<boolean> {
   try {
     if (!isPathWithinRoot(entryId, projectRoot)) {
       return false;
     }
     // Read the actual source file
-    const absolutePath = isAbsolute(entryId) ? entryId : resolve(projectRoot, entryId);
+    const absolutePath = isAbsolute(entryId)
+      ? entryId
+      : resolve(projectRoot, entryId);
     const sourceContent = await readFile(absolutePath, 'utf8');
 
     // Recompute file hash (strips @uif header block automatically)
@@ -121,4 +130,3 @@ export async function validateHashLock(contract: UIFContract, entryId: string, p
     return false;
   }
 }
-

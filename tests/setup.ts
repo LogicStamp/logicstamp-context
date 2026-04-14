@@ -39,4 +39,3 @@ export async function setup() {
 export async function teardown() {
   // Nothing to clean up
 }
-

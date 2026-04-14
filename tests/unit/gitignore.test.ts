@@ -89,7 +89,8 @@ describe('gitignore utilities', () => {
     });
 
     it('should return true when TOON patterns exist', () => {
-      const content = 'node_modules\ncontext.json\ncontext_*.json\ncontext.toon\ncontext_*.toon\n';
+      const content =
+        'node_modules\ncontext.json\ncontext_*.json\ncontext.toon\ncontext_*.toon\n';
       expect(hasLogicStampPatterns(content)).toBe(true);
     });
 
@@ -116,7 +117,8 @@ describe('gitignore utilities', () => {
     });
 
     it('should return true when block header exists', () => {
-      const content = 'node_modules\n# LogicStamp context & security files\ncontext.json\n';
+      const content =
+        'node_modules\n# LogicStamp context & security files\ncontext.json\n';
       expect(hasLogicStampBlock(content)).toBe(true);
     });
   });
@@ -134,7 +136,8 @@ describe('gitignore utilities', () => {
     });
 
     it('should return only missing patterns', () => {
-      const content = '# LogicStamp context & security files\ncontext.json\ncontext_*.json\n';
+      const content =
+        '# LogicStamp context & security files\ncontext.json\ncontext_*.json\n';
       const missing = getMissingPatterns(content);
       expect(missing).toContain('context.toon');
       expect(missing).toContain('context_*.toon');
@@ -147,7 +150,8 @@ describe('gitignore utilities', () => {
     });
 
     it('should detect missing TOON patterns', () => {
-      const content = '# LogicStamp context & security files\ncontext.json\ncontext_*.json\ncontext.toon\n';
+      const content =
+        '# LogicStamp context & security files\ncontext.json\ncontext_*.json\ncontext.toon\n';
       const missing = getMissingPatterns(content);
       expect(missing).toContain('context_*.toon');
       expect(missing).not.toContain('context.toon');
@@ -194,23 +198,25 @@ describe('gitignore utilities', () => {
         // Missing: stamp_security_report.json, context.toon, context_*.toon
       ];
       const content = oldPatterns.join('\n') + '\n';
-      
+
       const result = addLogicStampPatterns(content);
-      
+
       // Should contain all original patterns
       expect(result).toContain('context.json');
       expect(result).toContain('context_*.json');
       expect(result).toContain('*.uif.json');
       expect(result).toContain('logicstamp.manifest.json');
       expect(result).toContain('.logicstamp/');
-      
+
       // Should now contain the missing patterns
       expect(result).toContain('stamp_security_report.json');
       expect(result).toContain('context.toon');
       expect(result).toContain('context_*.toon');
-      
+
       // Should not duplicate the header
-      const headerMatches = (result.match(/# LogicStamp context & security files/g) || []).length;
+      const headerMatches = (
+        result.match(/# LogicStamp context & security files/g) || []
+      ).length;
       expect(headerMatches).toBe(1);
     });
 
@@ -223,9 +229,9 @@ describe('gitignore utilities', () => {
         // Missing: *.uif.json, logicstamp.manifest.json, .logicstamp/, stamp_security_report.json
       ];
       const content = oldPatterns.join('\n') + '\n';
-      
+
       const result = addLogicStampPatterns(content);
-      
+
       // Should contain all patterns
       expect(result).toContain('context.json');
       expect(result).toContain('context_*.json');
@@ -235,9 +241,10 @@ describe('gitignore utilities', () => {
       expect(result).toContain('logicstamp.manifest.json');
       expect(result).toContain('.logicstamp/');
       expect(result).toContain('stamp_security_report.json');
-      
+
       // Should not duplicate existing patterns
-      const contextJsonMatches = (result.match(/^context\.json$/gm) || []).length;
+      const contextJsonMatches = (result.match(/^context\.json$/gm) || [])
+        .length;
       expect(contextJsonMatches).toBe(1);
     });
 
@@ -252,14 +259,14 @@ describe('gitignore utilities', () => {
         '# User custom ignore',
         'custom.log',
       ].join('\n');
-      
+
       const result = addLogicStampPatterns(content);
-      
+
       // Should preserve user content
       expect(result).toContain('node_modules');
       expect(result).toContain('# User custom ignore');
       expect(result).toContain('custom.log');
-      
+
       // Should add missing patterns
       expect(result).toContain('stamp_security_report.json');
     });
@@ -267,7 +274,7 @@ describe('gitignore utilities', () => {
     it('should handle Windows line endings (CRLF)', () => {
       const content = 'node_modules\r\ncontext.json\r\n';
       const result = addLogicStampPatterns(content);
-      
+
       // Should preserve CRLF line endings
       expect(result).toContain('node_modules');
       expect(result).toContain('context.json');
@@ -343,18 +350,19 @@ describe('gitignore utilities', () => {
 
     it('should update old block with missing patterns (edge case fix)', async () => {
       // Simulate old .gitignore without stamp_security_report.json
-      const oldContent = [
-        'node_modules',
-        '',
-        '# LogicStamp context & security files',
-        'context.json',
-        'context_*.json',
-        '*.uif.json',
-        'logicstamp.manifest.json',
-        '.logicstamp/',
-        // Missing: stamp_security_report.json
-      ].join('\n') + '\n';
-      
+      const oldContent =
+        [
+          'node_modules',
+          '',
+          '# LogicStamp context & security files',
+          'context.json',
+          'context_*.json',
+          '*.uif.json',
+          'logicstamp.manifest.json',
+          '.logicstamp/',
+          // Missing: stamp_security_report.json
+        ].join('\n') + '\n';
+
       await writeFile(join(testDir, '.gitignore'), oldContent);
 
       const result = await ensureGitignorePatterns(testDir);
@@ -364,7 +372,7 @@ describe('gitignore utilities', () => {
       expect(result.created).toBe(false);
 
       const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
-      
+
       // Should preserve all original patterns
       expect(content).toContain('node_modules');
       expect(content).toContain('context.json');
@@ -372,16 +380,18 @@ describe('gitignore utilities', () => {
       expect(content).toContain('*.uif.json');
       expect(content).toContain('logicstamp.manifest.json');
       expect(content).toContain('.logicstamp/');
-      
+
       // Should now include the missing pattern
       expect(content).toContain('stamp_security_report.json');
-      
+
       // Should include TOON patterns
       expect(content).toContain('context.toon');
       expect(content).toContain('context_*.toon');
-      
+
       // Should not duplicate the header
-      const headerMatches = (content.match(/# LogicStamp context & security files/g) || []).length;
+      const headerMatches = (
+        content.match(/# LogicStamp context & security files/g) || []
+      ).length;
       expect(headerMatches).toBe(1);
     });
 
@@ -415,7 +425,7 @@ describe('gitignore utilities', () => {
 
     it('should add pattern to existing .gitignore', async () => {
       await writeFile(join(testDir, '.gitignore'), 'node_modules\n');
-      
+
       const pattern = 'reports/security.json';
       const result = await ensurePatternInGitignore(testDir, pattern);
 
@@ -428,8 +438,11 @@ describe('gitignore utilities', () => {
     });
 
     it('should not duplicate pattern if it already exists', async () => {
-      await writeFile(join(testDir, '.gitignore'), 'node_modules\nreports/security.json\n');
-      
+      await writeFile(
+        join(testDir, '.gitignore'),
+        'node_modules\nreports/security.json\n',
+      );
+
       const pattern = 'reports/security.json';
       const result = await ensurePatternInGitignore(testDir, pattern);
 
@@ -472,7 +485,7 @@ describe('gitignore utilities', () => {
     it('should preserve existing content when adding pattern', async () => {
       const existingContent = '# Custom ignores\nnode_modules\n*.log\n';
       await writeFile(join(testDir, '.gitignore'), existingContent);
-      
+
       await ensurePatternInGitignore(testDir, 'reports/security.json');
 
       const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
@@ -484,7 +497,7 @@ describe('gitignore utilities', () => {
 
     it('should handle empty .gitignore', async () => {
       await writeFile(join(testDir, '.gitignore'), '');
-      
+
       const pattern = 'reports/security.json';
       const result = await ensurePatternInGitignore(testDir, pattern);
 
@@ -497,7 +510,7 @@ describe('gitignore utilities', () => {
 
     it('should add blank line before pattern if content exists', async () => {
       await writeFile(join(testDir, '.gitignore'), 'node_modules\n');
-      
+
       await ensurePatternInGitignore(testDir, 'reports/security.json');
 
       const content = await readFile(join(testDir, '.gitignore'), 'utf-8');
@@ -513,25 +526,29 @@ describe('gitignore utilities', () => {
     });
 
     it('should detect TOON patterns when checking for LogicStamp patterns', () => {
-      const content = '# LogicStamp context & security files\ncontext.json\ncontext_*.json\ncontext.toon\ncontext_*.toon\n';
+      const content =
+        '# LogicStamp context & security files\ncontext.json\ncontext_*.json\ncontext.toon\ncontext_*.toon\n';
       expect(hasLogicStampPatterns(content)).toBe(true);
     });
 
     it('should add TOON patterns when they are missing', async () => {
-      const content = '# LogicStamp context & security files\ncontext.json\ncontext_*.json\n';
+      const content =
+        '# LogicStamp context & security files\ncontext.json\ncontext_*.json\n';
       const result = addLogicStampPatterns(content);
-      
+
       expect(result).toContain('context.toon');
       expect(result).toContain('context_*.toon');
     });
 
     it('should preserve TOON patterns when they already exist', async () => {
-      const content = '# LogicStamp context & security files\ncontext.json\ncontext_*.json\ncontext.toon\ncontext_*.toon\n*.uif.json\nlogicstamp.manifest.json\n.logicstamp/\nstamp_security_report.json\n';
+      const content =
+        '# LogicStamp context & security files\ncontext.json\ncontext_*.json\ncontext.toon\ncontext_*.toon\n*.uif.json\nlogicstamp.manifest.json\n.logicstamp/\nstamp_security_report.json\n';
       const result = addLogicStampPatterns(content);
-      
+
       // Should not duplicate
       const toonMatches = (result.match(/^context\.toon$/gm) || []).length;
-      const toonWildcardMatches = (result.match(/^context_\*\.toon$/gm) || []).length;
+      const toonWildcardMatches = (result.match(/^context_\*\.toon$/gm) || [])
+        .length;
       expect(toonMatches).toBe(1);
       expect(toonWildcardMatches).toBe(1);
     });

@@ -75,7 +75,9 @@ describe('displayMultiFileCompareResult', () => {
     displayMultiFileCompareResult(result, false, false);
 
     expect(console.log).toHaveBeenCalledWith(expect.stringContaining('DRIFT'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('ADDED FILE'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('ADDED FILE'),
+    );
   });
 
   it('should display orphaned folder details', () => {
@@ -102,8 +104,12 @@ describe('displayMultiFileCompareResult', () => {
 
     displayMultiFileCompareResult(result, false, false);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('ORPHANED FILE'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('lib/context.json'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('ORPHANED FILE'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('lib/context.json'),
+    );
   });
 
   it('should display drift folder with component changes', () => {
@@ -121,9 +127,7 @@ describe('displayMultiFileCompareResult', () => {
             changed: [
               {
                 id: 'src/App.tsx',
-                deltas: [
-                  { type: 'hash', old: 'old-hash', new: 'new-hash' },
-                ],
+                deltas: [{ type: 'hash', old: 'old-hash', new: 'new-hash' }],
               },
             ],
           },
@@ -144,9 +148,15 @@ describe('displayMultiFileCompareResult', () => {
     displayMultiFileCompareResult(result, false, false);
 
     expect(console.log).toHaveBeenCalledWith(expect.stringContaining('DRIFT'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Added components'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Removed components'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Changed components'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Added components'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Removed components'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Changed components'),
+    );
   });
 
   it('should display orphaned files on disk', () => {
@@ -168,9 +178,15 @@ describe('displayMultiFileCompareResult', () => {
 
     displayMultiFileCompareResult(result, false, false);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Orphaned Files on Disk'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('old/context.json'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('deprecated/context.json'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Orphaned Files on Disk'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('old/context.json'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('deprecated/context.json'),
+    );
   });
 
   it('should display stats warning when stats enabled', () => {
@@ -191,7 +207,9 @@ describe('displayMultiFileCompareResult', () => {
 
     displayMultiFileCompareResult(result, true, false);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('tokenizer-based'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('tokenizer-based'),
+    );
   });
 
   it('should display token delta for drift folders when stats enabled', () => {
@@ -206,7 +224,12 @@ describe('displayMultiFileCompareResult', () => {
             status: 'DRIFT',
             added: [],
             removed: [],
-            changed: [{ id: 'src/App.tsx', deltas: [{ type: 'hash', old: 'a', new: 'b' }] }],
+            changed: [
+              {
+                id: 'src/App.tsx',
+                deltas: [{ type: 'hash', old: 'a', new: 'b' }],
+              },
+            ],
           },
           tokenDelta: { gpt4: 150, claude: 200 },
         },
@@ -258,10 +281,12 @@ describe('displayMultiFileCompareResult', () => {
     displayMultiFileCompareResult(result, false, true);
 
     // Should show ADDED but not PASS folder details
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('ADDED FILE'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('ADDED FILE'),
+    );
     // PASS folder should not show individual output in quiet mode
-    const passCalls = (console.log as any).mock.calls.filter(
-      (call: any[]) => call[0]?.includes?.('PASS: src/context.json')
+    const passCalls = (console.log as any).mock.calls.filter((call: any[]) =>
+      call[0]?.includes?.('PASS: src/context.json'),
     );
     expect(passCalls).toHaveLength(0);
   });
@@ -307,8 +332,12 @@ describe('displayMultiFileCompareResult', () => {
 
     displayMultiFileCompareResult(result, false, false);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('imports'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('+ lodash'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('imports'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('+ lodash'),
+    );
   });
 
   it('should display export kind changes', () => {
@@ -352,8 +381,12 @@ describe('displayMultiFileCompareResult', () => {
 
     displayMultiFileCompareResult(result, false, false);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('exports'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('default → named'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('exports'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('default → named'),
+    );
   });
 
   it('should display order changed indicator when items same but order differs', () => {
@@ -397,7 +430,9 @@ describe('displayMultiFileCompareResult', () => {
 
     displayMultiFileCompareResult(result, false, false);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('order changed'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('order changed'),
+    );
   });
 
   it('should display folder summary counts', () => {
@@ -418,11 +453,21 @@ describe('displayMultiFileCompareResult', () => {
 
     displayMultiFileCompareResult(result, false, false);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Total folders: 10'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Added folders: 2'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Orphaned folders: 1'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Changed folders: 3'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Unchanged folders: 4'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Total folders: 10'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Added folders: 2'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Orphaned folders: 1'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Changed folders: 3'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Unchanged folders: 4'),
+    );
   });
 
   it('should display component summary counts when drift', () => {
@@ -443,10 +488,18 @@ describe('displayMultiFileCompareResult', () => {
 
     displayMultiFileCompareResult(result, false, false);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Component Summary'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Added: 5'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Removed: 2'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Changed: 3'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Component Summary'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Added: 5'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Removed: 2'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Changed: 3'),
+    );
   });
 
   it('should display state delta details', () => {
@@ -491,8 +544,12 @@ describe('displayMultiFileCompareResult', () => {
     displayMultiFileCompareResult(result, false, false);
 
     expect(console.log).toHaveBeenCalledWith(expect.stringContaining('state'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('+ active'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('~ count'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('+ active'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('~ count'),
+    );
   });
 
   it('should display props delta details', () => {
@@ -514,7 +571,11 @@ describe('displayMultiFileCompareResult', () => {
                   {
                     type: 'props',
                     old: { label: 'string', disabled: 'boolean' },
-                    new: { label: 'string', disabled: 'boolean', variant: 'string' },
+                    new: {
+                      label: 'string',
+                      disabled: 'boolean',
+                      variant: 'string',
+                    },
                   },
                 ],
               },
@@ -537,7 +598,9 @@ describe('displayMultiFileCompareResult', () => {
     displayMultiFileCompareResult(result, false, false);
 
     expect(console.log).toHaveBeenCalledWith(expect.stringContaining('props'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('+ variant'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('+ variant'),
+    );
   });
 
   it('should display emits delta details', () => {
@@ -582,7 +645,9 @@ describe('displayMultiFileCompareResult', () => {
     displayMultiFileCompareResult(result, false, false);
 
     expect(console.log).toHaveBeenCalledWith(expect.stringContaining('emits'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('+ onHover'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('+ onHover'),
+    );
   });
 
   it('should display apiSignature delta details', () => {
@@ -632,8 +697,12 @@ describe('displayMultiFileCompareResult', () => {
 
     displayMultiFileCompareResult(result, false, false);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('apiSignature'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('parameters.includeDeleted'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('apiSignature'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('parameters.includeDeleted'),
+    );
   });
 
   it('should display apiSignature returnType changes', () => {
@@ -683,9 +752,15 @@ describe('displayMultiFileCompareResult', () => {
 
     displayMultiFileCompareResult(result, false, false);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('apiSignature'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('returnType'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('User → UserResponse'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('apiSignature'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('returnType'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('User → UserResponse'),
+    );
   });
 
   it('should display apiSignature added', () => {
@@ -732,8 +807,12 @@ describe('displayMultiFileCompareResult', () => {
 
     displayMultiFileCompareResult(result, false, false);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('apiSignature'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Added API signature'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('apiSignature'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Added API signature'),
+    );
   });
 
   it('should display variables delta details', () => {
@@ -777,8 +856,12 @@ describe('displayMultiFileCompareResult', () => {
 
     displayMultiFileCompareResult(result, false, false);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('variables'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('+ const3'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('variables'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('+ const3'),
+    );
   });
 
   it('should display hooks delta details', () => {
@@ -823,7 +906,9 @@ describe('displayMultiFileCompareResult', () => {
     displayMultiFileCompareResult(result, false, false);
 
     expect(console.log).toHaveBeenCalledWith(expect.stringContaining('hooks'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('+ useEffect'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('+ useEffect'),
+    );
   });
 
   it('should display functions delta details', () => {
@@ -867,8 +952,12 @@ describe('displayMultiFileCompareResult', () => {
 
     displayMultiFileCompareResult(result, false, false);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('functions'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('+ helper2'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('functions'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('+ helper2'),
+    );
   });
 
   it('should display components delta details', () => {
@@ -912,8 +1001,12 @@ describe('displayMultiFileCompareResult', () => {
 
     displayMultiFileCompareResult(result, false, false);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('components'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('+ Input'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('components'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('+ Input'),
+    );
   });
 
   it('should display removed items in deltas', () => {
@@ -957,7 +1050,9 @@ describe('displayMultiFileCompareResult', () => {
 
     displayMultiFileCompareResult(result, false, false);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('- lodash'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('- lodash'),
+    );
   });
 
   it('should display multiple deltas for same component', () => {
@@ -1011,7 +1106,9 @@ describe('displayMultiFileCompareResult', () => {
 
     displayMultiFileCompareResult(result, false, false);
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('imports'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('imports'),
+    );
     expect(console.log).toHaveBeenCalledWith(expect.stringContaining('hooks'));
     expect(console.log).toHaveBeenCalledWith(expect.stringContaining('props'));
   });
@@ -1035,7 +1132,9 @@ describe('displayMultiFileCompareResult', () => {
     displayMultiFileCompareResult(result, false, false);
 
     expect(console.log).toHaveBeenCalledWith(expect.stringContaining('PASS'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Total folders: 0'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Total folders: 0'),
+    );
   });
 
   it('should display token delta with negative values', () => {
@@ -1050,7 +1149,12 @@ describe('displayMultiFileCompareResult', () => {
             status: 'DRIFT',
             added: [],
             removed: [],
-            changed: [{ id: 'src/App.tsx', deltas: [{ type: 'hash', old: 'a', new: 'b' }] }],
+            changed: [
+              {
+                id: 'src/App.tsx',
+                deltas: [{ type: 'hash', old: 'a', new: 'b' }],
+              },
+            ],
           },
           tokenDelta: { gpt4: -50, claude: -75 },
         },

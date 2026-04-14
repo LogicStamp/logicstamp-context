@@ -3,7 +3,11 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { detectViolations, summarizeViolations, displayViolations } from '../../../src/core/violations.js';
+import {
+  detectViolations,
+  summarizeViolations,
+  displayViolations,
+} from '../../../src/core/violations.js';
 import type { BundleChanges } from '../../../src/cli/commands/context/watchMode/watchDiff.js';
 import type { CompareResult } from '../../../src/cli/commands/compare/types.js';
 import type { Violation } from '../../../src/core/violations.js';
@@ -202,7 +206,8 @@ describe('detectViolations', () => {
         type: 'breaking_change_function_removed',
         severity: 'error',
         entryId: 'src/utils.ts',
-        message: "Breaking change: function 'calculateTotal' removed from src/utils.ts",
+        message:
+          "Breaking change: function 'calculateTotal' removed from src/utils.ts",
         details: { name: 'calculateTotal' },
       });
     });
@@ -273,9 +278,15 @@ describe('detectViolations', () => {
 
       const violations = detectViolations({ type: 'watch', changes });
       expect(violations).toHaveLength(3);
-      expect(violations.find(v => v.type === 'breaking_change_prop_removed')).toBeDefined();
-      expect(violations.find(v => v.type === 'breaking_change_prop_type')).toBeDefined();
-      expect(violations.find(v => v.type === 'breaking_change_event_removed')).toBeDefined();
+      expect(
+        violations.find((v) => v.type === 'breaking_change_prop_removed'),
+      ).toBeDefined();
+      expect(
+        violations.find((v) => v.type === 'breaking_change_prop_type'),
+      ).toBeDefined();
+      expect(
+        violations.find((v) => v.type === 'breaking_change_event_removed'),
+      ).toBeDefined();
     });
 
     it('should handle multiple removed contracts', () => {
@@ -499,7 +510,8 @@ describe('detectViolations', () => {
         type: 'breaking_change_function_removed',
         severity: 'error',
         entryId: 'src/utils.ts',
-        message: "Breaking change: function 'calculateTotal' removed from src/utils.ts",
+        message:
+          "Breaking change: function 'calculateTotal' removed from src/utils.ts",
         details: { name: 'calculateTotal' },
       });
     });
@@ -560,9 +572,15 @@ describe('detectViolations', () => {
 
       const violations = detectViolations({ type: 'compare', result });
       expect(violations.length).toBeGreaterThanOrEqual(2);
-      expect(violations.find(v => v.type === 'breaking_change_prop_removed')).toBeDefined();
-      expect(violations.find(v => v.type === 'breaking_change_prop_type')).toBeDefined();
-      expect(violations.find(v => v.type === 'breaking_change_event_removed')).toBeDefined();
+      expect(
+        violations.find((v) => v.type === 'breaking_change_prop_removed'),
+      ).toBeDefined();
+      expect(
+        violations.find((v) => v.type === 'breaking_change_prop_type'),
+      ).toBeDefined();
+      expect(
+        violations.find((v) => v.type === 'breaking_change_event_removed'),
+      ).toBeDefined();
     });
 
     it('should ignore non-breaking delta types', () => {
@@ -771,10 +789,24 @@ describe('displayViolations', () => {
 
     displayViolations(violations);
     expect(consoleLogSpy).toHaveBeenCalled();
-    const calls = consoleLogSpy.mock.calls.map(call => call[0]);
-    expect(calls.some(c => typeof c === 'string' && c.includes('Strict Mode: 2 violation(s) detected'))).toBe(true);
-    expect(calls.some(c => typeof c === 'string' && c.includes('Errors (2):'))).toBe(true);
-    expect(calls.some(c => typeof c === 'string' && c.includes('Contract removed: src/Button.tsx'))).toBe(true);
+    const calls = consoleLogSpy.mock.calls.map((call) => call[0]);
+    expect(
+      calls.some(
+        (c) =>
+          typeof c === 'string' &&
+          c.includes('Strict Mode: 2 violation(s) detected'),
+      ),
+    ).toBe(true);
+    expect(
+      calls.some((c) => typeof c === 'string' && c.includes('Errors (2):')),
+    ).toBe(true);
+    expect(
+      calls.some(
+        (c) =>
+          typeof c === 'string' &&
+          c.includes('Contract removed: src/Button.tsx'),
+      ),
+    ).toBe(true);
   });
 
   it('should display warnings only', () => {
@@ -790,9 +822,17 @@ describe('displayViolations', () => {
 
     displayViolations(violations);
     expect(consoleLogSpy).toHaveBeenCalled();
-    const calls = consoleLogSpy.mock.calls.map(call => call[0]);
-    expect(calls.some(c => typeof c === 'string' && c.includes('Strict Mode: 1 violation(s) detected'))).toBe(true);
-    expect(calls.some(c => typeof c === 'string' && c.includes('Warnings (1):'))).toBe(true);
+    const calls = consoleLogSpy.mock.calls.map((call) => call[0]);
+    expect(
+      calls.some(
+        (c) =>
+          typeof c === 'string' &&
+          c.includes('Strict Mode: 1 violation(s) detected'),
+      ),
+    ).toBe(true);
+    expect(
+      calls.some((c) => typeof c === 'string' && c.includes('Warnings (1):')),
+    ).toBe(true);
   });
 
   it('should display both errors and warnings', () => {
@@ -814,10 +854,20 @@ describe('displayViolations', () => {
 
     displayViolations(violations);
     expect(consoleLogSpy).toHaveBeenCalled();
-    const calls = consoleLogSpy.mock.calls.map(call => call[0]);
-    expect(calls.some(c => typeof c === 'string' && c.includes('Strict Mode: 2 violation(s) detected'))).toBe(true);
-    expect(calls.some(c => typeof c === 'string' && c.includes('Errors (1):'))).toBe(true);
-    expect(calls.some(c => typeof c === 'string' && c.includes('Warnings (1):'))).toBe(true);
+    const calls = consoleLogSpy.mock.calls.map((call) => call[0]);
+    expect(
+      calls.some(
+        (c) =>
+          typeof c === 'string' &&
+          c.includes('Strict Mode: 2 violation(s) detected'),
+      ),
+    ).toBe(true);
+    expect(
+      calls.some((c) => typeof c === 'string' && c.includes('Errors (1):')),
+    ).toBe(true);
+    expect(
+      calls.some((c) => typeof c === 'string' && c.includes('Warnings (1):')),
+    ).toBe(true);
   });
 
   it('should respect quiet option', () => {

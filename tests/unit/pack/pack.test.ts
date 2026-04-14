@@ -1,13 +1,49 @@
-import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+  type Mock,
+} from 'vitest';
 import type { UIFContract } from '../../../src/types/UIFContract.js';
 import type { BundleNode } from '../../../src/core/pack/builder.js';
 import type { MissingDependency } from '../../../src/core/pack/collector.js';
-import { formatBundle, pack, type LogicStampBundle, type PackOptions } from '../../../src/core/pack.js';
-import { buildEdges, stableSort, computeBundleHash, validateHashLock } from '../../../src/core/pack/builder.js';
+import {
+  formatBundle,
+  pack,
+  type LogicStampBundle,
+  type PackOptions,
+} from '../../../src/core/pack.js';
+import {
+  buildEdges,
+  stableSort,
+  computeBundleHash,
+  validateHashLock,
+} from '../../../src/core/pack/builder.js';
 import { collectDependencies } from '../../../src/core/pack/collector.js';
-import { loadManifest, loadContract, extractCodeHeader, readSourceCode, clearSecurityReportCache, getAndResetSanitizeStats, recordSanitization, recordSanitizationBatch } from '../../../src/core/pack/loader.js';
-import { resolveKey, resolveDependency, findComponentByName } from '../../../src/core/pack/resolver.js';
-import { isThirdPartyPackage, extractPackageName, getPackageVersion, clearPackageJsonCache } from '../../../src/core/pack/packageInfo.js';
+import {
+  loadManifest,
+  loadContract,
+  extractCodeHeader,
+  readSourceCode,
+  clearSecurityReportCache,
+  getAndResetSanitizeStats,
+  recordSanitization,
+  recordSanitizationBatch,
+} from '../../../src/core/pack/loader.js';
+import {
+  resolveKey,
+  resolveDependency,
+  findComponentByName,
+} from '../../../src/core/pack/resolver.js';
+import {
+  isThirdPartyPackage,
+  extractPackageName,
+  getPackageVersion,
+  clearPackageJsonCache,
+} from '../../../src/core/pack/packageInfo.js';
 import type { ProjectManifest } from '../../../src/core/manifest.js';
 import { join } from 'node:path';
 import { mkdtemp, writeFile, mkdir, rm } from 'node:fs/promises';
@@ -15,7 +51,8 @@ import { tmpdir } from 'node:os';
 
 // Mock the pack submodules for pack() integration tests
 vi.mock('../../../src/core/pack/loader.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../../src/core/pack/loader.js')>();
+  const actual =
+    await importOriginal<typeof import('../../../src/core/pack/loader.js')>();
   return {
     ...actual,
     loadContract: vi.fn(actual.loadContract),
@@ -25,7 +62,8 @@ vi.mock('../../../src/core/pack/loader.js', async (importOriginal) => {
 });
 
 vi.mock('../../../src/core/pack/builder.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../../src/core/pack/builder.js')>();
+  const actual =
+    await importOriginal<typeof import('../../../src/core/pack/builder.js')>();
   return {
     ...actual,
     validateHashLock: vi.fn(actual.validateHashLock),
@@ -33,7 +71,10 @@ vi.mock('../../../src/core/pack/builder.js', async (importOriginal) => {
 });
 
 vi.mock('../../../src/core/pack/collector.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../../src/core/pack/collector.js')>();
+  const actual =
+    await importOriginal<
+      typeof import('../../../src/core/pack/collector.js')
+    >();
   return {
     ...actual,
     collectDependencies: vi.fn(actual.collectDependencies),
@@ -45,7 +86,9 @@ vi.mock('../../../src/core/pack/collector.js', async (importOriginal) => {
 // But first, let's create a helper to test the logic
 
 describe('Pack - Internal Component Filtering', () => {
-  const createMockContract = (overrides?: Partial<UIFContract>): UIFContract => ({
+  const createMockContract = (
+    overrides?: Partial<UIFContract>,
+  ): UIFContract => ({
     type: 'UIFContract',
     schemaVersion: '0.4',
     kind: 'react:component',
@@ -70,7 +113,10 @@ describe('Pack - Internal Component Filtering', () => {
     ...overrides,
   });
 
-  const createMockBundleNode = (entryId: string, contract: UIFContract): BundleNode => ({
+  const createMockBundleNode = (
+    entryId: string,
+    contract: UIFContract,
+  ): BundleNode => ({
     entryId,
     contract,
   });
@@ -79,7 +125,7 @@ describe('Pack - Internal Component Filtering', () => {
     it('should filter internal components from missing dependencies when contract is available', () => {
       // This test verifies the behavior indirectly
       // Internal components (functions defined in same file) should not appear in missing deps
-      
+
       const contract = createMockContract({
         entryId: 'src/components/Card.tsx',
         composition: {
@@ -147,11 +193,11 @@ describe('Pack - Internal Component Filtering', () => {
       });
 
       // Verify internal component detection logic
-      const internalHelperIsInternal = 
+      const internalHelperIsInternal =
         contractWithInternal.composition.functions.includes('InternalHelper') &&
         contractWithInternal.composition.components.includes('InternalHelper');
-      
-      const buttonIsInternal = 
+
+      const buttonIsInternal =
         contractWithInternal.composition.functions.includes('Button') &&
         contractWithInternal.composition.components.includes('Button');
 
@@ -159,10 +205,14 @@ describe('Pack - Internal Component Filtering', () => {
       expect(buttonIsInternal).toBe(false);
 
       // External component should not be considered internal
-      const externalIsInternal = 
-        contractWithExternal.composition.functions.includes('ExternalComponent') &&
-        contractWithExternal.composition.components.includes('ExternalComponent');
-      
+      const externalIsInternal =
+        contractWithExternal.composition.functions.includes(
+          'ExternalComponent',
+        ) &&
+        contractWithExternal.composition.components.includes(
+          'ExternalComponent',
+        );
+
       expect(externalIsInternal).toBe(false);
     });
 
@@ -202,7 +252,9 @@ describe('Pack - Internal Component Filtering', () => {
 
       // Since Card.tsx contract is not in nodes, we can't check if SomeComponent is internal
       // So it should be kept
-      const cardNode = nodes.find(n => n.entryId === 'src/components/Card.tsx');
+      const cardNode = nodes.find(
+        (n) => n.entryId === 'src/components/Card.tsx',
+      );
       expect(cardNode).toBeUndefined();
     });
 
@@ -235,10 +287,10 @@ describe('Pack - Internal Component Filtering', () => {
       expect(contractsMap.has('src/components/Card.tsx')).toBe(true);
       const contractFromMap = contractsMap.get('src/components/Card.tsx');
       expect(contractFromMap).toBeDefined();
-      
+
       // InternalHelper should be identified as internal
       if (contractFromMap) {
-        const isInternal = 
+        const isInternal =
           contractFromMap.composition.functions.includes('InternalHelper') &&
           contractFromMap.composition.components.includes('InternalHelper');
         expect(isInternal).toBe(true);
@@ -326,15 +378,25 @@ describe('Pack - Internal Component Filtering', () => {
       ];
 
       // CardHelper should be internal to Card.tsx
-      expect(cardContract.composition.functions.includes('CardHelper')).toBe(true);
-      expect(cardContract.composition.components.includes('CardHelper')).toBe(true);
+      expect(cardContract.composition.functions.includes('CardHelper')).toBe(
+        true,
+      );
+      expect(cardContract.composition.components.includes('CardHelper')).toBe(
+        true,
+      );
 
       // ButtonHelper should be internal to Button.tsx
-      expect(buttonContract.composition.functions.includes('ButtonHelper')).toBe(true);
-      expect(buttonContract.composition.components.includes('ButtonHelper')).toBe(true);
+      expect(
+        buttonContract.composition.functions.includes('ButtonHelper'),
+      ).toBe(true);
+      expect(
+        buttonContract.composition.components.includes('ButtonHelper'),
+      ).toBe(true);
 
       // CardHelper is not internal to Button.tsx
-      expect(buttonContract.composition.functions.includes('CardHelper')).toBe(false);
+      expect(buttonContract.composition.functions.includes('CardHelper')).toBe(
+        false,
+      );
     });
 
     it('should handle empty composition arrays', () => {
@@ -350,8 +412,12 @@ describe('Pack - Internal Component Filtering', () => {
       });
 
       // Nothing should be internal when arrays are empty
-      expect(contract.composition.functions.includes('AnyComponent')).toBe(false);
-      expect(contract.composition.components.includes('AnyComponent')).toBe(false);
+      expect(contract.composition.functions.includes('AnyComponent')).toBe(
+        false,
+      );
+      expect(contract.composition.components.includes('AnyComponent')).toBe(
+        false,
+      );
     });
 
     it('should correctly identify components that are only in functions array', () => {
@@ -495,12 +561,15 @@ describe('formatBundle', () => {
 
   it('should handle special characters in bundle data', () => {
     const bundle = createMockBundle();
-    bundle.graph.nodes[0].contract.description = 'Description with "quotes" and \n newlines';
+    bundle.graph.nodes[0].contract.description =
+      'Description with "quotes" and \n newlines';
 
     const result = formatBundle(bundle, 'json');
     const parsed = JSON.parse(result);
 
-    expect(parsed.graph.nodes[0].contract.description).toBe('Description with "quotes" and \n newlines');
+    expect(parsed.graph.nodes[0].contract.description).toBe(
+      'Description with "quotes" and \n newlines',
+    );
   });
 
   it('should include codeHeader when present in nodes', () => {
@@ -515,12 +584,15 @@ describe('formatBundle', () => {
 
   it('should include code when present in nodes', () => {
     const bundle = createMockBundle();
-    bundle.graph.nodes[0].code = 'export function Component() { return <div />; }';
+    bundle.graph.nodes[0].code =
+      'export function Component() { return <div />; }';
 
     const result = formatBundle(bundle, 'json');
     const parsed = JSON.parse(result);
 
-    expect(parsed.graph.nodes[0].code).toBe('export function Component() { return <div />; }');
+    expect(parsed.graph.nodes[0].code).toBe(
+      'export function Component() { return <div />; }',
+    );
   });
 
   it('should handle null codeHeader', () => {
@@ -537,7 +609,12 @@ describe('formatBundle', () => {
     const bundle = createMockBundle();
     bundle.meta.missing = [
       { name: 'react', reason: 'Third party' },
-      { name: '@mui/material', reason: 'Third party', packageName: '@mui/material', packageVersion: '^5.0.0' },
+      {
+        name: '@mui/material',
+        reason: 'Third party',
+        packageName: '@mui/material',
+        packageVersion: '^5.0.0',
+      },
     ];
 
     const result = formatBundle(bundle, 'pretty');
@@ -558,7 +635,10 @@ describe('formatBundle', () => {
     const parsed = JSON.parse(result);
 
     expect(parsed.graph.edges).toHaveLength(2);
-    expect(parsed.graph.edges[0]).toEqual(['src/components/Card.tsx', 'src/components/Button.tsx']);
+    expect(parsed.graph.edges[0]).toEqual([
+      'src/components/Card.tsx',
+      'src/components/Button.tsx',
+    ]);
   });
 });
 
@@ -629,22 +709,40 @@ describe('buildEdges', () => {
   it('should build edges for dependencies within the bundle', () => {
     const manifest = createMockManifest();
     const nodes: BundleNode[] = [
-      { entryId: 'src/components/Card.tsx', contract: createMockContract('src/components/Card.tsx') },
-      { entryId: 'src/components/Button.tsx', contract: createMockContract('src/components/Button.tsx') },
-      { entryId: 'src/components/Icon.tsx', contract: createMockContract('src/components/Icon.tsx') },
+      {
+        entryId: 'src/components/Card.tsx',
+        contract: createMockContract('src/components/Card.tsx'),
+      },
+      {
+        entryId: 'src/components/Button.tsx',
+        contract: createMockContract('src/components/Button.tsx'),
+      },
+      {
+        entryId: 'src/components/Icon.tsx',
+        contract: createMockContract('src/components/Icon.tsx'),
+      },
     ];
 
     const edges = buildEdges(nodes, manifest);
 
-    expect(edges).toContainEqual(['src/components/Card.tsx', 'src/components/Button.tsx']);
-    expect(edges).toContainEqual(['src/components/Card.tsx', 'src/components/Icon.tsx']);
+    expect(edges).toContainEqual([
+      'src/components/Card.tsx',
+      'src/components/Button.tsx',
+    ]);
+    expect(edges).toContainEqual([
+      'src/components/Card.tsx',
+      'src/components/Icon.tsx',
+    ]);
     expect(edges).toHaveLength(2);
   });
 
   it('should not include edges to nodes outside the bundle', () => {
     const manifest = createMockManifest();
     const nodes: BundleNode[] = [
-      { entryId: 'src/components/Card.tsx', contract: createMockContract('src/components/Card.tsx') },
+      {
+        entryId: 'src/components/Card.tsx',
+        contract: createMockContract('src/components/Card.tsx'),
+      },
       // Button and Icon are NOT in the bundle
     ];
 
@@ -656,7 +754,10 @@ describe('buildEdges', () => {
   it('should handle nodes not found in manifest', () => {
     const manifest = createMockManifest();
     const nodes: BundleNode[] = [
-      { entryId: 'src/components/Unknown.tsx', contract: createMockContract('src/components/Unknown.tsx') },
+      {
+        entryId: 'src/components/Unknown.tsx',
+        contract: createMockContract('src/components/Unknown.tsx'),
+      },
     ];
 
     const edges = buildEdges(nodes, manifest);
@@ -704,13 +805,22 @@ describe('buildEdges', () => {
     };
 
     const nodes: BundleNode[] = [
-      { entryId: 'src/components/Card.tsx', contract: createMockContract('src/components/Card.tsx') },
-      { entryId: 'src/components/Button.tsx', contract: createMockContract('src/components/Button.tsx') },
+      {
+        entryId: 'src/components/Card.tsx',
+        contract: createMockContract('src/components/Card.tsx'),
+      },
+      {
+        entryId: 'src/components/Button.tsx',
+        contract: createMockContract('src/components/Button.tsx'),
+      },
     ];
 
     const edges = buildEdges(nodes, manifest);
 
-    expect(edges).toContainEqual(['src/components/Card.tsx', 'src/components/Button.tsx']);
+    expect(edges).toContainEqual([
+      'src/components/Card.tsx',
+      'src/components/Button.tsx',
+    ]);
   });
 
   it('should handle self-referencing dependencies', () => {
@@ -736,13 +846,19 @@ describe('buildEdges', () => {
     };
 
     const nodes: BundleNode[] = [
-      { entryId: 'src/components/Recursive.tsx', contract: createMockContract('src/components/Recursive.tsx') },
+      {
+        entryId: 'src/components/Recursive.tsx',
+        contract: createMockContract('src/components/Recursive.tsx'),
+      },
     ];
 
     const edges = buildEdges(nodes, manifest);
 
     // Self-referencing edge should be created
-    expect(edges).toContainEqual(['src/components/Recursive.tsx', 'src/components/Recursive.tsx']);
+    expect(edges).toContainEqual([
+      'src/components/Recursive.tsx',
+      'src/components/Recursive.tsx',
+    ]);
   });
 
   it('should handle multiple dependencies from one node', () => {
@@ -787,8 +903,14 @@ describe('buildEdges', () => {
 
     const nodes: BundleNode[] = [
       { entryId: 'src/App.tsx', contract: createMockContract('src/App.tsx') },
-      { entryId: 'src/components/Button.tsx', contract: createMockContract('src/components/Button.tsx') },
-      { entryId: 'src/components/Card.tsx', contract: createMockContract('src/components/Card.tsx') },
+      {
+        entryId: 'src/components/Button.tsx',
+        contract: createMockContract('src/components/Button.tsx'),
+      },
+      {
+        entryId: 'src/components/Card.tsx',
+        contract: createMockContract('src/components/Card.tsx'),
+      },
     ];
 
     const edges = buildEdges(nodes, manifest);
@@ -811,7 +933,13 @@ describe('stableSort', () => {
       entryPathRel: entryId,
       os: 'posix',
       description: 'Test',
-      composition: { variables: [], hooks: [], components: [], functions: [], imports: [] },
+      composition: {
+        variables: [],
+        hooks: [],
+        components: [],
+        functions: [],
+        imports: [],
+      },
       interface: { props: {}, emits: {} },
       semanticHash: 'hash',
       fileHash: 'file',
@@ -853,8 +981,12 @@ describe('stableSort', () => {
     const sorted2 = stableSort([nodeB, nodeC, nodeA]);
     const sorted3 = stableSort([nodeA, nodeB, nodeC]);
 
-    expect(sorted1.map(n => n.entryId)).toEqual(sorted2.map(n => n.entryId));
-    expect(sorted2.map(n => n.entryId)).toEqual(sorted3.map(n => n.entryId));
+    expect(sorted1.map((n) => n.entryId)).toEqual(
+      sorted2.map((n) => n.entryId),
+    );
+    expect(sorted2.map((n) => n.entryId)).toEqual(
+      sorted3.map((n) => n.entryId),
+    );
   });
 
   it('should handle empty array', () => {
@@ -907,14 +1039,17 @@ describe('stableSort', () => {
     const sorted = stableSort(nodes);
 
     // localeCompare behavior - uppercase letters come before lowercase in default locale
-    expect(sorted.map(n => n.entryId)).toEqual(
-      [...nodes.map(n => n.entryId)].sort((a, b) => a.localeCompare(b))
+    expect(sorted.map((n) => n.entryId)).toEqual(
+      [...nodes.map((n) => n.entryId)].sort((a, b) => a.localeCompare(b)),
     );
   });
 });
 
 describe('computeBundleHash', () => {
-  const createMockNode = (entryId: string, semanticHash: string): BundleNode => ({
+  const createMockNode = (
+    entryId: string,
+    semanticHash: string,
+  ): BundleNode => ({
     entryId,
     contract: {
       type: 'UIFContract',
@@ -925,7 +1060,13 @@ describe('computeBundleHash', () => {
       entryPathRel: entryId,
       os: 'posix',
       description: 'Test',
-      composition: { variables: [], hooks: [], components: [], functions: [], imports: [] },
+      composition: {
+        variables: [],
+        hooks: [],
+        components: [],
+        functions: [],
+        imports: [],
+      },
       interface: { props: {}, emits: {} },
       semanticHash,
       fileHash: 'file',
@@ -1013,7 +1154,7 @@ describe('computeBundleHash', () => {
 
   it('should handle many nodes', () => {
     const nodes = Array.from({ length: 50 }, (_, i) =>
-      createMockNode(`src/Component${i}.tsx`, `hash${i}`)
+      createMockNode(`src/Component${i}.tsx`, `hash${i}`),
     );
 
     const hash = computeBundleHash(nodes, 2);
@@ -1032,7 +1173,13 @@ describe('validateHashLock', () => {
     entryPathRel: 'src/test.tsx',
     os: 'posix',
     description: 'Test',
-    composition: { variables: [], hooks: [], components: [], functions: [], imports: [] },
+    composition: {
+      variables: [],
+      hooks: [],
+      components: [],
+      functions: [],
+      imports: [],
+    },
     interface: { props: {}, emits: {} },
     semanticHash: 'semantic',
     fileHash,
@@ -1040,7 +1187,11 @@ describe('validateHashLock', () => {
 
   it('should return false when file cannot be read', async () => {
     const contract = createMockContract('somehash');
-    const result = await validateHashLock(contract, 'non/existent/file.tsx', '/project');
+    const result = await validateHashLock(
+      contract,
+      'non/existent/file.tsx',
+      '/project',
+    );
 
     expect(result).toBe(false);
   });
@@ -1048,14 +1199,22 @@ describe('validateHashLock', () => {
   it('should return false when hash does not match', async () => {
     // This will read a real file and compare - hash won't match
     const contract = createMockContract('definitely-wrong-hash');
-    const result = await validateHashLock(contract, 'package.json', process.cwd());
+    const result = await validateHashLock(
+      contract,
+      'package.json',
+      process.cwd(),
+    );
 
     expect(result).toBe(false);
   });
 
   it('should return false for empty file hash', async () => {
     const contract = createMockContract('');
-    const result = await validateHashLock(contract, 'package.json', process.cwd());
+    const result = await validateHashLock(
+      contract,
+      'package.json',
+      process.cwd(),
+    );
 
     expect(result).toBe(false);
   });
@@ -1063,7 +1222,11 @@ describe('validateHashLock', () => {
   it('should handle absolute paths', async () => {
     const contract = createMockContract('wrong-hash');
     const absolutePath = `${process.cwd()}/package.json`;
-    const result = await validateHashLock(contract, absolutePath, process.cwd());
+    const result = await validateHashLock(
+      contract,
+      absolutePath,
+      process.cwd(),
+    );
 
     expect(result).toBe(false);
   });
@@ -1071,7 +1234,11 @@ describe('validateHashLock', () => {
   it('should handle binary/non-text files gracefully', async () => {
     // This might be a binary file or might not exist - either way should return false
     const contract = createMockContract('somehash');
-    const result = await validateHashLock(contract, 'node_modules/.bin/vitest', process.cwd());
+    const result = await validateHashLock(
+      contract,
+      'node_modules/.bin/vitest',
+      process.cwd(),
+    );
 
     // Should not throw, just return false
     expect(typeof result).toBe('boolean');
@@ -1082,7 +1249,7 @@ describe('validateHashLock', () => {
     const result = await validateHashLock(
       contract,
       '../../../package.json',
-      process.cwd()
+      process.cwd(),
     );
     expect(result).toBe(false);
   });
@@ -1094,7 +1261,10 @@ describe('validateHashLock', () => {
 
 describe('Pack Failure Modes', () => {
   describe('circular dependencies', () => {
-    const createMockContract = (entryId: string, components: string[] = []): UIFContract => ({
+    const createMockContract = (
+      entryId: string,
+      components: string[] = [],
+    ): UIFContract => ({
       type: 'UIFContract',
       schemaVersion: '0.4',
       kind: 'react:component',
@@ -1139,7 +1309,10 @@ describe('Pack Failure Modes', () => {
       };
 
       const nodes: BundleNode[] = [
-        { entryId: 'src/Tree.tsx', contract: createMockContract('src/Tree.tsx', ['Tree']) },
+        {
+          entryId: 'src/Tree.tsx',
+          contract: createMockContract('src/Tree.tsx', ['Tree']),
+        },
       ];
 
       const edges = buildEdges(nodes, manifest);
@@ -1177,8 +1350,14 @@ describe('Pack Failure Modes', () => {
       };
 
       const nodes: BundleNode[] = [
-        { entryId: 'src/A.tsx', contract: createMockContract('src/A.tsx', ['B']) },
-        { entryId: 'src/B.tsx', contract: createMockContract('src/B.tsx', ['A']) },
+        {
+          entryId: 'src/A.tsx',
+          contract: createMockContract('src/A.tsx', ['B']),
+        },
+        {
+          entryId: 'src/B.tsx',
+          contract: createMockContract('src/B.tsx', ['A']),
+        },
       ];
 
       const edges = buildEdges(nodes, manifest);
@@ -1226,9 +1405,18 @@ describe('Pack Failure Modes', () => {
       };
 
       const nodes: BundleNode[] = [
-        { entryId: 'src/A.tsx', contract: createMockContract('src/A.tsx', ['B']) },
-        { entryId: 'src/B.tsx', contract: createMockContract('src/B.tsx', ['C']) },
-        { entryId: 'src/C.tsx', contract: createMockContract('src/C.tsx', ['A']) },
+        {
+          entryId: 'src/A.tsx',
+          contract: createMockContract('src/A.tsx', ['B']),
+        },
+        {
+          entryId: 'src/B.tsx',
+          contract: createMockContract('src/B.tsx', ['C']),
+        },
+        {
+          entryId: 'src/C.tsx',
+          contract: createMockContract('src/C.tsx', ['A']),
+        },
       ];
 
       const edges = buildEdges(nodes, manifest);
@@ -1249,7 +1437,13 @@ describe('Pack Failure Modes', () => {
         entryPathRel: 'src/Empty.tsx',
         os: 'posix',
         description: 'Empty hash',
-        composition: { variables: [], hooks: [], components: [], functions: [], imports: [] },
+        composition: {
+          variables: [],
+          hooks: [],
+          components: [],
+          functions: [],
+          imports: [],
+        },
         interface: { props: {}, emits: {} },
         semanticHash: '', // Empty hash
         fileHash: 'file1',
@@ -1273,7 +1467,13 @@ describe('Pack Failure Modes', () => {
         entryPathRel: 'src/Long.tsx',
         os: 'posix',
         description: 'Long hash',
-        composition: { variables: [], hooks: [], components: [], functions: [], imports: [] },
+        composition: {
+          variables: [],
+          hooks: [],
+          components: [],
+          functions: [],
+          imports: [],
+        },
         interface: { props: {}, emits: {} },
         semanticHash: 'x'.repeat(1000), // Very long hash
         fileHash: 'file1',
@@ -1295,7 +1495,13 @@ describe('Pack Failure Modes', () => {
         entryPathRel: 'src/[id]/Component.tsx',
         os: 'posix',
         description: 'Dynamic route component',
-        composition: { variables: [], hooks: [], components: [], functions: [], imports: [] },
+        composition: {
+          variables: [],
+          hooks: [],
+          components: [],
+          functions: [],
+          imports: [],
+        },
         interface: { props: {}, emits: {} },
         semanticHash: 'hash',
         fileHash: 'file',
@@ -1317,7 +1523,13 @@ describe('Pack Failure Modes', () => {
         entryPathRel: 'src/Unicode.tsx',
         os: 'posix',
         description: '日本語コンポーネント 🎉',
-        composition: { variables: [], hooks: [], components: [], functions: [], imports: [] },
+        composition: {
+          variables: [],
+          hooks: [],
+          components: [],
+          functions: [],
+          imports: [],
+        },
         interface: { props: {}, emits: {} },
         semanticHash: 'hash',
         fileHash: 'file',
@@ -1337,7 +1549,9 @@ describe('Pack Failure Modes', () => {
       // Should format correctly with unicode
       const json = formatBundle(bundle, 'json');
       const parsed = JSON.parse(json);
-      expect(parsed.graph.nodes[0].contract.description).toBe('日本語コンポーネント 🎉');
+      expect(parsed.graph.nodes[0].contract.description).toBe(
+        '日本語コンポーネント 🎉',
+      );
     });
   });
 
@@ -1383,7 +1597,13 @@ describe('Pack Failure Modes', () => {
         entryPathRel: 'src/A.tsx',
         os: 'posix',
         description: 'A',
-        composition: { variables: [], hooks: [], components: ['NonExistent'], functions: [], imports: [] },
+        composition: {
+          variables: [],
+          hooks: [],
+          components: ['NonExistent'],
+          functions: [],
+          imports: [],
+        },
         interface: { props: {}, emits: {} },
         semanticHash: 'hash',
         fileHash: 'file',
@@ -1434,7 +1654,13 @@ describe('Pack Failure Modes', () => {
         entryPathRel: 'src/A.tsx',
         os: 'posix',
         description: 'A',
-        composition: { variables: [], hooks: [], components: ['B'], functions: [], imports: [] },
+        composition: {
+          variables: [],
+          hooks: [],
+          components: ['B'],
+          functions: [],
+          imports: [],
+        },
         interface: { props: {}, emits: {} },
         semanticHash: 'hashA',
         fileHash: 'fileA',
@@ -1449,7 +1675,13 @@ describe('Pack Failure Modes', () => {
         entryPathRel: 'src/B.tsx',
         os: 'posix',
         description: 'B',
-        composition: { variables: [], hooks: [], components: [], functions: [], imports: [] },
+        composition: {
+          variables: [],
+          hooks: [],
+          components: [],
+          functions: [],
+          imports: [],
+        },
         interface: { props: {}, emits: {} },
         semanticHash: 'hashB',
         fileHash: 'fileB',
@@ -1480,7 +1712,13 @@ describe('Pack Failure Modes', () => {
         entryPathRel: 'src/Large.tsx',
         os: 'posix',
         description: 'Large component',
-        composition: { variables: [], hooks: [], components: [], functions: [], imports: [] },
+        composition: {
+          variables: [],
+          hooks: [],
+          components: [],
+          functions: [],
+          imports: [],
+        },
         interface: { props: {}, emits: {} },
         semanticHash: 'hash',
         fileHash: 'file',
@@ -1515,18 +1753,27 @@ describe('Pack Failure Modes', () => {
         entryPathRel: 'src/Many.tsx',
         os: 'posix',
         description: 'Many deps',
-        composition: { variables: [], hooks: [], components: [], functions: [], imports: [] },
+        composition: {
+          variables: [],
+          hooks: [],
+          components: [],
+          functions: [],
+          imports: [],
+        },
         interface: { props: {}, emits: {} },
         semanticHash: 'hash',
         fileHash: 'file',
       };
 
-      const missingDeps: MissingDependency[] = Array.from({ length: 100 }, (_, i) => ({
-        name: `missing-dep-${i}`,
-        reason: 'Not found',
-        packageName: `@scope/package-${i}`,
-        packageVersion: `^${i}.0.0`,
-      }));
+      const missingDeps: MissingDependency[] = Array.from(
+        { length: 100 },
+        (_, i) => ({
+          name: `missing-dep-${i}`,
+          reason: 'Not found',
+          packageName: `@scope/package-${i}`,
+          packageVersion: `^${i}.0.0`,
+        }),
+      );
 
       const bundle: LogicStampBundle = {
         type: 'LogicStampBundle',
@@ -1554,7 +1801,13 @@ describe('Pack Failure Modes', () => {
         entryPathRel: id,
         os: 'posix',
         description: 'Component',
-        composition: { variables: [], hooks: [], components: [], functions: [], imports: [] },
+        composition: {
+          variables: [],
+          hooks: [],
+          components: [],
+          functions: [],
+          imports: [],
+        },
         interface: { props: {}, emits: {} },
         semanticHash: 'hash',
         fileHash: 'file',
@@ -1602,7 +1855,13 @@ describe('Pack Failure Modes', () => {
           entryPathRel: id,
           os: 'posix',
           description: 'Test',
-          composition: { variables: [], hooks: [], components: [], functions: [], imports: [] },
+          composition: {
+            variables: [],
+            hooks: [],
+            components: [],
+            functions: [],
+            imports: [],
+          },
           interface: { props: {}, emits: {} },
           semanticHash: hash,
           fileHash: 'file',
@@ -1610,8 +1869,14 @@ describe('Pack Failure Modes', () => {
       });
 
       // Without sorting, different orders would produce different hashes
-      const nodes1 = [createNode('a.tsx', 'hash1'), createNode('b.tsx', 'hash2')];
-      const nodes2 = [createNode('b.tsx', 'hash2'), createNode('a.tsx', 'hash1')];
+      const nodes1 = [
+        createNode('a.tsx', 'hash1'),
+        createNode('b.tsx', 'hash2'),
+      ];
+      const nodes2 = [
+        createNode('b.tsx', 'hash2'),
+        createNode('a.tsx', 'hash1'),
+      ];
 
       // After stable sort, same content should produce same hash
       const sorted1 = stableSort(nodes1);
@@ -1635,7 +1900,13 @@ describe('Pack Failure Modes', () => {
           entryPathRel: 'src/A.tsx',
           os: 'posix',
           description: 'Test',
-          composition: { variables: [], hooks: [], components: [], functions: [], imports: [] },
+          composition: {
+            variables: [],
+            hooks: [],
+            components: [],
+            functions: [],
+            imports: [],
+          },
           interface: { props: {}, emits: {} },
           semanticHash: 'hash',
           fileHash: 'file',
@@ -1659,7 +1930,13 @@ describe('Pack Failure Modes', () => {
           entryPathRel: 'src/A.tsx',
           os: 'posix',
           description: 'Test',
-          composition: { variables: [], hooks: [], components: [], functions: [], imports: [] },
+          composition: {
+            variables: [],
+            hooks: [],
+            components: [],
+            functions: [],
+            imports: [],
+          },
           interface: { props: {}, emits: {} },
           semanticHash: 'hash',
           fileHash: 'file',
@@ -1709,7 +1986,10 @@ describe('Loader Module', () => {
         graph: { roots: ['src/App.tsx'], leaves: [] },
       };
 
-      await writeFile(join(tempDir, 'logicstamp.manifest.json'), JSON.stringify(manifest));
+      await writeFile(
+        join(tempDir, 'logicstamp.manifest.json'),
+        JSON.stringify(manifest),
+      );
 
       const loaded = await loadManifest(tempDir);
       expect(loaded.totalComponents).toBe(1);
@@ -1723,7 +2003,9 @@ describe('Loader Module', () => {
     it('should throw on invalid JSON', async () => {
       await writeFile(join(tempDir, 'logicstamp.manifest.json'), 'not json {');
 
-      await expect(loadManifest(tempDir)).rejects.toThrow('Failed to parse manifest');
+      await expect(loadManifest(tempDir)).rejects.toThrow(
+        'Failed to parse manifest',
+      );
     });
 
     it('should throw on empty manifest file', async () => {
@@ -1741,7 +2023,10 @@ describe('Loader Module', () => {
 
     it('should return null for invalid JSON in sidecar', async () => {
       await mkdir(join(tempDir, 'src'), { recursive: true });
-      await writeFile(join(tempDir, 'src', 'Component.tsx.uif.json'), 'invalid json');
+      await writeFile(
+        join(tempDir, 'src', 'Component.tsx.uif.json'),
+        'invalid json',
+      );
 
       const contract = await loadContract('src/Component.tsx', tempDir);
       expect(contract).toBeNull();
@@ -1750,10 +2035,13 @@ describe('Loader Module', () => {
     it('should return null for invalid schema in sidecar', async () => {
       await mkdir(join(tempDir, 'src'), { recursive: true });
       // Valid JSON but invalid UIFContract schema
-      await writeFile(join(tempDir, 'src', 'Component.tsx.uif.json'), JSON.stringify({
-        type: 'NotUIFContract',
-        invalid: true,
-      }));
+      await writeFile(
+        join(tempDir, 'src', 'Component.tsx.uif.json'),
+        JSON.stringify({
+          type: 'NotUIFContract',
+          invalid: true,
+        }),
+      );
 
       const contract = await loadContract('src/Component.tsx', tempDir);
       expect(contract).toBeNull();
@@ -1769,12 +2057,20 @@ describe('Loader Module', () => {
         kind: 'react:component',
         entryId: 'src/Component.tsx',
         description: 'Test component',
-        composition: { variables: [], hooks: [], components: [], functions: [] },
+        composition: {
+          variables: [],
+          hooks: [],
+          components: [],
+          functions: [],
+        },
         interface: { props: {}, emits: {} },
         semanticHash: 'uif:abcdef0123456789abcdef01',
         fileHash: 'uif:123456789abcdef012345678',
       };
-      await writeFile(join(tempDir, 'src', 'Component.tsx.uif.json'), JSON.stringify(validContract));
+      await writeFile(
+        join(tempDir, 'src', 'Component.tsx.uif.json'),
+        JSON.stringify(validContract),
+      );
 
       const contract = await loadContract('src/Component.tsx', tempDir);
       expect(contract).not.toBeNull();
@@ -1788,7 +2084,10 @@ describe('Loader Module', () => {
     });
 
     it('should prevent path traversal with encoded characters', async () => {
-      const contract = await loadContract('src/..\\..\\..\\etc\\passwd', tempDir);
+      const contract = await loadContract(
+        'src/..\\..\\..\\etc\\passwd',
+        tempDir,
+      );
       expect(contract).toBeNull();
     });
   });
@@ -1810,7 +2109,10 @@ export const Component = () => <div />;`;
 
     it('should return null for file without @uif header', async () => {
       await mkdir(join(tempDir, 'src'), { recursive: true });
-      await writeFile(join(tempDir, 'src', 'Component.tsx'), 'export const x = 1;');
+      await writeFile(
+        join(tempDir, 'src', 'Component.tsx'),
+        'export const x = 1;',
+      );
 
       const result = await extractCodeHeader('src/Component.tsx', tempDir);
       expect(result.header).toBeNull();
@@ -1902,7 +2204,9 @@ export const Component = () => <div />;`;
 
 describe('Collector Module', () => {
   describe('collectDependencies', () => {
-    const createManifest = (components: Record<string, { dependencies: string[] }>): ProjectManifest => ({
+    const createManifest = (
+      components: Record<string, { dependencies: string[] }>,
+    ): ProjectManifest => ({
       version: '0.3',
       generatedAt: new Date().toISOString(),
       totalComponents: Object.keys(components).length,
@@ -1918,7 +2222,7 @@ describe('Collector Module', () => {
             routes: [],
             semanticHash: 'hash',
           },
-        ])
+        ]),
       ),
       graph: { roots: [], leaves: [] },
     });
@@ -1928,7 +2232,12 @@ describe('Collector Module', () => {
         'src/App.tsx': { dependencies: [] },
       });
 
-      const { visited, missing } = await collectDependencies('src/App.tsx', manifest, 2, 100);
+      const { visited, missing } = await collectDependencies(
+        'src/App.tsx',
+        manifest,
+        2,
+        100,
+      );
 
       expect(visited.size).toBe(1);
       expect(visited.has('src/App.tsx')).toBe(true);
@@ -1941,7 +2250,12 @@ describe('Collector Module', () => {
         'src/Button.tsx': { dependencies: [] },
       });
 
-      const { visited } = await collectDependencies('src/App.tsx', manifest, 1, 100);
+      const { visited } = await collectDependencies(
+        'src/App.tsx',
+        manifest,
+        1,
+        100,
+      );
 
       expect(visited.size).toBe(2);
       expect(visited.has('src/App.tsx')).toBe(true);
@@ -1956,7 +2270,12 @@ describe('Collector Module', () => {
         'src/D.tsx': { dependencies: [] },
       });
 
-      const { visited } = await collectDependencies('src/A.tsx', manifest, 1, 100);
+      const { visited } = await collectDependencies(
+        'src/A.tsx',
+        manifest,
+        1,
+        100,
+      );
 
       expect(visited.size).toBe(2); // A and B only
       expect(visited.has('src/A.tsx')).toBe(true);
@@ -1973,7 +2292,12 @@ describe('Collector Module', () => {
         'src/E.tsx': { dependencies: [] },
       });
 
-      const { visited } = await collectDependencies('src/A.tsx', manifest, 10, 3);
+      const { visited } = await collectDependencies(
+        'src/A.tsx',
+        manifest,
+        10,
+        3,
+      );
 
       expect(visited.size).toBe(3);
     });
@@ -1985,7 +2309,12 @@ describe('Collector Module', () => {
         'src/C.tsx': { dependencies: ['A'] }, // Circular back to A
       });
 
-      const { visited } = await collectDependencies('src/A.tsx', manifest, 10, 100);
+      const { visited } = await collectDependencies(
+        'src/A.tsx',
+        manifest,
+        10,
+        100,
+      );
 
       expect(visited.size).toBe(3);
       expect(visited.has('src/A.tsx')).toBe(true);
@@ -1998,12 +2327,17 @@ describe('Collector Module', () => {
         'src/App.tsx': { dependencies: ['NonExistent', 'AlsoMissing'] },
       });
 
-      const { visited, missing } = await collectDependencies('src/App.tsx', manifest, 2, 100);
+      const { visited, missing } = await collectDependencies(
+        'src/App.tsx',
+        manifest,
+        2,
+        100,
+      );
 
       expect(visited.size).toBe(1);
       expect(missing.length).toBe(2);
-      expect(missing.some(m => m.name === 'NonExistent')).toBe(true);
-      expect(missing.some(m => m.name === 'AlsoMissing')).toBe(true);
+      expect(missing.some((m) => m.name === 'NonExistent')).toBe(true);
+      expect(missing.some((m) => m.name === 'AlsoMissing')).toBe(true);
     });
 
     it('should not duplicate missing dependencies', async () => {
@@ -2014,10 +2348,15 @@ describe('Collector Module', () => {
       // Make A depend on B to traverse both
       manifest.components['src/A.tsx'].dependencies.push('B');
 
-      const { missing } = await collectDependencies('src/A.tsx', manifest, 2, 100);
+      const { missing } = await collectDependencies(
+        'src/A.tsx',
+        manifest,
+        2,
+        100,
+      );
 
       // Missing should only appear once even though both A and B reference it
-      const missingCount = missing.filter(m => m.name === 'Missing').length;
+      const missingCount = missing.filter((m) => m.name === 'Missing').length;
       expect(missingCount).toBe(1);
     });
 
@@ -2026,7 +2365,12 @@ describe('Collector Module', () => {
         'src/Other.tsx': { dependencies: [] },
       });
 
-      const { visited, missing } = await collectDependencies('src/NonExistent.tsx', manifest, 2, 100);
+      const { visited, missing } = await collectDependencies(
+        'src/NonExistent.tsx',
+        manifest,
+        2,
+        100,
+      );
 
       expect(visited.size).toBe(0);
       expect(missing.length).toBe(1);
@@ -2039,7 +2383,12 @@ describe('Collector Module', () => {
         'src/Button.tsx': { dependencies: [] },
       });
 
-      const { visited } = await collectDependencies('src/App.tsx', manifest, 0, 100);
+      const { visited } = await collectDependencies(
+        'src/App.tsx',
+        manifest,
+        0,
+        100,
+      );
 
       expect(visited.size).toBe(1);
       expect(visited.has('src/App.tsx')).toBe(true);
@@ -2055,7 +2404,12 @@ describe('Collector Module', () => {
         'src/D.tsx': { dependencies: [] },
       });
 
-      const { visited } = await collectDependencies('src/A.tsx', manifest, 3, 100);
+      const { visited } = await collectDependencies(
+        'src/A.tsx',
+        manifest,
+        3,
+        100,
+      );
 
       expect(visited.size).toBe(4);
       // D should only be visited once
@@ -2073,7 +2427,7 @@ describe('Resolver Module', () => {
     generatedAt: new Date().toISOString(),
     totalComponents: components.length,
     components: Object.fromEntries(
-      components.map(key => [
+      components.map((key) => [
         key,
         {
           entryId: key,
@@ -2084,7 +2438,7 @@ describe('Resolver Module', () => {
           routes: [],
           semanticHash: 'hash',
         },
-      ])
+      ]),
     ),
     graph: { roots: [], leaves: [] },
   });
@@ -2115,7 +2469,10 @@ describe('Resolver Module', () => {
 
   describe('resolveDependency', () => {
     it('should resolve by filename', () => {
-      const manifest = createManifest(['src/components/Button.tsx', 'src/App.tsx']);
+      const manifest = createManifest([
+        'src/components/Button.tsx',
+        'src/App.tsx',
+      ]);
 
       const resolved = resolveDependency(manifest, 'Button', 'src/App.tsx');
       expect(resolved).toBe('src/components/Button.tsx');
@@ -2124,7 +2481,11 @@ describe('Resolver Module', () => {
     it('should return null for unresolved dependency', () => {
       const manifest = createManifest(['src/App.tsx']);
 
-      const resolved = resolveDependency(manifest, 'NonExistent', 'src/App.tsx');
+      const resolved = resolveDependency(
+        manifest,
+        'NonExistent',
+        'src/App.tsx',
+      );
       expect(resolved).toBeNull();
     });
   });
@@ -2170,7 +2531,10 @@ describe('pack() Integration Tests', () => {
   const mockValidateHashLock = validateHashLock as Mock;
   const mockCollectDependencies = collectDependencies as Mock;
 
-  const createValidContract = (entryId: string, overrides?: Partial<UIFContract>): UIFContract => ({
+  const createValidContract = (
+    entryId: string,
+    overrides?: Partial<UIFContract>,
+  ): UIFContract => ({
     type: 'UIFContract',
     schemaVersion: '0.4',
     kind: 'react:component',
@@ -2195,7 +2559,9 @@ describe('pack() Integration Tests', () => {
     ...overrides,
   });
 
-  const createManifest = (components: Record<string, { dependencies?: string[] }>): ProjectManifest => ({
+  const createManifest = (
+    components: Record<string, { dependencies?: string[] }>,
+  ): ProjectManifest => ({
     version: '0.3',
     generatedAt: new Date().toISOString(),
     totalComponents: Object.keys(components).length,
@@ -2211,7 +2577,7 @@ describe('pack() Integration Tests', () => {
           routes: [],
           semanticHash: 'hash',
         },
-      ])
+      ]),
     ),
     graph: { roots: Object.keys(components), leaves: [] },
   });
@@ -2245,9 +2611,9 @@ describe('pack() Integration Tests', () => {
 
       const options = { ...defaultOptions, hashLock: true };
 
-      await expect(pack('src/App.tsx', manifest, options, '/project')).rejects.toThrow(
-        /Hash lock validation failed for src\/App\.tsx/
-      );
+      await expect(
+        pack('src/App.tsx', manifest, options, '/project'),
+      ).rejects.toThrow(/Hash lock validation failed for src\/App\.tsx/);
     });
 
     it('should succeed when hashLock is true and validation passes', async () => {
@@ -2265,7 +2631,11 @@ describe('pack() Integration Tests', () => {
       const bundle = await pack('src/App.tsx', manifest, options, '/project');
 
       expect(bundle.graph.nodes).toHaveLength(1);
-      expect(mockValidateHashLock).toHaveBeenCalledWith(contract, 'src/App.tsx', '/project');
+      expect(mockValidateHashLock).toHaveBeenCalledWith(
+        contract,
+        'src/App.tsx',
+        '/project',
+      );
     });
   });
 
@@ -2292,7 +2662,10 @@ describe('pack() Integration Tests', () => {
       const bundle = await pack('src/App.tsx', manifest, options, '/project');
 
       expect(bundle.graph.nodes[0].codeHeader).toBe('/** @uif Contract */');
-      expect(mockExtractCodeHeader).toHaveBeenCalledWith('src/App.tsx', '/project');
+      expect(mockExtractCodeHeader).toHaveBeenCalledWith(
+        'src/App.tsx',
+        '/project',
+      );
 
       // Sanitization stats should be recorded
       const stats = getAndResetSanitizeStats();
@@ -2349,10 +2722,18 @@ describe('pack() Integration Tests', () => {
       const options = { ...defaultOptions, includeCode: 'full' as const };
       const bundle = await pack('src/App.tsx', manifest, options, '/project');
 
-      expect(bundle.graph.nodes[0].code).toBe('export const App = () => <div />;');
+      expect(bundle.graph.nodes[0].code).toBe(
+        'export const App = () => <div />;',
+      );
       expect(bundle.graph.nodes[0].codeHeader).toBe('/** @uif Contract */');
-      expect(mockReadSourceCode).toHaveBeenCalledWith('src/App.tsx', '/project');
-      expect(mockExtractCodeHeader).toHaveBeenCalledWith('src/App.tsx', '/project');
+      expect(mockReadSourceCode).toHaveBeenCalledWith(
+        'src/App.tsx',
+        '/project',
+      );
+      expect(mockExtractCodeHeader).toHaveBeenCalledWith(
+        'src/App.tsx',
+        '/project',
+      );
 
       const stats = getAndResetSanitizeStats();
       expect(stats.filesWithSecrets).toBe(1);
@@ -2372,9 +2753,9 @@ describe('pack() Integration Tests', () => {
 
       const options = { ...defaultOptions, allowMissing: true };
 
-      await expect(pack('src/App.tsx', manifest, options, '/project')).rejects.toThrow(
-        /No nodes packed/
-      );
+      await expect(
+        pack('src/App.tsx', manifest, options, '/project'),
+      ).rejects.toThrow(/No nodes packed/);
     });
 
     it('should track missing contracts when allowMissing is false', async () => {
@@ -2398,7 +2779,9 @@ describe('pack() Integration Tests', () => {
       const bundle = await pack('src/App.tsx', manifest, options, '/project');
 
       expect(bundle.graph.nodes).toHaveLength(1);
-      expect(bundle.meta.missing.some(m => m.name === 'src/Button.tsx')).toBe(true);
+      expect(bundle.meta.missing.some((m) => m.name === 'src/Button.tsx')).toBe(
+        true,
+      );
     });
   });
 
@@ -2414,8 +2797,10 @@ describe('pack() Integration Tests', () => {
 
       const options = { ...defaultOptions, strict: true };
 
-      await expect(pack('src/App.tsx', manifest, options, '/project')).rejects.toThrow(
-        /Missing contract for src\/App\.tsx \(strict mode enabled\)/
+      await expect(
+        pack('src/App.tsx', manifest, options, '/project'),
+      ).rejects.toThrow(
+        /Missing contract for src\/App\.tsx \(strict mode enabled\)/,
       );
     });
   });
@@ -2440,10 +2825,15 @@ describe('pack() Integration Tests', () => {
         missing: [],
       });
       mockLoadContract.mockImplementation((entryId: string) =>
-        Promise.resolve(contracts[entryId as keyof typeof contracts] || null)
+        Promise.resolve(contracts[entryId as keyof typeof contracts] || null),
       );
 
-      const bundle = await pack('src/App.tsx', manifest, defaultOptions, '/project');
+      const bundle = await pack(
+        'src/App.tsx',
+        manifest,
+        defaultOptions,
+        '/project',
+      );
 
       // Both edges have same source (App), so secondary sort by target kicks in
       // Button < Card alphabetically
@@ -2460,9 +2850,9 @@ describe('pack() Integration Tests', () => {
         'src/Card.tsx': {},
       });
 
-      await expect(pack('src/NonExistent.tsx', manifest, defaultOptions, '/project')).rejects.toThrow(
-        /Component not found: src\/NonExistent\.tsx/
-      );
+      await expect(
+        pack('src/NonExistent.tsx', manifest, defaultOptions, '/project'),
+      ).rejects.toThrow(/Component not found: src\/NonExistent\.tsx/);
     });
   });
 
@@ -2504,7 +2894,7 @@ describe('pack() Integration Tests', () => {
         missing: [],
       });
       mockLoadContract.mockImplementation((entryId: string) =>
-        Promise.resolve(contracts[entryId as keyof typeof contracts] || null)
+        Promise.resolve(contracts[entryId as keyof typeof contracts] || null),
       );
       mockExtractCodeHeader.mockImplementation((entryId: string) =>
         Promise.resolve({
@@ -2514,7 +2904,7 @@ describe('pack() Integration Tests', () => {
             secretCount: entryId === 'src/App.tsx' ? 2 : 1,
             entryId,
           },
-        })
+        }),
       );
 
       const options = { ...defaultOptions, includeCode: 'header' as const };
@@ -2597,33 +2987,42 @@ describe('Package Info Module', () => {
     });
 
     it('should return version from dependencies', async () => {
-      await writeFile(join(tempDir, 'package.json'), JSON.stringify({
-        dependencies: {
-          'react': '^18.2.0',
-        },
-      }));
+      await writeFile(
+        join(tempDir, 'package.json'),
+        JSON.stringify({
+          dependencies: {
+            react: '^18.2.0',
+          },
+        }),
+      );
 
       const version = await getPackageVersion('react', tempDir);
       expect(version).toBe('^18.2.0');
     });
 
     it('should return version from devDependencies', async () => {
-      await writeFile(join(tempDir, 'package.json'), JSON.stringify({
-        devDependencies: {
-          'vitest': '^1.0.0',
-        },
-      }));
+      await writeFile(
+        join(tempDir, 'package.json'),
+        JSON.stringify({
+          devDependencies: {
+            vitest: '^1.0.0',
+          },
+        }),
+      );
 
       const version = await getPackageVersion('vitest', tempDir);
       expect(version).toBe('^1.0.0');
     });
 
     it('should return undefined for non-existent package', async () => {
-      await writeFile(join(tempDir, 'package.json'), JSON.stringify({
-        dependencies: {
-          'react': '^18.0.0',
-        },
-      }));
+      await writeFile(
+        join(tempDir, 'package.json'),
+        JSON.stringify({
+          dependencies: {
+            react: '^18.0.0',
+          },
+        }),
+      );
 
       const version = await getPackageVersion('nonexistent-package', tempDir);
       expect(version).toBeUndefined();
@@ -2637,4 +3036,3 @@ describe('Package Info Module', () => {
     });
   });
 });
-

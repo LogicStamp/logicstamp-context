@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { buildDependencyGraph, generateStats, writeManifest, type ProjectManifest } from '../../src/core/manifest.js';
+import {
+  buildDependencyGraph,
+  generateStats,
+  writeManifest,
+  type ProjectManifest,
+} from '../../src/core/manifest.js';
 import type { UIFContract } from '../../src/types/UIFContract.js';
 
 // Mock fs/promises for writeManifest tests
@@ -373,7 +378,9 @@ describe('Manifest - Internal Component Filtering', () => {
         },
       ];
 
-      const manifest = buildDependencyGraph(contracts, { includeHashIndices: true });
+      const manifest = buildDependencyGraph(contracts, {
+        includeHashIndices: true,
+      });
 
       expect(manifest.hashIndex).toBeDefined();
       expect(manifest.hashIndex!.structureHash).toBeDefined();
@@ -384,8 +391,8 @@ describe('Manifest - Internal Component Filtering', () => {
       const signatureHashes = Object.values(manifest.hashIndex!.signatureHash);
 
       // At least one hash group should have entries
-      expect(structureHashes.some(arr => arr.length > 0)).toBe(true);
-      expect(signatureHashes.some(arr => arr.length > 0)).toBe(true);
+      expect(structureHashes.some((arr) => arr.length > 0)).toBe(true);
+      expect(signatureHashes.some((arr) => arr.length > 0)).toBe(true);
     });
 
     it('should find components with .ts extension', () => {
@@ -488,7 +495,9 @@ describe('Manifest - Internal Component Filtering', () => {
 
       // Button should only have App in usedBy once
       const buttonNode = manifest.components['src/components/Button.tsx'];
-      const appOccurrences = buttonNode.usedBy.filter(id => id === 'src/App.tsx');
+      const appOccurrences = buttonNode.usedBy.filter(
+        (id) => id === 'src/App.tsx',
+      );
       expect(appOccurrences).toHaveLength(1);
     });
 
@@ -701,7 +710,7 @@ describe('writeManifest', () => {
     expect(writeFile).toHaveBeenCalledWith(
       expect.stringContaining('logicstamp.manifest.json'),
       expect.any(String),
-      'utf8'
+      'utf8',
     );
   });
 
@@ -719,7 +728,7 @@ describe('writeManifest', () => {
     };
 
     await expect(writeManifest(manifest, '/nonexistent/path')).rejects.toThrow(
-      /Parent directory not found/
+      /Parent directory not found/,
     );
   });
 
@@ -737,7 +746,7 @@ describe('writeManifest', () => {
     };
 
     await expect(writeManifest(manifest, '/protected/path')).rejects.toThrow(
-      /Permission denied/
+      /Permission denied/,
     );
   });
 
@@ -755,7 +764,7 @@ describe('writeManifest', () => {
     };
 
     await expect(writeManifest(manifest, '/full/disk')).rejects.toThrow(
-      /No space left on device/
+      /No space left on device/,
     );
   });
 
@@ -773,8 +782,7 @@ describe('writeManifest', () => {
     };
 
     await expect(writeManifest(manifest, '/some/path')).rejects.toThrow(
-      /Failed to write manifest/
+      /Failed to write manifest/,
     );
   });
 });
-

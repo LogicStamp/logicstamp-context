@@ -48,7 +48,9 @@ describe('fileWriter', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    stdoutSpy = vi
+      .spyOn(process.stdout, 'write')
+      .mockImplementation(() => true);
     tempDir = await mkdtemp(join(tmpdir(), 'filewriter-test-'));
   });
 
@@ -62,15 +64,21 @@ describe('fileWriter', () => {
 
   describe('displayPath', () => {
     it('should convert backslashes to forward slashes', () => {
-      expect(displayPath('src\\components\\Button.tsx')).toBe('src/components/Button.tsx');
+      expect(displayPath('src\\components\\Button.tsx')).toBe(
+        'src/components/Button.tsx',
+      );
     });
 
     it('should leave forward slashes unchanged', () => {
-      expect(displayPath('src/components/Button.tsx')).toBe('src/components/Button.tsx');
+      expect(displayPath('src/components/Button.tsx')).toBe(
+        'src/components/Button.tsx',
+      );
     });
 
     it('should handle mixed slashes', () => {
-      expect(displayPath('src/components\\Button.tsx')).toBe('src/components/Button.tsx');
+      expect(displayPath('src/components\\Button.tsx')).toBe(
+        'src/components/Button.tsx',
+      );
     });
 
     it('should handle empty string', () => {
@@ -85,7 +93,9 @@ describe('fileWriter', () => {
   describe('displayProjectRoot', () => {
     it('should normalize backslashes to forward slashes', () => {
       // Test that Windows-style paths are normalized
-      const result = displayProjectRoot('C:\\Users\\River\\Desktop\\my-project');
+      const result = displayProjectRoot(
+        'C:\\Users\\River\\Desktop\\my-project',
+      );
       // Should use forward slashes
       expect(result).not.toContain('\\');
       expect(result).toContain('/');
@@ -132,7 +142,9 @@ describe('fileWriter', () => {
   describe('displayFilePath', () => {
     it('should normalize backslashes to forward slashes', () => {
       // Test that Windows-style paths are normalized
-      const result = displayFilePath('C:\\Users\\River\\Desktop\\my-project\\context.json');
+      const result = displayFilePath(
+        'C:\\Users\\River\\Desktop\\my-project\\context.json',
+      );
       // Should use forward slashes
       expect(result).not.toContain('\\');
       expect(result).toContain('/');
@@ -276,7 +288,10 @@ describe('fileWriter', () => {
       expect(result.folderInfos.length).toBe(1);
 
       // Verify file exists
-      const content = await readFile(join(tempDir, 'src', 'context.json'), 'utf8');
+      const content = await readFile(
+        join(tempDir, 'src', 'context.json'),
+        'utf8',
+      );
       const parsed = JSON.parse(content);
       expect(Array.isArray(parsed)).toBe(true);
     });
@@ -284,7 +299,9 @@ describe('fileWriter', () => {
     it('should calculate total token estimate', async () => {
       const bundles = [
         createMockBundle('src/App.tsx', [createMockContract('src/App.tsx')]),
-        createMockBundle('src/Button.tsx', [createMockContract('src/Button.tsx')]),
+        createMockBundle('src/Button.tsx', [
+          createMockContract('src/Button.tsx'),
+        ]),
       ];
 
       const result = await writeContextFiles(bundles, tempDir, tempDir, {
@@ -340,7 +357,9 @@ describe('fileWriter', () => {
     it('should show bundle checkmarks when verbose is true', async () => {
       const bundles = [
         createMockBundle('src/App.tsx', [createMockContract('src/App.tsx')]),
-        createMockBundle('src/components/Button.tsx', [createMockContract('src/components/Button.tsx')]),
+        createMockBundle('src/components/Button.tsx', [
+          createMockContract('src/components/Button.tsx'),
+        ]),
       ];
 
       await writeContextFiles(bundles, tempDir, tempDir, {
@@ -357,7 +376,9 @@ describe('fileWriter', () => {
     it('should not show bundle checkmarks when verbose is false (default)', async () => {
       const bundles = [
         createMockBundle('src/App.tsx', [createMockContract('src/App.tsx')]),
-        createMockBundle('src/components/Button.tsx', [createMockContract('src/components/Button.tsx')]),
+        createMockBundle('src/components/Button.tsx', [
+          createMockContract('src/components/Button.tsx'),
+        ]),
       ];
 
       await writeContextFiles(bundles, tempDir, tempDir, {
@@ -429,10 +450,13 @@ describe('fileWriter', () => {
         1,
         1000,
         tempDir,
-        { quiet: true }
+        { quiet: true },
       );
 
-      const content = await readFile(join(tempDir, 'context_main.json'), 'utf8');
+      const content = await readFile(
+        join(tempDir, 'context_main.json'),
+        'utf8',
+      );
       const parsed = JSON.parse(content);
 
       expect(parsed.type).toBe('LogicStampIndex');
@@ -443,8 +467,22 @@ describe('fileWriter', () => {
 
     it('should sort folders by path', async () => {
       const folderInfos = [
-        { path: 'src/z', contextFile: 'src/z/context.json', bundles: 1, components: ['Z.tsx'], isRoot: false, tokenEstimate: 100 },
-        { path: 'src/a', contextFile: 'src/a/context.json', bundles: 1, components: ['A.tsx'], isRoot: false, tokenEstimate: 100 },
+        {
+          path: 'src/z',
+          contextFile: 'src/z/context.json',
+          bundles: 1,
+          components: ['Z.tsx'],
+          isRoot: false,
+          tokenEstimate: 100,
+        },
+        {
+          path: 'src/a',
+          contextFile: 'src/a/context.json',
+          bundles: 1,
+          components: ['A.tsx'],
+          isRoot: false,
+          tokenEstimate: 100,
+        },
       ];
 
       await writeMainIndex(
@@ -455,10 +493,13 @@ describe('fileWriter', () => {
         2,
         200,
         tempDir,
-        { quiet: true }
+        { quiet: true },
       );
 
-      const content = await readFile(join(tempDir, 'context_main.json'), 'utf8');
+      const content = await readFile(
+        join(tempDir, 'context_main.json'),
+        'utf8',
+      );
       const parsed = JSON.parse(content);
 
       expect(parsed.folders[0].path).toBe('src/a');
@@ -466,64 +507,36 @@ describe('fileWriter', () => {
     });
 
     it('should log progress when not quiet', async () => {
-      await writeMainIndex(
-        tempDir,
-        [],
-        [],
-        [],
-        0,
-        0,
-        tempDir,
-        { quiet: false }
-      );
+      await writeMainIndex(tempDir, [], [], [], 0, 0, tempDir, {
+        quiet: false,
+      });
 
       const calls = consoleSpy.mock.calls.flat().join('\n');
       expect(calls).toContain('Writing main context index');
     });
 
     it('should output success indicator in quiet mode', async () => {
-      await writeMainIndex(
-        tempDir,
-        [],
-        [],
-        [],
-        0,
-        0,
-        tempDir,
-        { quiet: true }
-      );
+      await writeMainIndex(tempDir, [], [], [], 0, 0, tempDir, { quiet: true });
 
       expect(stdoutSpy).toHaveBeenCalledWith('✓\n');
     });
 
     it('should suppress success indicator when suppressSuccessIndicator is true', async () => {
-      await writeMainIndex(
-        tempDir,
-        [],
-        [],
-        [],
-        0,
-        0,
-        tempDir,
-        { quiet: true, suppressSuccessIndicator: true }
-      );
+      await writeMainIndex(tempDir, [], [], [], 0, 0, tempDir, {
+        quiet: true,
+        suppressSuccessIndicator: true,
+      });
 
       expect(stdoutSpy).not.toHaveBeenCalled();
     });
 
     it('should include meta.source with package version', async () => {
-      await writeMainIndex(
-        tempDir,
-        [],
-        [],
-        [],
-        0,
-        0,
-        tempDir,
-        { quiet: true }
-      );
+      await writeMainIndex(tempDir, [], [], [], 0, 0, tempDir, { quiet: true });
 
-      const content = await readFile(join(tempDir, 'context_main.json'), 'utf8');
+      const content = await readFile(
+        join(tempDir, 'context_main.json'),
+        'utf8',
+      );
       const parsed = JSON.parse(content);
 
       expect(parsed.meta).toHaveProperty('source');
@@ -539,7 +552,10 @@ describe('fileWriter', () => {
 
       // This should succeed in temp dir
       await expect(
-        writeContextFiles(bundles, tempDir, tempDir, { format: 'json', quiet: true })
+        writeContextFiles(bundles, tempDir, tempDir, {
+          format: 'json',
+          quiet: true,
+        }),
       ).resolves.not.toThrow();
     });
 
@@ -550,7 +566,10 @@ describe('fileWriter', () => {
 
       // Should throw with user-friendly message
       await expect(
-        writeContextFiles(bundles, invalidPath, invalidPath, { format: 'json', quiet: true })
+        writeContextFiles(bundles, invalidPath, invalidPath, {
+          format: 'json',
+          quiet: true,
+        }),
       ).rejects.toThrow();
     });
   });

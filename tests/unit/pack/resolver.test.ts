@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { resolveKey, resolveDependency, findComponentByName } from '../../../src/core/pack/resolver.js';
-import type { ProjectManifest, ComponentNode } from '../../../src/core/manifest.js';
+import {
+  resolveKey,
+  resolveDependency,
+  findComponentByName,
+} from '../../../src/core/pack/resolver.js';
+import type {
+  ProjectManifest,
+  ComponentNode,
+} from '../../../src/core/manifest.js';
 
 describe('Pack Resolver', () => {
   const createMockManifest = (): ProjectManifest => {
@@ -119,7 +126,11 @@ describe('Pack Resolver', () => {
   describe('resolveDependency', () => {
     it('should resolve relative path dependency', () => {
       const manifest = createMockManifest();
-      const result = resolveDependency(manifest, 'Button', 'src/components/Card.tsx');
+      const result = resolveDependency(
+        manifest,
+        'Button',
+        'src/components/Card.tsx',
+      );
 
       expect(result).toBe('src/components/Button.tsx');
     });
@@ -127,7 +138,11 @@ describe('Pack Resolver', () => {
     it('should try multiple path variations', () => {
       const manifest = createMockManifest();
       // Should try Button.tsx, Button.ts, Button/index.tsx, Button/index.ts
-      const result = resolveDependency(manifest, 'Button', 'src/components/Card.tsx');
+      const result = resolveDependency(
+        manifest,
+        'Button',
+        'src/components/Card.tsx',
+      );
 
       expect(result).toBe('src/components/Button.tsx');
     });
@@ -135,14 +150,22 @@ describe('Pack Resolver', () => {
     it('should fall back to global search if relative fails', () => {
       const manifest = createMockManifest();
       // If Button is not in same directory, should search globally
-      const result = resolveDependency(manifest, 'helpers', 'src/components/Card.tsx');
+      const result = resolveDependency(
+        manifest,
+        'helpers',
+        'src/components/Card.tsx',
+      );
 
       expect(result).toBe('src/utils/helpers.ts');
     });
 
     it('should return null for non-existent dependency', () => {
       const manifest = createMockManifest();
-      const result = resolveDependency(manifest, 'NonExistent', 'src/components/Card.tsx');
+      const result = resolveDependency(
+        manifest,
+        'NonExistent',
+        'src/components/Card.tsx',
+      );
 
       expect(result).toBeNull();
     });
@@ -180,7 +203,11 @@ describe('Pack Resolver', () => {
       };
 
       // When resolving from Card.tsx, should find components/Button, not fixtures/Button
-      const result = resolveDependency(manifest, 'Button', 'src/components/Card.tsx');
+      const result = resolveDependency(
+        manifest,
+        'Button',
+        'src/components/Card.tsx',
+      );
 
       expect(result).toBe('src/components/Button.tsx');
     });
@@ -188,10 +215,13 @@ describe('Pack Resolver', () => {
     it('should handle Windows-style backslash path separators in parentId', () => {
       const manifest = createMockManifest();
       // On Windows, parentId might contain backslashes - should still resolve correctly
-      const result = resolveDependency(manifest, 'Button', 'src\\components\\Card.tsx');
+      const result = resolveDependency(
+        manifest,
+        'Button',
+        'src\\components\\Card.tsx',
+      );
 
       expect(result).toBe('src/components/Button.tsx');
     });
   });
 });
-

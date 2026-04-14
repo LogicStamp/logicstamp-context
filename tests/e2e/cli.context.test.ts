@@ -35,7 +35,7 @@ describe('CLI Context Generation Tests', () => {
 
       // Run the CLI
       const { stdout, stderr } = await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --out ${outFile}`
+        `node dist/cli/index.js ${fixturesPath} --out ${outFile}`,
       );
 
       // Verify output
@@ -98,9 +98,7 @@ describe('CLI Context Generation Tests', () => {
       const outDir = join(outputPath, 'relative-paths-test');
 
       // Run the CLI
-      await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --out ${outDir}`
-      );
+      await execAsync(`node dist/cli/index.js ${fixturesPath} --out ${outDir}`);
 
       // Read context_main.json
       const mainIndexPath = join(outDir, 'context_main.json');
@@ -127,7 +125,7 @@ describe('CLI Context Generation Tests', () => {
         const folderContextPath = join(outDir, index.folders[0].contextFile);
         const folderContent = await readFile(folderContextPath, 'utf-8');
         const bundles = JSON.parse(folderContent);
-        
+
         expect(Array.isArray(bundles)).toBe(true);
         for (const bundle of bundles) {
           expect(!isAbsolute(bundle.entryId)).toBe(true);
@@ -145,7 +143,7 @@ describe('CLI Context Generation Tests', () => {
       const outDir = join(outputPath, 'depth-test');
 
       const { stdout } = await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --depth 2 --out ${outDir}`
+        `node dist/cli/index.js ${fixturesPath} --depth 2 --out ${outDir}`,
       );
 
       // User-set depth is now respected (not overridden by profile)
@@ -168,42 +166,57 @@ describe('CLI Context Generation Tests', () => {
     }, 30000);
 
     it('should work with different output formats', async () => {
-
       // Test JSON format
       const jsonDir = join(outputPath, 'json-test');
       await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --format json --out ${jsonDir}`
+        `node dist/cli/index.js ${fixturesPath} --format json --out ${jsonDir}`,
       );
 
       // context_main.json should always be JSON
-      const jsonMainIndex = await readFile(join(jsonDir, 'context_main.json'), 'utf-8');
+      const jsonMainIndex = await readFile(
+        join(jsonDir, 'context_main.json'),
+        'utf-8',
+      );
       const index = JSON.parse(jsonMainIndex);
       expect(index.type).toBe('LogicStampIndex');
 
       // Per-folder context should be JSON array
-      const jsonFolderContext = await readFile(join(jsonDir, index.folders[0].contextFile), 'utf-8');
+      const jsonFolderContext = await readFile(
+        join(jsonDir, index.folders[0].contextFile),
+        'utf-8',
+      );
       expect(() => JSON.parse(jsonFolderContext)).not.toThrow();
 
       // Test NDJSON format
       const ndjsonDir = join(outputPath, 'ndjson-test');
       await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --format ndjson --out ${ndjsonDir}`
+        `node dist/cli/index.js ${fixturesPath} --format ndjson --out ${ndjsonDir}`,
       );
-      const ndjsonIndex = JSON.parse(await readFile(join(ndjsonDir, 'context_main.json'), 'utf-8'));
-      const ndjsonContent = await readFile(join(ndjsonDir, ndjsonIndex.folders[0].contextFile), 'utf-8');
+      const ndjsonIndex = JSON.parse(
+        await readFile(join(ndjsonDir, 'context_main.json'), 'utf-8'),
+      );
+      const ndjsonContent = await readFile(
+        join(ndjsonDir, ndjsonIndex.folders[0].contextFile),
+        'utf-8',
+      );
       const lines = ndjsonContent.trim().split('\n');
       expect(lines.length).toBeGreaterThan(0);
-      lines.forEach(line => {
+      lines.forEach((line) => {
         expect(() => JSON.parse(line)).not.toThrow();
       });
 
       // Test pretty format
       const prettyDir = join(outputPath, 'pretty-test');
       await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --format pretty --out ${prettyDir}`
+        `node dist/cli/index.js ${fixturesPath} --format pretty --out ${prettyDir}`,
       );
-      const prettyIndex = JSON.parse(await readFile(join(prettyDir, 'context_main.json'), 'utf-8'));
-      const prettyContent = await readFile(join(prettyDir, prettyIndex.folders[0].contextFile), 'utf-8');
+      const prettyIndex = JSON.parse(
+        await readFile(join(prettyDir, 'context_main.json'), 'utf-8'),
+      );
+      const prettyContent = await readFile(
+        join(prettyDir, prettyIndex.folders[0].contextFile),
+        'utf-8',
+      );
       expect(prettyContent).toContain('Bundle');
     }, 60000);
   });
@@ -213,18 +226,22 @@ describe('CLI Context Generation Tests', () => {
       const outDir = join(outputPath, 'safe-test');
 
       const { stdout } = await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --profile llm-safe --out ${outDir}`
+        `node dist/cli/index.js ${fixturesPath} --profile llm-safe --out ${outDir}`,
       );
 
       expect(stdout).toContain('llm-safe');
       expect(stdout).toContain('depth=2');
 
-      const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
-      const bundles = JSON.parse(await readFile(join(outDir, index.folders[0].contextFile), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
+      );
+      const bundles = JSON.parse(
+        await readFile(join(outDir, index.folders[0].contextFile), 'utf-8'),
+      );
 
       expect(bundles[0].depth).toBe(2);
       // llm-safe has max 30 nodes per bundle
-      bundles.forEach(bundle => {
+      bundles.forEach((bundle) => {
         expect(bundle.graph.nodes.length).toBeLessThanOrEqual(30);
       });
     }, 30000);
@@ -233,17 +250,21 @@ describe('CLI Context Generation Tests', () => {
       const outDir = join(outputPath, 'chat-test');
 
       const { stdout } = await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --profile llm-chat --out ${outDir}`
+        `node dist/cli/index.js ${fixturesPath} --profile llm-chat --out ${outDir}`,
       );
 
       expect(stdout).toContain('llm-chat');
 
-      const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
-      const bundles = JSON.parse(await readFile(join(outDir, index.folders[0].contextFile), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
+      );
+      const bundles = JSON.parse(
+        await readFile(join(outDir, index.folders[0].contextFile), 'utf-8'),
+      );
 
       expect(bundles[0].depth).toBe(2);
       // llm-chat has max 100 nodes per bundle
-      bundles.forEach(bundle => {
+      bundles.forEach((bundle) => {
         expect(bundle.graph.nodes.length).toBeLessThanOrEqual(100);
       });
     }, 30000);
@@ -252,17 +273,21 @@ describe('CLI Context Generation Tests', () => {
       const outDir = join(outputPath, 'strict-test');
 
       const { stdout } = await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --profile ci-strict --out ${outDir}`
+        `node dist/cli/index.js ${fixturesPath} --profile ci-strict --out ${outDir}`,
       );
 
       expect(stdout).toContain('ci-strict');
 
-      const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
-      const bundles = JSON.parse(await readFile(join(outDir, index.folders[0].contextFile), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
+      );
+      const bundles = JSON.parse(
+        await readFile(join(outDir, index.folders[0].contextFile), 'utf-8'),
+      );
 
       // ci-strict includes no code
-      bundles.forEach(bundle => {
-        bundle.graph.nodes.forEach(node => {
+      bundles.forEach((bundle) => {
+        bundle.graph.nodes.forEach((node) => {
           expect(node.contract.codeSnippet).toBeUndefined();
         });
       });
@@ -274,14 +299,18 @@ describe('CLI Context Generation Tests', () => {
       const outDir = join(outputPath, 'no-code-test');
 
       await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --include-code none --out ${outDir}`
+        `node dist/cli/index.js ${fixturesPath} --include-code none --out ${outDir}`,
       );
 
-      const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
-      const bundles = JSON.parse(await readFile(join(outDir, index.folders[0].contextFile), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
+      );
+      const bundles = JSON.parse(
+        await readFile(join(outDir, index.folders[0].contextFile), 'utf-8'),
+      );
 
-      bundles.forEach(bundle => {
-        bundle.graph.nodes.forEach(node => {
+      bundles.forEach((bundle) => {
+        bundle.graph.nodes.forEach((node) => {
           expect(node.contract.codeSnippet).toBeUndefined();
         });
       });
@@ -291,14 +320,18 @@ describe('CLI Context Generation Tests', () => {
       const outDir = join(outputPath, 'header-test');
 
       const { stdout } = await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --include-code header --out ${outDir}`
+        `node dist/cli/index.js ${fixturesPath} --include-code header --out ${outDir}`,
       );
 
       // Verify the command completed successfully
       expect(stdout).toContain('context files written successfully');
 
-      const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
-      const bundles = JSON.parse(await readFile(join(outDir, index.folders[0].contextFile), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
+      );
+      const bundles = JSON.parse(
+        await readFile(join(outDir, index.folders[0].contextFile), 'utf-8'),
+      );
 
       // Verify bundles were generated
       expect(bundles.length).toBeGreaterThan(0);
@@ -309,14 +342,18 @@ describe('CLI Context Generation Tests', () => {
       const outDir = join(outputPath, 'full-test');
 
       const { stdout } = await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --include-code full --out ${outDir}`
+        `node dist/cli/index.js ${fixturesPath} --include-code full --out ${outDir}`,
       );
 
       // Verify the command completed successfully
       expect(stdout).toContain('context files written successfully');
 
-      const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
-      const bundles = JSON.parse(await readFile(join(outDir, index.folders[0].contextFile), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
+      );
+      const bundles = JSON.parse(
+        await readFile(join(outDir, index.folders[0].contextFile), 'utf-8'),
+      );
 
       // Verify bundles were generated
       expect(bundles.length).toBeGreaterThan(0);
@@ -329,11 +366,13 @@ describe('CLI Context Generation Tests', () => {
       const outDir = join(outputPath, 'context-deps');
 
       await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --depth 2 --out ${outDir}`
+        `node dist/cli/index.js ${fixturesPath} --depth 2 --out ${outDir}`,
       );
 
       // Read main index to find context files
-      const mainIndex = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const mainIndex = JSON.parse(
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
+      );
 
       // Collect all bundles from all folder context files
       const bundles: any[] = [];
@@ -344,12 +383,12 @@ describe('CLI Context Generation Tests', () => {
       }
 
       // Find the Card component bundle
-      const cardBundle = bundles.find(b => b.entryId.includes('Card.tsx'));
+      const cardBundle = bundles.find((b) => b.entryId.includes('Card.tsx'));
 
       if (cardBundle) {
         // Card should depend on Button
-        const hasButtonDependency = cardBundle.graph.edges.some(
-          (edge: any) => edge.to.includes('Button.tsx')
+        const hasButtonDependency = cardBundle.graph.edges.some((edge: any) =>
+          edge.to.includes('Button.tsx'),
         );
         expect(hasButtonDependency).toBe(true);
       }
@@ -359,7 +398,7 @@ describe('CLI Context Generation Tests', () => {
       const outFile = join(outputPath, 'context-summary.json');
 
       const { stdout } = await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --out ${outFile}`
+        `node dist/cli/index.js ${fixturesPath} --out ${outFile}`,
       );
 
       expect(stdout).toContain('Summary:');
@@ -373,12 +412,13 @@ describe('CLI Context Generation Tests', () => {
       const outFile = join(outputPath, 'context-no-dupe.json');
 
       const { stdout } = await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --out ${outFile}`
+        `node dist/cli/index.js ${fixturesPath} --out ${outFile}`,
       );
 
       // Count occurrences of key summary lines
       const summaryCount = (stdout.match(/📊 Summary:/g) || []).length;
-      const totalComponentsCount = (stdout.match(/Total components:/g) || []).length;
+      const totalComponentsCount = (stdout.match(/Total components:/g) || [])
+        .length;
       const completedCount = (stdout.match(/Completed in/g) || []).length;
 
       // Each of these should appear exactly once
@@ -396,10 +436,9 @@ describe('CLI Context Generation Tests', () => {
     it('should suppress verbose output with --quiet flag', async () => {
       const outDir = join(outputPath, 'quiet-test');
 
-
       // Run with --quiet flag
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir} --quiet`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir} --quiet`,
       );
 
       // Should not contain verbose output messages
@@ -422,10 +461,9 @@ describe('CLI Context Generation Tests', () => {
     it('should suppress verbose output with -q flag', async () => {
       const outDir = join(outputPath, 'quiet-short-test');
 
-
       // Run with -q flag
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir} -q`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir} -q`,
       );
 
       // Should not contain verbose output messages
@@ -443,11 +481,10 @@ describe('CLI Context Generation Tests', () => {
     }, 30000);
 
     it('should still show errors in quiet mode', async () => {
-
       // Try to run on a non-existent directory
       try {
         await execAsync(
-          'node dist/cli/stamp.js context /nonexistent/path --quiet'
+          'node dist/cli/stamp.js context /nonexistent/path --quiet',
         );
         expect.fail('Should have thrown an error');
       } catch (error: any) {
@@ -460,10 +497,9 @@ describe('CLI Context Generation Tests', () => {
     it('should generate valid context files even in quiet mode', async () => {
       const outDir = join(outputPath, 'quiet-valid-test');
 
-
       // Run with --quiet flag
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir} --quiet`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir} --quiet`,
       );
 
       // Verify context_main.json was created and is valid
@@ -487,7 +523,7 @@ describe('CLI Context Generation Tests', () => {
 
       // Run with --skip-gitignore flag
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir} --skip-gitignore`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir} --skip-gitignore`,
       );
 
       // Should complete successfully
@@ -513,11 +549,11 @@ describe('CLI Context Generation Tests', () => {
     it('should auto-create config with safe defaults when config does not exist', async () => {
       const testDir = join(outputPath, 'auto-config-test');
       await mkdir(testDir, { recursive: true });
-      
+
       // Copy fixture contents to test directory to avoid modifying the original
       const testFixturesPath = join(testDir, 'simple-app');
       await cp(fixturesPath, testFixturesPath, { recursive: true });
-      
+
       const outDir = join(testDir, 'output');
 
       // Ensure no config exists
@@ -536,12 +572,14 @@ describe('CLI Context Generation Tests', () => {
 
       // Run context command on root - it will recursively find files in src
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`,
       );
 
       // Should mention config creation
       expect(stdout).toContain('No LogicStamp config found');
-      expect(stdout).toContain('created .logicstamp/config.json with safe defaults');
+      expect(stdout).toContain(
+        'created .logicstamp/config.json with safe defaults',
+      );
 
       // Verify config was created with skipped preferences
       const configContent = await readFile(configPath, 'utf-8');
@@ -554,17 +592,19 @@ describe('CLI Context Generation Tests', () => {
       // Should match initial content (unchanged)
       expect(finalGitignoreContent).toBe(initialGitignoreContent);
       // Should not contain LogicStamp patterns (since preference is 'skipped')
-      expect(finalGitignoreContent).not.toContain('# LogicStamp context & security files');
+      expect(finalGitignoreContent).not.toContain(
+        '# LogicStamp context & security files',
+      );
     }, 30000);
 
     it('should respect config preference for gitignore (added)', async () => {
       const testDir = join(outputPath, 'config-added-test');
       await mkdir(testDir, { recursive: true });
-      
+
       // Copy fixture contents to test directory
       const testFixturesPath = join(testDir, 'simple-app');
       await cp(fixturesPath, testFixturesPath, { recursive: true });
-      
+
       const outDir = join(testDir, 'output');
 
       // Create config with 'added' preference
@@ -572,7 +612,10 @@ describe('CLI Context Generation Tests', () => {
       await mkdir(configDir, { recursive: true });
       await writeFile(
         join(configDir, 'config.json'),
-        JSON.stringify({ gitignorePreference: 'added', llmContextPreference: 'skipped' })
+        JSON.stringify({
+          gitignorePreference: 'added',
+          llmContextPreference: 'skipped',
+        }),
       );
 
       // Ensure .gitignore doesn't have LogicStamp patterns
@@ -581,12 +624,14 @@ describe('CLI Context Generation Tests', () => {
 
       // Run context command on root - it will recursively find files in src
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`,
       );
 
       // Should add patterns based on config preference
       const gitignoreContent = await readFile(gitignorePath, 'utf-8');
-      expect(gitignoreContent).toContain('# LogicStamp context & security files');
+      expect(gitignoreContent).toContain(
+        '# LogicStamp context & security files',
+      );
       expect(gitignoreContent).toContain('context.json');
       expect(gitignoreContent).toContain('node_modules'); // Original content preserved
     }, 30000);
@@ -594,11 +639,11 @@ describe('CLI Context Generation Tests', () => {
     it('should respect config preference for gitignore (skipped)', async () => {
       const testDir = join(outputPath, 'config-skipped-test');
       await mkdir(testDir, { recursive: true });
-      
+
       // Copy fixture contents to test directory
       const testFixturesPath = join(testDir, 'simple-app');
       await cp(fixturesPath, testFixturesPath, { recursive: true });
-      
+
       const outDir = join(testDir, 'output');
 
       // Create config with 'skipped' preference
@@ -606,7 +651,10 @@ describe('CLI Context Generation Tests', () => {
       await mkdir(configDir, { recursive: true });
       await writeFile(
         join(configDir, 'config.json'),
-        JSON.stringify({ gitignorePreference: 'skipped', llmContextPreference: 'skipped' })
+        JSON.stringify({
+          gitignorePreference: 'skipped',
+          llmContextPreference: 'skipped',
+        }),
       );
 
       const gitignorePath = join(testFixturesPath, '.gitignore');
@@ -615,13 +663,15 @@ describe('CLI Context Generation Tests', () => {
 
       // Run context command on root - it will recursively find files in src
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`,
       );
 
       // Verify .gitignore was NOT modified
       const gitignoreContent = await readFile(gitignorePath, 'utf-8');
       expect(gitignoreContent).toBe(initialContent);
-      expect(gitignoreContent).not.toContain('# LogicStamp context & security files');
+      expect(gitignoreContent).not.toContain(
+        '# LogicStamp context & security files',
+      );
       expect(stdout).not.toContain('Created .gitignore');
       expect(stdout).not.toContain('Added LogicStamp patterns');
     }, 30000);
@@ -631,11 +681,11 @@ describe('CLI Context Generation Tests', () => {
     it('should respect .stampignore and exclude ignored files', async () => {
       const testDir = join(outputPath, 'stampignore-test');
       await mkdir(testDir, { recursive: true });
-      
+
       // Copy fixture contents to test directory
       const testFixturesPath = join(testDir, 'simple-app');
       await cp(fixturesPath, testFixturesPath, { recursive: true });
-      
+
       const outDir = join(testDir, 'output');
 
       // Create .stampignore to ignore a specific file
@@ -644,12 +694,12 @@ describe('CLI Context Generation Tests', () => {
         stampignorePath,
         JSON.stringify({
           ignore: ['src/components/Button.tsx'],
-        })
+        }),
       );
 
       // Run context command
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`,
       );
 
       // Should mention excluded files
@@ -669,10 +719,13 @@ describe('CLI Context Generation Tests', () => {
       for (const folder of index.folders) {
         const contextPath = join(outDir, folder.contextFile);
         const bundles = JSON.parse(await readFile(contextPath, 'utf-8'));
-        
+
         for (const bundle of bundles) {
           for (const node of bundle.graph.nodes) {
-            if (node.contract?.entryId && node.contract.entryId.includes('Button.tsx')) {
+            if (
+              node.contract?.entryId &&
+              node.contract.entryId.includes('Button.tsx')
+            ) {
               foundButton = true;
               break;
             }
@@ -689,11 +742,11 @@ describe('CLI Context Generation Tests', () => {
     it('should respect .stampignore with glob patterns', async () => {
       const testDir = join(outputPath, 'stampignore-glob-test');
       await mkdir(testDir, { recursive: true });
-      
+
       // Copy fixture contents to test directory
       const testFixturesPath = join(testDir, 'simple-app');
       await cp(fixturesPath, testFixturesPath, { recursive: true });
-      
+
       const outDir = join(testDir, 'output');
 
       // Create .stampignore with glob pattern to ignore all files in components directory
@@ -702,12 +755,12 @@ describe('CLI Context Generation Tests', () => {
         stampignorePath,
         JSON.stringify({
           ignore: ['src/components/**'],
-        })
+        }),
       );
 
       // Run context command
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`,
       );
 
       // Should mention excluded files
@@ -727,11 +780,14 @@ describe('CLI Context Generation Tests', () => {
       for (const folder of index.folders) {
         const contextPath = join(outDir, folder.contextFile);
         const bundles = JSON.parse(await readFile(contextPath, 'utf-8'));
-        
+
         for (const bundle of bundles) {
           for (const node of bundle.graph.nodes) {
             const entryId = node.contract?.entryId || '';
-            if (entryId.includes('components/Button.tsx') || entryId.includes('components/Card.tsx')) {
+            if (
+              entryId.includes('components/Button.tsx') ||
+              entryId.includes('components/Card.tsx')
+            ) {
               foundComponent = true;
               break;
             }
@@ -748,11 +804,11 @@ describe('CLI Context Generation Tests', () => {
     it('should work without .stampignore (no exclusions)', async () => {
       const testDir = join(outputPath, 'no-stampignore-test');
       await mkdir(testDir, { recursive: true });
-      
+
       // Copy fixture contents to test directory
       const testFixturesPath = join(testDir, 'simple-app');
       await cp(fixturesPath, testFixturesPath, { recursive: true });
-      
+
       const outDir = join(testDir, 'output');
 
       // Ensure .stampignore does not exist
@@ -765,7 +821,7 @@ describe('CLI Context Generation Tests', () => {
 
       // Run context command
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`,
       );
 
       // Should not mention excluded files
@@ -787,11 +843,11 @@ describe('CLI Context Generation Tests', () => {
     it('should handle empty .stampignore gracefully', async () => {
       const testDir = join(outputPath, 'empty-stampignore-test');
       await mkdir(testDir, { recursive: true });
-      
+
       // Copy fixture contents to test directory
       const testFixturesPath = join(testDir, 'simple-app');
       await cp(fixturesPath, testFixturesPath, { recursive: true });
-      
+
       const outDir = join(testDir, 'output');
 
       // Create empty .stampignore
@@ -800,12 +856,12 @@ describe('CLI Context Generation Tests', () => {
         stampignorePath,
         JSON.stringify({
           ignore: [],
-        })
+        }),
       );
 
       // Run context command
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`,
       );
 
       // Should not mention excluded files (empty ignore array)
@@ -827,10 +883,10 @@ describe('CLI Context Generation Tests', () => {
       // Create a test directory with a file containing secrets
       const testDir = join(outputPath, 'sanitization-test');
       await mkdir(testDir, { recursive: true });
-      
+
       const srcDir = join(testDir, 'src');
       await mkdir(srcDir, { recursive: true });
-      
+
       // Create a file with secrets
       const configFile = join(srcDir, 'config.ts');
       await writeFile(
@@ -839,7 +895,7 @@ describe('CLI Context Generation Tests', () => {
   apiKey: 'FAKE_API_KEY_1234567890abcdefghijklmnopqrstuvwxyz',
   password: 'FAKE_PASSWORD_1234567890abcdefghijklmnop',
   token: 'FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz',
-};`
+};`,
       );
 
       // Create a security report
@@ -856,7 +912,8 @@ describe('CLI Context Generation Tests', () => {
             line: 2,
             column: 12,
             type: 'API Key',
-            snippet: "  apiKey: 'FAKE_API_KEY_1234567890abcdefghijklmnopqrstuvwxyz',",
+            snippet:
+              "  apiKey: 'FAKE_API_KEY_1234567890abcdefghijklmnopqrstuvwxyz',",
             severity: 'high',
           },
           {
@@ -872,7 +929,8 @@ describe('CLI Context Generation Tests', () => {
             line: 4,
             column: 10,
             type: 'Token',
-            snippet: "  token: 'FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz',",
+            snippet:
+              "  token: 'FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz',",
             severity: 'high',
           },
         ],
@@ -885,7 +943,7 @@ describe('CLI Context Generation Tests', () => {
       // Generate context with full code inclusion
       const outDir = join(outputPath, 'sanitized-context');
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context ${testDir} --include-code full --out ${outDir}`
+        `node dist/cli/stamp.js context ${testDir} --include-code full --out ${outDir}`,
       );
 
       expect(stdout).toContain('Compiling context');
@@ -895,46 +953,58 @@ describe('CLI Context Generation Tests', () => {
       await access(contextPath);
       const contextContent = await readFile(contextPath, 'utf-8');
       const bundles = JSON.parse(contextContent);
-      
+
       expect(Array.isArray(bundles)).toBe(true);
       expect(bundles.length).toBeGreaterThan(0);
 
       // Find the bundle with config.ts
-      const configBundle = bundles.find((b: any) => 
-        b.entryId && b.entryId.includes('config.ts')
+      const configBundle = bundles.find(
+        (b: any) => b.entryId && b.entryId.includes('config.ts'),
       );
-      
+
       expect(configBundle).toBeDefined();
-      
+
       // Check that the code contains PRIVATE_DATA instead of actual secrets
       if (configBundle.graph?.nodes) {
-        const configNode = configBundle.graph.nodes.find((n: any) => 
-          n.entryId && n.entryId.includes('config.ts')
+        const configNode = configBundle.graph.nodes.find(
+          (n: any) => n.entryId && n.entryId.includes('config.ts'),
         );
-        
+
         if (configNode?.code) {
           expect(configNode.code).toContain('PRIVATE_DATA');
-          expect(configNode.code).not.toContain('FAKE_API_KEY_1234567890abcdefghijklmnopqrstuvwxyz');
-          expect(configNode.code).not.toContain('FAKE_PASSWORD_1234567890abcdefghijklmnop');
-          expect(configNode.code).not.toContain('FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz');
+          expect(configNode.code).not.toContain(
+            'FAKE_API_KEY_1234567890abcdefghijklmnopqrstuvwxyz',
+          );
+          expect(configNode.code).not.toContain(
+            'FAKE_PASSWORD_1234567890abcdefghijklmnop',
+          );
+          expect(configNode.code).not.toContain(
+            'FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz',
+          );
         }
       }
 
       // Verify source file was NOT modified
       const originalContent = await readFile(configFile, 'utf-8');
-      expect(originalContent).toContain('FAKE_API_KEY_1234567890abcdefghijklmnopqrstuvwxyz');
-      expect(originalContent).toContain('FAKE_PASSWORD_1234567890abcdefghijklmnop');
-      expect(originalContent).toContain('FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz');
+      expect(originalContent).toContain(
+        'FAKE_API_KEY_1234567890abcdefghijklmnopqrstuvwxyz',
+      );
+      expect(originalContent).toContain(
+        'FAKE_PASSWORD_1234567890abcdefghijklmnop',
+      );
+      expect(originalContent).toContain(
+        'FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz',
+      );
     }, 30000);
 
     it('should not sanitize when no security report exists', async () => {
       // Create a test directory with a file containing secrets
       const testDir = join(outputPath, 'no-sanitization-test');
       await mkdir(testDir, { recursive: true });
-      
+
       const srcDir = join(testDir, 'src');
       await mkdir(srcDir, { recursive: true });
-      
+
       // Create a file with secrets (but no security report)
       const configFile = join(srcDir, 'config.ts');
       const secretValue = 'FAKE_API_KEY_1234567890abcdefghijklmnopqrstuvwxyz';
@@ -942,13 +1012,13 @@ describe('CLI Context Generation Tests', () => {
         configFile,
         `export const config = {
   apiKey: '${secretValue}',
-};`
+};`,
       );
 
       // Generate context WITHOUT security report
       const outDir = join(outputPath, 'unsanitized-context');
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context ${testDir} --include-code full --out ${outDir}`
+        `node dist/cli/stamp.js context ${testDir} --include-code full --out ${outDir}`,
       );
 
       expect(stdout).toContain('Compiling context');
@@ -958,20 +1028,20 @@ describe('CLI Context Generation Tests', () => {
       await access(contextPath);
       const contextContent = await readFile(contextPath, 'utf-8');
       const bundles = JSON.parse(contextContent);
-      
+
       expect(Array.isArray(bundles)).toBe(true);
       expect(bundles.length).toBeGreaterThan(0);
 
       // Find the bundle with config.ts
-      const configBundle = bundles.find((b: any) => 
-        b.entryId && b.entryId.includes('config.ts')
+      const configBundle = bundles.find(
+        (b: any) => b.entryId && b.entryId.includes('config.ts'),
       );
-      
+
       if (configBundle?.graph?.nodes) {
-        const configNode = configBundle.graph.nodes.find((n: any) => 
-          n.entryId && n.entryId.includes('config.ts')
+        const configNode = configBundle.graph.nodes.find(
+          (n: any) => n.entryId && n.entryId.includes('config.ts'),
         );
-        
+
         // Without security report, code should NOT be sanitized
         // (Note: This test may need adjustment based on actual behavior)
         // The code might still contain the secret if no report exists
@@ -983,4 +1053,3 @@ describe('CLI Context Generation Tests', () => {
     }, 30000);
   });
 });
-

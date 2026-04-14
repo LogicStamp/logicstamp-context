@@ -3,10 +3,28 @@
  * Orchestrates extraction of style metadata from TypeScript components
  */
 
-import { SourceFile, SyntaxKind, JsxAttribute, JsxExpression, StringLiteral, NoSubstitutionTemplateLiteral } from 'ts-morph';
-import type { StyleMetadata, StyleSources, StyleMode, StyleSummary, LayoutMetadata, VisualMetadata } from '../../types/UIFContract.js';
+import {
+  type SourceFile,
+  SyntaxKind,
+  type JsxAttribute,
+  type JsxExpression,
+  type StringLiteral,
+  type NoSubstitutionTemplateLiteral,
+} from 'ts-morph';
+import type {
+  StyleMetadata,
+  StyleSources,
+  StyleMode,
+  StyleSummary,
+  LayoutMetadata,
+  VisualMetadata,
+} from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
-import { extractTailwindClasses, categorizeTailwindClasses, extractBreakpoints } from './tailwind.js';
+import {
+  extractTailwindClasses,
+  categorizeTailwindClasses,
+  extractBreakpoints,
+} from './tailwind.js';
 import { extractScssMetadata, parseStyleFile } from './scss.js';
 import { extractStyledComponents } from './styled.js';
 import { extractMotionConfig, extractAnimationMetadata } from './motion.js';
@@ -27,7 +45,7 @@ import { extractAntDesign } from './antd.js';
 export async function extractStyleMetadata(
   source: SourceFile,
   filePath: string,
-  mode: StyleMode = 'lean'
+  mode: StyleMode = 'lean',
 ): Promise<StyleMetadata | undefined> {
   try {
     const fullStyleSources = await extractStyleSources(source, filePath);
@@ -77,13 +95,16 @@ export async function extractStyleMetadata(
 
     // Build summary and apply lean transformation if needed
     const summary = buildStyleSummary(fullStyleSources, mode);
-    const styleSources = mode === 'lean'
-      ? transformToLean(fullStyleSources, summary)
-      : fullStyleSources;
+    const styleSources =
+      mode === 'lean'
+        ? transformToLean(fullStyleSources, summary)
+        : fullStyleSources;
 
     // Transform layout and visual in lean mode
-    const finalLayout = mode === 'lean' ? transformLayoutToLean(layout) : layout;
-    const finalVisual = mode === 'lean' ? transformVisualToLean(visual) : visual;
+    const finalLayout =
+      mode === 'lean' ? transformLayoutToLean(layout) : layout;
+    const finalVisual =
+      mode === 'lean' ? transformVisualToLean(visual) : visual;
 
     return {
       ...(Object.keys(styleSources).length > 0 && { styleSources }),
@@ -104,7 +125,10 @@ export async function extractStyleMetadata(
 /**
  * Build style summary from full style sources
  */
-function buildStyleSummary(styleSources: StyleSources, mode: StyleMode): StyleSummary {
+function buildStyleSummary(
+  styleSources: StyleSources,
+  mode: StyleMode,
+): StyleSummary {
   const sources: string[] = [];
 
   if (styleSources.tailwind) sources.push('tailwind');
@@ -138,7 +162,10 @@ function buildStyleSummary(styleSources: StyleSources, mode: StyleMode): StyleSu
  * Transform full style sources to lean format
  * Drops verbose arrays, keeps counts and flags
  */
-function transformToLean(fullSources: StyleSources, summary: StyleSummary): StyleSources {
+function transformToLean(
+  fullSources: StyleSources,
+  summary: StyleSummary,
+): StyleSources {
   const lean: StyleSources = {};
 
   // Tailwind: keep classCount + categoriesUsed, drop class arrays
@@ -175,8 +202,12 @@ function transformToLean(fullSources: StyleSources, summary: StyleSummary): Styl
     lean.styledJsx = {
       global: fullSources.styledJsx.global,
       // Keep counts instead of arrays
-      ...(fullSources.styledJsx.selectors && { selectorCount: fullSources.styledJsx.selectors.length }),
-      ...(fullSources.styledJsx.properties && { propertyCount: fullSources.styledJsx.properties.length }),
+      ...(fullSources.styledJsx.selectors && {
+        selectorCount: fullSources.styledJsx.selectors.length,
+      }),
+      ...(fullSources.styledJsx.properties && {
+        propertyCount: fullSources.styledJsx.properties.length,
+      }),
     };
   }
 
@@ -187,7 +218,7 @@ function transformToLean(fullSources: StyleSources, summary: StyleSummary): Styl
       usesCssProp: fullSources.styledComponents.usesCssProp,
       // Drop components array, keep count
       ...(fullSources.styledComponents.components && {
-        componentCount: fullSources.styledComponents.components.length
+        componentCount: fullSources.styledComponents.components.length,
       }),
     };
   }
@@ -216,8 +247,12 @@ function transformToLean(fullSources: StyleSources, summary: StyleSummary): Styl
   // Radix: keep features + accessibility, drop primitives/patterns
   if (fullSources.radixUI) {
     lean.radixUI = {
-      ...(fullSources.radixUI.accessibility && { accessibility: fullSources.radixUI.accessibility }),
-      ...(fullSources.radixUI.features && { features: fullSources.radixUI.features }),
+      ...(fullSources.radixUI.accessibility && {
+        accessibility: fullSources.radixUI.accessibility,
+      }),
+      ...(fullSources.radixUI.features && {
+        features: fullSources.radixUI.features,
+      }),
     };
   }
 
@@ -269,40 +304,48 @@ function transformVisualToLean(visual: VisualMetadata): VisualMetadata {
   };
 }
 
-
 /**
  * Extract inline style properties and values from style={{...}} attributes
  */
-function extractInlineStyles(source: SourceFile): { properties: string[]; values?: Record<string, string> } | null {
+function extractInlineStyles(
+  source: SourceFile,
+): { properties: string[]; values?: Record<string, string> } | null {
   const properties = new Set<string>();
   const values: Record<string, string> = {};
   const filePath = source.getFilePath?.() ?? 'unknown';
 
   try {
     const jsxAttributes = source.getDescendantsOfKind(SyntaxKind.JsxAttribute);
-    
+
     for (const attr of jsxAttributes) {
       try {
         const jsxAttr = attr as JsxAttribute;
         const attrName = jsxAttr.getNameNode().getText();
-        
+
         if (attrName === 'style') {
           const initializer = jsxAttr.getInitializer();
-          if (initializer && initializer.getKind() === SyntaxKind.JsxExpression) {
+          if (
+            initializer &&
+            initializer.getKind() === SyntaxKind.JsxExpression
+          ) {
             const jsxExpr = initializer as JsxExpression;
             const expr = jsxExpr.getExpression();
-            
+
             // Handle object literal: style={{ color: 'blue', padding: '1rem' }}
             if (expr && expr.getKind() === SyntaxKind.ObjectLiteralExpression) {
-              const objLiteral = expr.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+              const objLiteral = expr.asKindOrThrow(
+                SyntaxKind.ObjectLiteralExpression,
+              );
               const objProperties = objLiteral.getProperties();
-              
+
               for (const prop of objProperties) {
                 if (prop.getKind() === SyntaxKind.PropertyAssignment) {
-                  const propAssignment = prop.asKindOrThrow(SyntaxKind.PropertyAssignment);
+                  const propAssignment = prop.asKindOrThrow(
+                    SyntaxKind.PropertyAssignment,
+                  );
                   const nameNode = propAssignment.getNameNode();
                   const initializer = propAssignment.getInitializer();
-                  
+
                   // Extract property name (handles both identifier and string literal)
                   let propName: string | undefined;
                   if (nameNode.getKind() === SyntaxKind.Identifier) {
@@ -310,17 +353,19 @@ function extractInlineStyles(source: SourceFile): { properties: string[]; values
                   } else if (nameNode.getKind() === SyntaxKind.StringLiteral) {
                     propName = (nameNode as StringLiteral).getLiteralText();
                   }
-                  
+
                   if (propName) {
                     properties.add(propName);
-                    
+
                     // Extract property value if it's a literal
                     if (initializer) {
                       const initKind = initializer.getKind();
-                      
+
                       // String literal: 'blue', "1rem"
                       if (initKind === SyntaxKind.StringLiteral) {
-                        const value = (initializer as StringLiteral).getLiteralText();
+                        const value = (
+                          initializer as StringLiteral
+                        ).getLiteralText();
                         values[propName] = value;
                       }
                       // Numeric literal: 10, 1.5
@@ -328,7 +373,10 @@ function extractInlineStyles(source: SourceFile): { properties: string[]; values
                         values[propName] = initializer.getText();
                       }
                       // Boolean literal: true, false
-                      else if (initKind === SyntaxKind.TrueKeyword || initKind === SyntaxKind.FalseKeyword) {
+                      else if (
+                        initKind === SyntaxKind.TrueKeyword ||
+                        initKind === SyntaxKind.FalseKeyword
+                      ) {
                         values[propName] = initializer.getText();
                       }
                       // Null literal
@@ -336,8 +384,12 @@ function extractInlineStyles(source: SourceFile): { properties: string[]; values
                         values[propName] = 'null';
                       }
                       // Template literal (no substitutions): `2s`
-                      else if (initKind === SyntaxKind.NoSubstitutionTemplateLiteral) {
-                        const value = (initializer as NoSubstitutionTemplateLiteral).getLiteralText();
+                      else if (
+                        initKind === SyntaxKind.NoSubstitutionTemplateLiteral
+                      ) {
+                        const value = (
+                          initializer as NoSubstitutionTemplateLiteral
+                        ).getLiteralText();
                         values[propName] = value;
                       }
                       // For other expressions (variables, function calls, etc.), we skip the value
@@ -382,7 +434,10 @@ function extractInlineStyles(source: SourceFile): { properties: string[]; values
 /**
  * Extract style sources (SCSS modules, Tailwind, inline styles, etc.)
  */
-async function extractStyleSources(source: SourceFile, filePath: string): Promise<StyleSources> {
+async function extractStyleSources(
+  source: SourceFile,
+  filePath: string,
+): Promise<StyleSources> {
   const sources: StyleSources = {};
 
   // Extract SCSS module metadata
@@ -404,9 +459,12 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
 
   // Check for CSS module imports and parse them
   try {
-    const cssModuleImport = source.getImportDeclarations().find(imp => {
+    const cssModuleImport = source.getImportDeclarations().find((imp) => {
       const moduleSpecifier = imp.getModuleSpecifierValue();
-      return moduleSpecifier.endsWith('.module.css') || moduleSpecifier.endsWith('.css');
+      return (
+        moduleSpecifier.endsWith('.module.css') ||
+        moduleSpecifier.endsWith('.css')
+      );
     });
 
     if (cssModuleImport) {
@@ -433,8 +491,10 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
   // Extract Tailwind classes (using AST for better dynamic class support)
   try {
     const allClasses = extractTailwindClasses(source);
-    const hasTailwind = allClasses.some(c =>
-      /^(flex|grid|bg-|text-|p-|m-|rounded|shadow|border|w-|h-|hover:|focus:|sm:|md:|lg:|xl:|2xl:)/.test(c)
+    const hasTailwind = allClasses.some((c) =>
+      /^(flex|grid|bg-|text-|p-|m-|rounded|shadow|border|w-|h-|hover:|focus:|sm:|md:|lg:|xl:|2xl:)/.test(
+        c,
+      ),
     );
 
     if (hasTailwind) {
@@ -446,7 +506,7 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
           Object.entries(categorized).map(([key, set]) => [
             key,
             Array.from(set).sort().slice(0, 15), // Top 15 per category
-          ])
+          ]),
         ),
         ...(breakpoints.length > 0 && { breakpoints }),
         classCount: allClasses.length,
@@ -490,15 +550,20 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
 
   // Check for styled-components/emotion
   try {
-    const hasStyledComponents = source.getImportDeclarations().some(imp => {
+    const hasStyledComponents = source.getImportDeclarations().some((imp) => {
       const moduleSpecifier = imp.getModuleSpecifierValue();
-      return moduleSpecifier === 'styled-components' || moduleSpecifier === '@emotion/styled';
+      return (
+        moduleSpecifier === 'styled-components' ||
+        moduleSpecifier === '@emotion/styled'
+      );
     });
 
     if (hasStyledComponents) {
       const styledInfo = extractStyledComponents(source);
       sources.styledComponents = {
-        ...(styledInfo.components.length > 0 && { components: styledInfo.components }),
+        ...(styledInfo.components.length > 0 && {
+          components: styledInfo.components,
+        }),
         ...(styledInfo.hasTheme && { usesTheme: true }),
         ...(styledInfo.hasCssProps && { usesCssProp: true }),
       };
@@ -513,7 +578,7 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
 
   // Check for framer-motion
   try {
-    const hasMotion = source.getImportDeclarations().some(imp => {
+    const hasMotion = source.getImportDeclarations().some((imp) => {
       const moduleSpecifier = imp.getModuleSpecifierValue();
       return moduleSpecifier === 'framer-motion';
     });
@@ -521,10 +586,15 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
     // Also check for motion.* usage using AST
     let hasMotionUsage = false;
     try {
-      hasMotionUsage = source.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression).some(propAccess => {
-        const expression = propAccess.getExpression();
-        return expression.getKind() === SyntaxKind.Identifier && expression.getText() === 'motion';
-      });
+      hasMotionUsage = source
+        .getDescendantsOfKind(SyntaxKind.PropertyAccessExpression)
+        .some((propAccess) => {
+          const expression = propAccess.getExpression();
+          return (
+            expression.getKind() === SyntaxKind.Identifier &&
+            expression.getText() === 'motion'
+          );
+        });
     } catch {
       // If AST traversal fails, continue without motion.* detection
     }
@@ -532,8 +602,12 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
     if (hasMotion || hasMotionUsage) {
       const motionInfo = extractMotionConfig(source);
       sources.motion = {
-        ...(motionInfo.components.length > 0 && { components: motionInfo.components }),
-        ...(motionInfo.variants.length > 0 && { variants: motionInfo.variants }),
+        ...(motionInfo.components.length > 0 && {
+          components: motionInfo.components,
+        }),
+        ...(motionInfo.variants.length > 0 && {
+          variants: motionInfo.variants,
+        }),
         features: {
           ...(motionInfo.hasGestures && { gestures: true }),
           ...(motionInfo.hasLayout && { layoutAnimations: true }),
@@ -551,15 +625,20 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
 
   // Check for Material UI
   try {
-    const hasMaterialUI = source.getImportDeclarations().some(imp => {
+    const hasMaterialUI = source.getImportDeclarations().some((imp) => {
       const moduleSpecifier = imp.getModuleSpecifierValue();
-      return /^@mui\//.test(moduleSpecifier) || /^@material-ui\//.test(moduleSpecifier);
+      return (
+        /^@mui\//.test(moduleSpecifier) ||
+        /^@material-ui\//.test(moduleSpecifier)
+      );
     });
 
     if (hasMaterialUI) {
       const muiInfo = extractMaterialUI(source);
       sources.materialUI = {
-        ...(muiInfo.components.length > 0 && { components: muiInfo.components }),
+        ...(muiInfo.components.length > 0 && {
+          components: muiInfo.components,
+        }),
         ...(muiInfo.packages.length > 0 && { packages: muiInfo.packages }),
         features: muiInfo.features,
       };
@@ -574,7 +653,7 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
 
   // Check for ShadCN/UI
   try {
-    const hasShadcnUI = source.getImportDeclarations().some(imp => {
+    const hasShadcnUI = source.getImportDeclarations().some((imp) => {
       const moduleSpecifier = imp.getModuleSpecifierValue();
       return (
         /^@\/components\/ui\//.test(moduleSpecifier) ||
@@ -587,8 +666,12 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
     if (hasShadcnUI) {
       const shadcnInfo = extractShadcnUI(source);
       sources.shadcnUI = {
-        ...(shadcnInfo.components.length > 0 && { components: shadcnInfo.components }),
-        ...(Object.keys(shadcnInfo.variants).length > 0 && { variants: shadcnInfo.variants }),
+        ...(shadcnInfo.components.length > 0 && {
+          components: shadcnInfo.components,
+        }),
+        ...(Object.keys(shadcnInfo.variants).length > 0 && {
+          variants: shadcnInfo.variants,
+        }),
         ...(shadcnInfo.sizes.length > 0 && { sizes: shadcnInfo.sizes }),
         features: shadcnInfo.features,
       };
@@ -603,7 +686,7 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
 
   // Check for Radix UI
   try {
-    const hasRadixUI = source.getImportDeclarations().some(imp => {
+    const hasRadixUI = source.getImportDeclarations().some((imp) => {
       const moduleSpecifier = imp.getModuleSpecifierValue();
       return /^@radix-ui\/react-/.test(moduleSpecifier);
     });
@@ -611,13 +694,19 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
     if (hasRadixUI) {
       const radixInfo = extractRadixUI(source);
       sources.radixUI = {
-        ...(Object.keys(radixInfo.primitives).length > 0 && { primitives: radixInfo.primitives }),
-        ...(radixInfo.patterns.controlled.length > 0 ||
-            radixInfo.patterns.uncontrolled.length > 0 ||
-            radixInfo.patterns.portals > 0 ||
-            radixInfo.patterns.asChild > 0) && { patterns: radixInfo.patterns },
-        ...(Object.keys(radixInfo.accessibility).length > 0 && { accessibility: radixInfo.accessibility }),
-        ...(radixInfo.features.primitiveCount !== undefined && { features: radixInfo.features }),
+        ...(Object.keys(radixInfo.primitives).length > 0 && {
+          primitives: radixInfo.primitives,
+        }),
+        ...((radixInfo.patterns.controlled.length > 0 ||
+          radixInfo.patterns.uncontrolled.length > 0 ||
+          radixInfo.patterns.portals > 0 ||
+          radixInfo.patterns.asChild > 0) && { patterns: radixInfo.patterns }),
+        ...(Object.keys(radixInfo.accessibility).length > 0 && {
+          accessibility: radixInfo.accessibility,
+        }),
+        ...(radixInfo.features.primitiveCount !== undefined && {
+          features: radixInfo.features,
+        }),
       };
     }
   } catch (error) {
@@ -630,7 +719,7 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
 
   // Check for Chakra UI
   try {
-    const hasChakraUI = source.getImportDeclarations().some(imp => {
+    const hasChakraUI = source.getImportDeclarations().some((imp) => {
       const moduleSpecifier = imp.getModuleSpecifierValue();
       return /^@chakra-ui\//.test(moduleSpecifier);
     });
@@ -638,8 +727,12 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
     if (hasChakraUI) {
       const chakraInfo = extractChakraUI(source);
       sources.chakraUI = {
-        ...(chakraInfo.components.length > 0 && { components: chakraInfo.components }),
-        ...(chakraInfo.packages.length > 0 && { packages: chakraInfo.packages }),
+        ...(chakraInfo.components.length > 0 && {
+          components: chakraInfo.components,
+        }),
+        ...(chakraInfo.packages.length > 0 && {
+          packages: chakraInfo.packages,
+        }),
         features: chakraInfo.features,
       };
     }
@@ -653,15 +746,19 @@ async function extractStyleSources(source: SourceFile, filePath: string): Promis
 
   // Check for Ant Design
   try {
-    const hasAntDesign = source.getImportDeclarations().some(imp => {
+    const hasAntDesign = source.getImportDeclarations().some((imp) => {
       const moduleSpecifier = imp.getModuleSpecifierValue();
-      return moduleSpecifier === 'antd' || /^@ant-design\//.test(moduleSpecifier);
+      return (
+        moduleSpecifier === 'antd' || /^@ant-design\//.test(moduleSpecifier)
+      );
     });
 
     if (hasAntDesign) {
       const antdInfo = extractAntDesign(source);
       sources.antd = {
-        ...(antdInfo.components.length > 0 && { components: antdInfo.components }),
+        ...(antdInfo.components.length > 0 && {
+          components: antdInfo.components,
+        }),
         ...(antdInfo.packages.length > 0 && { packages: antdInfo.packages }),
         features: antdInfo.features,
       };

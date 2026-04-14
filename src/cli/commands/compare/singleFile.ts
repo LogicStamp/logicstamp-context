@@ -18,12 +18,15 @@ export async function compareFolderContext(
   newContextPath: string,
   stats: boolean,
   quiet?: boolean,
-  gitBaseline = false
-): Promise<{ result: CompareResult; tokenDelta?: { gpt4: number; claude: number } }> {
+  gitBaseline = false,
+): Promise<{
+  result: CompareResult;
+  tokenDelta?: { gpt4: number; claude: number };
+}> {
   // Load both files
   let oldContent: string;
   let newContent: string;
-  
+
   try {
     oldContent = await readFile(oldContextPath, 'utf8');
   } catch (error) {
@@ -33,9 +36,11 @@ export async function compareFolderContext(
       message: err.message,
       code: err.code,
     });
-    throw new Error(`Failed to read old context file "${oldContextPath}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`);
+    throw new Error(
+      `Failed to read old context file "${oldContextPath}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`,
+    );
   }
-  
+
   try {
     newContent = await readFile(newContextPath, 'utf8');
   } catch (error) {
@@ -45,7 +50,9 @@ export async function compareFolderContext(
       message: err.message,
       code: err.code,
     });
-    throw new Error(`Failed to read new context file "${newContextPath}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`);
+    throw new Error(
+      `Failed to read new context file "${newContextPath}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`,
+    );
   }
 
   let oldBundles: LogicStampBundle[];
@@ -91,11 +98,13 @@ export async function compareFolderContext(
  * Main compare command
  * Returns the comparison result instead of exiting, allowing caller to handle approval logic
  */
-export async function compareCommand(options: CompareOptions): Promise<CompareResult> {
+export async function compareCommand(
+  options: CompareOptions,
+): Promise<CompareResult> {
   // Load both files
   let oldContent: string;
   let newContent: string;
-  
+
   try {
     oldContent = await readFile(options.oldFile, 'utf8');
   } catch (error) {
@@ -105,9 +114,11 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
       message: err.message,
       code: err.code,
     });
-    throw new Error(`Failed to read old file "${options.oldFile}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`);
+    throw new Error(
+      `Failed to read old file "${options.oldFile}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`,
+    );
   }
-  
+
   try {
     newContent = await readFile(options.newFile, 'utf8');
   } catch (error) {
@@ -117,7 +128,9 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
       message: err.message,
       code: err.code,
     });
-    throw new Error(`Failed to read new file "${options.newFile}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`);
+    throw new Error(
+      `Failed to read new file "${options.newFile}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`,
+    );
   }
 
   let oldBundles: LogicStampBundle[];
@@ -150,7 +163,9 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
     // Minimal output in quiet mode for PASS
     process.stdout.write('✓\n');
   } else if (!options.quiet || result.status === 'DRIFT') {
-    console.log(`\n${result.status === 'PASS' ? '✅' : '⚠️'}  ${result.status}\n`);
+    console.log(
+      `\n${result.status === 'PASS' ? '✅' : '⚠️'}  ${result.status}\n`,
+    );
   }
 
   if (result.status === 'DRIFT') {
@@ -158,7 +173,7 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
       if (!options.quiet) {
         console.log(`Added components: ${result.added.length}`);
       }
-      result.added.forEach(id => console.log(`  + ${id}`));
+      result.added.forEach((id) => console.log(`  + ${id}`));
       if (!options.quiet) {
         console.log();
       }
@@ -168,7 +183,7 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
       if (!options.quiet) {
         console.log(`Removed components: ${result.removed.length}`);
       }
-      result.removed.forEach(id => console.log(`  - ${id}`));
+      result.removed.forEach((id) => console.log(`  - ${id}`));
       if (!options.quiet) {
         console.log();
       }
@@ -180,19 +195,26 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
       }
       result.changed.forEach(({ id, deltas }) => {
         console.log(`  ~ ${id}`);
-        deltas.forEach(delta => {
+        deltas.forEach((delta) => {
           console.log(`    Δ ${delta.type}`);
 
           if (delta.type === 'hash') {
             console.log(`      old: ${delta.old}`);
             console.log(`      new: ${delta.new}`);
-          } else if (delta.type === 'imports' || delta.type === 'hooks' || delta.type === 'functions' ||
-                     delta.type === 'components' || delta.type === 'variables') {
+          } else if (
+            delta.type === 'imports' ||
+            delta.type === 'hooks' ||
+            delta.type === 'functions' ||
+            delta.type === 'components' ||
+            delta.type === 'variables'
+          ) {
             const oldSet = new Set(delta.old);
             const newSet = new Set(delta.new);
 
             // Find removed items
-            const removed = delta.old.filter((item: string) => !newSet.has(item));
+            const removed = delta.old.filter(
+              (item: string) => !newSet.has(item),
+            );
             // Find added items
             const added = delta.new.filter((item: string) => !oldSet.has(item));
 
@@ -212,7 +234,7 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
             // If objects are passed, extract keys; if arrays, use directly
             let oldArray: string[];
             let newArray: string[];
-            
+
             if (Array.isArray(delta.old)) {
               oldArray = delta.old;
             } else if (delta.old && typeof delta.old === 'object') {
@@ -222,7 +244,7 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
               // Fallback: treat as empty array
               oldArray = [];
             }
-            
+
             if (Array.isArray(delta.new)) {
               newArray = delta.new;
             } else if (delta.new && typeof delta.new === 'object') {
@@ -232,12 +254,14 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
               // Fallback: treat as empty array
               newArray = [];
             }
-            
+
             const oldSet = new Set(oldArray);
             const newSet = new Set(newArray);
 
             // Find removed items
-            const removed = oldArray.filter((item: string) => !newSet.has(item));
+            const removed = oldArray.filter(
+              (item: string) => !newSet.has(item),
+            );
             // Find added items
             const added = newArray.filter((item: string) => !oldSet.has(item));
 
@@ -247,7 +271,11 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
             if (added.length > 0) {
               added.forEach((item: string) => console.log(`      + ${item}`));
             }
-            if (removed.length === 0 && added.length === 0 && oldArray.length > 0) {
+            if (
+              removed.length === 0 &&
+              added.length === 0 &&
+              oldArray.length > 0
+            ) {
               // Only show "order changed" if arrays are non-empty and identical
               console.log(`      (order changed)`);
             }
@@ -266,7 +294,10 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
             // Find changed state variables (type changed)
             const changed = oldKeys.filter((key: string) => {
               if (newSet.has(key)) {
-                return JSON.stringify(oldState[key]) !== JSON.stringify(newState[key]);
+                return (
+                  JSON.stringify(oldState[key]) !==
+                  JSON.stringify(newState[key])
+                );
               }
               return false;
             });
@@ -279,7 +310,9 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
             }
             if (changed.length > 0) {
               changed.forEach((key: string) => {
-                console.log(`      ~ ${key}: ${JSON.stringify(oldState[key])} → ${JSON.stringify(newState[key])}`);
+                console.log(
+                  `      ~ ${key}: ${JSON.stringify(oldState[key])} → ${JSON.stringify(newState[key])}`,
+                );
               });
             }
           } else if (delta.type === 'exports') {
@@ -287,14 +320,20 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
           } else if (delta.type === 'apiSignature') {
             const oldSig = delta.old as Record<string, any> | null;
             const newSig = delta.new as Record<string, any> | null;
-            
+
             // Handle null/undefined cases
             if (!oldSig && newSig) {
               console.log(`      + Added API signature`);
-              if (newSig.parameters) console.log(`        parameters: ${JSON.stringify(newSig.parameters)}`);
-              if (newSig.returnType) console.log(`        returnType: ${newSig.returnType}`);
-              if (newSig.requestType) console.log(`        requestType: ${newSig.requestType}`);
-              if (newSig.responseType) console.log(`        responseType: ${newSig.responseType}`);
+              if (newSig.parameters)
+                console.log(
+                  `        parameters: ${JSON.stringify(newSig.parameters)}`,
+                );
+              if (newSig.returnType)
+                console.log(`        returnType: ${newSig.returnType}`);
+              if (newSig.requestType)
+                console.log(`        requestType: ${newSig.requestType}`);
+              if (newSig.responseType)
+                console.log(`        responseType: ${newSig.responseType}`);
             } else if (oldSig && !newSig) {
               console.log(`      - Removed API signature`);
             } else if (oldSig && newSig) {
@@ -303,28 +342,44 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
               const newParams = newSig.parameters ?? {};
               const oldKeys = Object.keys(oldParams);
               const newKeys = Object.keys(newParams);
-              const paramRemoved = oldKeys.filter(k => !(k in newParams));
-              const paramAdded = newKeys.filter(k => !(k in oldParams));
-              const paramChanged = oldKeys.filter(k => k in newParams && oldParams[k] !== newParams[k]);
-              
+              const paramRemoved = oldKeys.filter((k) => !(k in newParams));
+              const paramAdded = newKeys.filter((k) => !(k in oldParams));
+              const paramChanged = oldKeys.filter(
+                (k) => k in newParams && oldParams[k] !== newParams[k],
+              );
+
               if (paramRemoved.length > 0) {
-                paramRemoved.forEach(k => console.log(`      - parameters.${k}: ${oldParams[k]}`));
+                paramRemoved.forEach((k) =>
+                  console.log(`      - parameters.${k}: ${oldParams[k]}`),
+                );
               }
               if (paramAdded.length > 0) {
-                paramAdded.forEach(k => console.log(`      + parameters.${k}: ${newParams[k]}`));
+                paramAdded.forEach((k) =>
+                  console.log(`      + parameters.${k}: ${newParams[k]}`),
+                );
               }
               if (paramChanged.length > 0) {
-                paramChanged.forEach(k => console.log(`      ~ parameters.${k}: ${oldParams[k]} → ${newParams[k]}`));
+                paramChanged.forEach((k) =>
+                  console.log(
+                    `      ~ parameters.${k}: ${oldParams[k]} → ${newParams[k]}`,
+                  ),
+                );
               }
-              
+
               if (oldSig.returnType !== newSig.returnType) {
-                console.log(`      ~ returnType: ${oldSig.returnType ?? '(none)'} → ${newSig.returnType ?? '(none)'}`);
+                console.log(
+                  `      ~ returnType: ${oldSig.returnType ?? '(none)'} → ${newSig.returnType ?? '(none)'}`,
+                );
               }
               if (oldSig.requestType !== newSig.requestType) {
-                console.log(`      ~ requestType: ${oldSig.requestType ?? '(none)'} → ${newSig.requestType ?? '(none)'}`);
+                console.log(
+                  `      ~ requestType: ${oldSig.requestType ?? '(none)'} → ${newSig.requestType ?? '(none)'}`,
+                );
               }
               if (oldSig.responseType !== newSig.responseType) {
-                console.log(`      ~ responseType: ${oldSig.responseType ?? '(none)'} → ${newSig.responseType ?? '(none)'}`);
+                console.log(
+                  `      ~ responseType: ${oldSig.responseType ?? '(none)'} → ${newSig.responseType ?? '(none)'}`,
+                );
               }
             }
           }
@@ -341,25 +396,34 @@ export async function compareCommand(options: CompareOptions): Promise<CompareRe
     const oldTokens = await calculateTokens(oldBundles);
     const newTokens = await calculateTokens(newBundles);
     const deltaStat = newTokens.gpt4 - oldTokens.gpt4;
-    
+
     let deltaPercentStr = '0.00';
     let deltaPercentNum = 0;
-    
+
     if (oldTokens.gpt4 > 0) {
       deltaPercentNum = (deltaStat / oldTokens.gpt4) * 100;
       deltaPercentStr = deltaPercentNum.toFixed(2);
     }
-    
+
     const sign = deltaStat > 0 ? '+' : '';
-    const percentSign = deltaPercentNum > 0 ? '+' : deltaPercentNum < 0 ? '' : '';
+    const percentSign =
+      deltaPercentNum > 0 ? '+' : deltaPercentNum < 0 ? '' : '';
 
     console.log('Token Stats:');
     console.log(`  ⚠️  Current mode = tokenizer-based.`);
     console.log(`      Other modes / raw source = heuristic.`);
-    console.log(`      For precise per-mode breakdown, use "stamp context --compare-modes".`);
-    console.log(`  Old: ${formatTokenCount(oldTokens.gpt4)} (GPT-4o-mini) | ${formatTokenCount(oldTokens.claude)} (Claude)`);
-    console.log(`  New: ${formatTokenCount(newTokens.gpt4)} (GPT-4o-mini) | ${formatTokenCount(newTokens.claude)} (Claude)`);
-    console.log(`  Δ ${sign}${formatTokenCount(deltaStat)} (${percentSign}${deltaPercentStr}%)\n`);
+    console.log(
+      `      For precise per-mode breakdown, use "stamp context --compare-modes".`,
+    );
+    console.log(
+      `  Old: ${formatTokenCount(oldTokens.gpt4)} (GPT-4o-mini) | ${formatTokenCount(oldTokens.claude)} (Claude)`,
+    );
+    console.log(
+      `  New: ${formatTokenCount(newTokens.gpt4)} (GPT-4o-mini) | ${formatTokenCount(newTokens.claude)} (Claude)`,
+    );
+    console.log(
+      `  Δ ${sign}${formatTokenCount(deltaStat)} (${percentSign}${deltaPercentStr}%)\n`,
+    );
   }
 
   return result;

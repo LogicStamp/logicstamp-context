@@ -94,7 +94,10 @@ describe('Material UI Extractor', () => {
       const result = extractMaterialUI(sourceFile);
 
       expectComponents(result, ['Button', 'TextField']);
-      expectPackages(result, ['@mui/material/Button', '@mui/material/TextField']);
+      expectPackages(result, [
+        '@mui/material/Button',
+        '@mui/material/TextField',
+      ]);
     });
 
     it('should detect default imports with aliases (derives canonical name from module path)', () => {
@@ -117,7 +120,10 @@ describe('Material UI Extractor', () => {
 
       // Should detect canonical component names, not the aliases
       expectComponents(result, ['Button', 'TextField']);
-      expectPackages(result, ['@mui/material/Button', '@mui/material/TextField']);
+      expectPackages(result, [
+        '@mui/material/Button',
+        '@mui/material/TextField',
+      ]);
     });
   });
 
@@ -171,7 +177,9 @@ describe('Material UI Extractor', () => {
   });
 
   describe('Theme Detection', () => {
-    const themeTestCases: StyleExtractorTestCase<ReturnType<typeof extractMaterialUI>>[] = [
+    const themeTestCases: StyleExtractorTestCase<
+      ReturnType<typeof extractMaterialUI>
+    >[] = [
       {
         description: 'should detect theme usage via useTheme hook',
         sourceCode: `
@@ -182,7 +190,7 @@ describe('Material UI Extractor', () => {
             return <div>Hello</div>;
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesTheme).toBe(true);
         },
       },
@@ -195,7 +203,7 @@ describe('Material UI Extractor', () => {
             return <ThemeProvider theme={theme}>Hello</ThemeProvider>;
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesTheme).toBe(true);
         },
       },
@@ -208,7 +216,7 @@ describe('Material UI Extractor', () => {
             palette: { primary: { main: '#1976d2' } }
           });
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesTheme).toBe(true);
         },
       },
@@ -221,7 +229,7 @@ describe('Material UI Extractor', () => {
             color: \${props => props.theme.palette.primary.main};
           \`;
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesTheme).toBe(true);
         },
       },
@@ -237,7 +245,7 @@ describe('Material UI Extractor', () => {
             return <div style={{ color: primaryColor, padding: spacing }}>Hello</div>;
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesTheme).toBe(true);
         },
       },
@@ -247,7 +255,9 @@ describe('Material UI Extractor', () => {
   });
 
   describe('Styled Detection', () => {
-    const styledTestCases: StyleExtractorTestCase<ReturnType<typeof extractMaterialUI>>[] = [
+    const styledTestCases: StyleExtractorTestCase<
+      ReturnType<typeof extractMaterialUI>
+    >[] = [
       {
         description: 'should detect styled from @mui/material/styles',
         sourceCode: `
@@ -257,12 +267,13 @@ describe('Material UI Extractor', () => {
             padding: 1rem;
           \`;
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesStyled).toBe(true);
         },
       },
       {
-        description: 'should detect styled from legacy @material-ui/core/styles',
+        description:
+          'should detect styled from legacy @material-ui/core/styles',
         sourceCode: `
           import { styled } from '@material-ui/core/styles';
           
@@ -270,7 +281,7 @@ describe('Material UI Extractor', () => {
             padding: 1rem;
           \`;
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesStyled).toBe(true);
         },
       },
@@ -283,7 +294,7 @@ describe('Material UI Extractor', () => {
             padding: 1rem;
           \`;
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesStyled).toBe(true);
           expectPackages(result, ['@mui/system']);
         },
@@ -294,7 +305,9 @@ describe('Material UI Extractor', () => {
   });
 
   describe('makeStyles Detection', () => {
-    const makeStylesTestCases: StyleExtractorTestCase<ReturnType<typeof extractMaterialUI>>[] = [
+    const makeStylesTestCases: StyleExtractorTestCase<
+      ReturnType<typeof extractMaterialUI>
+    >[] = [
       {
         description: 'should detect makeStyles usage',
         sourceCode: `
@@ -304,7 +317,7 @@ describe('Material UI Extractor', () => {
             root: { padding: theme.spacing(2) }
           }));
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesMakeStyles).toBe(true);
         },
       },
@@ -317,7 +330,7 @@ describe('Material UI Extractor', () => {
             root: { padding: theme.spacing(2) }
           }));
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesMakeStyles).toBe(true);
         },
       },
@@ -348,7 +361,9 @@ describe('Material UI Extractor', () => {
   });
 
   describe('System Props Detection', () => {
-    const systemPropsTestCases: StyleExtractorTestCase<ReturnType<typeof extractMaterialUI>>[] = [
+    const systemPropsTestCases: StyleExtractorTestCase<
+      ReturnType<typeof extractMaterialUI>
+    >[] = [
       {
         description: 'should detect system props on Box component',
         sourceCode: `
@@ -362,7 +377,7 @@ describe('Material UI Extractor', () => {
             );
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesSystemProps).toBe(true);
         },
       },
@@ -380,7 +395,7 @@ describe('Material UI Extractor', () => {
             );
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesSystemProps).toBe(true);
         },
       },
@@ -397,7 +412,7 @@ describe('Material UI Extractor', () => {
             );
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesSystemProps).toBe(true);
         },
       },
@@ -414,7 +429,7 @@ describe('Material UI Extractor', () => {
             );
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesSystemProps).toBe(true);
         },
       },

@@ -94,7 +94,9 @@ describe('Style Extractor', () => {
 
       expect(result).toBeDefined();
       expect(result?.styleSources?.styledComponents).toBeDefined();
-      expect(result?.styleSources?.styledComponents?.components).toContain('button');
+      expect(result?.styleSources?.styledComponents?.components).toContain(
+        'button',
+      );
     });
 
     it('should extract framer-motion metadata', async () => {
@@ -146,9 +148,13 @@ describe('Style Extractor', () => {
       expect(result).toBeDefined();
       expect(result?.styleSources?.materialUI).toBeDefined();
       expect(result?.styleSources?.materialUI?.components).toContain('Button');
-      expect(result?.styleSources?.materialUI?.components).toContain('TextField');
+      expect(result?.styleSources?.materialUI?.components).toContain(
+        'TextField',
+      );
       expect(result?.styleSources?.materialUI?.components).toContain('Card');
-      expect(result?.styleSources?.materialUI?.packages).toContain('@mui/material');
+      expect(result?.styleSources?.materialUI?.packages).toContain(
+        '@mui/material',
+      );
       expect(result?.styleSources?.materialUI?.features?.usesSxProp).toBe(true);
     });
 
@@ -165,11 +171,13 @@ describe('Style Extractor', () => {
 
       expect(result).toBeDefined();
       expect(result?.styleSources?.inlineStyles).toBeDefined();
-      
+
       // Should be an object with properties and values
       if (typeof result?.styleSources?.inlineStyles === 'object') {
         expect(result.styleSources.inlineStyles.properties).toContain('color');
-        expect(result.styleSources.inlineStyles.properties).toContain('padding');
+        expect(result.styleSources.inlineStyles.properties).toContain(
+          'padding',
+        );
         expect(result.styleSources.inlineStyles.values).toBeDefined();
         expect(result.styleSources.inlineStyles.values?.color).toBe('blue');
         expect(result.styleSources.inlineStyles.values?.padding).toBe('1rem');
@@ -203,20 +211,34 @@ describe('Style Extractor', () => {
 
       expect(result).toBeDefined();
       if (typeof result?.styleSources?.inlineStyles === 'object') {
-        expect(result.styleSources.inlineStyles.properties).toContain('padding');
+        expect(result.styleSources.inlineStyles.properties).toContain(
+          'padding',
+        );
         expect(result.styleSources.inlineStyles.properties).toContain('margin');
-        expect(result.styleSources.inlineStyles.properties).toContain('opacity');
-        expect(result.styleSources.inlineStyles.properties).toContain('display');
-        expect(result.styleSources.inlineStyles.properties).toContain('animationDelay');
-        expect(result.styleSources.inlineStyles.properties).toContain('transformOrigin');
-        
+        expect(result.styleSources.inlineStyles.properties).toContain(
+          'opacity',
+        );
+        expect(result.styleSources.inlineStyles.properties).toContain(
+          'display',
+        );
+        expect(result.styleSources.inlineStyles.properties).toContain(
+          'animationDelay',
+        );
+        expect(result.styleSources.inlineStyles.properties).toContain(
+          'transformOrigin',
+        );
+
         // Check extracted values
         expect(result.styleSources.inlineStyles.values?.padding).toBe('1rem');
         expect(result.styleSources.inlineStyles.values?.margin).toBe('10');
         expect(result.styleSources.inlineStyles.values?.opacity).toBe('0.5');
         expect(result.styleSources.inlineStyles.values?.display).toBe('true');
-        expect(result.styleSources.inlineStyles.values?.animationDelay).toBe('2s');
-        expect(result.styleSources.inlineStyles.values?.transformOrigin).toBe('center');
+        expect(result.styleSources.inlineStyles.values?.animationDelay).toBe(
+          '2s',
+        );
+        expect(result.styleSources.inlineStyles.values?.transformOrigin).toBe(
+          'center',
+        );
       }
     });
 
@@ -251,11 +273,17 @@ describe('Style Extractor', () => {
       expect(result?.styleSources?.styledJsx).toBeDefined();
       expect(result?.styleSources?.styledJsx?.css).toContain('.container');
       expect(result?.styleSources?.styledJsx?.css).toContain('padding: 1rem');
-      expect(result?.styleSources?.styledJsx?.css).toContain('@keyframes border-spin');
-      expect(result?.styleSources?.styledJsx?.selectors).toContain('.container');
+      expect(result?.styleSources?.styledJsx?.css).toContain(
+        '@keyframes border-spin',
+      );
+      expect(result?.styleSources?.styledJsx?.selectors).toContain(
+        '.container',
+      );
       expect(result?.styleSources?.styledJsx?.properties).toContain('padding');
       expect(result?.styleSources?.styledJsx?.properties).toContain('color');
-      expect(result?.styleSources?.styledJsx?.properties).toContain('background-color');
+      expect(result?.styleSources?.styledJsx?.properties).toContain(
+        'background-color',
+      );
       expect(result?.styleSources?.styledJsx?.global).toBeUndefined(); // Should not be global
     });
 
@@ -408,7 +436,9 @@ describe('Style Extractor', () => {
 
       expect(result).toBeDefined();
       expect(result?.styleSources?.tailwind?.breakpoints).toBeDefined();
-      expect(result?.styleSources?.tailwind?.breakpoints?.length).toBeGreaterThan(0);
+      expect(
+        result?.styleSources?.tailwind?.breakpoints?.length,
+      ).toBeGreaterThan(0);
     });
 
     it('should categorize Tailwind classes', async () => {
@@ -493,7 +523,9 @@ describe('Style Extractor', () => {
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
       expect(result).toBeDefined();
-      expect(result?.styleSources?.motion?.features?.layoutAnimations).toBe(true);
+      expect(result?.styleSources?.motion?.features?.layoutAnimations).toBe(
+        true,
+      );
     });
 
     it('should detect motion viewport animations', async () => {
@@ -512,7 +544,9 @@ describe('Style Extractor', () => {
       const result = await extractStyleMetadata(sourceFile, tempDir);
 
       expect(result).toBeDefined();
-      expect(result?.styleSources?.motion?.features?.viewportAnimations).toBe(true);
+      expect(result?.styleSources?.motion?.features?.viewportAnimations).toBe(
+        true,
+      );
     });
 
     it('should extract styled-components theme usage', async () => {
@@ -588,7 +622,7 @@ describe('Style Extractor', () => {
 
       // Should not throw, should return partial results
       const result = await extractStyleMetadata(sourceFile, tempDir);
-      
+
       // Should still be able to extract other metadata if available
       expect(result).toBeDefined();
     });
@@ -637,7 +671,7 @@ describe('Style Extractor', () => {
           );
         }
         `,
-        'test.tsx'
+        'test.tsx',
       );
 
       // Should not throw
@@ -784,8 +818,12 @@ describe('Style Extractor', () => {
 
       expect(result?.styleSources?.tailwind?.categoriesUsed).toBeDefined();
       expect(result?.styleSources?.tailwind?.categories).toBeUndefined();
-      expect(result?.styleSources?.tailwind?.categoriesUsed).toContain('layout');
-      expect(result?.styleSources?.tailwind?.categoriesUsed).toContain('spacing');
+      expect(result?.styleSources?.tailwind?.categoriesUsed).toContain(
+        'layout',
+      );
+      expect(result?.styleSources?.tailwind?.categoriesUsed).toContain(
+        'spacing',
+      );
     });
 
     it('full mode should have categories with class arrays', async () => {
@@ -800,7 +838,9 @@ describe('Style Extractor', () => {
 
       expect(result?.styleSources?.tailwind?.categories).toBeDefined();
       expect(result?.styleSources?.tailwind?.categoriesUsed).toBeUndefined();
-      expect(result?.styleSources?.tailwind?.categories?.layout).toContain('flex');
+      expect(result?.styleSources?.tailwind?.categories?.layout).toContain(
+        'flex',
+      );
     });
 
     it('lean mode should keep features but drop component arrays', async () => {
@@ -860,4 +900,3 @@ describe('Style Extractor', () => {
     });
   });
 });
-

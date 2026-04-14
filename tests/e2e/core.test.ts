@@ -4,7 +4,11 @@ import { extractFromFile } from '../../src/core/astParser.js';
 import { buildContract } from '../../src/core/contractBuilder.js';
 import { buildDependencyGraph } from '../../src/core/manifest.js';
 import { pack } from '../../src/core/pack.js';
-import { readFileWithText, normalizeEntryId, getRelativePath } from '../../src/utils/fsx.js';
+import {
+  readFileWithText,
+  normalizeEntryId,
+  getRelativePath,
+} from '../../src/utils/fsx.js';
 import type { UIFContract } from '../../src/types/UIFContract.js';
 
 describe('Core Modules End-to-End Tests', () => {
@@ -129,12 +133,9 @@ describe('Core Modules End-to-End Tests', () => {
       const { text } = await readFileWithText(buttonPath);
 
       // Test with different valid presets
-      const presets: Array<'submit-only' | 'nav-only' | 'display-only' | 'none'> = [
-        'submit-only',
-        'nav-only',
-        'display-only',
-        'none',
-      ];
+      const presets: Array<
+        'submit-only' | 'nav-only' | 'display-only' | 'none'
+      > = ['submit-only', 'nav-only', 'display-only', 'none'];
 
       for (const preset of presets) {
         const result = buildContract(buttonPath, ast, {
@@ -207,12 +208,14 @@ describe('Core Modules End-to-End Tests', () => {
       const manifest = buildDependencyGraph(contracts);
 
       // App should be a root (nothing imports it)
-      const appIsRoot = manifest.graph.roots.some(id => id.includes('App.tsx'));
+      const appIsRoot = manifest.graph.roots.some((id) =>
+        id.includes('App.tsx'),
+      );
       expect(appIsRoot).toBe(true);
 
       // Button should be a leaf (it doesn't import other components)
-      const buttonIsLeaf = manifest.graph.leaves.some(id =>
-        id.includes('Button.tsx')
+      const buttonIsLeaf = manifest.graph.leaves.some((id) =>
+        id.includes('Button.tsx'),
       );
       expect(buttonIsLeaf).toBe(true);
     });
@@ -241,8 +244,8 @@ describe('Core Modules End-to-End Tests', () => {
       const manifest = buildDependencyGraph(contracts);
 
       // Card should have Button in its dependencies
-      const cardNode = Object.values(manifest.components).find(node =>
-        node.entryId.includes('Card.tsx')
+      const cardNode = Object.values(manifest.components).find((node) =>
+        node.entryId.includes('Card.tsx'),
       );
 
       expect(cardNode).toBeDefined();
@@ -280,8 +283,9 @@ describe('Core Modules End-to-End Tests', () => {
       }
 
       const manifest = buildDependencyGraph(contracts);
-      const cardId = contracts.find(c => c.entryId.includes('Card.tsx'))
-        ?.entryId;
+      const cardId = contracts.find((c) =>
+        c.entryId.includes('Card.tsx'),
+      )?.entryId;
 
       if (cardId) {
         const bundle = await pack(
@@ -297,7 +301,7 @@ describe('Core Modules End-to-End Tests', () => {
             maxNodes: 100,
             contractsMap,
           },
-          fixturesPath
+          fixturesPath,
         );
 
         expect(bundle).toBeDefined();
@@ -341,8 +345,9 @@ describe('Core Modules End-to-End Tests', () => {
       }
 
       const manifest = buildDependencyGraph(contracts);
-      const appId = contracts.find(c => c.entryId.includes('App.tsx'))
-        ?.entryId;
+      const appId = contracts.find((c) =>
+        c.entryId.includes('App.tsx'),
+      )?.entryId;
 
       if (appId) {
         // Bundle with depth 0 (only App)
@@ -359,7 +364,7 @@ describe('Core Modules End-to-End Tests', () => {
             maxNodes: 100,
             contractsMap,
           },
-          fixturesPath
+          fixturesPath,
         );
 
         // Bundle with depth 2 (App -> Card -> Button)
@@ -376,12 +381,12 @@ describe('Core Modules End-to-End Tests', () => {
             maxNodes: 100,
             contractsMap,
           },
-          fixturesPath
+          fixturesPath,
         );
 
         // Deeper bundle should have more nodes
         expect(bundleDepth2.graph.nodes.length).toBeGreaterThanOrEqual(
-          bundleDepth0.graph.nodes.length
+          bundleDepth0.graph.nodes.length,
         );
       }
     });
@@ -411,8 +416,9 @@ describe('Core Modules End-to-End Tests', () => {
       }
 
       const manifest = buildDependencyGraph(contracts);
-      const appId = contracts.find(c => c.entryId.includes('App.tsx'))
-        ?.entryId;
+      const appId = contracts.find((c) =>
+        c.entryId.includes('App.tsx'),
+      )?.entryId;
 
       if (appId) {
         const bundle = await pack(
@@ -428,7 +434,7 @@ describe('Core Modules End-to-End Tests', () => {
             maxNodes: 2, // Very restrictive limit
             contractsMap,
           },
-          fixturesPath
+          fixturesPath,
         );
 
         expect(bundle.graph.nodes.length).toBeLessThanOrEqual(2);
@@ -481,7 +487,7 @@ describe('Core Modules End-to-End Tests', () => {
             maxNodes: 100,
             contractsMap,
           },
-          fixturesPath
+          fixturesPath,
         );
 
         bundles.push(bundle);
@@ -494,7 +500,7 @@ describe('Core Modules End-to-End Tests', () => {
       expect(bundles.length).toBe(manifest.graph.roots.length);
 
       // Verify bundle quality
-      bundles.forEach(bundle => {
+      bundles.forEach((bundle) => {
         expect(bundle.type).toBe('LogicStampBundle');
         expect(bundle.graph.nodes.length).toBeGreaterThan(0);
         expect(bundle.bundleHash).toBeDefined();

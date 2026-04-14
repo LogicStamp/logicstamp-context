@@ -26,8 +26,12 @@ describe('handleValidate', () => {
   });
 
   it('should show help when --help flag is provided', async () => {
-    const printFoxSpy = vi.spyOn(initHandler, 'printFoxIcon').mockImplementation(() => {});
-    const getHelpSpy = vi.spyOn(parser, 'getValidateHelp').mockReturnValue('Validate help text');
+    const printFoxSpy = vi
+      .spyOn(initHandler, 'printFoxIcon')
+      .mockImplementation(() => {});
+    const getHelpSpy = vi
+      .spyOn(parser, 'getValidateHelp')
+      .mockReturnValue('Validate help text');
 
     await handleValidate(['--help']);
 
@@ -38,8 +42,12 @@ describe('handleValidate', () => {
   });
 
   it('should show help when -h flag is provided', async () => {
-    const printFoxSpy = vi.spyOn(initHandler, 'printFoxIcon').mockImplementation(() => {});
-    const getHelpSpy = vi.spyOn(parser, 'getValidateHelp').mockReturnValue('Validate help text');
+    const printFoxSpy = vi
+      .spyOn(initHandler, 'printFoxIcon')
+      .mockImplementation(() => {});
+    const getHelpSpy = vi
+      .spyOn(parser, 'getValidateHelp')
+      .mockReturnValue('Validate help text');
 
     await handleValidate(['-h']);
 
@@ -49,7 +57,9 @@ describe('handleValidate', () => {
   });
 
   it('should call validateCommand with parsed options', async () => {
-    const validateSpy = vi.spyOn(validateCommand, 'validateCommand').mockResolvedValue(undefined);
+    const validateSpy = vi
+      .spyOn(validateCommand, 'validateCommand')
+      .mockResolvedValue(undefined);
     const parseSpy = vi.spyOn(parser, 'parseValidateArgs').mockReturnValue({
       quiet: false,
       filePath: 'context.json',
@@ -71,7 +81,10 @@ describe('handleValidate', () => {
 
     await handleValidate([]);
 
-    expect(console.error).toHaveBeenCalledWith('❌ Validation failed:', 'Validation failed');
+    expect(console.error).toHaveBeenCalledWith(
+      '❌ Validation failed:',
+      'Validation failed',
+    );
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 });

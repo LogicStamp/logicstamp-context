@@ -20,7 +20,10 @@ export interface BundleStats {
 export function calculateStats(bundles: LogicStampBundle[]): BundleStats {
   const totalNodes = bundles.reduce((sum, b) => sum + b.graph.nodes.length, 0);
   const totalEdges = bundles.reduce((sum, b) => sum + b.graph.edges.length, 0);
-  const totalMissing = bundles.reduce((sum, b) => sum + b.meta.missing.length, 0);
+  const totalMissing = bundles.reduce(
+    (sum, b) => sum + b.meta.missing.length,
+    0,
+  );
 
   return {
     totalNodes,
@@ -38,7 +41,7 @@ export function generateStatsOutput(
   bundles: LogicStampBundle[],
   stats: BundleStats,
   tokenEstimates: TokenEstimates,
-  elapsed: number
+  elapsed: number,
 ): object {
   return {
     totalComponents: contracts.length,
@@ -51,9 +54,18 @@ export function generateStatsOutput(
     tokensGPT4: tokenEstimates.currentGPT4,
     tokensClaude: tokenEstimates.currentClaude,
     modeEstimates: {
-      none: { gpt4: tokenEstimates.modeEstimates.none.gpt4, claude: tokenEstimates.modeEstimates.none.claude },
-      header: { gpt4: tokenEstimates.modeEstimates.header.gpt4, claude: tokenEstimates.modeEstimates.header.claude },
-      full: { gpt4: tokenEstimates.modeEstimates.full.gpt4, claude: tokenEstimates.modeEstimates.full.claude },
+      none: {
+        gpt4: tokenEstimates.modeEstimates.none.gpt4,
+        claude: tokenEstimates.modeEstimates.none.claude,
+      },
+      header: {
+        gpt4: tokenEstimates.modeEstimates.header.gpt4,
+        claude: tokenEstimates.modeEstimates.header.claude,
+      },
+      full: {
+        gpt4: tokenEstimates.modeEstimates.full.gpt4,
+        claude: tokenEstimates.modeEstimates.full.claude,
+      },
     },
     savingsGPT4: tokenEstimates.savingsGPT4,
     savingsClaude: tokenEstimates.savingsClaude,
@@ -64,7 +76,10 @@ export function generateStatsOutput(
 /**
  * Determines the display label for the current mode combination
  */
-function getModeLabel(includeCode: 'none' | 'header' | 'full', hasStyle: boolean): string {
+function getModeLabel(
+  includeCode: 'none' | 'header' | 'full',
+  hasStyle: boolean,
+): string {
   if (includeCode === 'header') {
     return hasStyle ? 'header+style' : 'header';
   }
@@ -103,9 +118,12 @@ export async function generateSummary(
       predictBehavior: boolean;
     };
     quiet?: boolean;
-  }
+  },
 ): Promise<void> {
-  const modeLabel = getModeLabel(options.includeCode, options.includeStyle === true);
+  const modeLabel = getModeLabel(
+    options.includeCode,
+    options.includeStyle === true,
+  );
 
   // Print component summary
   console.log('\n📊 Summary:');
@@ -125,17 +143,27 @@ export async function generateSummary(
   // Calculate savings vs raw source
   const rawGPT4 = tokenEstimates.sourceTokensGPT4;
   const rawClaude = tokenEstimates.sourceTokensClaude;
-  const savingsGPT4 = rawGPT4 > 0
-    ? Math.round(((rawGPT4 - tokenEstimates.currentGPT4) / rawGPT4) * 100)
-    : 0;
-  const savingsClaude = rawClaude > 0
-    ? Math.round(((rawClaude - tokenEstimates.currentClaude) / rawClaude) * 100)
-    : 0;
+  const savingsGPT4 =
+    rawGPT4 > 0
+      ? Math.round(((rawGPT4 - tokenEstimates.currentGPT4) / rawGPT4) * 100)
+      : 0;
+  const savingsClaude =
+    rawClaude > 0
+      ? Math.round(
+          ((rawClaude - tokenEstimates.currentClaude) / rawClaude) * 100,
+        )
+      : 0;
 
   console.log(`\n📏 Token Count (${modeLabel} mode):`);
-  console.log(`   Raw source:  ${formatTokenCount(rawGPT4)} GPT-4o / ${formatTokenCount(rawClaude)} Claude`);
-  console.log(`   ${modeLabel.padEnd(12)} ${formatTokenCount(tokenEstimates.currentGPT4)} GPT-4o / ${formatTokenCount(tokenEstimates.currentClaude)} Claude`);
-  console.log(`   Savings:     ~${savingsGPT4}% GPT-4o / ~${savingsClaude}% Claude`);
+  console.log(
+    `   Raw source:  ${formatTokenCount(rawGPT4)} GPT-4o / ${formatTokenCount(rawClaude)} Claude`,
+  );
+  console.log(
+    `   ${modeLabel.padEnd(12)} ${formatTokenCount(tokenEstimates.currentGPT4)} GPT-4o / ${formatTokenCount(tokenEstimates.currentClaude)} Claude`,
+  );
+  console.log(
+    `   Savings:     ~${savingsGPT4}% GPT-4o / ~${savingsClaude}% Claude`,
+  );
   console.log(`   Method: GPT-4o (${gpt4Method}) | Claude (${claudeMethod})`);
   if (claudeMethod === 'tokenizer') {
     console.log(
@@ -148,22 +176,28 @@ export async function generateSummary(
     const missing: string[] = [];
     if (!tokenizerStatus.gpt4) missing.push('@dqbd/tiktoken');
     if (!tokenizerStatus.claude) missing.push('@anthropic-ai/tokenizer');
-    console.log(`   💡 Install ${missing.join(' and ')} for tokenizer-based estimates`);
+    console.log(
+      `   💡 Install ${missing.join(' and ')} for tokenizer-based estimates`,
+    );
   }
 
   // Point to --compare-modes for detailed breakdown
-  console.log(`\n   For detailed mode comparison, run: stamp context --compare-modes`);
+  console.log(
+    `\n   For detailed mode comparison, run: stamp context --compare-modes`,
+  );
 
   // Print missing dependencies if any
   if (stats.totalMissing > 0) {
     console.log('\n⚠️  Missing dependencies (external/third-party):');
     const allMissing = new Set<string>();
-    bundles.forEach(b => {
-      b.meta.missing.forEach(dep => allMissing.add(dep.name));
+    bundles.forEach((b) => {
+      b.meta.missing.forEach((dep) => allMissing.add(dep.name));
     });
 
     const MAX_DISPLAY = 10;
-    Array.from(allMissing).slice(0, MAX_DISPLAY).forEach(name => console.log(`   - ${name}`));
+    Array.from(allMissing)
+      .slice(0, MAX_DISPLAY)
+      .forEach((name) => console.log(`   - ${name}`));
 
     if (allMissing.size > MAX_DISPLAY) {
       console.log(`   ... and ${allMissing.size - MAX_DISPLAY} more`);

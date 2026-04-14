@@ -25,4 +25,3 @@ export async function handleValidate(args: string[]): Promise<void> {
     process.exit(1);
   }
 }
-

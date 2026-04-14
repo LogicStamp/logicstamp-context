@@ -4,7 +4,10 @@
 
 import { describe, it, expect } from 'vitest';
 import { Project } from 'ts-morph';
-import { extractEvents, extractJsxRoutes } from '../../../../src/extractors/react/eventExtractor.js';
+import {
+  extractEvents,
+  extractJsxRoutes,
+} from '../../../../src/extractors/react/eventExtractor.js';
 
 /**
  * Helper to create a SourceFile from code string
@@ -164,7 +167,9 @@ describe('eventExtractor', () => {
         }
       `);
 
-      const props = { onClick: { type: 'function', signature: '(e: Event) => void' } };
+      const props = {
+        onClick: { type: 'function', signature: '(e: Event) => void' },
+      };
       const events = extractEvents(source, props);
 
       // Should use prop signature since it's just an identifier reference
@@ -212,7 +217,9 @@ describe('eventExtractor', () => {
           ],
         });
 
-        const props = { onClick: { type: 'function', signature: '() => void' } };
+        const props = {
+          onClick: { type: 'function', signature: '() => void' },
+        };
         const events = extractEvents(mockSource as any, props);
         expect(events).toHaveProperty('onClick');
       });
@@ -229,17 +236,19 @@ describe('eventExtractor', () => {
 
       it('should handle error in signature extraction', () => {
         const mockSource = createMockSourceFile({
-          getDescendantsOfKind: () => [{
-            getNameNode: () => ({
-              getText: () => 'onClick',
-            }),
-            getInitializer: () => ({
-              getKind: () => 289, // JsxExpression
-              getExpression: () => {
-                throw new Error('Expression error');
-              },
-            }),
-          }],
+          getDescendantsOfKind: () => [
+            {
+              getNameNode: () => ({
+                getText: () => 'onClick',
+              }),
+              getInitializer: () => ({
+                getKind: () => 289, // JsxExpression
+                getExpression: () => {
+                  throw new Error('Expression error');
+                },
+              }),
+            },
+          ],
         });
 
         // Mock Node.isJsxExpression to return true
@@ -379,7 +388,7 @@ describe('eventExtractor', () => {
       `);
 
       const routes = extractJsxRoutes(source);
-      expect(routes.filter(r => r === '/home')).toHaveLength(1);
+      expect(routes.filter((r) => r === '/home')).toHaveLength(1);
     });
 
     it('should return empty array for file without routes', () => {
@@ -478,18 +487,20 @@ describe('eventExtractor', () => {
 
       it('should use fallback when getLiteralValue throws for string literal', () => {
         const mockSource = createMockSourceFile({
-          getDescendantsOfKind: () => [{
-            getNameNode: () => ({
-              getText: () => 'href',
-            }),
-            getInitializer: () => ({
-              getKind: () => 11, // StringLiteral
-              getLiteralValue: () => {
-                throw new Error('Literal error');
-              },
-              getText: () => '"/fallback-route"',
-            }),
-          }],
+          getDescendantsOfKind: () => [
+            {
+              getNameNode: () => ({
+                getText: () => 'href',
+              }),
+              getInitializer: () => ({
+                getKind: () => 11, // StringLiteral
+                getLiteralValue: () => {
+                  throw new Error('Literal error');
+                },
+                getText: () => '"/fallback-route"',
+              }),
+            },
+          ],
         });
 
         const routes = extractJsxRoutes(mockSource as any);
@@ -510,15 +521,17 @@ describe('eventExtractor', () => {
 
       it('should handle non-StringLiteral initializers with fallback parsing', () => {
         const mockSource = createMockSourceFile({
-          getDescendantsOfKind: () => [{
-            getNameNode: () => ({
-              getText: () => 'path',
-            }),
-            getInitializer: () => ({
-              getKind: () => 999, // Unknown kind
-              getText: () => '"/other-route"',
-            }),
-          }],
+          getDescendantsOfKind: () => [
+            {
+              getNameNode: () => ({
+                getText: () => 'path',
+              }),
+              getInitializer: () => ({
+                getKind: () => 999, // Unknown kind
+                getText: () => '"/other-route"',
+              }),
+            },
+          ],
         });
 
         const routes = extractJsxRoutes(mockSource as any);
@@ -527,17 +540,19 @@ describe('eventExtractor', () => {
 
       it('should skip when fallback parsing fails', () => {
         const mockSource = createMockSourceFile({
-          getDescendantsOfKind: () => [{
-            getNameNode: () => ({
-              getText: () => 'path',
-            }),
-            getInitializer: () => ({
-              getKind: () => 999, // Unknown kind
-              getText: () => {
-                throw new Error('getText error');
-              },
-            }),
-          }],
+          getDescendantsOfKind: () => [
+            {
+              getNameNode: () => ({
+                getText: () => 'path',
+              }),
+              getInitializer: () => ({
+                getKind: () => 999, // Unknown kind
+                getText: () => {
+                  throw new Error('getText error');
+                },
+              }),
+            },
+          ],
         });
 
         const routes = extractJsxRoutes(mockSource as any);

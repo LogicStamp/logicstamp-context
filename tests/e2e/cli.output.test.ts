@@ -55,7 +55,7 @@ describe('CLI Output and Formatting Tests', () => {
       const outFile = join(outputPath, 'smoke-test.json');
 
       const { stdout } = await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --out ${outFile}`
+        `node dist/cli/index.js ${fixturesPath} --out ${outFile}`,
       );
 
       // Verify all expected output sections are present
@@ -83,12 +83,12 @@ describe('CLI Output and Formatting Tests', () => {
     it('should produce valid JSON output that matches schema expectations', async () => {
       const outDir = join(outputPath, 'schema-check');
 
-      await execAsync(
-        `node dist/cli/index.js ${fixturesPath} --out ${outDir}`
-      );
+      await execAsync(`node dist/cli/index.js ${fixturesPath} --out ${outDir}`);
 
       // Read index to find a per-folder context file
-      const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
+      );
       const folderContextPath = join(outDir, index.folders[0].contextFile);
       const content = await readFile(folderContextPath, 'utf-8');
       const bundles = JSON.parse(content);
@@ -127,4 +127,3 @@ describe('CLI Output and Formatting Tests', () => {
     }, 30000);
   });
 });
-

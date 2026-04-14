@@ -104,11 +104,11 @@ describe('AST Parser Error Handling', () => {
     it('should return empty AST structure on complete parse failure', async () => {
       const brokenFile = join(tempDir, 'broken.tsx');
       // Completely broken syntax
-      const brokenContent = `{{{[[[`; 
+      const brokenContent = `{{{[[[`;
       writeFileSync(brokenFile, brokenContent, 'utf-8');
 
       const result = await extractFromFile(brokenFile);
-      
+
       expect(result).toBeDefined();
       expect(result.kind).toBe('ts:module');
       expect(result.variables).toEqual([]);
@@ -127,7 +127,9 @@ describe('AST Parser Error Handling', () => {
       // Note: ts-morph is very tolerant and may not throw errors for invalid files,
       // but the error handling infrastructure is in place
       process.env.LOGICSTAMP_DEBUG = '1';
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       const invalidFile = '/invalid/path/that/does/not/exist.tsx';
       const result = await extractFromFile(invalidFile);
@@ -135,13 +137,14 @@ describe('AST Parser Error Handling', () => {
       // Function should not crash and should return a valid structure
       expect(result).toBeDefined();
       expect(result.kind).toBe('ts:module');
-      
+
       // If errors were logged, verify they have the correct format
       const errorCalls = consoleErrorSpy.mock.calls;
       if (errorCalls.length > 0) {
-        const hasAstParserLog = errorCalls.some(call => 
-          call[0]?.toString().includes('[LogicStamp][DEBUG]') && 
-          call[0]?.toString().includes('astParser')
+        const hasAstParserLog = errorCalls.some(
+          (call) =>
+            call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
+            call[0]?.toString().includes('astParser'),
         );
         expect(hasAstParserLog).toBe(true);
       }
@@ -152,10 +155,12 @@ describe('AST Parser Error Handling', () => {
 
     it('should not log errors when LOGICSTAMP_DEBUG is disabled', async () => {
       delete process.env.LOGICSTAMP_DEBUG;
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       const brokenFile = join(tempDir, 'no-debug-test.tsx');
-      const brokenContent = `{{{[[[`; 
+      const brokenContent = `{{{[[[`;
       writeFileSync(brokenFile, brokenContent, 'utf-8');
 
       await extractFromFile(brokenFile);
@@ -170,26 +175,31 @@ describe('AST Parser Error Handling', () => {
       // This test verifies that error logs include file paths when errors are logged
       // Note: ts-morph may handle errors gracefully without logging
       process.env.LOGICSTAMP_DEBUG = '1';
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       const invalidFile = '/invalid/path/test-file.tsx';
       await extractFromFile(invalidFile);
 
       // Check that if errors were logged, they include the file path
       const errorCalls = consoleErrorSpy.mock.calls;
-      const astParserLogs = errorCalls.filter(call => 
-        call[0]?.toString().includes('[LogicStamp][DEBUG]') && 
-        call[0]?.toString().includes('astParser')
+      const astParserLogs = errorCalls.filter(
+        (call) =>
+          call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
+          call[0]?.toString().includes('astParser'),
       );
-      
+
       if (astParserLogs.length > 0) {
         // If we have AST parser logs, verify they include file path information
         // The context object (second argument) should contain filePath
-        const hasFilePath = astParserLogs.some(call => {
+        const hasFilePath = astParserLogs.some((call) => {
           const message = call[0]?.toString() || '';
           const context = call[1] || {};
-          return message.includes('[LogicStamp][DEBUG]') || 
-                 (typeof context === 'object' && 'filePath' in context);
+          return (
+            message.includes('[LogicStamp][DEBUG]') ||
+            (typeof context === 'object' && 'filePath' in context)
+          );
         });
         expect(hasFilePath).toBe(true);
       }
@@ -211,7 +221,7 @@ describe('AST Parser Error Handling', () => {
       writeFileSync(validFile, validContent, 'utf-8');
 
       const result = await extractFromFile(validFile);
-      
+
       // Should have extracted something even if some extractors failed
       expect(result).toBeDefined();
       expect(result.kind).toBeDefined();
@@ -233,7 +243,7 @@ app.get('/users', (req, res) => {
       writeFileSync(mixedFile, mixedContent, 'utf-8');
 
       const result = await extractFromFile(mixedFile);
-      
+
       // Should extract backend (not Vue) because Backend > Vue priority
       expect(result.kind).toBe('node:api');
       expect(result.backend).toBeDefined();
@@ -291,7 +301,9 @@ describe('AST Parser Failure Modes', () => {
     it('should handle binary data disguised as TypeScript', async () => {
       const binaryFile = join(tempDir, 'binary.tsx');
       // Write binary data (PNG header)
-      const binaryData = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+      const binaryData = Buffer.from([
+        0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+      ]);
       writeFileSync(binaryFile, binaryData);
 
       const result = await extractFromFile(binaryFile);
@@ -347,7 +359,8 @@ describe('AST Parser Failure Modes', () => {
 
     it('should handle file with mixed line endings', async () => {
       const mixedFile = join(tempDir, 'mixed-endings.tsx');
-      const content = 'import React from "react";\r\n\nexport function A() {\r  return <div />;\n}\r\n';
+      const content =
+        'import React from "react";\r\n\nexport function A() {\r  return <div />;\n}\r\n';
       writeFileSync(mixedFile, content, 'utf-8');
 
       const result = await extractFromFile(mixedFile);
@@ -433,7 +446,10 @@ describe('AST Parser Failure Modes', () => {
 
     it('should handle many props', async () => {
       const manyPropsFile = join(tempDir, 'manyprops.tsx');
-      const props = Array.from({ length: 100 }, (_, i) => `prop${i}: string`).join('; ');
+      const props = Array.from(
+        { length: 100 },
+        (_, i) => `prop${i}: string`,
+      ).join('; ');
       const content = `
         interface Props { ${props} }
         export const Component = (props: Props) => <div />;
@@ -448,8 +464,9 @@ describe('AST Parser Failure Modes', () => {
 
     it('should handle many imports', async () => {
       const manyImportsFile = join(tempDir, 'manyimports.tsx');
-      const imports = Array.from({ length: 50 }, (_, i) =>
-        `import { util${i} } from './utils/util${i}';`
+      const imports = Array.from(
+        { length: 50 },
+        (_, i) => `import { util${i} } from './utils/util${i}';`,
       ).join('\n');
       const content = `
         ${imports}
@@ -638,9 +655,12 @@ describe('AST Parser Failure Modes', () => {
   describe('large file handling', () => {
     it('should handle large file with many components', async () => {
       const largeFile = join(tempDir, 'large.tsx');
-      const components = Array.from({ length: 100 }, (_, i) => `
+      const components = Array.from(
+        { length: 100 },
+        (_, i) => `
         export const Component${i} = () => <div>Component ${i}</div>;
-      `).join('\n');
+      `,
+      ).join('\n');
 
       const content = `import React from 'react';\n${components}`;
       writeFileSync(largeFile, content, 'utf-8');
@@ -663,4 +683,3 @@ describe('AST Parser Failure Modes', () => {
     });
   });
 });
-

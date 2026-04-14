@@ -3,13 +3,23 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { normalizeName, normalizeNames, index, arraysEqual, diff } from '../../../../src/cli/commands/compare/core.js';
+import {
+  normalizeName,
+  normalizeNames,
+  index,
+  arraysEqual,
+  diff,
+} from '../../../../src/cli/commands/compare/core.js';
 import type { LogicStampBundle } from '../../../../src/core/pack.js';
 
 /**
  * Helper to create a minimal valid bundle for testing
  */
-function createBundle(entryId: string, semanticHash: string, overrides: Record<string, any> = {}): LogicStampBundle {
+function createBundle(
+  entryId: string,
+  semanticHash: string,
+  overrides: Record<string, any> = {},
+): LogicStampBundle {
   return {
     type: 'LogicStampBundle',
     schemaVersion: '0.1',
@@ -276,16 +286,25 @@ describe('index', () => {
                 description: 'Button component',
                 semanticHash: 'uif:hash123',
                 fileHash: 'fileHash-src-Button-tsx',
-                composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
                 interface: {
                   props: {
                     onClick: 'function',
                     disabled: 'boolean',
-                    size: { type: 'union', values: ['small', 'medium', 'large'] }
+                    size: {
+                      type: 'union',
+                      values: ['small', 'medium', 'large'],
+                    },
                   },
                   emits: {
                     onHover: '() => void',
-                    onChange: '(value: string) => void'
+                    onChange: '(value: string) => void',
                   },
                 },
                 exports: 'default',
@@ -304,13 +323,13 @@ describe('index', () => {
     expect(sig.props).toEqual({
       onClick: 'function',
       disabled: 'boolean',
-      size: { type: 'union', values: ['small', 'medium', 'large'] }
+      size: { type: 'union', values: ['small', 'medium', 'large'] },
     });
 
     // Emits should be full object with types, not array of keys
     expect(sig.emits).toEqual({
       onHover: '() => void',
-      onChange: '(value: string) => void'
+      onChange: '(value: string) => void',
     });
   });
 
@@ -335,17 +354,23 @@ describe('index', () => {
                 description: 'Test component',
                 semanticHash: 'uif:hash123',
                 fileHash: 'fileHash-src-Test-tsx',
-                composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
                 interface: {
                   props: {
                     validProp: 'string',
                     'invalid\nkey': 'should be filtered',
                     'has{brace': 'should be filtered',
-                    anotherValid: 'number'
+                    anotherValid: 'number',
                   },
                   emits: {
                     validEmit: '() => void',
-                    'bad}key': 'should be filtered'
+                    'bad}key': 'should be filtered',
                   },
                 },
                 exports: 'default',
@@ -364,10 +389,10 @@ describe('index', () => {
     // Should only include valid keys with their types
     expect(sig.props).toEqual({
       validProp: 'string',
-      anotherValid: 'number'
+      anotherValid: 'number',
     });
     expect(sig.emits).toEqual({
-      validEmit: '() => void'
+      validEmit: '() => void',
     });
   });
 
@@ -386,7 +411,13 @@ describe('index', () => {
               description: 'Test utils module',
               semanticHash: 'uif:hash456',
               fileHash: 'fileHash-src-utils-ts',
-              composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+              composition: {
+                variables: [],
+                imports: [],
+                hooks: [],
+                functions: [],
+                components: [],
+              },
               interface: { props: {}, emits: {} },
               exports: { named: ['foo', 'bar'] },
             },
@@ -408,7 +439,13 @@ describe('index', () => {
               description: 'Test config module',
               semanticHash: 'uif:hash789',
               fileHash: 'fileHash-src-config-ts',
-              composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+              composition: {
+                variables: [],
+                imports: [],
+                hooks: [],
+                functions: [],
+                components: [],
+              },
               interface: { props: {}, emits: {} },
             },
           },
@@ -437,7 +474,13 @@ describe('index', () => {
               description: 'Malformed named',
               semanticHash: 'uif:hash-mal',
               fileHash: 'fileHash-bad',
-              composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+              composition: {
+                variables: [],
+                imports: [],
+                hooks: [],
+                functions: [],
+                components: [],
+              },
               interface: { props: {}, emits: {} },
               exports: { named: 'foo' as unknown as string[] },
             },
@@ -459,7 +502,13 @@ describe('index', () => {
               description: 'Empty named array',
               semanticHash: 'uif:hash-empty',
               fileHash: 'fileHash-empty',
-              composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+              composition: {
+                variables: [],
+                imports: [],
+                hooks: [],
+                functions: [],
+                components: [],
+              },
               interface: { props: {}, emits: {} },
               exports: { named: [] },
             },
@@ -492,7 +541,9 @@ describe('arraysEqual', () => {
   });
 
   it('should normalize when normalize=true', () => {
-    expect(arraysEqual(['./Button', '../Header'], ['button', 'header'], true)).toBe(true);
+    expect(
+      arraysEqual(['./Button', '../Header'], ['button', 'header'], true),
+    ).toBe(true);
     expect(arraysEqual(['./Button'], ['../Button'], true)).toBe(true);
   });
 
@@ -801,9 +852,9 @@ describe('diff', () => {
     expect(result.status).toBe('DRIFT');
     expect(result.changed).toHaveLength(1);
     expect(result.changed[0].deltas).toHaveLength(3); // hash, imports, hooks
-    expect(result.changed[0].deltas.map(d => d.type)).toContain('hash');
-    expect(result.changed[0].deltas.map(d => d.type)).toContain('imports');
-    expect(result.changed[0].deltas.map(d => d.type)).toContain('hooks');
+    expect(result.changed[0].deltas.map((d) => d.type)).toContain('hash');
+    expect(result.changed[0].deltas.map((d) => d.type)).toContain('imports');
+    expect(result.changed[0].deltas.map((d) => d.type)).toContain('hooks');
   });
 
   it('should detect apiSignature changes', () => {
@@ -891,7 +942,10 @@ describe('diff', () => {
     expect(result.changed[0].deltas).toContainEqual({
       type: 'apiSignature',
       old: { parameters: { id: 'string' }, returnType: 'User' },
-      new: { parameters: { id: 'string', includeDeleted: 'boolean' }, returnType: 'User' },
+      new: {
+        parameters: { id: 'string', includeDeleted: 'boolean' },
+        returnType: 'User',
+      },
     });
   });
 
@@ -1364,7 +1418,13 @@ describe('diff', () => {
                   description: 'Button component',
                   semanticHash: 'uif:hash123',
                   fileHash: 'fileHash-src-Button-tsx',
-                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  composition: {
+                    variables: [],
+                    imports: [],
+                    hooks: [],
+                    functions: [],
+                    components: [],
+                  },
                   interface: {
                     props: { onClick: 'function' },
                     emits: {},
@@ -1391,7 +1451,13 @@ describe('diff', () => {
                   description: 'Button component',
                   semanticHash: 'uif:hash123',
                   fileHash: 'fileHash-src-Button-tsx',
-                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  composition: {
+                    variables: [],
+                    imports: [],
+                    hooks: [],
+                    functions: [],
+                    components: [],
+                  },
                   interface: {
                     props: { onClick: 'function', disabled: 'boolean' },
                     emits: {},
@@ -1412,11 +1478,16 @@ describe('diff', () => {
       expect(result.status).toBe('DRIFT');
       expect(result.changed).toHaveLength(1);
 
-      const propsDelta = result.changed[0].deltas.find(d => d.type === 'props');
+      const propsDelta = result.changed[0].deltas.find(
+        (d) => d.type === 'props',
+      );
       expect(propsDelta).toBeDefined();
       // Now stores full objects - old has onClick, new has onClick + disabled
       expect(propsDelta!.old).toEqual({ onClick: 'function' });
-      expect(propsDelta!.new).toEqual({ onClick: 'function', disabled: 'boolean' });
+      expect(propsDelta!.new).toEqual({
+        onClick: 'function',
+        disabled: 'boolean',
+      });
     });
 
     it('should detect removed props', () => {
@@ -1434,7 +1505,13 @@ describe('diff', () => {
                   description: 'Button component',
                   semanticHash: 'uif:hash123',
                   fileHash: 'fileHash-src-Button-tsx',
-                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  composition: {
+                    variables: [],
+                    imports: [],
+                    hooks: [],
+                    functions: [],
+                    components: [],
+                  },
                   interface: {
                     props: { onClick: 'function', disabled: 'boolean' },
                     emits: {},
@@ -1461,7 +1538,13 @@ describe('diff', () => {
                   description: 'Button component',
                   semanticHash: 'uif:hash123',
                   fileHash: 'fileHash-src-Button-tsx',
-                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  composition: {
+                    variables: [],
+                    imports: [],
+                    hooks: [],
+                    functions: [],
+                    components: [],
+                  },
                   interface: {
                     props: { onClick: 'function' },
                     emits: {},
@@ -1482,10 +1565,15 @@ describe('diff', () => {
       expect(result.status).toBe('DRIFT');
       expect(result.changed).toHaveLength(1);
 
-      const propsDelta = result.changed[0].deltas.find(d => d.type === 'props');
+      const propsDelta = result.changed[0].deltas.find(
+        (d) => d.type === 'props',
+      );
       expect(propsDelta).toBeDefined();
       // Now stores full objects - old has onClick + disabled, new has only onClick
-      expect(propsDelta!.old).toEqual({ onClick: 'function', disabled: 'boolean' });
+      expect(propsDelta!.old).toEqual({
+        onClick: 'function',
+        disabled: 'boolean',
+      });
       expect(propsDelta!.new).toEqual({ onClick: 'function' });
     });
 
@@ -1504,7 +1592,13 @@ describe('diff', () => {
                   description: 'Button component',
                   semanticHash: 'uif:hash123',
                   fileHash: 'fileHash-src-Button-tsx',
-                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  composition: {
+                    variables: [],
+                    imports: [],
+                    hooks: [],
+                    functions: [],
+                    components: [],
+                  },
                   interface: {
                     props: { value: 'string', count: 'number' },
                     emits: {},
@@ -1531,7 +1625,13 @@ describe('diff', () => {
                   description: 'Button component',
                   semanticHash: 'uif:hash123',
                   fileHash: 'fileHash-src-Button-tsx',
-                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  composition: {
+                    variables: [],
+                    imports: [],
+                    hooks: [],
+                    functions: [],
+                    components: [],
+                  },
                   interface: {
                     props: { value: 'number', count: 'number' }, // value changed from string to number
                     emits: {},
@@ -1553,7 +1653,9 @@ describe('diff', () => {
       expect(result.changed).toHaveLength(1);
 
       // Now props delta contains full objects - type changes are detected by comparing them
-      const propsDelta = result.changed[0].deltas.find(d => d.type === 'props');
+      const propsDelta = result.changed[0].deltas.find(
+        (d) => d.type === 'props',
+      );
       expect(propsDelta).toBeDefined();
       expect(propsDelta!.old).toEqual({ value: 'string', count: 'number' });
       expect(propsDelta!.new).toEqual({ value: 'number', count: 'number' });
@@ -1574,7 +1676,13 @@ describe('diff', () => {
                   description: 'Input component',
                   semanticHash: 'uif:hash123',
                   fileHash: 'fileHash-src-Input-tsx',
-                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  composition: {
+                    variables: [],
+                    imports: [],
+                    hooks: [],
+                    functions: [],
+                    components: [],
+                  },
                   interface: {
                     props: {},
                     emits: { onChange: '(value: string) => void' },
@@ -1601,7 +1709,13 @@ describe('diff', () => {
                   description: 'Input component',
                   semanticHash: 'uif:hash123',
                   fileHash: 'fileHash-src-Input-tsx',
-                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  composition: {
+                    variables: [],
+                    imports: [],
+                    hooks: [],
+                    functions: [],
+                    components: [],
+                  },
                   interface: {
                     props: {},
                     emits: { onChange: '(value: number) => void' }, // changed
@@ -1623,7 +1737,9 @@ describe('diff', () => {
       expect(result.changed).toHaveLength(1);
 
       // Now emits delta contains full objects - type changes are detected by comparing them
-      const emitsDelta = result.changed[0].deltas.find(d => d.type === 'emits');
+      const emitsDelta = result.changed[0].deltas.find(
+        (d) => d.type === 'emits',
+      );
       expect(emitsDelta).toBeDefined();
       expect(emitsDelta!.old).toEqual({ onChange: '(value: string) => void' });
       expect(emitsDelta!.new).toEqual({ onChange: '(value: number) => void' });
@@ -1644,9 +1760,19 @@ describe('diff', () => {
                   description: 'Button component',
                   semanticHash: 'uif:hash123',
                   fileHash: 'fileHash-src-Button-tsx',
-                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  composition: {
+                    variables: [],
+                    imports: [],
+                    hooks: [],
+                    functions: [],
+                    components: [],
+                  },
                   interface: {
-                    props: { onClick: 'function', size: 'string', deprecated: 'boolean' },
+                    props: {
+                      onClick: 'function',
+                      size: 'string',
+                      deprecated: 'boolean',
+                    },
                     emits: {},
                   },
                   exports: 'default',
@@ -1671,12 +1797,18 @@ describe('diff', () => {
                   description: 'Button component',
                   semanticHash: 'uif:hash123',
                   fileHash: 'fileHash-src-Button-tsx',
-                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  composition: {
+                    variables: [],
+                    imports: [],
+                    hooks: [],
+                    functions: [],
+                    components: [],
+                  },
                   interface: {
                     props: {
                       onClick: 'function',
-                      size: 'number',  // type changed
-                      variant: 'string' // added
+                      size: 'number', // type changed
+                      variant: 'string', // added
                       // deprecated removed
                     },
                     emits: {},
@@ -1698,10 +1830,20 @@ describe('diff', () => {
       expect(result.changed).toHaveLength(1);
 
       // Now props delta contains full objects - all changes detected by comparing them
-      const propsDelta = result.changed[0].deltas.find(d => d.type === 'props');
+      const propsDelta = result.changed[0].deltas.find(
+        (d) => d.type === 'props',
+      );
       expect(propsDelta).toBeDefined();
-      expect(propsDelta!.old).toEqual({ onClick: 'function', size: 'string', deprecated: 'boolean' });
-      expect(propsDelta!.new).toEqual({ onClick: 'function', size: 'number', variant: 'string' });
+      expect(propsDelta!.old).toEqual({
+        onClick: 'function',
+        size: 'string',
+        deprecated: 'boolean',
+      });
+      expect(propsDelta!.new).toEqual({
+        onClick: 'function',
+        size: 'number',
+        variant: 'string',
+      });
     });
 
     it('should handle complex prop type objects', () => {
@@ -1719,10 +1861,19 @@ describe('diff', () => {
                   description: 'Form component',
                   semanticHash: 'uif:hash123',
                   fileHash: 'fileHash-src-Form-tsx',
-                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  composition: {
+                    variables: [],
+                    imports: [],
+                    hooks: [],
+                    functions: [],
+                    components: [],
+                  },
                   interface: {
                     props: {
-                      config: { type: 'object', properties: { enabled: 'boolean' } }
+                      config: {
+                        type: 'object',
+                        properties: { enabled: 'boolean' },
+                      },
                     },
                     emits: {},
                   },
@@ -1748,10 +1899,19 @@ describe('diff', () => {
                   description: 'Form component',
                   semanticHash: 'uif:hash123',
                   fileHash: 'fileHash-src-Form-tsx',
-                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  composition: {
+                    variables: [],
+                    imports: [],
+                    hooks: [],
+                    functions: [],
+                    components: [],
+                  },
                   interface: {
                     props: {
-                      config: { type: 'object', properties: { enabled: 'boolean', mode: 'string' } }
+                      config: {
+                        type: 'object',
+                        properties: { enabled: 'boolean', mode: 'string' },
+                      },
                     },
                     emits: {},
                   },
@@ -1772,10 +1932,19 @@ describe('diff', () => {
       expect(result.changed).toHaveLength(1);
 
       // Now props delta contains full objects
-      const propsDelta = result.changed[0].deltas.find(d => d.type === 'props');
+      const propsDelta = result.changed[0].deltas.find(
+        (d) => d.type === 'props',
+      );
       expect(propsDelta).toBeDefined();
-      expect(propsDelta!.old).toEqual({ config: { type: 'object', properties: { enabled: 'boolean' } } });
-      expect(propsDelta!.new).toEqual({ config: { type: 'object', properties: { enabled: 'boolean', mode: 'string' } } });
+      expect(propsDelta!.old).toEqual({
+        config: { type: 'object', properties: { enabled: 'boolean' } },
+      });
+      expect(propsDelta!.new).toEqual({
+        config: {
+          type: 'object',
+          properties: { enabled: 'boolean', mode: 'string' },
+        },
+      });
     });
 
     it('should not report changes when props/emits are identical', () => {
@@ -1793,7 +1962,13 @@ describe('diff', () => {
                   description: 'Button component',
                   semanticHash: 'uif:hash123',
                   fileHash: 'fileHash-src-Button-tsx',
-                  composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                  composition: {
+                    variables: [],
+                    imports: [],
+                    hooks: [],
+                    functions: [],
+                    components: [],
+                  },
                   interface: {
                     props: { onClick: 'function', disabled: 'boolean' },
                     emits: { onHover: '() => void' },
@@ -1899,7 +2074,9 @@ describe('diff', () => {
     const result = diff(oldIdx, newIdx, false, true);
     expect(result.status).toBe('DRIFT');
     expect(result.changed).toHaveLength(1);
-    expect(result.changed[0].deltas.map(d => d.type)).toContain('hash');
-    expect(result.changed[0].deltas.map(d => d.type)).toContain('apiSignature');
+    expect(result.changed[0].deltas.map((d) => d.type)).toContain('hash');
+    expect(result.changed[0].deltas.map((d) => d.type)).toContain(
+      'apiSignature',
+    );
   });
 });

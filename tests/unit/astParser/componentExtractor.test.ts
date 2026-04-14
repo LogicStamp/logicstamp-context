@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { extractHooks, extractComponents } from '../../../src/extractors/react/index.js';
+import {
+  extractHooks,
+  extractComponents,
+} from '../../../src/extractors/react/index.js';
 import { createTestSourceFile } from '../test-helpers.js';
 
 describe('Component Extractor', () => {
@@ -73,8 +76,8 @@ describe('Component Extractor', () => {
 
       const hooks = extractHooks(sourceFile);
 
-      expect(hooks.filter(h => h === 'useState').length).toBe(1);
-      expect(hooks.filter(h => h === 'useEffect').length).toBe(1);
+      expect(hooks.filter((h) => h === 'useState').length).toBe(1);
+      expect(hooks.filter((h) => h === 'useEffect').length).toBe(1);
     });
 
     it('should only extract hook name, not method chains', () => {
@@ -93,8 +96,15 @@ describe('Component Extractor', () => {
 
       // Should only contain 'useState', not 'useState.map', 'useState.filter', etc.
       expect(hooks).toContain('useState');
-      expect(hooks.filter(h => h === 'useState').length).toBe(1);
-      expect(hooks.every(h => !h.includes('.map') && !h.includes('.filter') && !h.includes('.reduce'))).toBe(true);
+      expect(hooks.filter((h) => h === 'useState').length).toBe(1);
+      expect(
+        hooks.every(
+          (h) =>
+            !h.includes('.map') &&
+            !h.includes('.filter') &&
+            !h.includes('.reduce'),
+        ),
+      ).toBe(true);
     });
   });
 
@@ -191,8 +201,8 @@ describe('Component Extractor', () => {
 
       const components = extractComponents(sourceFile);
 
-      expect(components.filter(c => c === 'Button').length).toBe(1);
-      expect(components.filter(c => c === 'Card').length).toBe(1);
+      expect(components.filter((c) => c === 'Button').length).toBe(1);
+      expect(components.filter((c) => c === 'Card').length).toBe(1);
     });
   });
 
@@ -234,7 +244,9 @@ describe('Component Extractor', () => {
     it('should have debug logging infrastructure in place', () => {
       const originalEnv = process.env.LOGICSTAMP_DEBUG;
       process.env.LOGICSTAMP_DEBUG = '1';
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       const sourceFile = createTestSourceFile('const x = useState(0);');
 
@@ -244,9 +256,10 @@ describe('Component Extractor', () => {
       // If errors were logged, verify they have the correct format
       const errorCalls = consoleErrorSpy.mock.calls;
       if (errorCalls.length > 0) {
-        const hasComponentExtractorLog = errorCalls.some(call =>
-          call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
-          call[0]?.toString().includes('componentExtractor')
+        const hasComponentExtractorLog = errorCalls.some(
+          (call) =>
+            call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
+            call[0]?.toString().includes('componentExtractor'),
         );
         expect(hasComponentExtractorLog).toBe(true);
       }
@@ -260,4 +273,3 @@ describe('Component Extractor', () => {
     });
   });
 });
-

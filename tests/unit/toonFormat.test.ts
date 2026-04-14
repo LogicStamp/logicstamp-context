@@ -21,7 +21,12 @@ describe('TOON format', () => {
             kind: 'react:component',
             entryId: `src/components/${id}.tsx`,
             description: `${id} component`,
-            composition: { variables: [], hooks: [], components: [], functions: [] },
+            composition: {
+              variables: [],
+              hooks: [],
+              components: [],
+              functions: [],
+            },
             interface: { props: {}, emits: {} },
             exports: 'default',
             semanticHash: 'uif:test',
@@ -55,7 +60,9 @@ describe('TOON format', () => {
     const output = formatBundles(bundles, 'toon');
     const decoded = decodeToon(output) as any[];
 
-    expect(decoded[0].$schema).toBe('https://logicstamp.dev/schemas/context/v0.1.json');
+    expect(decoded[0].$schema).toBe(
+      'https://logicstamp.dev/schemas/context/v0.1.json',
+    );
     expect(decoded[0].position).toBe('1/1');
     expect(decoded[0].type).toBe('LogicStampBundle');
     expect(decoded[0].entryId).toBe('src/components/Card.tsx');

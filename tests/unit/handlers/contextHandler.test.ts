@@ -26,14 +26,20 @@ describe('handleGenerate', () => {
   });
 
   it('should show help when --help flag is provided', async () => {
-    const printFoxSpy = vi.spyOn(initHandler, 'printFoxIcon').mockImplementation(() => {});
-    const getHelpSpy = vi.spyOn(parser, 'getGenerateHelp').mockReturnValue('Help text');
+    const printFoxSpy = vi
+      .spyOn(initHandler, 'printFoxIcon')
+      .mockImplementation(() => {});
+    const getHelpSpy = vi
+      .spyOn(parser, 'getGenerateHelp')
+      .mockReturnValue('Help text');
     // Make process.exit actually stop execution
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`Exit called with code ${code}`);
     });
 
-    await expect(handleGenerate(['--help'])).rejects.toThrow('Exit called with code 0');
+    await expect(handleGenerate(['--help'])).rejects.toThrow(
+      'Exit called with code 0',
+    );
 
     expect(printFoxSpy).toHaveBeenCalled();
     expect(getHelpSpy).toHaveBeenCalled();
@@ -42,13 +48,19 @@ describe('handleGenerate', () => {
   });
 
   it('should show help when -h flag is provided', async () => {
-    const printFoxSpy = vi.spyOn(initHandler, 'printFoxIcon').mockImplementation(() => {});
-    const getHelpSpy = vi.spyOn(parser, 'getGenerateHelp').mockReturnValue('Help text');
+    const printFoxSpy = vi
+      .spyOn(initHandler, 'printFoxIcon')
+      .mockImplementation(() => {});
+    const getHelpSpy = vi
+      .spyOn(parser, 'getGenerateHelp')
+      .mockReturnValue('Help text');
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`Exit called with code ${code}`);
     });
 
-    await expect(handleGenerate(['-h'])).rejects.toThrow('Exit called with code 0');
+    await expect(handleGenerate(['-h'])).rejects.toThrow(
+      'Exit called with code 0',
+    );
 
     expect(printFoxSpy).toHaveBeenCalled();
     expect(getHelpSpy).toHaveBeenCalled();
@@ -56,7 +68,9 @@ describe('handleGenerate', () => {
   });
 
   it('should call contextCommand with parsed options', async () => {
-    const contextSpy = vi.spyOn(contextCommand, 'contextCommand').mockResolvedValue(undefined);
+    const contextSpy = vi
+      .spyOn(contextCommand, 'contextCommand')
+      .mockResolvedValue(undefined);
     const parseSpy = vi.spyOn(parser, 'parseContextArgs').mockReturnValue({
       depth: 3,
       includeCode: 'header',
@@ -118,7 +132,7 @@ describe('handleGenerate', () => {
 
     expect(console.error).toHaveBeenCalledWith(
       '❌ Context compilation failed:',
-      'Test error'
+      'Test error',
     );
     expect(process.exit).toHaveBeenCalledWith(1);
   });

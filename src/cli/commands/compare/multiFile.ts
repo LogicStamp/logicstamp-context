@@ -3,7 +3,12 @@
  */
 
 import { dirname, join } from 'node:path';
-import type { MultiFileCompareOptions, MultiFileCompareResult, FolderCompareResult, CompareResult } from './types.js';
+import type {
+  MultiFileCompareOptions,
+  MultiFileCompareResult,
+  FolderCompareResult,
+  CompareResult,
+} from './types.js';
 import { loadIndex, findOrphanedFiles } from './utils.js';
 import { compareFolderContext } from './singleFile.js';
 
@@ -17,7 +22,9 @@ import { compareFolderContext } from './singleFile.js';
  * 5. DRIFT detection (changed files)
  * 6. PASS detection (unchanged files)
  */
-export async function multiFileCompare(options: MultiFileCompareOptions): Promise<MultiFileCompareResult> {
+export async function multiFileCompare(
+  options: MultiFileCompareOptions,
+): Promise<MultiFileCompareResult> {
   const oldBaseDir = dirname(options.oldIndexFile);
   const newBaseDir = dirname(options.newIndexFile);
 
@@ -26,8 +33,8 @@ export async function multiFileCompare(options: MultiFileCompareOptions): Promis
   const newIndex = await loadIndex(options.newIndexFile);
 
   // Create maps for quick lookup
-  const oldFolderMap = new Map(oldIndex.folders.map(f => [f.contextFile, f]));
-  const newFolderMap = new Map(newIndex.folders.map(f => [f.contextFile, f]));
+  const oldFolderMap = new Map(oldIndex.folders.map((f) => [f.contextFile, f]));
+  const newFolderMap = new Map(newIndex.folders.map((f) => [f.contextFile, f]));
 
   const folderResults: FolderCompareResult[] = [];
   let totalComponentsAdded = 0;
@@ -36,8 +43,8 @@ export async function multiFileCompare(options: MultiFileCompareOptions): Promis
 
   // Compare folders that exist in both old and new
   const allContextFiles = new Set([
-    ...oldIndex.folders.map(f => f.contextFile),
-    ...newIndex.folders.map(f => f.contextFile),
+    ...oldIndex.folders.map((f) => f.contextFile),
+    ...newIndex.folders.map((f) => f.contextFile),
   ]);
 
   for (const contextFile of allContextFiles) {
@@ -50,7 +57,13 @@ export async function multiFileCompare(options: MultiFileCompareOptions): Promis
       const newPath = join(newBaseDir, newFolder.contextFile);
 
       try {
-        const { result, tokenDelta } = await compareFolderContext(oldPath, newPath, options.stats || false, options.quiet, options.gitBaseline ?? false);
+        const { result, tokenDelta } = await compareFolderContext(
+          oldPath,
+          newPath,
+          options.stats || false,
+          options.quiet,
+          options.gitBaseline ?? false,
+        );
 
         folderResults.push({
           folderPath: newFolder.path,
@@ -67,7 +80,9 @@ export async function multiFileCompare(options: MultiFileCompareOptions): Promis
         }
       } catch (error) {
         // If comparison fails, treat as drift
-        console.error(`⚠️  Failed to compare ${contextFile}: ${(error as Error).message}`);
+        console.error(
+          `⚠️  Failed to compare ${contextFile}: ${(error as Error).message}`,
+        );
         folderResults.push({
           folderPath: newFolder.path,
           contextFile: newFolder.contextFile,
@@ -97,10 +112,12 @@ export async function multiFileCompare(options: MultiFileCompareOptions): Promis
   const orphanedFiles = await findOrphanedFiles(oldIndex, newIndex, oldBaseDir);
 
   // Calculate summary
-  const addedFolders = folderResults.filter(f => f.status === 'ADDED').length;
-  const orphanedFolders = folderResults.filter(f => f.status === 'ORPHANED').length;
-  const driftFolders = folderResults.filter(f => f.status === 'DRIFT').length;
-  const passFolders = folderResults.filter(f => f.status === 'PASS').length;
+  const addedFolders = folderResults.filter((f) => f.status === 'ADDED').length;
+  const orphanedFolders = folderResults.filter(
+    (f) => f.status === 'ORPHANED',
+  ).length;
+  const driftFolders = folderResults.filter((f) => f.status === 'DRIFT').length;
+  const passFolders = folderResults.filter((f) => f.status === 'PASS').length;
 
   // Only orphaned folders and drift folders qualify as drift; added folders are growth, not drift
   const status = orphanedFolders > 0 || driftFolders > 0 ? 'DRIFT' : 'PASS';

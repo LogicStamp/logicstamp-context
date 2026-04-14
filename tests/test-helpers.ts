@@ -12,13 +12,17 @@ export async function getTestOutputDir(testName: string): Promise<string> {
     .replace(/[^a-z0-9]/gi, '-')
     .toLowerCase()
     .substring(0, 50);
-  
+
   const uniqueId = randomUUID().substring(0, 8);
-  const outputPath = join(process.cwd(), 'tests/e2e/output', `${sanitized}-${uniqueId}`);
-  
+  const outputPath = join(
+    process.cwd(),
+    'tests/e2e/output',
+    `${sanitized}-${uniqueId}`,
+  );
+
   // Ensure directory exists
   await mkdir(outputPath, { recursive: true });
-  
+
   return outputPath;
 }
 
@@ -44,7 +48,10 @@ export async function cleanupContextFiles(dir: string): Promise<void> {
       const fullPath = join(dir, entry.name);
       if (entry.isDirectory()) {
         await cleanupContextFiles(fullPath);
-      } else if (entry.name === 'context.json' || entry.name === 'context_main.json') {
+      } else if (
+        entry.name === 'context.json' ||
+        entry.name === 'context_main.json'
+      ) {
         try {
           await rm(fullPath, { force: true });
         } catch {
@@ -60,13 +67,15 @@ export async function cleanupContextFiles(dir: string): Promise<void> {
 /**
  * Comprehensive cleanup that removes context files from common test locations.
  * Call this in afterEach hooks to ensure no context files are left behind.
- * 
+ *
  * This function only removes context.json and context_main.json files, not entire directories,
  * so it won't break tests that rely on other files in these directories.
  */
-export async function cleanupAllContextFiles(fixturesPath?: string): Promise<void> {
+export async function cleanupAllContextFiles(
+  fixturesPath?: string,
+): Promise<void> {
   const cwd = process.cwd();
-  
+
   // Clean up context files in fixtures directory if provided
   if (fixturesPath) {
     try {
@@ -75,7 +84,7 @@ export async function cleanupAllContextFiles(fixturesPath?: string): Promise<voi
       // Ignore cleanup errors
     }
   }
-  
+
   // Clean up context files in current working directory root (safety measure)
   try {
     const contextMain = join(cwd, 'context_main.json');
@@ -85,7 +94,7 @@ export async function cleanupAllContextFiles(fixturesPath?: string): Promise<voi
   } catch {
     // Ignore cleanup errors
   }
-  
+
   // Clean up context files in src/ directory (where tests might create them)
   // Only removes context.json files, not the directory itself
   try {
@@ -94,7 +103,7 @@ export async function cleanupAllContextFiles(fixturesPath?: string): Promise<voi
   } catch {
     // Ignore cleanup errors (src directory might not exist or not be readable)
   }
-  
+
   // Clean up context files in utils/ directory (where tests might create them)
   // Only removes context.json files, not the directory itself
   try {
@@ -104,4 +113,3 @@ export async function cleanupAllContextFiles(fixturesPath?: string): Promise<voi
     // Ignore cleanup errors (utils directory might not exist or not be readable)
   }
 }
-

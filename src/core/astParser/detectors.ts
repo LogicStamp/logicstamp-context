@@ -2,7 +2,17 @@
  * Detectors - Detect component kind and Next.js metadata
  */
 
-import { SourceFile, SyntaxKind, FunctionDeclaration, VariableStatement, ArrowFunction, ObjectLiteralExpression, PropertyAssignment, StringLiteral, ClassDeclaration } from 'ts-morph';
+import {
+  type SourceFile,
+  SyntaxKind,
+  type FunctionDeclaration,
+  type VariableStatement,
+  ArrowFunction,
+  ObjectLiteralExpression,
+  type PropertyAssignment,
+  type StringLiteral,
+  type ClassDeclaration,
+} from 'ts-morph';
 import type { ContractKind, NextJSMetadata } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
 import { toForwardSlashes } from '../../utils/fsx.js';
@@ -12,7 +22,9 @@ import { basename, dirname } from 'node:path';
  * Detect Next.js 'use client' or 'use server' directives
  * These directives must appear at the top of the file (before any imports)
  */
-export function detectNextJsDirective(source: SourceFile): 'client' | 'server' | undefined {
+export function detectNextJsDirective(
+  source: SourceFile,
+): 'client' | 'server' | undefined {
   const filePath = source.getFilePath?.() ?? 'unknown';
 
   try {
@@ -82,10 +94,12 @@ export function isInNextAppDir(filePath: string): boolean {
  * Detect Next.js route role based on filename
  * Next.js App Router uses special filenames: page, layout, loading, error, not-found, template, default, route
  */
-export function detectNextJsRouteRole(filePath: string): NextJSMetadata['routeRole'] | undefined {
+export function detectNextJsRouteRole(
+  filePath: string,
+): NextJSMetadata['routeRole'] | undefined {
   try {
     const fileName = basename(filePath, '.tsx').replace(/\.ts$/, '');
-    
+
     // Check for special Next.js route files
     if (fileName === 'page') return 'page';
     if (fileName === 'layout') return 'layout';
@@ -95,7 +109,7 @@ export function detectNextJsRouteRole(filePath: string): NextJSMetadata['routeRo
     if (fileName === 'template') return 'template';
     if (fileName === 'default') return 'default';
     if (fileName === 'route') return 'route';
-    
+
     return undefined;
   } catch (error) {
     debugError('detector', 'detectNextJsRouteRole', {
@@ -113,30 +127,30 @@ export function detectNextJsRouteRole(filePath: string): NextJSMetadata['routeRo
 export function extractNextJsSegmentPath(filePath: string): string | undefined {
   try {
     const normalizedPath = toForwardSlashes(filePath);
-    
+
     // Find the app directory in the path
     const appDirMatch = normalizedPath.match(/(?:^|\/)(?:src\/)?app(\/.*)$/);
     if (!appDirMatch) {
       return undefined;
     }
-    
+
     const pathAfterApp = appDirMatch[1];
-    
+
     // Remove the filename (page.tsx, layout.tsx, etc.) to get the directory path
     // Handle both /page.tsx and page.tsx formats
     const dirPath = dirname(pathAfterApp);
-    
+
     // Build segment path
     // If dirPath is '.' or '/', it means the file is directly in app/ directory
     let segmentPath = dirPath === '.' || dirPath === '/' ? '' : dirPath;
-    
+
     // Remove route groups (parentheses) from path
     // e.g., (auth)/login -> /login
     segmentPath = segmentPath.replace(/\/\([^)]+\)/g, '');
-    
+
     // Normalize: remove leading/trailing slashes
     segmentPath = segmentPath.replace(/^\/+|\/+$/g, '');
-    
+
     // Return root path or normalized path
     return segmentPath ? `/${segmentPath}` : '/';
   } catch (error) {
@@ -152,57 +166,76 @@ export function extractNextJsSegmentPath(filePath: string): string | undefined {
  * Extract Next.js metadata exports
  * Supports both static metadata (export const metadata) and dynamic metadata (export function generateMetadata)
  */
-export function extractNextJsMetadataExports(source: SourceFile): NextJSMetadata['metadata'] | undefined {
+export function extractNextJsMetadataExports(
+  source: SourceFile,
+): NextJSMetadata['metadata'] | undefined {
   const filePath = source.getFilePath?.() ?? 'unknown';
-  
+
   try {
     let staticMetadata: Record<string, unknown> | undefined;
     let hasDynamicMetadata = false;
-    
+
     const statements = source.getStatements();
-    
+
     for (const stmt of statements) {
       const kind = stmt.getKind();
-      
+
       // Check for `export const metadata = {...}`
       if (kind === SyntaxKind.VariableStatement) {
         const varStmt = stmt as VariableStatement;
         const modifiers = varStmt.getModifiers();
-        const isExported = modifiers.some(mod => mod.getKind() === SyntaxKind.ExportKeyword);
-        
+        const isExported = modifiers.some(
+          (mod) => mod.getKind() === SyntaxKind.ExportKeyword,
+        );
+
         if (isExported) {
           const declarations = varStmt.getDeclarationList().getDeclarations();
           for (const decl of declarations) {
             const name = decl.getName();
             if (name === 'metadata') {
               const initializer = decl.getInitializer();
-              if (initializer && initializer.getKind() === SyntaxKind.ObjectLiteralExpression) {
+              if (
+                initializer &&
+                initializer.getKind() === SyntaxKind.ObjectLiteralExpression
+              ) {
                 // Parse object literal to extract property names and basic values
                 try {
-                  const objLiteral = initializer.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+                  const objLiteral = initializer.asKindOrThrow(
+                    SyntaxKind.ObjectLiteralExpression,
+                  );
                   const properties = objLiteral.getProperties();
                   const metadataObj: Record<string, unknown> = {};
-                  
+
                   for (const prop of properties) {
                     if (prop.getKind() === SyntaxKind.PropertyAssignment) {
                       const propAssignment = prop as PropertyAssignment;
                       const propName = propAssignment.getNameNode();
                       const propValue = propAssignment.getInitializer();
-                      
-                      if (propName.getKind() === SyntaxKind.Identifier || propName.getKind() === SyntaxKind.StringLiteral) {
-                        const name = propName.getKind() === SyntaxKind.Identifier
-                          ? propName.getText()
-                          : (propName as StringLiteral).getLiteralText();
+
+                      if (
+                        propName.getKind() === SyntaxKind.Identifier ||
+                        propName.getKind() === SyntaxKind.StringLiteral
+                      ) {
+                        const name =
+                          propName.getKind() === SyntaxKind.Identifier
+                            ? propName.getText()
+                            : (propName as StringLiteral).getLiteralText();
 
                         // Extract basic value types
                         if (propValue) {
                           const valueKind = propValue.getKind();
                           if (valueKind === SyntaxKind.StringLiteral) {
-                            metadataObj[name] = (propValue as StringLiteral).getLiteralText();
+                            metadataObj[name] = (
+                              propValue as StringLiteral
+                            ).getLiteralText();
                           } else if (valueKind === SyntaxKind.NumericLiteral) {
                             metadataObj[name] = parseFloat(propValue.getText());
-                          } else if (valueKind === SyntaxKind.TrueKeyword || valueKind === SyntaxKind.FalseKeyword) {
-                            metadataObj[name] = valueKind === SyntaxKind.TrueKeyword;
+                          } else if (
+                            valueKind === SyntaxKind.TrueKeyword ||
+                            valueKind === SyntaxKind.FalseKeyword
+                          ) {
+                            metadataObj[name] =
+                              valueKind === SyntaxKind.TrueKeyword;
                           } else if (valueKind === SyntaxKind.NullKeyword) {
                             metadataObj[name] = null;
                           } else {
@@ -213,7 +246,7 @@ export function extractNextJsMetadataExports(source: SourceFile): NextJSMetadata
                       }
                     }
                   }
-                  
+
                   if (Object.keys(metadataObj).length > 0) {
                     staticMetadata = metadataObj;
                   } else {
@@ -232,27 +265,29 @@ export function extractNextJsMetadataExports(source: SourceFile): NextJSMetadata
           }
         }
       }
-      
+
       // Check for `export function generateMetadata(...) {...}`
       if (kind === SyntaxKind.FunctionDeclaration) {
         const func = stmt as FunctionDeclaration;
         const modifiers = func.getModifiers();
-        const isExported = modifiers.some(mod => mod.getKind() === SyntaxKind.ExportKeyword);
+        const isExported = modifiers.some(
+          (mod) => mod.getKind() === SyntaxKind.ExportKeyword,
+        );
         const name = func.getName();
-        
+
         if (isExported && name === 'generateMetadata') {
           hasDynamicMetadata = true;
         }
       }
     }
-    
+
     if (staticMetadata || hasDynamicMetadata) {
       return {
         ...(staticMetadata && { static: staticMetadata }),
-        ...(hasDynamicMetadata && { dynamic: true })
+        ...(hasDynamicMetadata && { dynamic: true }),
       };
     }
-    
+
     return undefined;
   } catch (error) {
     debugError('detector', 'extractNextJsMetadataExports', {
@@ -266,14 +301,19 @@ export function extractNextJsMetadataExports(source: SourceFile): NextJSMetadata
 /**
  * Extract Next.js metadata from the file
  */
-export function extractNextJsMetadata(source: SourceFile, filePath: string): NextJSMetadata | undefined {
+export function extractNextJsMetadata(
+  source: SourceFile,
+  filePath: string,
+): NextJSMetadata | undefined {
   const resolvedPath = source.getFilePath?.() ?? filePath;
 
   try {
     const directive = detectNextJsDirective(source);
     const isInApp = isInNextAppDir(filePath);
     const routeRole = isInApp ? detectNextJsRouteRole(filePath) : undefined;
-    const segmentPath = isInApp ? extractNextJsSegmentPath(filePath) : undefined;
+    const segmentPath = isInApp
+      ? extractNextJsSegmentPath(filePath)
+      : undefined;
     const metadata = isInApp ? extractNextJsMetadataExports(source) : undefined;
 
     // Only return metadata if we have something to report
@@ -283,7 +323,7 @@ export function extractNextJsMetadata(source: SourceFile, filePath: string): Nex
         ...(directive && { directive }),
         ...(routeRole && { routeRole }),
         ...(segmentPath && { segmentPath }),
-        ...(metadata && { metadata })
+        ...(metadata && { metadata }),
       };
     }
   } catch (error) {
@@ -300,9 +340,14 @@ export function extractNextJsMetadata(source: SourceFile, filePath: string): Nex
 /**
  * Check if the main export is a Vue composable function (starts with "use")
  */
-function isMainExportAVueComposable(source: SourceFile, imports: string[]): boolean {
+function isMainExportAVueComposable(
+  source: SourceFile,
+  imports: string[],
+): boolean {
   // Must have Vue imports
-  const hasVueImport = imports.some(imp => imp === 'vue' || imp.startsWith('vue/'));
+  const hasVueImport = imports.some(
+    (imp) => imp === 'vue' || imp.startsWith('vue/'),
+  );
   if (!hasVueImport) return false;
 
   try {
@@ -311,12 +356,17 @@ function isMainExportAVueComposable(source: SourceFile, imports: string[]): bool
     for (const stmt of statements) {
       const kind = stmt.getKind();
       // Only check statements that can have modifiers
-      if (kind !== SyntaxKind.FunctionDeclaration &&
-          kind !== SyntaxKind.VariableStatement &&
-          kind !== SyntaxKind.ClassDeclaration) {
+      if (
+        kind !== SyntaxKind.FunctionDeclaration &&
+        kind !== SyntaxKind.VariableStatement &&
+        kind !== SyntaxKind.ClassDeclaration
+      ) {
         continue;
       }
-      const modifierableStmt = stmt as FunctionDeclaration | VariableStatement | ClassDeclaration;
+      const modifierableStmt = stmt as
+        | FunctionDeclaration
+        | VariableStatement
+        | ClassDeclaration;
       const modifiers = modifierableStmt.getModifiers();
 
       let hasExport = false;
@@ -343,10 +393,11 @@ function isMainExportAVueComposable(source: SourceFile, imports: string[]): bool
             const name = decl.getName();
             const initializer = decl.getInitializer();
             if (name && /^use[A-Z]/.test(name)) {
-              if (initializer && (
-                initializer.getKind() === SyntaxKind.ArrowFunction ||
-                initializer.getKind() === SyntaxKind.FunctionExpression
-              )) {
+              if (
+                initializer &&
+                (initializer.getKind() === SyntaxKind.ArrowFunction ||
+                  initializer.getKind() === SyntaxKind.FunctionExpression)
+              ) {
                 return true;
               }
             }
@@ -369,10 +420,11 @@ function isMainExportAVueComposable(source: SourceFile, imports: string[]): bool
             const name = decl.getName();
             const initializer = decl.getInitializer();
             if (name && /^use[A-Z]/.test(name)) {
-              if (initializer && (
-                initializer.getKind() === SyntaxKind.ArrowFunction ||
-                initializer.getKind() === SyntaxKind.FunctionExpression
-              )) {
+              if (
+                initializer &&
+                (initializer.getKind() === SyntaxKind.ArrowFunction ||
+                  initializer.getKind() === SyntaxKind.FunctionExpression)
+              ) {
                 return true;
               }
             }
@@ -407,7 +459,7 @@ function hasVueComposables(source: SourceFile): boolean {
       /\bdefineEmits\s*[(<]/,
     ];
 
-    return vueComposablePatterns.some(pattern => pattern.test(sourceText));
+    return vueComposablePatterns.some((pattern) => pattern.test(sourceText));
   } catch (error) {
     return false;
   }
@@ -421,9 +473,11 @@ function hasVueComponentRegistration(source: SourceFile): boolean {
     const sourceText = source.getFullText();
 
     // Check for defineComponent, component registration, or SFC script setup
-    return /defineComponent\s*\(/.test(sourceText) ||
-           /components\s*:\s*\{/.test(sourceText) ||
-           /<script\s+setup/.test(sourceText);
+    return (
+      /defineComponent\s*\(/.test(sourceText) ||
+      /components\s*:\s*\{/.test(sourceText) ||
+      /<script\s+setup/.test(sourceText)
+    );
   } catch (error) {
     return false;
   }
@@ -439,12 +493,17 @@ function isMainExportAHook(source: SourceFile): boolean {
     for (const stmt of statements) {
       const kind = stmt.getKind();
       // Only check statements that can have modifiers
-      if (kind !== SyntaxKind.FunctionDeclaration &&
-          kind !== SyntaxKind.VariableStatement &&
-          kind !== SyntaxKind.ClassDeclaration) {
+      if (
+        kind !== SyntaxKind.FunctionDeclaration &&
+        kind !== SyntaxKind.VariableStatement &&
+        kind !== SyntaxKind.ClassDeclaration
+      ) {
         continue;
       }
-      const modifierableStmt = stmt as FunctionDeclaration | VariableStatement | ClassDeclaration;
+      const modifierableStmt = stmt as
+        | FunctionDeclaration
+        | VariableStatement
+        | ClassDeclaration;
       const modifiers = modifierableStmt.getModifiers();
 
       let hasExport = false;
@@ -472,17 +531,18 @@ function isMainExportAHook(source: SourceFile): boolean {
             const initializer = decl.getInitializer();
             // Check if it's an arrow function or function expression
             if (name && /^use[A-Z]/.test(name)) {
-              if (initializer && (
-                initializer.getKind() === SyntaxKind.ArrowFunction ||
-                initializer.getKind() === SyntaxKind.FunctionExpression
-              )) {
+              if (
+                initializer &&
+                (initializer.getKind() === SyntaxKind.ArrowFunction ||
+                  initializer.getKind() === SyntaxKind.FunctionExpression)
+              ) {
                 return true;
               }
             }
           }
         }
       }
-      
+
       // Check named exports (if no default export found)
       if (hasExport && !isDefault) {
         if (kind === SyntaxKind.FunctionDeclaration) {
@@ -499,10 +559,11 @@ function isMainExportAHook(source: SourceFile): boolean {
             const initializer = decl.getInitializer();
             // Check if it's an arrow function or function expression
             if (name && /^use[A-Z]/.test(name)) {
-              if (initializer && (
-                initializer.getKind() === SyntaxKind.ArrowFunction ||
-                initializer.getKind() === SyntaxKind.FunctionExpression
-              )) {
+              if (
+                initializer &&
+                (initializer.getKind() === SyntaxKind.ArrowFunction ||
+                  initializer.getKind() === SyntaxKind.FunctionExpression)
+              ) {
                 return true;
               }
             }
@@ -510,7 +571,7 @@ function isMainExportAHook(source: SourceFile): boolean {
         }
       }
     }
-    
+
     return false;
   } catch (error) {
     // If we can't determine, return false (fall back to other checks)
@@ -527,7 +588,7 @@ export function detectKind(
   imports: string[],
   source: SourceFile,
   filePath: string,
-  backendFramework?: 'express' | 'nestjs'
+  backendFramework?: 'express' | 'nestjs',
 ): ContractKind {
   const resolvedPath = source.getFilePath?.() ?? filePath;
 
@@ -538,18 +599,25 @@ export function detectKind(
     }
 
     // Vue detection (highest priority after hooks)
-    const hasVueImport = imports.some(imp => imp === 'vue' || imp.startsWith('vue/'));
+    const hasVueImport = imports.some(
+      (imp) => imp === 'vue' || imp.startsWith('vue/'),
+    );
 
     if (hasVueImport) {
       // Check if main export is a Vue composable
-      const mainExportIsVueComposable = isMainExportAVueComposable(source, imports);
+      const mainExportIsVueComposable = isMainExportAVueComposable(
+        source,
+        imports,
+      );
 
       if (mainExportIsVueComposable && components.length === 0) {
         // Double-check: no JSX elements in the file
         try {
-          const hasJsxElements = source.getDescendantsOfKind(SyntaxKind.JsxElement).length > 0 ||
-                              source.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement).length > 0 ||
-                              source.getDescendantsOfKind(SyntaxKind.JsxFragment).length > 0;
+          const hasJsxElements =
+            source.getDescendantsOfKind(SyntaxKind.JsxElement).length > 0 ||
+            source.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement)
+              .length > 0 ||
+            source.getDescendantsOfKind(SyntaxKind.JsxFragment).length > 0;
           if (!hasJsxElements) {
             return 'vue:composable';
           }
@@ -560,7 +628,11 @@ export function detectKind(
       }
 
       // Check for Vue component patterns
-      if (hasVueComposables(source) || hasVueComponentRegistration(source) || components.length > 0) {
+      if (
+        hasVueComposables(source) ||
+        hasVueComponentRegistration(source) ||
+        components.length > 0
+      ) {
         return 'vue:component';
       }
     }
@@ -573,9 +645,11 @@ export function detectKind(
     if (mainExportIsHook && components.length === 0) {
       // Double-check: no JSX elements in the file
       try {
-        const hasJsxElements = source.getDescendantsOfKind(SyntaxKind.JsxElement).length > 0 ||
-                            source.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement).length > 0 ||
-                            source.getDescendantsOfKind(SyntaxKind.JsxFragment).length > 0;
+        const hasJsxElements =
+          source.getDescendantsOfKind(SyntaxKind.JsxElement).length > 0 ||
+          source.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement).length >
+            0 ||
+          source.getDescendantsOfKind(SyntaxKind.JsxFragment).length > 0;
         if (!hasJsxElements) {
           return 'react:hook';
         }
@@ -584,14 +658,16 @@ export function detectKind(
         return 'react:hook';
       }
     }
-    
+
     // React component: has hooks or JSX components
     if (hooks.length > 0 || components.length > 0) {
       return 'react:component';
     }
 
     // Check for React imports
-    const hasReactImport = imports.some(imp => imp === 'react' || imp.startsWith('react/'));
+    const hasReactImport = imports.some(
+      (imp) => imp === 'react' || imp.startsWith('react/'),
+    );
 
     if (hasReactImport) {
       try {
@@ -600,9 +676,11 @@ export function detectKind(
         // Check for any JSX usage (including lowercase HTML elements)
         let hasJsxElements = false;
         try {
-          hasJsxElements = source.getDescendantsOfKind(SyntaxKind.JsxElement).length > 0 ||
-                          source.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement).length > 0 ||
-                          source.getDescendantsOfKind(SyntaxKind.JsxFragment).length > 0;
+          hasJsxElements =
+            source.getDescendantsOfKind(SyntaxKind.JsxElement).length > 0 ||
+            source.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement)
+              .length > 0 ||
+            source.getDescendantsOfKind(SyntaxKind.JsxFragment).length > 0;
         } catch (error) {
           debugError('detector', 'detectKind', {
             filePath: resolvedPath,
@@ -623,7 +701,11 @@ export function detectKind(
 
         // Check for React component type annotations
         // Look for React.FC, React.FunctionComponent, or return type JSX.Element
-        if (/React\.(FC|FunctionComponent|ReactElement)|:\s*JSX\.Element/.test(sourceText)) {
+        if (
+          /React\.(FC|FunctionComponent|ReactElement)|:\s*JSX\.Element/.test(
+            sourceText,
+          )
+        ) {
           return 'react:component';
         }
       } catch (error) {
@@ -674,7 +756,7 @@ export function detectKind(
  */
 export function detectBackendFramework(
   imports: string[],
-  source: SourceFile
+  source: SourceFile,
 ): 'express' | 'nestjs' | undefined {
   const filePath = source.getFilePath?.() ?? 'unknown';
 
@@ -682,18 +764,24 @@ export function detectBackendFramework(
     const sourceText = source.getFullText();
 
     // Express.js detection
-    if (imports.some(imp => imp === 'express' || imp.startsWith('express/'))) {
+    if (
+      imports.some((imp) => imp === 'express' || imp.startsWith('express/'))
+    ) {
       // Additional check: look for app/router usage
-      if (/app\.(get|post|put|delete|patch|all)\(/i.test(sourceText) ||
-          /router\.(get|post|put|delete|patch|all)\(/i.test(sourceText)) {
+      if (
+        /app\.(get|post|put|delete|patch|all)\(/i.test(sourceText) ||
+        /router\.(get|post|put|delete|patch|all)\(/i.test(sourceText)
+      ) {
         return 'express';
       }
     }
 
     // NestJS detection
-    if (imports.some(imp => imp.includes('@nestjs'))) {
-      if (/@Controller\(/i.test(sourceText) ||
-          /@Get\(|@Post\(|@Put\(|@Delete\(|@Patch\(/i.test(sourceText)) {
+    if (imports.some((imp) => imp.includes('@nestjs'))) {
+      if (
+        /@Controller\(/i.test(sourceText) ||
+        /@Get\(|@Post\(|@Put\(|@Delete\(|@Patch\(/i.test(sourceText)
+      ) {
         return 'nestjs';
       }
     }

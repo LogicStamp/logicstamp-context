@@ -115,7 +115,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     it('should detect page route role', async () => {
       const testContent = `export default function Page() { return <div>Page</div>; }`;
       const tempPath = join(fixturesPath, 'app/test-route/page.tsx');
-      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import('node:fs');
+      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import(
+        'node:fs'
+      );
 
       try {
         mkdirSync(join(fixturesPath, 'app/test-route'), { recursive: true });
@@ -134,7 +136,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     it('should detect layout route role', async () => {
       const testContent = `export default function Layout({ children }: { children: React.ReactNode }) { return <>{children}</>; }`;
       const tempPath = join(fixturesPath, 'app/test-layout/layout.tsx');
-      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import('node:fs');
+      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import(
+        'node:fs'
+      );
 
       try {
         mkdirSync(join(fixturesPath, 'app/test-layout'), { recursive: true });
@@ -153,7 +157,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     it('should detect loading route role', async () => {
       const testContent = `export default function Loading() { return <div>Loading...</div>; }`;
       const tempPath = join(fixturesPath, 'app/test-loading/loading.tsx');
-      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import('node:fs');
+      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import(
+        'node:fs'
+      );
 
       try {
         mkdirSync(join(fixturesPath, 'app/test-loading'), { recursive: true });
@@ -172,7 +178,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     it('should detect error route role', async () => {
       const testContent = `export default function Error({ error }: { error: Error }) { return <div>Error</div>; }`;
       const tempPath = join(fixturesPath, 'app/test-error/error.tsx');
-      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import('node:fs');
+      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import(
+        'node:fs'
+      );
 
       try {
         mkdirSync(join(fixturesPath, 'app/test-error'), { recursive: true });
@@ -191,10 +199,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     it('should detect route handler role', async () => {
       const testContent = `export async function GET() { return Response.json({}); }`;
       const tempPath = join(fixturesPath, 'app/api/test-route/route.ts');
-      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import('node:fs');
+      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import(
+        'node:fs'
+      );
 
       try {
-        mkdirSync(join(fixturesPath, 'app/api/test-route'), { recursive: true });
+        mkdirSync(join(fixturesPath, 'app/api/test-route'), {
+          recursive: true,
+        });
         writeFileSync(tempPath, testContent);
         const ast = await extractFromFile(tempPath);
 
@@ -229,7 +241,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     it('should extract segment path for nested routes', async () => {
       const testContent = `export default function BlogPage() { return <div>Blog</div>; }`;
       const tempPath = join(fixturesPath, 'app/test-blog/page.tsx');
-      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import('node:fs');
+      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import(
+        'node:fs'
+      );
 
       try {
         mkdirSync(join(fixturesPath, 'app/test-blog'), { recursive: true });
@@ -248,10 +262,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     it('should extract segment path with dynamic segments', async () => {
       const testContent = `export default function PostPage() { return <div>Post</div>; }`;
       const tempPath = join(fixturesPath, 'app/test-blog/[slug]/page.tsx');
-      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import('node:fs');
+      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import(
+        'node:fs'
+      );
 
       try {
-        mkdirSync(join(fixturesPath, 'app/test-blog/[slug]'), { recursive: true });
+        mkdirSync(join(fixturesPath, 'app/test-blog/[slug]'), {
+          recursive: true,
+        });
         writeFileSync(tempPath, testContent);
         const ast = await extractFromFile(tempPath);
 
@@ -268,10 +286,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     it('should extract segment path for API routes', async () => {
       const testContent = `export async function GET() { return Response.json({}); }`;
       const tempPath = join(fixturesPath, 'app/api/test-users/route.ts');
-      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import('node:fs');
+      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import(
+        'node:fs'
+      );
 
       try {
-        mkdirSync(join(fixturesPath, 'app/api/test-users'), { recursive: true });
+        mkdirSync(join(fixturesPath, 'app/api/test-users'), {
+          recursive: true,
+        });
         writeFileSync(tempPath, testContent);
         const ast = await extractFromFile(tempPath);
 
@@ -286,11 +308,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
     it('should handle route groups in segment path', async () => {
       const testContent = `export default function LoginPage() { return <div>Login</div>; }`;
-      const tempPath = join(fixturesPath, 'app/(test-auth)/test-login/page.tsx');
-      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import('node:fs');
+      const tempPath = join(
+        fixturesPath,
+        'app/(test-auth)/test-login/page.tsx',
+      );
+      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import(
+        'node:fs'
+      );
 
       try {
-        mkdirSync(join(fixturesPath, 'app/(test-auth)/test-login'), { recursive: true });
+        mkdirSync(join(fixturesPath, 'app/(test-auth)/test-login'), {
+          recursive: true,
+        });
         writeFileSync(tempPath, testContent);
         const ast = await extractFromFile(tempPath);
 
@@ -307,7 +336,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     it('should handle src/app directory structure', async () => {
       const testContent = `export default function Page() { return <div>Page</div>; }`;
       const tempPath = join(fixturesPath, 'src/app/test-page.tsx');
-      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import('node:fs');
+      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import(
+        'node:fs'
+      );
 
       try {
         mkdirSync(join(fixturesPath, 'src/app'), { recursive: true });
@@ -346,7 +377,9 @@ export default function Page() {
         expect(ast.nextjs?.metadata).toBeDefined();
         expect(ast.nextjs?.metadata?.static).toBeDefined();
         expect(ast.nextjs?.metadata?.static?.title).toBe('My Page');
-        expect(ast.nextjs?.metadata?.static?.description).toBe('Page description');
+        expect(ast.nextjs?.metadata?.static?.description).toBe(
+          'Page description',
+        );
       } finally {
         try {
           unlinkSync(tempPath);
@@ -465,10 +498,14 @@ export default function Page() {
 }
 `;
       const tempPath = join(fixturesPath, 'app/test-combined/[id]/page.tsx');
-      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import('node:fs');
+      const { writeFileSync, unlinkSync, mkdirSync, rmdirSync } = await import(
+        'node:fs'
+      );
 
       try {
-        mkdirSync(join(fixturesPath, 'app/test-combined/[id]'), { recursive: true });
+        mkdirSync(join(fixturesPath, 'app/test-combined/[id]'), {
+          recursive: true,
+        });
         writeFileSync(tempPath, testContent);
         const ast = await extractFromFile(tempPath);
 

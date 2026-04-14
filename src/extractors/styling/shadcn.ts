@@ -4,14 +4,14 @@
  */
 
 import {
-  SourceFile,
+  type SourceFile,
   SyntaxKind,
-  JsxAttribute,
-  JsxElement,
-  JsxSelfClosingElement,
-  CallExpression,
-  ImportDeclaration,
-  StringLiteral,
+  type JsxAttribute,
+  type JsxElement,
+  type JsxSelfClosingElement,
+  type CallExpression,
+  type ImportDeclaration,
+  type StringLiteral,
 } from 'ts-morph';
 import { debugError } from '../../utils/debug.js';
 
@@ -20,59 +20,168 @@ import { debugError } from '../../utils/debug.js';
  * These are typically imported from @/components/ui/*
  */
 const SHADCN_COMPONENTS = [
-  'Accordion', 'AccordionContent', 'AccordionItem', 'AccordionTrigger',
-  'Alert', 'AlertDescription', 'AlertTitle',
-  'AlertDialog', 'AlertDialogAction', 'AlertDialogCancel', 'AlertDialogContent', 'AlertDialogDescription',
-  'AlertDialogFooter', 'AlertDialogHeader', 'AlertDialogTitle', 'AlertDialogTrigger',
+  'Accordion',
+  'AccordionContent',
+  'AccordionItem',
+  'AccordionTrigger',
+  'Alert',
+  'AlertDescription',
+  'AlertTitle',
+  'AlertDialog',
+  'AlertDialogAction',
+  'AlertDialogCancel',
+  'AlertDialogContent',
+  'AlertDialogDescription',
+  'AlertDialogFooter',
+  'AlertDialogHeader',
+  'AlertDialogTitle',
+  'AlertDialogTrigger',
   'AspectRatio',
-  'Avatar', 'AvatarFallback', 'AvatarImage',
+  'Avatar',
+  'AvatarFallback',
+  'AvatarImage',
   'Badge',
   'Button',
   'Calendar',
-  'Card', 'CardContent', 'CardDescription', 'CardFooter', 'CardHeader', 'CardTitle',
+  'Card',
+  'CardContent',
+  'CardDescription',
+  'CardFooter',
+  'CardHeader',
+  'CardTitle',
   'Checkbox',
-  'Collapsible', 'CollapsibleContent', 'CollapsibleTrigger',
-  'Command', 'CommandDialog', 'CommandEmpty', 'CommandGroup', 'CommandInput', 'CommandItem',
-  'CommandList', 'CommandSeparator', 'CommandShortcut',
-  'ContextMenu', 'ContextMenuCheckboxItem', 'ContextMenuContent', 'ContextMenuItem',
-  'ContextMenuLabel', 'ContextMenuRadioGroup', 'ContextMenuRadioItem', 'ContextMenuSeparator',
-  'ContextMenuShortcut', 'ContextMenuSub', 'ContextMenuSubContent', 'ContextMenuSubTrigger',
+  'Collapsible',
+  'CollapsibleContent',
+  'CollapsibleTrigger',
+  'Command',
+  'CommandDialog',
+  'CommandEmpty',
+  'CommandGroup',
+  'CommandInput',
+  'CommandItem',
+  'CommandList',
+  'CommandSeparator',
+  'CommandShortcut',
+  'ContextMenu',
+  'ContextMenuCheckboxItem',
+  'ContextMenuContent',
+  'ContextMenuItem',
+  'ContextMenuLabel',
+  'ContextMenuRadioGroup',
+  'ContextMenuRadioItem',
+  'ContextMenuSeparator',
+  'ContextMenuShortcut',
+  'ContextMenuSub',
+  'ContextMenuSubContent',
+  'ContextMenuSubTrigger',
   'ContextMenuTrigger',
-  'Dialog', 'DialogContent', 'DialogDescription', 'DialogFooter', 'DialogHeader', 'DialogTitle',
+  'Dialog',
+  'DialogContent',
+  'DialogDescription',
+  'DialogFooter',
+  'DialogHeader',
+  'DialogTitle',
   'DialogTrigger',
-  'DropdownMenu', 'DropdownMenuCheckboxItem', 'DropdownMenuContent', 'DropdownMenuItem',
-  'DropdownMenuLabel', 'DropdownMenuRadioGroup', 'DropdownMenuRadioItem', 'DropdownMenuSeparator',
-  'DropdownMenuShortcut', 'DropdownMenuSub', 'DropdownMenuSubContent', 'DropdownMenuSubTrigger',
+  'DropdownMenu',
+  'DropdownMenuCheckboxItem',
+  'DropdownMenuContent',
+  'DropdownMenuItem',
+  'DropdownMenuLabel',
+  'DropdownMenuRadioGroup',
+  'DropdownMenuRadioItem',
+  'DropdownMenuSeparator',
+  'DropdownMenuShortcut',
+  'DropdownMenuSub',
+  'DropdownMenuSubContent',
+  'DropdownMenuSubTrigger',
   'DropdownMenuTrigger',
-  'Form', 'FormControl', 'FormDescription', 'FormField', 'FormItem', 'FormLabel', 'FormMessage',
-  'HoverCard', 'HoverCardContent', 'HoverCardTrigger',
+  'Form',
+  'FormControl',
+  'FormDescription',
+  'FormField',
+  'FormItem',
+  'FormLabel',
+  'FormMessage',
+  'HoverCard',
+  'HoverCardContent',
+  'HoverCardTrigger',
   'Input',
   'Label',
-  'Menubar', 'MenubarCheckboxItem', 'MenubarContent', 'MenubarItem', 'MenubarLabel',
-  'MenubarMenu', 'MenubarRadioGroup', 'MenubarRadioItem', 'MenubarSeparator', 'MenubarShortcut',
-  'MenubarSub', 'MenubarSubContent', 'MenubarSubTrigger', 'MenubarTrigger',
-  'NavigationMenu', 'NavigationMenuContent', 'NavigationMenuItem', 'NavigationMenuLink',
-  'NavigationMenuList', 'NavigationMenuTrigger',
-  'Popover', 'PopoverContent', 'PopoverTrigger',
+  'Menubar',
+  'MenubarCheckboxItem',
+  'MenubarContent',
+  'MenubarItem',
+  'MenubarLabel',
+  'MenubarMenu',
+  'MenubarRadioGroup',
+  'MenubarRadioItem',
+  'MenubarSeparator',
+  'MenubarShortcut',
+  'MenubarSub',
+  'MenubarSubContent',
+  'MenubarSubTrigger',
+  'MenubarTrigger',
+  'NavigationMenu',
+  'NavigationMenuContent',
+  'NavigationMenuItem',
+  'NavigationMenuLink',
+  'NavigationMenuList',
+  'NavigationMenuTrigger',
+  'Popover',
+  'PopoverContent',
+  'PopoverTrigger',
   'Progress',
-  'RadioGroup', 'RadioGroupItem',
-  'ScrollArea', 'ScrollBar',
-  'Select', 'SelectContent', 'SelectGroup', 'SelectItem', 'SelectLabel', 'SelectSeparator',
-  'SelectTrigger', 'SelectValue',
+  'RadioGroup',
+  'RadioGroupItem',
+  'ScrollArea',
+  'ScrollBar',
+  'Select',
+  'SelectContent',
+  'SelectGroup',
+  'SelectItem',
+  'SelectLabel',
+  'SelectSeparator',
+  'SelectTrigger',
+  'SelectValue',
   'Separator',
-  'Sheet', 'SheetContent', 'SheetDescription', 'SheetFooter', 'SheetHeader', 'SheetTitle',
+  'Sheet',
+  'SheetContent',
+  'SheetDescription',
+  'SheetFooter',
+  'SheetHeader',
+  'SheetTitle',
   'SheetTrigger',
   'Skeleton',
   'Slider',
   'Switch',
-  'Table', 'TableBody', 'TableCaption', 'TableCell', 'TableFooter', 'TableHead', 'TableHeader',
+  'Table',
+  'TableBody',
+  'TableCaption',
+  'TableCell',
+  'TableFooter',
+  'TableHead',
+  'TableHeader',
   'TableRow',
-  'Tabs', 'TabsContent', 'TabsList', 'TabsTrigger',
+  'Tabs',
+  'TabsContent',
+  'TabsList',
+  'TabsTrigger',
   'Textarea',
-  'Toast', 'ToastAction', 'ToastClose', 'ToastDescription', 'ToastProvider', 'ToastTitle',
-  'ToastViewport', 'Toaster',
-  'Toggle', 'ToggleGroup', 'ToggleGroupItem',
-  'Tooltip', 'TooltipContent', 'TooltipProvider', 'TooltipTrigger',
+  'Toast',
+  'ToastAction',
+  'ToastClose',
+  'ToastDescription',
+  'ToastProvider',
+  'ToastTitle',
+  'ToastViewport',
+  'Toaster',
+  'Toggle',
+  'ToggleGroup',
+  'ToggleGroupItem',
+  'Tooltip',
+  'TooltipContent',
+  'TooltipProvider',
+  'TooltipTrigger',
 ];
 
 /**
@@ -138,45 +247,53 @@ export function extractShadcnUI(source: SourceFile): {
       };
     }
 
-    importDeclarations.forEach(imp => {
-    const moduleSpecifier = imp.getModuleSpecifierValue();
+    importDeclarations.forEach((imp) => {
+      const moduleSpecifier = imp.getModuleSpecifierValue();
 
-    // Check if it's a ShadCN/UI import path
-    const isShadcnImport = SHADCN_IMPORT_PATTERNS.some(pattern => pattern.test(moduleSpecifier));
+      // Check if it's a ShadCN/UI import path
+      const isShadcnImport = SHADCN_IMPORT_PATTERNS.some((pattern) =>
+        pattern.test(moduleSpecifier),
+      );
 
-    if (isShadcnImport) {
-      hasShadcnImport = true;
-      // Extract component names from imports (including aliases)
-      const namedImports = imp.getNamedImports();
-      namedImports.forEach(namedImport => {
-        const importName = namedImport.getName(); // Original/canonical name
-        const aliasNode = namedImport.getAliasNode();
-        const localName = aliasNode?.getText() ?? importName; // Local alias or original
+      if (isShadcnImport) {
+        hasShadcnImport = true;
+        // Extract component names from imports (including aliases)
+        const namedImports = imp.getNamedImports();
+        namedImports.forEach((namedImport) => {
+          const importName = namedImport.getName(); // Original/canonical name
+          const aliasNode = namedImport.getAliasNode();
+          const localName = aliasNode?.getText() ?? importName; // Local alias or original
 
-        if (SHADCN_COMPONENTS.includes(importName)) {
-          // Count import as one usage
-          componentCounts.set(importName, (componentCounts.get(importName) ?? 0) + 1);
-          // Track the mapping from local name (alias or original) to canonical component
-          localToShadcn.set(localName, importName);
-          // Always map canonical name to itself (for direct usage without alias)
-          localToShadcn.set(importName, importName);
-        }
-      });
+          if (SHADCN_COMPONENTS.includes(importName)) {
+            // Count import as one usage
+            componentCounts.set(
+              importName,
+              (componentCounts.get(importName) ?? 0) + 1,
+            );
+            // Track the mapping from local name (alias or original) to canonical component
+            localToShadcn.set(localName, importName);
+            // Always map canonical name to itself (for direct usage without alias)
+            localToShadcn.set(importName, importName);
+          }
+        });
 
-      // Check for default imports
-      // Note: Only recognizes default imports where the import name matches a canonical
-      // ShadCN component name. Aliased default imports (e.g., "import PrimaryButton from ...")
-      // won't be recognized, but ShadCN typically uses named imports anyway.
-      const defaultImport = imp.getDefaultImport();
-      if (defaultImport) {
-        const defaultName = defaultImport.getText();
-        if (SHADCN_COMPONENTS.includes(defaultName)) {
-          componentCounts.set(defaultName, (componentCounts.get(defaultName) ?? 0) + 1);
-          localToShadcn.set(defaultName, defaultName);
+        // Check for default imports
+        // Note: Only recognizes default imports where the import name matches a canonical
+        // ShadCN component name. Aliased default imports (e.g., "import PrimaryButton from ...")
+        // won't be recognized, but ShadCN typically uses named imports anyway.
+        const defaultImport = imp.getDefaultImport();
+        if (defaultImport) {
+          const defaultName = defaultImport.getText();
+          if (SHADCN_COMPONENTS.includes(defaultName)) {
+            componentCounts.set(
+              defaultName,
+              (componentCounts.get(defaultName) ?? 0) + 1,
+            );
+            localToShadcn.set(defaultName, defaultName);
+          }
         }
       }
-    }
-  });
+    });
 
     // Also check for component usage in JSX using AST – but ONLY if we saw a ShadCN import
     if (hasShadcnImport) {
@@ -191,109 +308,140 @@ export function extractShadcnUI(source: SourceFile): {
         // If AST traversal fails, continue with what we have (imports only)
       }
 
-    for (const element of jsxElements) {
-      const openingElement = 'getOpeningElement' in element 
-        ? element.getOpeningElement() 
-        : element;
+      for (const element of jsxElements) {
+        const openingElement =
+          'getOpeningElement' in element
+            ? element.getOpeningElement()
+            : element;
 
-      const rawTag = openingElement.getTagNameNode().getText();
-      
-      // Handle namespace tags like <Dialog.Root> or <Dialog.Trigger>
-      const baseTag = rawTag.includes('.') 
-        ? rawTag.split('.')[0] 
-        : rawTag;
+        const rawTag = openingElement.getTagNameNode().getText();
 
-      // Map local alias to canonical component name
-      const componentName = localToShadcn.get(baseTag) ?? baseTag;
+        // Handle namespace tags like <Dialog.Root> or <Dialog.Trigger>
+        const baseTag = rawTag.includes('.') ? rawTag.split('.')[0] : rawTag;
 
-      if (SHADCN_COMPONENTS.includes(componentName)) {
-        // Count each JSX usage (in addition to import count)
-        componentCounts.set(componentName, (componentCounts.get(componentName) ?? 0) + 1);
+        // Map local alias to canonical component name
+        const componentName = localToShadcn.get(baseTag) ?? baseTag;
 
-        // Extract variant prop usage from JSX attributes
-        const attributes = openingElement.getAttributes();
-        for (const attr of attributes) {
-          if (attr.getKind() !== SyntaxKind.JsxAttribute) continue;
-          
-          const jsxAttr = attr as JsxAttribute;
-          const attrName = jsxAttr.getNameNode().getText();
+        if (SHADCN_COMPONENTS.includes(componentName)) {
+          // Count each JSX usage (in addition to import count)
+          componentCounts.set(
+            componentName,
+            (componentCounts.get(componentName) ?? 0) + 1,
+          );
 
-          // Extract variant prop
-          if (attrName === 'variant') {
-            const initializer = jsxAttr.getInitializer();
-            if (initializer && initializer.getKind() === SyntaxKind.StringLiteral) {
-              const variantValue = (initializer as StringLiteral).getLiteralText();
+          // Extract variant prop usage from JSX attributes
+          const attributes = openingElement.getAttributes();
+          for (const attr of attributes) {
+            if (attr.getKind() !== SyntaxKind.JsxAttribute) continue;
 
-              // Determine component type
-              let componentType = 'other';
-              if (componentName === 'Button') componentType = 'button';
-              else if (componentName === 'Badge') componentType = 'badge';
-              else if (componentName === 'Alert') componentType = 'alert';
-              else if (componentName === 'Card') componentType = 'card';
+            const jsxAttr = attr as JsxAttribute;
+            const attrName = jsxAttr.getNameNode().getText();
 
-              if (!variants.has(componentType)) {
-                variants.set(componentType, new Set());
-              }
+            // Extract variant prop
+            if (attrName === 'variant') {
+              const initializer = jsxAttr.getInitializer();
+              if (
+                initializer &&
+                initializer.getKind() === SyntaxKind.StringLiteral
+              ) {
+                const variantValue = (
+                  initializer as StringLiteral
+                ).getLiteralText();
 
-              // For Card, don't filter strictly (custom variants are common)
-              // For other components, only record known variants
-              const allowed = SHADCN_VARIANTS[componentType as keyof typeof SHADCN_VARIANTS];
-              if (componentType === 'card' || !allowed || allowed.includes(variantValue)) {
-                variants.get(componentType)!.add(variantValue);
+                // Determine component type
+                let componentType = 'other';
+                if (componentName === 'Button') componentType = 'button';
+                else if (componentName === 'Badge') componentType = 'badge';
+                else if (componentName === 'Alert') componentType = 'alert';
+                else if (componentName === 'Card') componentType = 'card';
+
+                if (!variants.has(componentType)) {
+                  variants.set(componentType, new Set());
+                }
+
+                // For Card, don't filter strictly (custom variants are common)
+                // For other components, only record known variants
+                const allowed =
+                  SHADCN_VARIANTS[
+                    componentType as keyof typeof SHADCN_VARIANTS
+                  ];
+                if (
+                  componentType === 'card' ||
+                  !allowed ||
+                  allowed.includes(variantValue)
+                ) {
+                  variants.get(componentType)!.add(variantValue);
+                }
               }
             }
-          }
 
-          // Extract size prop
-          if (attrName === 'size') {
-            const initializer = jsxAttr.getInitializer();
-            if (initializer && initializer.getKind() === SyntaxKind.StringLiteral) {
-              const sizeValue = (initializer as StringLiteral).getLiteralText();
-              if (SHADCN_SIZES.includes(sizeValue)) {
-                sizes.add(sizeValue);
+            // Extract size prop
+            if (attrName === 'size') {
+              const initializer = jsxAttr.getInitializer();
+              if (
+                initializer &&
+                initializer.getKind() === SyntaxKind.StringLiteral
+              ) {
+                const sizeValue = (
+                  initializer as StringLiteral
+                ).getLiteralText();
+                if (SHADCN_SIZES.includes(sizeValue)) {
+                  sizes.add(sizeValue);
+                }
               }
             }
           }
         }
       }
     }
-  }
 
     // Check for form usage (react-hook-form integration) using AST
     let usesForm = false;
     try {
-      const callExpressions: CallExpression[] = source.getDescendantsOfKind(SyntaxKind.CallExpression);
+      const callExpressions: CallExpression[] = source.getDescendantsOfKind(
+        SyntaxKind.CallExpression,
+      );
       usesForm =
-        callExpressions.some(callExpr => {
+        callExpressions.some((callExpr) => {
           const expr = callExpr.getExpression();
-          return expr.getKind() === SyntaxKind.Identifier && 
-            ['useForm', 'FormProvider', 'Controller'].includes(expr.getText());
+          return (
+            expr.getKind() === SyntaxKind.Identifier &&
+            ['useForm', 'FormProvider', 'Controller'].includes(expr.getText())
+          );
         }) ||
         componentCounts.has('Form') ||
         componentCounts.has('FormField');
     } catch {
       // If AST traversal fails, check only component counts
-      usesForm = componentCounts.has('Form') || componentCounts.has('FormField');
+      usesForm =
+        componentCounts.has('Form') || componentCounts.has('FormField');
     }
 
     // Check for theme usage (next-themes or similar) using AST
     let usesTheme = false;
     try {
-      const callExpressions: CallExpression[] = source.getDescendantsOfKind(SyntaxKind.CallExpression);
+      const callExpressions: CallExpression[] = source.getDescendantsOfKind(
+        SyntaxKind.CallExpression,
+      );
       usesTheme =
-        callExpressions.some(callExpr => {
+        callExpressions.some((callExpr) => {
           const expr = callExpr.getExpression();
-          return expr.getKind() === SyntaxKind.Identifier && expr.getText() === 'useTheme';
+          return (
+            expr.getKind() === SyntaxKind.Identifier &&
+            expr.getText() === 'useTheme'
+          );
         }) ||
-        importDeclarations.some(imp => {
+        importDeclarations.some((imp) => {
           const moduleSpecifier = imp.getModuleSpecifierValue();
           return (
-            imp.getNamedImports().some(n => n.getName() === 'ThemeProvider') ||
+            imp
+              .getNamedImports()
+              .some((n) => n.getName() === 'ThemeProvider') ||
             /theme-provider/i.test(moduleSpecifier)
           );
         }) ||
         // Check for theme- classes in Tailwind (would need to check className attributes)
-        source.getDescendantsOfKind(SyntaxKind.JsxAttribute).some(attr => {
+        source.getDescendantsOfKind(SyntaxKind.JsxAttribute).some((attr) => {
           const jsxAttr = attr as JsxAttribute;
           const attrName = jsxAttr.getNameNode().getText();
           if (attrName === 'className' || attrName === 'class') {
@@ -307,10 +455,10 @@ export function extractShadcnUI(source: SourceFile): {
         });
     } catch {
       // If AST traversal fails, check only imports
-      usesTheme = importDeclarations.some(imp => {
+      usesTheme = importDeclarations.some((imp) => {
         const moduleSpecifier = imp.getModuleSpecifierValue();
         return (
-          imp.getNamedImports().some(n => n.getName() === 'ThemeProvider') ||
+          imp.getNamedImports().some((n) => n.getName() === 'ThemeProvider') ||
           /theme-provider/i.test(moduleSpecifier)
         );
       });
@@ -319,11 +467,13 @@ export function extractShadcnUI(source: SourceFile): {
     // Check for icon usage (lucide-react is common with ShadCN) using AST
     let usesIcons = false;
     try {
-      usesIcons = importDeclarations.some(imp => {
+      usesIcons = importDeclarations.some((imp) => {
         const moduleSpecifier = imp.getModuleSpecifierValue();
-        return moduleSpecifier === 'lucide-react' ||
+        return (
+          moduleSpecifier === 'lucide-react' ||
           moduleSpecifier === '@radix-ui/react-icons' ||
-          moduleSpecifier.startsWith('react-icons');
+          moduleSpecifier.startsWith('react-icons')
+        );
       });
     } catch {
       // If AST traversal fails, skip icon detection

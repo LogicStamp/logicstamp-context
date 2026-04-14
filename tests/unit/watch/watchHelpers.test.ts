@@ -6,12 +6,15 @@
 import { describe, it, expect } from 'vitest';
 import type { UIFContract } from '../../../src/types/UIFContract.js';
 import type { LogicStampBundle } from '../../../src/core/pack.js';
-import { compareContracts, getChanges } from '../../../src/cli/commands/context/watchMode/watchDiff.js';
+import {
+  compareContracts,
+  getChanges,
+} from '../../../src/cli/commands/context/watchMode/watchDiff.js';
 
 // Helper to create mock contracts and bundles
 const createMockContract = (
   entryId: string,
-  overrides: Partial<UIFContract> = {}
+  overrides: Partial<UIFContract> = {},
 ): UIFContract => ({
   type: 'UIFContract',
   schemaVersion: '0.4',
@@ -37,7 +40,7 @@ const createMockContract = (
 const createMockBundle = (
   entryId: string,
   contracts: UIFContract[],
-  bundleHash: string = `bundle-${entryId}`
+  bundleHash: string = `bundle-${entryId}`,
 ): LogicStampBundle => ({
   type: 'LogicStampBundle',
   schemaVersion: '0.1',
@@ -46,7 +49,7 @@ const createMockBundle = (
   createdAt: new Date().toISOString(),
   bundleHash,
   graph: {
-    nodes: contracts.map(c => ({ entryId: c.entryId, contract: c })),
+    nodes: contracts.map((c) => ({ entryId: c.entryId, contract: c })),
     edges: [],
   },
   meta: {
@@ -62,7 +65,10 @@ describe('compareContracts', () => {
         interface: { props: { onClick: 'function' }, emits: {} },
       });
       const newContract = createMockContract('src/Button.tsx', {
-        interface: { props: { onClick: 'function', disabled: 'boolean' }, emits: {} },
+        interface: {
+          props: { onClick: 'function', disabled: 'boolean' },
+          emits: {},
+        },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -74,7 +80,10 @@ describe('compareContracts', () => {
 
     it('should detect removed props', () => {
       const oldContract = createMockContract('src/Button.tsx', {
-        interface: { props: { onClick: 'function', disabled: 'boolean' }, emits: {} },
+        interface: {
+          props: { onClick: 'function', disabled: 'boolean' },
+          emits: {},
+        },
       });
       const newContract = createMockContract('src/Button.tsx', {
         interface: { props: { onClick: 'function' }, emits: {} },
@@ -91,7 +100,15 @@ describe('compareContracts', () => {
         interface: { props: { variant: 'string' }, emits: {} },
       });
       const newContract = createMockContract('src/Button.tsx', {
-        interface: { props: { variant: { type: 'literal-union', literals: ['primary', 'secondary'] } }, emits: {} },
+        interface: {
+          props: {
+            variant: {
+              type: 'literal-union',
+              literals: ['primary', 'secondary'],
+            },
+          },
+          emits: {},
+        },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -132,7 +149,10 @@ describe('compareContracts', () => {
 
     it('should detect removed events', () => {
       const oldContract = createMockContract('src/Button.tsx', {
-        interface: { props: {}, emits: { onClick: 'function', onHover: 'function' } },
+        interface: {
+          props: {},
+          emits: { onClick: 'function', onHover: 'function' },
+        },
       });
       const newContract = createMockContract('src/Button.tsx', {
         interface: { props: {}, emits: { onClick: 'function' } },
@@ -160,7 +180,11 @@ describe('compareContracts', () => {
 
     it('should detect removed state', () => {
       const oldContract = createMockContract('src/Counter.tsx', {
-        interface: { props: {}, emits: {}, state: { count: 'number', isLoading: 'boolean' } },
+        interface: {
+          props: {},
+          emits: {},
+          state: { count: 'number', isLoading: 'boolean' },
+        },
       });
       const newContract = createMockContract('src/Counter.tsx', {
         interface: { props: {}, emits: {}, state: { count: 'number' } },
@@ -189,10 +213,22 @@ describe('compareContracts', () => {
   describe('version arrays comparison', () => {
     it('should detect added hooks', () => {
       const oldContract = createMockContract('src/App.tsx', {
-        composition: { variables: [], hooks: ['useState'], components: [], functions: [], imports: [] },
+        composition: {
+          variables: [],
+          hooks: ['useState'],
+          components: [],
+          functions: [],
+          imports: [],
+        },
       });
       const newContract = createMockContract('src/App.tsx', {
-        composition: { variables: [], hooks: ['useState', 'useEffect'], components: [], functions: [], imports: [] },
+        composition: {
+          variables: [],
+          hooks: ['useState', 'useEffect'],
+          components: [],
+          functions: [],
+          imports: [],
+        },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -203,10 +239,22 @@ describe('compareContracts', () => {
 
     it('should detect removed hooks', () => {
       const oldContract = createMockContract('src/App.tsx', {
-        composition: { variables: [], hooks: ['useState', 'useEffect'], components: [], functions: [], imports: [] },
+        composition: {
+          variables: [],
+          hooks: ['useState', 'useEffect'],
+          components: [],
+          functions: [],
+          imports: [],
+        },
       });
       const newContract = createMockContract('src/App.tsx', {
-        composition: { variables: [], hooks: ['useState'], components: [], functions: [], imports: [] },
+        composition: {
+          variables: [],
+          hooks: ['useState'],
+          components: [],
+          functions: [],
+          imports: [],
+        },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -216,10 +264,22 @@ describe('compareContracts', () => {
 
     it('should detect added components', () => {
       const oldContract = createMockContract('src/App.tsx', {
-        composition: { variables: [], hooks: [], components: ['Header'], functions: [], imports: [] },
+        composition: {
+          variables: [],
+          hooks: [],
+          components: ['Header'],
+          functions: [],
+          imports: [],
+        },
       });
       const newContract = createMockContract('src/App.tsx', {
-        composition: { variables: [], hooks: [], components: ['Header', 'Footer'], functions: [], imports: [] },
+        composition: {
+          variables: [],
+          hooks: [],
+          components: ['Header', 'Footer'],
+          functions: [],
+          imports: [],
+        },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -229,10 +289,22 @@ describe('compareContracts', () => {
 
     it('should detect added/removed functions', () => {
       const oldContract = createMockContract('src/utils.ts', {
-        composition: { variables: [], hooks: [], components: [], functions: ['formatDate'], imports: [] },
+        composition: {
+          variables: [],
+          hooks: [],
+          components: [],
+          functions: ['formatDate'],
+          imports: [],
+        },
       });
       const newContract = createMockContract('src/utils.ts', {
-        composition: { variables: [], hooks: [], components: [], functions: ['formatDate', 'formatCurrency'], imports: [] },
+        composition: {
+          variables: [],
+          hooks: [],
+          components: [],
+          functions: ['formatDate', 'formatCurrency'],
+          imports: [],
+        },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -242,10 +314,22 @@ describe('compareContracts', () => {
 
     it('should detect added/removed variables', () => {
       const oldContract = createMockContract('src/constants.ts', {
-        composition: { variables: ['API_URL'], hooks: [], components: [], functions: [], imports: [] },
+        composition: {
+          variables: ['API_URL'],
+          hooks: [],
+          components: [],
+          functions: [],
+          imports: [],
+        },
       });
       const newContract = createMockContract('src/constants.ts', {
-        composition: { variables: ['API_URL', 'API_KEY'], hooks: [], components: [], functions: [], imports: [] },
+        composition: {
+          variables: ['API_URL', 'API_KEY'],
+          hooks: [],
+          components: [],
+          functions: [],
+          imports: [],
+        },
       });
 
       const diff = compareContracts(oldContract, newContract);
@@ -307,8 +391,12 @@ describe('getChanges', () => {
     });
 
     it('should detect semantic hash changes', () => {
-      const oldContract = createMockContract('src/App.tsx', { semanticHash: 'hash-1' });
-      const newContract = createMockContract('src/App.tsx', { semanticHash: 'hash-2' });
+      const oldContract = createMockContract('src/App.tsx', {
+        semanticHash: 'hash-1',
+      });
+      const newContract = createMockContract('src/App.tsx', {
+        semanticHash: 'hash-2',
+      });
 
       const oldBundles = [createMockBundle('src/App.tsx', [oldContract])];
       const newBundles = [createMockBundle('src/App.tsx', [newContract])];
@@ -317,7 +405,10 @@ describe('getChanges', () => {
 
       expect(changes).not.toBeNull();
       expect(changes!.changed).toHaveLength(1);
-      expect(changes!.changed[0].semanticHash).toEqual({ old: 'hash-1', new: 'hash-2' });
+      expect(changes!.changed[0].semanticHash).toEqual({
+        old: 'hash-1',
+        new: 'hash-2',
+      });
     });
 
     it('should detect file hash changes (cosmetic)', () => {
@@ -337,7 +428,10 @@ describe('getChanges', () => {
 
       expect(changes).not.toBeNull();
       expect(changes!.changed).toHaveLength(1);
-      expect(changes!.changed[0].fileHash).toEqual({ old: 'file-1', new: 'file-2' });
+      expect(changes!.changed[0].fileHash).toEqual({
+        old: 'file-1',
+        new: 'file-2',
+      });
       expect(changes!.changed[0].semanticHash).toBeUndefined(); // Semantic didn't change
     });
 
@@ -369,7 +463,9 @@ describe('getChanges', () => {
       const newContract2 = createMockContract('src/components/Button.tsx');
 
       const oldBundles = [createMockBundle('src/App.tsx', [oldContract])];
-      const newBundles = [createMockBundle('src/App.tsx', [newContract1, newContract2])];
+      const newBundles = [
+        createMockBundle('src/App.tsx', [newContract1, newContract2]),
+      ];
 
       const changes = getChanges(oldBundles, newBundles);
 
@@ -382,7 +478,9 @@ describe('getChanges', () => {
       const oldContract2 = createMockContract('src/components/Button.tsx');
       const newContract = createMockContract('src/App.tsx');
 
-      const oldBundles = [createMockBundle('src/App.tsx', [oldContract1, oldContract2])];
+      const oldBundles = [
+        createMockBundle('src/App.tsx', [oldContract1, oldContract2]),
+      ];
       const newBundles = [createMockBundle('src/App.tsx', [newContract])];
 
       const changes = getChanges(oldBundles, newBundles);
@@ -396,8 +494,12 @@ describe('getChanges', () => {
     it('should detect bundle hash changes', () => {
       const contract = createMockContract('src/App.tsx');
 
-      const oldBundles = [createMockBundle('src/App.tsx', [contract], 'bundle-hash-1')];
-      const newBundles = [createMockBundle('src/App.tsx', [contract], 'bundle-hash-2')];
+      const oldBundles = [
+        createMockBundle('src/App.tsx', [contract], 'bundle-hash-1'),
+      ];
+      const newBundles = [
+        createMockBundle('src/App.tsx', [contract], 'bundle-hash-2'),
+      ];
 
       const changes = getChanges(oldBundles, newBundles);
 
@@ -432,8 +534,12 @@ describe('getChanges', () => {
 
   describe('case insensitivity', () => {
     it('should match contracts case-insensitively', () => {
-      const oldContract = createMockContract('src/App.tsx', { semanticHash: 'hash-1' });
-      const newContract = createMockContract('src/app.tsx', { semanticHash: 'hash-2' }); // Different case
+      const oldContract = createMockContract('src/App.tsx', {
+        semanticHash: 'hash-1',
+      });
+      const newContract = createMockContract('src/app.tsx', {
+        semanticHash: 'hash-2',
+      }); // Different case
 
       const oldBundles = [createMockBundle('src/App.tsx', [oldContract])];
       const newBundles = [createMockBundle('src/app.tsx', [newContract])];
@@ -456,7 +562,10 @@ describe('getChanges', () => {
       });
       const newContract = createMockContract('src/Button.tsx', {
         semanticHash: 'semantic-2',
-        interface: { props: { onClick: 'function', disabled: 'boolean' }, emits: {} },
+        interface: {
+          props: { onClick: 'function', disabled: 'boolean' },
+          emits: {},
+        },
       });
 
       const oldBundles = [createMockBundle('src/Button.tsx', [oldContract])];
@@ -466,7 +575,9 @@ describe('getChanges', () => {
 
       expect(changes).not.toBeNull();
       expect(changes!.changed[0].contractDiff).toBeDefined();
-      expect(changes!.changed[0].contractDiff!.props.added).toContain('disabled');
+      expect(changes!.changed[0].contractDiff!.props.added).toContain(
+        'disabled',
+      );
     });
 
     it('should not include contract diff when only file hash changes', () => {
@@ -492,13 +603,30 @@ describe('getChanges', () => {
   describe('multiple contracts in bundles', () => {
     it('should handle bundles with multiple contracts', () => {
       const appContract = createMockContract('src/App.tsx');
-      const buttonContract = createMockContract('src/components/Button.tsx', { semanticHash: 'btn-1' });
+      const buttonContract = createMockContract('src/components/Button.tsx', {
+        semanticHash: 'btn-1',
+      });
       const cardContract = createMockContract('src/components/Card.tsx');
 
-      const newButtonContract = createMockContract('src/components/Button.tsx', { semanticHash: 'btn-2' });
+      const newButtonContract = createMockContract(
+        'src/components/Button.tsx',
+        { semanticHash: 'btn-2' },
+      );
 
-      const oldBundles = [createMockBundle('src/App.tsx', [appContract, buttonContract, cardContract])];
-      const newBundles = [createMockBundle('src/App.tsx', [appContract, newButtonContract, cardContract])];
+      const oldBundles = [
+        createMockBundle('src/App.tsx', [
+          appContract,
+          buttonContract,
+          cardContract,
+        ]),
+      ];
+      const newBundles = [
+        createMockBundle('src/App.tsx', [
+          appContract,
+          newButtonContract,
+          cardContract,
+        ]),
+      ];
 
       const changes = getChanges(oldBundles, newBundles);
 

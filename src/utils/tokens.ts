@@ -13,7 +13,9 @@
 /** Mutable tokenizer state lives on this class instead of module-level lets. */
 export class TokenizerRuntime {
   private tiktokenEncoder: unknown = null;
-  private anthropicTokenizer: { countTokens?: (text: string) => number } | null = null;
+  private anthropicTokenizer: {
+    countTokens?: (text: string) => number;
+  } | null = null;
   private tiktokenLoaded = false;
   private anthropicLoaded = false;
 
@@ -78,7 +80,9 @@ export class TokenizerRuntime {
 
   async estimateGPT4Tokens(text: string): Promise<number> {
     const hasTiktoken = await this.loadTiktoken();
-    const encoder = this.tiktokenEncoder as { encode?: (s: string) => unknown[] } | null;
+    const encoder = this.tiktokenEncoder as {
+      encode?: (s: string) => unknown[];
+    } | null;
 
     if (hasTiktoken && encoder && typeof encoder.encode === 'function') {
       try {
@@ -135,6 +139,9 @@ export function formatTokenCount(count: number): string {
   return count.toLocaleString();
 }
 
-export async function getTokenizerStatus(): Promise<{ gpt4: boolean; claude: boolean }> {
+export async function getTokenizerStatus(): Promise<{
+  gpt4: boolean;
+  claude: boolean;
+}> {
   return defaultTokenizerRuntime.getTokenizerStatus();
 }

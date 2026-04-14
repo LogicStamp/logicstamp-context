@@ -155,9 +155,15 @@ export function MyComponent() {
 }
 `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'src/components/Button.tsx');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'src/components/Button.tsx',
+      );
 
-      const metadata = extractNextJsMetadata(sourceFile, 'src/components/Button.tsx');
+      const metadata = extractNextJsMetadata(
+        sourceFile,
+        'src/components/Button.tsx',
+      );
 
       expect(metadata).toBeUndefined();
     });
@@ -176,7 +182,13 @@ export function MyComponent() {
 
       const sourceFile = createTestSourceFile(sourceCode);
 
-      const kind = detectKind(['useState'], [], ['react'], sourceFile, 'test.tsx');
+      const kind = detectKind(
+        ['useState'],
+        [],
+        ['react'],
+        sourceFile,
+        'test.tsx',
+      );
 
       expect(kind).toBe('react:component');
     });
@@ -192,7 +204,13 @@ export function MyComponent() {
 
       const sourceFile = createTestSourceFile(sourceCode);
 
-      const kind = detectKind([], ['Button'], ['react'], sourceFile, 'test.tsx');
+      const kind = detectKind(
+        [],
+        ['Button'],
+        ['react'],
+        sourceFile,
+        'test.tsx',
+      );
 
       expect(kind).toBe('react:component');
     });
@@ -268,9 +286,18 @@ export default function useTypewriter(text: string, speed = 30) {
 }
 `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'hooks/useTypewriter.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'hooks/useTypewriter.ts',
+      );
 
-      const kind = detectKind(['useState'], [], ['react'], sourceFile, 'hooks/useTypewriter.ts');
+      const kind = detectKind(
+        ['useState'],
+        [],
+        ['react'],
+        sourceFile,
+        'hooks/useTypewriter.ts',
+      );
 
       expect(kind).toBe('react:hook');
     });
@@ -285,9 +312,18 @@ export function useCounter(initialValue = 0) {
 }
 `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'hooks/useCounter.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'hooks/useCounter.ts',
+      );
 
-      const kind = detectKind(['useState'], [], ['react'], sourceFile, 'hooks/useCounter.ts');
+      const kind = detectKind(
+        ['useState'],
+        [],
+        ['react'],
+        sourceFile,
+        'hooks/useCounter.ts',
+      );
 
       expect(kind).toBe('react:hook');
     });
@@ -302,9 +338,18 @@ export const useDebounce = (value: string, delay: number) => {
 };
 `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'hooks/useDebounce.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'hooks/useDebounce.ts',
+      );
 
-      const kind = detectKind(['useState'], [], ['react'], sourceFile, 'hooks/useDebounce.ts');
+      const kind = detectKind(
+        ['useState'],
+        [],
+        ['react'],
+        sourceFile,
+        'hooks/useDebounce.ts',
+      );
 
       expect(kind).toBe('react:hook');
     });
@@ -319,9 +364,18 @@ export function useCounter(initialValue = 0) {
 }
 `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'components/Counter.tsx');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'components/Counter.tsx',
+      );
 
-      const kind = detectKind(['useState'], [], ['react'], sourceFile, 'components/Counter.tsx');
+      const kind = detectKind(
+        ['useState'],
+        [],
+        ['react'],
+        sourceFile,
+        'components/Counter.tsx',
+      );
 
       expect(kind).toBe('react:component');
     });
@@ -337,9 +391,18 @@ export function useCounter(initialValue = 0) {
 }
 `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'hooks/useCounter.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'hooks/useCounter.ts',
+      );
 
-      const kind = detectKind(['useState'], ['Button'], ['react'], sourceFile, 'hooks/useCounter.ts');
+      const kind = detectKind(
+        ['useState'],
+        ['Button'],
+        ['react'],
+        sourceFile,
+        'hooks/useCounter.ts',
+      );
 
       expect(kind).toBe('react:component');
     });
@@ -358,7 +421,11 @@ export function MyComponent() {
 
       // Should not throw even if there are issues
       const directive = detectNextJsDirective(sourceFile);
-      expect(directive === 'client' || directive === 'server' || directive === undefined).toBe(true);
+      expect(
+        directive === 'client' ||
+          directive === 'server' ||
+          directive === undefined,
+      ).toBe(true);
     });
 
     it('should handle AST traversal errors gracefully in extractNextJsMetadata', () => {
@@ -389,14 +456,27 @@ export function MyComponent() {
       const sourceFile = createTestSourceFile(sourceCode);
 
       // Should not throw even if there are issues
-      const kind = detectKind(['useState'], [], ['react'], sourceFile, 'test.tsx');
-      expect(['react:component', 'react:hook', 'node:cli', 'ts:module']).toContain(kind);
+      const kind = detectKind(
+        ['useState'],
+        [],
+        ['react'],
+        sourceFile,
+        'test.tsx',
+      );
+      expect([
+        'react:component',
+        'react:hook',
+        'node:cli',
+        'ts:module',
+      ]).toContain(kind);
     });
 
     it('should have debug logging infrastructure in place', () => {
       const originalEnv = process.env.LOGICSTAMP_DEBUG;
       process.env.LOGICSTAMP_DEBUG = '1';
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       const sourceFile = createTestSourceFile('export function test() {}');
 
@@ -407,9 +487,10 @@ export function MyComponent() {
       // If errors were logged, verify they have the correct format
       const errorCalls = consoleErrorSpy.mock.calls;
       if (errorCalls.length > 0) {
-        const hasDetectorLog = errorCalls.some(call =>
-          call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
-          call[0]?.toString().includes('detector')
+        const hasDetectorLog = errorCalls.some(
+          (call) =>
+            call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
+            call[0]?.toString().includes('detector'),
         );
         expect(hasDetectorLog).toBe(true);
       }
@@ -427,7 +508,11 @@ export function MyComponent() {
 
       // Should return undefined on any error, not throw
       const directive = detectNextJsDirective(sourceFile);
-      expect(directive === 'client' || directive === 'server' || directive === undefined).toBe(true);
+      expect(
+        directive === 'client' ||
+          directive === 'server' ||
+          directive === undefined,
+      ).toBe(true);
     });
 
     it('should return undefined on error in extractNextJsMetadata', () => {
@@ -443,7 +528,13 @@ export function MyComponent() {
 
       // Should return a valid ContractKind on any error, defaulting to ts:module
       const kind = detectKind([], [], [], sourceFile, 'test.tsx');
-      expect(['react:component', 'react:hook', 'node:cli', 'ts:module', 'node:api']).toContain(kind);
+      expect([
+        'react:component',
+        'react:hook',
+        'node:cli',
+        'ts:module',
+        'node:api',
+      ]).toContain(kind);
     });
   });
 
@@ -460,7 +551,14 @@ export function MyComponent() {
 
       const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
-      const kind = detectKind([], [], ['express'], sourceFile, 'routes.ts', 'express');
+      const kind = detectKind(
+        [],
+        [],
+        ['express'],
+        sourceFile,
+        'routes.ts',
+        'express',
+      );
 
       expect(kind).toBe('node:api');
     });
@@ -478,9 +576,19 @@ export function MyComponent() {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
-      const kind = detectKind([], [], ['@nestjs/common'], sourceFile, 'users.controller.ts', 'nestjs');
+      const kind = detectKind(
+        [],
+        [],
+        ['@nestjs/common'],
+        sourceFile,
+        'users.controller.ts',
+        'nestjs',
+      );
 
       expect(kind).toBe('node:api');
     });
@@ -499,7 +607,14 @@ export function MyComponent() {
 
       const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
-      const kind = detectKind(['useState'], [], ['express', 'react'], sourceFile, 'routes.ts', 'express');
+      const kind = detectKind(
+        ['useState'],
+        [],
+        ['express', 'react'],
+        sourceFile,
+        'routes.ts',
+        'express',
+      );
 
       expect(kind).toBe('node:api');
     });
@@ -518,7 +633,14 @@ export function MyComponent() {
 
       const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
-      const kind = detectKind([], [], ['express', 'vue'], sourceFile, 'routes.ts', 'express');
+      const kind = detectKind(
+        [],
+        [],
+        ['express', 'vue'],
+        sourceFile,
+        'routes.ts',
+        'express',
+      );
 
       expect(kind).toBe('node:api');
     });
@@ -542,4 +664,3 @@ export function MyComponent() {
     });
   });
 });
-

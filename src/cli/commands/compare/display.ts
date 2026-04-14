@@ -5,17 +5,22 @@
 import type { MultiFileCompareResult } from './types.js';
 import { formatTokenCount } from '../../../utils/tokens.js';
 
-
 /**
  * Format and display multi-file comparison results
  */
-export function displayMultiFileCompareResult(result: MultiFileCompareResult, stats: boolean, quiet?: boolean): void {
+export function displayMultiFileCompareResult(
+  result: MultiFileCompareResult,
+  stats: boolean,
+  quiet?: boolean,
+): void {
   // Skip status header in quiet mode unless there's drift
   if (quiet && result.status === 'PASS') {
     // Minimal output in quiet mode for PASS
     process.stdout.write('✓\n');
   } else if (!quiet || result.status === 'DRIFT') {
-    console.log(`\n${result.status === 'PASS' ? '✅' : '⚠️'}  ${result.status}\n`);
+    console.log(
+      `\n${result.status === 'PASS' ? '✅' : '⚠️'}  ${result.status}\n`,
+    );
   }
 
   // Skip summaries in quiet mode
@@ -57,7 +62,9 @@ export function displayMultiFileCompareResult(result: MultiFileCompareResult, st
     if (stats) {
       console.log('   ⚠️  Current mode = tokenizer-based.');
       console.log('      Other modes / raw source = heuristic.');
-      console.log('      For precise per-mode breakdown, use "stamp context --compare-modes".');
+      console.log(
+        '      For precise per-mode breakdown, use "stamp context --compare-modes".',
+      );
     }
     console.log();
   }
@@ -79,17 +86,17 @@ export function displayMultiFileCompareResult(result: MultiFileCompareResult, st
         const cr = folder.componentResult;
         if (cr.added.length > 0) {
           console.log(`      + Added components (${cr.added.length}):`);
-          cr.added.forEach(id => console.log(`        + ${id}`));
+          cr.added.forEach((id) => console.log(`        + ${id}`));
         }
         if (cr.removed.length > 0) {
           console.log(`      - Removed components (${cr.removed.length}):`);
-          cr.removed.forEach(id => console.log(`        - ${id}`));
+          cr.removed.forEach((id) => console.log(`        - ${id}`));
         }
         if (cr.changed.length > 0) {
           console.log(`      ~ Changed components (${cr.changed.length}):`);
           cr.changed.forEach(({ id, deltas }) => {
             console.log(`        ~ ${id}`);
-            deltas.forEach(delta => {
+            deltas.forEach((delta) => {
               console.log(`          Δ ${delta.type}`);
 
               if (delta.type === 'hash') {
@@ -97,47 +104,81 @@ export function displayMultiFileCompareResult(result: MultiFileCompareResult, st
                 console.log(`            new: ${delta.new}`);
               } else if (delta.type === 'props' || delta.type === 'emits') {
                 // props/emits are now full objects - compute diff on display
-                const oldObj = (delta.old && typeof delta.old === 'object') ? delta.old as Record<string, any> : {};
-                const newObj = (delta.new && typeof delta.new === 'object') ? delta.new as Record<string, any> : {};
+                const oldObj =
+                  delta.old && typeof delta.old === 'object'
+                    ? (delta.old as Record<string, any>)
+                    : {};
+                const newObj =
+                  delta.new && typeof delta.new === 'object'
+                    ? (delta.new as Record<string, any>)
+                    : {};
                 const oldKeys = Object.keys(oldObj);
                 const newKeys = Object.keys(newObj);
                 const oldSet = new Set(oldKeys);
                 const newSet = new Set(newKeys);
 
-                const removed = oldKeys.filter((key: string) => !newSet.has(key));
+                const removed = oldKeys.filter(
+                  (key: string) => !newSet.has(key),
+                );
                 const added = newKeys.filter((key: string) => !oldSet.has(key));
                 const changed = oldKeys.filter((key: string) => {
                   if (newSet.has(key)) {
-                    return JSON.stringify(oldObj[key]) !== JSON.stringify(newObj[key]);
+                    return (
+                      JSON.stringify(oldObj[key]) !==
+                      JSON.stringify(newObj[key])
+                    );
                   }
                   return false;
                 });
 
                 if (removed.length > 0) {
-                  removed.forEach((key: string) => console.log(`            - ${key}`));
+                  removed.forEach((key: string) =>
+                    console.log(`            - ${key}`),
+                  );
                 }
                 if (added.length > 0) {
-                  added.forEach((key: string) => console.log(`            + ${key}`));
+                  added.forEach((key: string) =>
+                    console.log(`            + ${key}`),
+                  );
                 }
                 if (changed.length > 0) {
                   changed.forEach((key: string) => {
-                    const oldStr = typeof oldObj[key] === 'string' ? oldObj[key] : JSON.stringify(oldObj[key]);
-                    const newStr = typeof newObj[key] === 'string' ? newObj[key] : JSON.stringify(newObj[key]);
+                    const oldStr =
+                      typeof oldObj[key] === 'string'
+                        ? oldObj[key]
+                        : JSON.stringify(oldObj[key]);
+                    const newStr =
+                      typeof newObj[key] === 'string'
+                        ? newObj[key]
+                        : JSON.stringify(newObj[key]);
                     console.log(`            ~ ${key}: ${oldStr} → ${newStr}`);
                   });
                 }
-              } else if (delta.type === 'imports' || delta.type === 'hooks' || delta.type === 'functions' ||
-                         delta.type === 'components' || delta.type === 'variables') {
+              } else if (
+                delta.type === 'imports' ||
+                delta.type === 'hooks' ||
+                delta.type === 'functions' ||
+                delta.type === 'components' ||
+                delta.type === 'variables'
+              ) {
                 const oldSet = new Set(delta.old);
                 const newSet = new Set(delta.new);
-                const removed = delta.old.filter((item: string) => !newSet.has(item));
-                const added = delta.new.filter((item: string) => !oldSet.has(item));
+                const removed = delta.old.filter(
+                  (item: string) => !newSet.has(item),
+                );
+                const added = delta.new.filter(
+                  (item: string) => !oldSet.has(item),
+                );
 
                 if (removed.length > 0) {
-                  removed.forEach((item: string) => console.log(`            - ${item}`));
+                  removed.forEach((item: string) =>
+                    console.log(`            - ${item}`),
+                  );
                 }
                 if (added.length > 0) {
-                  added.forEach((item: string) => console.log(`            + ${item}`));
+                  added.forEach((item: string) =>
+                    console.log(`            + ${item}`),
+                  );
                 }
                 if (removed.length === 0 && added.length === 0) {
                   console.log(`            (order changed)`);
@@ -151,26 +192,37 @@ export function displayMultiFileCompareResult(result: MultiFileCompareResult, st
                 const newSet = new Set(newKeys);
 
                 // Find removed state variables
-                const removed = oldKeys.filter((key: string) => !newSet.has(key));
+                const removed = oldKeys.filter(
+                  (key: string) => !newSet.has(key),
+                );
                 // Find added state variables
                 const added = newKeys.filter((key: string) => !oldSet.has(key));
                 // Find changed state variables (type changed)
                 const changed = oldKeys.filter((key: string) => {
                   if (newSet.has(key)) {
-                    return JSON.stringify(oldState[key]) !== JSON.stringify(newState[key]);
+                    return (
+                      JSON.stringify(oldState[key]) !==
+                      JSON.stringify(newState[key])
+                    );
                   }
                   return false;
                 });
 
                 if (removed.length > 0) {
-                  removed.forEach((key: string) => console.log(`            - ${key}`));
+                  removed.forEach((key: string) =>
+                    console.log(`            - ${key}`),
+                  );
                 }
                 if (added.length > 0) {
-                  added.forEach((key: string) => console.log(`            + ${key}`));
+                  added.forEach((key: string) =>
+                    console.log(`            + ${key}`),
+                  );
                 }
                 if (changed.length > 0) {
                   changed.forEach((key: string) => {
-                    console.log(`            ~ ${key}: ${JSON.stringify(oldState[key])} → ${JSON.stringify(newState[key])}`);
+                    console.log(
+                      `            ~ ${key}: ${JSON.stringify(oldState[key])} → ${JSON.stringify(newState[key])}`,
+                    );
                   });
                 }
               } else if (delta.type === 'exports') {
@@ -178,14 +230,26 @@ export function displayMultiFileCompareResult(result: MultiFileCompareResult, st
               } else if (delta.type === 'apiSignature') {
                 const oldSig = delta.old as Record<string, any> | null;
                 const newSig = delta.new as Record<string, any> | null;
-                
+
                 // Handle null/undefined cases
                 if (!oldSig && newSig) {
                   console.log(`            + Added API signature`);
-                  if (newSig.parameters) console.log(`              parameters: ${JSON.stringify(newSig.parameters)}`);
-                  if (newSig.returnType) console.log(`              returnType: ${newSig.returnType}`);
-                  if (newSig.requestType) console.log(`              requestType: ${newSig.requestType}`);
-                  if (newSig.responseType) console.log(`              responseType: ${newSig.responseType}`);
+                  if (newSig.parameters)
+                    console.log(
+                      `              parameters: ${JSON.stringify(newSig.parameters)}`,
+                    );
+                  if (newSig.returnType)
+                    console.log(
+                      `              returnType: ${newSig.returnType}`,
+                    );
+                  if (newSig.requestType)
+                    console.log(
+                      `              requestType: ${newSig.requestType}`,
+                    );
+                  if (newSig.responseType)
+                    console.log(
+                      `              responseType: ${newSig.responseType}`,
+                    );
                 } else if (oldSig && !newSig) {
                   console.log(`            - Removed API signature`);
                 } else if (oldSig && newSig) {
@@ -194,28 +258,48 @@ export function displayMultiFileCompareResult(result: MultiFileCompareResult, st
                   const newParams = newSig.parameters ?? {};
                   const oldKeys = Object.keys(oldParams);
                   const newKeys = Object.keys(newParams);
-                  const paramRemoved = oldKeys.filter(k => !(k in newParams));
-                  const paramAdded = newKeys.filter(k => !(k in oldParams));
-                  const paramChanged = oldKeys.filter(k => k in newParams && oldParams[k] !== newParams[k]);
-                  
+                  const paramRemoved = oldKeys.filter((k) => !(k in newParams));
+                  const paramAdded = newKeys.filter((k) => !(k in oldParams));
+                  const paramChanged = oldKeys.filter(
+                    (k) => k in newParams && oldParams[k] !== newParams[k],
+                  );
+
                   if (paramRemoved.length > 0) {
-                    paramRemoved.forEach(k => console.log(`            - parameters.${k}: ${oldParams[k]}`));
+                    paramRemoved.forEach((k) =>
+                      console.log(
+                        `            - parameters.${k}: ${oldParams[k]}`,
+                      ),
+                    );
                   }
                   if (paramAdded.length > 0) {
-                    paramAdded.forEach(k => console.log(`            + parameters.${k}: ${newParams[k]}`));
+                    paramAdded.forEach((k) =>
+                      console.log(
+                        `            + parameters.${k}: ${newParams[k]}`,
+                      ),
+                    );
                   }
                   if (paramChanged.length > 0) {
-                    paramChanged.forEach(k => console.log(`            ~ parameters.${k}: ${oldParams[k]} → ${newParams[k]}`));
+                    paramChanged.forEach((k) =>
+                      console.log(
+                        `            ~ parameters.${k}: ${oldParams[k]} → ${newParams[k]}`,
+                      ),
+                    );
                   }
-                  
+
                   if (oldSig.returnType !== newSig.returnType) {
-                    console.log(`            ~ returnType: ${oldSig.returnType ?? '(none)'} → ${newSig.returnType ?? '(none)'}`);
+                    console.log(
+                      `            ~ returnType: ${oldSig.returnType ?? '(none)'} → ${newSig.returnType ?? '(none)'}`,
+                    );
                   }
                   if (oldSig.requestType !== newSig.requestType) {
-                    console.log(`            ~ requestType: ${oldSig.requestType ?? '(none)'} → ${newSig.requestType ?? '(none)'}`);
+                    console.log(
+                      `            ~ requestType: ${oldSig.requestType ?? '(none)'} → ${newSig.requestType ?? '(none)'}`,
+                    );
                   }
                   if (oldSig.responseType !== newSig.responseType) {
-                    console.log(`            ~ responseType: ${oldSig.responseType ?? '(none)'} → ${newSig.responseType ?? '(none)'}`);
+                    console.log(
+                      `            ~ responseType: ${oldSig.responseType ?? '(none)'} → ${newSig.responseType ?? '(none)'}`,
+                    );
                   }
                 }
               }
@@ -226,7 +310,9 @@ export function displayMultiFileCompareResult(result: MultiFileCompareResult, st
 
       if (stats && !quiet && folder.tokenDelta) {
         const sign = folder.tokenDelta.gpt4 > 0 ? '+' : '';
-        console.log(`      Token Δ: ${sign}${formatTokenCount(folder.tokenDelta.gpt4)} (GPT-4) | ${sign}${formatTokenCount(folder.tokenDelta.claude)} (Claude)`);
+        console.log(
+          `      Token Δ: ${sign}${formatTokenCount(folder.tokenDelta.gpt4)} (GPT-4) | ${sign}${formatTokenCount(folder.tokenDelta.claude)} (Claude)`,
+        );
       }
 
       console.log();
@@ -244,9 +330,11 @@ export function displayMultiFileCompareResult(result: MultiFileCompareResult, st
   if (result.orphanedFiles && result.orphanedFiles.length > 0) {
     if (!quiet) {
       console.log('🗑️  Orphaned Files on Disk:');
-      console.log('   (These files exist on disk but are not in the new index)\n');
+      console.log(
+        '   (These files exist on disk but are not in the new index)\n',
+      );
     }
-    result.orphanedFiles.forEach(file => {
+    result.orphanedFiles.forEach((file) => {
       console.log(`   🗑️  ${file}`);
     });
     if (!quiet) {

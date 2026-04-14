@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { spawn, exec, ChildProcess } from 'node:child_process';
+import { spawn, exec, type ChildProcess } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readFile, rm, access, mkdir, writeFile, cp } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -22,7 +22,11 @@ async function waitFor(
     timeoutMs = 60000,
     intervalMs = 100,
     onTimeoutMessage = 'Timeout waiting for condition',
-  }: { timeoutMs?: number; intervalMs?: number; onTimeoutMessage?: string } = {}
+  }: {
+    timeoutMs?: number;
+    intervalMs?: number;
+    onTimeoutMessage?: string;
+  } = {},
 ) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
@@ -90,7 +94,7 @@ describe('CLI Watch Mode Tests', () => {
     it('should accept --watch flag', async () => {
       // Just verify the flag is accepted (don't actually run watch mode)
       const { stdout, stderr } = await execAsync(
-        `node dist/cli/stamp.js context --help`
+        `node dist/cli/stamp.js context --help`,
       );
 
       expect(stdout + stderr).toContain('--watch');
@@ -98,7 +102,7 @@ describe('CLI Watch Mode Tests', () => {
 
     it('should accept -w shorthand', async () => {
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context --help`
+        `node dist/cli/stamp.js context --help`,
       );
 
       expect(stdout).toContain('-w');
@@ -109,7 +113,7 @@ describe('CLI Watch Mode Tests', () => {
     it('should generate initial context before watching', async () => {
       // Run initial context generation (non-watch mode)
       await execAsync(
-        `node dist/cli/stamp.js context ${testDir} --out ${outputPath}`
+        `node dist/cli/stamp.js context ${testDir} --out ${outputPath}`,
       );
 
       // Verify context files were created
@@ -133,16 +137,21 @@ describe('CLI Watch Mode Tests', () => {
           reject(new Error('Timeout waiting for watch mode message'));
         }, 30000);
 
-        watchProcess = spawn('node', [
-          'dist/cli/stamp.js',
-          'context',
-          testDir,
-          '--out', outputPath,
-          '--watch',
-        ], {
-          cwd: process.cwd(),
-          stdio: ['ignore', 'pipe', 'pipe'],
-        });
+        watchProcess = spawn(
+          'node',
+          [
+            'dist/cli/stamp.js',
+            'context',
+            testDir,
+            '--out',
+            outputPath,
+            '--watch',
+          ],
+          {
+            cwd: process.cwd(),
+            stdio: ['ignore', 'pipe', 'pipe'],
+          },
+        );
 
         let output = '';
 
@@ -150,7 +159,10 @@ describe('CLI Watch Mode Tests', () => {
           output += data.toString();
 
           // Check for watch mode message
-          if (output.includes('Watch mode enabled') || output.includes('Watching for file changes')) {
+          if (
+            output.includes('Watch mode enabled') ||
+            output.includes('Watching for file changes')
+          ) {
             clearTimeout(timeout);
             watchProcess?.kill('SIGTERM');
             expect(output).toMatch(/Watch mode|Watching/);
@@ -169,7 +181,10 @@ describe('CLI Watch Mode Tests', () => {
       });
     }, 35000);
 
-    it('should create watch status file', { retry: CI_RETRY, timeout: 120000 }, async () => {
+    it('should create watch status file', {
+      retry: CI_RETRY,
+      timeout: 120000,
+    }, async () => {
       return new Promise<void>(async (resolve, reject) => {
         const timeout = setTimeout(() => {
           if (watchProcess) {
@@ -178,16 +193,21 @@ describe('CLI Watch Mode Tests', () => {
           reject(new Error('Timeout waiting for watch status file'));
         }, 60000);
 
-        watchProcess = spawn('node', [
-          'dist/cli/stamp.js',
-          'context',
-          testDir,
-          '--out', outputPath,
-          '--watch',
-        ], {
-          cwd: process.cwd(),
-          stdio: ['ignore', 'pipe', 'pipe'],
-        });
+        watchProcess = spawn(
+          'node',
+          [
+            'dist/cli/stamp.js',
+            'context',
+            testDir,
+            '--out',
+            outputPath,
+            '--watch',
+          ],
+          {
+            cwd: process.cwd(),
+            stdio: ['ignore', 'pipe', 'pipe'],
+          },
+        );
 
         let output = '';
 
@@ -195,12 +215,19 @@ describe('CLI Watch Mode Tests', () => {
           output += data.toString();
 
           // Wait for watch mode to be active
-          if (output.includes('Watch mode active') || output.includes('Waiting for file changes')) {
+          if (
+            output.includes('Watch mode active') ||
+            output.includes('Waiting for file changes')
+          ) {
             // Check for watch status file
-            const statusPath = join(testDir, '.logicstamp', 'context_watch-status.json');
+            const statusPath = join(
+              testDir,
+              '.logicstamp',
+              'context_watch-status.json',
+            );
 
             // Wait a bit for the file to be written
-            await new Promise(r => setTimeout(r, 500));
+            await new Promise((r) => setTimeout(r, 500));
 
             try {
               await access(statusPath);
@@ -243,17 +270,22 @@ describe('CLI Watch Mode Tests', () => {
           resolve();
         }, 10000);
 
-        watchProcess = spawn('node', [
-          'dist/cli/stamp.js',
-          'context',
-          testDir,
-          '--out', outputPath,
-          '--watch',
-          '--quiet',
-        ], {
-          cwd: process.cwd(),
-          stdio: ['ignore', 'pipe', 'pipe'],
-        });
+        watchProcess = spawn(
+          'node',
+          [
+            'dist/cli/stamp.js',
+            'context',
+            testDir,
+            '--out',
+            outputPath,
+            '--watch',
+            '--quiet',
+          ],
+          {
+            cwd: process.cwd(),
+            stdio: ['ignore', 'pipe', 'pipe'],
+          },
+        );
 
         let output = '';
 
@@ -264,7 +296,9 @@ describe('CLI Watch Mode Tests', () => {
           if (output.includes('Watch mode enabled')) {
             clearTimeout(timeout);
             watchProcess?.kill('SIGTERM');
-            reject(new Error('Should not show watch mode message in quiet mode'));
+            reject(
+              new Error('Should not show watch mode message in quiet mode'),
+            );
           }
         });
 
@@ -286,16 +320,21 @@ describe('CLI Watch Mode Tests', () => {
           reject(new Error('Timeout waiting for file change detection'));
         }, 30000);
 
-        watchProcess = spawn('node', [
-          'dist/cli/stamp.js',
-          'context',
-          testDir,
-          '--out', outputPath,
-          '--watch',
-        ], {
-          cwd: process.cwd(),
-          stdio: ['ignore', 'pipe', 'pipe'],
-        });
+        watchProcess = spawn(
+          'node',
+          [
+            'dist/cli/stamp.js',
+            'context',
+            testDir,
+            '--out',
+            outputPath,
+            '--watch',
+          ],
+          {
+            cwd: process.cwd(),
+            stdio: ['ignore', 'pipe', 'pipe'],
+          },
+        );
 
         let output = '';
         let isReady = false;
@@ -303,7 +342,11 @@ describe('CLI Watch Mode Tests', () => {
         watchProcess.stdout?.on('data', async (data: Buffer) => {
           output += data.toString();
 
-          if ((output.includes('Watch mode active') || output.includes('Waiting for file changes')) && !isReady) {
+          if (
+            (output.includes('Watch mode active') ||
+              output.includes('Waiting for file changes')) &&
+            !isReady
+          ) {
             isReady = true;
 
             // Modify a tsx file
@@ -328,20 +371,28 @@ describe('CLI Watch Mode Tests', () => {
       });
     }, 35000);
 
-    it('should also watch .css and .scss files with --include-style', { retry: CI_RETRY, timeout: 120000 }, async () => {
+    it('should also watch .css and .scss files with --include-style', {
+      retry: CI_RETRY,
+      timeout: 120000,
+    }, async () => {
       let output = '';
 
-      watchProcess = spawn('node', [
-        'dist/cli/stamp.js',
-        'context',
-        testDir,
-        '--out', outputPath,
-        '--watch',
-        '--include-style',
-      ], {
-        cwd: process.cwd(),
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
+      watchProcess = spawn(
+        'node',
+        [
+          'dist/cli/stamp.js',
+          'context',
+          testDir,
+          '--out',
+          outputPath,
+          '--watch',
+          '--include-style',
+        ],
+        {
+          cwd: process.cwd(),
+          stdio: ['ignore', 'pipe', 'pipe'],
+        },
+      );
 
       watchProcess.stdout?.on('data', (data: Buffer) => {
         output += data.toString();
@@ -353,8 +404,13 @@ describe('CLI Watch Mode Tests', () => {
 
       // Wait for watch mode to be ready
       await waitFor(
-        () => output.includes('Watch mode active') || output.includes('Waiting for file changes'),
-        { timeoutMs: 60000, onTimeoutMessage: 'Timeout waiting for watch mode ready' }
+        () =>
+          output.includes('Watch mode active') ||
+          output.includes('Waiting for file changes'),
+        {
+          timeoutMs: 60000,
+          onTimeoutMessage: 'Timeout waiting for watch mode ready',
+        },
       );
 
       // Verify style extensions are being watched (these only appear with --include-style)
@@ -374,17 +430,22 @@ describe('CLI Watch Mode Tests', () => {
           reject(new Error('Timeout waiting for watch mode'));
         }, 30000);
 
-        watchProcess = spawn('node', [
-          'dist/cli/stamp.js',
-          'context',
-          testDir,
-          '--out', outputPath,
-          '--watch',
-          '--log-file', // Required to enable log file output
-        ], {
-          cwd: process.cwd(),
-          stdio: ['ignore', 'pipe', 'pipe'],
-        });
+        watchProcess = spawn(
+          'node',
+          [
+            'dist/cli/stamp.js',
+            'context',
+            testDir,
+            '--out',
+            outputPath,
+            '--watch',
+            '--log-file', // Required to enable log file output
+          ],
+          {
+            cwd: process.cwd(),
+            stdio: ['ignore', 'pipe', 'pipe'],
+          },
+        );
 
         let output = '';
         let isReady = false;
@@ -392,7 +453,11 @@ describe('CLI Watch Mode Tests', () => {
         watchProcess.stdout?.on('data', async (data: Buffer) => {
           output += data.toString();
 
-          if ((output.includes('Watch mode active') || output.includes('Waiting for file changes')) && !isReady) {
+          if (
+            (output.includes('Watch mode active') ||
+              output.includes('Waiting for file changes')) &&
+            !isReady
+          ) {
             isReady = true;
 
             // Modify a file to trigger recompilation and create a log entry
@@ -404,7 +469,7 @@ describe('CLI Watch Mode Tests', () => {
           // Wait for recompilation to complete
           if (output.includes('Recompiled') || output.includes('✅')) {
             // Wait a bit for log to be written
-            await new Promise(r => setTimeout(r, 500));
+            await new Promise((r) => setTimeout(r, 500));
 
             // Send SIGINT to trigger exit
             watchProcess?.kill('SIGINT');
@@ -415,10 +480,14 @@ describe('CLI Watch Mode Tests', () => {
           clearTimeout(timeout);
 
           // Wait a bit for cleanup
-          await new Promise(r => setTimeout(r, 500));
+          await new Promise((r) => setTimeout(r, 500));
 
           // Check that status file was removed
-          const statusPath = join(testDir, '.logicstamp', 'context_watch-status.json');
+          const statusPath = join(
+            testDir,
+            '.logicstamp',
+            'context_watch-status.json',
+          );
           let statusExists = true;
           try {
             await access(statusPath);
@@ -427,7 +496,11 @@ describe('CLI Watch Mode Tests', () => {
           }
 
           // Check that logs file was preserved (only created with --log-file flag)
-          const logsPath = join(testDir, '.logicstamp', 'context_watch-mode-logs.json');
+          const logsPath = join(
+            testDir,
+            '.logicstamp',
+            'context_watch-mode-logs.json',
+          );
           let logsExist = false;
           try {
             await access(logsPath);
@@ -445,7 +518,9 @@ describe('CLI Watch Mode Tests', () => {
           // Status file should be cleaned up, logs should persist
           // Note: status cleanup is best-effort, so we log but don't fail if it still exists
           if (statusExists) {
-            console.log('Note: context_watch-status.json still exists (cleanup is best-effort)');
+            console.log(
+              'Note: context_watch-status.json still exists (cleanup is best-effort)',
+            );
           }
 
           // Logs should be preserved (if recompilation happened)
@@ -472,17 +547,22 @@ describe('CLI Watch Mode Tests', () => {
           reject(new Error('Timeout waiting for watch mode'));
         }, 30000);
 
-        watchProcess = spawn('node', [
-          'dist/cli/stamp.js',
-          'context',
-          testDir,
-          '--out', outputPath,
-          '--watch',
-          // Note: --log-file is NOT passed
-        ], {
-          cwd: process.cwd(),
-          stdio: ['ignore', 'pipe', 'pipe'],
-        });
+        watchProcess = spawn(
+          'node',
+          [
+            'dist/cli/stamp.js',
+            'context',
+            testDir,
+            '--out',
+            outputPath,
+            '--watch',
+            // Note: --log-file is NOT passed
+          ],
+          {
+            cwd: process.cwd(),
+            stdio: ['ignore', 'pipe', 'pipe'],
+          },
+        );
 
         let output = '';
         let isReady = false;
@@ -490,7 +570,11 @@ describe('CLI Watch Mode Tests', () => {
         watchProcess.stdout?.on('data', async (data: Buffer) => {
           output += data.toString();
 
-          if ((output.includes('Watch mode active') || output.includes('Waiting for file changes')) && !isReady) {
+          if (
+            (output.includes('Watch mode active') ||
+              output.includes('Waiting for file changes')) &&
+            !isReady
+          ) {
             isReady = true;
 
             // Modify a file to trigger recompilation
@@ -502,7 +586,7 @@ describe('CLI Watch Mode Tests', () => {
           // Wait for recompilation to complete
           if (output.includes('Recompiled') || output.includes('✅')) {
             // Wait a bit
-            await new Promise(r => setTimeout(r, 500));
+            await new Promise((r) => setTimeout(r, 500));
 
             // Send SIGINT to trigger exit
             watchProcess?.kill('SIGINT');
@@ -513,10 +597,14 @@ describe('CLI Watch Mode Tests', () => {
           clearTimeout(timeout);
 
           // Wait a bit for cleanup
-          await new Promise(r => setTimeout(r, 500));
+          await new Promise((r) => setTimeout(r, 500));
 
           // Check that logs file was NOT created (--log-file not passed)
-          const logsPath = join(testDir, '.logicstamp', 'context_watch-mode-logs.json');
+          const logsPath = join(
+            testDir,
+            '.logicstamp',
+            'context_watch-mode-logs.json',
+          );
           let logsExist = false;
           try {
             await access(logsPath);
@@ -547,23 +635,31 @@ describe('CLI Watch Mode Tests', () => {
           reject(new Error('Timeout waiting for cleanup'));
         }, 30000);
 
-        watchProcess = spawn('node', [
-          'dist/cli/stamp.js',
-          'context',
-          testDir,
-          '--out', outputPath,
-          '--watch',
-        ], {
-          cwd: process.cwd(),
-          stdio: ['ignore', 'pipe', 'pipe'],
-        });
+        watchProcess = spawn(
+          'node',
+          [
+            'dist/cli/stamp.js',
+            'context',
+            testDir,
+            '--out',
+            outputPath,
+            '--watch',
+          ],
+          {
+            cwd: process.cwd(),
+            stdio: ['ignore', 'pipe', 'pipe'],
+          },
+        );
 
         let output = '';
 
         watchProcess.stdout?.on('data', async (data: Buffer) => {
           output += data.toString();
 
-          if (output.includes('Watch mode active') || output.includes('Waiting for file changes')) {
+          if (
+            output.includes('Watch mode active') ||
+            output.includes('Waiting for file changes')
+          ) {
             // Send SIGINT
             watchProcess?.kill('SIGINT');
           }
@@ -573,10 +669,14 @@ describe('CLI Watch Mode Tests', () => {
           clearTimeout(timeout);
 
           // Wait a bit for cleanup
-          await new Promise(r => setTimeout(r, 500));
+          await new Promise((r) => setTimeout(r, 500));
 
           // Check that status file was removed
-          const statusPath = join(testDir, '.logicstamp', 'context_watch-status.json');
+          const statusPath = join(
+            testDir,
+            '.logicstamp',
+            'context_watch-status.json',
+          );
           try {
             await access(statusPath);
             // Status file still exists - might be OK on some platforms
@@ -603,28 +703,40 @@ describe('CLI Watch Mode Tests', () => {
           reject(new Error('Timeout waiting for goodbye message'));
         }, 30000);
 
-        watchProcess = spawn('node', [
-          'dist/cli/stamp.js',
-          'context',
-          testDir,
-          '--out', outputPath,
-          '--watch',
-        ], {
-          cwd: process.cwd(),
-          stdio: ['ignore', 'pipe', 'pipe'],
-        });
+        watchProcess = spawn(
+          'node',
+          [
+            'dist/cli/stamp.js',
+            'context',
+            testDir,
+            '--out',
+            outputPath,
+            '--watch',
+          ],
+          {
+            cwd: process.cwd(),
+            stdio: ['ignore', 'pipe', 'pipe'],
+          },
+        );
 
         let output = '';
 
         watchProcess.stdout?.on('data', async (data: Buffer) => {
           output += data.toString();
 
-          if (output.includes('Watch mode active') || output.includes('Waiting for file changes')) {
+          if (
+            output.includes('Watch mode active') ||
+            output.includes('Waiting for file changes')
+          ) {
             // Send SIGINT to trigger exit
             watchProcess?.kill('SIGINT');
           }
 
-          if (output.includes('stopped') || output.includes('goodbye') || output.includes('bye')) {
+          if (
+            output.includes('stopped') ||
+            output.includes('goodbye') ||
+            output.includes('bye')
+          ) {
             clearTimeout(timeout);
             expect(output.toLowerCase()).toMatch(/stop|bye/);
             resolve();
@@ -652,7 +764,7 @@ describe('CLI Watch Mode Tests', () => {
       await mkdir(nodeModulesDir, { recursive: true });
       await writeFile(
         join(nodeModulesDir, 'test.tsx'),
-        'export const Test = () => <div>Test</div>;'
+        'export const Test = () => <div>Test</div>;',
       );
 
       return new Promise<void>((resolve, reject) => {
@@ -664,16 +776,21 @@ describe('CLI Watch Mode Tests', () => {
           resolve();
         }, 15000);
 
-        watchProcess = spawn('node', [
-          'dist/cli/stamp.js',
-          'context',
-          testDir,
-          '--out', outputPath,
-          '--watch',
-        ], {
-          cwd: process.cwd(),
-          stdio: ['ignore', 'pipe', 'pipe'],
-        });
+        watchProcess = spawn(
+          'node',
+          [
+            'dist/cli/stamp.js',
+            'context',
+            testDir,
+            '--out',
+            outputPath,
+            '--watch',
+          ],
+          {
+            cwd: process.cwd(),
+            stdio: ['ignore', 'pipe', 'pipe'],
+          },
+        );
 
         let output = '';
         let isReady = false;
@@ -682,13 +799,17 @@ describe('CLI Watch Mode Tests', () => {
         watchProcess.stdout?.on('data', async (data: Buffer) => {
           output += data.toString();
 
-          if ((output.includes('Watch mode active') || output.includes('Waiting for file changes')) && !isReady) {
+          if (
+            (output.includes('Watch mode active') ||
+              output.includes('Waiting for file changes')) &&
+            !isReady
+          ) {
             isReady = true;
 
             // Modify a file in node_modules
             await writeFile(
               join(nodeModulesDir, 'test.tsx'),
-              'export const Test = () => <div>Modified</div>;'
+              'export const Test = () => <div>Modified</div>;',
             );
             modifiedNodeModules = true;
           }
@@ -699,7 +820,9 @@ describe('CLI Watch Mode Tests', () => {
             if (output.includes('node_modules')) {
               clearTimeout(timeout);
               watchProcess?.kill('SIGTERM');
-              reject(new Error('Should not recompile for node_modules changes'));
+              reject(
+                new Error('Should not recompile for node_modules changes'),
+              );
             }
           }
         });
@@ -721,16 +844,21 @@ describe('CLI Watch Mode Tests', () => {
           resolve();
         }, 15000);
 
-        watchProcess = spawn('node', [
-          'dist/cli/stamp.js',
-          'context',
-          testDir,
-          '--out', outputPath,
-          '--watch',
-        ], {
-          cwd: process.cwd(),
-          stdio: ['ignore', 'pipe', 'pipe'],
-        });
+        watchProcess = spawn(
+          'node',
+          [
+            'dist/cli/stamp.js',
+            'context',
+            testDir,
+            '--out',
+            outputPath,
+            '--watch',
+          ],
+          {
+            cwd: process.cwd(),
+            stdio: ['ignore', 'pipe', 'pipe'],
+          },
+        );
 
         let output = '';
         let recompilationCount = 0;
@@ -747,7 +875,9 @@ describe('CLI Watch Mode Tests', () => {
             if (recompilationCount > 3) {
               clearTimeout(timeout);
               watchProcess?.kill('SIGTERM');
-              reject(new Error('Too many recompilations - possible infinite loop'));
+              reject(
+                new Error('Too many recompilations - possible infinite loop'),
+              );
             }
           }
         });
@@ -770,16 +900,21 @@ describe('CLI Watch Mode Tests', () => {
           reject(new Error('Timeout waiting for changed file message'));
         }, 30000);
 
-        watchProcess = spawn('node', [
-          'dist/cli/stamp.js',
-          'context',
-          testDir,
-          '--out', outputPath,
-          '--watch',
-        ], {
-          cwd: process.cwd(),
-          stdio: ['ignore', 'pipe', 'pipe'],
-        });
+        watchProcess = spawn(
+          'node',
+          [
+            'dist/cli/stamp.js',
+            'context',
+            testDir,
+            '--out',
+            outputPath,
+            '--watch',
+          ],
+          {
+            cwd: process.cwd(),
+            stdio: ['ignore', 'pipe', 'pipe'],
+          },
+        );
 
         let output = '';
         let isReady = false;
@@ -787,7 +922,11 @@ describe('CLI Watch Mode Tests', () => {
         watchProcess.stdout?.on('data', async (data: Buffer) => {
           output += data.toString();
 
-          if ((output.includes('Watch mode active') || output.includes('Waiting for file changes')) && !isReady) {
+          if (
+            (output.includes('Watch mode active') ||
+              output.includes('Waiting for file changes')) &&
+            !isReady
+          ) {
             isReady = true;
 
             // Modify App.tsx
@@ -797,7 +936,10 @@ describe('CLI Watch Mode Tests', () => {
           }
 
           // Check for file name in output
-          if (output.includes('App.tsx') && (output.includes('Changed') || output.includes('Recompiling'))) {
+          if (
+            output.includes('App.tsx') &&
+            (output.includes('Changed') || output.includes('Recompiling'))
+          ) {
             clearTimeout(timeout);
             watchProcess?.kill('SIGTERM');
             expect(output).toContain('App.tsx');
@@ -812,19 +954,27 @@ describe('CLI Watch Mode Tests', () => {
       });
     }, 35000);
 
-    it('should show recompilation success message', { retry: CI_RETRY, timeout: 120000 }, async () => {
+    it('should show recompilation success message', {
+      retry: CI_RETRY,
+      timeout: 120000,
+    }, async () => {
       let output = '';
 
-      watchProcess = spawn('node', [
-        'dist/cli/stamp.js',
-        'context',
-        testDir,
-        '--out', outputPath,
-        '--watch',
-      ], {
-        cwd: process.cwd(),
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
+      watchProcess = spawn(
+        'node',
+        [
+          'dist/cli/stamp.js',
+          'context',
+          testDir,
+          '--out',
+          outputPath,
+          '--watch',
+        ],
+        {
+          cwd: process.cwd(),
+          stdio: ['ignore', 'pipe', 'pipe'],
+        },
+      );
 
       watchProcess.stdout?.on('data', (data: Buffer) => {
         output += data.toString();
@@ -836,8 +986,13 @@ describe('CLI Watch Mode Tests', () => {
 
       // Wait for watch mode to be ready
       await waitFor(
-        () => output.includes('Watch mode active') || output.includes('Waiting for file changes'),
-        { timeoutMs: 60000, onTimeoutMessage: 'Timeout waiting for watch mode ready' }
+        () =>
+          output.includes('Watch mode active') ||
+          output.includes('Waiting for file changes'),
+        {
+          timeoutMs: 60000,
+          onTimeoutMessage: 'Timeout waiting for watch mode ready',
+        },
       );
 
       // Give watcher a moment to fully attach (CI stability)
@@ -851,7 +1006,10 @@ describe('CLI Watch Mode Tests', () => {
       // Wait for recompilation success
       await waitFor(
         () => output.includes('Recompiled') || output.includes('✅'),
-        { timeoutMs: 90000, onTimeoutMessage: 'Timeout waiting for recompilation success message' }
+        {
+          timeoutMs: 90000,
+          onTimeoutMessage: 'Timeout waiting for recompilation success message',
+        },
       );
 
       expect(output).toMatch(/Recompiled|✅/);
@@ -863,7 +1021,7 @@ describe('CLI Watch Mode Tests', () => {
   describe('Strict watch mode', () => {
     it('should accept --strict-watch flag', async () => {
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context --help`
+        `node dist/cli/stamp.js context --help`,
       );
 
       expect(stdout).toContain('--strict-watch');
@@ -878,17 +1036,22 @@ describe('CLI Watch Mode Tests', () => {
           reject(new Error('Timeout waiting for strict mode message'));
         }, 30000);
 
-        watchProcess = spawn('node', [
-          'dist/cli/stamp.js',
-          'context',
-          testDir,
-          '--out', outputPath,
-          '--watch',
-          '--strict-watch',
-        ], {
-          cwd: process.cwd(),
-          stdio: ['ignore', 'pipe', 'pipe'],
-        });
+        watchProcess = spawn(
+          'node',
+          [
+            'dist/cli/stamp.js',
+            'context',
+            testDir,
+            '--out',
+            outputPath,
+            '--watch',
+            '--strict-watch',
+          ],
+          {
+            cwd: process.cwd(),
+            stdio: ['ignore', 'pipe', 'pipe'],
+          },
+        );
 
         let output = '';
 
@@ -896,7 +1059,10 @@ describe('CLI Watch Mode Tests', () => {
           output += data.toString();
 
           // Check for strict mode message
-          if (output.includes('Strict mode') || output.includes('tracking breaking changes')) {
+          if (
+            output.includes('Strict mode') ||
+            output.includes('tracking breaking changes')
+          ) {
             clearTimeout(timeout);
             watchProcess?.kill('SIGTERM');
             expect(output).toMatch(/Strict mode|tracking breaking changes/);
@@ -915,20 +1081,28 @@ describe('CLI Watch Mode Tests', () => {
       });
     }, 35000);
 
-    it('should create violations report file when violations occur', { retry: CI_RETRY, timeout: 120000 }, async () => {
+    it('should create violations report file when violations occur', {
+      retry: CI_RETRY,
+      timeout: 120000,
+    }, async () => {
       let output = '';
 
-      watchProcess = spawn('node', [
-        'dist/cli/stamp.js',
-        'context',
-        testDir,
-        '--out', outputPath,
-        '--watch',
-        '--strict-watch',
-      ], {
-        cwd: process.cwd(),
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
+      watchProcess = spawn(
+        'node',
+        [
+          'dist/cli/stamp.js',
+          'context',
+          testDir,
+          '--out',
+          outputPath,
+          '--watch',
+          '--strict-watch',
+        ],
+        {
+          cwd: process.cwd(),
+          stdio: ['ignore', 'pipe', 'pipe'],
+        },
+      );
 
       watchProcess.stdout?.on('data', (data: Buffer) => {
         output += data.toString();
@@ -940,8 +1114,13 @@ describe('CLI Watch Mode Tests', () => {
 
       // Wait for watch mode to be ready
       await waitFor(
-        () => output.includes('Watch mode active') || output.includes('Waiting for file changes'),
-        { timeoutMs: 60000, onTimeoutMessage: 'Timeout waiting for watch mode ready' }
+        () =>
+          output.includes('Watch mode active') ||
+          output.includes('Waiting for file changes'),
+        {
+          timeoutMs: 60000,
+          onTimeoutMessage: 'Timeout waiting for watch mode ready',
+        },
       );
 
       // Give watcher a moment to fully attach
@@ -954,15 +1133,15 @@ describe('CLI Watch Mode Tests', () => {
       // First, add a new prop to the component
       const modifiedContent = originalContent.replace(
         'export function App(',
-        'interface AppProps { testProp?: string; }\nexport function App({ testProp }: AppProps = {},'
+        'interface AppProps { testProp?: string; }\nexport function App({ testProp }: AppProps = {},',
       );
       await writeFile(appPath, modifiedContent);
 
       // Wait for first recompilation
-      await waitFor(
-        () => output.includes('Recompiled'),
-        { timeoutMs: 60000, onTimeoutMessage: 'Timeout waiting for first recompilation' }
-      );
+      await waitFor(() => output.includes('Recompiled'), {
+        timeoutMs: 60000,
+        onTimeoutMessage: 'Timeout waiting for first recompilation',
+      });
 
       await sleep(500);
 
@@ -970,15 +1149,19 @@ describe('CLI Watch Mode Tests', () => {
       await writeFile(appPath, originalContent);
 
       // Wait for second recompilation
-      await waitFor(
-        () => (output.match(/Recompiled/g) || []).length >= 2,
-        { timeoutMs: 60000, onTimeoutMessage: 'Timeout waiting for second recompilation' }
-      );
+      await waitFor(() => (output.match(/Recompiled/g) || []).length >= 2, {
+        timeoutMs: 60000,
+        onTimeoutMessage: 'Timeout waiting for second recompilation',
+      });
 
       await sleep(500);
 
       // Check for violations report file
-      const violationsPath = join(testDir, '.logicstamp', 'strict_watch_violations.json');
+      const violationsPath = join(
+        testDir,
+        '.logicstamp',
+        'strict_watch_violations.json',
+      );
       try {
         await access(violationsPath);
         const violationsContent = await readFile(violationsPath, 'utf-8');
@@ -1004,31 +1187,42 @@ describe('CLI Watch Mode Tests', () => {
           reject(new Error('Timeout waiting for session summary'));
         }, 30000);
 
-        watchProcess = spawn('node', [
-          'dist/cli/stamp.js',
-          'context',
-          testDir,
-          '--out', outputPath,
-          '--watch',
-          '--strict-watch',
-        ], {
-          cwd: process.cwd(),
-          stdio: ['ignore', 'pipe', 'pipe'],
-        });
+        watchProcess = spawn(
+          'node',
+          [
+            'dist/cli/stamp.js',
+            'context',
+            testDir,
+            '--out',
+            outputPath,
+            '--watch',
+            '--strict-watch',
+          ],
+          {
+            cwd: process.cwd(),
+            stdio: ['ignore', 'pipe', 'pipe'],
+          },
+        );
 
         let output = '';
 
         watchProcess.stdout?.on('data', async (data: Buffer) => {
           output += data.toString();
 
-          if (output.includes('Watch mode active') || output.includes('Waiting for file changes')) {
+          if (
+            output.includes('Watch mode active') ||
+            output.includes('Waiting for file changes')
+          ) {
             // Send SIGINT to trigger exit
             watchProcess?.kill('SIGINT');
           }
 
           // Check for strict watch summary in exit message
           // New format: "✅ Strict Watch session complete — no violations detected" or similar
-          if (output.includes('Strict Watch session complete') && output.includes('Session summary:')) {
+          if (
+            output.includes('Strict Watch session complete') &&
+            output.includes('Session summary:')
+          ) {
             clearTimeout(timeout);
             expect(output).toMatch(/Strict Watch session complete/);
             expect(output).toMatch(/Session summary:/);

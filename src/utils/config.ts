@@ -2,7 +2,14 @@
  * Utilities for managing LogicStamp configuration
  */
 
-import { readFile, writeFile, mkdir, access, rename, unlink } from 'node:fs/promises';
+import {
+  readFile,
+  writeFile,
+  mkdir,
+  access,
+  rename,
+  unlink,
+} from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { debugError } from './debug.js';
@@ -14,7 +21,10 @@ import { withLock } from './fileLock.js';
  * @param context - Context for debug logging (e.g., 'writeConfig', 'writeWatchStatus')
  * @throws Error if directory cannot be created
  */
-async function ensureConfigDir(configDir: string, context: string): Promise<void> {
+async function ensureConfigDir(
+  configDir: string,
+  context: string,
+): Promise<void> {
   try {
     await mkdir(configDir, { recursive: true });
   } catch (error) {
@@ -26,7 +36,7 @@ async function ensureConfigDir(configDir: string, context: string): Promise<void
       code: err.code,
     });
     throw new Error(
-      `Failed to create config directory "${configDir}": ${err.code === 'EACCES' ? 'Permission denied' : err.message}`
+      `Failed to create config directory "${configDir}": ${err.code === 'EACCES' ? 'Permission denied' : err.message}`,
     );
   }
 }
@@ -38,7 +48,11 @@ async function ensureConfigDir(configDir: string, context: string): Promise<void
  * @param fileType - Human-readable file type (e.g., 'config file', 'watch status file')
  * @returns User-friendly error message
  */
-function formatWriteError(err: NodeJS.ErrnoException, filePath: string, fileType: string): string {
+function formatWriteError(
+  err: NodeJS.ErrnoException,
+  filePath: string,
+  fileType: string,
+): string {
   switch (err.code) {
     case 'ENOENT':
       return `Parent directory not found for: "${filePath}"`;
@@ -87,7 +101,9 @@ export async function configExists(projectRoot: string): Promise<boolean> {
 /**
  * Read config from disk
  */
-export async function readConfig(projectRoot: string): Promise<LogicStampConfig> {
+export async function readConfig(
+  projectRoot: string,
+): Promise<LogicStampConfig> {
   try {
     const configPath = getConfigPath(projectRoot);
     const content = await readFile(configPath, 'utf-8');
@@ -101,7 +117,10 @@ export async function readConfig(projectRoot: string): Promise<LogicStampConfig>
  * Write config to disk using atomic write (temp file + rename)
  * This prevents corruption if the process crashes mid-write
  */
-export async function writeConfig(projectRoot: string, config: LogicStampConfig): Promise<void> {
+export async function writeConfig(
+  projectRoot: string,
+  config: LogicStampConfig,
+): Promise<void> {
   const configDir = getConfigDir(projectRoot);
   const configPath = getConfigPath(projectRoot);
   const tempPath = `${configPath}.${randomUUID()}.tmp`;
@@ -135,7 +154,10 @@ export async function writeConfig(projectRoot: string, config: LogicStampConfig)
  * Update config with new values (merges with existing)
  * Uses file locking to prevent race conditions when multiple processes update config
  */
-export async function updateConfig(projectRoot: string, updates: Partial<LogicStampConfig>): Promise<void> {
+export async function updateConfig(
+  projectRoot: string,
+  updates: Partial<LogicStampConfig>,
+): Promise<void> {
   const configDir = getConfigDir(projectRoot);
   const configPath = getConfigPath(projectRoot);
 
@@ -181,11 +203,11 @@ export async function isWatchModeActive(projectRoot: string): Promise<boolean> {
   try {
     const statusPath = getWatchStatusPath(projectRoot);
     await access(statusPath);
-    
+
     // Read and validate the status file
     const content = await readFile(statusPath, 'utf-8');
     const status: WatchStatus = JSON.parse(content);
-    
+
     // Check if process is still running
     try {
       // Try to send signal 0 to check if process exists
@@ -197,7 +219,7 @@ export async function isWatchModeActive(projectRoot: string): Promise<boolean> {
       await deleteWatchStatus(projectRoot);
       return false;
     }
-    
+
     return status.active === true;
   } catch {
     return false;
@@ -209,7 +231,9 @@ export async function isWatchModeActive(projectRoot: string): Promise<boolean> {
  * Always validates that the PID is still running - if not, cleans up the stale file.
  * This handles Windows where signal handlers may not fire on process exit.
  */
-export async function readWatchStatus(projectRoot: string): Promise<WatchStatus | null> {
+export async function readWatchStatus(
+  projectRoot: string,
+): Promise<WatchStatus | null> {
   try {
     const statusPath = getWatchStatusPath(projectRoot);
     const content = await readFile(statusPath, 'utf-8');
@@ -236,7 +260,10 @@ export async function readWatchStatus(projectRoot: string): Promise<WatchStatus 
 /**
  * Write watch status to disk using atomic write (temp file + rename)
  */
-export async function writeWatchStatus(projectRoot: string, status: WatchStatus): Promise<void> {
+export async function writeWatchStatus(
+  projectRoot: string,
+  status: WatchStatus,
+): Promise<void> {
   const configDir = getConfigDir(projectRoot);
   const statusPath = getWatchStatusPath(projectRoot);
   const tempPath = `${statusPath}.${randomUUID()}.tmp`;
@@ -354,7 +381,10 @@ export async function readWatchLogs(projectRoot: string): Promise<WatchLogs> {
  * @param context - Context for debug logging
  * @returns true if directory exists/created, false if failed
  */
-async function ensureConfigDirSilent(configDir: string, context: string): Promise<boolean> {
+async function ensureConfigDirSilent(
+  configDir: string,
+  context: string,
+): Promise<boolean> {
   try {
     await mkdir(configDir, { recursive: true });
     return true;
@@ -375,13 +405,16 @@ async function ensureConfigDirSilent(configDir: string, context: string): Promis
  * Uses file locking to prevent race conditions when multiple processes append logs
  * Uses atomic write (temp file + rename) to prevent corruption on crash
  */
-export async function appendWatchLog(projectRoot: string, entry: WatchLogEntry): Promise<void> {
+export async function appendWatchLog(
+  projectRoot: string,
+  entry: WatchLogEntry,
+): Promise<void> {
   const configDir = getConfigDir(projectRoot);
   const logsPath = getWatchLogsPath(projectRoot);
   const tempPath = `${logsPath}.${randomUUID()}.tmp`;
 
   // Non-fatal - continue even if directory can't be created
-  if (!await ensureConfigDirSilent(configDir, 'appendWatchLog')) {
+  if (!(await ensureConfigDirSilent(configDir, 'appendWatchLog'))) {
     return;
   }
 
@@ -438,13 +471,16 @@ export async function clearWatchLogs(projectRoot: string): Promise<void> {
  * This gives "git diff" semantics - shows current state relative to baseline
  * If there are no changes, the log file is cleared
  */
-export async function writeWatchState(projectRoot: string, entry: WatchLogEntry | null): Promise<void> {
+export async function writeWatchState(
+  projectRoot: string,
+  entry: WatchLogEntry | null,
+): Promise<void> {
   const configDir = getConfigDir(projectRoot);
   const logsPath = getWatchLogsPath(projectRoot);
   const tempPath = `${logsPath}.${randomUUID()}.tmp`;
 
   // Non-fatal - continue even if directory can't be created
-  if (!await ensureConfigDirSilent(configDir, 'writeWatchState')) {
+  if (!(await ensureConfigDirSilent(configDir, 'writeWatchState'))) {
     return;
   }
 
@@ -578,12 +614,14 @@ export function getStrictWatchReportPath(projectRoot: string): string {
 /**
  * Read strict watch status from disk
  */
-export async function readStrictWatchStatus(projectRoot: string): Promise<StrictWatchStatus | null> {
+export async function readStrictWatchStatus(
+  projectRoot: string,
+): Promise<StrictWatchStatus | null> {
   try {
     const reportPath = getStrictWatchReportPath(projectRoot);
     const content = await readFile(reportPath, 'utf-8');
     const parsed = JSON.parse(content) as Partial<StrictWatchStatus>;
-    
+
     // Backward compatibility: provide defaults for new fields
     return {
       active: parsed.active ?? false,
@@ -605,13 +643,16 @@ export async function readStrictWatchStatus(projectRoot: string): Promise<Strict
 /**
  * Write strict watch status to disk using atomic write (temp file + rename)
  */
-export async function writeStrictWatchStatus(projectRoot: string, status: StrictWatchStatus): Promise<void> {
+export async function writeStrictWatchStatus(
+  projectRoot: string,
+  status: StrictWatchStatus,
+): Promise<void> {
   const configDir = getConfigDir(projectRoot);
   const reportPath = getStrictWatchReportPath(projectRoot);
   const tempPath = `${reportPath}.${randomUUID()}.tmp`;
 
   // Non-fatal - continue even if directory can't be created
-  if (!await ensureConfigDirSilent(configDir, 'writeStrictWatchStatus')) {
+  if (!(await ensureConfigDirSilent(configDir, 'writeStrictWatchStatus'))) {
     return;
   }
 
@@ -638,7 +679,9 @@ export async function writeStrictWatchStatus(projectRoot: string, status: Strict
 /**
  * Delete strict watch status file
  */
-export async function deleteStrictWatchStatus(projectRoot: string): Promise<void> {
+export async function deleteStrictWatchStatus(
+  projectRoot: string,
+): Promise<void> {
   try {
     const reportPath = getStrictWatchReportPath(projectRoot);
     const { unlink } = await import('node:fs/promises');

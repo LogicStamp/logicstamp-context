@@ -34,24 +34,27 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'compare1');
       const outDir2 = join(outputPath, 'compare2');
 
-
       // Generate two identical contexts
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`,
       );
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2}`,
       );
 
       // Get a specific per-folder context.json file from each
-      const index1 = JSON.parse(await readFile(join(outDir1, 'context_main.json'), 'utf-8'));
-      const index2 = JSON.parse(await readFile(join(outDir2, 'context_main.json'), 'utf-8'));
+      const index1 = JSON.parse(
+        await readFile(join(outDir1, 'context_main.json'), 'utf-8'),
+      );
+      const index2 = JSON.parse(
+        await readFile(join(outDir2, 'context_main.json'), 'utf-8'),
+      );
       const contextFile1 = join(outDir1, index1.folders[0].contextFile);
       const contextFile2 = join(outDir2, index2.folders[0].contextFile);
 
       // Compare them
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+        `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`,
       );
 
       expect(stdout).toContain('✅');
@@ -62,21 +65,23 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'drift-before');
       const outDir2 = join(outputPath, 'drift-after');
 
-
       // Generate first context
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`,
       );
 
       // Get the first per-folder context file
-      const index1 = JSON.parse(await readFile(join(outDir1, 'context_main.json'), 'utf-8'));
+      const index1 = JSON.parse(
+        await readFile(join(outDir1, 'context_main.json'), 'utf-8'),
+      );
       const contextFile1 = join(outDir1, index1.folders[0].contextFile);
 
       // Modify the context to simulate drift - change a semantic hash
       const content1 = JSON.parse(await readFile(contextFile1, 'utf-8'));
       if (content1.length > 0 && content1[0].graph.nodes.length > 0) {
         // Modify the semantic hash to simulate a code change
-        content1[0].graph.nodes[0].contract.semanticHash = 'uif:000000000000000000000000';
+        content1[0].graph.nodes[0].contract.semanticHash =
+          'uif:000000000000000000000000';
       }
       const contextFile2 = join(outDir2, 'src', 'context.json');
       await mkdir(dirname(contextFile2), { recursive: true });
@@ -85,7 +90,7 @@ describe('CLI Compare Command Tests', () => {
       // Compare them - should detect drift
       try {
         await execAsync(
-          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`,
         );
         expect.fail('Should have detected drift');
       } catch (error: any) {
@@ -99,24 +104,27 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'stats1');
       const outDir2 = join(outputPath, 'stats2');
 
-
       // Generate two contexts
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`,
       );
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2}`,
       );
 
       // Get per-folder context files
-      const index1 = JSON.parse(await readFile(join(outDir1, 'context_main.json'), 'utf-8'));
-      const index2 = JSON.parse(await readFile(join(outDir2, 'context_main.json'), 'utf-8'));
+      const index1 = JSON.parse(
+        await readFile(join(outDir1, 'context_main.json'), 'utf-8'),
+      );
+      const index2 = JSON.parse(
+        await readFile(join(outDir2, 'context_main.json'), 'utf-8'),
+      );
       const contextFile1 = join(outDir1, index1.folders[0].contextFile);
       const contextFile2 = join(outDir2, index2.folders[0].contextFile);
 
       // Compare with stats
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2} --stats`
+        `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2} --stats`,
       );
 
       expect(stdout).toContain('Token Stats:');
@@ -130,7 +138,6 @@ describe('CLI Compare Command Tests', () => {
       const testDir = join(outputPath, 'auto-mode-test');
       await mkdir(testDir, { recursive: true });
 
-
       // Copy fixture files to test directory first so both generations scan the same files
       const { cpSync } = await import('node:fs');
       cpSync(fixturesPath, testDir, { recursive: true });
@@ -138,13 +145,13 @@ describe('CLI Compare Command Tests', () => {
       // Generate initial context in the test directory
       await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Run auto-mode comparison from test directory
       const { stdout } = await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       expect(stdout).toContain('Auto-compare mode');
@@ -157,7 +164,6 @@ describe('CLI Compare Command Tests', () => {
       const testDir = join(outputPath, 'no-drift-auto');
       await mkdir(testDir, { recursive: true });
 
-
       // Copy fixture files to test directory first
       const { cpSync } = await import('node:fs');
       cpSync(fixturesPath, testDir, { recursive: true });
@@ -165,13 +171,13 @@ describe('CLI Compare Command Tests', () => {
       // Generate initial context in the test directory
       await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Run comparison - should exit with code 0 (no drift)
       const { stdout } = await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       expect(stdout).toContain('PASS');
@@ -181,10 +187,9 @@ describe('CLI Compare Command Tests', () => {
       const testDir = join(outputPath, 'drift-ci-test');
       await mkdir(testDir, { recursive: true });
 
-
       // Generate initial context
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${testDir}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${testDir}`,
       );
 
       // Copy fixture files to test directory
@@ -192,12 +197,15 @@ describe('CLI Compare Command Tests', () => {
       cpSync(fixturesPath, join(testDir, 'src'), { recursive: true });
 
       // Modify a context file to create drift
-      const index = JSON.parse(await readFile(join(testDir, 'context_main.json'), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(testDir, 'context_main.json'), 'utf-8'),
+      );
       const contextFile = join(testDir, index.folders[0].contextFile);
       const content = JSON.parse(await readFile(contextFile, 'utf-8'));
 
       if (content.length > 0 && content[0].graph.nodes.length > 0) {
-        content[0].graph.nodes[0].contract.semanticHash = 'uif:000000000000000000000000';
+        content[0].graph.nodes[0].contract.semanticHash =
+          'uif:000000000000000000000000';
         await writeFile(contextFile, JSON.stringify(content, null, 2));
       }
 
@@ -205,7 +213,7 @@ describe('CLI Compare Command Tests', () => {
       try {
         await execAsync(
           `cd "${testDir}" && node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare`,
-          { env: { ...process.env, CI: 'true' } }
+          { env: { ...process.env, CI: 'true' } },
         );
         expect.fail('Should have detected drift and exited with code 1');
       } catch (error: any) {
@@ -217,7 +225,7 @@ describe('CLI Compare Command Tests', () => {
 
     it('should display help for compare command', async () => {
       const { stdout } = await execAsync(
-        'node dist/cli/stamp.js context compare --help'
+        'node dist/cli/stamp.js context compare --help',
       );
 
       expect(stdout).toContain('Stamp Context Compare');
@@ -233,21 +241,23 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'hash-before');
       const outDir2 = join(outputPath, 'hash-after');
 
-
       // Generate first context
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`,
       );
 
       // Get the per-folder context file
-      const index1 = JSON.parse(await readFile(join(outDir1, 'context_main.json'), 'utf-8'));
+      const index1 = JSON.parse(
+        await readFile(join(outDir1, 'context_main.json'), 'utf-8'),
+      );
       const contextFile1 = join(outDir1, index1.folders[0].contextFile);
 
       // Load and modify to simulate hash change
       const content = JSON.parse(await readFile(contextFile1, 'utf-8'));
       if (content.length > 0 && content[0].graph.nodes.length > 0) {
         // Change the semantic hash to simulate code change
-        content[0].graph.nodes[0].contract.semanticHash = 'uif:999999999999999999999999';
+        content[0].graph.nodes[0].contract.semanticHash =
+          'uif:999999999999999999999999';
       }
       const contextFile2 = join(outDir2, 'src', 'context.json');
       await mkdir(dirname(contextFile2), { recursive: true });
@@ -256,7 +266,7 @@ describe('CLI Compare Command Tests', () => {
       // Compare them - should show detailed hash diff
       try {
         await execAsync(
-          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`,
         );
         expect.fail('Should have detected drift');
       } catch (error: any) {
@@ -272,14 +282,15 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'imports-before');
       const outDir2 = join(outputPath, 'imports-after');
 
-
       // Generate first context
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`,
       );
 
       // Get the per-folder context file
-      const index1 = JSON.parse(await readFile(join(outDir1, 'context_main.json'), 'utf-8'));
+      const index1 = JSON.parse(
+        await readFile(join(outDir1, 'context_main.json'), 'utf-8'),
+      );
       const contextFile1 = join(outDir1, index1.folders[0].contextFile);
 
       // Load and modify imports
@@ -290,7 +301,10 @@ describe('CLI Compare Command Tests', () => {
           node.contract.composition = { imports: [], hooks: [] };
         }
         // Add and remove imports
-        node.contract.composition.imports = ['./new-import', './another-import'];
+        node.contract.composition.imports = [
+          './new-import',
+          './another-import',
+        ];
       }
       const contextFile2 = join(outDir2, 'src', 'context.json');
       await mkdir(dirname(contextFile2), { recursive: true });
@@ -299,7 +313,7 @@ describe('CLI Compare Command Tests', () => {
       // Compare them - should show detailed import diff
       try {
         await execAsync(
-          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`,
         );
         // May or may not fail depending on if imports actually changed
       } catch (error: any) {
@@ -314,14 +328,15 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'exports-before');
       const outDir2 = join(outputPath, 'exports-after');
 
-
       // Generate first context
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`,
       );
 
       // Get the per-folder context file
-      const index1 = JSON.parse(await readFile(join(outDir1, 'context_main.json'), 'utf-8'));
+      const index1 = JSON.parse(
+        await readFile(join(outDir1, 'context_main.json'), 'utf-8'),
+      );
       const contextFile1 = join(outDir1, index1.folders[0].contextFile);
 
       // Load and modify export kind
@@ -344,7 +359,7 @@ describe('CLI Compare Command Tests', () => {
       // Compare them - should show detailed export diff
       try {
         await execAsync(
-          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`,
         );
         expect.fail('Should have detected drift');
       } catch (error: any) {
@@ -360,14 +375,15 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'hooks-before');
       const outDir2 = join(outputPath, 'hooks-after');
 
-
       // Generate first context
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`,
       );
 
       // Get the per-folder context file
-      const index1 = JSON.parse(await readFile(join(outDir1, 'context_main.json'), 'utf-8'));
+      const index1 = JSON.parse(
+        await readFile(join(outDir1, 'context_main.json'), 'utf-8'),
+      );
       const contextFile1 = join(outDir1, index1.folders[0].contextFile);
 
       // Load and modify hooks
@@ -378,7 +394,11 @@ describe('CLI Compare Command Tests', () => {
           node.contract.composition = { imports: [], hooks: [] };
         }
         // Change hooks
-        node.contract.composition.hooks = ['useState', 'useEffect', 'useCallback'];
+        node.contract.composition.hooks = [
+          'useState',
+          'useEffect',
+          'useCallback',
+        ];
       }
       const contextFile2 = join(outDir2, 'src', 'context.json');
       await mkdir(dirname(contextFile2), { recursive: true });
@@ -387,7 +407,7 @@ describe('CLI Compare Command Tests', () => {
       // Compare them
       try {
         await execAsync(
-          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`,
         );
         // May or may not fail depending on if hooks actually changed
       } catch (error: any) {
@@ -402,14 +422,15 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'functions-before');
       const outDir2 = join(outputPath, 'functions-after');
 
-
       // Generate first context
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`,
       );
 
       // Get the per-folder context file
-      const index1 = JSON.parse(await readFile(join(outDir1, 'context_main.json'), 'utf-8'));
+      const index1 = JSON.parse(
+        await readFile(join(outDir1, 'context_main.json'), 'utf-8'),
+      );
       const contextFile1 = join(outDir1, index1.folders[0].contextFile);
 
       // Load and modify functions
@@ -417,10 +438,19 @@ describe('CLI Compare Command Tests', () => {
       if (content.length > 0 && content[0].graph.nodes.length > 0) {
         const node = content[0].graph.nodes[0];
         if (!node.contract.composition) {
-          node.contract.composition = { imports: [], hooks: [], components: [], functions: [] };
+          node.contract.composition = {
+            imports: [],
+            hooks: [],
+            components: [],
+            functions: [],
+          };
         }
         // Change functions
-        node.contract.composition.functions = ['handleSubmit', 'validateForm', 'processData'];
+        node.contract.composition.functions = [
+          'handleSubmit',
+          'validateForm',
+          'processData',
+        ];
       }
       const contextFile2 = join(outDir2, 'src', 'context.json');
       await mkdir(dirname(contextFile2), { recursive: true });
@@ -429,7 +459,7 @@ describe('CLI Compare Command Tests', () => {
       // Compare them
       try {
         await execAsync(
-          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`,
         );
         // May or may not fail depending on if functions actually changed
       } catch (error: any) {
@@ -444,13 +474,14 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'components-before');
       const outDir2 = join(outputPath, 'components-after');
 
-
       // Generate first context
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`,
       );
 
-      const index1 = JSON.parse(await readFile(join(outDir1, 'context_main.json'), 'utf-8'));
+      const index1 = JSON.parse(
+        await readFile(join(outDir1, 'context_main.json'), 'utf-8'),
+      );
       const contextFile1 = join(outDir1, index1.folders[0].contextFile);
 
       // Load and modify components
@@ -458,7 +489,12 @@ describe('CLI Compare Command Tests', () => {
       if (content.length > 0 && content[0].graph.nodes.length > 0) {
         const node = content[0].graph.nodes[0];
         if (!node.contract.composition) {
-          node.contract.composition = { imports: [], hooks: [], components: [], functions: [] };
+          node.contract.composition = {
+            imports: [],
+            hooks: [],
+            components: [],
+            functions: [],
+          };
         }
         // Change components used
         node.contract.composition.components = ['Modal', 'Dialog', 'Button'];
@@ -470,7 +506,7 @@ describe('CLI Compare Command Tests', () => {
       // Compare them
       try {
         await execAsync(
-          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`,
         );
       } catch (error: any) {
         if (error.stdout && error.stdout.includes('Δ components')) {
@@ -484,13 +520,14 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'props-before');
       const outDir2 = join(outputPath, 'props-after');
 
-
       // Generate first context
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`,
       );
 
-      const index1 = JSON.parse(await readFile(join(outDir1, 'context_main.json'), 'utf-8'));
+      const index1 = JSON.parse(
+        await readFile(join(outDir1, 'context_main.json'), 'utf-8'),
+      );
       const contextFile1 = join(outDir1, index1.folders[0].contextFile);
 
       // Load and modify props
@@ -514,7 +551,7 @@ describe('CLI Compare Command Tests', () => {
       // Compare them
       try {
         await execAsync(
-          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`,
         );
       } catch (error: any) {
         if (error.stdout && error.stdout.includes('Δ props')) {
@@ -528,13 +565,14 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'emits-before');
       const outDir2 = join(outputPath, 'emits-after');
 
-
       // Generate first context
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`,
       );
 
-      const index1 = JSON.parse(await readFile(join(outDir1, 'context_main.json'), 'utf-8'));
+      const index1 = JSON.parse(
+        await readFile(join(outDir1, 'context_main.json'), 'utf-8'),
+      );
       const contextFile1 = join(outDir1, index1.folders[0].contextFile);
 
       // Load and modify emits
@@ -558,7 +596,7 @@ describe('CLI Compare Command Tests', () => {
       // Compare them
       try {
         await execAsync(
-          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`,
         );
       } catch (error: any) {
         if (error.stdout && error.stdout.includes('Δ emits')) {
@@ -574,18 +612,17 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'multi1');
       const outDir2 = join(outputPath, 'multi2');
 
-
       // Generate two identical multi-file contexts
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`,
       );
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2}`,
       );
 
       // Compare the context_main.json files
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context compare ${join(outDir1, 'context_main.json')} ${join(outDir2, 'context_main.json')}`
+        `node dist/cli/stamp.js context compare ${join(outDir1, 'context_main.json')} ${join(outDir2, 'context_main.json')}`,
       );
 
       expect(stdout).toContain('✅');
@@ -599,19 +636,20 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'added-before');
       const outDir2 = join(outputPath, 'added-after');
 
-
       // Generate first context
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`,
       );
 
       // Generate second context with same files
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2}`,
       );
 
       // Manually add a new folder to the second index
-      const index2 = JSON.parse(await readFile(join(outDir2, 'context_main.json'), 'utf-8'));
+      const index2 = JSON.parse(
+        await readFile(join(outDir2, 'context_main.json'), 'utf-8'),
+      );
 
       // Add a fake folder entry
       index2.folders.push({
@@ -620,26 +658,35 @@ describe('CLI Compare Command Tests', () => {
         bundles: 1,
         components: ['NewComponent.tsx'],
         isRoot: false,
-        tokenEstimate: 500
+        tokenEstimate: 500,
       });
 
-      await writeFile(join(outDir2, 'context_main.json'), JSON.stringify(index2, null, 2));
+      await writeFile(
+        join(outDir2, 'context_main.json'),
+        JSON.stringify(index2, null, 2),
+      );
 
       // Create the actual context file
       await mkdir(join(outDir2, 'src/new-folder'), { recursive: true });
       await writeFile(
         join(outDir2, 'src/new-folder/context.json'),
-        JSON.stringify([{
-          type: 'LogicStampBundle',
-          schemaVersion: '0.1',
-          entryId: 'src/new-folder/NewComponent.tsx',
-          graph: { nodes: [], edges: [] }
-        }], null, 2)
+        JSON.stringify(
+          [
+            {
+              type: 'LogicStampBundle',
+              schemaVersion: '0.1',
+              entryId: 'src/new-folder/NewComponent.tsx',
+              graph: { nodes: [], edges: [] },
+            },
+          ],
+          null,
+          2,
+        ),
       );
 
       // Compare - should detect ADDED FILE (but additions are growth, not drift, so should PASS)
       const result = await execAsync(
-        `node dist/cli/stamp.js context compare ${join(outDir1, 'context_main.json')} ${join(outDir2, 'context_main.json')}`
+        `node dist/cli/stamp.js context compare ${join(outDir1, 'context_main.json')} ${join(outDir2, 'context_main.json')}`,
       );
       const output = result.stdout || '';
       // Additions are growth, not drift - should be PASS
@@ -652,29 +699,33 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'orphan-before');
       const outDir2 = join(outputPath, 'orphan-after');
 
-
       // Generate first context
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`,
       );
 
       // Generate second context
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2}`,
       );
 
       // Manually remove a folder from the second index
-      const index2 = JSON.parse(await readFile(join(outDir2, 'context_main.json'), 'utf-8'));
+      const index2 = JSON.parse(
+        await readFile(join(outDir2, 'context_main.json'), 'utf-8'),
+      );
 
       // Remove the last folder from index
       const removedFolder = index2.folders.pop();
 
-      await writeFile(join(outDir2, 'context_main.json'), JSON.stringify(index2, null, 2));
+      await writeFile(
+        join(outDir2, 'context_main.json'),
+        JSON.stringify(index2, null, 2),
+      );
 
       // Compare - should detect ORPHANED FILE
       try {
         await execAsync(
-          `node dist/cli/stamp.js context compare ${join(outDir1, 'context_main.json')} ${join(outDir2, 'context_main.json')}`
+          `node dist/cli/stamp.js context compare ${join(outDir1, 'context_main.json')} ${join(outDir2, 'context_main.json')}`,
         );
         expect.fail('Should have detected drift');
       } catch (error: any) {
@@ -689,10 +740,9 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'drift-folder-before');
       const outDir2 = join(outputPath, 'drift-folder-after');
 
-
       // Generate first context
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`,
       );
 
       // Copy to second directory
@@ -700,20 +750,23 @@ describe('CLI Compare Command Tests', () => {
       cpSync(outDir1, outDir2, { recursive: true });
 
       // Modify just one folder's context file
-      const index = JSON.parse(await readFile(join(outDir2, 'context_main.json'), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(outDir2, 'context_main.json'), 'utf-8'),
+      );
       const firstFolder = index.folders[0];
       const contextFile = join(outDir2, firstFolder.contextFile);
       const content = JSON.parse(await readFile(contextFile, 'utf-8'));
 
       if (content.length > 0 && content[0].graph.nodes.length > 0) {
-        content[0].graph.nodes[0].contract.semanticHash = 'uif:111111111111111111111111';
+        content[0].graph.nodes[0].contract.semanticHash =
+          'uif:111111111111111111111111';
         await writeFile(contextFile, JSON.stringify(content, null, 2));
       }
 
       // Compare - should show mixed results
       try {
         const result = await execAsync(
-          `node dist/cli/stamp.js context compare ${join(outDir1, 'context_main.json')} ${join(outDir2, 'context_main.json')}`
+          `node dist/cli/stamp.js context compare ${join(outDir1, 'context_main.json')} ${join(outDir2, 'context_main.json')}`,
         );
         // If it succeeds, fail the test
         expect.fail('Should have detected drift and exited with code 1');
@@ -735,18 +788,17 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'stats-multi1');
       const outDir2 = join(outputPath, 'stats-multi2');
 
-
       // Generate two contexts
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`,
       );
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2}`,
       );
 
       // Compare with stats
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context compare ${join(outDir1, 'context_main.json')} ${join(outDir2, 'context_main.json')} --stats`
+        `node dist/cli/stamp.js context compare ${join(outDir1, 'context_main.json')} ${join(outDir2, 'context_main.json')} --stats`,
       );
 
       expect(stdout).toContain('Folder Summary:');
@@ -758,7 +810,6 @@ describe('CLI Compare Command Tests', () => {
       const testDir = join(outputPath, 'clean-orphaned-test');
       await mkdir(testDir, { recursive: true });
 
-
       // Copy fixture files to test directory first
       const { cpSync } = await import('node:fs');
       cpSync(fixturesPath, testDir, { recursive: true });
@@ -766,7 +817,7 @@ describe('CLI Compare Command Tests', () => {
       // Generate initial context in the test directory
       await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Create an orphaned context file
@@ -774,18 +825,20 @@ describe('CLI Compare Command Tests', () => {
       await mkdir(orphanedDir, { recursive: true });
       await writeFile(
         join(orphanedDir, 'context.json'),
-        JSON.stringify([{ type: 'LogicStampBundle' }], null, 2)
+        JSON.stringify([{ type: 'LogicStampBundle' }], null, 2),
       );
 
       // Update context_main.json to not include the orphaned folder
-      const index = JSON.parse(await readFile(join(testDir, 'context_main.json'), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(testDir, 'context_main.json'), 'utf-8'),
+      );
       // Index doesn't include orphaned folder by default, but file exists
 
       // Run comparison with --clean-orphaned (no need for --approve without drift)
       // This test verifies the flag is recognized
       const { stdout } = await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --clean-orphaned`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Should run without error
@@ -796,10 +849,9 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'grouped-before');
       const outDir2 = join(outputPath, 'grouped-after');
 
-
       // Generate first context
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`,
       );
 
       // Copy to second directory
@@ -807,21 +859,24 @@ describe('CLI Compare Command Tests', () => {
       cpSync(outDir1, outDir2, { recursive: true });
 
       // Modify a context file to add component changes
-      const index = JSON.parse(await readFile(join(outDir2, 'context_main.json'), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(outDir2, 'context_main.json'), 'utf-8'),
+      );
       const folder = index.folders[0];
       const contextFile = join(outDir2, folder.contextFile);
       const content = JSON.parse(await readFile(contextFile, 'utf-8'));
 
       if (content.length > 0 && content[0].graph.nodes.length > 0) {
         // Change semantic hash to create drift
-        content[0].graph.nodes[0].contract.semanticHash = 'uif:222222222222222222222222';
+        content[0].graph.nodes[0].contract.semanticHash =
+          'uif:222222222222222222222222';
         await writeFile(contextFile, JSON.stringify(content, null, 2));
       }
 
       // Compare - should show grouped output
       try {
         await execAsync(
-          `node dist/cli/stamp.js context compare ${join(outDir1, 'context_main.json')} ${join(outDir2, 'context_main.json')}`
+          `node dist/cli/stamp.js context compare ${join(outDir1, 'context_main.json')} ${join(outDir2, 'context_main.json')}`,
         );
       } catch (error: any) {
         const output = error.stdout || '';
@@ -839,24 +894,27 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'quiet-compare1');
       const outDir2 = join(outputPath, 'quiet-compare2');
 
-
       // Generate two identical contexts
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1} --quiet`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1} --quiet`,
       );
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2} --quiet`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2} --quiet`,
       );
 
       // Get per-folder context files
-      const index1 = JSON.parse(await readFile(join(outDir1, 'context_main.json'), 'utf-8'));
-      const index2 = JSON.parse(await readFile(join(outDir2, 'context_main.json'), 'utf-8'));
+      const index1 = JSON.parse(
+        await readFile(join(outDir1, 'context_main.json'), 'utf-8'),
+      );
+      const index2 = JSON.parse(
+        await readFile(join(outDir2, 'context_main.json'), 'utf-8'),
+      );
       const contextFile1 = join(outDir1, index1.folders[0].contextFile);
       const contextFile2 = join(outDir2, index2.folders[0].contextFile);
 
       // Compare with --quiet flag
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2} --quiet`
+        `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2} --quiet`,
       );
 
       // Should not contain verbose output messages
@@ -877,24 +935,27 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'quiet-compare-short1');
       const outDir2 = join(outputPath, 'quiet-compare-short2');
 
-
       // Generate two identical contexts
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1} --quiet`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1} --quiet`,
       );
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2} --quiet`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2} --quiet`,
       );
 
       // Get per-folder context files
-      const index1 = JSON.parse(await readFile(join(outDir1, 'context_main.json'), 'utf-8'));
-      const index2 = JSON.parse(await readFile(join(outDir2, 'context_main.json'), 'utf-8'));
+      const index1 = JSON.parse(
+        await readFile(join(outDir1, 'context_main.json'), 'utf-8'),
+      );
+      const index2 = JSON.parse(
+        await readFile(join(outDir2, 'context_main.json'), 'utf-8'),
+      );
       const contextFile1 = join(outDir1, index1.folders[0].contextFile);
       const contextFile2 = join(outDir2, index2.folders[0].contextFile);
 
       // Compare with -q flag
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2} -q`
+        `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2} -q`,
       );
 
       // Should not contain verbose output messages
@@ -907,20 +968,22 @@ describe('CLI Compare Command Tests', () => {
       const outDir1 = join(outputPath, 'quiet-drift1');
       const outDir2 = join(outputPath, 'quiet-drift2');
 
-
       // Generate first context
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1} --quiet`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1} --quiet`,
       );
 
       // Get the first per-folder context file
-      const index1 = JSON.parse(await readFile(join(outDir1, 'context_main.json'), 'utf-8'));
+      const index1 = JSON.parse(
+        await readFile(join(outDir1, 'context_main.json'), 'utf-8'),
+      );
       const contextFile1 = join(outDir1, index1.folders[0].contextFile);
 
       // Modify the context to simulate drift
       const content1 = JSON.parse(await readFile(contextFile1, 'utf-8'));
       if (content1.length > 0 && content1[0].graph.nodes.length > 0) {
-        content1[0].graph.nodes[0].contract.semanticHash = 'uif:000000000000000000000000';
+        content1[0].graph.nodes[0].contract.semanticHash =
+          'uif:000000000000000000000000';
       }
       const contextFile2 = join(outDir2, 'src', 'context.json');
       await mkdir(dirname(contextFile2), { recursive: true });
@@ -929,7 +992,7 @@ describe('CLI Compare Command Tests', () => {
       // Compare with --quiet flag - should still show drift
       try {
         await execAsync(
-          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2} --quiet`
+          `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2} --quiet`,
         );
         expect.fail('Should have detected drift');
       } catch (error: any) {
@@ -946,7 +1009,6 @@ describe('CLI Compare Command Tests', () => {
       const testDir = join(outputPath, 'quiet-auto-mode');
       await mkdir(testDir, { recursive: true });
 
-
       // Copy fixture files to test directory
       const { cpSync } = await import('node:fs');
       cpSync(fixturesPath, testDir, { recursive: true });
@@ -954,13 +1016,13 @@ describe('CLI Compare Command Tests', () => {
       // Generate initial context in the test directory
       await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context . --quiet`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Run auto-mode comparison with --quiet
       const { stdout } = await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --quiet`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Should not contain verbose output
@@ -977,11 +1039,10 @@ describe('CLI Compare Command Tests', () => {
     }, 60000);
 
     it('should still show errors in quiet mode', async () => {
-
       // Try to compare non-existent files
       try {
         await execAsync(
-          'node dist/cli/stamp.js context compare /nonexistent1.json /nonexistent2.json --quiet'
+          'node dist/cli/stamp.js context compare /nonexistent1.json /nonexistent2.json --quiet',
         );
         expect.fail('Should have thrown an error');
       } catch (error: any) {
@@ -1009,25 +1070,38 @@ describe('CLI Compare Command Tests', () => {
         } catch {
           // If that fails, try to rename existing branch
           try {
-            const { stdout: currentBranch } = await execAsync('git branch --show-current', { cwd: path });
+            const { stdout: currentBranch } = await execAsync(
+              'git branch --show-current',
+              { cwd: path },
+            );
             const branchName = currentBranch.trim();
             if (branchName && branchName !== 'main') {
-              await execAsync(`git branch -m ${branchName} main`, { cwd: path });
+              await execAsync(`git branch -m ${branchName} main`, {
+                cwd: path,
+              });
             }
           } catch {
             // Ignore - will create main on first commit
           }
         }
       }
-      await execAsync('git config user.email "test@example.com"', { cwd: path });
+      await execAsync('git config user.email "test@example.com"', {
+        cwd: path,
+      });
       await execAsync('git config user.name "Test User"', { cwd: path });
     }
 
     // Helper function to create a commit
-    async function createCommit(path: string, message: string): Promise<string> {
+    async function createCommit(
+      path: string,
+      message: string,
+    ): Promise<string> {
       // Ensure we're on main branch before committing (first commit creates the branch)
       try {
-        const { stdout: currentBranch } = await execAsync('git branch --show-current', { cwd: path });
+        const { stdout: currentBranch } = await execAsync(
+          'git branch --show-current',
+          { cwd: path },
+        );
         if (!currentBranch.trim()) {
           // We're in detached HEAD or no branch exists, create main
           await execAsync('git checkout -b main', { cwd: path });
@@ -1037,7 +1111,9 @@ describe('CLI Compare Command Tests', () => {
             await execAsync('git checkout main', { cwd: path });
           } catch {
             // Main doesn't exist, rename current branch to main
-            await execAsync(`git branch -m ${currentBranch.trim()} main`, { cwd: path });
+            await execAsync(`git branch -m ${currentBranch.trim()} main`, {
+              cwd: path,
+            });
           }
         }
       } catch {
@@ -1055,7 +1131,10 @@ describe('CLI Compare Command Tests', () => {
     }
 
     // Helper function to create a branch
-    async function createBranch(path: string, branchName: string): Promise<void> {
+    async function createBranch(
+      path: string,
+      branchName: string,
+    ): Promise<void> {
       await execAsync(`git checkout -b ${branchName}`, { cwd: path });
     }
 
@@ -1102,13 +1181,13 @@ describe('CLI Compare Command Tests', () => {
       // Generate context at baseline
       await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
-        { cwd: gitRepoPath }
+        { cwd: gitRepoPath },
       );
 
       // Compare against baseline - should pass (no changes)
       const { stdout } = await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:HEAD`,
-        { cwd: gitRepoPath }
+        { cwd: gitRepoPath },
       );
 
       expect(stdout).toContain('Git baseline comparison');
@@ -1123,13 +1202,16 @@ describe('CLI Compare Command Tests', () => {
       // Make a significant change to a file (add a new function to ensure structural change)
       const appFile = join(gitRepoPath, 'src', 'App.tsx');
       const content = await readFile(appFile, 'utf-8');
-      await writeFile(appFile, content + '\nexport function newFunction() { return null; }\n');
+      await writeFile(
+        appFile,
+        content + '\nexport function newFunction() { return null; }\n',
+      );
 
       // Compare against baseline - should detect drift
       try {
         await execAsync(
           `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:HEAD`,
-          { cwd: gitRepoPath }
+          { cwd: gitRepoPath },
         );
         expect.fail('Should have detected drift');
       } catch (error: any) {
@@ -1147,7 +1229,7 @@ describe('CLI Compare Command Tests', () => {
 
       // Create and switch to feature branch
       await createBranch(gitRepoPath, 'feature-branch');
-      
+
       // Make a change before committing
       const appFile = join(gitRepoPath, 'src', 'App.tsx');
       const content = await readFile(appFile, 'utf-8');
@@ -1157,7 +1239,7 @@ describe('CLI Compare Command Tests', () => {
       // Compare current (feature-branch) against main
       const { stdout } = await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:main`,
-        { cwd: gitRepoPath }
+        { cwd: gitRepoPath },
       );
 
       expect(stdout).toContain('Git baseline comparison');
@@ -1180,7 +1262,7 @@ describe('CLI Compare Command Tests', () => {
       // Compare against tag
       const { stdout } = await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:v1.0.0`,
-        { cwd: gitRepoPath }
+        { cwd: gitRepoPath },
       );
 
       expect(stdout).toContain('Git baseline comparison');
@@ -1201,7 +1283,7 @@ describe('CLI Compare Command Tests', () => {
       const shortHash = initialHash.substring(0, 7);
       const { stdout } = await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:${shortHash}`,
-        { cwd: gitRepoPath }
+        { cwd: gitRepoPath },
       );
 
       expect(stdout).toContain('Git baseline comparison');
@@ -1214,7 +1296,7 @@ describe('CLI Compare Command Tests', () => {
       // Create a git-ignored file (like next-env.d.ts)
       const gitignorePath = join(gitRepoPath, '.gitignore');
       await writeFile(gitignorePath, 'next-env.d.ts\n.env.local\n');
-      
+
       const ignoredFile = join(gitRepoPath, 'next-env.d.ts');
       await writeFile(ignoredFile, '// Auto-generated file\n');
 
@@ -1224,7 +1306,7 @@ describe('CLI Compare Command Tests', () => {
       // Compare - git-ignored file should not cause drift
       const { stdout } = await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:HEAD`,
-        { cwd: gitRepoPath }
+        { cwd: gitRepoPath },
       );
 
       // Should pass because git-ignored files are filtered
@@ -1235,7 +1317,10 @@ describe('CLI Compare Command Tests', () => {
     it('should error when not in a git repository', async () => {
       // Create a non-git directory in a temp location outside the project
       const { tmpdir } = await import('node:os');
-      const nonGitDir = join(tmpdir(), `logicstamp-non-git-${randomUUID().substring(0, 8)}`);
+      const nonGitDir = join(
+        tmpdir(),
+        `logicstamp-non-git-${randomUUID().substring(0, 8)}`,
+      );
       await mkdir(nonGitDir, { recursive: true });
       const { cpSync } = await import('node:fs');
       cpSync(fixturesPath, nonGitDir, { recursive: true });
@@ -1243,7 +1328,7 @@ describe('CLI Compare Command Tests', () => {
       try {
         await execAsync(
           `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:main`,
-          { cwd: nonGitDir }
+          { cwd: nonGitDir },
         );
         expect.fail('Should have errored');
       } catch (error: any) {
@@ -1263,7 +1348,7 @@ describe('CLI Compare Command Tests', () => {
       try {
         await execAsync(
           `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:nonexistent-branch`,
-          { cwd: gitRepoPath }
+          { cwd: gitRepoPath },
         );
         expect.fail('Should have errored');
       } catch (error: any) {
@@ -1281,7 +1366,7 @@ describe('CLI Compare Command Tests', () => {
       try {
         await execAsync(
           `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline invalid-format`,
-          { cwd: gitRepoPath }
+          { cwd: gitRepoPath },
         );
         expect.fail('Should have errored');
       } catch (error: any) {
@@ -1299,7 +1384,7 @@ describe('CLI Compare Command Tests', () => {
       // Compare with --quiet flag
       const { stdout } = await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:HEAD --quiet`,
-        { cwd: gitRepoPath }
+        { cwd: gitRepoPath },
       );
 
       // Should not contain verbose output
@@ -1310,7 +1395,7 @@ describe('CLI Compare Command Tests', () => {
       expect(stdout).not.toContain('Generating current context');
       expect(stdout).not.toContain('Comparing baseline vs current');
       expect(stdout).not.toContain('Folder Summary:');
-      
+
       // Should output just ✓ in quiet mode for PASS
       expect(stdout.trim()).toBe('✓');
     }, 120000);
@@ -1322,13 +1407,16 @@ describe('CLI Compare Command Tests', () => {
       // Make a significant change to trigger drift (add a new export)
       const appFile = join(gitRepoPath, 'src', 'App.tsx');
       const content = await readFile(appFile, 'utf-8');
-      await writeFile(appFile, content + '\nexport const newConstant = "test";\n');
+      await writeFile(
+        appFile,
+        content + '\nexport const newConstant = "test";\n',
+      );
 
       // Compare with --stats flag
       try {
         await execAsync(
           `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:HEAD --stats`,
-          { cwd: gitRepoPath }
+          { cwd: gitRepoPath },
         );
         expect.fail('Should have detected drift');
       } catch (error: any) {
@@ -1348,11 +1436,13 @@ describe('CLI Compare Command Tests', () => {
       // Run comparison
       await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:HEAD`,
-        { cwd: gitRepoPath }
+        { cwd: gitRepoPath },
       );
 
       // Check that no worktrees remain
-      const { stdout } = await execAsync('git worktree list', { cwd: gitRepoPath });
+      const { stdout } = await execAsync('git worktree list', {
+        cwd: gitRepoPath,
+      });
       // Should only have the main worktree, no logicstamp worktrees
       expect(stdout).not.toContain('logicstamp-worktree');
     }, 120000);
@@ -1365,14 +1455,16 @@ describe('CLI Compare Command Tests', () => {
       try {
         await execAsync(
           `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:nonexistent`,
-          { cwd: gitRepoPath }
+          { cwd: gitRepoPath },
         );
       } catch {
         // Expected to fail
       }
 
       // Check that no worktrees remain even after error
-      const { stdout } = await execAsync('git worktree list', { cwd: gitRepoPath });
+      const { stdout } = await execAsync('git worktree list', {
+        cwd: gitRepoPath,
+      });
       expect(stdout).not.toContain('logicstamp-worktree');
     }, 60000);
 
@@ -1383,24 +1475,32 @@ describe('CLI Compare Command Tests', () => {
       // Make significant changes to multiple files (add exports to ensure structural changes)
       const appFile = join(gitRepoPath, 'src', 'App.tsx');
       const appContent = await readFile(appFile, 'utf-8');
-      await writeFile(appFile, appContent + '\nexport const change1 = "test1";\n');
+      await writeFile(
+        appFile,
+        appContent + '\nexport const change1 = "test1";\n',
+      );
 
       // Find another file to modify
       const { readdir } = await import('node:fs/promises');
       const srcDir = join(gitRepoPath, 'src');
       const files = await readdir(srcDir);
-      const otherFile = files.find(f => f.endsWith('.tsx') || f.endsWith('.ts'));
+      const otherFile = files.find(
+        (f) => f.endsWith('.tsx') || f.endsWith('.ts'),
+      );
       if (otherFile) {
         const otherFilePath = join(srcDir, otherFile);
         const otherContent = await readFile(otherFilePath, 'utf-8');
-        await writeFile(otherFilePath, otherContent + '\nexport const change2 = "test2";\n');
+        await writeFile(
+          otherFilePath,
+          otherContent + '\nexport const change2 = "test2";\n',
+        );
       }
 
       // Compare - should detect drift in multiple folders
       try {
         await execAsync(
           `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:HEAD`,
-          { cwd: gitRepoPath }
+          { cwd: gitRepoPath },
         );
         expect.fail('Should have detected drift');
       } catch (error: any) {
@@ -1425,11 +1525,10 @@ describe('CLI Compare Command Tests', () => {
       // Compare against HEAD~1
       const { stdout } = await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context compare --baseline git:HEAD~1`,
-        { cwd: gitRepoPath }
+        { cwd: gitRepoPath },
       );
 
       expect(stdout).toContain('Git baseline comparison');
     }, 120000);
   });
 });
-

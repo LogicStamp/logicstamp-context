@@ -455,7 +455,7 @@ describe('Layout Extractor', () => {
             <div className="flex p-4"
           );
         }
-        `
+        `,
       );
 
       // Should not throw, should return empty object or partial results
@@ -473,7 +473,7 @@ describe('Layout Extractor', () => {
             <div className="bg-blue-500 text-white"
           );
         }
-        `
+        `,
       );
 
       // Should not throw, should return empty object or partial results
@@ -507,7 +507,7 @@ describe('Layout Extractor', () => {
             <div className="flex" 
           // Missing closing brace and parenthesis
         `,
-        'test.tsx'
+        'test.tsx',
       );
 
       // Should not throw, should return empty object
@@ -525,7 +525,7 @@ describe('Layout Extractor', () => {
             <div className="bg-blue-500" 
           // Missing closing brace and parenthesis
         `,
-        'test.tsx'
+        'test.tsx',
       );
 
       // Should not throw, should return empty object
@@ -545,7 +545,7 @@ describe('Layout Extractor', () => {
             </div>
           );
         }
-        `
+        `,
       );
 
       // Should not throw, should handle gracefully
@@ -565,7 +565,7 @@ describe('Layout Extractor', () => {
             </div>
           );
         }
-        `
+        `,
       );
 
       // Should not throw, should handle gracefully
@@ -575,4 +575,3 @@ describe('Layout Extractor', () => {
     });
   });
 });
-

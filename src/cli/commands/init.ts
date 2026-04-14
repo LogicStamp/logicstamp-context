@@ -3,9 +3,17 @@
  */
 
 import { resolve } from 'node:path';
-import { ensureGitignorePatterns, readGitignore, hasLogicStampPatterns } from '../../utils/gitignore.js';
+import {
+  ensureGitignorePatterns,
+  readGitignore,
+  hasLogicStampPatterns,
+} from '../../utils/gitignore.js';
 import { updateConfig } from '../../utils/config.js';
-import { readPackageLLMContext, writeLLMContext, llmContextExists } from '../../utils/llmContext.js';
+import {
+  readPackageLLMContext,
+  writeLLMContext,
+  llmContextExists,
+} from '../../utils/llmContext.js';
 import { securityScanCommand } from './security.js';
 
 export interface InitOptions {
@@ -39,7 +47,11 @@ async function promptYesNo(question: string): Promise<boolean> {
   return new Promise((resolve) => {
     readline.question(question, (answer) => {
       readline.close();
-      resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes' || answer === '');
+      resolve(
+        answer.toLowerCase() === 'y' ||
+          answer.toLowerCase() === 'yes' ||
+          answer === '',
+      );
     });
   });
 }
@@ -69,7 +81,9 @@ export async function init(options: InitOptions = {}): Promise<void> {
       const alreadyHasPatterns = hasLogicStampPatterns(gitignoreContent);
 
       if (!alreadyHasPatterns) {
-        console.log('💡 LogicStamp compiles large context files that are usually not committed.');
+        console.log(
+          '💡 LogicStamp compiles large context files that are usually not committed.',
+        );
         console.log('\n   The following patterns will be added to .gitignore:');
         console.log('   - context.json');
         console.log('   - context_*.json');
@@ -78,12 +92,16 @@ export async function init(options: InitOptions = {}): Promise<void> {
         console.log('   - *.uif.json');
         console.log('   - logicstamp.manifest.json');
         console.log('   - .logicstamp/');
-        console.log('   - stamp_security_report.json (🔒 SECURITY: contains sensitive secret locations)');
-        
+        console.log(
+          '   - stamp_security_report.json (🔒 SECURITY: contains sensitive secret locations)',
+        );
+
         let shouldAdd = true; // Default to "yes" in non-interactive mode
         if (isTTY() && !autoYes) {
           // Interactive prompt (local dev convenience)
-          shouldAdd = await promptYesNo('\nAdd recommended patterns to .gitignore? [Y/n] ');
+          shouldAdd = await promptYesNo(
+            '\nAdd recommended patterns to .gitignore? [Y/n] ',
+          );
         }
 
         if (shouldAdd) {
@@ -100,26 +118,31 @@ export async function init(options: InitOptions = {}): Promise<void> {
           }
         } else {
           console.log('📝 Skipping .gitignore setup');
-          console.log('⚠️  Note: If you run `stamp security scan`, it will automatically add `stamp_security_report.json` to `.gitignore` to protect sensitive findings.');
+          console.log(
+            '⚠️  Note: If you run `stamp security scan`, it will automatically add `stamp_security_report.json` to `.gitignore` to protect sensitive findings.',
+          );
           await updateConfig(targetDir, { gitignorePreference: 'skipped' });
         }
       } else {
         // Even if hasLogicStampPatterns() returns true, ensureGitignorePatterns()
         // will check for missing patterns and update if needed (idempotent patch mode)
         const { added } = await ensureGitignorePatterns(targetDir);
-        
+
         if (added) {
           console.log('✅ Updated existing LogicStamp section in .gitignore');
           gitignoreAdded = true;
         } else {
           console.log('ℹ️  .gitignore already contains all LogicStamp patterns');
         }
-        
+
         // Still save preference in case config doesn't exist
         await updateConfig(targetDir, { gitignorePreference: 'added' });
       }
     } catch (error) {
-      console.error('⚠️  Failed to update .gitignore:', error instanceof Error ? error.message : String(error));
+      console.error(
+        '⚠️  Failed to update .gitignore:',
+        error instanceof Error ? error.message : String(error),
+      );
       console.log('   You can manually add the patterns to your .gitignore');
     }
   } else {
@@ -134,11 +157,15 @@ export async function init(options: InitOptions = {}): Promise<void> {
     } else {
       const content = await readPackageLLMContext();
       if (content) {
-        console.log('\n💡 LogicStamp can create LLM_CONTEXT.md to help AI assistants understand your project structure.');
+        console.log(
+          '\n💡 LogicStamp can create LLM_CONTEXT.md to help AI assistants understand your project structure.',
+        );
         let shouldAdd = true; // Default to "yes" in non-interactive mode
         if (isTTY() && !autoYes) {
           // Interactive prompt (local dev convenience)
-          shouldAdd = await promptYesNo('Create LLM_CONTEXT.md in project root? [Y/n] ');
+          shouldAdd = await promptYesNo(
+            'Create LLM_CONTEXT.md in project root? [Y/n] ',
+          );
         }
 
         if (shouldAdd) {
@@ -152,9 +179,11 @@ export async function init(options: InitOptions = {}): Promise<void> {
         }
       } else {
         // Template not found in package - offer to create a basic default
-        console.log('\n💡 LogicStamp can create LLM_CONTEXT.md to help AI assistants understand your project structure.');
+        console.log(
+          '\n💡 LogicStamp can create LLM_CONTEXT.md to help AI assistants understand your project structure.',
+        );
         console.log('   (Using default template - package template not found)');
-        
+
         const defaultContent = `# LLM Context
 
 This file helps AI assistants understand your project structure and conventions.
@@ -180,7 +209,9 @@ This file is created by LogicStamp Context. Customize it to fit your project's n
         let shouldAdd = true; // Default to "yes" in non-interactive mode
         if (isTTY() && !autoYes) {
           // Interactive prompt (local dev convenience)
-          shouldAdd = await promptYesNo('Create LLM_CONTEXT.md in project root? [Y/n] ');
+          shouldAdd = await promptYesNo(
+            'Create LLM_CONTEXT.md in project root? [Y/n] ',
+          );
         }
 
         if (shouldAdd) {
@@ -195,23 +226,26 @@ This file is created by LogicStamp Context. Customize it to fit your project's n
       }
     }
   } catch (error) {
-    console.error('\n⚠️  Failed to create LLM_CONTEXT.md:', error instanceof Error ? error.message : String(error));
+    console.error(
+      '\n⚠️  Failed to create LLM_CONTEXT.md:',
+      error instanceof Error ? error.message : String(error),
+    );
   }
 
   // Run security scan after init (default behavior, unless --no-secure is set)
   if (shouldRunSecurity) {
     console.log('\n🔒 Running security scan...\n');
-    
+
     try {
       const scanResult = await securityScanCommand({
         entry: targetDir,
         quiet: false,
         noExit: true,
       });
-      
+
       // Print combined summary
       console.log('\n📊 Initialization complete.');
-      
+
       // Summary of init actions
       if (!options.skipGitignore) {
         if (gitignoreAdded) {
@@ -224,18 +258,24 @@ This file is created by LogicStamp Context. Customize it to fit your project's n
           }
         }
       }
-      
+
       if (llmContextGenerated) {
         console.log('✔ Generated LLM_CONTEXT.md');
       } else if (await llmContextExists(targetDir)) {
         console.log('✔ LLM_CONTEXT.md already exists');
       }
-      
+
       // Summary of security scan
-      if (scanResult && typeof scanResult === 'object' && 'report' in scanResult) {
+      if (
+        scanResult &&
+        typeof scanResult === 'object' &&
+        'report' in scanResult
+      ) {
         const { report } = scanResult;
-        console.log(`✔ Security scan: ${report.filesScanned} files scanned, ${report.secretsFound} secrets found`);
-        
+        console.log(
+          `✔ Security scan: ${report.filesScanned} files scanned, ${report.secretsFound} secrets found`,
+        );
+
         if (report.secretsFound > 0) {
           console.log(`✔ Report written to stamp_security_report.json`);
           process.exit(1);
@@ -245,7 +285,10 @@ This file is created by LogicStamp Context. Customize it to fit your project's n
         }
       }
     } catch (error) {
-      console.error('\n⚠️  Security scan failed:', error instanceof Error ? error.message : String(error));
+      console.error(
+        '\n⚠️  Security scan failed:',
+        error instanceof Error ? error.message : String(error),
+      );
       // Don't exit with error - init succeeded, scan failed
     }
   } else {

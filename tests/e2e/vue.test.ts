@@ -292,12 +292,14 @@ describe('Vue.js End-to-End Tests', () => {
       const manifest = buildDependencyGraph(contracts);
 
       // App should be a root (nothing imports it)
-      const appIsRoot = manifest.graph.roots.some(id => id.includes('App.tsx'));
+      const appIsRoot = manifest.graph.roots.some((id) =>
+        id.includes('App.tsx'),
+      );
       expect(appIsRoot).toBe(true);
 
       // Button should be a leaf (it doesn't import other components)
-      const buttonIsLeaf = manifest.graph.leaves.some(id =>
-        id.includes('Button.tsx')
+      const buttonIsLeaf = manifest.graph.leaves.some((id) =>
+        id.includes('Button.tsx'),
       );
       expect(buttonIsLeaf).toBe(true);
     });
@@ -326,8 +328,8 @@ describe('Vue.js End-to-End Tests', () => {
       const manifest = buildDependencyGraph(contracts);
 
       // Card should have Button in its dependencies
-      const cardNode = Object.values(manifest.components).find(node =>
-        node.entryId.includes('Card.tsx')
+      const cardNode = Object.values(manifest.components).find((node) =>
+        node.entryId.includes('Card.tsx'),
       );
 
       expect(cardNode).toBeDefined();
@@ -365,13 +367,13 @@ describe('Vue.js End-to-End Tests', () => {
 
       expect(manifest).toBeDefined();
       expect(manifest.components).toBeDefined();
-      
+
       // Should have both composable and component
-      const composableNode = Object.values(manifest.components).find(node =>
-        node.entryId.includes('useCounter.ts')
+      const composableNode = Object.values(manifest.components).find((node) =>
+        node.entryId.includes('useCounter.ts'),
       );
-      const appNode = Object.values(manifest.components).find(node =>
-        node.entryId.includes('App.tsx')
+      const appNode = Object.values(manifest.components).find((node) =>
+        node.entryId.includes('App.tsx'),
       );
 
       expect(composableNode).toBeDefined();
@@ -442,4 +444,3 @@ describe('Vue.js End-to-End Tests', () => {
     });
   });
 });
-

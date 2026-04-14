@@ -1,4 +1,4 @@
-import { Project, SourceFile } from 'ts-morph';
+import { Project, type SourceFile } from 'ts-morph';
 import { it, expect } from 'vitest';
 
 /**
@@ -14,16 +14,16 @@ export function createTestProject(): Project {
  * Uses in-memory file system to avoid touching the actual filesystem.
  */
 export function createTestProjectWithJSX(): Project {
-  return new Project({ 
-    useInMemoryFileSystem: true, 
-    compilerOptions: { jsx: 1 } 
+  return new Project({
+    useInMemoryFileSystem: true,
+    compilerOptions: { jsx: 1 },
   });
 }
 
 /**
  * Creates a SourceFile from source code string for testing.
  * Automatically creates a new Project if not provided.
- * 
+ *
  * @param sourceCode - The source code to create a file from
  * @param fileName - The name of the file (default: 'test.tsx')
  * @param project - Optional project instance. If not provided, creates a new one.
@@ -33,9 +33,11 @@ export function createTestSourceFile(
   sourceCode: string,
   fileName: string = 'test.tsx',
   project?: Project,
-  options?: { jsx?: number }
+  options?: { jsx?: number },
 ): SourceFile {
-  const proj = project ?? (options?.jsx ? createTestProjectWithJSX() : createTestProject());
+  const proj =
+    project ??
+    (options?.jsx ? createTestProjectWithJSX() : createTestProject());
   return proj.createSourceFile(fileName, sourceCode);
 }
 
@@ -55,7 +57,7 @@ export interface StyleExtractorTestCase<T> {
  */
 export function runExtractorTests<T>(
   extractor: (sourceFile: SourceFile) => T,
-  testCases: StyleExtractorTestCase<T>[]
+  testCases: StyleExtractorTestCase<T>[],
 ): void {
   testCases.forEach(({ description, sourceCode, assertions }) => {
     it(description, () => {
@@ -69,8 +71,10 @@ export function runExtractorTests<T>(
 /**
  * Common assertion helpers for style extractor tests
  */
-export const expectEmptyResult = <T extends { components: string[]; packages: string[] }>(
-  result: T
+export const expectEmptyResult = <
+  T extends { components: string[]; packages: string[] },
+>(
+  result: T,
 ): void => {
   expect(result.components).toEqual([]);
   expect(result.packages).toEqual([]);
@@ -81,9 +85,9 @@ export const expectEmptyResult = <T extends { components: string[]; packages: st
  */
 export const expectComponents = (
   result: { components: string[] },
-  expectedComponents: string[]
+  expectedComponents: string[],
 ): void => {
-  expectedComponents.forEach(component => {
+  expectedComponents.forEach((component) => {
     expect(result.components).toContain(component);
   });
 };
@@ -93,9 +97,9 @@ export const expectComponents = (
  */
 export const expectPackages = (
   result: { packages: string[] },
-  expectedPackages: string[]
+  expectedPackages: string[],
 ): void => {
-  expectedPackages.forEach(pkg => {
+  expectedPackages.forEach((pkg) => {
     expect(result.packages).toContain(pkg);
   });
 };
@@ -112,7 +116,7 @@ export const expectSortedPackages = (result: { packages: string[] }): void => {
  */
 export const expectComponentLimit = (
   result: { components: string[] },
-  limit: number = 20
+  limit: number = 20,
 ): void => {
   expect(result.components.length).toBeLessThanOrEqual(limit);
 };

@@ -16,7 +16,10 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const controller = extractNestJSController(sourceFile);
 
@@ -35,7 +38,10 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const controller = extractNestJSController(sourceFile);
 
@@ -57,7 +63,10 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const controller = extractNestJSController(sourceFile);
 
@@ -83,7 +92,10 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const controller = extractNestJSController(sourceFile);
 
@@ -110,7 +122,10 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const controller = extractNestJSController(sourceFile);
 
@@ -136,7 +151,10 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const controller = extractNestJSController(sourceFile);
 
@@ -163,7 +181,10 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const controller = extractNestJSController(sourceFile);
 
@@ -190,7 +211,10 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const controller = extractNestJSController(sourceFile);
 
@@ -237,7 +261,10 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const controller = extractNestJSController(sourceFile);
 
@@ -286,7 +313,10 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const controller = extractNestJSController(sourceFile);
 
@@ -325,7 +355,10 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const controller = extractNestJSController(sourceFile);
 
@@ -350,7 +383,10 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const controller = extractNestJSController(sourceFile);
 
@@ -374,9 +410,16 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
-      const signature = extractNestJSApiSignature(sourceFile, 'UsersController', 'findOne');
+      const signature = extractNestJSApiSignature(
+        sourceFile,
+        'UsersController',
+        'findOne',
+      );
 
       expect(signature).toBeDefined();
       expect(signature?.parameters).toBeDefined();
@@ -397,9 +440,16 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
-      const signature = extractNestJSApiSignature(sourceFile, 'UsersController', 'findAll');
+      const signature = extractNestJSApiSignature(
+        sourceFile,
+        'UsersController',
+        'findAll',
+      );
 
       expect(signature).toBeDefined();
       expect(signature?.returnType).toBe('User[]');
@@ -418,13 +468,22 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
-      const signature = extractNestJSApiSignature(sourceFile, 'UsersController', 'findAll');
+      const signature = extractNestJSApiSignature(
+        sourceFile,
+        'UsersController',
+        'findAll',
+      );
 
       // When no parameters, signature might be undefined (since parameters object would be empty)
       // This is expected behavior - the function should not throw
-      expect(() => extractNestJSApiSignature(sourceFile, 'UsersController', 'findAll')).not.toThrow();
+      expect(() =>
+        extractNestJSApiSignature(sourceFile, 'UsersController', 'findAll'),
+      ).not.toThrow();
     });
 
     it('should return undefined for non-existent class', () => {
@@ -440,9 +499,16 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
-      const signature = extractNestJSApiSignature(sourceFile, 'NonExistentController', 'findAll');
+      const signature = extractNestJSApiSignature(
+        sourceFile,
+        'NonExistentController',
+        'findAll',
+      );
 
       expect(signature).toBeUndefined();
     });
@@ -460,9 +526,16 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
-      const signature = extractNestJSApiSignature(sourceFile, 'UsersController', 'nonExistent');
+      const signature = extractNestJSApiSignature(
+        sourceFile,
+        'UsersController',
+        'nonExistent',
+      );
 
       expect(signature).toBeUndefined();
     });
@@ -480,9 +553,16 @@ describe('NestJS Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
-      const signature = extractNestJSApiSignature(sourceFile, 'UsersController', 'findOne');
+      const signature = extractNestJSApiSignature(
+        sourceFile,
+        'UsersController',
+        'findOne',
+      );
 
       // Should still extract function, but types might be 'any' or inferred
       expect(signature).toBeDefined();

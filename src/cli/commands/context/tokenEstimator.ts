@@ -2,7 +2,12 @@
  * Token Estimator - Calculates token counts and mode comparisons
  */
 
-import { estimateGPT4Tokens, estimateClaudeTokens, formatTokenCount, getTokenizerStatus } from '../../../utils/tokens.js';
+import {
+  estimateGPT4Tokens,
+  estimateClaudeTokens,
+  formatTokenCount,
+  getTokenizerStatus,
+} from '../../../utils/tokens.js';
 import type { LogicStampBundle } from '../../../core/pack.js';
 import type { UIFContract } from '../../../types/UIFContract.js';
 import type { ProjectManifest } from '../../../core/manifest.js';
@@ -23,20 +28,22 @@ import { join, isAbsolute } from 'node:path';
 function checkBundleResults<T>(
   results: PromiseSettledResult<T>[],
   context: string,
-  quiet?: boolean
+  quiet?: boolean,
 ): { successful: T[]; allFailed: boolean } {
   const successful = results
     .filter((r): r is PromiseFulfilledResult<T> => r.status === 'fulfilled')
-    .map(r => r.value);
+    .map((r) => r.value);
 
   if (successful.length === 0 && results.length > 0) {
     const errors = results
       .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
-      .map(r => r.reason instanceof Error ? r.reason.message : String(r.reason));
+      .map((r) =>
+        r.reason instanceof Error ? r.reason.message : String(r.reason),
+      );
 
     if (!quiet) {
       console.warn(`\n⚠️  All ${context} bundle compilations failed:`);
-      errors.forEach(e => console.warn(`   - ${e}`));
+      errors.forEach((e) => console.warn(`   - ${e}`));
     }
 
     return { successful: [], allFailed: true };
@@ -45,7 +52,9 @@ function checkBundleResults<T>(
   // Log partial failures as warnings
   const failedCount = results.length - successful.length;
   if (failedCount > 0 && !quiet) {
-    console.warn(`   ⚠️  ${failedCount}/${results.length} ${context} bundles failed to compile`);
+    console.warn(
+      `   ⚠️  ${failedCount}/${results.length} ${context} bundles failed to compile`,
+    );
   }
 
   return { successful, allFailed: false };
@@ -87,7 +96,7 @@ export async function calculateTokenEstimates(
   output: string,
   totalSourceSize: number,
   currentGPT4: number,
-  currentClaude: number
+  currentClaude: number,
 ): Promise<TokenEstimates> {
   // Estimate tokens for all three modes
   const sourceTokensGPT4 = Math.ceil(totalSourceSize / 4);
@@ -113,12 +122,21 @@ export async function calculateTokenEstimates(
   };
 
   // Calculate savings percentage for current mode vs full
-  const savingsGPT4 = modeEstimates.full.gpt4 > 0
-    ? ((modeEstimates.full.gpt4 - currentGPT4) / modeEstimates.full.gpt4 * 100).toFixed(0)
-    : '0';
-  const savingsClaude = modeEstimates.full.claude > 0
-    ? ((modeEstimates.full.claude - currentClaude) / modeEstimates.full.claude * 100).toFixed(0)
-    : '0';
+  const savingsGPT4 =
+    modeEstimates.full.gpt4 > 0
+      ? (
+          ((modeEstimates.full.gpt4 - currentGPT4) / modeEstimates.full.gpt4) *
+          100
+        ).toFixed(0)
+      : '0';
+  const savingsClaude =
+    modeEstimates.full.claude > 0
+      ? (
+          ((modeEstimates.full.claude - currentClaude) /
+            modeEstimates.full.claude) *
+          100
+        ).toFixed(0)
+      : '0';
 
   return {
     currentGPT4,
@@ -152,11 +170,11 @@ export async function generateModeComparison(
     allowMissing: boolean;
     predictBehavior: boolean;
     quiet?: boolean;
-  }
+  },
 ): Promise<ModeComparisonResult> {
   const hasStyle = options.includeStyle === true;
   const isHeaderMode = options.includeCode === 'header';
-  
+
   // Calculate actual source size tokens using tokenizers when available
   // Read all source files and concatenate to get accurate token counts
   // Cache file contents to avoid redundant file reads later
@@ -170,7 +188,9 @@ export async function generateModeComparison(
     for (const file of files) {
       try {
         // Resolve relative path to absolute for file operations
-        const absoluteFilePath = isAbsolute(file) ? file : join(projectRoot, file);
+        const absoluteFilePath = isAbsolute(file)
+          ? file
+          : join(projectRoot, file);
         const { text } = await readFileWithText(absoluteFilePath);
         fileContentCache.set(absoluteFilePath, text);
         sourceTexts.push(text);
@@ -188,28 +208,32 @@ export async function generateModeComparison(
     actualSourceTokensGPT4 = Math.ceil(totalSourceSize / 4);
     actualSourceTokensClaude = Math.ceil(totalSourceSize / 4.5);
   }
-  
+
   // Calculate header and header+style for comparison
   let headerNoStyleGPT4: number;
   let headerNoStyleClaude: number;
   let headerWithStyleGPT4: number;
   let headerWithStyleClaude: number;
-  
+
   if (isHeaderMode && hasStyle) {
     // Current is header+style - recompile contracts without style to get accurate count
     headerWithStyleGPT4 = currentGPT4;
     headerWithStyleClaude = currentClaude;
-    
+
     // Rebuild contracts without style metadata to get accurate header token count
     if (!options.quiet) {
-      console.log('   Generating without style metadata for accurate comparison...');
+      console.log(
+        '   Generating without style metadata for accurate comparison...',
+      );
     }
-    
+
     const noStyleContracts: UIFContract[] = [];
     for (const file of files) {
       try {
         // Resolve relative path to absolute for file operations
-        const absoluteFilePath = isAbsolute(file) ? file : join(projectRoot, file);
+        const absoluteFilePath = isAbsolute(file)
+          ? file
+          : join(projectRoot, file);
         const ast = await extractFromFile(absoluteFilePath);
         // Use cached file content instead of re-reading from disk
         const text = fileContentCache.get(absoluteFilePath);
@@ -230,34 +254,48 @@ export async function generateModeComparison(
         // Skip files that can't be analyzed
       }
     }
-    
+
     // Generate bundles with no-style contracts
-    const noStyleContractsMap = new Map(noStyleContracts.map(c => [c.entryId, c]));
+    const noStyleContractsMap = new Map(
+      noStyleContracts.map((c) => [c.entryId, c]),
+    );
     const noStyleBundleResults = await Promise.allSettled(
-      manifest.graph.roots.map(rootId =>
-        pack(rootId, manifest, {
-          depth: options.depth,
-          includeCode: options.includeCode,
-          maxNodes: options.maxNodes,
-          contractsMap: noStyleContractsMap,
-          format: options.format,
-          hashLock: options.hashLock || false,
-          strict: options.strict || false,
-          allowMissing: options.allowMissing !== false,
-        }, projectRoot)
-      )
+      manifest.graph.roots.map((rootId) =>
+        pack(
+          rootId,
+          manifest,
+          {
+            depth: options.depth,
+            includeCode: options.includeCode,
+            maxNodes: options.maxNodes,
+            contractsMap: noStyleContractsMap,
+            format: options.format,
+            hashLock: options.hashLock || false,
+            strict: options.strict || false,
+            allowMissing: options.allowMissing !== false,
+          },
+          projectRoot,
+        ),
+      ),
     );
 
     // Check for failures and extract successful bundles
-    const { successful: successfulNoStyleBundles, allFailed: noStyleAllFailed } =
-      checkBundleResults(noStyleBundleResults, 'no-style', options.quiet);
+    const {
+      successful: successfulNoStyleBundles,
+      allFailed: noStyleAllFailed,
+    } = checkBundleResults(noStyleBundleResults, 'no-style', options.quiet);
 
     if (noStyleAllFailed) {
-      throw new Error('Failed to compile any no-style bundles for token comparison');
+      throw new Error(
+        'Failed to compile any no-style bundles for token comparison',
+      );
     }
 
     // Format no-style bundles to get token count
-    const noStyleOutput = formatBundles(successfulNoStyleBundles, options.format);
+    const noStyleOutput = formatBundles(
+      successfulNoStyleBundles,
+      options.format,
+    );
 
     headerNoStyleGPT4 = await estimateGPT4Tokens(noStyleOutput);
     headerNoStyleClaude = await estimateClaudeTokens(noStyleOutput);
@@ -265,12 +303,14 @@ export async function generateModeComparison(
     // Current is header without style - recompile contracts with style to get accurate count
     headerNoStyleGPT4 = currentGPT4;
     headerNoStyleClaude = currentClaude;
-    
+
     // Rebuild contracts with style metadata to get accurate header+style token count
     if (!options.quiet) {
-      console.log('   Generating with style metadata for accurate comparison...');
+      console.log(
+        '   Generating with style metadata for accurate comparison...',
+      );
     }
-    
+
     const styleProject = new Project({
       skipAddingFilesFromTsConfig: true,
       compilerOptions: {
@@ -278,12 +318,14 @@ export async function generateModeComparison(
         target: 99,
       },
     });
-    
+
     const styleContracts: UIFContract[] = [];
     for (const file of files) {
       try {
         // Resolve relative path to absolute for file operations
-        const absoluteFilePath = isAbsolute(file) ? file : join(projectRoot, file);
+        const absoluteFilePath = isAbsolute(file)
+          ? file
+          : join(projectRoot, file);
         const ast = await extractFromFile(absoluteFilePath);
         // Use cached file content instead of re-reading from disk
         const text = fileContentCache.get(absoluteFilePath);
@@ -293,7 +335,11 @@ export async function generateModeComparison(
         try {
           const sourceFile = styleProject.addSourceFileAtPath(absoluteFilePath);
           // Use 'lean' mode (default) for comparison
-          styleMetadata = await extractStyleMetadata(sourceFile, absoluteFilePath, 'lean');
+          styleMetadata = await extractStyleMetadata(
+            sourceFile,
+            absoluteFilePath,
+            'lean',
+          );
         } catch (styleError) {
           // Style extraction is optional
         }
@@ -313,22 +359,29 @@ export async function generateModeComparison(
         // Skip files that can't be analyzed
       }
     }
-    
+
     // Generate bundles with style-enabled contracts
-    const styleContractsMap = new Map(styleContracts.map(c => [c.entryId, c]));
+    const styleContractsMap = new Map(
+      styleContracts.map((c) => [c.entryId, c]),
+    );
     const styleBundleResults = await Promise.allSettled(
-      manifest.graph.roots.map(rootId =>
-        pack(rootId, manifest, {
-          depth: options.depth,
-          includeCode: options.includeCode,
-          maxNodes: options.maxNodes,
-          contractsMap: styleContractsMap,
-          format: options.format,
-          hashLock: options.hashLock || false,
-          strict: options.strict || false,
-          allowMissing: options.allowMissing !== false,
-        }, projectRoot)
-      )
+      manifest.graph.roots.map((rootId) =>
+        pack(
+          rootId,
+          manifest,
+          {
+            depth: options.depth,
+            includeCode: options.includeCode,
+            maxNodes: options.maxNodes,
+            contractsMap: styleContractsMap,
+            format: options.format,
+            hashLock: options.hashLock || false,
+            strict: options.strict || false,
+            allowMissing: options.allowMissing !== false,
+          },
+          projectRoot,
+        ),
+      ),
     );
 
     // Check for failures and extract successful bundles
@@ -336,7 +389,9 @@ export async function generateModeComparison(
       checkBundleResults(styleBundleResults, 'style', options.quiet);
 
     if (styleAllFailed) {
-      throw new Error('Failed to compile any style bundles for token comparison');
+      throw new Error(
+        'Failed to compile any style bundles for token comparison',
+      );
     }
 
     // Format style bundles to get token count
@@ -351,7 +406,7 @@ export async function generateModeComparison(
     headerWithStyleGPT4 = Math.ceil(currentGPT4 * 0.85);
     headerWithStyleClaude = Math.ceil(currentClaude * 0.85);
   }
-  
+
   // Calculate mode estimates
   const modeEstimates = {
     none: {
@@ -371,7 +426,7 @@ export async function generateModeComparison(
       claude: headerNoStyleClaude + actualSourceTokensClaude,
     },
   };
-  
+
   return {
     headerNoStyleGPT4,
     headerNoStyleClaude,
@@ -389,36 +444,58 @@ export async function generateModeComparison(
 export async function displayModeComparison(
   comparison: ModeComparisonResult,
   files: string[],
-  elapsed: number
+  elapsed: number,
 ): Promise<void> {
-  const { headerNoStyleGPT4, headerNoStyleClaude, headerWithStyleGPT4, headerWithStyleClaude, sourceTokensGPT4, sourceTokensClaude, modeEstimates } = comparison;
-  
+  const {
+    headerNoStyleGPT4,
+    headerNoStyleClaude,
+    headerWithStyleGPT4,
+    headerWithStyleClaude,
+    sourceTokensGPT4,
+    sourceTokensClaude,
+    modeEstimates,
+  } = comparison;
+
   // Calculate file statistics (check .tsx first to avoid double-counting)
-  const tsxFiles = files.filter(f => f.endsWith('.tsx')).length;
-  const tsFiles = files.filter(f => f.endsWith('.ts') && !f.endsWith('.tsx')).length;
+  const tsxFiles = files.filter((f) => f.endsWith('.tsx')).length;
+  const tsFiles = files.filter(
+    (f) => f.endsWith('.ts') && !f.endsWith('.tsx'),
+  ).length;
   const totalFiles = files.length;
-  
+
   // Calculate savings percentages vs raw source
-  const headerSavingsGPT4 = sourceTokensGPT4 > 0
-    ? ((sourceTokensGPT4 - headerNoStyleGPT4) / sourceTokensGPT4 * 100).toFixed(0)
-    : '0';
-  const headerStyleSavingsGPT4 = sourceTokensGPT4 > 0
-    ? ((sourceTokensGPT4 - headerWithStyleGPT4) / sourceTokensGPT4 * 100).toFixed(0)
-    : '0';
-  
+  const headerSavingsGPT4 =
+    sourceTokensGPT4 > 0
+      ? (
+          ((sourceTokensGPT4 - headerNoStyleGPT4) / sourceTokensGPT4) *
+          100
+        ).toFixed(0)
+      : '0';
+  const headerStyleSavingsGPT4 =
+    sourceTokensGPT4 > 0
+      ? (
+          ((sourceTokensGPT4 - headerWithStyleGPT4) / sourceTokensGPT4) *
+          100
+        ).toFixed(0)
+      : '0';
+
   // Check tokenizer status
   const tokenizerStatus = await getTokenizerStatus();
   const gpt4Method = tokenizerStatus.gpt4 ? 'tiktoken' : 'approximation';
   const claudeMethod = tokenizerStatus.claude ? 'tokenizer' : 'approximation';
-  
+
   console.log('\n📊 Mode Comparison\n');
-  console.log(`   Token estimation: GPT-4o (${gpt4Method}) | Claude (${claudeMethod})`);
+  console.log(
+    `   Token estimation: GPT-4o (${gpt4Method}) | Claude (${claudeMethod})`,
+  );
   if (claudeMethod === 'tokenizer') {
     console.log(
       '   Note: Claude counts use @anthropic-ai/tokenizer (approximate for Claude 3+; see package readme).',
     );
   }
-  console.log(`   Files analyzed: ${totalFiles} total (${tsFiles} .ts, ${tsxFiles} .tsx)`);
+  console.log(
+    `   Files analyzed: ${totalFiles} total (${tsFiles} .ts, ${tsxFiles} .tsx)`,
+  );
   console.log(`   Scope: TypeScript source files only (test files excluded)`);
   if (!tokenizerStatus.gpt4 || !tokenizerStatus.claude) {
     const missing: string[] = [];
@@ -434,37 +511,70 @@ export async function displayModeComparison(
   }
   console.log('\n   Comparison vs Raw Source:');
   console.log('');
-  console.log('     (Raw source = all .ts/.tsx files concatenated, excluding tests)');
+  console.log(
+    '     (Raw source = all .ts/.tsx files concatenated, excluding tests)',
+  );
   console.log('');
-  console.log('     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Raw Source');
-  console.log('     -------------|---------------|---------------|------------------------');
-  console.log(`     Raw source   | ${formatTokenCount(sourceTokensGPT4).padStart(13)} | ${formatTokenCount(sourceTokensClaude).padStart(13)} | 0%`);
-  console.log(`     Header       | ${formatTokenCount(headerNoStyleGPT4).padStart(13)} | ${formatTokenCount(headerNoStyleClaude).padStart(13)} | ${headerSavingsGPT4}%`);
-  console.log(`     Header+style | ${formatTokenCount(headerWithStyleGPT4).padStart(13)} | ${formatTokenCount(headerWithStyleClaude).padStart(13)} | ${headerStyleSavingsGPT4}%`);
+  console.log(
+    '     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Raw Source',
+  );
+  console.log(
+    '     -------------|---------------|---------------|------------------------',
+  );
+  console.log(
+    `     Raw source   | ${formatTokenCount(sourceTokensGPT4).padStart(13)} | ${formatTokenCount(sourceTokensClaude).padStart(13)} | 0%`,
+  );
+  console.log(
+    `     Header       | ${formatTokenCount(headerNoStyleGPT4).padStart(13)} | ${formatTokenCount(headerNoStyleClaude).padStart(13)} | ${headerSavingsGPT4}%`,
+  );
+  console.log(
+    `     Header+style | ${formatTokenCount(headerWithStyleGPT4).padStart(13)} | ${formatTokenCount(headerWithStyleClaude).padStart(13)} | ${headerStyleSavingsGPT4}%`,
+  );
   console.log('\n   Mode breakdown:');
   console.log('');
-  console.log('     (Full context = contracts with complete source code embedded)');
+  console.log(
+    '     (Full context = contracts with complete source code embedded)',
+  );
   console.log('');
-  console.log('     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Full Context');
-  console.log('     -------------|---------------|---------------|--------------------------');
+  console.log(
+    '     Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Full Context',
+  );
+  console.log(
+    '     -------------|---------------|---------------|--------------------------',
+  );
 
   const modes: Array<{ name: string; gpt4: number; claude: number }> = [
-    { name: 'none', gpt4: modeEstimates.none.gpt4, claude: modeEstimates.none.claude },
+    {
+      name: 'none',
+      gpt4: modeEstimates.none.gpt4,
+      claude: modeEstimates.none.claude,
+    },
     { name: 'header', gpt4: headerNoStyleGPT4, claude: headerNoStyleClaude },
-    { name: 'header+style', gpt4: headerWithStyleGPT4, claude: headerWithStyleClaude },
-    { name: 'full', gpt4: modeEstimates.full.gpt4, claude: modeEstimates.full.claude },
+    {
+      name: 'header+style',
+      gpt4: headerWithStyleGPT4,
+      claude: headerWithStyleClaude,
+    },
+    {
+      name: 'full',
+      gpt4: modeEstimates.full.gpt4,
+      claude: modeEstimates.full.claude,
+    },
   ];
 
-  modes.forEach(mode => {
-    const savings = modeEstimates.full.gpt4 > 0
-      ? ((modeEstimates.full.gpt4 - mode.gpt4) / modeEstimates.full.gpt4 * 100).toFixed(0)
-      : '0';
+  modes.forEach((mode) => {
+    const savings =
+      modeEstimates.full.gpt4 > 0
+        ? (
+            ((modeEstimates.full.gpt4 - mode.gpt4) / modeEstimates.full.gpt4) *
+            100
+          ).toFixed(0)
+        : '0';
 
     console.log(
-      `     ${mode.name.padEnd(13)} | ${formatTokenCount(mode.gpt4).padStart(13)} | ${formatTokenCount(mode.claude).padStart(13)} | ${savings}%`
+      `     ${mode.name.padEnd(13)} | ${formatTokenCount(mode.gpt4).padStart(13)} | ${formatTokenCount(mode.claude).padStart(13)} | ${savings}%`,
     );
   });
 
   console.log(`\n⏱  Completed in ${elapsed}ms`);
 }
-

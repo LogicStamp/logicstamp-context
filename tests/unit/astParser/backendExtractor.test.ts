@@ -21,7 +21,12 @@ describe('Backend Extractor', () => {
 
       const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
-      const metadata = extractBackendMetadata(sourceFile, 'routes.ts', ['express'], 'express');
+      const metadata = extractBackendMetadata(
+        sourceFile,
+        'routes.ts',
+        ['express'],
+        'express',
+      );
 
       expect(metadata).toBeDefined();
       expect(metadata?.framework).toBe('express');
@@ -57,7 +62,12 @@ describe('Backend Extractor', () => {
 
       const sourceFile = createTestSourceFile(sourceCode, 'routes.ts');
 
-      const metadata = extractBackendMetadata(sourceFile, 'routes.ts', ['express'], 'express');
+      const metadata = extractBackendMetadata(
+        sourceFile,
+        'routes.ts',
+        ['express'],
+        'express',
+      );
 
       expect(metadata).toBeDefined();
       expect(metadata?.framework).toBe('express');
@@ -76,7 +86,12 @@ describe('Backend Extractor', () => {
 
       const sourceFile = createTestSourceFile(sourceCode, 'app.ts');
 
-      const metadata = extractBackendMetadata(sourceFile, 'app.ts', ['express'], 'express');
+      const metadata = extractBackendMetadata(
+        sourceFile,
+        'app.ts',
+        ['express'],
+        'express',
+      );
 
       expect(metadata).toBeDefined();
       expect(metadata?.framework).toBe('express');
@@ -101,13 +116,16 @@ describe('Backend Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const metadata = extractBackendMetadata(
         sourceFile,
         'users.controller.ts',
         ['@nestjs/common'],
-        'nestjs'
+        'nestjs',
       );
 
       expect(metadata).toBeDefined();
@@ -137,20 +155,25 @@ describe('Backend Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const metadata = extractBackendMetadata(
         sourceFile,
         'users.controller.ts',
         ['@nestjs/common'],
-        'nestjs'
+        'nestjs',
       );
 
       expect(metadata).toBeDefined();
       expect(metadata?.framework).toBe('nestjs');
       expect(metadata?.languageSpecific).toBeDefined();
       expect(metadata?.languageSpecific?.annotations).toBeDefined();
-      expect(metadata?.languageSpecific?.annotations?.length).toBeGreaterThan(0);
+      expect(metadata?.languageSpecific?.annotations?.length).toBeGreaterThan(
+        0,
+      );
       expect(metadata?.languageSpecific?.classes).toBeDefined();
       expect(metadata?.languageSpecific?.classes).toContain('UsersController');
     });
@@ -170,7 +193,7 @@ describe('Backend Extractor', () => {
         sourceFile,
         'users.service.ts',
         ['@nestjs/common'],
-        'nestjs'
+        'nestjs',
       );
 
       expect(metadata).toBeUndefined();
@@ -189,7 +212,11 @@ describe('Backend Extractor', () => {
 
       const sourceFile = createTestSourceFile(sourceCode, 'handlers.ts');
 
-      const signature = extractBackendApiSignature(sourceFile, 'express', 'getUser');
+      const signature = extractBackendApiSignature(
+        sourceFile,
+        'express',
+        'getUser',
+      );
 
       expect(signature).toBeDefined();
       expect(signature?.parameters).toBeDefined();
@@ -208,7 +235,11 @@ describe('Backend Extractor', () => {
 
       const sourceFile = createTestSourceFile(sourceCode, 'handlers.ts');
 
-      const signature = extractBackendApiSignature(sourceFile, 'express', 'getUser');
+      const signature = extractBackendApiSignature(
+        sourceFile,
+        'express',
+        'getUser',
+      );
 
       expect(signature).toBeUndefined();
     });
@@ -228,13 +259,16 @@ describe('Backend Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const signature = extractBackendApiSignature(
         sourceFile,
         'nestjs',
         'findOne',
-        'UsersController'
+        'UsersController',
       );
 
       expect(signature).toBeDefined();
@@ -257,13 +291,16 @@ describe('Backend Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const signature = extractBackendApiSignature(
         sourceFile,
         'nestjs',
         'findAll',
-        'NonExistentController'
+        'NonExistentController',
       );
 
       expect(signature).toBeUndefined();
@@ -282,9 +319,16 @@ describe('Backend Extractor', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
-      const signature = extractBackendApiSignature(sourceFile, 'nestjs', 'findAll');
+      const signature = extractBackendApiSignature(
+        sourceFile,
+        'nestjs',
+        'findAll',
+      );
 
       expect(signature).toBeUndefined();
     });
@@ -301,12 +345,17 @@ describe('Backend Extractor', () => {
         sourceFile,
         'invalid.ts',
         ['express'],
-        'express'
+        'express',
       );
 
       // Result might be undefined or empty, but should not throw
       expect(() => {
-        extractBackendMetadata(sourceFile, 'invalid.ts', ['express'], 'express');
+        extractBackendMetadata(
+          sourceFile,
+          'invalid.ts',
+          ['express'],
+          'express',
+        );
       }).not.toThrow();
     });
   });

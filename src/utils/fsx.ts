@@ -48,7 +48,7 @@ export interface FileWithText {
  */
 export async function globFiles(
   searchPath: string,
-  extensions: string = '.tsx,.ts'
+  extensions: string = '.tsx,.ts',
 ): Promise<string[]> {
   const extArray = extensions.split(',').map((ext) => ext.trim());
 
@@ -82,7 +82,7 @@ export async function globFiles(
       });
 
       // Convert to relative paths (normalize for consistency)
-      const relativeMatches = matches.map(match => normalizeEntryId(match));
+      const relativeMatches = matches.map((match) => normalizeEntryId(match));
       files.push(...relativeMatches);
     } catch (error) {
       const err = error as Error;
@@ -98,7 +98,9 @@ export async function globFiles(
 
   // If ALL patterns failed, throw an aggregate error
   if (errors.length === patterns.length) {
-    const errorMessages = errors.map(e => `Pattern "${e.pattern}": ${e.message}`);
+    const errorMessages = errors.map(
+      (e) => `Pattern "${e.pattern}": ${e.message}`,
+    );
     const aggregateMessage = `All glob patterns failed in "${searchPath}":\n  - ${errorMessages.join('\n  - ')}`;
     debugError('fsx', 'globFiles all patterns failed', {
       searchPath,
@@ -116,7 +118,7 @@ export async function globFiles(
       extensions,
       successCount: patterns.length - errors.length,
       failCount: errors.length,
-      failedPatterns: errors.map(e => e.pattern),
+      failedPatterns: errors.map((e) => e.pattern),
     });
     // Continue with partial results - this is intentional resilient behavior
   }
@@ -128,10 +130,12 @@ export async function globFiles(
 /**
  * Read file and return path + content
  */
-export async function readFileWithText(filePath: string): Promise<FileWithText> {
+export async function readFileWithText(
+  filePath: string,
+): Promise<FileWithText> {
   try {
-  const text = await readFile(filePath, 'utf8');
-  return { path: filePath, text };
+    const text = await readFile(filePath, 'utf8');
+    return { path: filePath, text };
   } catch (error) {
     const err = error as NodeJS.ErrnoException;
     debugError('fsx', 'readFileWithText', {
@@ -139,7 +143,7 @@ export async function readFileWithText(filePath: string): Promise<FileWithText> 
       code: err.code,
       message: err.message,
     });
-    
+
     // Provide user-friendly error messages based on errno
     let userMessage: string;
     switch (err.code) {
@@ -161,7 +165,7 @@ export async function readFileWithText(filePath: string): Promise<FileWithText> 
       default:
         userMessage = `Failed to read file "${filePath}": ${err.message}`;
     }
-    
+
     throw new Error(userMessage);
   }
 }
@@ -173,12 +177,12 @@ export async function readFileWithText(filePath: string): Promise<FileWithText> 
 export async function findSidecarFiles(searchPath: string): Promise<string[]> {
   try {
     const matches = await glob('**/*.uif.json', {
-    cwd: searchPath,
-    absolute: false,
-    ignore: ['**/node_modules/**', '**/dist/**', '**/build/**'],
-  });
+      cwd: searchPath,
+      absolute: false,
+      ignore: ['**/node_modules/**', '**/dist/**', '**/build/**'],
+    });
     // Convert to relative paths (normalize for consistency)
-    return matches.map(match => normalizeEntryId(match));
+    return matches.map((match) => normalizeEntryId(match));
   } catch (error) {
     const err = error as Error;
     debugError('fsx', 'findSidecarFiles', {
@@ -265,7 +269,7 @@ export function getSidecarPath(sourcePath: string, outRoot: string): string {
  * - On Windows: preserve drive letter but normalize case
  * - Remove leading ./ if present
  * - Result should match manifest keys exactly
- * 
+ *
  * This function is the single source of truth for path normalization.
  * All entryId fields in contracts and manifest keys use this normalization.
  */
@@ -273,7 +277,10 @@ export function normalizeEntryId(entryId: string): string {
   const normalized = toForwardSlashes(normalize(entryId));
   // On Windows, normalize drive letter to lowercase for consistency
   // This ensures manifest keys match across different input formats
-  let result = normalized.replace(/^([A-Z]):/, (_, drive) => `${drive.toLowerCase()}:`);
+  let result = normalized.replace(
+    /^([A-Z]):/,
+    (_, drive) => `${drive.toLowerCase()}:`,
+  );
   // Remove leading ./ if present
   result = result.replace(/^\.\//, '');
   return result;

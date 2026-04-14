@@ -88,9 +88,20 @@ export default function MyComponent() {
 }
 `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'Component.tsx', undefined, { jsx: 1 });
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'Component.tsx',
+        undefined,
+        { jsx: 1 },
+      );
 
-      const kind = detectKind([], ['div', 'p', 'button'], ['vue'], sourceFile, 'Component.tsx');
+      const kind = detectKind(
+        [],
+        ['div', 'p', 'button'],
+        ['vue'],
+        sourceFile,
+        'Component.tsx',
+      );
 
       expect(kind).toBe('vue:component');
     });
@@ -357,7 +368,12 @@ export default () => (
 );
 `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx', undefined, { jsx: 1 });
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'test.tsx',
+        undefined,
+        { jsx: 1 },
+      );
 
       const components = extractVueComponents(sourceFile);
 
@@ -608,7 +624,11 @@ const props = defineProps<{
       expect(props).toHaveProperty('age');
       expect(props).toHaveProperty('email');
       // email should be optional - check if it's an object with optional property
-      if (typeof props.email === 'object' && props.email !== null && !Array.isArray(props.email)) {
+      if (
+        typeof props.email === 'object' &&
+        props.email !== null &&
+        !Array.isArray(props.email)
+      ) {
         expect(props.email.optional).toBe(true);
       }
     });
@@ -738,7 +758,12 @@ export default () => (
 );
 `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx', undefined, { jsx: 1 });
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'test.tsx',
+        undefined,
+        { jsx: 1 },
+      );
 
       const components = extractVueComponents(sourceFile);
 
@@ -780,7 +805,12 @@ export default () => (
 );
 `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'test.tsx', undefined, { jsx: 1 });
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'test.tsx',
+        undefined,
+        { jsx: 1 },
+      );
 
       const components = extractVueComponents(sourceFile);
 
@@ -894,8 +924,8 @@ const tripled = computed(() => count.value * 3);
 
       const composables = extractVueComposables(sourceFile);
 
-      expect(composables.filter(c => c === 'ref')).toHaveLength(1);
-      expect(composables.filter(c => c === 'computed')).toHaveLength(1);
+      expect(composables.filter((c) => c === 'ref')).toHaveLength(1);
+      expect(composables.filter((c) => c === 'computed')).toHaveLength(1);
     });
 
     it('should return sorted composables', () => {
@@ -1431,18 +1461,22 @@ const emit = defineEmits<{
             callCount++;
             if (callCount === 1) {
               // First call for JsxOpeningElement
-              return [{
-                getTagNameNode: () => {
-                  throw new Error('Tag error');
+              return [
+                {
+                  getTagNameNode: () => {
+                    throw new Error('Tag error');
+                  },
                 },
-              }];
+              ];
             }
             // Second call for JsxSelfClosingElement
-            return [{
-              getTagNameNode: () => ({
-                getText: () => 'ValidComponent',
-              }),
-            }];
+            return [
+              {
+                getTagNameNode: () => ({
+                  getText: () => 'ValidComponent',
+                }),
+              },
+            ];
           },
         });
 
@@ -1457,18 +1491,22 @@ const emit = defineEmits<{
             callCount++;
             if (callCount === 1) {
               // First call for JsxOpeningElement
-              return [{
-                getTagNameNode: () => ({
-                  getText: () => 'OpeningComponent',
-                }),
-              }];
+              return [
+                {
+                  getTagNameNode: () => ({
+                    getText: () => 'OpeningComponent',
+                  }),
+                },
+              ];
             }
             // Second call for JsxSelfClosingElement - throws
-            return [{
-              getTagNameNode: () => {
-                throw new Error('Self-closing error');
+            return [
+              {
+                getTagNameNode: () => {
+                  throw new Error('Self-closing error');
+                },
               },
-            }];
+            ];
           },
         });
 
@@ -1501,16 +1539,20 @@ const emit = defineEmits<{
         const mockSource = createMockSourceFile({
           getDescendantsOfKind: (kind: number) => {
             if (kind === SyntaxKind.PropertyAssignment) {
-              return [{
-                getName: () => 'components',
-                getInitializer: () => ({
-                  getProperties: () => [{
-                    getName: () => {
-                      throw new Error('Property name error');
-                    },
-                  }],
-                }),
-              }];
+              return [
+                {
+                  getName: () => 'components',
+                  getInitializer: () => ({
+                    getProperties: () => [
+                      {
+                        getName: () => {
+                          throw new Error('Property name error');
+                        },
+                      },
+                    ],
+                  }),
+                },
+              ];
             }
             return [];
           },
@@ -1546,7 +1588,7 @@ const name = ref('hello');
 
         const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
         const state = extractVueState(sourceFile);
-        
+
         // Should extract both state variables
         expect(Object.keys(state).length).toBeGreaterThan(0);
         expect(state).toHaveProperty('count');
@@ -1589,9 +1631,11 @@ const name = ref('hello');
                 getKind: () => SyntaxKind.Identifier,
                 getText: () => 'defineProps',
               }),
-              getTypeArguments: () => [{
-                getText: () => '{ name: string }',
-              }],
+              getTypeArguments: () => [
+                {
+                  getText: () => '{ name: string }',
+                },
+              ],
             },
           ],
         });
@@ -1623,7 +1667,7 @@ const emit = defineEmits(['update', 'close']);
 
         const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
         const emits = extractVueEmitsCall(sourceFile);
-        
+
         // Should extract emits
         expect(emits.length).toBeGreaterThan(0);
         expect(emits).toContain('update');
@@ -1656,11 +1700,13 @@ const emit = defineEmits(['update', 'close']);
                 getKind: () => SyntaxKind.Identifier,
                 getText: () => 'defineProps',
               }),
-              getTypeArguments: () => [{
-                getType: () => ({
-                  getProperties: () => [],
-                }),
-              }],
+              getTypeArguments: () => [
+                {
+                  getType: () => ({
+                    getProperties: () => [],
+                  }),
+                },
+              ],
             },
           ],
         });
@@ -1672,21 +1718,27 @@ const emit = defineEmits(['update', 'close']);
 
       it('should handle error in type property parsing', () => {
         const mockSource = createMockSourceFile({
-          getDescendantsOfKind: () => [{
-            getExpression: () => ({
-              getKind: () => SyntaxKind.Identifier,
-              getText: () => 'defineProps',
-            }),
-            getTypeArguments: () => [{
-              getType: () => ({
-                getProperties: () => [{
-                  getName: () => {
-                    throw new Error('Property name error');
-                  },
-                }],
+          getDescendantsOfKind: () => [
+            {
+              getExpression: () => ({
+                getKind: () => SyntaxKind.Identifier,
+                getText: () => 'defineProps',
               }),
-            }],
-          }],
+              getTypeArguments: () => [
+                {
+                  getType: () => ({
+                    getProperties: () => [
+                      {
+                        getName: () => {
+                          throw new Error('Property name error');
+                        },
+                      },
+                    ],
+                  }),
+                },
+              ],
+            },
+          ],
         });
 
         const props = extractVueProps(mockSource as any);
@@ -1696,20 +1748,26 @@ const emit = defineEmits(['update', 'close']);
 
       it('should handle error in runtime property parsing', () => {
         const mockSource = createMockSourceFile({
-          getDescendantsOfKind: () => [{
-            getExpression: () => ({
-              getKind: () => SyntaxKind.Identifier,
-              getText: () => 'defineProps',
-            }),
-            getTypeArguments: () => [],
-            getArguments: () => [{
-              getProperties: () => [{
-                getName: () => {
-                  throw new Error('Property name error');
+          getDescendantsOfKind: () => [
+            {
+              getExpression: () => ({
+                getKind: () => SyntaxKind.Identifier,
+                getText: () => 'defineProps',
+              }),
+              getTypeArguments: () => [],
+              getArguments: () => [
+                {
+                  getProperties: () => [
+                    {
+                      getName: () => {
+                        throw new Error('Property name error');
+                      },
+                    },
+                  ],
                 },
-              }],
-            }],
-          }],
+              ],
+            },
+          ],
         });
 
         const props = extractVueProps(mockSource as any);
@@ -1739,7 +1797,7 @@ const emit = defineEmits(['update', 'close']);
 
         const sourceFile = createTestSourceFile(sourceCode, 'test.ts');
         const emits = extractVueEmits(sourceFile);
-        
+
         // Should extract emits
         expect(Object.keys(emits).length).toBeGreaterThan(0);
         expect(emits).toHaveProperty('update');
@@ -1748,17 +1806,21 @@ const emit = defineEmits(['update', 'close']);
 
       it('should handle error in type parsing', () => {
         const mockSource = createMockSourceFile({
-          getDescendantsOfKind: () => [{
-            getExpression: () => ({
-              getKind: () => SyntaxKind.Identifier,
-              getText: () => 'defineEmits',
-            }),
-            getTypeArguments: () => [{
-              getText: () => {
-                throw new Error('Type text error');
-              },
-            }],
-          }],
+          getDescendantsOfKind: () => [
+            {
+              getExpression: () => ({
+                getKind: () => SyntaxKind.Identifier,
+                getText: () => 'defineEmits',
+              }),
+              getTypeArguments: () => [
+                {
+                  getText: () => {
+                    throw new Error('Type text error');
+                  },
+                },
+              ],
+            },
+          ],
         });
 
         const emits = extractVueEmits(mockSource as any);
@@ -1768,20 +1830,26 @@ const emit = defineEmits(['update', 'close']);
 
       it('should handle error in runtime element iteration', () => {
         const mockSource = createMockSourceFile({
-          getDescendantsOfKind: () => [{
-            getExpression: () => ({
-              getKind: () => SyntaxKind.Identifier,
-              getText: () => 'defineEmits',
-            }),
-            getTypeArguments: () => [],
-            getArguments: () => [{
-              getElements: () => [{
-                getText: () => {
-                  throw new Error('Element text error');
+          getDescendantsOfKind: () => [
+            {
+              getExpression: () => ({
+                getKind: () => SyntaxKind.Identifier,
+                getText: () => 'defineEmits',
+              }),
+              getTypeArguments: () => [],
+              getArguments: () => [
+                {
+                  getElements: () => [
+                    {
+                      getText: () => {
+                        throw new Error('Element text error');
+                      },
+                    },
+                  ],
                 },
-              }],
-            }],
-          }],
+              ],
+            },
+          ],
         });
 
         const emits = extractVueEmits(mockSource as any);

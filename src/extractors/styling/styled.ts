@@ -2,7 +2,17 @@
  * Styled-components/Emotion extractor - Extracts CSS-in-JS library usage
  */
 
-import { SourceFile, SyntaxKind, Node, NoSubstitutionTemplateLiteral, JsxAttribute, TaggedTemplateExpression, CallExpression, JsxElement, JsxSelfClosingElement } from 'ts-morph';
+import {
+  type SourceFile,
+  SyntaxKind,
+  type Node,
+  type NoSubstitutionTemplateLiteral,
+  type JsxAttribute,
+  type TaggedTemplateExpression,
+  type CallExpression,
+  type JsxElement,
+  type JsxSelfClosingElement,
+} from 'ts-morph';
 import { debugError } from '../../utils/debug.js';
 
 /**
@@ -67,7 +77,9 @@ export function extractStyledComponents(source: SourceFile): {
     // Find all tagged template expressions (e.g., styled.div`...` or styled(Component)`...`)
     let taggedTemplates: TaggedTemplateExpression[] = [];
     try {
-      taggedTemplates = source.getDescendantsOfKind(SyntaxKind.TaggedTemplateExpression);
+      taggedTemplates = source.getDescendantsOfKind(
+        SyntaxKind.TaggedTemplateExpression,
+      );
     } catch (error) {
       debugError('styled', 'extractStyledComponents', {
         error: error instanceof Error ? error.message : String(error),
@@ -108,7 +120,9 @@ export function extractStyledComponents(source: SourceFile): {
     if (!hasTheme) {
       let callExpressions: CallExpression[] = [];
       try {
-        callExpressions = source.getDescendantsOfKind(SyntaxKind.CallExpression);
+        callExpressions = source.getDescendantsOfKind(
+          SyntaxKind.CallExpression,
+        );
       } catch (error) {
         debugError('styled', 'extractStyledComponents', {
           error: error instanceof Error ? error.message : String(error),
@@ -121,7 +135,10 @@ export function extractStyledComponents(source: SourceFile): {
         for (const callExpr of callExpressions) {
           try {
             const expr = callExpr.getExpression();
-            if (expr.getKind() === SyntaxKind.Identifier && expr.getText() === 'useTheme') {
+            if (
+              expr.getKind() === SyntaxKind.Identifier &&
+              expr.getText() === 'useTheme'
+            ) {
               hasTheme = true;
               break;
             }
@@ -153,17 +170,18 @@ export function extractStyledComponents(source: SourceFile): {
       try {
         for (const element of jsxElements) {
           try {
-            const openingElement = 'getOpeningElement' in element 
-              ? element.getOpeningElement() 
-              : element;
+            const openingElement =
+              'getOpeningElement' in element
+                ? element.getOpeningElement()
+                : element;
 
             const attributes = openingElement.getAttributes();
             for (const attr of attributes) {
               if (attr.getKind() !== SyntaxKind.JsxAttribute) continue;
-              
+
               const jsxAttr = attr as JsxAttribute;
               const attrName = jsxAttr.getNameNode().getText();
-              
+
               if (attrName === 'css') {
                 hasCssProps = true;
                 break;
@@ -210,7 +228,10 @@ function extractStyledComponentName(tag: Node): string | null {
       const name = propAccess.getNameNode().getText();
 
       // Check if expression is 'styled'
-      if (expression.getKind() === SyntaxKind.Identifier && expression.getText() === 'styled') {
+      if (
+        expression.getKind() === SyntaxKind.Identifier &&
+        expression.getText() === 'styled'
+      ) {
         return name;
       }
     }
@@ -221,7 +242,10 @@ function extractStyledComponentName(tag: Node): string | null {
       const expression = callExpr.getExpression();
 
       // Check if it's styled(...)
-      if (expression.getKind() === SyntaxKind.Identifier && expression.getText() === 'styled') {
+      if (
+        expression.getKind() === SyntaxKind.Identifier &&
+        expression.getText() === 'styled'
+      ) {
         const args = callExpr.getArguments();
         if (args.length > 0) {
           const firstArg = args[0];
@@ -231,7 +255,9 @@ function extractStyledComponentName(tag: Node): string | null {
           }
           // Handle PropertyAccessExpression like styled(Some.Component)
           if (firstArg.getKind() === SyntaxKind.PropertyAccessExpression) {
-            const propAccess = firstArg.asKindOrThrow(SyntaxKind.PropertyAccessExpression);
+            const propAccess = firstArg.asKindOrThrow(
+              SyntaxKind.PropertyAccessExpression,
+            );
             return propAccess.getNameNode().getText();
           }
           // Handle string literals like styled('div') or styled("section")
@@ -259,14 +285,18 @@ function containsThemeUsage(template: Node): boolean {
     // For NoSubstitutionTemplateLiteral, check for theme. in literal text
     // (NoSubstitutionTemplateLiteral can't contain ${}, so just check for theme.)
     if (template.getKind() === SyntaxKind.NoSubstitutionTemplateLiteral) {
-      const text = (template as NoSubstitutionTemplateLiteral).getLiteralText?.() ?? template.getText();
+      const text =
+        (template as NoSubstitutionTemplateLiteral).getLiteralText?.() ??
+        template.getText();
       return /theme\./.test(text);
     }
 
     // For TemplateExpression, check all template spans for theme references
     if (template.getKind() === SyntaxKind.TemplateExpression) {
-      const templateExpr = template.asKindOrThrow(SyntaxKind.TemplateExpression);
-      
+      const templateExpr = template.asKindOrThrow(
+        SyntaxKind.TemplateExpression,
+      );
+
       // Check head for theme references
       const headText = templateExpr.getHead().getText();
       if (/theme\./.test(headText)) {
@@ -277,7 +307,7 @@ function containsThemeUsage(template: Node): boolean {
       for (const span of templateExpr.getTemplateSpans()) {
         try {
           const expression = span.getExpression();
-          
+
           // Recursively check the expression for theme references
           if (containsThemeInExpression(expression)) {
             return true;
@@ -336,4 +366,3 @@ function containsThemeInExpression(node: Node): boolean {
     return false;
   }
 }
-

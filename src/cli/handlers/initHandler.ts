@@ -16,7 +16,7 @@ export function printFoxIcon() {
 
 export async function handleInit(args: string[]): Promise<void> {
   printFoxIcon();
-  
+
   if (args.includes('--help') || args.includes('-h')) {
     console.log(getInitHelp());
     process.exit(0);
@@ -31,4 +31,3 @@ export async function handleInit(args: string[]): Promise<void> {
     process.exit(1);
   }
 }
-

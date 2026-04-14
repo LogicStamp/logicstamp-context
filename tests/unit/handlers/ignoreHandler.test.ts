@@ -26,7 +26,9 @@ describe('handleIgnore', () => {
   });
 
   it('should always print fox icon', async () => {
-    const printFoxSpy = vi.spyOn(initHandler, 'printFoxIcon').mockImplementation(() => {});
+    const printFoxSpy = vi
+      .spyOn(initHandler, 'printFoxIcon')
+      .mockImplementation(() => {});
     vi.spyOn(ignoreCommand, 'ignoreCommand').mockResolvedValue(undefined);
     vi.spyOn(parser, 'parseIgnoreArgs').mockReturnValue({
       paths: [],
@@ -39,8 +41,12 @@ describe('handleIgnore', () => {
   });
 
   it('should show help when --help flag is provided', async () => {
-    const printFoxSpy = vi.spyOn(initHandler, 'printFoxIcon').mockImplementation(() => {});
-    const getHelpSpy = vi.spyOn(parser, 'getIgnoreHelp').mockReturnValue('Ignore help text');
+    const printFoxSpy = vi
+      .spyOn(initHandler, 'printFoxIcon')
+      .mockImplementation(() => {});
+    const getHelpSpy = vi
+      .spyOn(parser, 'getIgnoreHelp')
+      .mockReturnValue('Ignore help text');
 
     await handleIgnore(['--help']);
 
@@ -51,8 +57,12 @@ describe('handleIgnore', () => {
   });
 
   it('should show help when -h flag is provided', async () => {
-    const printFoxSpy = vi.spyOn(initHandler, 'printFoxIcon').mockImplementation(() => {});
-    const getHelpSpy = vi.spyOn(parser, 'getIgnoreHelp').mockReturnValue('Ignore help text');
+    const printFoxSpy = vi
+      .spyOn(initHandler, 'printFoxIcon')
+      .mockImplementation(() => {});
+    const getHelpSpy = vi
+      .spyOn(parser, 'getIgnoreHelp')
+      .mockReturnValue('Ignore help text');
 
     await handleIgnore(['-h']);
 
@@ -62,7 +72,9 @@ describe('handleIgnore', () => {
   });
 
   it('should call ignoreCommand with parsed options', async () => {
-    const ignoreSpy = vi.spyOn(ignoreCommand, 'ignoreCommand').mockResolvedValue(undefined);
+    const ignoreSpy = vi
+      .spyOn(ignoreCommand, 'ignoreCommand')
+      .mockResolvedValue(undefined);
     const parseSpy = vi.spyOn(parser, 'parseIgnoreArgs').mockReturnValue({
       paths: ['src/test.ts', 'src/test2.ts'],
       quiet: false,
@@ -86,7 +98,7 @@ describe('handleIgnore', () => {
 
     expect(console.error).toHaveBeenCalledWith(
       '❌ Failed to add paths to .stampignore:',
-      'Failed to add paths'
+      'Failed to add paths',
     );
     expect(process.exit).toHaveBeenCalledWith(1);
   });

@@ -2,7 +2,10 @@
  * Handler for security scan command
  */
 
-import { securityScanCommand, type SecurityScanOptions } from '../commands/security.js';
+import {
+  securityScanCommand,
+  type SecurityScanOptions,
+} from '../commands/security.js';
 import { getSecurityScanHelp } from '../parser/index.js';
 import { printFoxIcon } from './initHandler.js';
 
@@ -22,7 +25,7 @@ export async function handleSecurityScan(args: string[]): Promise<void> {
   // Parse arguments
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    
+
     if (arg === '--quiet' || arg === '-q') {
       options.quiet = true;
     } else if (arg === '--out' || arg === '-o') {
@@ -41,4 +44,3 @@ export async function handleSecurityScan(args: string[]): Promise<void> {
     process.exit(1);
   }
 }
-

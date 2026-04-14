@@ -2,29 +2,88 @@
  * Chakra UI extractor - Extracts Chakra UI component library usage
  */
 
-import { SourceFile, SyntaxKind, JsxAttribute, JsxElement, JsxSelfClosingElement, JsxExpression } from 'ts-morph';
+import {
+  type SourceFile,
+  SyntaxKind,
+  type JsxAttribute,
+  type JsxElement,
+  type JsxSelfClosingElement,
+  type JsxExpression,
+} from 'ts-morph';
 import { debugError } from '../../utils/debug.js';
 
 /**
  * Common Chakra UI component names
  */
 const CHAKRA_COMPONENTS = [
-  'Accordion', 'Alert', 'AlertDialog', 'AspectRatio', 'Avatar', 'Badge', 'Box', 'Breadcrumb',
-  'Button', 'Card', 'Checkbox', 'CircularProgress', 'CloseButton', 'Code', 'Collapse', 'Container',
-  'Divider', 'Drawer', 'Editable', 'Flex', 'FormControl', 'FormLabel', 'FormErrorMessage',
-  'FormHelperText', 'Grid', 'Heading', 'HStack', 'Icon', 'IconButton', 'Image', 'Input',
-  'InputGroup', 'InputLeftElement', 'InputRightElement', 'Link', 'List', 'ListItem', 'Menu',
-  'MenuItem', 'Modal', 'NumberInput', 'Popover', 'Progress', 'Radio', 'RadioGroup', 'Select',
-  'SimpleGrid', 'Skeleton', 'Slider', 'Spinner', 'Stack', 'Stat', 'Switch', 'Table', 'Tabs',
-  'Tag', 'Text', 'Textarea', 'Tooltip', 'VStack', 'Wrap', 'WrapItem',
+  'Accordion',
+  'Alert',
+  'AlertDialog',
+  'AspectRatio',
+  'Avatar',
+  'Badge',
+  'Box',
+  'Breadcrumb',
+  'Button',
+  'Card',
+  'Checkbox',
+  'CircularProgress',
+  'CloseButton',
+  'Code',
+  'Collapse',
+  'Container',
+  'Divider',
+  'Drawer',
+  'Editable',
+  'Flex',
+  'FormControl',
+  'FormLabel',
+  'FormErrorMessage',
+  'FormHelperText',
+  'Grid',
+  'Heading',
+  'HStack',
+  'Icon',
+  'IconButton',
+  'Image',
+  'Input',
+  'InputGroup',
+  'InputLeftElement',
+  'InputRightElement',
+  'Link',
+  'List',
+  'ListItem',
+  'Menu',
+  'MenuItem',
+  'Modal',
+  'NumberInput',
+  'Popover',
+  'Progress',
+  'Radio',
+  'RadioGroup',
+  'Select',
+  'SimpleGrid',
+  'Skeleton',
+  'Slider',
+  'Spinner',
+  'Stack',
+  'Stat',
+  'Switch',
+  'Table',
+  'Tabs',
+  'Tag',
+  'Text',
+  'Textarea',
+  'Tooltip',
+  'VStack',
+  'Wrap',
+  'WrapItem',
 ];
 
 /**
  * Chakra UI package patterns
  */
-const CHAKRA_PACKAGE_PATTERNS = [
-  /^@chakra-ui\//,
-];
+const CHAKRA_PACKAGE_PATTERNS = [/^@chakra-ui\//];
 
 /**
  * Extract Chakra UI usage from a source file
@@ -46,7 +105,9 @@ export function extractChakraUI(source: SourceFile): {
     const localToChakra = new Map<string, string>(); // local alias → canonical Chakra component
 
     // Cache import declarations for reuse across multiple checks
-    let importDeclarations = [] as ReturnType<SourceFile['getImportDeclarations']>;
+    let importDeclarations = [] as ReturnType<
+      SourceFile['getImportDeclarations']
+    >;
     try {
       importDeclarations = source.getImportDeclarations();
     } catch (error) {
@@ -59,24 +120,29 @@ export function extractChakraUI(source: SourceFile): {
 
     // Check for Chakra UI imports
     try {
-      importDeclarations.forEach(imp => {
+      importDeclarations.forEach((imp) => {
         const moduleSpecifier = imp.getModuleSpecifierValue();
 
         // Check if it's a Chakra UI package
-        const isChakraPackage = CHAKRA_PACKAGE_PATTERNS.some(pattern => pattern.test(moduleSpecifier));
+        const isChakraPackage = CHAKRA_PACKAGE_PATTERNS.some((pattern) =>
+          pattern.test(moduleSpecifier),
+        );
 
         if (isChakraPackage) {
           packages.add(moduleSpecifier);
 
           // Extract component names from imports (including aliases)
           const namedImports = imp.getNamedImports();
-          namedImports.forEach(namedImport => {
+          namedImports.forEach((namedImport) => {
             const importName = namedImport.getName(); // canonical name
             const aliasNode = namedImport.getAliasNode();
             const localName = aliasNode?.getText() ?? importName; // local alias or original
 
             if (CHAKRA_COMPONENTS.includes(importName)) {
-              componentCounts.set(importName, (componentCounts.get(importName) ?? 0) + 1);
+              componentCounts.set(
+                importName,
+                (componentCounts.get(importName) ?? 0) + 1,
+              );
               localToChakra.set(localName, importName);
               localToChakra.set(importName, importName); // self-map
             }
@@ -89,15 +155,21 @@ export function extractChakraUI(source: SourceFile): {
             // Try to derive canonical name from module specifier path
             const pathSegments = moduleSpecifier.split('/');
             const canonicalName = pathSegments[pathSegments.length - 1];
-            
+
             if (CHAKRA_COMPONENTS.includes(canonicalName)) {
-              componentCounts.set(canonicalName, (componentCounts.get(canonicalName) ?? 0) + 1);
+              componentCounts.set(
+                canonicalName,
+                (componentCounts.get(canonicalName) ?? 0) + 1,
+              );
               localToChakra.set(aliasName, canonicalName);
               localToChakra.set(canonicalName, canonicalName); // self-map
             }
             // Fallback: check if alias itself is a known component
             else if (CHAKRA_COMPONENTS.includes(aliasName)) {
-              componentCounts.set(aliasName, (componentCounts.get(aliasName) ?? 0) + 1);
+              componentCounts.set(
+                aliasName,
+                (componentCounts.get(aliasName) ?? 0) + 1,
+              );
               localToChakra.set(aliasName, aliasName);
             }
           }
@@ -131,22 +203,24 @@ export function extractChakraUI(source: SourceFile): {
     if (hasChakraImports) {
       try {
         for (const element of jsxElements) {
-          const openingElement = 'getOpeningElement' in element
-            ? element.getOpeningElement()
-            : element;
+          const openingElement =
+            'getOpeningElement' in element
+              ? element.getOpeningElement()
+              : element;
 
           const rawTag = openingElement.getTagNameNode().getText();
 
           // Handle namespace tags like <Box.Root> or <Button.Group>
-          const baseTag = rawTag.includes('.')
-            ? rawTag.split('.')[0]
-            : rawTag;
+          const baseTag = rawTag.includes('.') ? rawTag.split('.')[0] : rawTag;
 
           // Map local alias back to canonical Chakra component name
           const componentName = localToChakra.get(baseTag) ?? baseTag;
 
           if (CHAKRA_COMPONENTS.includes(componentName)) {
-            componentCounts.set(componentName, (componentCounts.get(componentName) ?? 0) + 1);
+            componentCounts.set(
+              componentName,
+              (componentCounts.get(componentName) ?? 0) + 1,
+            );
           }
         }
       } catch (error) {
@@ -164,23 +238,38 @@ export function extractChakraUI(source: SourceFile): {
     let usesTheme = false;
     try {
       usesTheme =
-        source.getDescendantsOfKind(SyntaxKind.CallExpression).some(callExpr => {
-          const expr = callExpr.getExpression();
-          if (expr.getKind() !== SyntaxKind.Identifier) return false;
-          const name = expr.getText();
-          return name === 'useTheme' || name === 'extendTheme' || name === 'createTheme';
-        }) ||
-        importDeclarations.some(imp => {
+        source
+          .getDescendantsOfKind(SyntaxKind.CallExpression)
+          .some((callExpr) => {
+            const expr = callExpr.getExpression();
+            if (expr.getKind() !== SyntaxKind.Identifier) return false;
+            const name = expr.getText();
+            return (
+              name === 'useTheme' ||
+              name === 'extendTheme' ||
+              name === 'createTheme'
+            );
+          }) ||
+        importDeclarations.some((imp) => {
           // Named ChakraProvider or ThemeProvider import
-          return imp.getNamedImports().some(n => 
-            n.getName() === 'ChakraProvider' || n.getName() === 'ThemeProvider'
-          );
+          return imp
+            .getNamedImports()
+            .some(
+              (n) =>
+                n.getName() === 'ChakraProvider' ||
+                n.getName() === 'ThemeProvider',
+            );
         }) ||
         // theme.property access
-        source.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression).some(propAccess => {
-          const expr = propAccess.getExpression();
-          return expr.getKind() === SyntaxKind.Identifier && expr.getText() === 'theme';
-        });
+        source
+          .getDescendantsOfKind(SyntaxKind.PropertyAccessExpression)
+          .some((propAccess) => {
+            const expr = propAccess.getExpression();
+            return (
+              expr.getKind() === SyntaxKind.Identifier &&
+              expr.getText() === 'theme'
+            );
+          });
     } catch (error) {
       debugError('chakra', 'extractChakraUI', {
         error: error instanceof Error ? error.message : String(error),
@@ -194,22 +283,34 @@ export function extractChakraUI(source: SourceFile): {
     try {
       usesColorMode =
         usesChakra &&
-        (source.getDescendantsOfKind(SyntaxKind.CallExpression).some(callExpr => {
-          const expr = callExpr.getExpression();
-          if (expr.getKind() !== SyntaxKind.Identifier) return false;
-          const name = expr.getText();
-          return name === 'useColorMode' || name === 'useColorModeValue';
-        }) ||
-        importDeclarations.some(imp => {
-          return imp.getNamedImports().some(n => 
-            n.getName() === 'useColorMode' || n.getName() === 'useColorModeValue' || n.getName() === 'ColorModeScript'
-          );
-        }) ||
-        // colorMode property access
-        source.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression).some(propAccess => {
-          const expr = propAccess.getExpression();
-          return expr.getKind() === SyntaxKind.Identifier && expr.getText() === 'colorMode';
-        }));
+        (source
+          .getDescendantsOfKind(SyntaxKind.CallExpression)
+          .some((callExpr) => {
+            const expr = callExpr.getExpression();
+            if (expr.getKind() !== SyntaxKind.Identifier) return false;
+            const name = expr.getText();
+            return name === 'useColorMode' || name === 'useColorModeValue';
+          }) ||
+          importDeclarations.some((imp) => {
+            return imp
+              .getNamedImports()
+              .some(
+                (n) =>
+                  n.getName() === 'useColorMode' ||
+                  n.getName() === 'useColorModeValue' ||
+                  n.getName() === 'ColorModeScript',
+              );
+          }) ||
+          // colorMode property access
+          source
+            .getDescendantsOfKind(SyntaxKind.PropertyAccessExpression)
+            .some((propAccess) => {
+              const expr = propAccess.getExpression();
+              return (
+                expr.getKind() === SyntaxKind.Identifier &&
+                expr.getText() === 'colorMode'
+              );
+            }));
     } catch (error) {
       debugError('chakra', 'extractChakraUI', {
         error: error instanceof Error ? error.message : String(error),
@@ -223,10 +324,11 @@ export function extractChakraUI(source: SourceFile): {
     try {
       usesResponsiveProps =
         usesChakra &&
-        jsxElements.some(element => {
-          const openingElement = 'getOpeningElement' in element
-            ? element.getOpeningElement()
-            : element;
+        jsxElements.some((element) => {
+          const openingElement =
+            'getOpeningElement' in element
+              ? element.getOpeningElement()
+              : element;
 
           const rawTag = openingElement.getTagNameNode().getText();
           const baseTag = rawTag.includes('.') ? rawTag.split('.')[0] : rawTag;
@@ -241,12 +343,17 @@ export function extractChakraUI(source: SourceFile): {
             if (attr.getKind() !== SyntaxKind.JsxAttribute) return false;
             const jsxAttr = attr as JsxAttribute;
             const initializer = jsxAttr.getInitializer();
-            
+
             // Check for array syntax in prop values (responsive props)
-            if (initializer && initializer.getKind() === SyntaxKind.JsxExpression) {
+            if (
+              initializer &&
+              initializer.getKind() === SyntaxKind.JsxExpression
+            ) {
               const jsxExpr = initializer as JsxExpression;
               const expr = jsxExpr.getExpression();
-              return expr && expr.getKind() === SyntaxKind.ArrayLiteralExpression;
+              return (
+                expr && expr.getKind() === SyntaxKind.ArrayLiteralExpression
+              );
             }
             return false;
           });
@@ -261,25 +368,65 @@ export function extractChakraUI(source: SourceFile): {
 
     // Check for system props (spacing, color, etc. on Box/Stack/Flex components)
     const systemProps = [
-      'p', 'px', 'py', 'pt', 'pb', 'pl', 'pr', 'm', 'mx', 'my', 'mt', 'mb', 'ml', 'mr',
-      'w', 'h', 'minW', 'minH', 'maxW', 'maxH', 'bg', 'color', 'border', 'rounded',
-      'shadow', 'opacity', 'zIndex', 'position', 'top', 'right', 'bottom', 'left',
+      'p',
+      'px',
+      'py',
+      'pt',
+      'pb',
+      'pl',
+      'pr',
+      'm',
+      'mx',
+      'my',
+      'mt',
+      'mb',
+      'ml',
+      'mr',
+      'w',
+      'h',
+      'minW',
+      'minH',
+      'maxW',
+      'maxH',
+      'bg',
+      'color',
+      'border',
+      'rounded',
+      'shadow',
+      'opacity',
+      'zIndex',
+      'position',
+      'top',
+      'right',
+      'bottom',
+      'left',
     ];
 
     let usesSystemProps = false;
     try {
       usesSystemProps =
         usesChakra &&
-        jsxElements.some(element => {
-          const openingElement = 'getOpeningElement' in element
-            ? element.getOpeningElement()
-            : element;
+        jsxElements.some((element) => {
+          const openingElement =
+            'getOpeningElement' in element
+              ? element.getOpeningElement()
+              : element;
 
           const rawTag = openingElement.getTagNameNode().getText();
           const baseTag = rawTag.includes('.') ? rawTag.split('.')[0] : rawTag;
           const componentName = localToChakra.get(baseTag) ?? baseTag;
 
-          if (!['Box', 'Stack', 'Flex', 'HStack', 'VStack', 'Grid', 'SimpleGrid'].includes(componentName)) {
+          if (
+            ![
+              'Box',
+              'Stack',
+              'Flex',
+              'HStack',
+              'VStack',
+              'Grid',
+              'SimpleGrid',
+            ].includes(componentName)
+          ) {
             return false;
           }
 
@@ -305,7 +452,7 @@ export function extractChakraUI(source: SourceFile): {
       components = Array.from(componentCounts.entries())
         .sort((a, b) => {
           if (b[1] !== a[1]) return b[1] - a[1]; // by count desc
-          return a[0].localeCompare(b[0]);       // then alpha
+          return a[0].localeCompare(b[0]); // then alpha
         })
         .slice(0, 20)
         .map(([name]) => name);

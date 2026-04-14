@@ -44,7 +44,7 @@ describe('CLI Security Command Tests', () => {
         `// This file contains secrets
 const apiKey = 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz';
 const password = 'mySecretPassword123';
-`
+`,
       );
 
       const reportPath = join(testDir, 'stamp_security_report.json');
@@ -53,7 +53,7 @@ const password = 'mySecretPassword123';
       let stdout = '';
       try {
         const result = await execAsync(
-          `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`
+          `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`,
         );
         stdout = result.stdout;
       } catch (error: any) {
@@ -105,14 +105,14 @@ const password = 'mySecretPassword123';
       const secretFile = join(fixturesPath, 'src', 'secrets.ts');
       await writeFile(
         secretFile,
-        `const apiKey = 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz';`
+        `const apiKey = 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz';`,
       );
 
       const reportPath = join(testDir, 'stamp_security_report.json');
 
       try {
         await execAsync(
-          `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`
+          `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`,
         );
         expect.fail('Should have exited with non-zero code');
       } catch (error: any) {
@@ -125,7 +125,7 @@ const password = 'mySecretPassword123';
       const reportPath = join(testDir, 'stamp_security_report.json');
 
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`
+        `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`,
       );
 
       // Should report no secrets
@@ -147,7 +147,7 @@ const password = 'mySecretPassword123';
         stampignorePath,
         JSON.stringify({
           ignore: ['src/secrets.ts'],
-        })
+        }),
       );
 
       // Create report file with a secret (should not be scanned)
@@ -157,14 +157,14 @@ const password = 'mySecretPassword123';
         JSON.stringify({
           type: 'LogicStampSecurityReport',
           apiKey: 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz',
-        })
+        }),
       );
 
       // Create a file with a secret that should be detected
       const secretFile = join(fixturesPath, 'src', 'secrets.ts');
       await writeFile(
         secretFile,
-        `const apiKey = 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz';`
+        `const apiKey = 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz';`,
       );
 
       const outputReportPath = join(testDir, 'output_report.json');
@@ -173,7 +173,7 @@ const password = 'mySecretPassword123';
       let stdout = '';
       try {
         const result = await execAsync(
-          `node dist/cli/stamp.js security scan ${fixturesPath} --out ${outputReportPath}`
+          `node dist/cli/stamp.js security scan ${fixturesPath} --out ${outputReportPath}`,
         );
         stdout = result.stdout;
       } catch (error: any) {
@@ -184,14 +184,20 @@ const password = 'mySecretPassword123';
 
       // Should detect the secret in secrets.ts but not in .stampignore or report file
       expect(stdout).toContain('Secrets found');
-      
+
       const reportContent = await readFile(outputReportPath, 'utf-8');
       const report = JSON.parse(reportContent);
-      
+
       // Should not report .stampignore or the report file itself
-      const reportedFiles = report.filesWithSecrets.map((f: string) => f.replace(/\\/g, '/'));
-      expect(reportedFiles).not.toContain(expect.stringContaining('.stampignore'));
-      expect(reportedFiles).not.toContain(expect.stringContaining('stamp_security_report.json'));
+      const reportedFiles = report.filesWithSecrets.map((f: string) =>
+        f.replace(/\\/g, '/'),
+      );
+      expect(reportedFiles).not.toContain(
+        expect.stringContaining('.stampignore'),
+      );
+      expect(reportedFiles).not.toContain(
+        expect.stringContaining('stamp_security_report.json'),
+      );
     }, 30000);
 
     it('should work with --quiet flag', async () => {
@@ -199,7 +205,7 @@ const password = 'mySecretPassword123';
       const secretFile = join(fixturesPath, 'src', 'secrets.ts');
       await writeFile(
         secretFile,
-        `const apiKey = 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz';`
+        `const apiKey = 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz';`,
       );
 
       const reportPath = join(testDir, 'stamp_security_report.json');
@@ -208,7 +214,7 @@ const password = 'mySecretPassword123';
       let stdout = '';
       try {
         const result = await execAsync(
-          `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath} --quiet`
+          `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath} --quiet`,
         );
         stdout = result.stdout;
       } catch (error: any) {
@@ -220,7 +226,7 @@ const password = 'mySecretPassword123';
       // Should output JSON stats only
       expect(stdout).not.toContain('Scanning for secrets');
       expect(stdout).not.toContain('Secrets found');
-      
+
       // Should be valid JSON
       const stats = JSON.parse(stdout.trim());
       expect(stats).toHaveProperty('filesScanned');
@@ -232,7 +238,10 @@ const password = 'mySecretPassword123';
     it('should scan TypeScript, JavaScript, and JSON files', async () => {
       // Create files with secrets in different formats
       const tsFile = join(fixturesPath, 'src', 'secrets.ts');
-      await writeFile(tsFile, `const apiKey = 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz';`);
+      await writeFile(
+        tsFile,
+        `const apiKey = 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz';`,
+      );
 
       const jsFile = join(fixturesPath, 'src', 'secrets.js');
       await writeFile(jsFile, `const password = 'mySecretPassword123';`);
@@ -242,7 +251,11 @@ const password = 'mySecretPassword123';
       const jsonFile = join(fixturesPath, 'config.json');
       await writeFile(
         jsonFile,
-        JSON.stringify({ apiKey: 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz' }, null, 2)
+        JSON.stringify(
+          { apiKey: 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz' },
+          null,
+          2,
+        ),
       );
 
       const reportPath = join(testDir, 'stamp_security_report.json');
@@ -250,7 +263,7 @@ const password = 'mySecretPassword123';
       // Command exits with code 1 when secrets are found (expected behavior)
       try {
         await execAsync(
-          `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`
+          `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`,
         );
       } catch (error: any) {
         // Expected: command exits with code 1 when secrets found
@@ -261,13 +274,21 @@ const password = 'mySecretPassword123';
       const report = JSON.parse(reportContent);
 
       // Should find secrets in all three file types
-      const reportedFiles = report.filesWithSecrets.map((f: string) => f.replace(/\\/g, '/'));
-      expect(reportedFiles.some((f: string) => f.includes('secrets.ts'))).toBe(true);
-      expect(reportedFiles.some((f: string) => f.includes('secrets.js'))).toBe(true);
-      
+      const reportedFiles = report.filesWithSecrets.map((f: string) =>
+        f.replace(/\\/g, '/'),
+      );
+      expect(reportedFiles.some((f: string) => f.includes('secrets.ts'))).toBe(
+        true,
+      );
+      expect(reportedFiles.some((f: string) => f.includes('secrets.js'))).toBe(
+        true,
+      );
+
       // JSON files should be detected - the pretty-printed format should match the pattern
       // The pattern looks for: apiKey : "value" or apiKey: "value"
-      expect(reportedFiles.some((f: string) => f.includes('config.json'))).toBe(true);
+      expect(reportedFiles.some((f: string) => f.includes('config.json'))).toBe(
+        true,
+      );
     }, 30000);
 
     it('should automatically add default report file to .gitignore', async () => {
@@ -275,7 +296,7 @@ const password = 'mySecretPassword123';
 
       // Run security scan (no secrets expected)
       await execAsync(
-        `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`
+        `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`,
       );
 
       // Verify report was created
@@ -305,7 +326,7 @@ const password = 'mySecretPassword123';
 
       // Run security scan with custom report path
       await execAsync(
-        `node dist/cli/stamp.js security scan ${fixturesPath} --out ${customReportPath}`
+        `node dist/cli/stamp.js security scan ${fixturesPath} --out ${customReportPath}`,
       );
 
       // Verify report was created
@@ -316,7 +337,9 @@ const password = 'mySecretPassword123';
       const gitignoreContent = await readFile(gitignorePath, 'utf-8');
 
       // Should contain the custom report path (relative to project root)
-      const relativeReportPath = customReportPath.replace(fixturesPath + '/', '').replace(/\\/g, '/');
+      const relativeReportPath = customReportPath
+        .replace(fixturesPath + '/', '')
+        .replace(/\\/g, '/');
       expect(gitignoreContent).toContain('reports/security-report.json');
     }, 30000);
 
@@ -327,7 +350,7 @@ const password = 'mySecretPassword123';
 
       // Run security scan - should complete successfully even if gitignore update fails
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`
+        `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`,
       );
 
       // Verify report was still created
@@ -346,14 +369,14 @@ const password = 'mySecretPassword123';
         `# Existing patterns
 node_modules/
 stamp_security_report.json
-`
+`,
       );
 
       const reportPath = join(fixturesPath, 'stamp_security_report.json');
 
       // Run security scan
       await execAsync(
-        `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`
+        `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`,
       );
 
       // Verify report was created
@@ -362,7 +385,7 @@ stamp_security_report.json
       // Verify .gitignore still contains the pattern (idempotent)
       const gitignoreContent = await readFile(gitignorePath, 'utf-8');
       expect(gitignoreContent).toContain('stamp_security_report.json');
-      
+
       // Should not duplicate the pattern
       const matches = gitignoreContent.match(/stamp_security_report\.json/g);
       expect(matches?.length).toBeLessThanOrEqual(2); // Allow for comment and pattern
@@ -376,29 +399,34 @@ stamp_security_report.json
         `# LogicStamp context & security files
 context.json
 context_*.json
-`
+`,
       );
 
       const reportPath = join(fixturesPath, 'stamp_security_report.json');
 
       // Run security scan
       await execAsync(
-        `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`
+        `node dist/cli/stamp.js security scan ${fixturesPath} --out ${reportPath}`,
       );
 
       // Verify .gitignore was updated with the report in the LogicStamp block
       const gitignoreContent = await readFile(gitignorePath, 'utf-8');
-      expect(gitignoreContent).toContain('# LogicStamp context & security files');
+      expect(gitignoreContent).toContain(
+        '# LogicStamp context & security files',
+      );
       expect(gitignoreContent).toContain('stamp_security_report.json');
-      
+
       // The report should be in the LogicStamp section
       const lines = gitignoreContent.split('\n');
-      const logicStampIndex = lines.findIndex(line => line.includes('# LogicStamp context & security files'));
-      const reportIndex = lines.findIndex(line => line.includes('stamp_security_report.json'));
+      const logicStampIndex = lines.findIndex((line) =>
+        line.includes('# LogicStamp context & security files'),
+      );
+      const reportIndex = lines.findIndex((line) =>
+        line.includes('stamp_security_report.json'),
+      );
       expect(reportIndex).toBeGreaterThan(logicStampIndex);
     }, 30000);
   });
-
 
   describe('stamp security --hard-reset', () => {
     it('should accept --hard-reset flag without --force (confirmation required)', async () => {
@@ -406,7 +434,7 @@ context_*.json
       const reportPath = join(fixturesPath, 'stamp_security_report.json');
       await writeFile(
         reportPath,
-        JSON.stringify({ type: 'LogicStampSecurityReport', secretsFound: 0 })
+        JSON.stringify({ type: 'LogicStampSecurityReport', secretsFound: 0 }),
       );
 
       // Verify file exists before test
@@ -422,7 +450,7 @@ context_*.json
         // The important verification is that --force works (tested separately)
         await execAsync(
           `node dist/cli/stamp.js security --hard-reset ${fixturesPath} --out ${reportPath}`,
-          { timeout: 2000 }
+          { timeout: 2000 },
         );
       } catch (error: any) {
         // Timeout is expected since we're not providing stdin input
@@ -437,11 +465,11 @@ context_*.json
       const reportPath = join(fixturesPath, 'stamp_security_report.json');
       await writeFile(
         reportPath,
-        JSON.stringify({ type: 'LogicStampSecurityReport', secretsFound: 0 })
+        JSON.stringify({ type: 'LogicStampSecurityReport', secretsFound: 0 }),
       );
 
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js security --hard-reset ${fixturesPath} --out ${reportPath} --force`
+        `node dist/cli/stamp.js security --hard-reset ${fixturesPath} --out ${reportPath} --force`,
       );
 
       // Should delete without prompting
@@ -464,7 +492,7 @@ context_*.json
       const reportPath = join(fixturesPath, 'stamp_security_report.json');
 
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js security --hard-reset ${fixturesPath} --out ${reportPath} --force`
+        `node dist/cli/stamp.js security --hard-reset ${fixturesPath} --out ${reportPath} --force`,
       );
 
       // Should report that no report file was found
@@ -476,11 +504,11 @@ context_*.json
       const customReportPath = join(testDir, 'custom-report.json');
       await writeFile(
         customReportPath,
-        JSON.stringify({ type: 'LogicStampSecurityReport', secretsFound: 0 })
+        JSON.stringify({ type: 'LogicStampSecurityReport', secretsFound: 0 }),
       );
 
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js security --hard-reset ${fixturesPath} --out ${customReportPath} --force`
+        `node dist/cli/stamp.js security --hard-reset ${fixturesPath} --out ${customReportPath} --force`,
       );
 
       // Should delete report file
@@ -502,16 +530,16 @@ context_*.json
       const reportPath = join(fixturesPath, 'stamp_security_report.json');
       await writeFile(
         reportPath,
-        JSON.stringify({ type: 'LogicStampSecurityReport', secretsFound: 0 })
+        JSON.stringify({ type: 'LogicStampSecurityReport', secretsFound: 0 }),
       );
 
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js security --hard-reset ${fixturesPath} --out ${reportPath} --force --quiet`
+        `node dist/cli/stamp.js security --hard-reset ${fixturesPath} --out ${reportPath} --force --quiet`,
       );
 
       // Should be minimal output
       expect(stdout.length).toBeLessThan(200);
-      
+
       // Verify report file was deleted
       let reportExists = true;
       try {
@@ -523,4 +551,3 @@ context_*.json
     }, 30000);
   });
 });
-

@@ -8,4 +8,7 @@ export {
   extractBackendApiSignature,
   type BackendMetadata,
 } from './backendExtractor.js';
-export { normalizePropType, stripUndefinedFromUnionText } from './propTypeNormalizer.js';
+export {
+  normalizePropType,
+  stripUndefinedFromUnionText,
+} from './propTypeNormalizer.js';

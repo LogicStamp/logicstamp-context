@@ -2,7 +2,10 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { writeFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { extractScssMetadata, parseStyleFile } from '../../../src/extractors/styling/scss.js';
+import {
+  extractScssMetadata,
+  parseStyleFile,
+} from '../../../src/extractors/styling/scss.js';
 import { createTestSourceFile } from './test-helpers.js';
 
 describe('SCSS Extractor', () => {
@@ -115,8 +118,9 @@ describe('SCSS Extractor', () => {
 
     it('should limit selectors to 20', async () => {
       const cssFile = join(tempDir, 'styles.css');
-      const cssContent = Array.from({ length: 25 }, (_, i) => 
-        `.class-${i} { padding: 1rem; }`
+      const cssContent = Array.from(
+        { length: 25 },
+        (_, i) => `.class-${i} { padding: 1rem; }`,
       ).join('\n');
       await writeFile(cssFile, cssContent, 'utf-8');
 
@@ -155,7 +159,10 @@ describe('SCSS Extractor', () => {
     });
 
     it('should handle file not found gracefully', async () => {
-      const result = await parseStyleFile(join(tempDir, 'nonexistent.css'), 'nonexistent.css');
+      const result = await parseStyleFile(
+        join(tempDir, 'nonexistent.css'),
+        'nonexistent.css',
+      );
 
       expect(result.selectors).toEqual([]);
       expect(result.properties).toEqual([]);
@@ -277,16 +284,16 @@ describe('SCSS Extractor', () => {
         /^\d+$/, // pure numbers
         /^\d+(\.\d+)?(px|em|rem|vh|vw|vmin|vmax|%)$/i, // values with units
       ];
-      
+
       for (const selector of result.selectors) {
         // Should be a class, ID, or valid element
-        const isValid = 
-          selector.startsWith('.') || 
-          selector.startsWith('#') || 
+        const isValid =
+          selector.startsWith('.') ||
+          selector.startsWith('#') ||
           /^[a-zA-Z][\w-]*$/.test(selector);
-        
+
         expect(isValid).toBe(true);
-        
+
         // Should not match invalid patterns
         for (const pattern of invalidPatterns) {
           expect(selector).not.toMatch(pattern);
@@ -387,7 +394,7 @@ describe('SCSS Extractor', () => {
 
       // Should contain selectors from outside @supports
       expect(result.selectors).toContain('.base');
-      
+
       // Should contain selectors from inside @supports
       expect(result.selectors).toContain('.grid-container');
       expect(result.selectors).toContain('#grid-header');
@@ -428,7 +435,7 @@ describe('SCSS Extractor', () => {
 
       // Should contain selectors from outside @container
       expect(result.selectors).toContain('.card');
-      
+
       // Should contain selectors from inside @container
       expect(result.selectors).toContain('.card-large');
       expect(result.selectors).toContain('#card-title');
@@ -587,7 +594,10 @@ describe('SCSS Extractor', () => {
   describe('Error handling', () => {
     describe('parseStyleFile', () => {
       it('should handle file read errors gracefully', async () => {
-        const result = await parseStyleFile(join(tempDir, 'nonexistent.css'), 'nonexistent.css');
+        const result = await parseStyleFile(
+          join(tempDir, 'nonexistent.css'),
+          'nonexistent.css',
+        );
 
         expect(result.selectors).toEqual([]);
         expect(result.properties).toEqual([]);
@@ -597,7 +607,10 @@ describe('SCSS Extractor', () => {
       });
 
       it('should handle invalid file paths gracefully', async () => {
-        const result = await parseStyleFile('/invalid/path/to/file.css', 'file.css');
+        const result = await parseStyleFile(
+          '/invalid/path/to/file.css',
+          'file.css',
+        );
 
         expect(result.selectors).toEqual([]);
         expect(result.properties).toEqual([]);
@@ -646,7 +659,7 @@ describe('SCSS Extractor', () => {
           import styles from './styles.module.scss'
           // Missing semicolon and closing
         `,
-          'test.tsx'
+          'test.tsx',
         );
 
         // Should not throw, should return empty object
@@ -664,7 +677,7 @@ describe('SCSS Extractor', () => {
             return <div
           // Missing closing
         `,
-          'test.tsx'
+          'test.tsx',
         );
 
         // Should not throw, should return empty object or partial results
@@ -689,11 +702,14 @@ describe('SCSS Extractor', () => {
           function Component() {
             return <div>Hello</div>;
           }
-        `
+        `,
         );
 
         // Use invalid file path that will cause parseStyleFile to fail
-        const result = await extractScssMetadata(sourceFile, '/nonexistent/path');
+        const result = await extractScssMetadata(
+          sourceFile,
+          '/nonexistent/path',
+        );
 
         // Should return module name but no details if file can't be parsed
         expect(typeof result).toBe('object');
@@ -710,7 +726,7 @@ describe('SCSS Extractor', () => {
             return <div className={invalid}>Content</div>;
           }
         `,
-          'test.tsx'
+          'test.tsx',
         );
 
         // Should not throw, should handle gracefully
@@ -721,4 +737,3 @@ describe('SCSS Extractor', () => {
     });
   });
 });
-

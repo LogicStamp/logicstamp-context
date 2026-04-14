@@ -4,7 +4,10 @@
 
 import { describe, it, expect } from 'vitest';
 import { Project } from 'ts-morph';
-import { extractVariables, extractState } from '../../../../src/extractors/react/stateExtractor.js';
+import {
+  extractVariables,
+  extractState,
+} from '../../../../src/extractors/react/stateExtractor.js';
 
 /**
  * Helper to create a SourceFile from code string
@@ -398,12 +401,14 @@ describe('stateExtractor', () => {
 
       it('should handle error in type inference and fallback to unknown', () => {
         const mockSource = createMockSourceFile({
-          getDescendantsOfKind: () => [{
-            getInitializer: () => ({
-              getText: () => 'useState<ComplexType>(value)',
-            }),
-            getName: () => '[data, setData]',
-          }],
+          getDescendantsOfKind: () => [
+            {
+              getInitializer: () => ({
+                getText: () => 'useState<ComplexType>(value)',
+              }),
+              getName: () => '[data, setData]',
+            },
+          ],
         });
 
         const state = extractState(mockSource as any);

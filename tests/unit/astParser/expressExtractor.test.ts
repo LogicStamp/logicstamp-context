@@ -390,7 +390,9 @@ describe('Express Extractor', () => {
 
       // When no parameters, signature might be undefined (since parameters object would be empty)
       // This is expected behavior - the function should not throw
-      expect(() => extractExpressApiSignature(sourceFile, 'getUsers')).not.toThrow();
+      expect(() =>
+        extractExpressApiSignature(sourceFile, 'getUsers'),
+      ).not.toThrow();
     });
 
     it('should return undefined for non-existent function', () => {

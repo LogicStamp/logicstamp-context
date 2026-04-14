@@ -45,9 +45,15 @@ export class PackageJsonLoader {
       const packageJson = JSON.parse(raw) as Record<string, unknown>;
 
       const result: PackageJsonDeps = {
-        dependencies: packageJson.dependencies as Record<string, string> | undefined,
-        devDependencies: packageJson.devDependencies as Record<string, string> | undefined,
-        peerDependencies: packageJson.peerDependencies as Record<string, string> | undefined,
+        dependencies: packageJson.dependencies as
+          | Record<string, string>
+          | undefined,
+        devDependencies: packageJson.devDependencies as
+          | Record<string, string>
+          | undefined,
+        peerDependencies: packageJson.peerDependencies as
+          | Record<string, string>
+          | undefined,
       };
 
       this.cache = { path: projectRoot, content: result };
@@ -58,7 +64,10 @@ export class PackageJsonLoader {
     }
   }
 
-  async getPackageVersion(packageName: string, projectRoot: string): Promise<string | undefined> {
+  async getPackageVersion(
+    packageName: string,
+    projectRoot: string,
+  ): Promise<string | undefined> {
     const packageJson = await this.load(projectRoot);
 
     if (!packageJson) {
@@ -136,7 +145,7 @@ export function extractPackageName(importSpecifier: string): string | null {
  */
 export async function getPackageVersion(
   packageName: string,
-  projectRoot: string
+  projectRoot: string,
 ): Promise<string | undefined> {
   return defaultPackageJsonLoader.getPackageVersion(packageName, projectRoot);
 }

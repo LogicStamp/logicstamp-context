@@ -18,7 +18,11 @@ vi.mock('../../../../src/utils/debug.js', () => ({
 /**
  * Helper to create a minimal valid bundle for testing
  */
-function createBundle(entryId: string, semanticHash: string, overrides: Record<string, any> = {}): LogicStampBundle {
+function createBundle(
+  entryId: string,
+  semanticHash: string,
+  overrides: Record<string, any> = {},
+): LogicStampBundle {
   return {
     type: 'LogicStampBundle',
     schemaVersion: '0.1',
@@ -90,9 +94,7 @@ describe('multiFileCompare', () => {
     const mockIndex = {
       type: 'LogicStampIndex',
       schemaVersion: '0.2',
-      folders: [
-        { path: 'src', contextFile: 'src/context.json', bundles: 1 },
-      ],
+      folders: [{ path: 'src', contextFile: 'src/context.json', bundles: 1 }],
     };
 
     const mockBundles = [createBundle('src/App.tsx', 'uif:hash123')];
@@ -119,9 +121,7 @@ describe('multiFileCompare', () => {
     const oldIndex = {
       type: 'LogicStampIndex',
       schemaVersion: '0.2',
-      folders: [
-        { path: 'src', contextFile: 'src/context.json', bundles: 1 },
-      ],
+      folders: [{ path: 'src', contextFile: 'src/context.json', bundles: 1 }],
     };
 
     const newIndex = {
@@ -169,9 +169,7 @@ describe('multiFileCompare', () => {
     const newIndex = {
       type: 'LogicStampIndex',
       schemaVersion: '0.2',
-      folders: [
-        { path: 'src', contextFile: 'src/context.json', bundles: 1 },
-      ],
+      folders: [{ path: 'src', contextFile: 'src/context.json', bundles: 1 }],
     };
 
     const mockBundles = [createBundle('src/App.tsx', 'uif:hash123')];
@@ -200,9 +198,7 @@ describe('multiFileCompare', () => {
     const mockIndex = {
       type: 'LogicStampIndex',
       schemaVersion: '0.2',
-      folders: [
-        { path: 'src', contextFile: 'src/context.json', bundles: 1 },
-      ],
+      folders: [{ path: 'src', contextFile: 'src/context.json', bundles: 1 }],
     };
 
     const oldBundles = [createBundle('src/App.tsx', 'uif:oldhash')];
@@ -232,9 +228,7 @@ describe('multiFileCompare', () => {
     const mockIndex = {
       type: 'LogicStampIndex',
       schemaVersion: '0.2',
-      folders: [
-        { path: 'src', contextFile: 'src/context.json', bundles: 1 },
-      ],
+      folders: [{ path: 'src', contextFile: 'src/context.json', bundles: 1 }],
     };
 
     const oldBundles = [createBundle('src/App.tsx', 'uif:oldhash')];
@@ -267,9 +261,7 @@ describe('multiFileCompare', () => {
     const mockIndex = {
       type: 'LogicStampIndex',
       schemaVersion: '0.2',
-      folders: [
-        { path: 'src', contextFile: 'src/context.json', bundles: 1 },
-      ],
+      folders: [{ path: 'src', contextFile: 'src/context.json', bundles: 1 }],
     };
 
     const oldBundles = [
@@ -354,22 +346,28 @@ describe('multiFileCompare', () => {
     expect(result.status).toBe('DRIFT');
     expect(result.summary.driftFolders).toBe(1);
     expect(result.folders[0].status).toBe('DRIFT');
-    expect(result.folders[0].componentResult?.changed[0].deltas).toContainEqual({
-      type: 'hash',
-      old: 'uif:oldhash',
-      new: 'uif:newhash',
-    });
+    expect(result.folders[0].componentResult?.changed[0].deltas).toContainEqual(
+      {
+        type: 'hash',
+        old: 'uif:oldhash',
+        new: 'uif:newhash',
+      },
+    );
   });
 
   it('should throw error for invalid index type', async () => {
-    vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify({
-      type: 'InvalidType',
-    }));
+    vi.mocked(fs.readFile).mockResolvedValue(
+      JSON.stringify({
+        type: 'InvalidType',
+      }),
+    );
 
-    await expect(multiFileCompare({
-      oldIndexFile: '/old/context_main.json',
-      newIndexFile: '/new/context_main.json',
-    })).rejects.toThrow("Invalid index file: expected type 'LogicStampIndex'");
+    await expect(
+      multiFileCompare({
+        oldIndexFile: '/old/context_main.json',
+        newIndexFile: '/new/context_main.json',
+      }),
+    ).rejects.toThrow("Invalid index file: expected type 'LogicStampIndex'");
   });
 
   it('should warn about legacy schema version 0.1', async () => {
@@ -387,7 +385,7 @@ describe('multiFileCompare', () => {
     });
 
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('schema version 0.1')
+      expect.stringContaining('schema version 0.1'),
     );
   });
 
@@ -406,7 +404,7 @@ describe('multiFileCompare', () => {
     });
 
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Unknown schema version')
+      expect.stringContaining('Unknown schema version'),
     );
   });
 
@@ -415,19 +413,19 @@ describe('multiFileCompare', () => {
     error.code = 'ENOENT';
     vi.mocked(fs.readFile).mockRejectedValue(error);
 
-    await expect(multiFileCompare({
-      oldIndexFile: '/old/context_main.json',
-      newIndexFile: '/new/context_main.json',
-    })).rejects.toThrow('File not found');
+    await expect(
+      multiFileCompare({
+        oldIndexFile: '/old/context_main.json',
+        newIndexFile: '/new/context_main.json',
+      }),
+    ).rejects.toThrow('File not found');
   });
 
   it('should handle comparison failure for individual folders gracefully', async () => {
     const mockIndex = {
       type: 'LogicStampIndex',
       schemaVersion: '0.2',
-      folders: [
-        { path: 'src', contextFile: 'src/context.json', bundles: 1 },
-      ],
+      folders: [{ path: 'src', contextFile: 'src/context.json', bundles: 1 }],
     };
 
     vi.mocked(fs.readFile).mockImplementation(async (path) => {
@@ -447,7 +445,7 @@ describe('multiFileCompare', () => {
     expect(result.status).toBe('DRIFT');
     expect(result.folders[0].status).toBe('DRIFT');
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to compare')
+      expect.stringContaining('Failed to compare'),
     );
   });
 
@@ -464,9 +462,7 @@ describe('multiFileCompare', () => {
     const newIndex = {
       type: 'LogicStampIndex',
       schemaVersion: '0.2',
-      folders: [
-        { path: 'src', contextFile: 'src/context.json', bundles: 1 },
-      ],
+      folders: [{ path: 'src', contextFile: 'src/context.json', bundles: 1 }],
     };
 
     const mockBundles = [createBundle('src/App.tsx', 'uif:hash123')];
@@ -505,9 +501,7 @@ describe('multiFileCompare', () => {
     const newIndex = {
       type: 'LogicStampIndex',
       schemaVersion: '0.2',
-      folders: [
-        { path: 'src', contextFile: 'src/context.json', bundles: 1 },
-      ],
+      folders: [{ path: 'src', contextFile: 'src/context.json', bundles: 1 }],
     };
 
     const mockBundles = [createBundle('src/App.tsx', 'uif:hash123')];
@@ -580,9 +574,7 @@ describe('multiFileCompare', () => {
     const newIndex = {
       type: 'LogicStampIndex',
       schemaVersion: '0.2',
-      folders: [
-        { path: 'src', contextFile: 'src/context.json', bundles: 5 },
-      ],
+      folders: [{ path: 'src', contextFile: 'src/context.json', bundles: 5 }],
     };
 
     vi.mocked(fs.readFile).mockImplementation(async (path) => {
@@ -608,9 +600,7 @@ describe('multiFileCompare', () => {
     const oldIndex = {
       type: 'LogicStampIndex',
       schemaVersion: '0.2',
-      folders: [
-        { path: 'src', contextFile: 'src/context.json', bundles: 3 },
-      ],
+      folders: [{ path: 'src', contextFile: 'src/context.json', bundles: 3 }],
     };
 
     const newIndex = {

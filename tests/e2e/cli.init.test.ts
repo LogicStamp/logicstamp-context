@@ -37,7 +37,7 @@ describe('CLI Init Command Tests', () => {
 
       // Run stamp init (with --no-secure to match old behavior)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} --no-secure`
+        `node dist/cli/stamp.js init ${testDir} --no-secure`,
       );
 
       // Verify output messages
@@ -49,7 +49,9 @@ describe('CLI Init Command Tests', () => {
       const gitignorePath = join(testDir, '.gitignore');
       const gitignoreContent = await readFile(gitignorePath, 'utf-8');
 
-      expect(gitignoreContent).toContain('# LogicStamp context & security files');
+      expect(gitignoreContent).toContain(
+        '# LogicStamp context & security files',
+      );
       expect(gitignoreContent).toContain('context.json');
       expect(gitignoreContent).toContain('context_*.json');
       expect(gitignoreContent).toContain('context.toon');
@@ -76,11 +78,13 @@ describe('CLI Init Command Tests', () => {
 
       // Run stamp init (with --no-secure to match old behavior)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} --no-secure`
+        `node dist/cli/stamp.js init ${testDir} --no-secure`,
       );
 
       // Verify output messages
-      expect(stdout).toContain('Added LogicStamp patterns to existing .gitignore');
+      expect(stdout).toContain(
+        'Added LogicStamp patterns to existing .gitignore',
+      );
 
       // Verify .gitignore has both old and new patterns
       const gitignoreContent = await readFile(gitignorePath, 'utf-8');
@@ -90,7 +94,9 @@ describe('CLI Init Command Tests', () => {
       expect(gitignoreContent).toContain('dist');
 
       // New patterns should be added
-      expect(gitignoreContent).toContain('# LogicStamp context & security files');
+      expect(gitignoreContent).toContain(
+        '# LogicStamp context & security files',
+      );
       expect(gitignoreContent).toContain('context.json');
       expect(gitignoreContent).toContain('context_*.json');
       expect(gitignoreContent).toContain('context.toon');
@@ -111,12 +117,13 @@ describe('CLI Init Command Tests', () => {
       await mkdir(testDir, { recursive: true });
 
       const gitignorePath = join(testDir, '.gitignore');
-      const existingContent = '# LogicStamp context & security files\ncontext.json\ncontext_*.json\ncontext.toon\ncontext_*.toon\n*.uif.json\nlogicstamp.manifest.json\n.logicstamp/\nstamp_security_report.json\n';
+      const existingContent =
+        '# LogicStamp context & security files\ncontext.json\ncontext_*.json\ncontext.toon\ncontext_*.toon\n*.uif.json\nlogicstamp.manifest.json\n.logicstamp/\nstamp_security_report.json\n';
       await writeFile(gitignorePath, existingContent);
 
       // Run stamp init (with --no-secure to match old behavior)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} --no-secure`
+        `node dist/cli/stamp.js init ${testDir} --no-secure`,
       );
 
       // Verify output messages
@@ -134,7 +141,7 @@ describe('CLI Init Command Tests', () => {
 
       // Run stamp init with --skip-gitignore (with --no-secure to match old behavior)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} --skip-gitignore --no-secure`
+        `node dist/cli/stamp.js init ${testDir} --skip-gitignore --no-secure`,
       );
 
       // Verify output messages
@@ -165,7 +172,7 @@ describe('CLI Init Command Tests', () => {
 
       // Run stamp init (with --no-secure to match old behavior)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} --no-secure`
+        `node dist/cli/stamp.js init ${testDir} --no-secure`,
       );
 
       // Verify informational messages are shown (in non-interactive mode, defaults to yes)
@@ -183,7 +190,7 @@ describe('CLI Init Command Tests', () => {
 
       // Run stamp init (with --no-secure to match old behavior)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} --skip-gitignore --no-secure`
+        `node dist/cli/stamp.js init ${testDir} --skip-gitignore --no-secure`,
       );
 
       // Verify LLM_CONTEXT.md was handled (either created or skipped message)
@@ -203,9 +210,9 @@ describe('CLI Init Command Tests', () => {
       } else {
         // If it doesn't exist, verify skip message or template not found message
         expect(
-          stdout.includes('Skipping LLM_CONTEXT.md') || 
-          stdout.includes('template not found') ||
-          stdout.includes('LLM_CONTEXT.md')
+          stdout.includes('Skipping LLM_CONTEXT.md') ||
+            stdout.includes('template not found') ||
+            stdout.includes('LLM_CONTEXT.md'),
         ).toBe(true);
       }
 
@@ -223,7 +230,7 @@ describe('CLI Init Command Tests', () => {
 
       // Run stamp init with --yes flag (with --no-secure to match old behavior)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} --yes --no-secure`
+        `node dist/cli/stamp.js init ${testDir} --yes --no-secure`,
       );
 
       // Verify output messages - should not contain prompts
@@ -253,7 +260,7 @@ describe('CLI Init Command Tests', () => {
 
       // Run stamp init with -y flag (with --no-secure to match old behavior)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} -y --no-secure`
+        `node dist/cli/stamp.js init ${testDir} -y --no-secure`,
       );
 
       // Verify output messages - should not contain prompts
@@ -283,7 +290,7 @@ describe('CLI Init Command Tests', () => {
 
       // Run stamp init with both --yes and --skip-gitignore (with --no-secure to match old behavior)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} --yes --skip-gitignore --no-secure`
+        `node dist/cli/stamp.js init ${testDir} --yes --skip-gitignore --no-secure`,
       );
 
       // Verify output messages
@@ -316,7 +323,7 @@ describe('CLI Init Command Tests', () => {
 
       // Run stamp init (security scan runs by default)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir}`
+        `node dist/cli/stamp.js init ${testDir}`,
       );
 
       // Verify init was run (no prompts, auto-yes)
@@ -353,7 +360,7 @@ describe('CLI Init Command Tests', () => {
 
       // Run stamp init (security scan runs by default)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir}`
+        `node dist/cli/stamp.js init ${testDir}`,
       );
 
       // Should complete successfully
@@ -370,14 +377,14 @@ describe('CLI Init Command Tests', () => {
       const secretFile = join(testDir, 'secrets.ts');
       await writeFile(
         secretFile,
-        `const apiKey = 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz';`
+        `const apiKey = 'FAKE_SECRET_KEY_1234567890abcdefghijklmnopqrstuvwxyz';`,
       );
 
       // Run stamp init (security scan runs by default)
       let stdout = '';
       try {
         const result = await execAsync(
-          `node dist/cli/stamp.js init ${testDir}`
+          `node dist/cli/stamp.js init ${testDir}`,
         );
         stdout = result.stdout;
         expect.fail('Should have exited with code 1 when secrets are found');
@@ -408,7 +415,7 @@ describe('CLI Init Command Tests', () => {
 
       // Run stamp init with --yes (security scan runs by default)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} --yes`
+        `node dist/cli/stamp.js init ${testDir} --yes`,
       );
 
       // Should run security scan by default
@@ -425,14 +432,14 @@ describe('CLI Init Command Tests', () => {
 
       // Run stamp init (security scan runs by default)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir}`
+        `node dist/cli/stamp.js init ${testDir}`,
       );
 
       // Verify combined summary format
       expect(stdout).toContain('Initialization complete');
-      
+
       // Should show gitignore status
-      const hasGitignoreStatus = 
+      const hasGitignoreStatus =
         stdout.includes('Added LogicStamp patterns to .gitignore') ||
         stdout.includes('LogicStamp patterns already in .gitignore');
       expect(hasGitignoreStatus).toBe(true);
@@ -451,7 +458,7 @@ describe('CLI Init Command Tests', () => {
 
       // Run stamp init with --no-secure flag
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js init ${testDir} --no-secure`
+        `node dist/cli/stamp.js init ${testDir} --no-secure`,
       );
 
       // Verify init ran but security scan did not
@@ -475,4 +482,3 @@ describe('CLI Init Command Tests', () => {
     }, 30000);
   });
 });
-

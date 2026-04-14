@@ -124,12 +124,17 @@ describe('Pack Collector', () => {
       const result = await collectDependencies('src/App.tsx', manifest, 2, 100);
 
       expect(result.missing.length).toBeGreaterThan(0);
-      expect(result.missing.some(m => m.name === 'NonExistent')).toBe(true);
+      expect(result.missing.some((m) => m.name === 'NonExistent')).toBe(true);
     });
 
     it('should handle entry point not in manifest', async () => {
       const manifest = createMockManifest();
-      const result = await collectDependencies('NonExistent.tsx', manifest, 2, 100);
+      const result = await collectDependencies(
+        'NonExistent.tsx',
+        manifest,
+        2,
+        100,
+      );
 
       expect(result.visited.size).toBe(0);
       expect(result.missing.length).toBeGreaterThan(0);
@@ -167,10 +172,17 @@ describe('Pack Collector', () => {
         },
       };
 
-      const result = await collectDependencies('src/App.tsx', manifest, 10, 100);
+      const result = await collectDependencies(
+        'src/App.tsx',
+        manifest,
+        10,
+        100,
+      );
 
       // Button should only be visited once despite circular reference
-      const buttonVisits = Array.from(result.visited).filter(id => id.includes('Button'));
+      const buttonVisits = Array.from(result.visited).filter((id) =>
+        id.includes('Button'),
+      );
       expect(buttonVisits.length).toBe(1);
     });
 
@@ -197,13 +209,13 @@ describe('Pack Collector', () => {
         // Create a package.json with dependencies
         const packageJson = {
           dependencies: {
-            'react': '^18.2.0',
+            react: '^18.2.0',
             '@mui/material': '^5.15.0',
           },
         };
         await writeFile(
           join(testProjectRoot, 'package.json'),
-          JSON.stringify(packageJson, null, 2)
+          JSON.stringify(packageJson, null, 2),
         );
 
         const manifest: ProjectManifest = {
@@ -227,16 +239,22 @@ describe('Pack Collector', () => {
           },
         };
 
-        const result = await collectDependencies('src/App.tsx', manifest, 2, 100, testProjectRoot);
+        const result = await collectDependencies(
+          'src/App.tsx',
+          manifest,
+          2,
+          100,
+          testProjectRoot,
+        );
 
         expect(result.missing.length).toBeGreaterThan(0);
-        
-        const reactDep = result.missing.find(m => m.name === 'react');
+
+        const reactDep = result.missing.find((m) => m.name === 'react');
         expect(reactDep).toBeDefined();
         expect(reactDep?.packageName).toBe('react');
         expect(reactDep?.packageVersion).toBe('^18.2.0');
 
-        const muiDep = result.missing.find(m => m.name === '@mui/material');
+        const muiDep = result.missing.find((m) => m.name === '@mui/material');
         expect(muiDep).toBeDefined();
         expect(muiDep?.packageName).toBe('@mui/material');
         expect(muiDep?.packageVersion).toBe('^5.15.0');
@@ -245,12 +263,12 @@ describe('Pack Collector', () => {
       it('should not populate package info for relative imports', async () => {
         const packageJson = {
           dependencies: {
-            'react': '^18.2.0',
+            react: '^18.2.0',
           },
         };
         await writeFile(
           join(testProjectRoot, 'package.json'),
-          JSON.stringify(packageJson, null, 2)
+          JSON.stringify(packageJson, null, 2),
         );
 
         const manifest: ProjectManifest = {
@@ -274,11 +292,19 @@ describe('Pack Collector', () => {
           },
         };
 
-        const result = await collectDependencies('src/App.tsx', manifest, 2, 100, testProjectRoot);
+        const result = await collectDependencies(
+          'src/App.tsx',
+          manifest,
+          2,
+          100,
+          testProjectRoot,
+        );
 
         expect(result.missing.length).toBeGreaterThan(0);
-        
-        const relativeDep = result.missing.find(m => m.name === './Component');
+
+        const relativeDep = result.missing.find(
+          (m) => m.name === './Component',
+        );
         expect(relativeDep).toBeDefined();
         expect(relativeDep?.packageName).toBeUndefined();
         expect(relativeDep?.packageVersion).toBeUndefined();
@@ -292,7 +318,7 @@ describe('Pack Collector', () => {
         };
         await writeFile(
           join(testProjectRoot, 'package.json'),
-          JSON.stringify(packageJson, null, 2)
+          JSON.stringify(packageJson, null, 2),
         );
 
         const manifest: ProjectManifest = {
@@ -316,9 +342,17 @@ describe('Pack Collector', () => {
           },
         };
 
-        const result = await collectDependencies('src/App.tsx', manifest, 2, 100, testProjectRoot);
+        const result = await collectDependencies(
+          'src/App.tsx',
+          manifest,
+          2,
+          100,
+          testProjectRoot,
+        );
 
-        const muiDep = result.missing.find(m => m.name === '@mui/material/Button');
+        const muiDep = result.missing.find(
+          (m) => m.name === '@mui/material/Button',
+        );
         expect(muiDep).toBeDefined();
         expect(muiDep?.packageName).toBe('@mui/material');
         expect(muiDep?.packageVersion).toBe('^5.15.0');
@@ -347,9 +381,15 @@ describe('Pack Collector', () => {
         };
 
         // Use a path without package.json
-        const result = await collectDependencies('src/App.tsx', manifest, 2, 100, '/nonexistent/path');
+        const result = await collectDependencies(
+          'src/App.tsx',
+          manifest,
+          2,
+          100,
+          '/nonexistent/path',
+        );
 
-        const reactDep = result.missing.find(m => m.name === 'react');
+        const reactDep = result.missing.find((m) => m.name === 'react');
         expect(reactDep).toBeDefined();
         expect(reactDep?.packageName).toBe('react');
         expect(reactDep?.packageVersion).toBeUndefined(); // No package.json, so no version
@@ -378,9 +418,14 @@ describe('Pack Collector', () => {
         };
 
         // Don't provide projectRoot
-        const result = await collectDependencies('src/App.tsx', manifest, 2, 100);
+        const result = await collectDependencies(
+          'src/App.tsx',
+          manifest,
+          2,
+          100,
+        );
 
-        const reactDep = result.missing.find(m => m.name === 'react');
+        const reactDep = result.missing.find((m) => m.name === 'react');
         expect(reactDep).toBeDefined();
         expect(reactDep?.packageName).toBeUndefined();
         expect(reactDep?.packageVersion).toBeUndefined();
@@ -389,12 +434,12 @@ describe('Pack Collector', () => {
       it('should handle entry point as third-party package', async () => {
         const packageJson = {
           dependencies: {
-            'react': '^18.2.0',
+            react: '^18.2.0',
           },
         };
         await writeFile(
           join(testProjectRoot, 'package.json'),
-          JSON.stringify(packageJson, null, 2)
+          JSON.stringify(packageJson, null, 2),
         );
 
         const manifest: ProjectManifest = {
@@ -409,12 +454,18 @@ describe('Pack Collector', () => {
         };
 
         // Entry point is a third-party package
-        const result = await collectDependencies('react', manifest, 2, 100, testProjectRoot);
+        const result = await collectDependencies(
+          'react',
+          manifest,
+          2,
+          100,
+          testProjectRoot,
+        );
 
         expect(result.visited.size).toBe(0);
         expect(result.missing.length).toBeGreaterThan(0);
-        
-        const reactDep = result.missing.find(m => m.name === 'react');
+
+        const reactDep = result.missing.find((m) => m.name === 'react');
         expect(reactDep).toBeDefined();
         expect(reactDep?.packageName).toBe('react');
         expect(reactDep?.packageVersion).toBe('^18.2.0');
@@ -423,15 +474,15 @@ describe('Pack Collector', () => {
       it('should check devDependencies and peerDependencies', async () => {
         const packageJson = {
           devDependencies: {
-            'typescript': '^5.3.0',
+            typescript: '^5.3.0',
           },
           peerDependencies: {
-            'react': '^18.0.0',
+            react: '^18.0.0',
           },
         };
         await writeFile(
           join(testProjectRoot, 'package.json'),
-          JSON.stringify(packageJson, null, 2)
+          JSON.stringify(packageJson, null, 2),
         );
 
         const manifest: ProjectManifest = {
@@ -455,15 +506,20 @@ describe('Pack Collector', () => {
           },
         };
 
-        const result = await collectDependencies('src/App.tsx', manifest, 2, 100, testProjectRoot);
+        const result = await collectDependencies(
+          'src/App.tsx',
+          manifest,
+          2,
+          100,
+          testProjectRoot,
+        );
 
-        const tsDep = result.missing.find(m => m.name === 'typescript');
+        const tsDep = result.missing.find((m) => m.name === 'typescript');
         expect(tsDep?.packageVersion).toBe('^5.3.0');
 
-        const reactDep = result.missing.find(m => m.name === 'react');
+        const reactDep = result.missing.find((m) => m.name === 'react');
         expect(reactDep?.packageVersion).toBe('^18.0.0');
       });
     });
   });
 });
-

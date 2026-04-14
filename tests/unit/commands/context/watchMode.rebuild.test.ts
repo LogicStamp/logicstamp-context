@@ -53,7 +53,10 @@ vi.mock('../../../../src/utils/config.js', () => ({
   appendWatchLog: vi.fn().mockResolvedValue(undefined),
   writeStrictWatchStatus: vi.fn().mockResolvedValue(undefined),
   deleteStrictWatchStatus: vi.fn().mockResolvedValue(undefined),
-  getWatchStatusPath: vi.fn((projectRoot: string) => `${projectRoot}/.logicstamp/context_watch-status.json`),
+  getWatchStatusPath: vi.fn(
+    (projectRoot: string) =>
+      `${projectRoot}/.logicstamp/context_watch-status.json`,
+  ),
 }));
 
 vi.mock('../../../../src/utils/cleanup.js', () => ({
@@ -75,7 +78,11 @@ vi.mock('../../../../src/cli/commands/context/watchMode/index.js', () => ({
 
 vi.mock('../../../../src/cli/commands/context/index.js', () => ({
   buildContractsFromFiles: vi.fn(),
-  writeContextFiles: vi.fn().mockResolvedValue({ filesWritten: 1, folderInfos: [], totalTokenEstimate: 500 }),
+  writeContextFiles: vi.fn().mockResolvedValue({
+    filesWritten: 1,
+    folderInfos: [],
+    totalTokenEstimate: 500,
+  }),
   writeMainIndex: vi.fn().mockResolvedValue(undefined),
   groupBundlesByFolder: vi.fn(() => new Map()),
   displayPath: vi.fn((p: string) => p),
@@ -98,16 +105,20 @@ import chokidar from 'chokidar';
 describe('cleanup handler', () => {
   it('should clean up watch status file and close watcher', async () => {
     let cleanupHandler: (() => Promise<void>) | undefined;
-    vi.mocked(cleanupModule.registerCleanup).mockImplementation((name, handler) => {
-      cleanupHandler = handler as () => Promise<void>;
-      return () => {}; // Return unregister function
-    });
+    vi.mocked(cleanupModule.registerCleanup).mockImplementation(
+      (name, handler) => {
+        cleanupHandler = handler as () => Promise<void>;
+        return () => {}; // Return unregister function
+      },
+    );
 
     const mockWatcher = {
       on: vi.fn().mockReturnThis(),
       close: vi.fn().mockResolvedValue(undefined),
     };
-    vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+    vi.mocked(chokidar.watch).mockReturnValue(
+      mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+    );
 
     const options: ContextOptions = {
       out: '.logicstamp',
@@ -129,7 +140,7 @@ describe('cleanup handler', () => {
     };
 
     const watchPromise = startWatchMode(options, '/project', null);
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     // Execute cleanup handler
     if (cleanupHandler) {
@@ -142,16 +153,20 @@ describe('cleanup handler', () => {
 
   it('should show session summary when strict watch has violations', async () => {
     let cleanupHandler: (() => Promise<void>) | undefined;
-    vi.mocked(cleanupModule.registerCleanup).mockImplementation((name, handler) => {
-      cleanupHandler = handler as () => Promise<void>;
-      return () => {}; // Return unregister function
-    });
+    vi.mocked(cleanupModule.registerCleanup).mockImplementation(
+      (name, handler) => {
+        cleanupHandler = handler as () => Promise<void>;
+        return () => {}; // Return unregister function
+      },
+    );
 
     const mockWatcher = {
       on: vi.fn().mockReturnThis(),
       close: vi.fn().mockResolvedValue(undefined),
     };
-    vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+    vi.mocked(chokidar.watch).mockReturnValue(
+      mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+    );
 
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
@@ -176,14 +191,16 @@ describe('cleanup handler', () => {
     };
 
     const watchPromise = startWatchMode(options, '/project', null);
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     // Execute cleanup handler
     if (cleanupHandler) {
       await cleanupHandler();
     }
 
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Watch mode stopped'));
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Watch mode stopped'),
+    );
     consoleSpy.mockRestore();
   });
 });
@@ -208,7 +225,9 @@ describe('debouncing', () => {
       }),
       close: vi.fn().mockResolvedValue(undefined),
     };
-    vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+    vi.mocked(chokidar.watch).mockReturnValue(
+      mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+    );
 
     vi.mocked(watchModeModule.incrementalRebuild).mockResolvedValue({
       bundles: [],
@@ -255,7 +274,7 @@ describe('debouncing', () => {
 
     // Need real timer for initial setup
     vi.useRealTimers();
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
     vi.useFakeTimers();
 
     // Trigger multiple rapid changes
@@ -317,7 +336,7 @@ describe('incremental vs full rebuild', () => {
 
     // Start watch mode with cache
     const watchPromise = startWatchMode(options, '/project', mockCache);
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     // The cache should be used for incremental rebuilds
     expect(mockCache).toBeDefined();

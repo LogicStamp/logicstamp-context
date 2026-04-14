@@ -25,7 +25,11 @@ import {
   setupGitignore,
   setupLLMContext,
 } from '../../../../src/cli/commands/context/configManager.js';
-import { configExists, writeConfig, readConfig } from '../../../../src/utils/config.js';
+import {
+  configExists,
+  writeConfig,
+  readConfig,
+} from '../../../../src/utils/config.js';
 import { smartGitignoreSetup } from '../../../../src/utils/gitignore.js';
 import { smartLLMContextSetup } from '../../../../src/utils/llmContext.js';
 
@@ -104,7 +108,10 @@ describe('configManager', () => {
         gitignorePreference: 'added',
         llmContextPreference: 'skipped',
       });
-      vi.mocked(smartGitignoreSetup).mockResolvedValue({ added: false, created: false });
+      vi.mocked(smartGitignoreSetup).mockResolvedValue({
+        added: false,
+        created: false,
+      });
 
       await setupGitignore('/project', { skipGitignore: true });
 
@@ -118,7 +125,10 @@ describe('configManager', () => {
         gitignorePreference: 'skipped',
         llmContextPreference: 'skipped',
       });
-      vi.mocked(smartGitignoreSetup).mockResolvedValue({ added: false, created: false });
+      vi.mocked(smartGitignoreSetup).mockResolvedValue({
+        added: false,
+        created: false,
+      });
 
       await setupGitignore('/project', {});
 
@@ -131,7 +141,10 @@ describe('configManager', () => {
       vi.mocked(readConfig).mockResolvedValue({
         llmContextPreference: 'skipped',
       });
-      vi.mocked(smartGitignoreSetup).mockResolvedValue({ added: false, created: false });
+      vi.mocked(smartGitignoreSetup).mockResolvedValue({
+        added: false,
+        created: false,
+      });
 
       await setupGitignore('/project', {});
 
@@ -145,7 +158,10 @@ describe('configManager', () => {
         gitignorePreference: 'added',
         llmContextPreference: 'skipped',
       });
-      vi.mocked(smartGitignoreSetup).mockResolvedValue({ added: true, created: false });
+      vi.mocked(smartGitignoreSetup).mockResolvedValue({
+        added: true,
+        created: false,
+      });
 
       await setupGitignore('/project', { quiet: false });
 
@@ -158,7 +174,10 @@ describe('configManager', () => {
         gitignorePreference: 'added',
         llmContextPreference: 'skipped',
       });
-      vi.mocked(smartGitignoreSetup).mockResolvedValue({ added: true, created: true });
+      vi.mocked(smartGitignoreSetup).mockResolvedValue({
+        added: true,
+        created: true,
+      });
 
       await setupGitignore('/project', { quiet: false });
 
@@ -171,7 +190,10 @@ describe('configManager', () => {
         gitignorePreference: 'added',
         llmContextPreference: 'skipped',
       });
-      vi.mocked(smartGitignoreSetup).mockResolvedValue({ added: true, created: true });
+      vi.mocked(smartGitignoreSetup).mockResolvedValue({
+        added: true,
+        created: true,
+      });
 
       await setupGitignore('/project', { quiet: true });
 
@@ -213,7 +235,9 @@ describe('configManager', () => {
     });
 
     it('should swallow errors silently', async () => {
-      vi.mocked(smartLLMContextSetup).mockRejectedValue(new Error('Setup error'));
+      vi.mocked(smartLLMContextSetup).mockRejectedValue(
+        new Error('Setup error'),
+      );
 
       // Should not throw
       await expect(setupLLMContext('/project', {})).resolves.not.toThrow();

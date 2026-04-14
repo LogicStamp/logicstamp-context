@@ -172,7 +172,11 @@ describe('Ant Design Extractor', () => {
       const result = extractAntDesign(sourceFile);
 
       expectComponents(result, ['Button']);
-      expectPackages(result, ['antd', '@ant-design/pro-components', '@ant-design/pro-form']);
+      expectPackages(result, [
+        'antd',
+        '@ant-design/pro-components',
+        '@ant-design/pro-form',
+      ]);
     });
 
     it('should return sorted packages', () => {
@@ -189,7 +193,9 @@ describe('Ant Design Extractor', () => {
   });
 
   describe('Theme Detection', () => {
-    const themeTestCases: StyleExtractorTestCase<ReturnType<typeof extractAntDesign>>[] = [
+    const themeTestCases: StyleExtractorTestCase<
+      ReturnType<typeof extractAntDesign>
+    >[] = [
       {
         description: 'should detect theme usage via useToken hook',
         sourceCode: `
@@ -200,7 +206,7 @@ describe('Ant Design Extractor', () => {
             return <div style={{ color: token.colorPrimary }}>Hello</div>;
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesTheme).toBe(true);
         },
       },
@@ -213,7 +219,7 @@ describe('Ant Design Extractor', () => {
             token: { colorPrimary: '#00b96b' }
           });
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesTheme).toBe(true);
         },
       },
@@ -226,7 +232,7 @@ describe('Ant Design Extractor', () => {
             return <ConfigProvider theme={theme}>Hello</ConfigProvider>;
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesTheme).toBe(true);
         },
       },
@@ -239,7 +245,7 @@ describe('Ant Design Extractor', () => {
             return <ThemeProvider theme={theme}>Hello</ThemeProvider>;
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesTheme).toBe(true);
         },
       },
@@ -253,7 +259,7 @@ describe('Ant Design Extractor', () => {
             return <div style={{ color: primaryColor }}>Hello</div>;
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesTheme).toBe(true);
         },
       },
@@ -277,7 +283,9 @@ describe('Ant Design Extractor', () => {
   });
 
   describe('ConfigProvider Detection', () => {
-    const configProviderTestCases: StyleExtractorTestCase<ReturnType<typeof extractAntDesign>>[] = [
+    const configProviderTestCases: StyleExtractorTestCase<
+      ReturnType<typeof extractAntDesign>
+    >[] = [
       {
         description: 'should detect ConfigProvider usage',
         sourceCode: `
@@ -291,7 +299,7 @@ describe('Ant Design Extractor', () => {
             );
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesConfigProvider).toBe(true);
         },
       },
@@ -304,7 +312,7 @@ describe('Ant Design Extractor', () => {
             return <div>Hello</div>;
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesConfigProvider).toBe(true);
         },
       },
@@ -314,7 +322,9 @@ describe('Ant Design Extractor', () => {
   });
 
   describe('Form Detection', () => {
-    const formTestCases: StyleExtractorTestCase<ReturnType<typeof extractAntDesign>>[] = [
+    const formTestCases: StyleExtractorTestCase<
+      ReturnType<typeof extractAntDesign>
+    >[] = [
       {
         description: 'should detect Form usage',
         sourceCode: `
@@ -330,7 +340,7 @@ describe('Ant Design Extractor', () => {
             );
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesForm).toBe(true);
         },
       },
@@ -347,7 +357,7 @@ describe('Ant Design Extractor', () => {
             );
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesForm).toBe(true);
         },
       },
@@ -370,7 +380,9 @@ describe('Ant Design Extractor', () => {
   });
 
   describe('Locale Detection', () => {
-    const localeTestCases: StyleExtractorTestCase<ReturnType<typeof extractAntDesign>>[] = [
+    const localeTestCases: StyleExtractorTestCase<
+      ReturnType<typeof extractAntDesign>
+    >[] = [
       {
         description: 'should detect locale usage via useLocale hook',
         sourceCode: `
@@ -381,7 +393,7 @@ describe('Ant Design Extractor', () => {
             return <div>{locale.DatePicker?.lang}</div>;
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesLocale).toBe(true);
         },
       },
@@ -392,7 +404,7 @@ describe('Ant Design Extractor', () => {
           
           const locale = getLocale();
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesLocale).toBe(true);
         },
       },
@@ -405,7 +417,7 @@ describe('Ant Design Extractor', () => {
             return <DatePicker locale={locale} />;
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesLocale).toBe(true);
         },
       },
@@ -415,7 +427,7 @@ describe('Ant Design Extractor', () => {
           import { DatePicker } from 'antd';
           import locale from 'antd/locale/en_US';
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesLocale).toBe(true);
         },
       },
@@ -439,7 +451,9 @@ describe('Ant Design Extractor', () => {
   });
 
   describe('Icons Detection', () => {
-    const iconsTestCases: StyleExtractorTestCase<ReturnType<typeof extractAntDesign>>[] = [
+    const iconsTestCases: StyleExtractorTestCase<
+      ReturnType<typeof extractAntDesign>
+    >[] = [
       {
         description: 'should detect icons usage from @ant-design/icons',
         sourceCode: `
@@ -454,7 +468,7 @@ describe('Ant Design Extractor', () => {
             );
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesIcons).toBe(true);
         },
       },
@@ -463,7 +477,7 @@ describe('Ant Design Extractor', () => {
         sourceCode: `
           import { SmileOutlined } from '@ant-design/icons/lib/icons';
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesIcons).toBe(true);
         },
       },
@@ -476,7 +490,7 @@ describe('Ant Design Extractor', () => {
             return <icons.SmileOutlined />;
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesIcons).toBe(true);
         },
       },

@@ -15,7 +15,9 @@ export async function handleStyle(args: string[]): Promise<void> {
 
   // Explicitly reject --compare-modes (only available in stamp context, not stamp context style)
   if (args.includes('--compare-modes')) {
-    console.error('❌ --compare-modes is not available for "stamp context style". Use "stamp context --compare-modes" instead.');
+    console.error(
+      '❌ --compare-modes is not available for "stamp context style". Use "stamp context --compare-modes" instead.',
+    );
     process.exit(1);
   }
 
@@ -25,9 +27,11 @@ export async function handleStyle(args: string[]): Promise<void> {
   try {
     await styleCommand(options);
   } catch (error) {
-    console.error('❌ Style context compilation failed:', (error as Error).message);
+    console.error(
+      '❌ Style context compilation failed:',
+      (error as Error).message,
+    );
     console.error((error as Error).stack);
     process.exit(1);
   }
 }
-

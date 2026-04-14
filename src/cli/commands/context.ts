@@ -6,7 +6,10 @@ import { resolve, dirname, join } from 'node:path';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { debugError } from '../../utils/debug.js';
 import { globFiles } from '../../utils/fsx.js';
-import { readStampignore, filterIgnoredFiles } from '../../utils/stampignore.js';
+import {
+  readStampignore,
+  filterIgnoredFiles,
+} from '../../utils/stampignore.js';
 import { buildDependencyGraph } from '../../core/manifest.js';
 import type { UIFContract } from '../../types/UIFContract.js';
 import {
@@ -14,7 +17,10 @@ import {
   type PackOptions,
   type LogicStampBundle,
 } from '../../core/pack.js';
-import { estimateGPT4Tokens, estimateClaudeTokens } from '../../utils/tokens.js';
+import {
+  estimateGPT4Tokens,
+  estimateClaudeTokens,
+} from '../../utils/tokens.js';
 import { validateBundles } from './validate.js';
 import {
   buildContractsFromFiles,
@@ -84,19 +90,27 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
 
   // Step 1.5: Filter files based on .stampignore
   // Use stampignorePath override if provided (for git baseline comparisons), otherwise use projectRoot
-  const stampignoreDir = options.stampignorePath ? resolve(options.stampignorePath) : projectRoot;
+  const stampignoreDir = options.stampignorePath
+    ? resolve(options.stampignorePath)
+    : projectRoot;
   const stampignore = await readStampignore(stampignoreDir);
   if (stampignore && stampignore.ignore.length > 0) {
     const originalCount = files.length;
     files = filterIgnoredFiles(files, stampignore.ignore, projectRoot);
     if (!options.quiet && files.length < originalCount) {
-      console.log(`   Excluded ${originalCount - files.length} file(s) via .stampignore`);
+      console.log(
+        `   Excluded ${originalCount - files.length} file(s) via .stampignore`,
+      );
     }
   }
 
   if (files.length === 0) {
-    console.error(`❌ No TypeScript modules found under ${displayProjectRoot(projectRoot)}`);
-    console.error(`   Try: logicstamp-context ./src or --depth 0 to scan all directories`);
+    console.error(
+      `❌ No TypeScript modules found under ${displayProjectRoot(projectRoot)}`,
+    );
+    console.error(
+      `   Try: logicstamp-context ./src or --depth 0 to scan all directories`,
+    );
     process.exit(1);
   }
 
@@ -108,12 +122,13 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   if (!options.quiet) {
     console.log(`🔨 Analyzing components...`);
   }
-  const { contracts, analyzed, totalSourceSize } = await buildContractsFromFiles(files, projectRoot, {
-    includeStyle: options.includeStyle,
-    styleMode: options.styleMode,
-    predictBehavior: options.predictBehavior,
-    quiet: options.quiet,
-  });
+  const { contracts, analyzed, totalSourceSize } =
+    await buildContractsFromFiles(files, projectRoot, {
+      includeStyle: options.includeStyle,
+      styleMode: options.styleMode,
+      predictBehavior: options.predictBehavior,
+      quiet: options.quiet,
+    });
 
   if (!options.quiet) {
     console.log(`   Analyzed ${analyzed} components`);
@@ -121,8 +136,12 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
 
   if (contracts.length === 0) {
     console.error('❌ No components found to analyze');
-    console.error(`   Files were found but could not be analyzed as TypeScript components`);
-    console.error(`   Ensure your files contain valid React components or TypeScript modules`);
+    console.error(
+      `   Files were found but could not be analyzed as TypeScript components`,
+    );
+    console.error(
+      `   Ensure your files contain valid React components or TypeScript modules`,
+    );
     process.exit(1);
   }
 
@@ -140,11 +159,14 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
 
   // Apply profile settings (only if user hasn't explicitly set the option)
   // Check if user explicitly set options by looking for flags in argv
-  const userSetIncludeCode = process.argv.some((arg, i) => 
-    (arg === '--include-code' || arg === '-c') && process.argv[i + 1]);
-  const userSetDepth = process.argv.some((arg, i) => 
-    (arg === '--depth' || arg === '-d') && process.argv[i + 1]);
-  
+  const userSetIncludeCode = process.argv.some(
+    (arg, i) =>
+      (arg === '--include-code' || arg === '-c') && process.argv[i + 1],
+  );
+  const userSetDepth = process.argv.some(
+    (arg, i) => (arg === '--depth' || arg === '-d') && process.argv[i + 1],
+  );
+
   let depth = options.depth;
   let includeCode = options.includeCode;
   let hashLock = options.hashLock;
@@ -157,24 +179,45 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     options.maxNodes = 30;
     options.allowMissing = true;
     if (!options.quiet) {
-      const codeMode = includeCode === 'full' ? 'full code' : includeCode === 'none' ? 'no code' : 'header only';
-      console.log(`📋 Using profile: llm-safe (depth=${depth}, ${codeMode}, max 30 nodes)`);
+      const codeMode =
+        includeCode === 'full'
+          ? 'full code'
+          : includeCode === 'none'
+            ? 'no code'
+            : 'header only';
+      console.log(
+        `📋 Using profile: llm-safe (depth=${depth}, ${codeMode}, max 30 nodes)`,
+      );
     }
   } else if (options.profile === 'llm-chat') {
     depth = userSetDepth ? options.depth : 2;
     includeCode = userSetIncludeCode ? options.includeCode : 'header';
     hashLock = false;
     if (!options.quiet) {
-      const codeMode = includeCode === 'full' ? 'full code' : includeCode === 'none' ? 'no code' : 'header only';
-      console.log(`📋 Using profile: llm-chat (depth=${depth}, ${codeMode}, max 100 nodes)`);
+      const codeMode =
+        includeCode === 'full'
+          ? 'full code'
+          : includeCode === 'none'
+            ? 'no code'
+            : 'header only';
+      console.log(
+        `📋 Using profile: llm-chat (depth=${depth}, ${codeMode}, max 100 nodes)`,
+      );
     }
   } else if (options.profile === 'ci-strict') {
     includeCode = userSetIncludeCode ? options.includeCode : 'none';
     hashLock = false;
     strict = true;
     if (!options.quiet) {
-      const codeMode = includeCode === 'full' ? 'full code' : includeCode === 'header' ? 'header only' : 'no code';
-      console.log(`📋 Using profile: ci-strict (${codeMode}, strict dependencies)`);
+      const codeMode =
+        includeCode === 'full'
+          ? 'full code'
+          : includeCode === 'header'
+            ? 'header only'
+            : 'no code';
+      console.log(
+        `📋 Using profile: ci-strict (${codeMode}, strict dependencies)`,
+      );
     }
   } else if (options.profile === 'watch-fast') {
     depth = userSetDepth ? options.depth : 2;
@@ -182,8 +225,15 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     hashLock = false;
     // For watch-fast, use lighter style extraction (will be handled in style extractor)
     if (!options.quiet) {
-      const codeMode = includeCode === 'full' ? 'full code' : includeCode === 'none' ? 'no code' : 'header only';
-      console.log(`📋 Using profile: watch-fast (depth=${depth}, ${codeMode}, lighter style extraction)`);
+      const codeMode =
+        includeCode === 'full'
+          ? 'full code'
+          : includeCode === 'none'
+            ? 'no code'
+            : 'header only';
+      console.log(
+        `📋 Using profile: watch-fast (depth=${depth}, ${codeMode}, lighter style extraction)`,
+      );
     }
   }
 
@@ -201,7 +251,9 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
 
   // Compile context for all root components
   if (!options.quiet) {
-    console.log(`📦 Compiling context for ${manifest.graph.roots.length} root components (depth=${depth})...`);
+    console.log(
+      `📦 Compiling context for ${manifest.graph.roots.length} root components (depth=${depth})...`,
+    );
   }
 
   const bundles: LogicStampBundle[] = [];
@@ -211,7 +263,9 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
       bundles.push(bundle);
     } catch (error) {
       if (!options.quiet) {
-        console.warn(`   ⚠️  Failed to pack ${rootId}: ${(error as Error).message}`);
+        console.warn(
+          `   ⚠️  Failed to pack ${rootId}: ${(error as Error).message}`,
+        );
       }
     }
   }
@@ -237,7 +291,12 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   const currentClaude = await estimateClaudeTokens(output);
 
   // Calculate token estimates
-  const tokenEstimates = await calculateTokenEstimates(output, totalSourceSize, currentGPT4, currentClaude);
+  const tokenEstimates = await calculateTokenEstimates(
+    output,
+    totalSourceSize,
+    currentGPT4,
+    currentClaude,
+  );
 
   // If --compare-modes flag is set, output detailed mode comparison and exit
   if (options.compareModes) {
@@ -259,15 +318,15 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
         allowMissing: options.allowMissing,
         predictBehavior: options.predictBehavior,
         quiet: options.quiet,
-      }
+      },
     );
-    
+
     // If --stats is also set, write comparison data to JSON file
     if (options.stats) {
       // Determine output directory from --out option
       const outPath = resolve(options.out);
       const outputDir = outPath.endsWith('.json') ? dirname(outPath) : outPath;
-      
+
       // Create output directory if it doesn't exist
       try {
         await mkdir(outputDir, { recursive: true });
@@ -279,12 +338,14 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
           message: err.message,
           code: err.code,
         });
-        throw new Error(`Failed to create output directory "${outputDir}": ${err.code === 'EACCES' ? 'Permission denied' : err.message}`);
+        throw new Error(
+          `Failed to create output directory "${outputDir}": ${err.code === 'EACCES' ? 'Permission denied' : err.message}`,
+        );
       }
-      
+
       // Write comparison data to JSON file
       const compareModesPath = join(outputDir, 'context_compare_modes.json');
-      
+
       const compareModesData = {
         type: 'LogicStampCompareModes',
         schemaVersion: '0.1',
@@ -292,14 +353,19 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
         elapsed,
         files: {
           total: files.length,
-          ts: files.filter(f => f.endsWith('.ts') && !f.endsWith('.tsx')).length,
-          tsx: files.filter(f => f.endsWith('.tsx')).length,
+          ts: files.filter((f) => f.endsWith('.ts') && !f.endsWith('.tsx'))
+            .length,
+          tsx: files.filter((f) => f.endsWith('.tsx')).length,
         },
         comparison,
       };
-      
+
       try {
-        await writeFile(compareModesPath, JSON.stringify(compareModesData, null, 2), 'utf8');
+        await writeFile(
+          compareModesPath,
+          JSON.stringify(compareModesData, null, 2),
+          'utf8',
+        );
       } catch (error) {
         const err = error as NodeJS.ErrnoException;
         debugError('context', 'contextCommand', {
@@ -308,7 +374,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
           message: err.message,
           code: err.code,
         });
-        
+
         let userMessage: string;
         switch (err.code) {
           case 'ENOENT':
@@ -325,9 +391,11 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
         }
         throw new Error(userMessage);
       }
-      
+
       if (!options.quiet) {
-        console.log(`\n📝 Written comparison data to ${displayPath(compareModesPath)}`);
+        console.log(
+          `\n📝 Written comparison data to ${displayPath(compareModesPath)}`,
+        );
       }
     } else {
       // Only display comparison if --stats is not set
@@ -344,7 +412,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
       bundles,
       stats,
       tokenEstimates,
-      elapsed
+      elapsed,
     );
     console.log(JSON.stringify(statsOutput));
     return;
@@ -363,14 +431,16 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
 
   if (!validation.valid) {
     console.error(`\n❌ Validation failed: ${validation.errors} error(s)`);
-    validation.messages.forEach(msg => console.error(`   ${msg}`));
+    validation.messages.forEach((msg) => console.error(`   ${msg}`));
     process.exit(1);
   }
 
   if (!options.quiet) {
     if (validation.warnings > 0) {
       console.log(`⚠️  ${validation.warnings} warning(s) during validation`);
-      validation.messages.filter(msg => !msg.includes('error')).forEach(msg => console.log(`   ${msg}`));
+      validation.messages
+        .filter((msg) => !msg.includes('error'))
+        .forEach((msg) => console.log(`   ${msg}`));
     } else {
       console.log(`✅ Validation passed`);
     }
@@ -384,16 +454,12 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     const outputDir = outPath.endsWith('.json') ? dirname(outPath) : outPath;
 
     // Write context files
-    const { filesWritten, folderInfos, totalTokenEstimate } = await writeContextFiles(
-      bundles,
-      outputDir,
-      projectRoot,
-      {
+    const { filesWritten, folderInfos, totalTokenEstimate } =
+      await writeContextFiles(bundles, outputDir, projectRoot, {
         format: options.format,
         quiet: options.quiet,
         verbose: options.verbose,
-      }
-    );
+      });
 
     // Write main index
     await writeMainIndex(
@@ -407,7 +473,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
       {
         quiet: options.quiet,
         suppressSuccessIndicator: options.suppressSuccessIndicator,
-      }
+      },
     );
 
     if (!options.quiet) {
@@ -456,13 +522,21 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     // Display sanitization summary
     const sanitizeStats = getAndResetSanitizeStats();
     if (sanitizeStats.filesWithSecrets > 0) {
-      console.log(`\n⚠️  Secret sanitization: Replaced ${sanitizeStats.totalSecretsReplaced} secret(s) in ${sanitizeStats.filesWithSecrets} file(s)`);
-      console.log(`   Secrets were replaced with "PRIVATE_DATA" in compiled JSON files`);
+      console.log(
+        `\n⚠️  Secret sanitization: Replaced ${sanitizeStats.totalSecretsReplaced} secret(s) in ${sanitizeStats.filesWithSecrets} file(s)`,
+      );
+      console.log(
+        `   Secrets were replaced with "PRIVATE_DATA" in compiled JSON files`,
+      );
     } else if (sanitizeStats.securityReportLoaded) {
-      console.log(`\n✅ Compiled context verified - no secret patterns detected`);
+      console.log(
+        `\n✅ Compiled context verified - no secret patterns detected`,
+      );
     } else {
       console.log(`\nℹ️  Security scan skipped (no security report found)`);
-      console.log(`   Run \`stamp init\` or \`stamp security scan\` to enable secret detection`);
+      console.log(
+        `   Run \`stamp init\` or \`stamp security scan\` to enable secret detection`,
+      );
     }
 
     console.log(`\n⏱  Completed in ${elapsed}ms`);
@@ -471,7 +545,9 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   // Exit with non-zero code if --strict-missing is enabled and there are missing dependencies
   // Skip exit in watch mode to allow continuous watching
   if (options.strictMissing && stats.totalMissing > 0 && !options.watch) {
-    console.error(`\n❌ Strict missing mode: ${stats.totalMissing} missing dependencies found`);
+    console.error(
+      `\n❌ Strict missing mode: ${stats.totalMissing} missing dependencies found`,
+    );
     process.exit(1);
   }
 
@@ -479,11 +555,19 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   // Note: Watch mode is incompatible with --stats and --compare-modes (they return early)
   if (options.watch) {
     if (options.stats || options.compareModes) {
-      console.error(`❌ Watch mode is incompatible with --stats and --compare-modes`);
+      console.error(
+        `❌ Watch mode is incompatible with --stats and --compare-modes`,
+      );
       process.exit(1);
     }
     // Initialize watch cache BEFORE starting watch mode so first change can use incremental rebuild
-    const watchCache = await initializeWatchCache(files, contracts, manifest, bundles, projectRoot);
+    const watchCache = await initializeWatchCache(
+      files,
+      contracts,
+      manifest,
+      bundles,
+      projectRoot,
+    );
     await startWatchMode(options, projectRoot, watchCache);
   }
 }

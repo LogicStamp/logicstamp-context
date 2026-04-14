@@ -130,7 +130,10 @@ describe('Backend Framework Detection', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const framework = detectBackendFramework(['@nestjs/common'], sourceFile);
 
@@ -149,7 +152,10 @@ describe('Backend Framework Detection', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const framework = detectBackendFramework(['@nestjs/common'], sourceFile);
 
@@ -168,7 +174,10 @@ describe('Backend Framework Detection', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const framework = detectBackendFramework(['@nestjs/common'], sourceFile);
 
@@ -187,7 +196,10 @@ describe('Backend Framework Detection', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const framework = detectBackendFramework(['@nestjs/common'], sourceFile);
 
@@ -206,7 +218,10 @@ describe('Backend Framework Detection', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const framework = detectBackendFramework(['@nestjs/common'], sourceFile);
 
@@ -225,7 +240,10 @@ describe('Backend Framework Detection', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const framework = detectBackendFramework(['@nestjs/common'], sourceFile);
 
@@ -323,7 +341,10 @@ describe('Backend Framework Detection', () => {
         }
       `;
 
-      const sourceFile = createTestSourceFile(sourceCode, 'users.controller.ts');
+      const sourceFile = createTestSourceFile(
+        sourceCode,
+        'users.controller.ts',
+      );
 
       const framework = detectBackendFramework(['@nestjs/core'], sourceFile);
 

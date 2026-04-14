@@ -12,7 +12,7 @@
 export function debugLog(
   moduleName: string,
   message: string,
-  context?: Record<string, unknown>
+  context?: Record<string, unknown>,
 ): void {
   if (process.env.LOGICSTAMP_DEBUG === '1') {
     if (context) {
@@ -32,10 +32,12 @@ export function debugLog(
 export function debugError(
   moduleName: string,
   functionName: string,
-  context: Record<string, unknown>
+  context: Record<string, unknown>,
 ): void {
   if (process.env.LOGICSTAMP_DEBUG === '1') {
-    console.error(`[LogicStamp][DEBUG] ${moduleName}.${functionName} error:`, context);
+    console.error(
+      `[LogicStamp][DEBUG] ${moduleName}.${functionName} error:`,
+      context,
+    );
   }
 }
-

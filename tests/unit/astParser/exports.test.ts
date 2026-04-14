@@ -15,7 +15,25 @@ describe('AST Parser - Export Extraction', () => {
   afterEach(() => {
     // Clean up test files
     try {
-      const files = ['test.tsx', 'test.ts', 'default.tsx', 'named.tsx', 'mixed.tsx', 'class.tsx', 'variable.tsx', 'declaration.tsx', 'no-exports.tsx', 'empty.tsx', 'arrow-default.tsx', 'multi-default.tsx', 'sorted.tsx', 'typed.tsx', 'complex.tsx', 'malformed.tsx', 'types.ts'];
+      const files = [
+        'test.tsx',
+        'test.ts',
+        'default.tsx',
+        'named.tsx',
+        'mixed.tsx',
+        'class.tsx',
+        'variable.tsx',
+        'declaration.tsx',
+        'no-exports.tsx',
+        'empty.tsx',
+        'arrow-default.tsx',
+        'multi-default.tsx',
+        'sorted.tsx',
+        'typed.tsx',
+        'complex.tsx',
+        'malformed.tsx',
+        'types.ts',
+      ];
       for (const file of files) {
         const filePath = join(tempDir, file);
         try {
@@ -44,7 +62,9 @@ describe('AST Parser - Export Extraction', () => {
       const result = await extractFromFile(filePath);
 
       // Default export detection - may return 'default' or undefined if Component is not a function declaration
-      expect(result.exports === 'default' || result.exports === undefined).toBe(true);
+      expect(result.exports === 'default' || result.exports === undefined).toBe(
+        true,
+      );
       if (result.exportedFunctions) {
         expect(result.exportedFunctions).toContain('Component');
       }
@@ -111,7 +131,11 @@ describe('AST Parser - Export Extraction', () => {
       const result = await extractFromFile(filePath);
 
       // When both default and named exist, implementation may prioritize named
-      expect(result.exports === 'default' || result.exports === 'named' || (typeof result.exports === 'object' && result.exports.named)).toBe(true);
+      expect(
+        result.exports === 'default' ||
+          result.exports === 'named' ||
+          (typeof result.exports === 'object' && result.exports.named),
+      ).toBe(true);
       if (result.exportedFunctions) {
         expect(result.exportedFunctions).toContain('NamedComponent');
         // DefaultComponent may or may not be in exportedFunctions depending on implementation
@@ -195,7 +219,10 @@ describe('AST Parser - Export Extraction', () => {
 
       expect(result.exports).toBeUndefined();
       // exportedFunctions may be undefined or empty array
-      expect(result.exportedFunctions === undefined || result.exportedFunctions.length === 0).toBe(true);
+      expect(
+        result.exportedFunctions === undefined ||
+          result.exportedFunctions.length === 0,
+      ).toBe(true);
     });
 
     it('should handle empty file', async () => {
@@ -206,7 +233,10 @@ describe('AST Parser - Export Extraction', () => {
 
       expect(result.exports).toBeUndefined();
       // exportedFunctions may be undefined or empty array
-      expect(result.exportedFunctions === undefined || result.exportedFunctions.length === 0).toBe(true);
+      expect(
+        result.exportedFunctions === undefined ||
+          result.exportedFunctions.length === 0,
+      ).toBe(true);
     });
 
     it('should detect default export with arrow function', async () => {
@@ -223,7 +253,9 @@ describe('AST Parser - Export Extraction', () => {
       const result = await extractFromFile(filePath);
 
       // Default export detection - may return 'default' or undefined
-      expect(result.exports === 'default' || result.exports === undefined).toBe(true);
+      expect(result.exports === 'default' || result.exports === undefined).toBe(
+        true,
+      );
       if (result.exportedFunctions) {
         expect(result.exportedFunctions).toContain('Component');
       }
@@ -326,7 +358,11 @@ describe('AST Parser - Export Extraction', () => {
 
       // Should still extract what it can
       expect(result).toBeDefined();
-      expect(typeof result.exports === 'string' || typeof result.exports === 'object' || result.exports === undefined).toBe(true);
+      expect(
+        typeof result.exports === 'string' ||
+          typeof result.exports === 'object' ||
+          result.exports === undefined,
+      ).toBe(true);
     });
 
     it('should handle files with only type exports', async () => {
@@ -343,10 +379,12 @@ describe('AST Parser - Export Extraction', () => {
 
       // Type exports are not function exports
       // exportedFunctions may be undefined or empty array
-      expect(result.exportedFunctions === undefined || result.exportedFunctions.length === 0).toBe(true);
+      expect(
+        result.exportedFunctions === undefined ||
+          result.exportedFunctions.length === 0,
+      ).toBe(true);
       // Exports metadata might still be set if implementation tracks type exports
       // (This depends on implementation - types are not functions)
     });
   });
 });
-

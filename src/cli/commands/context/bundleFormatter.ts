@@ -10,7 +10,7 @@ import type { LogicStampBundle } from '../../../core/pack.js';
  */
 export function formatBundles(
   bundles: LogicStampBundle[],
-  format: 'json' | 'pretty' | 'ndjson' | 'toon'
+  format: 'json' | 'pretty' | 'ndjson' | 'toon',
 ): string {
   if (format === 'toon') {
     const bundlesWithPosition = bundles.map((b, idx) => ({
@@ -20,14 +20,16 @@ export function formatBundles(
     }));
     return encodeToon(bundlesWithPosition);
   } else if (format === 'ndjson') {
-    return bundles.map((b, idx) => {
-      const bundleWithSchema = {
-        $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
-        position: `${idx + 1}/${bundles.length}`,
-        ...b,
-      };
-      return JSON.stringify(bundleWithSchema);
-    }).join('\n');
+    return bundles
+      .map((b, idx) => {
+        const bundleWithSchema = {
+          $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
+          position: `${idx + 1}/${bundles.length}`,
+          ...b,
+        };
+        return JSON.stringify(bundleWithSchema);
+      })
+      .join('\n');
   } else if (format === 'json') {
     const bundlesWithPosition = bundles.map((b, idx) => ({
       $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
@@ -37,15 +39,17 @@ export function formatBundles(
     return JSON.stringify(bundlesWithPosition, null, 2);
   } else {
     // pretty format
-    return bundles.map((b, idx) => {
-      const bundleWithSchema = {
-        $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
-        position: `${idx + 1}/${bundles.length}`,
-        ...b,
-      };
-      const header = `\n# Bundle ${idx + 1}/${bundles.length}: ${b.entryId}`;
-      return header + '\n' + JSON.stringify(bundleWithSchema, null, 2);
-    }).join('\n\n');
+    return bundles
+      .map((b, idx) => {
+        const bundleWithSchema = {
+          $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
+          position: `${idx + 1}/${bundles.length}`,
+          ...b,
+        };
+        const header = `\n# Bundle ${idx + 1}/${bundles.length}: ${b.entryId}`;
+        return header + '\n' + JSON.stringify(bundleWithSchema, null, 2);
+      })
+      .join('\n\n');
   }
 }
 
@@ -55,7 +59,7 @@ export function formatBundles(
 export function createBundleWithSchema(
   bundle: LogicStampBundle,
   index: number,
-  total: number
+  total: number,
 ): LogicStampBundle & { $schema: string; position: string } {
   return {
     $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
@@ -69,8 +73,7 @@ export function createBundleWithSchema(
  */
 export function formatBundlesForFolder(
   folderBundles: LogicStampBundle[],
-  format: 'json' | 'pretty' | 'ndjson' | 'toon'
+  format: 'json' | 'pretty' | 'ndjson' | 'toon',
 ): string {
   return formatBundles(folderBundles, format);
 }
-

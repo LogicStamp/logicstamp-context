@@ -2,32 +2,101 @@
  * Material UI extractor - Extracts Material UI component library usage
  */
 
-import { SourceFile, SyntaxKind, JsxAttribute, JsxElement, JsxSelfClosingElement } from 'ts-morph';
+import {
+  type SourceFile,
+  SyntaxKind,
+  type JsxAttribute,
+  type JsxElement,
+  type JsxSelfClosingElement,
+} from 'ts-morph';
 import { debugError } from '../../utils/debug.js';
 
 /**
  * Common Material UI component names
  */
 const MUI_COMPONENTS = [
-  'Accordion', 'Alert', 'AppBar', 'Autocomplete', 'Avatar', 'Backdrop', 'Badge', 'BottomNavigation',
-  'Box', 'Breadcrumbs', 'Button', 'ButtonGroup', 'Card', 'Checkbox', 'Chip', 'CircularProgress',
-  'Container', 'CssBaseline', 'Dialog', 'Divider', 'Drawer', 'Fab', 'FormControl', 'FormGroup',
-  'FormLabel', 'Grid', 'Icon', 'IconButton', 'Input', 'InputAdornment', 'InputBase', 'InputLabel',
-  'LinearProgress', 'Link', 'List', 'ListItem', 'ListItemButton', 'ListItemIcon', 'ListItemText',
-  'Menu', 'MenuItem', 'MobileStepper', 'Modal', 'NativeSelect', 'Pagination', 'Paper', 'Popover',
-  'Popper', 'Radio', 'RadioGroup', 'Rating', 'Select', 'Skeleton', 'Slider', 'Snackbar',
-  'SpeedDial', 'Stack', 'Stepper', 'Switch', 'Tab', 'Table', 'TableBody', 'TableCell',
-  'TableContainer', 'TableFooter', 'TableHead', 'TablePagination', 'TableRow', 'Tabs', 'TextField',
-  'ToggleButton', 'ToggleButtonGroup', 'Toolbar', 'Tooltip', 'Typography', 'Zoom',
+  'Accordion',
+  'Alert',
+  'AppBar',
+  'Autocomplete',
+  'Avatar',
+  'Backdrop',
+  'Badge',
+  'BottomNavigation',
+  'Box',
+  'Breadcrumbs',
+  'Button',
+  'ButtonGroup',
+  'Card',
+  'Checkbox',
+  'Chip',
+  'CircularProgress',
+  'Container',
+  'CssBaseline',
+  'Dialog',
+  'Divider',
+  'Drawer',
+  'Fab',
+  'FormControl',
+  'FormGroup',
+  'FormLabel',
+  'Grid',
+  'Icon',
+  'IconButton',
+  'Input',
+  'InputAdornment',
+  'InputBase',
+  'InputLabel',
+  'LinearProgress',
+  'Link',
+  'List',
+  'ListItem',
+  'ListItemButton',
+  'ListItemIcon',
+  'ListItemText',
+  'Menu',
+  'MenuItem',
+  'MobileStepper',
+  'Modal',
+  'NativeSelect',
+  'Pagination',
+  'Paper',
+  'Popover',
+  'Popper',
+  'Radio',
+  'RadioGroup',
+  'Rating',
+  'Select',
+  'Skeleton',
+  'Slider',
+  'Snackbar',
+  'SpeedDial',
+  'Stack',
+  'Stepper',
+  'Switch',
+  'Tab',
+  'Table',
+  'TableBody',
+  'TableCell',
+  'TableContainer',
+  'TableFooter',
+  'TableHead',
+  'TablePagination',
+  'TableRow',
+  'Tabs',
+  'TextField',
+  'ToggleButton',
+  'ToggleButtonGroup',
+  'Toolbar',
+  'Tooltip',
+  'Typography',
+  'Zoom',
 ];
 
 /**
  * Material UI package patterns
  */
-const MUI_PACKAGE_PATTERNS = [
-  /^@mui\//,
-  /^@material-ui\//,
-];
+const MUI_PACKAGE_PATTERNS = [/^@mui\//, /^@material-ui\//];
 
 /**
  * Extract Material UI usage from a source file
@@ -50,7 +119,9 @@ export function extractMaterialUI(source: SourceFile): {
     const localToMui = new Map<string, string>(); // local alias → canonical MUI component
 
     // Cache import declarations for reuse across multiple checks
-    let importDeclarations = [] as ReturnType<SourceFile['getImportDeclarations']>;
+    let importDeclarations = [] as ReturnType<
+      SourceFile['getImportDeclarations']
+    >;
     try {
       importDeclarations = source.getImportDeclarations();
     } catch (error) {
@@ -63,24 +134,29 @@ export function extractMaterialUI(source: SourceFile): {
 
     // Check for Material UI imports
     try {
-      importDeclarations.forEach(imp => {
+      importDeclarations.forEach((imp) => {
         const moduleSpecifier = imp.getModuleSpecifierValue();
 
         // Check if it's a Material UI package
-        const isMuiPackage = MUI_PACKAGE_PATTERNS.some(pattern => pattern.test(moduleSpecifier));
+        const isMuiPackage = MUI_PACKAGE_PATTERNS.some((pattern) =>
+          pattern.test(moduleSpecifier),
+        );
 
         if (isMuiPackage) {
           packages.add(moduleSpecifier);
 
           // Extract component names from imports (including aliases)
           const namedImports = imp.getNamedImports();
-          namedImports.forEach(namedImport => {
+          namedImports.forEach((namedImport) => {
             const importName = namedImport.getName(); // canonical name
             const aliasNode = namedImport.getAliasNode();
             const localName = aliasNode?.getText() ?? importName; // local alias or original
 
             if (MUI_COMPONENTS.includes(importName)) {
-              componentCounts.set(importName, (componentCounts.get(importName) ?? 0) + 1);
+              componentCounts.set(
+                importName,
+                (componentCounts.get(importName) ?? 0) + 1,
+              );
               localToMui.set(localName, importName);
               localToMui.set(importName, importName); // self-map
             }
@@ -95,15 +171,21 @@ export function extractMaterialUI(source: SourceFile): {
             // e.g., "@mui/material/Button" -> "Button"
             const pathSegments = moduleSpecifier.split('/');
             const canonicalName = pathSegments[pathSegments.length - 1];
-            
+
             if (MUI_COMPONENTS.includes(canonicalName)) {
-              componentCounts.set(canonicalName, (componentCounts.get(canonicalName) ?? 0) + 1);
+              componentCounts.set(
+                canonicalName,
+                (componentCounts.get(canonicalName) ?? 0) + 1,
+              );
               localToMui.set(aliasName, canonicalName);
               localToMui.set(canonicalName, canonicalName); // self-map
             }
             // Fallback: check if alias itself is a known component
             else if (MUI_COMPONENTS.includes(aliasName)) {
-              componentCounts.set(aliasName, (componentCounts.get(aliasName) ?? 0) + 1);
+              componentCounts.set(
+                aliasName,
+                (componentCounts.get(aliasName) ?? 0) + 1,
+              );
               localToMui.set(aliasName, aliasName);
             }
           }
@@ -137,22 +219,24 @@ export function extractMaterialUI(source: SourceFile): {
     if (hasMuiImports) {
       try {
         for (const element of jsxElements) {
-          const openingElement = 'getOpeningElement' in element
-            ? element.getOpeningElement()
-            : element;
+          const openingElement =
+            'getOpeningElement' in element
+              ? element.getOpeningElement()
+              : element;
 
           const rawTag = openingElement.getTagNameNode().getText();
 
           // Handle namespace tags like <Box.Root> or <Grid.Item>
-          const baseTag = rawTag.includes('.')
-            ? rawTag.split('.')[0]
-            : rawTag;
+          const baseTag = rawTag.includes('.') ? rawTag.split('.')[0] : rawTag;
 
           // Map local alias back to canonical MUI component name
           const componentName = localToMui.get(baseTag) ?? baseTag;
 
           if (MUI_COMPONENTS.includes(componentName)) {
-            componentCounts.set(componentName, (componentCounts.get(componentName) ?? 0) + 1);
+            componentCounts.set(
+              componentName,
+              (componentCounts.get(componentName) ?? 0) + 1,
+            );
           }
         }
       } catch (error) {
@@ -170,27 +254,38 @@ export function extractMaterialUI(source: SourceFile): {
     let usesTheme = false;
     try {
       usesTheme =
-        source.getDescendantsOfKind(SyntaxKind.CallExpression).some(callExpr => {
-          const expr = callExpr.getExpression();
-          if (expr.getKind() !== SyntaxKind.Identifier) return false;
-          const name = expr.getText();
-          return name === 'useTheme' || name === 'createTheme';
-        }) ||
-        importDeclarations.some(imp => {
+        source
+          .getDescendantsOfKind(SyntaxKind.CallExpression)
+          .some((callExpr) => {
+            const expr = callExpr.getExpression();
+            if (expr.getKind() !== SyntaxKind.Identifier) return false;
+            const name = expr.getText();
+            return name === 'useTheme' || name === 'createTheme';
+          }) ||
+        importDeclarations.some((imp) => {
           // Named ThemeProvider import from any MUI package
-          return imp.getNamedImports().some(n => n.getName() === 'ThemeProvider');
+          return imp
+            .getNamedImports()
+            .some((n) => n.getName() === 'ThemeProvider');
         }) ||
         // theme.property access
-        source.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression).some(propAccess => {
-          const expr = propAccess.getExpression();
-          return expr.getKind() === SyntaxKind.Identifier && expr.getText() === 'theme';
-        }) ||
+        source
+          .getDescendantsOfKind(SyntaxKind.PropertyAccessExpression)
+          .some((propAccess) => {
+            const expr = propAccess.getExpression();
+            return (
+              expr.getKind() === SyntaxKind.Identifier &&
+              expr.getText() === 'theme'
+            );
+          }) ||
         // theme usage in tagged template literals (styled, emotion, etc.)
-        source.getDescendantsOfKind(SyntaxKind.TaggedTemplateExpression).some(taggedTemplate => {
-          const template = taggedTemplate.getTemplate();
-          const text = template.getText();
-          return /theme\./.test(text);
-        });
+        source
+          .getDescendantsOfKind(SyntaxKind.TaggedTemplateExpression)
+          .some((taggedTemplate) => {
+            const template = taggedTemplate.getTemplate();
+            const text = template.getText();
+            return /theme\./.test(text);
+          });
     } catch (error) {
       debugError('material', 'extractMaterialUI', {
         error: error instanceof Error ? error.message : String(error),
@@ -204,7 +299,7 @@ export function extractMaterialUI(source: SourceFile): {
     try {
       usesSxProp =
         usesMui &&
-        source.getDescendantsOfKind(SyntaxKind.JsxAttribute).some(attr => {
+        source.getDescendantsOfKind(SyntaxKind.JsxAttribute).some((attr) => {
           const jsxAttr = attr as JsxAttribute;
           const attrName = jsxAttr.getNameNode().getText();
           return attrName === 'sx';
@@ -221,7 +316,7 @@ export function extractMaterialUI(source: SourceFile): {
     let usesStyled = false;
     try {
       usesStyled =
-        importDeclarations.some(imp => {
+        importDeclarations.some((imp) => {
           const mod = imp.getModuleSpecifierValue();
           const isMuiStyles = [
             '@mui/material/styles',
@@ -234,16 +329,22 @@ export function extractMaterialUI(source: SourceFile): {
           if (!isMuiStyles) return false;
 
           // styled as named or default import
-          if (imp.getNamedImports().some(n => n.getName() === 'styled')) return true;
+          if (imp.getNamedImports().some((n) => n.getName() === 'styled'))
+            return true;
           const def = imp.getDefaultImport();
           return def?.getText() === 'styled';
         }) ||
         // fallback: call expression named styled, but only if we know MUI is present
         (usesMui &&
-          source.getDescendantsOfKind(SyntaxKind.CallExpression).some(callExpr => {
-            const expr = callExpr.getExpression();
-            return expr.getKind() === SyntaxKind.Identifier && expr.getText() === 'styled';
-          }));
+          source
+            .getDescendantsOfKind(SyntaxKind.CallExpression)
+            .some((callExpr) => {
+              const expr = callExpr.getExpression();
+              return (
+                expr.getKind() === SyntaxKind.Identifier &&
+                expr.getText() === 'styled'
+              );
+            }));
     } catch (error) {
       debugError('material', 'extractMaterialUI', {
         error: error instanceof Error ? error.message : String(error),
@@ -256,11 +357,16 @@ export function extractMaterialUI(source: SourceFile): {
     let usesMakeStyles = false;
     try {
       usesMakeStyles =
-        source.getDescendantsOfKind(SyntaxKind.CallExpression).some(callExpr => {
-          const expr = callExpr.getExpression();
-          return expr.getKind() === SyntaxKind.Identifier && expr.getText() === 'makeStyles';
-        }) ||
-        importDeclarations.some(imp => {
+        source
+          .getDescendantsOfKind(SyntaxKind.CallExpression)
+          .some((callExpr) => {
+            const expr = callExpr.getExpression();
+            return (
+              expr.getKind() === SyntaxKind.Identifier &&
+              expr.getText() === 'makeStyles'
+            );
+          }) ||
+        importDeclarations.some((imp) => {
           const mod = imp.getModuleSpecifierValue();
           return mod === '@mui/styles' || mod === '@material-ui/styles';
         });
@@ -274,18 +380,34 @@ export function extractMaterialUI(source: SourceFile): {
 
     // Check for system props (spacing, color, etc. on Box/Stack components) using AST
     const systemProps = [
-      'spacing', 'color', 'bgcolor', 'p', 'm', 'px', 'py', 'mx', 'my',
-      'pt', 'pb', 'pl', 'pr', 'mt', 'mb', 'ml', 'mr',
+      'spacing',
+      'color',
+      'bgcolor',
+      'p',
+      'm',
+      'px',
+      'py',
+      'mx',
+      'my',
+      'pt',
+      'pb',
+      'pl',
+      'pr',
+      'mt',
+      'mb',
+      'ml',
+      'mr',
     ];
 
     let usesSystemProps = false;
     try {
       usesSystemProps =
         usesMui &&
-        jsxElements.some(element => {
-          const openingElement = 'getOpeningElement' in element
-            ? element.getOpeningElement()
-            : element;
+        jsxElements.some((element) => {
+          const openingElement =
+            'getOpeningElement' in element
+              ? element.getOpeningElement()
+              : element;
 
           const rawTag = openingElement.getTagNameNode().getText();
           const baseTag = rawTag.includes('.') ? rawTag.split('.')[0] : rawTag;
@@ -317,7 +439,7 @@ export function extractMaterialUI(source: SourceFile): {
       components = Array.from(componentCounts.entries())
         .sort((a, b) => {
           if (b[1] !== a[1]) return b[1] - a[1]; // by count desc
-          return a[0].localeCompare(b[0]);       // then alpha
+          return a[0].localeCompare(b[0]); // then alpha
         })
         .slice(0, 20)
         .map(([name]) => name);

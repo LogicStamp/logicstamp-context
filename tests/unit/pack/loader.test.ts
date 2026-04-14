@@ -157,7 +157,12 @@ describe('Loader Module', () => {
   });
 
   describe('extractCodeHeader', () => {
-    const testDir = join(process.cwd(), 'tests', 'fixtures', 'loader-test-temp');
+    const testDir = join(
+      process.cwd(),
+      'tests',
+      'fixtures',
+      'loader-test-temp',
+    );
     const testFile = join(testDir, 'test-file.ts');
 
     beforeEach(async () => {
@@ -215,7 +220,12 @@ export function TestComponent() {
   });
 
   describe('readSourceCode', () => {
-    const testDir = join(process.cwd(), 'tests', 'fixtures', 'loader-test-temp');
+    const testDir = join(
+      process.cwd(),
+      'tests',
+      'fixtures',
+      'loader-test-temp',
+    );
     const testFile = join(testDir, 'test-file.ts');
 
     beforeEach(async () => {
@@ -261,19 +271,31 @@ export function TestComponent() {
       expect(typeof result).toBe('object');
       expect('code' in result).toBe(true);
       // sanitizeInfo is optional
-      expect(result.sanitizeInfo === undefined || typeof result.sanitizeInfo === 'object').toBe(true);
+      expect(
+        result.sanitizeInfo === undefined ||
+          typeof result.sanitizeInfo === 'object',
+      ).toBe(true);
     });
   });
 
   describe('loadContract Schema Validation', () => {
-    const testDir = join(process.cwd(), 'tests', 'fixtures', 'loader-contract-temp');
+    const testDir = join(
+      process.cwd(),
+      'tests',
+      'fixtures',
+      'loader-contract-temp',
+    );
     const testFile = join(testDir, 'Button.tsx');
     const sidecarFile = join(testDir, 'Button.tsx.uif.json');
 
     beforeEach(async () => {
       await mkdir(testDir, { recursive: true });
       // Create a dummy source file
-      await writeFile(testFile, 'export function Button() { return <button />; }', 'utf8');
+      await writeFile(
+        testFile,
+        'export function Button() { return <button />; }',
+        'utf8',
+      );
     });
 
     afterEach(async () => {
@@ -425,7 +447,12 @@ export function TestComponent() {
   });
 
   describe('Path Traversal Protection', () => {
-    const testDir = join(process.cwd(), 'tests', 'fixtures', 'loader-test-temp');
+    const testDir = join(
+      process.cwd(),
+      'tests',
+      'fixtures',
+      'loader-test-temp',
+    );
     const subDir = join(testDir, 'subdir');
     const testFile = join(subDir, 'test-file.ts');
 
@@ -449,7 +476,10 @@ export function TestComponent() {
       });
 
       it('should reject paths with multiple ../ sequences', async () => {
-        const result = await loadContract('subdir/../../outside/file.ts', testDir);
+        const result = await loadContract(
+          'subdir/../../outside/file.ts',
+          testDir,
+        );
         expect(result).toBeNull();
       });
 
@@ -469,16 +499,26 @@ export function TestComponent() {
       });
 
       it('should reject paths that escape project root', async () => {
-        const result = await extractCodeHeader('subdir/../../../outside.ts', testDir);
+        const result = await extractCodeHeader(
+          'subdir/../../../outside.ts',
+          testDir,
+        );
         expect(result.header).toBeNull();
       });
 
       it('should allow valid paths within project', async () => {
         // Create a file with @uif header
         const fileWithHeader = join(subDir, 'with-header.ts');
-        await writeFile(fileWithHeader, '/**\n * @uif Test\n */\nexport const x = 1;', 'utf8');
+        await writeFile(
+          fileWithHeader,
+          '/**\n * @uif Test\n */\nexport const x = 1;',
+          'utf8',
+        );
 
-        const result = await extractCodeHeader('subdir/with-header.ts', testDir);
+        const result = await extractCodeHeader(
+          'subdir/with-header.ts',
+          testDir,
+        );
         expect(result.header).toContain('@uif');
       });
     });
@@ -490,7 +530,10 @@ export function TestComponent() {
       });
 
       it('should reject paths that escape project root', async () => {
-        const result = await readSourceCode('foo/../../bar/../../../outside.ts', testDir);
+        const result = await readSourceCode(
+          'foo/../../bar/../../../outside.ts',
+          testDir,
+        );
         expect(result.code).toBeNull();
       });
 
@@ -501,7 +544,10 @@ export function TestComponent() {
 
       it('should allow paths with ../ that stay within project', async () => {
         // subdir/../subdir/test-file.ts resolves to subdir/test-file.ts which is valid
-        const result = await readSourceCode('subdir/../subdir/test-file.ts', testDir);
+        const result = await readSourceCode(
+          'subdir/../subdir/test-file.ts',
+          testDir,
+        );
         expect(result.code).toBe('export const x = 1;');
       });
     });

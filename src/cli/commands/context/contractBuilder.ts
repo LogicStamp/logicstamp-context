@@ -30,7 +30,7 @@ export async function buildContractsFromFiles(
     styleMode?: 'lean' | 'full';
     predictBehavior: boolean;
     quiet?: boolean;
-  }
+  },
 ): Promise<BuildContractsResult> {
   const contracts: UIFContract[] = [];
   let analyzed = 0;
@@ -51,8 +51,10 @@ export async function buildContractsFromFiles(
   for (const file of files) {
     try {
       // Resolve relative path to absolute for file operations
-      const absoluteFilePath = isAbsolute(file) ? file : join(projectRoot, file);
-      
+      const absoluteFilePath = isAbsolute(file)
+        ? file
+        : join(projectRoot, file);
+
       // Extract AST from file
       const ast = await extractFromFile(absoluteFilePath);
 
@@ -65,7 +67,11 @@ export async function buildContractsFromFiles(
       if (options.includeStyle && styleProject) {
         try {
           const sourceFile = styleProject.addSourceFileAtPath(absoluteFilePath);
-          styleMetadata = await extractStyleMetadata(sourceFile, absoluteFilePath, options.styleMode ?? 'lean');
+          styleMetadata = await extractStyleMetadata(
+            sourceFile,
+            absoluteFilePath,
+            options.styleMode ?? 'lean',
+          );
         } catch (styleError) {
           // Style extraction is optional - don't fail if it errors
           if (!options.quiet) {
@@ -100,4 +106,3 @@ export async function buildContractsFromFiles(
     totalSourceSize,
   };
 }
-

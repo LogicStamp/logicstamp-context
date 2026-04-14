@@ -42,7 +42,7 @@ describe('stampignore utilities', () => {
       const config: StampIgnoreConfig = { ignore: ['src/secrets.ts'] };
       await writeFile(
         join(testDir, STAMPIGNORE_FILENAME),
-        JSON.stringify(config, null, 2)
+        JSON.stringify(config, null, 2),
       );
       const exists = await stampignoreExists(testDir);
       expect(exists).toBe(true);
@@ -61,7 +61,7 @@ describe('stampignore utilities', () => {
       };
       await writeFile(
         join(testDir, STAMPIGNORE_FILENAME),
-        JSON.stringify(expectedConfig, null, 2)
+        JSON.stringify(expectedConfig, null, 2),
       );
 
       const config = await readStampignore(testDir);
@@ -88,7 +88,7 @@ describe('stampignore utilities', () => {
     it('should return null when ignore is not an array', async () => {
       await writeFile(
         join(testDir, STAMPIGNORE_FILENAME),
-        JSON.stringify({ ignore: 'not an array' })
+        JSON.stringify({ ignore: 'not an array' }),
       );
 
       const config = await readStampignore(testDir);
@@ -98,7 +98,7 @@ describe('stampignore utilities', () => {
     it('should return null when ignore property is missing', async () => {
       await writeFile(
         join(testDir, STAMPIGNORE_FILENAME),
-        JSON.stringify({ otherProperty: 'value' })
+        JSON.stringify({ otherProperty: 'value' }),
       );
 
       const config = await readStampignore(testDir);
@@ -109,7 +109,7 @@ describe('stampignore utilities', () => {
       const expectedConfig: StampIgnoreConfig = { ignore: [] };
       await writeFile(
         join(testDir, STAMPIGNORE_FILENAME),
-        JSON.stringify(expectedConfig, null, 2)
+        JSON.stringify(expectedConfig, null, 2),
       );
 
       const config = await readStampignore(testDir);
@@ -125,7 +125,10 @@ describe('stampignore utilities', () => {
       };
       await writeStampignore(testDir, config);
 
-      const written = await readFile(join(testDir, STAMPIGNORE_FILENAME), 'utf-8');
+      const written = await readFile(
+        join(testDir, STAMPIGNORE_FILENAME),
+        'utf-8',
+      );
       const parsed = JSON.parse(written);
       expect(parsed).toEqual(config);
     });
@@ -134,7 +137,10 @@ describe('stampignore utilities', () => {
       const config: StampIgnoreConfig = { ignore: ['test.ts'] };
       await writeStampignore(testDir, config);
 
-      const written = await readFile(join(testDir, STAMPIGNORE_FILENAME), 'utf-8');
+      const written = await readFile(
+        join(testDir, STAMPIGNORE_FILENAME),
+        'utf-8',
+      );
       // Should have newlines and spaces (pretty-printed)
       expect(written).toContain('\n');
       expect(written).toContain('  '); // 2-space indent
@@ -146,7 +152,10 @@ describe('stampignore utilities', () => {
       const config: StampIgnoreConfig = { ignore: [] };
       await writeStampignore(testDir, config);
 
-      const written = await readFile(join(testDir, STAMPIGNORE_FILENAME), 'utf-8');
+      const written = await readFile(
+        join(testDir, STAMPIGNORE_FILENAME),
+        'utf-8',
+      );
       const parsed = JSON.parse(written);
       expect(parsed).toEqual(config);
     });
@@ -170,7 +179,7 @@ describe('stampignore utilities', () => {
       };
       await writeFile(
         join(testDir, STAMPIGNORE_FILENAME),
-        JSON.stringify(initialConfig, null, 2)
+        JSON.stringify(initialConfig, null, 2),
       );
 
       const result = await addToStampignore(testDir, ['src/secrets.ts']);
@@ -189,7 +198,7 @@ describe('stampignore utilities', () => {
       };
       await writeFile(
         join(testDir, STAMPIGNORE_FILENAME),
-        JSON.stringify(initialConfig, null, 2)
+        JSON.stringify(initialConfig, null, 2),
       );
 
       const result = await addToStampignore(testDir, ['src/secrets.ts']);
@@ -198,7 +207,9 @@ describe('stampignore utilities', () => {
       expect(result.created).toBe(false);
 
       const config = await readStampignore(testDir);
-      const secretsCount = config?.ignore.filter((p) => p === 'src/secrets.ts').length;
+      const secretsCount = config?.ignore.filter(
+        (p) => p === 'src/secrets.ts',
+      ).length;
       expect(secretsCount).toBe(1);
     });
 
@@ -256,7 +267,7 @@ describe('stampignore utilities', () => {
       };
       await writeFile(
         join(testDir, STAMPIGNORE_FILENAME),
-        JSON.stringify(initialConfig, null, 2)
+        JSON.stringify(initialConfig, null, 2),
       );
 
       const result = await addToStampignore(testDir, [
@@ -274,7 +285,7 @@ describe('stampignore utilities', () => {
       };
       await writeFile(
         join(testDir, STAMPIGNORE_FILENAME),
-        JSON.stringify(initialConfig, null, 2)
+        JSON.stringify(initialConfig, null, 2),
       );
 
       const result = await addToStampignore(testDir, [
@@ -328,13 +339,17 @@ describe('stampignore utilities', () => {
       const patterns = ['**/secrets.ts'];
       const filePath = resolve(projectRoot, 'src/nested/secrets.ts');
       const result = matchesIgnorePattern(filePath, patterns, projectRoot);
-      
+
       // The ** pattern should ideally match, but if there are implementation
       // limitations with path normalization, verify that alternative patterns work
       // For now, test that a nested path pattern works as an alternative
       const alternativePattern = ['src/**/*.ts'];
-      const alternativeResult = matchesIgnorePattern(filePath, alternativePattern, projectRoot);
-      
+      const alternativeResult = matchesIgnorePattern(
+        filePath,
+        alternativePattern,
+        projectRoot,
+      );
+
       // At least one pattern should match
       expect(result || alternativeResult).toBe(true);
     });
@@ -492,7 +507,7 @@ describe('stampignore utilities', () => {
       const config: StampIgnoreConfig = { ignore: ['src/secrets.ts'] };
       await writeFile(
         join(testDir, STAMPIGNORE_FILENAME),
-        JSON.stringify(config, null, 2)
+        JSON.stringify(config, null, 2),
       );
 
       const existsBefore = await stampignoreExists(testDir);
@@ -509,7 +524,7 @@ describe('stampignore utilities', () => {
       const config: StampIgnoreConfig = { ignore: ['test.ts'] };
       await writeFile(
         join(testDir, STAMPIGNORE_FILENAME),
-        JSON.stringify(config, null, 2)
+        JSON.stringify(config, null, 2),
       );
 
       const deleted = await deleteStampignore(testDir);
@@ -526,4 +541,3 @@ describe('stampignore utilities', () => {
     });
   });
 });
-

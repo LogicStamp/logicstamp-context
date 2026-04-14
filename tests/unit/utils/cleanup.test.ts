@@ -59,9 +59,27 @@ describe('cleanup utilities', () => {
     it('should sort handlers by priority (lower first)', async () => {
       const executionOrder: number[] = [];
 
-      registerCleanup('high-priority', () => { executionOrder.push(1); }, 1);
-      registerCleanup('low-priority', () => { executionOrder.push(3); }, 30);
-      registerCleanup('medium-priority', () => { executionOrder.push(2); }, 10);
+      registerCleanup(
+        'high-priority',
+        () => {
+          executionOrder.push(1);
+        },
+        1,
+      );
+      registerCleanup(
+        'low-priority',
+        () => {
+          executionOrder.push(3);
+        },
+        30,
+      );
+      registerCleanup(
+        'medium-priority',
+        () => {
+          executionOrder.push(2);
+        },
+        10,
+      );
 
       // Verify handlers are registered
       expect(getCleanupHandlerCount()).toBe(3);
@@ -84,9 +102,23 @@ describe('cleanup utilities', () => {
     it('should use default priority of 10', () => {
       const executionOrder: number[] = [];
 
-      registerCleanup('default-priority', () => { executionOrder.push(2); }); // default 10
-      registerCleanup('high-priority', () => { executionOrder.push(1); }, 5);
-      registerCleanup('low-priority', () => { executionOrder.push(3); }, 15);
+      registerCleanup('default-priority', () => {
+        executionOrder.push(2);
+      }); // default 10
+      registerCleanup(
+        'high-priority',
+        () => {
+          executionOrder.push(1);
+        },
+        5,
+      );
+      registerCleanup(
+        'low-priority',
+        () => {
+          executionOrder.push(3);
+        },
+        15,
+      );
 
       const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
         throw new Error('EXIT_CALLED');
@@ -160,23 +192,37 @@ describe('cleanup utilities', () => {
     it('should continue running handlers even if one throws', async () => {
       const executionOrder: string[] = [];
 
-      registerCleanup('handler-1', () => {
-        executionOrder.push('handler-1');
-      }, 1);
+      registerCleanup(
+        'handler-1',
+        () => {
+          executionOrder.push('handler-1');
+        },
+        1,
+      );
 
-      registerCleanup('handler-2-throws', () => {
-        executionOrder.push('handler-2-throws');
-        throw new Error('Handler 2 failed!');
-      }, 2);
+      registerCleanup(
+        'handler-2-throws',
+        () => {
+          executionOrder.push('handler-2-throws');
+          throw new Error('Handler 2 failed!');
+        },
+        2,
+      );
 
-      registerCleanup('handler-3', () => {
-        executionOrder.push('handler-3');
-      }, 3);
+      registerCleanup(
+        'handler-3',
+        () => {
+          executionOrder.push('handler-3');
+        },
+        3,
+      );
 
       const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
         throw new Error('EXIT_CALLED');
       });
-      const mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const mockConsoleError = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       try {
         await gracefulShutdown(1);
@@ -185,10 +231,14 @@ describe('cleanup utilities', () => {
       }
 
       // All handlers should have been called despite handler-2 throwing
-      expect(executionOrder).toEqual(['handler-1', 'handler-2-throws', 'handler-3']);
+      expect(executionOrder).toEqual([
+        'handler-1',
+        'handler-2-throws',
+        'handler-3',
+      ]);
       expect(mockConsoleError).toHaveBeenCalledWith(
         'Cleanup error (handler-2-throws):',
-        'Handler 2 failed!'
+        'Handler 2 failed!',
       );
       expect(mockExit).toHaveBeenCalledWith(1);
 
@@ -215,7 +265,9 @@ describe('cleanup utilities', () => {
       const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
         throw new Error('EXIT_CALLED');
       });
-      const mockConsoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const mockConsoleError = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       try {
         await gracefulShutdown(1, 'Shutting down...');
@@ -232,15 +284,23 @@ describe('cleanup utilities', () => {
     it('should handle async handlers', async () => {
       const executionOrder: number[] = [];
 
-      registerCleanup('async-handler-1', async () => {
-        await new Promise(resolve => setTimeout(resolve, 10));
-        executionOrder.push(1);
-      }, 1);
+      registerCleanup(
+        'async-handler-1',
+        async () => {
+          await new Promise((resolve) => setTimeout(resolve, 10));
+          executionOrder.push(1);
+        },
+        1,
+      );
 
-      registerCleanup('async-handler-2', async () => {
-        await new Promise(resolve => setTimeout(resolve, 5));
-        executionOrder.push(2);
-      }, 2);
+      registerCleanup(
+        'async-handler-2',
+        async () => {
+          await new Promise((resolve) => setTimeout(resolve, 5));
+          executionOrder.push(2);
+        },
+        2,
+      );
 
       const mockExit = vi.spyOn(process, 'exit').mockImplementation(() => {
         throw new Error('EXIT_CALLED');
@@ -273,7 +333,10 @@ describe('cleanup utilities', () => {
 
     beforeEach(async () => {
       // Create a temp directory for test files
-      testDir = join(tmpdir(), `cleanup-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+      testDir = join(
+        tmpdir(),
+        `cleanup-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      );
       mkdirSync(testDir, { recursive: true });
 
       // Reset modules to get fresh state
@@ -281,12 +344,14 @@ describe('cleanup utilities', () => {
 
       // Capture the exit handler when it's registered
       exitHandler = null;
-      vi.spyOn(process, 'on').mockImplementation((event: string | symbol, handler: (...args: unknown[]) => void) => {
-        if (event === 'exit') {
-          exitHandler = handler as () => void;
-        }
-        return process;
-      });
+      vi.spyOn(process, 'on').mockImplementation(
+        (event: string | symbol, handler: (...args: unknown[]) => void) => {
+          if (event === 'exit') {
+            exitHandler = handler as () => void;
+          }
+          return process;
+        },
+      );
 
       // Import fresh module after mocking
       cleanupModule = await import('../../../src/utils/cleanup.js');

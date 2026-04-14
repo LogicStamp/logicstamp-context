@@ -2,7 +2,11 @@
  * Config Manager - Handles configuration and setup tasks
  */
 
-import { readConfig, configExists, writeConfig } from '../../../utils/config.js';
+import {
+  readConfig,
+  configExists,
+  writeConfig,
+} from '../../../utils/config.js';
 import { smartGitignoreSetup } from '../../../utils/gitignore.js';
 import { smartLLMContextSetup } from '../../../utils/llmContext.js';
 
@@ -11,16 +15,18 @@ import { smartLLMContextSetup } from '../../../utils/llmContext.js';
  */
 export async function ensureConfigExists(
   projectRoot: string,
-  options: { quiet?: boolean }
+  options: { quiet?: boolean },
 ): Promise<void> {
   try {
-    if (!await configExists(projectRoot)) {
+    if (!(await configExists(projectRoot))) {
       await writeConfig(projectRoot, {
         gitignorePreference: 'skipped',
         llmContextPreference: 'skipped',
       });
       if (!options.quiet) {
-        console.log('\n💡 No LogicStamp config found – created .logicstamp/config.json with safe defaults (no .gitignore changes).');
+        console.log(
+          '\n💡 No LogicStamp config found – created .logicstamp/config.json with safe defaults (no .gitignore changes).',
+        );
         console.log('   Run `stamp init` to customize behavior.\n');
       }
     }
@@ -37,12 +43,12 @@ export async function setupGitignore(
   options: {
     skipGitignore?: boolean;
     quiet?: boolean;
-  }
+  },
 ): Promise<void> {
   try {
     const config = await readConfig(projectRoot);
-    const shouldSkipGitignore = 
-      options.skipGitignore || 
+    const shouldSkipGitignore =
+      options.skipGitignore ||
       config.gitignorePreference === 'skipped' ||
       !config.gitignorePreference; // default to skip if no preference
 
@@ -69,7 +75,7 @@ export async function setupGitignore(
  */
 export async function setupLLMContext(
   projectRoot: string,
-  options: { quiet?: boolean }
+  options: { quiet?: boolean },
 ): Promise<void> {
   try {
     const { added } = await smartLLMContextSetup(projectRoot);
@@ -82,4 +88,3 @@ export async function setupLLMContext(
     // Silently ignore LLM_CONTEXT.md errors - not critical to context compilation
   }
 }
-

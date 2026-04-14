@@ -64,7 +64,10 @@ describe('watchDiff', () => {
       const contract = createMockContract('src/components/Button.tsx');
       const bundle = createMockBundle('src/components/Button.tsx', [contract]);
 
-      const result = getContractFromBundles([bundle], 'src\\components\\Button.tsx');
+      const result = getContractFromBundles(
+        [bundle],
+        'src\\components\\Button.tsx',
+      );
 
       expect(result).not.toBeNull();
       expect(result?.entryId).toBe('src/components/Button.tsx');
@@ -282,7 +285,12 @@ describe('watchDiff', () => {
       const newContract = createMockContract('src/Button.tsx', {
         interface: {
           props: {},
-          emits: { onClick: { type: 'function', signature: '(event: MouseEvent) => void' } },
+          emits: {
+            onClick: {
+              type: 'function',
+              signature: '(event: MouseEvent) => void',
+            },
+          },
         },
       });
 
@@ -346,8 +354,11 @@ describe('watchDiff', () => {
     it('should handle undefined composition arrays', () => {
       const oldContract = createMockContract('src/App.tsx');
       // Remove composition arrays
-      (oldContract.composition as unknown as Record<string, unknown>).hooks = undefined;
-      (oldContract.composition as unknown as Record<string, unknown>).components = undefined;
+      (oldContract.composition as unknown as Record<string, unknown>).hooks =
+        undefined;
+      (
+        oldContract.composition as unknown as Record<string, unknown>
+      ).components = undefined;
 
       const newContract = createMockContract('src/App.tsx', {
         composition: {
@@ -377,7 +388,9 @@ describe('watchDiff', () => {
     });
 
     it('should detect added contracts', () => {
-      const oldBundle = createMockBundle('src/App.tsx', [createMockContract('src/App.tsx')]);
+      const oldBundle = createMockBundle('src/App.tsx', [
+        createMockContract('src/App.tsx'),
+      ]);
       const newBundle = createMockBundle('src/App.tsx', [
         createMockContract('src/App.tsx'),
         createMockContract('src/Button.tsx'),
@@ -394,7 +407,9 @@ describe('watchDiff', () => {
         createMockContract('src/App.tsx'),
         createMockContract('src/Button.tsx'),
       ]);
-      const newBundle = createMockBundle('src/App.tsx', [createMockContract('src/App.tsx')]);
+      const newBundle = createMockBundle('src/App.tsx', [
+        createMockContract('src/App.tsx'),
+      ]);
 
       const changes = getChanges([oldBundle], [newBundle]);
 
@@ -477,11 +492,15 @@ describe('watchDiff', () => {
     it('should handle multiple bundles', () => {
       const oldBundles = [
         createMockBundle('src/App.tsx', [createMockContract('src/App.tsx')]),
-        createMockBundle('src/Button.tsx', [createMockContract('src/Button.tsx')]),
+        createMockBundle('src/Button.tsx', [
+          createMockContract('src/Button.tsx'),
+        ]),
       ];
       const newBundles = [
         createMockBundle('src/App.tsx', [createMockContract('src/App.tsx')]),
-        createMockBundle('src/Button.tsx', [createMockContract('src/Button.tsx')]),
+        createMockBundle('src/Button.tsx', [
+          createMockContract('src/Button.tsx'),
+        ]),
         createMockBundle('src/Card.tsx', [createMockContract('src/Card.tsx')]),
       ];
 
@@ -522,7 +541,10 @@ describe('watchDiff', () => {
       const changes = getChanges([oldBundle], [newBundle]);
 
       // The contracts should match case-insensitively
-      expect(changes?.added?.includes('SRC/APP.TSX') || changes?.removed?.includes('src/App.tsx')).toBeFalsy;
+      expect(
+        changes?.added?.includes('SRC/APP.TSX') ||
+          changes?.removed?.includes('src/App.tsx'),
+      ).toBeFalsy;
     });
   });
 
@@ -556,7 +578,9 @@ describe('watchDiff', () => {
     });
 
     it('should show added contract info', () => {
-      const oldBundle = createMockBundle('src/App.tsx', [createMockContract('src/App.tsx')]);
+      const oldBundle = createMockBundle('src/App.tsx', [
+        createMockContract('src/App.tsx'),
+      ]);
       const newBundle = createMockBundle('src/App.tsx', [
         createMockContract('src/App.tsx'),
         createMockContract('src/Button.tsx'),
@@ -573,7 +597,9 @@ describe('watchDiff', () => {
         createMockContract('src/App.tsx'),
         createMockContract('src/Button.tsx'),
       ]);
-      const newBundle = createMockBundle('src/App.tsx', [createMockContract('src/App.tsx')]);
+      const newBundle = createMockBundle('src/App.tsx', [
+        createMockContract('src/App.tsx'),
+      ]);
 
       showChanges([oldBundle], [newBundle], 'src/Button.tsx');
 
@@ -619,12 +645,12 @@ describe('watchDiff', () => {
     });
 
     it('should show multiple bundle changes (>3 bundles)', () => {
-      const oldBundles = [1, 2, 3, 4, 5].map(i => {
+      const oldBundles = [1, 2, 3, 4, 5].map((i) => {
         const b = createMockBundle(`src/Component${i}.tsx`);
         b.bundleHash = `old-hash-${i}`;
         return b;
       });
-      const newBundles = [1, 2, 3, 4, 5].map(i => {
+      const newBundles = [1, 2, 3, 4, 5].map((i) => {
         const b = createMockBundle(`src/Component${i}.tsx`);
         b.bundleHash = `new-hash-${i}`;
         return b;
@@ -868,12 +894,12 @@ describe('watchDiff', () => {
     });
 
     it('should show 2-3 bundle changes with count', () => {
-      const oldBundles = [1, 2, 3].map(i => {
+      const oldBundles = [1, 2, 3].map((i) => {
         const b = createMockBundle(`src/Component${i}.tsx`);
         b.bundleHash = `old-hash-${i}`;
         return b;
       });
-      const newBundles = [1, 2, 3].map(i => {
+      const newBundles = [1, 2, 3].map((i) => {
         const b = createMockBundle(`src/Component${i}.tsx`);
         b.bundleHash = `new-hash-${i}`;
         return b;

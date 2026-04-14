@@ -2,7 +2,15 @@
  * Express Extractor - Extracts Express.js routes and API metadata
  */
 
-import { SourceFile, SyntaxKind, Node, CallExpression, FunctionDeclaration, ArrowFunction, FunctionExpression } from 'ts-morph';
+import {
+  type SourceFile,
+  SyntaxKind,
+  Node,
+  CallExpression,
+  type FunctionDeclaration,
+  type ArrowFunction,
+  type FunctionExpression,
+} from 'ts-morph';
 import type { ApiSignature } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
 
@@ -23,7 +31,9 @@ export function extractExpressRoutes(source: SourceFile): ExpressRoute[] {
 
   try {
     // Find all call expressions
-    const callExpressions = source.getDescendantsOfKind(SyntaxKind.CallExpression);
+    const callExpressions = source.getDescendantsOfKind(
+      SyntaxKind.CallExpression,
+    );
 
     for (const callExpr of callExpressions) {
       try {
@@ -35,15 +45,19 @@ export function extractExpressRoutes(source: SourceFile): ExpressRoute[] {
           const objectName = expr.getExpression().getText();
 
           // Check if it's an HTTP method on app/router
-          if ((objectName === 'app' || objectName === 'router') &&
-              ['get', 'post', 'put', 'delete', 'patch', 'all'].includes(methodName.toLowerCase())) {
+          if (
+            (objectName === 'app' || objectName === 'router') &&
+            ['get', 'post', 'put', 'delete', 'patch', 'all'].includes(
+              methodName.toLowerCase(),
+            )
+          ) {
             const args = callExpr.getArguments();
 
             if (args.length >= 2) {
               // First argument is the path
               const pathArg = args[0];
               let path = '';
-              let params: string[] = [];
+              const params: string[] = [];
 
               if (Node.isStringLiteral(pathArg)) {
                 path = pathArg.getLiteralValue();
@@ -64,7 +78,10 @@ export function extractExpressRoutes(source: SourceFile): ExpressRoute[] {
 
               if (Node.isIdentifier(handlerArg)) {
                 handler = handlerArg.getText();
-              } else if (Node.isArrowFunction(handlerArg) || Node.isFunctionExpression(handlerArg)) {
+              } else if (
+                Node.isArrowFunction(handlerArg) ||
+                Node.isFunctionExpression(handlerArg)
+              ) {
                 // Try to find the function name from variable assignment
                 const parent = handlerArg.getParent();
                 if (Node.isVariableDeclaration(parent)) {
@@ -108,17 +125,21 @@ export function extractExpressRoutes(source: SourceFile): ExpressRoute[] {
  */
 export function extractExpressApiSignature(
   source: SourceFile,
-  handlerName: string
+  handlerName: string,
 ): ApiSignature | undefined {
   const filePath = source.getFilePath?.() ?? 'unknown';
 
   try {
     // Find the handler function - can be FunctionDeclaration, ArrowFunction, or FunctionExpression
-    let handlerFunc: FunctionDeclaration | ArrowFunction | FunctionExpression | undefined;
+    let handlerFunc:
+      | FunctionDeclaration
+      | ArrowFunction
+      | FunctionExpression
+      | undefined;
 
     // Check function declarations first
     const functions = source.getFunctions();
-    handlerFunc = functions.find(f => f.getName() === handlerName);
+    handlerFunc = functions.find((f) => f.getName() === handlerName);
 
     // Also check arrow functions assigned to variables
     if (!handlerFunc) {

@@ -1,6 +1,6 @@
 /**
  * Compare command - Main entry point
- * 
+ *
  * Public API exports for the compare command module.
  * These utilities are used by the main compare command and can be
  * imported by external consumers for building custom tooling.

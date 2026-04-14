@@ -19,7 +19,7 @@ describe('Radix UI Extractor', () => {
             </Dialog>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -43,7 +43,7 @@ describe('Radix UI Extractor', () => {
             </Popover>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -76,7 +76,7 @@ describe('Radix UI Extractor', () => {
             </Tabs>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -100,7 +100,7 @@ describe('Radix UI Extractor', () => {
             </Dialog.Root>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -114,7 +114,7 @@ describe('Radix UI Extractor', () => {
         export function App() {
           return <div>No Radix primitives</div>;
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -152,7 +152,7 @@ describe('Radix UI Extractor', () => {
             </>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -182,7 +182,7 @@ describe('Radix UI Extractor', () => {
             </>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -209,7 +209,7 @@ describe('Radix UI Extractor', () => {
             </>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -232,7 +232,7 @@ describe('Radix UI Extractor', () => {
             </Dialog>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -262,7 +262,7 @@ describe('Radix UI Extractor', () => {
             </>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -284,7 +284,7 @@ describe('Radix UI Extractor', () => {
             </Dialog>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -306,7 +306,7 @@ describe('Radix UI Extractor', () => {
             </Dialog>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -327,7 +327,7 @@ describe('Radix UI Extractor', () => {
             </RadioGroup>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -347,7 +347,7 @@ describe('Radix UI Extractor', () => {
             </Dialog>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -365,7 +365,7 @@ describe('Radix UI Extractor', () => {
         export function App() {
           return <Label>Simple label</Label>;
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -394,7 +394,7 @@ describe('Radix UI Extractor', () => {
             </Tabs>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -445,7 +445,7 @@ describe('Radix UI Extractor', () => {
             </Dialog>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -468,13 +468,15 @@ describe('Radix UI Extractor', () => {
             </Checkbox>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
 
       expect(result.primitives['react-checkbox']).toContain('Checkbox');
-      expect(result.primitives['react-checkbox']).toContain('CheckboxIndicator');
+      expect(result.primitives['react-checkbox']).toContain(
+        'CheckboxIndicator',
+      );
     });
 
     it('should detect RadioGroup primitives', () => {
@@ -490,13 +492,15 @@ describe('Radix UI Extractor', () => {
             </RadioGroup>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
 
       expect(result.primitives['react-radio-group']).toContain('RadioGroup');
-      expect(result.primitives['react-radio-group']).toContain('RadioGroupItem');
+      expect(result.primitives['react-radio-group']).toContain(
+        'RadioGroupItem',
+      );
     });
 
     it('should detect Select primitives', () => {
@@ -514,7 +518,7 @@ describe('Radix UI Extractor', () => {
             </Select>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -540,7 +544,7 @@ describe('Radix UI Extractor', () => {
             </Slider>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -584,7 +588,7 @@ describe('Radix UI Extractor', () => {
             </Dialog>
           );
         }
-        `
+        `,
       );
 
       const result = extractRadixUI(sourceFile);
@@ -624,7 +628,7 @@ describe('Radix UI Extractor', () => {
           );
         }
         `,
-        'test.tsx'
+        'test.tsx',
       );
 
       // Should not throw, should return empty object or partial results
@@ -643,7 +647,7 @@ describe('Radix UI Extractor', () => {
         function Component() {
           return <Dialog.Root
         // Missing closing
-        `
+        `,
       );
 
       // Should not throw, should return empty object or partial results
@@ -675,7 +679,7 @@ describe('Radix UI Extractor', () => {
         function Component() {
           return <Dialog.Root>Content</Dialog.Root>;
         }
-        `
+        `,
       );
 
       // Should handle gracefully even if AST traversal has issues
@@ -694,7 +698,7 @@ describe('Radix UI Extractor', () => {
           return <Dialog.Root className={invalid}>Content</Dialog.Root>;
         }
         `,
-        'test.tsx'
+        'test.tsx',
       );
 
       // Should not throw, should handle gracefully
@@ -716,7 +720,7 @@ describe('Radix UI Extractor', () => {
             </div>
           );
         }
-        `
+        `,
       );
 
       // Should not throw, should return partial results

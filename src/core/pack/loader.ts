@@ -9,7 +9,11 @@ import type { ProjectManifest } from '../manifest.js';
 import { debugError } from '../../utils/debug.js';
 import { isPathWithinRoot, toForwardSlashes } from '../../utils/fsx.js';
 import { validateUIFContract } from '../../utils/schemaValidator.js';
-import { loadSecurityReport, sanitizeCode, type SanitizeResult } from '../../utils/codeSanitizer.js';
+import {
+  loadSecurityReport,
+  sanitizeCode,
+  type SanitizeResult,
+} from '../../utils/codeSanitizer.js';
 import type { SecurityReport } from '../../cli/commands/security.js';
 
 // Cache for security report with expiration
@@ -35,7 +39,10 @@ export function clearSecurityReportCache(): void {
 /**
  * Check if cache is still valid (not expired and same project)
  */
-function isCacheValid(cache: SecurityReportCache | null, projectRoot: string): boolean {
+function isCacheValid(
+  cache: SecurityReportCache | null,
+  projectRoot: string,
+): boolean {
   if (!cache) return false;
 
   const normalizedCached = normalizeProjectRoot(cache.projectRoot);
@@ -138,7 +145,7 @@ export function getAndResetSanitizeStats(): SanitizeStats {
  */
 export async function loadManifest(basePath: string): Promise<ProjectManifest> {
   const manifestPath = join(basePath, 'logicstamp.manifest.json');
-  
+
   let content: string;
   try {
     content = await readFile(manifestPath, 'utf8');
@@ -151,10 +158,10 @@ export async function loadManifest(basePath: string): Promise<ProjectManifest> {
       code: err.code,
     });
     throw new Error(
-      `Failed to load manifest at ${manifestPath}: ${err.code === 'ENOENT' ? 'File not found' : err.message}`
+      `Failed to load manifest at ${manifestPath}: ${err.code === 'ENOENT' ? 'File not found' : err.message}`,
     );
   }
-  
+
   try {
     return JSON.parse(content) as ProjectManifest;
   } catch (error) {
@@ -164,7 +171,9 @@ export async function loadManifest(basePath: string): Promise<ProjectManifest> {
       operation: 'JSON.parse',
       message: err.message,
     });
-    throw new Error(`Failed to parse manifest at ${manifestPath}: ${err.message}`);
+    throw new Error(
+      `Failed to parse manifest at ${manifestPath}: ${err.message}`,
+    );
   }
 }
 
@@ -172,7 +181,10 @@ export async function loadManifest(basePath: string): Promise<ProjectManifest> {
  * Load a sidecar contract file
  * Sidecar path is computed from the manifest key (project-relative): resolved from projectRoot + key + '.uif.json'
  */
-export async function loadContract(entryId: string, projectRoot: string): Promise<UIFContract | null> {
+export async function loadContract(
+  entryId: string,
+  projectRoot: string,
+): Promise<UIFContract | null> {
   // Validate path stays within project root (prevents path traversal attacks)
   if (!isPathWithinRoot(entryId, projectRoot)) {
     debugError('loader', 'loadContract', {
@@ -184,7 +196,9 @@ export async function loadContract(entryId: string, projectRoot: string): Promis
   }
 
   // Resolve relative path from project root
-  const absolutePath = isAbsolute(entryId) ? entryId : resolve(projectRoot, entryId);
+  const absolutePath = isAbsolute(entryId)
+    ? entryId
+    : resolve(projectRoot, entryId);
   const sidecarPath = `${absolutePath}.uif.json`;
 
   // 1. Read file
@@ -262,7 +276,9 @@ function normalizeProjectRoot(path: string): string {
  * Get security report (cached per project with expiration)
  * Cache automatically expires after CACHE_MAX_AGE_MS to prevent memory leaks
  */
-async function getSecurityReport(projectRoot: string): Promise<SecurityReport | null> {
+async function getSecurityReport(
+  projectRoot: string,
+): Promise<SecurityReport | null> {
   // Check if we have a valid cached report
   if (isCacheValid(securityReportCache, projectRoot)) {
     // Track that we have a security report available
@@ -296,7 +312,10 @@ async function getSecurityReport(projectRoot: string): Promise<SecurityReport | 
  * Returns both the header and sanitization info to avoid race conditions.
  * Callers should aggregate sanitization info and record it once after batch processing.
  */
-export async function extractCodeHeader(entryId: string, projectRoot: string): Promise<CodeHeaderResult> {
+export async function extractCodeHeader(
+  entryId: string,
+  projectRoot: string,
+): Promise<CodeHeaderResult> {
   // Validate path stays within project root (prevents path traversal attacks)
   if (!isPathWithinRoot(entryId, projectRoot)) {
     debugError('loader', 'extractCodeHeader', {
@@ -308,15 +327,22 @@ export async function extractCodeHeader(entryId: string, projectRoot: string): P
   }
 
   try {
-    const absolutePath = isAbsolute(entryId) ? entryId : resolve(projectRoot, entryId);
+    const absolutePath = isAbsolute(entryId)
+      ? entryId
+      : resolve(projectRoot, entryId);
     // Read file content (source file is never modified)
     let content = await readFile(absolutePath, 'utf8');
 
     // Sanitize code in-memory only (for JSON generation, source files remain unchanged)
     const securityReport = await getSecurityReport(projectRoot);
-    let sanitizeInfo: SanitizeInfo | undefined = undefined;
+    let sanitizeInfo: SanitizeInfo | undefined;
     if (securityReport) {
-      const sanitizeResult = sanitizeCode(content, absolutePath, securityReport, projectRoot);
+      const sanitizeResult = sanitizeCode(
+        content,
+        absolutePath,
+        securityReport,
+        projectRoot,
+      );
       content = sanitizeResult.sanitized;
 
       // Return sanitization info for caller to aggregate (no global mutation)
@@ -326,7 +352,9 @@ export async function extractCodeHeader(entryId: string, projectRoot: string): P
           secretCount: sanitizeResult.matchCount,
           entryId,
         };
-        console.log(`   🔒 Sanitized ${sanitizeResult.matchCount} secret(s) in ${entryId}`);
+        console.log(
+          `   🔒 Sanitized ${sanitizeResult.matchCount} secret(s) in ${entryId}`,
+        );
       }
     }
 
@@ -350,7 +378,10 @@ export async function extractCodeHeader(entryId: string, projectRoot: string): P
  * Returns both the code and sanitization info to avoid race conditions.
  * Callers should aggregate sanitization info and record it once after batch processing.
  */
-export async function readSourceCode(entryId: string, projectRoot: string): Promise<SourceCodeResult> {
+export async function readSourceCode(
+  entryId: string,
+  projectRoot: string,
+): Promise<SourceCodeResult> {
   // Validate path stays within project root (prevents path traversal attacks)
   if (!isPathWithinRoot(entryId, projectRoot)) {
     debugError('loader', 'readSourceCode', {
@@ -362,15 +393,22 @@ export async function readSourceCode(entryId: string, projectRoot: string): Prom
   }
 
   try {
-    const absolutePath = isAbsolute(entryId) ? entryId : resolve(projectRoot, entryId);
+    const absolutePath = isAbsolute(entryId)
+      ? entryId
+      : resolve(projectRoot, entryId);
     // Read file content (source file is never modified)
     let content = await readFile(absolutePath, 'utf8');
 
     // Sanitize code in-memory only (for JSON generation, source files remain unchanged)
     const securityReport = await getSecurityReport(projectRoot);
-    let sanitizeInfo: SanitizeInfo | undefined = undefined;
+    let sanitizeInfo: SanitizeInfo | undefined;
     if (securityReport) {
-      const sanitizeResult = sanitizeCode(content, absolutePath, securityReport, projectRoot);
+      const sanitizeResult = sanitizeCode(
+        content,
+        absolutePath,
+        securityReport,
+        projectRoot,
+      );
       content = sanitizeResult.sanitized;
 
       // Return sanitization info for caller to aggregate (no global mutation)
@@ -380,7 +418,9 @@ export async function readSourceCode(entryId: string, projectRoot: string): Prom
           secretCount: sanitizeResult.matchCount,
           entryId,
         };
-        console.log(`   🔒 Sanitized ${sanitizeResult.matchCount} secret(s) in ${entryId}`);
+        console.log(
+          `   🔒 Sanitized ${sanitizeResult.matchCount} secret(s) in ${entryId}`,
+        );
       }
     }
 
@@ -389,4 +429,3 @@ export async function readSourceCode(entryId: string, projectRoot: string): Prom
     return { code: null };
   }
 }
-

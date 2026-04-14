@@ -17,7 +17,12 @@ export interface CleanOptions {
   quiet?: boolean;
 }
 
-const GLOB_IGNORE = ['**/node_modules/**', '**/dist/**', '**/build/**', '**/.next/**'];
+const GLOB_IGNORE = [
+  '**/node_modules/**',
+  '**/dist/**',
+  '**/build/**',
+  '**/.next/**',
+];
 
 /**
  * Find all context.json files in the project
@@ -31,7 +36,7 @@ async function findContextFiles(projectRoot: string): Promise<string[]> {
   });
 
   // Convert to normalized relative paths
-  return contextFiles.map(file => normalizeEntryId(file)).sort();
+  return contextFiles.map((file) => normalizeEntryId(file)).sort();
 }
 
 /**
@@ -54,13 +59,15 @@ async function findContextToonFiles(projectRoot: string): Promise<string[]> {
 
   // Combine and deduplicate (context.toon could theoretically match in some edge cases)
   const allToon = new Set([...toonFiles, ...toonVariants]);
-  return [...allToon].map(file => normalizeEntryId(file)).sort();
+  return [...allToon].map((file) => normalizeEntryId(file)).sort();
 }
 
 /**
  * Find context_main.json in the project root
  */
-async function findMainContextFile(projectRoot: string): Promise<string | null> {
+async function findMainContextFile(
+  projectRoot: string,
+): Promise<string | null> {
   const mainContextPath = join(projectRoot, 'context_main.json');
   if (await fileExists(mainContextPath)) {
     return mainContextPath;
@@ -120,7 +127,9 @@ export async function cleanCommand(options: CleanOptions): Promise<void> {
     console.log('\n🧹 This will remove:');
     if (mainContextFile) {
       const relPath = relative(projectRoot, mainContextFile);
-      console.log(`  - ${displayPath(relPath === 'context_main.json' ? 'context_main.json' : relPath)}`);
+      console.log(
+        `  - ${displayPath(relPath === 'context_main.json' ? 'context_main.json' : relPath)}`,
+      );
     }
     for (const file of contextFiles) {
       // file is already relative
@@ -152,7 +161,9 @@ export async function cleanCommand(options: CleanOptions): Promise<void> {
         }
       } catch (error) {
         // Always show errors
-        console.error(`   ✗ Failed to remove ${displayPath(file)}: ${(error as Error).message}`);
+        console.error(
+          `   ✗ Failed to remove ${displayPath(file)}: ${(error as Error).message}`,
+        );
       }
     }
 
@@ -167,20 +178,25 @@ export async function cleanCommand(options: CleanOptions): Promise<void> {
       } catch (error) {
         // Always show errors
         const relPath = relative(projectRoot, logicStampDir);
-        console.error(`   ✗ Failed to remove ${displayPath(relPath)}/: ${(error as Error).message}`);
+        console.error(
+          `   ✗ Failed to remove ${displayPath(relPath)}/: ${(error as Error).message}`,
+        );
       }
     }
 
     if (options.quiet) {
       process.stdout.write('✓\n');
     } else {
-      console.log(`\n✅ Cleaned ${filesToRemove.length} file(s)${logicStampDir ? ' and 1 directory' : ''}`);
+      console.log(
+        `\n✅ Cleaned ${filesToRemove.length} file(s)${logicStampDir ? ' and 1 directory' : ''}`,
+      );
     }
   } else {
     // Dry run mode - just show what would be removed
     if (!options.quiet) {
-      console.log('\n💡 Run with --all --yes to confirm and delete these files.');
+      console.log(
+        '\n💡 Run with --all --yes to confirm and delete these files.',
+      );
     }
   }
 }
-

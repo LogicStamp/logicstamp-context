@@ -4,7 +4,10 @@
 
 import { describe, it, expect } from 'vitest';
 import { Project } from 'ts-morph';
-import { extractHooks, extractComponents } from '../../../../src/extractors/react/componentExtractor.js';
+import {
+  extractHooks,
+  extractComponents,
+} from '../../../../src/extractors/react/componentExtractor.js';
 
 /**
  * Helper to create a SourceFile from code string
@@ -127,7 +130,7 @@ describe('componentExtractor', () => {
       `);
 
       const hooks = extractHooks(source);
-      expect(hooks.filter(h => h === 'useState')).toHaveLength(1);
+      expect(hooks.filter((h) => h === 'useState')).toHaveLength(1);
     });
 
     it('should return sorted hooks', () => {
@@ -291,7 +294,7 @@ describe('componentExtractor', () => {
       `);
 
       const components = extractComponents(source);
-      expect(components.filter(c => c === 'Button')).toHaveLength(1);
+      expect(components.filter((c) => c === 'Button')).toHaveLength(1);
     });
 
     it('should return sorted components', () => {
@@ -377,18 +380,22 @@ describe('componentExtractor', () => {
             callCount++;
             if (callCount === 1) {
               // First call for JsxOpeningElement
-              return [{
-                getTagNameNode: () => {
-                  throw new Error('Tag error');
+              return [
+                {
+                  getTagNameNode: () => {
+                    throw new Error('Tag error');
+                  },
                 },
-              }];
+              ];
             }
             // Second call for JsxSelfClosingElement
-            return [{
-              getTagNameNode: () => ({
-                getText: () => 'ValidComponent',
-              }),
-            }];
+            return [
+              {
+                getTagNameNode: () => ({
+                  getText: () => 'ValidComponent',
+                }),
+              },
+            ];
           },
         });
 
@@ -403,18 +410,22 @@ describe('componentExtractor', () => {
             callCount++;
             if (callCount === 1) {
               // First call for JsxOpeningElement
-              return [{
-                getTagNameNode: () => ({
-                  getText: () => 'OpeningComponent',
-                }),
-              }];
+              return [
+                {
+                  getTagNameNode: () => ({
+                    getText: () => 'OpeningComponent',
+                  }),
+                },
+              ];
             }
             // Second call for JsxSelfClosingElement - throws
-            return [{
-              getTagNameNode: () => {
-                throw new Error('Self-closing error');
+            return [
+              {
+                getTagNameNode: () => {
+                  throw new Error('Self-closing error');
+                },
               },
-            }];
+            ];
           },
         });
 

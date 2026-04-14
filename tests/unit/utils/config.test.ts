@@ -86,7 +86,7 @@ describe('config utils', () => {
       await mkdir(join(testDir, '.logicstamp'), { recursive: true });
       await writeFile(
         join(testDir, '.logicstamp', 'config.json'),
-        JSON.stringify(testConfig)
+        JSON.stringify(testConfig),
       );
 
       const config = await readConfig(testDir);
@@ -95,7 +95,10 @@ describe('config utils', () => {
 
     it('should handle invalid JSON gracefully', async () => {
       await mkdir(join(testDir, '.logicstamp'), { recursive: true });
-      await writeFile(join(testDir, '.logicstamp', 'config.json'), 'invalid json');
+      await writeFile(
+        join(testDir, '.logicstamp', 'config.json'),
+        'invalid json',
+      );
 
       // Should return empty object on parse error
       const config = await readConfig(testDir);
@@ -105,7 +108,10 @@ describe('config utils', () => {
 
   describe('writeConfig', () => {
     it('should write config to disk', async () => {
-      const testConfig: LogicStampConfig = { gitignorePreference: 'added', llmContextPreference: 'skipped' };
+      const testConfig: LogicStampConfig = {
+        gitignorePreference: 'added',
+        llmContextPreference: 'skipped',
+      };
       await writeConfig(testDir, testConfig);
 
       const configPath = join(testDir, '.logicstamp', 'config.json');
@@ -119,7 +125,9 @@ describe('config utils', () => {
       await writeConfig(testDir, testConfig);
 
       const configDir = join(testDir, '.logicstamp');
-      const dirExists = await access(configDir).then(() => true).catch(() => false);
+      const dirExists = await access(configDir)
+        .then(() => true)
+        .catch(() => false);
       expect(dirExists).toBe(true);
     });
   });
@@ -150,7 +158,9 @@ describe('config utils', () => {
     describe('getWatchStatusPath', () => {
       it('should return watch status file path', () => {
         const statusPath = getWatchStatusPath(testDir);
-        expect(statusPath).toBe(join(testDir, '.logicstamp', 'context_watch-status.json'));
+        expect(statusPath).toBe(
+          join(testDir, '.logicstamp', 'context_watch-status.json'),
+        );
       });
     });
 
@@ -170,7 +180,7 @@ describe('config utils', () => {
         };
         await writeFile(
           join(testDir, '.logicstamp', 'context_watch-status.json'),
-          JSON.stringify(status)
+          JSON.stringify(status),
         );
 
         const isActive = await isWatchModeActive(testDir);
@@ -194,7 +204,7 @@ describe('config utils', () => {
         await mkdir(join(testDir, '.logicstamp'), { recursive: true });
         await writeFile(
           join(testDir, '.logicstamp', 'context_watch-status.json'),
-          JSON.stringify(testStatus)
+          JSON.stringify(testStatus),
         );
 
         const status = await readWatchStatus(testDir);
@@ -212,7 +222,11 @@ describe('config utils', () => {
         };
         await writeWatchStatus(testDir, testStatus);
 
-        const statusPath = join(testDir, '.logicstamp', 'context_watch-status.json');
+        const statusPath = join(
+          testDir,
+          '.logicstamp',
+          'context_watch-status.json',
+        );
         const content = await readFile(statusPath, 'utf-8');
         const parsed = JSON.parse(content);
         expect(parsed).toEqual(testStatus);
@@ -224,13 +238,13 @@ describe('config utils', () => {
         await mkdir(join(testDir, '.logicstamp'), { recursive: true });
         await writeFile(
           join(testDir, '.logicstamp', 'context_watch-status.json'),
-          '{}'
+          '{}',
         );
 
         await deleteWatchStatus(testDir);
 
         const exists = await access(
-          join(testDir, '.logicstamp', 'context_watch-status.json')
+          join(testDir, '.logicstamp', 'context_watch-status.json'),
         )
           .then(() => true)
           .catch(() => false);
@@ -247,7 +261,9 @@ describe('config utils', () => {
     describe('getWatchLogsPath', () => {
       it('should return watch logs file path', () => {
         const logsPath = getWatchLogsPath(testDir);
-        expect(logsPath).toBe(join(testDir, '.logicstamp', 'context_watch-mode-logs.json'));
+        expect(logsPath).toBe(
+          join(testDir, '.logicstamp', 'context_watch-mode-logs.json'),
+        );
       });
     });
 
@@ -271,7 +287,7 @@ describe('config utils', () => {
         await mkdir(join(testDir, '.logicstamp'), { recursive: true });
         await writeFile(
           join(testDir, '.logicstamp', 'context_watch-mode-logs.json'),
-          JSON.stringify(testLogs)
+          JSON.stringify(testLogs),
         );
 
         const logs = await readWatchLogs(testDir);
@@ -297,7 +313,7 @@ describe('config utils', () => {
         await mkdir(join(testDir, '.logicstamp'), { recursive: true });
         await writeFile(
           join(testDir, '.logicstamp', 'context_watch-mode-logs.json'),
-          JSON.stringify({ entries: [], maxEntries: 2 })
+          JSON.stringify({ entries: [], maxEntries: 2 }),
         );
 
         for (let i = 0; i < 5; i++) {
@@ -318,13 +334,13 @@ describe('config utils', () => {
         await mkdir(join(testDir, '.logicstamp'), { recursive: true });
         await writeFile(
           join(testDir, '.logicstamp', 'context_watch-mode-logs.json'),
-          '{}'
+          '{}',
         );
 
         await clearWatchLogs(testDir);
 
         const exists = await access(
-          join(testDir, '.logicstamp', 'context_watch-mode-logs.json')
+          join(testDir, '.logicstamp', 'context_watch-mode-logs.json'),
         )
           .then(() => true)
           .catch(() => false);
@@ -337,7 +353,9 @@ describe('config utils', () => {
     describe('getStrictWatchReportPath', () => {
       it('should return strict watch report path', () => {
         const reportPath = getStrictWatchReportPath(testDir);
-        expect(reportPath).toBe(join(testDir, '.logicstamp', 'strict_watch_violations.json'));
+        expect(reportPath).toBe(
+          join(testDir, '.logicstamp', 'strict_watch_violations.json'),
+        );
       });
     });
 
@@ -359,7 +377,7 @@ describe('config utils', () => {
         await mkdir(join(testDir, '.logicstamp'), { recursive: true });
         await writeFile(
           join(testDir, '.logicstamp', 'strict_watch_violations.json'),
-          JSON.stringify(testStatus)
+          JSON.stringify(testStatus),
         );
 
         const status = await readStrictWatchStatus(testDir);
@@ -387,7 +405,11 @@ describe('config utils', () => {
         };
         await writeStrictWatchStatus(testDir, testStatus);
 
-        const reportPath = join(testDir, '.logicstamp', 'strict_watch_violations.json');
+        const reportPath = join(
+          testDir,
+          '.logicstamp',
+          'strict_watch_violations.json',
+        );
         const content = await readFile(reportPath, 'utf-8');
         const parsed = JSON.parse(content);
         expect(parsed).toEqual(testStatus);
@@ -399,13 +421,13 @@ describe('config utils', () => {
         await mkdir(join(testDir, '.logicstamp'), { recursive: true });
         await writeFile(
           join(testDir, '.logicstamp', 'strict_watch_violations.json'),
-          '{}'
+          '{}',
         );
 
         await deleteStrictWatchStatus(testDir);
 
         const exists = await access(
-          join(testDir, '.logicstamp', 'strict_watch_violations.json')
+          join(testDir, '.logicstamp', 'strict_watch_violations.json'),
         )
           .then(() => true)
           .catch(() => false);
@@ -457,7 +479,7 @@ describe('config utils', () => {
 
       // File should not exist
       const exists = await access(
-        join(testDir, '.logicstamp', 'context_watch-mode-logs.json')
+        join(testDir, '.logicstamp', 'context_watch-mode-logs.json'),
       )
         .then(() => true)
         .catch(() => false);
@@ -490,7 +512,7 @@ describe('config utils', () => {
       await mkdir(join(testDir, '.logicstamp'), { recursive: true });
       await writeFile(
         join(testDir, '.logicstamp', 'context_watch-mode-logs.json'),
-        'not valid json {'
+        'not valid json {',
       );
 
       const logs = await readWatchLogs(testDir);
@@ -509,7 +531,7 @@ describe('config utils', () => {
       };
       await writeFile(
         join(testDir, '.logicstamp', 'context_watch-status.json'),
-        JSON.stringify(status)
+        JSON.stringify(status),
       );
 
       const isActive = await isWatchModeActive(testDir);
@@ -526,7 +548,7 @@ describe('config utils', () => {
       };
       await writeFile(
         join(testDir, '.logicstamp', 'context_watch-status.json'),
-        JSON.stringify(status)
+        JSON.stringify(status),
       );
 
       const isActive = await isWatchModeActive(testDir);
@@ -537,7 +559,7 @@ describe('config utils', () => {
       await mkdir(join(testDir, '.logicstamp'), { recursive: true });
       await writeFile(
         join(testDir, '.logicstamp', 'context_watch-status.json'),
-        'invalid json'
+        'invalid json',
       );
 
       const isActive = await isWatchModeActive(testDir);
@@ -556,7 +578,7 @@ describe('config utils', () => {
       };
       await writeFile(
         join(testDir, '.logicstamp', 'context_watch-status.json'),
-        JSON.stringify(status)
+        JSON.stringify(status),
       );
 
       const result = await readWatchStatus(testDir);
@@ -564,7 +586,7 @@ describe('config utils', () => {
 
       // Status file should be cleaned up
       const exists = await access(
-        join(testDir, '.logicstamp', 'context_watch-status.json')
+        join(testDir, '.logicstamp', 'context_watch-status.json'),
       )
         .then(() => true)
         .catch(() => false);
@@ -575,7 +597,7 @@ describe('config utils', () => {
       await mkdir(join(testDir, '.logicstamp'), { recursive: true });
       await writeFile(
         join(testDir, '.logicstamp', 'context_watch-status.json'),
-        'not json'
+        'not json',
       );
 
       const result = await readWatchStatus(testDir);
@@ -592,7 +614,7 @@ describe('config utils', () => {
       };
       await writeFile(
         join(testDir, '.logicstamp', 'context_watch-status.json'),
-        JSON.stringify(status)
+        JSON.stringify(status),
       );
 
       const result = await readWatchStatus(testDir);
@@ -688,7 +710,9 @@ describe('config utils', () => {
       };
       await writeConfig(testDir, initialConfig);
 
-      await updateConfig(testDir, { gitignorePreference: 'skipped' } as LogicStampConfig);
+      await updateConfig(testDir, {
+        gitignorePreference: 'skipped',
+      } as LogicStampConfig);
 
       const config = await readConfig(testDir);
       expect(config).toEqual({
@@ -766,7 +790,7 @@ describe('config utils', () => {
       await mkdir(join(testDir, '.logicstamp'), { recursive: true });
       await writeFile(
         join(testDir, '.logicstamp', 'strict_watch_violations.json'),
-        'invalid json content'
+        'invalid json content',
       );
 
       const status = await readStrictWatchStatus(testDir);
@@ -811,12 +835,14 @@ describe('config utils', () => {
       await mkdir(join(testDir, '.logicstamp'), { recursive: true });
       await writeFile(
         join(testDir, '.logicstamp', 'strict_watch_violations.json'),
-        JSON.stringify(testStatus)
+        JSON.stringify(testStatus),
       );
 
       const status = await readStrictWatchStatus(testDir);
       expect(status?.lastCheck?.violations).toHaveLength(2);
-      expect(status?.lastCheck?.violations[0].type).toBe('breaking_change_prop_removed');
+      expect(status?.lastCheck?.violations[0].type).toBe(
+        'breaking_change_prop_removed',
+      );
     });
   });
 
@@ -854,8 +880,12 @@ describe('config utils', () => {
 
       // Run multiple concurrent updates
       const updates = [
-        updateConfig(testDir, { gitignorePreference: 'added' } as LogicStampConfig),
-        updateConfig(testDir, { llmContextPreference: 'skipped' } as LogicStampConfig),
+        updateConfig(testDir, {
+          gitignorePreference: 'added',
+        } as LogicStampConfig),
+        updateConfig(testDir, {
+          llmContextPreference: 'skipped',
+        } as LogicStampConfig),
       ];
 
       await Promise.all(updates);
@@ -883,7 +913,10 @@ describe('config utils', () => {
       expect(finalConfig).toEqual(configs[configs.length - 1]);
 
       // File should be valid JSON (not corrupted)
-      const rawContent = await readFile(join(testDir, '.logicstamp', 'config.json'), 'utf-8');
+      const rawContent = await readFile(
+        join(testDir, '.logicstamp', 'config.json'),
+        'utf-8',
+      );
       expect(() => JSON.parse(rawContent)).not.toThrow();
     });
 
@@ -915,7 +948,7 @@ describe('config utils', () => {
       // Simulate a crash mid-write
       await writeFile(
         join(testDir, '.logicstamp', 'config.json'),
-        '{"gitignorePreference": "add'  // Truncated JSON
+        '{"gitignorePreference": "add', // Truncated JSON
       );
 
       const config = await readConfig(testDir);
@@ -927,7 +960,7 @@ describe('config utils', () => {
       // Write binary data
       await writeFile(
         join(testDir, '.logicstamp', 'config.json'),
-        Buffer.from([0x00, 0x01, 0xFF, 0xFE, 0x89, 0x50, 0x4E, 0x47])
+        Buffer.from([0x00, 0x01, 0xff, 0xfe, 0x89, 0x50, 0x4e, 0x47]),
       );
 
       const config = await readConfig(testDir);
@@ -944,7 +977,10 @@ describe('config utils', () => {
 
     it('should handle config file with just whitespace', async () => {
       await mkdir(join(testDir, '.logicstamp'), { recursive: true });
-      await writeFile(join(testDir, '.logicstamp', 'config.json'), '   \n\t  \n');
+      await writeFile(
+        join(testDir, '.logicstamp', 'config.json'),
+        '   \n\t  \n',
+      );
 
       const config = await readConfig(testDir);
       expect(config).toEqual({});
@@ -954,7 +990,7 @@ describe('config utils', () => {
       await mkdir(join(testDir, '.logicstamp'), { recursive: true });
       await writeFile(
         join(testDir, '.logicstamp', 'context_watch-mode-logs.json'),
-        '{"entries": "not-an-array", "maxEntries": 100}'
+        '{"entries": "not-an-array", "maxEntries": 100}',
       );
 
       const logs = await readWatchLogs(testDir);
@@ -969,9 +1005,9 @@ describe('config utils', () => {
         JSON.stringify({
           active: true,
           projectRoot: testDir,
-          pid: 'not-a-number',  // Invalid PID type
+          pid: 'not-a-number', // Invalid PID type
           startedAt: new Date().toISOString(),
-        })
+        }),
       );
 
       const status = await readWatchStatus(testDir);
@@ -985,7 +1021,11 @@ describe('config utils', () => {
       await mkdir(join(testDir, '.logicstamp'), { recursive: true });
 
       // Simulate orphaned temp file from crashed write
-      const orphanedTemp = join(testDir, '.logicstamp', 'config.json.abc123.tmp');
+      const orphanedTemp = join(
+        testDir,
+        '.logicstamp',
+        'config.json.abc123.tmp',
+      );
       await writeFile(orphanedTemp, '{"crashed": true}');
 
       // New write should succeed
@@ -1003,13 +1043,13 @@ describe('config utils', () => {
       // Write real config
       await writeFile(
         join(testDir, '.logicstamp', 'config.json'),
-        JSON.stringify({ gitignorePreference: 'added' })
+        JSON.stringify({ gitignorePreference: 'added' }),
       );
 
       // Create temp file with different content (simulating in-progress write)
       await writeFile(
         join(testDir, '.logicstamp', 'config.json.temp123.tmp'),
-        JSON.stringify({ gitignorePreference: 'skipped' })
+        JSON.stringify({ gitignorePreference: 'skipped' }),
       );
 
       // Should read from actual config, not temp
@@ -1020,7 +1060,9 @@ describe('config utils', () => {
 
   describe('path edge cases', () => {
     it('should handle paths with spaces', async () => {
-      const dirWithSpaces = await mkdtemp(join(tmpdir(), 'logicstamp test with spaces '));
+      const dirWithSpaces = await mkdtemp(
+        join(tmpdir(), 'logicstamp test with spaces '),
+      );
 
       try {
         const configDir = getConfigDir(dirWithSpaces);
@@ -1032,12 +1074,16 @@ describe('config utils', () => {
         const config = await readConfig(dirWithSpaces);
         expect(config).toEqual(testConfig);
       } finally {
-        await rm(dirWithSpaces, { recursive: true, force: true }).catch(() => {});
+        await rm(dirWithSpaces, { recursive: true, force: true }).catch(
+          () => {},
+        );
       }
     });
 
     it('should handle paths with unicode characters', async () => {
-      const dirWithUnicode = await mkdtemp(join(tmpdir(), 'logicstamp-テスト-'));
+      const dirWithUnicode = await mkdtemp(
+        join(tmpdir(), 'logicstamp-テスト-'),
+      );
 
       try {
         const testConfig: LogicStampConfig = { gitignorePreference: 'added' };
@@ -1045,7 +1091,9 @@ describe('config utils', () => {
         const config = await readConfig(dirWithUnicode);
         expect(config).toEqual(testConfig);
       } finally {
-        await rm(dirWithUnicode, { recursive: true, force: true }).catch(() => {});
+        await rm(dirWithUnicode, { recursive: true, force: true }).catch(
+          () => {},
+        );
       }
     });
 
@@ -1078,7 +1126,7 @@ describe('config utils', () => {
           gitignorePreference: 'added',
           unknownField: 'should be ignored',
           anotherUnknown: { nested: true },
-        })
+        }),
       );
 
       const config = await readConfig(testDir);
@@ -1091,9 +1139,9 @@ describe('config utils', () => {
       await writeFile(
         join(testDir, '.logicstamp', 'config.json'),
         JSON.stringify({
-          gitignorePreference: 12345,  // Should be string
-          llmContextPreference: { invalid: 'type' },  // Should be string
-        })
+          gitignorePreference: 12345, // Should be string
+          llmContextPreference: { invalid: 'type' }, // Should be string
+        }),
       );
 
       // Should not crash - behavior depends on implementation
@@ -1107,11 +1155,11 @@ describe('config utils', () => {
         join(testDir, '.logicstamp', 'context_watch-mode-logs.json'),
         JSON.stringify({
           entries: [
-            { timestamp: new Date().toISOString() },  // Missing changedFiles and fileCount
-            { changedFiles: ['test.tsx'] },  // Missing timestamp and fileCount
+            { timestamp: new Date().toISOString() }, // Missing changedFiles and fileCount
+            { changedFiles: ['test.tsx'] }, // Missing timestamp and fileCount
           ],
           maxEntries: 100,
-        })
+        }),
       );
 
       const logs = await readWatchLogs(testDir);
@@ -1159,7 +1207,9 @@ describe('config utils', () => {
       await writeStrictWatchStatus(testDir, testStatus);
       const status = await readStrictWatchStatus(testDir);
 
-      expect(status?.lastCheck?.violations).toHaveLength(allViolationTypes.length);
+      expect(status?.lastCheck?.violations).toHaveLength(
+        allViolationTypes.length,
+      );
       allViolationTypes.forEach((type, i) => {
         expect(status?.lastCheck?.violations[i].type).toBe(type);
       });
@@ -1180,7 +1230,7 @@ describe('config utils', () => {
     it('should propagate write errors with meaningful messages', async () => {
       // Try to write to a path where parent doesn't exist and can't be created
       // On most systems, trying to create a directory at root level will fail
-      const invalidRoot = '/\0invalid';  // Null byte in path - invalid on most filesystems
+      const invalidRoot = '/\0invalid'; // Null byte in path - invalid on most filesystems
 
       // Depending on OS, this should either throw or fail gracefully
       try {
@@ -1197,16 +1247,19 @@ describe('config utils', () => {
   describe('large data handling', () => {
     it('should handle watch logs with many entries', async () => {
       // Write a log file with many entries
-      const manyEntries: WatchLogEntry[] = Array.from({ length: 150 }, (_, i) => ({
-        timestamp: new Date(Date.now() - i * 1000).toISOString(),
-        changedFiles: [`file${i}.tsx`],
-        fileCount: 1,
-      }));
+      const manyEntries: WatchLogEntry[] = Array.from(
+        { length: 150 },
+        (_, i) => ({
+          timestamp: new Date(Date.now() - i * 1000).toISOString(),
+          changedFiles: [`file${i}.tsx`],
+          fileCount: 1,
+        }),
+      );
 
       await mkdir(join(testDir, '.logicstamp'), { recursive: true });
       await writeFile(
         join(testDir, '.logicstamp', 'context_watch-mode-logs.json'),
-        JSON.stringify({ entries: manyEntries, maxEntries: 100 })
+        JSON.stringify({ entries: manyEntries, maxEntries: 100 }),
       );
 
       // Append new entry - should trigger trim to maxEntries
@@ -1223,8 +1276,14 @@ describe('config utils', () => {
     it('should handle violations with large detail objects', async () => {
       const largeDetails = {
         name: 'x'.repeat(1000),
-        oldValue: Array.from({ length: 100 }, (_, i) => ({ prop: i, value: 'x'.repeat(100) })),
-        newValue: Array.from({ length: 100 }, (_, i) => ({ prop: i, value: 'y'.repeat(100) })),
+        oldValue: Array.from({ length: 100 }, (_, i) => ({
+          prop: i,
+          value: 'x'.repeat(100),
+        })),
+        newValue: Array.from({ length: 100 }, (_, i) => ({
+          prop: i,
+          value: 'y'.repeat(100),
+        })),
       };
 
       const testStatus = {
@@ -1242,13 +1301,15 @@ describe('config utils', () => {
           totalViolations: 1,
           errors: 1,
           warnings: 0,
-          violations: [{
-            type: 'breaking_change_prop_type' as const,
-            severity: 'error' as const,
-            entryId: 'src/Large.tsx',
-            message: 'Large violation',
-            details: largeDetails,
-          }],
+          violations: [
+            {
+              type: 'breaking_change_prop_type' as const,
+              severity: 'error' as const,
+              entryId: 'src/Large.tsx',
+              message: 'Large violation',
+              details: largeDetails,
+            },
+          ],
           changedFiles: ['src/Large.tsx'],
         },
       };
@@ -1270,7 +1331,7 @@ describe('config utils', () => {
       // We can't easily simulate EACCES without OS-level mocking, but we can
       // verify the error message format by checking writeConfig throws appropriately
       const invalidPath = '/\0invalid'; // Invalid path that may cause errors
-      
+
       try {
         await writeConfig(invalidPath, { gitignorePreference: 'added' });
         // If it doesn't throw, that's also acceptable (some systems handle this differently)
@@ -1288,8 +1349,13 @@ describe('config utils', () => {
       // Test formatWriteError ENOENT branch
       // This is difficult to simulate without mocking, but we can verify
       // the error handling path exists
-      const nonExistentParent = join(testDir, 'nonexistent', 'deep', 'config.json');
-      
+      const nonExistentParent = join(
+        testDir,
+        'nonexistent',
+        'deep',
+        'config.json',
+      );
+
       // This should trigger an error, though the exact code depends on OS
       try {
         await writeFile(nonExistentParent, '{}');
@@ -1312,7 +1378,7 @@ describe('config utils', () => {
       };
       await writeFile(
         join(testDir, '.logicstamp', 'context_watch-status.json'),
-        JSON.stringify(status)
+        JSON.stringify(status),
       );
 
       const isActive = await isWatchModeActive(testDir);
@@ -1330,7 +1396,7 @@ describe('config utils', () => {
       };
       await writeFile(
         join(testDir, '.logicstamp', 'context_watch-status.json'),
-        JSON.stringify(status)
+        JSON.stringify(status),
       );
 
       const isActive = await isWatchModeActive(testDir);
@@ -1350,7 +1416,7 @@ describe('config utils', () => {
       };
       await writeFile(
         join(testDir, '.logicstamp', 'context_watch-status.json'),
-        JSON.stringify(status)
+        JSON.stringify(status),
       );
 
       const result = await readWatchStatus(testDir);
@@ -1368,7 +1434,7 @@ describe('config utils', () => {
       };
       await writeFile(
         join(testDir, '.logicstamp', 'context_watch-status.json'),
-        JSON.stringify(status)
+        JSON.stringify(status),
       );
 
       const result = await readWatchStatus(testDir);
@@ -1382,13 +1448,15 @@ describe('config utils', () => {
       // This is hard to simulate without mocking, but we can verify
       // the function doesn't crash when directory creation fails
       const invalidPath = '/\0invalid';
-      
+
       // Should not throw, should return early
-      await expect(appendWatchLog(invalidPath, {
-        timestamp: new Date().toISOString(),
-        changedFiles: ['test.tsx'],
-        fileCount: 1,
-      })).resolves.not.toThrow();
+      await expect(
+        appendWatchLog(invalidPath, {
+          timestamp: new Date().toISOString(),
+          changedFiles: ['test.tsx'],
+          fileCount: 1,
+        }),
+      ).resolves.not.toThrow();
     });
 
     it('should not trim when entries.length <= maxEntries', async () => {
@@ -1396,7 +1464,7 @@ describe('config utils', () => {
       await mkdir(join(testDir, '.logicstamp'), { recursive: true });
       await writeFile(
         join(testDir, '.logicstamp', 'context_watch-mode-logs.json'),
-        JSON.stringify({ entries: [], maxEntries: 5 })
+        JSON.stringify({ entries: [], maxEntries: 5 }),
       );
 
       // Add 3 entries (less than maxEntries of 5)
@@ -1424,7 +1492,7 @@ describe('config utils', () => {
       }));
       await writeFile(
         join(testDir, '.logicstamp', 'context_watch-mode-logs.json'),
-        JSON.stringify({ entries: existingEntries }) // maxEntries is missing
+        JSON.stringify({ entries: existingEntries }), // maxEntries is missing
       );
 
       // Add 3 more entries to exceed default 100 and trigger trim
@@ -1445,13 +1513,15 @@ describe('config utils', () => {
     it('should return early when ensureConfigDirSilent fails', async () => {
       // Test if (!await ensureConfigDirSilent(...)) branch (line 445-447)
       const invalidPath = '/\0invalid';
-      
+
       // Should not throw, should return early
-      await expect(writeWatchState(invalidPath, {
-        timestamp: new Date().toISOString(),
-        changedFiles: ['test.tsx'],
-        fileCount: 1,
-      })).resolves.not.toThrow();
+      await expect(
+        writeWatchState(invalidPath, {
+          timestamp: new Date().toISOString(),
+          changedFiles: ['test.tsx'],
+          fileCount: 1,
+        }),
+      ).resolves.not.toThrow();
     });
   });
 
@@ -1459,7 +1529,7 @@ describe('config utils', () => {
     it('should return early when ensureConfigDirSilent fails', async () => {
       // Test if (!await ensureConfigDirSilent(...)) branch (line 592-594)
       const invalidPath = '/\0invalid';
-      
+
       const status = {
         active: true,
         startedAt: new Date().toISOString(),
@@ -1473,7 +1543,9 @@ describe('config utils', () => {
       };
 
       // Should not throw, should return early
-      await expect(writeStrictWatchStatus(invalidPath, status)).resolves.not.toThrow();
+      await expect(
+        writeStrictWatchStatus(invalidPath, status),
+      ).resolves.not.toThrow();
     });
   });
 
@@ -1483,12 +1555,12 @@ describe('config utils', () => {
       // This tests the unlink(tempPath) in catch block
       const configDir = join(testDir, '.logicstamp');
       await mkdir(configDir, { recursive: true });
-      
+
       // Create a read-only directory to simulate write failure
       // On Windows, we can't easily make a directory read-only, so we'll
       // test the error path differently by using an invalid path
       const invalidPath = join('\0invalid', 'config');
-      
+
       try {
         await writeConfig(invalidPath, { gitignorePreference: 'added' });
       } catch (error) {
@@ -1502,7 +1574,7 @@ describe('config utils', () => {
       // Difficult to simulate without mocking, but we verify error handling exists
       const configDir = join(testDir, '.logicstamp');
       await mkdir(configDir, { recursive: true });
-      
+
       // Normal write should succeed
       await writeConfig(testDir, { gitignorePreference: 'added' });
       const config = await readConfig(testDir);
@@ -1514,7 +1586,7 @@ describe('config utils', () => {
     it('should clean up temp file on writeFile error', async () => {
       // Test cleanup temp file branch (line 248-252)
       const invalidPath = join('\0invalid', 'watch');
-      
+
       const status = {
         active: true,
         projectRoot: testDir,
@@ -1536,11 +1608,11 @@ describe('config utils', () => {
       // Test cleanup temp file branch (line 405-409)
       const configDir = join(testDir, '.logicstamp');
       await mkdir(configDir, { recursive: true });
-      
+
       // Create logs file first
       await writeFile(
         join(configDir, 'context_watch-mode-logs.json'),
-        JSON.stringify({ entries: [], maxEntries: 100 })
+        JSON.stringify({ entries: [], maxEntries: 100 }),
       );
 
       // Normal append should succeed
@@ -1558,13 +1630,15 @@ describe('config utils', () => {
       // Test that appendWatchLog doesn't throw (line 417 - non-fatal)
       // Even if there's an error, it should return gracefully
       const invalidPath = '/\0invalid';
-      
+
       // Should not throw - errors are logged but not fatal
-      await expect(appendWatchLog(invalidPath, {
-        timestamp: new Date().toISOString(),
-        changedFiles: ['test.tsx'],
-        fileCount: 1,
-      })).resolves.not.toThrow();
+      await expect(
+        appendWatchLog(invalidPath, {
+          timestamp: new Date().toISOString(),
+          changedFiles: ['test.tsx'],
+          fileCount: 1,
+        }),
+      ).resolves.not.toThrow();
     });
   });
 
@@ -1588,13 +1662,15 @@ describe('config utils', () => {
     it('should handle error gracefully without throwing', async () => {
       // Test that writeWatchState doesn't throw (line 483 - non-fatal)
       const invalidPath = '/\0invalid';
-      
+
       // Should not throw - errors are logged but not fatal
-      await expect(writeWatchState(invalidPath, {
-        timestamp: new Date().toISOString(),
-        changedFiles: ['test.tsx'],
-        fileCount: 1,
-      })).resolves.not.toThrow();
+      await expect(
+        writeWatchState(invalidPath, {
+          timestamp: new Date().toISOString(),
+          changedFiles: ['test.tsx'],
+          fileCount: 1,
+        }),
+      ).resolves.not.toThrow();
     });
   });
 
@@ -1625,7 +1701,7 @@ describe('config utils', () => {
     it('should handle error gracefully without throwing', async () => {
       // Test that writeStrictWatchStatus doesn't throw (line 612 - non-fatal)
       const invalidPath = '/\0invalid';
-      
+
       const status = {
         active: true,
         startedAt: new Date().toISOString(),
@@ -1639,7 +1715,9 @@ describe('config utils', () => {
       };
 
       // Should not throw - errors are logged but not fatal
-      await expect(writeStrictWatchStatus(invalidPath, status)).resolves.not.toThrow();
+      await expect(
+        writeStrictWatchStatus(invalidPath, status),
+      ).resolves.not.toThrow();
     });
   });
 });

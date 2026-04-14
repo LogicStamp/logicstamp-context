@@ -5,7 +5,11 @@
 import { normalizeEntryId } from '../../utils/fsx.js';
 import type { ProjectManifest } from '../manifest.js';
 import { resolveDependency } from './resolver.js';
-import { isThirdPartyPackage, extractPackageName, getPackageVersion } from './packageInfo.js';
+import {
+  isThirdPartyPackage,
+  extractPackageName,
+  getPackageVersion,
+} from './packageInfo.js';
 
 /**
  * Missing dependency information
@@ -26,12 +30,14 @@ export async function collectDependencies(
   manifest: ProjectManifest,
   depth: number,
   maxNodes: number,
-  projectRoot?: string
+  projectRoot?: string,
 ): Promise<{ visited: Set<string>; missing: MissingDependency[] }> {
   const visited = new Set<string>();
   const missing: MissingDependency[] = [];
   const missingNames = new Set<string>(); // Track already-added missing deps for O(1) lookup
-  const queue: Array<{ id: string; level: number }> = [{ id: entryId, level: 0 }];
+  const queue: Array<{ id: string; level: number }> = [
+    { id: entryId, level: 0 },
+  ];
 
   // Build normalized ID index for O(1) lookups (instead of O(n) linear search)
   const normalizedIdIndex = new Map<string, string>();
@@ -67,13 +73,13 @@ export async function collectDependencies(
     if (visited.size >= maxNodes) {
       break;
     }
-    
+
     if (!node) {
       const missingDep: MissingDependency = {
         name: current.id,
         reason: 'Component not found in manifest',
       };
-      
+
       // Enhance with package info if it's a third-party package
       if (projectRoot && isThirdPartyPackage(current.id)) {
         const packageName = extractPackageName(current.id);
@@ -85,7 +91,7 @@ export async function collectDependencies(
           }
         }
       }
-      
+
       missing.push(missingDep);
       continue;
     }
@@ -117,7 +123,10 @@ export async function collectDependencies(
               const packageName = extractPackageName(dep);
               if (packageName) {
                 missingDep.packageName = packageName;
-                const version = await getPackageVersion(packageName, projectRoot);
+                const version = await getPackageVersion(
+                  packageName,
+                  projectRoot,
+                );
                 if (version) {
                   missingDep.packageVersion = version;
                 }
@@ -133,4 +142,3 @@ export async function collectDependencies(
 
   return { visited, missing };
 }
-

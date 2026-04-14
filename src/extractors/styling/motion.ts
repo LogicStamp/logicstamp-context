@@ -2,7 +2,17 @@
  * Framer Motion extractor - Extracts animation configurations
  */
 
-import { SourceFile, SyntaxKind, JsxAttribute, JsxExpression, PropertyAccessExpression, CallExpression, VariableDeclaration, NumericLiteral, PropertyAssignment } from 'ts-morph';
+import {
+  type SourceFile,
+  SyntaxKind,
+  type JsxAttribute,
+  type JsxExpression,
+  type PropertyAccessExpression,
+  type CallExpression,
+  type VariableDeclaration,
+  type NumericLiteral,
+  type PropertyAssignment,
+} from 'ts-morph';
 import type { AnimationMetadata } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
 
@@ -24,7 +34,9 @@ export function extractMotionConfig(source: SourceFile): {
     let hasViewport = false;
 
     // Cache import declarations for reuse
-    let importDeclarations = [] as ReturnType<SourceFile['getImportDeclarations']>;
+    let importDeclarations = [] as ReturnType<
+      SourceFile['getImportDeclarations']
+    >;
     try {
       importDeclarations = source.getImportDeclarations();
     } catch (error) {
@@ -38,7 +50,7 @@ export function extractMotionConfig(source: SourceFile): {
     // Check if Framer Motion is actually being used
     let hasFramerMotionImport = false;
     try {
-      hasFramerMotionImport = importDeclarations.some(imp => {
+      hasFramerMotionImport = importDeclarations.some((imp) => {
         const mod = imp.getModuleSpecifierValue();
         return mod === 'framer-motion' || mod.startsWith('framer-motion/');
       });
@@ -53,7 +65,9 @@ export function extractMotionConfig(source: SourceFile): {
     // Extract motion components (motion.div, motion.button, etc.) using AST
     let propertyAccessExpressions: PropertyAccessExpression[] = [];
     try {
-      propertyAccessExpressions = source.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression);
+      propertyAccessExpressions = source.getDescendantsOfKind(
+        SyntaxKind.PropertyAccessExpression,
+      );
     } catch (error) {
       debugError('motion', 'extractMotionConfig', {
         error: error instanceof Error ? error.message : String(error),
@@ -65,7 +79,10 @@ export function extractMotionConfig(source: SourceFile): {
     try {
       for (const propAccess of propertyAccessExpressions) {
         const expression = propAccess.getExpression();
-        if (expression.getKind() === SyntaxKind.Identifier && expression.getText() === 'motion') {
+        if (
+          expression.getKind() === SyntaxKind.Identifier &&
+          expression.getText() === 'motion'
+        ) {
           const name = propAccess.getNameNode().getText();
           components.add(name);
         }
@@ -97,15 +114,20 @@ export function extractMotionConfig(source: SourceFile): {
       for (const attr of jsxAttributes) {
         const jsxAttr = attr as JsxAttribute;
         const attrName = jsxAttr.getNameNode().getText();
-        
+
         if (attrName === 'variants') {
           const initializer = jsxAttr.getInitializer();
-          if (initializer && initializer.getKind() === SyntaxKind.JsxExpression) {
+          if (
+            initializer &&
+            initializer.getKind() === SyntaxKind.JsxExpression
+          ) {
             const jsxExpr = initializer as JsxExpression;
             const expr = jsxExpr.getExpression();
             if (expr && expr.getKind() === SyntaxKind.ObjectLiteralExpression) {
               // Extract property names from inline object literal
-              const objLiteral = expr.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+              const objLiteral = expr.asKindOrThrow(
+                SyntaxKind.ObjectLiteralExpression,
+              );
               const properties = objLiteral.getProperties();
               for (const prop of properties) {
                 if (prop.getKind() === SyntaxKind.PropertyAssignment) {
@@ -121,17 +143,29 @@ export function extractMotionConfig(source: SourceFile): {
               // Find the variable declaration and extract from it
               try {
                 const varName = expr.getText();
-                const variableDeclarations: VariableDeclaration[] = source.getDescendantsOfKind(SyntaxKind.VariableDeclaration);
+                const variableDeclarations: VariableDeclaration[] =
+                  source.getDescendantsOfKind(SyntaxKind.VariableDeclaration);
                 for (const varDecl of variableDeclarations) {
                   const nameNode = varDecl.getNameNode();
-                  if (nameNode.getKind() === SyntaxKind.Identifier && nameNode.getText() === varName) {
+                  if (
+                    nameNode.getKind() === SyntaxKind.Identifier &&
+                    nameNode.getText() === varName
+                  ) {
                     const initializer = varDecl.getInitializer();
-                    if (initializer && initializer.getKind() === SyntaxKind.ObjectLiteralExpression) {
-                      const objLiteral = initializer.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+                    if (
+                      initializer &&
+                      initializer.getKind() ===
+                        SyntaxKind.ObjectLiteralExpression
+                    ) {
+                      const objLiteral = initializer.asKindOrThrow(
+                        SyntaxKind.ObjectLiteralExpression,
+                      );
                       const properties = objLiteral.getProperties();
                       for (const prop of properties) {
                         if (prop.getKind() === SyntaxKind.PropertyAssignment) {
-                          const propAssignment = prop.asKindOrThrow(SyntaxKind.PropertyAssignment);
+                          const propAssignment = prop.asKindOrThrow(
+                            SyntaxKind.PropertyAssignment,
+                          );
                           const propName = propAssignment.getNameNode();
                           if (propName.getKind() === SyntaxKind.Identifier) {
                             variants.add(propName.getText());
@@ -163,10 +197,26 @@ export function extractMotionConfig(source: SourceFile): {
 
     // Check for gesture handlers (only if Framer Motion is being used)
     if (usesMotion && !hasGestures) {
-      const gestureProps = ['whileHover', 'whileTap', 'whileDrag', 'whileFocus', 'whileInView',
-        'onTap', 'onPan', 'onDrag', 'onHover', 'onTapStart', 'onTapEnd', 
-        'onPanStart', 'onPanEnd', 'onDragStart', 'onDragEnd', 'onHoverStart', 'onHoverEnd'];
-      
+      const gestureProps = [
+        'whileHover',
+        'whileTap',
+        'whileDrag',
+        'whileFocus',
+        'whileInView',
+        'onTap',
+        'onPan',
+        'onDrag',
+        'onHover',
+        'onTapStart',
+        'onTapEnd',
+        'onPanStart',
+        'onPanEnd',
+        'onDragStart',
+        'onDragEnd',
+        'onHoverStart',
+        'onHoverEnd',
+      ];
+
       try {
         for (const attr of jsxAttributes) {
           const jsxAttr = attr as JsxAttribute;
@@ -228,10 +278,15 @@ export function extractMotionConfig(source: SourceFile): {
     // Check for useInView hook using AST (only if Framer Motion is being used)
     if (usesMotion && !hasViewport) {
       try {
-        const callExpressions = source.getDescendantsOfKind(SyntaxKind.CallExpression);
+        const callExpressions = source.getDescendantsOfKind(
+          SyntaxKind.CallExpression,
+        );
         for (const callExpr of callExpressions) {
           const expr = callExpr.getExpression();
-          if (expr.getKind() === SyntaxKind.Identifier && expr.getText() === 'useInView') {
+          if (
+            expr.getKind() === SyntaxKind.Identifier &&
+            expr.getText() === 'useInView'
+          ) {
             hasViewport = true;
             break;
           }
@@ -270,12 +325,16 @@ export function extractMotionConfig(source: SourceFile): {
 /**
  * Extract animation metadata using AST
  */
-export function extractAnimationMetadata(source: SourceFile): AnimationMetadata {
+export function extractAnimationMetadata(
+  source: SourceFile,
+): AnimationMetadata {
   try {
     const animation: AnimationMetadata = {};
 
     // Cache import declarations for reuse
-    let importDeclarations = [] as ReturnType<SourceFile['getImportDeclarations']>;
+    let importDeclarations = [] as ReturnType<
+      SourceFile['getImportDeclarations']
+    >;
     try {
       importDeclarations = source.getImportDeclarations();
     } catch (error) {
@@ -289,7 +348,7 @@ export function extractAnimationMetadata(source: SourceFile): AnimationMetadata 
     // Check for framer-motion animations using AST
     let hasFramerMotion = false;
     try {
-      hasFramerMotion = importDeclarations.some(imp => {
+      hasFramerMotion = importDeclarations.some((imp) => {
         const mod = imp.getModuleSpecifierValue();
         return mod === 'framer-motion' || mod.startsWith('framer-motion/');
       });
@@ -322,20 +381,38 @@ export function extractAnimationMetadata(source: SourceFile): AnimationMetadata 
         for (const attr of jsxAttributes) {
           if (attr.getNameNode().getText() === 'animate') {
             const animateInitializer = attr.getInitializer();
-            if (animateInitializer && animateInitializer.getKind() === SyntaxKind.JsxExpression) {
+            if (
+              animateInitializer &&
+              animateInitializer.getKind() === SyntaxKind.JsxExpression
+            ) {
               const animateJsxExpr = animateInitializer as JsxExpression;
               const expr = animateJsxExpr.getExpression();
-              if (expr && expr.getKind() === SyntaxKind.ObjectLiteralExpression) {
-                const objLiteral = expr.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+              if (
+                expr &&
+                expr.getKind() === SyntaxKind.ObjectLiteralExpression
+              ) {
+                const objLiteral = expr.asKindOrThrow(
+                  SyntaxKind.ObjectLiteralExpression,
+                );
                 const properties = objLiteral.getProperties();
                 for (const prop of properties) {
                   if (prop.getKind() === SyntaxKind.PropertyAssignment) {
                     const propAssignment = prop as PropertyAssignment;
                     const name = propAssignment.getNameNode();
-                    if (name.getKind() === SyntaxKind.Identifier && name.getText() === 'opacity') {
-                      const opacityInitializer = propAssignment.getInitializer();
-                      if (opacityInitializer && opacityInitializer.getKind() === SyntaxKind.NumericLiteral) {
-                        const value = (opacityInitializer as NumericLiteral).getLiteralValue();
+                    if (
+                      name.getKind() === SyntaxKind.Identifier &&
+                      name.getText() === 'opacity'
+                    ) {
+                      const opacityInitializer =
+                        propAssignment.getInitializer();
+                      if (
+                        opacityInitializer &&
+                        opacityInitializer.getKind() ===
+                          SyntaxKind.NumericLiteral
+                      ) {
+                        const value = (
+                          opacityInitializer as NumericLiteral
+                        ).getLiteralValue();
                         if (value === 1) {
                           animation.type = 'fade-in';
                           break;
@@ -347,23 +424,28 @@ export function extractAnimationMetadata(source: SourceFile): AnimationMetadata 
                 if (animation.type === 'fade-in') break;
               }
             }
+          }
         }
+      } catch (error) {
+        debugError('motion', 'extractAnimationMetadata', {
+          error: error instanceof Error ? error.message : String(error),
+          context: 'checkFadeInPatterns',
+        });
+        // Continue - animation detection may be incomplete but not fatal
       }
-    } catch (error) {
-      debugError('motion', 'extractAnimationMetadata', {
-        error: error instanceof Error ? error.message : String(error),
-        context: 'checkFadeInPatterns',
-      });
-      // Continue - animation detection may be incomplete but not fatal
-    }
 
       // Check for useInView hook using AST
       if (!animation.trigger) {
         try {
-          const callExpressions: CallExpression[] = source.getDescendantsOfKind(SyntaxKind.CallExpression);
+          const callExpressions: CallExpression[] = source.getDescendantsOfKind(
+            SyntaxKind.CallExpression,
+          );
           for (const callExpr of callExpressions) {
             const expr = callExpr.getExpression();
-            if (expr.getKind() === SyntaxKind.Identifier && expr.getText() === 'useInView') {
+            if (
+              expr.getKind() === SyntaxKind.Identifier &&
+              expr.getText() === 'useInView'
+            ) {
               animation.trigger = 'inView';
               break;
             }
@@ -381,27 +463,29 @@ export function extractAnimationMetadata(source: SourceFile): AnimationMetadata 
     // Check for CSS transitions/animations using AST (reuse jsxAttributes from above)
     let hasTransition = false;
     let hasAnimateClass = false;
-    
+
     try {
       // Check for transition attribute or transition-related classes in className
-      hasTransition = jsxAttributes.some(attr => {
+      hasTransition = jsxAttributes.some((attr) => {
         const name = attr.getNameNode().getText();
-        
+
         if (name === 'transition') return true; // explicit prop
-        
+
         if (name === 'className' || name === 'class') {
           const attrInitializer = attr.getInitializer();
           if (attrInitializer) {
             const text = attrInitializer.getText();
             // Tailwind-style transitions
-            return /(?:^|\s)transition-/.test(text) || /(?:^|\s)duration-/.test(text);
+            return (
+              /(?:^|\s)transition-/.test(text) || /(?:^|\s)duration-/.test(text)
+            );
           }
         }
-        
+
         return false;
       });
 
-      hasAnimateClass = jsxAttributes.some(attr => {
+      hasAnimateClass = jsxAttributes.some((attr) => {
         const attrName = attr.getNameNode().getText();
         if (attrName === 'className' || attrName === 'class') {
           const attrInitializer = attr.getInitializer();
@@ -460,4 +544,3 @@ export function extractAnimationMetadata(source: SourceFile): AnimationMetadata 
     return {};
   }
 }
-

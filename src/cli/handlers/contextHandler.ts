@@ -5,7 +5,10 @@
 import { contextCommand, type ContextOptions } from '../commands/context.js';
 import { parseContextArgs, getGenerateHelp } from '../parser/index.js';
 import { printFoxIcon } from './initHandler.js';
-import { gracefulShutdown, registerSignalHandlers } from '../../utils/cleanup.js';
+import {
+  gracefulShutdown,
+  registerSignalHandlers,
+} from '../../utils/cleanup.js';
 
 export async function handleGenerate(args: string[]): Promise<void> {
   if (args.includes('--help') || args.includes('-h')) {
@@ -28,4 +31,3 @@ export async function handleGenerate(args: string[]): Promise<void> {
     await gracefulShutdown(1);
   }
 }
-
