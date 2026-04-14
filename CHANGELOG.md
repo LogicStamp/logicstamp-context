@@ -20,6 +20,23 @@ See [docs/reference/limitations.md](docs/reference/limitations.md).
 
 ---
 
+## [0.8.7] - 2026-04-15
+
+### Chore
+
+- **Add config, scripts, and formatting baseline (Biome)** ([#194](https://github.com/LogicStamp/logicstamp-context/pull/194))
+  - Add `biome.json` configuration
+  - Add `@biomejs/biome` as a dev dependency
+  - Add lint and format scripts to `package.json`
+  - Update `CONTRIBUTING.md` with lint/format instructions
+  - Apply Biome formatting across the codebase as a one-time baseline
+
+- **Add Biome linting step to CI workflow** ([#195](https://github.com/LogicStamp/logicstamp-context/pull/195))
+
+No runtime or behavioral changes are intended.
+
+---
+
 ## [0.8.6] - 2026-04-14
 
 ### Changed
@@ -743,7 +760,9 @@ See [docs/reference/limitations.md](docs/reference/limitations.md).
 
 
 
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.8.6...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.8.7...HEAD
+
+[0.8.7]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.7
 
 [0.8.6]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.6
 

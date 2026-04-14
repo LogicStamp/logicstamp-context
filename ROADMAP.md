@@ -4,9 +4,10 @@ Planned features, improvements, and known limitations. See [CHANGELOG.md](CHANGE
 
 ## Current Status
 
-**Version:** v0.8.6 (Beta)
+**Version:** v0.8.7 (Beta)
 
 Recent milestones:
+- **Biome baseline and CI linting (v0.8.7)** - Added `biome.json`, Biome lint/format scripts and dependency setup, updated contributing docs for lint/format workflows, applied a one-time formatting baseline across the codebase, and added a Biome lint step to CI. No runtime or behavioral changes intended
 - **Runtime caches, NodeNext/ESM alignment, dependency refresh (v0.8.6)** - Encapsulated tokenizer and package.json caches behind runtime/loader helpers. Switched TypeScript `module` and `moduleResolution` to `NodeNext`, added conditional `exports` (`types` + `import`), normalized `bin` paths, and updated dependencies to current compatible versions
 - **Watch lock, file lock, secrets, compare fixes (v0.8.5)** - Watch: synchronous `isRegenerating` flag and queued change processing instead of a promise-based lock race. File lock: exclusive write helper with cleanup on failed write/close; Windows PID liveness via `tasklist` (with safe fallbacks) instead of `process.kill(pid, 0)`. Secret scanner: case-insensitive AWS/GitHub/PEM patterns. skip invalid match indices before snippets. Compare: `exportKind` treats `exports.named` as named only when it is a non-empty array
 - **CLI packaging, paths, and token summary (v0.8.4)** - `logicstamp-context` registered as npm bin (fixes `npx logicstamp-context`). centralized `normalizeEntryId` / `toForwardSlashes` across CLI, watch, pack loader, and AST; `stamp context` summary shows the current mode’s exact token count vs raw source with savings % (use `--compare-modes` for full breakdown). tag-based npm publish via GitHub Actions and updated contributing/release docs
