@@ -2,7 +2,7 @@
  * Handler for clean command
  */
 
-import { cleanCommand, type CleanOptions } from '../commands/clean.js';
+import { cleanCommand } from '../commands/clean.js';
 import { parseCleanArgs, getCleanHelp } from '../parser/index.js';
 import { printFoxIcon } from './initHandler.js';
 

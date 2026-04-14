@@ -2,7 +2,7 @@
  * Handler for init command
  */
 
-import { init, type InitOptions } from '../commands/init.js';
+import { init } from '../commands/init.js';
 import { parseInitArgs, getInitHelp } from '../parser/index.js';
 
 export function printFoxIcon() {

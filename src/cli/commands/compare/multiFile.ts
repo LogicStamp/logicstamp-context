@@ -7,7 +7,6 @@ import type {
   MultiFileCompareOptions,
   MultiFileCompareResult,
   FolderCompareResult,
-  CompareResult,
 } from './types.js';
 import { loadIndex, findOrphanedFiles } from './utils.js';
 import { compareFolderContext } from './singleFile.js';

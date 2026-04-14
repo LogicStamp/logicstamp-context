@@ -2,7 +2,7 @@
  * Handler for style command
  */
 
-import { styleCommand, type StyleOptions } from '../commands/style.js';
+import { styleCommand } from '../commands/style.js';
 import { parseStyleArgs, getStyleHelp } from '../parser/index.js';
 import { printFoxIcon } from './initHandler.js';
 

@@ -30,7 +30,7 @@ export async function ensureConfigExists(
         console.log('   Run `stamp init` to customize behavior.\n');
       }
     }
-  } catch (error) {
+  } catch {
     // Ignore config creation errors - not critical
   }
 }
@@ -64,7 +64,7 @@ export async function setupGitignore(
         console.log('\n📝 Added LogicStamp patterns to .gitignore');
       }
     }
-  } catch (error) {
+  } catch {
     // Silently ignore gitignore errors - not critical to context compilation
     // Users can run `stamp init` manually if needed
   }
@@ -84,7 +84,7 @@ export async function setupLLMContext(
     if (added && !options.quiet) {
       console.log('\n📝 Created LLM_CONTEXT.md');
     }
-  } catch (error) {
+  } catch {
     // Silently ignore LLM_CONTEXT.md errors - not critical to context compilation
   }
 }

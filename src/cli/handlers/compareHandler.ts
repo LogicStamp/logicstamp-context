@@ -25,7 +25,6 @@ import {
   resolveGitRef,
   describeGitRef,
   createWorktree,
-  removeWorktree,
   createBaselinePaths,
   cleanupBaselinePaths,
   filterGitIgnoredFiles,
@@ -441,9 +440,15 @@ async function handleGitBaselineCompare(options: {
   skipGitignore: boolean;
   strict: boolean;
 }): Promise<void> {
-  const { ref, stats, approve, quiet, skipGitignore, strict } = options;
+  const {
+    ref,
+    stats,
+    approve,
+    quiet,
+    skipGitignore: _skipGitignore,
+    strict,
+  } = options;
   const { join } = await import('node:path');
-  const { rm } = await import('node:fs/promises');
 
   // Validate git repository
   if (!(await isGitRepo())) {
@@ -494,7 +499,7 @@ async function handleGitBaselineCompare(options: {
       console.log(`🔄 Creating worktree at ${refDescription}...`);
     }
 
-    const worktree = await createWorktree(ref, paths.worktreeDir, {
+    await createWorktree(ref, paths.worktreeDir, {
       timeout: GIT_WORKTREE_TIMEOUT,
     });
 
