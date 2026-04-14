@@ -2,7 +2,7 @@
  * Handler for ignore command
  */
 
-import { ignoreCommand, type IgnoreOptions } from '../commands/ignore.js';
+import { ignoreCommand } from '../commands/ignore.js';
 import { parseIgnoreArgs, getIgnoreHelp } from '../parser/index.js';
 import { printFoxIcon } from './initHandler.js';
 

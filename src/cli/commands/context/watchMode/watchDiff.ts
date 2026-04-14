@@ -654,7 +654,7 @@ export function showChanges(
       added.forEach((id) => {
         const contract = newContractIdx.get(normalizeEntryId(id).toLowerCase());
         const hash = contract
-          ? contract.semanticHash.substring(0, 12) + '...'
+          ? `${contract.semanticHash.substring(0, 12)}...`
           : 'unknown';
         console.log(`  + ${id} (semanticHash: ${hash})`);
       });
@@ -665,7 +665,7 @@ export function showChanges(
       removed.forEach((id) => {
         const contract = oldContractIdx.get(normalizeEntryId(id).toLowerCase());
         const hash = contract
-          ? contract.semanticHash.substring(0, 12) + '...'
+          ? `${contract.semanticHash.substring(0, 12)}...`
           : 'unknown';
         console.log(`  - ${id} (semanticHash: ${hash})`);
       });

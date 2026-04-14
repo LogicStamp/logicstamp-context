@@ -2,7 +2,7 @@
  * Handler for context/compile command
  */
 
-import { contextCommand, type ContextOptions } from '../commands/context.js';
+import { contextCommand } from '../commands/context.js';
 import { parseContextArgs, getGenerateHelp } from '../parser/index.js';
 import { printFoxIcon } from './initHandler.js';
 import {

@@ -64,7 +64,7 @@ export function parseContextArgs(args: string[]): ContextOptions {
         case 'depth':
         case 'd': {
           const parsed = parseInt(value, 10);
-          if (isNaN(parsed) || parsed < 0) {
+          if (Number.isNaN(parsed) || parsed < 0) {
             console.error(
               `❌ Invalid depth value: ${value}. Must be a non-negative integer.`,
             );
@@ -92,7 +92,7 @@ export function parseContextArgs(args: string[]): ContextOptions {
         case 'max-nodes':
         case 'm': {
           const parsed = parseInt(value, 10);
-          if (isNaN(parsed) || parsed < 1) {
+          if (Number.isNaN(parsed) || parsed < 1) {
             console.error(
               `❌ Invalid max-nodes value: ${value}. Must be a positive integer.`,
             );
@@ -189,7 +189,7 @@ export function parseCompareArgs(args: string[]): CompareArgs {
 
   // Extract --baseline value
   let baseline: string | undefined;
-  const baselineIndex = args.findIndex((arg) => arg === '--baseline');
+  const baselineIndex = args.indexOf('--baseline');
   if (baselineIndex !== -1 && args[baselineIndex + 1]) {
     baseline = args[baselineIndex + 1];
   }

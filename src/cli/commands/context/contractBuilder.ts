@@ -72,7 +72,7 @@ export async function buildContractsFromFiles(
             absoluteFilePath,
             options.styleMode ?? 'lean',
           );
-        } catch (styleError) {
+        } catch {
           // Style extraction is optional - don't fail if it errors
           if (!options.quiet) {
             console.warn(`   ⚠️  Style extraction failed for ${file}`);

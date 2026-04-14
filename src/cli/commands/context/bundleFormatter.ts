@@ -47,7 +47,7 @@ export function formatBundles(
           ...b,
         };
         const header = `\n# Bundle ${idx + 1}/${bundles.length}: ${b.entryId}`;
-        return header + '\n' + JSON.stringify(bundleWithSchema, null, 2);
+        return `${header}\n${JSON.stringify(bundleWithSchema, null, 2)}`;
       })
       .join('\n\n');
   }

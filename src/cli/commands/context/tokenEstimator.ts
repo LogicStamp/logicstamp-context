@@ -8,10 +8,8 @@ import {
   formatTokenCount,
   getTokenizerStatus,
 } from '../../../utils/tokens.js';
-import type { LogicStampBundle } from '../../../core/pack.js';
 import type { UIFContract } from '../../../types/UIFContract.js';
 import type { ProjectManifest } from '../../../core/manifest.js';
-import type { PackOptions } from '../../../core/pack.js';
 import { pack } from '../../../core/pack.js';
 import { buildContract } from '../../../core/contractBuilder.js';
 import { extractFromFile } from '../../../core/astParser.js';
@@ -93,7 +91,7 @@ export interface ModeComparisonResult {
  * Calculate token estimates for current output
  */
 export async function calculateTokenEstimates(
-  output: string,
+  _output: string,
   totalSourceSize: number,
   currentGPT4: number,
   currentClaude: number,
@@ -194,7 +192,7 @@ export async function generateModeComparison(
         const { text } = await readFileWithText(absoluteFilePath);
         fileContentCache.set(absoluteFilePath, text);
         sourceTexts.push(text);
-      } catch (error) {
+      } catch {
         // Skip files that can't be read
       }
     }
@@ -203,7 +201,7 @@ export async function generateModeComparison(
     // Use actual tokenizers if available, otherwise fall back to approximation
     actualSourceTokensGPT4 = await estimateGPT4Tokens(concatenatedSource);
     actualSourceTokensClaude = await estimateClaudeTokens(concatenatedSource);
-  } catch (error) {
+  } catch {
     // Fallback to character-based approximation if tokenization fails
     actualSourceTokensGPT4 = Math.ceil(totalSourceSize / 4);
     actualSourceTokensClaude = Math.ceil(totalSourceSize / 4.5);
@@ -250,7 +248,7 @@ export async function generateModeComparison(
         if (result.contract) {
           noStyleContracts.push(result.contract);
         }
-      } catch (error) {
+      } catch {
         // Skip files that can't be analyzed
       }
     }
@@ -340,7 +338,7 @@ export async function generateModeComparison(
             absoluteFilePath,
             'lean',
           );
-        } catch (styleError) {
+        } catch {
           // Style extraction is optional
         }
 
@@ -355,7 +353,7 @@ export async function generateModeComparison(
         if (result.contract) {
           styleContracts.push(result.contract);
         }
-      } catch (error) {
+      } catch {
         // Skip files that can't be analyzed
       }
     }

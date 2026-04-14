@@ -87,7 +87,7 @@ export function validateBundles(bundles: LogicStampBundle[]): ValidationResult {
     }
 
     // Validate contracts
-    if (bundle.graph && bundle.graph.nodes) {
+    if (bundle.graph?.nodes) {
       for (const node of bundle.graph.nodes) {
         const contract = node.contract;
         if (contract?.type !== 'UIFContract') {
@@ -519,7 +519,7 @@ export async function validateCommand(
       }
 
       // Validate contracts
-      if (bundle.graph && bundle.graph.nodes) {
+      if (bundle.graph?.nodes) {
         for (const node of bundle.graph.nodes) {
           const contract = node.contract;
           if (contract?.type !== 'UIFContract') {
