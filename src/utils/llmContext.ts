@@ -14,7 +14,7 @@ import { readConfig, updateConfig } from './config.js';
 export async function readPackageLLMContext(): Promise<string | null> {
   const currentFile = fileURLToPath(import.meta.url);
   const currentDir = dirname(currentFile);
-  
+
   // Try multiple possible paths:
   // 1. Development: src/utils/llmContext.ts -> ../../LLM_CONTEXT.md
   // 2. Installed: node_modules/logicstamp-context/dist/utils/llmContext.js -> ../../../LLM_CONTEXT.md
@@ -29,10 +29,7 @@ export async function readPackageLLMContext(): Promise<string | null> {
     try {
       await access(path);
       return await readFile(path, 'utf-8');
-    } catch {
-      // Try next path
-      continue;
-    }
+    } catch {}
   }
 
   return null;
@@ -53,7 +50,10 @@ export async function llmContextExists(targetDir: string): Promise<boolean> {
 /**
  * Write LLM_CONTEXT.md to target directory
  */
-export async function writeLLMContext(targetDir: string, content: string): Promise<void> {
+export async function writeLLMContext(
+  targetDir: string,
+  content: string,
+): Promise<void> {
   const llmContextPath = join(targetDir, 'LLM_CONTEXT.md');
   await writeFile(llmContextPath, content, 'utf-8');
 }
@@ -69,7 +69,7 @@ export async function writeLLMContext(targetDir: string, content: string): Promi
  * Note: Prompting should only happen in `stamp init`, not in `stamp context`
  */
 export async function smartLLMContextSetup(
-  targetDir: string
+  targetDir: string,
 ): Promise<{ added: boolean; prompted: boolean; skipped: boolean }> {
   // Check if file already exists
   if (await llmContextExists(targetDir)) {
@@ -93,4 +93,3 @@ export async function smartLLMContextSetup(
   // Default behavior: skip (safe, no file creation)
   return { added: false, prompted: false, skipped: true };
 }
-

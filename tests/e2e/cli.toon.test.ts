@@ -32,7 +32,7 @@ describe('CLI TOON Format', () => {
     const outDir = join(outputPath, 'toon-test');
 
     const { stdout } = await execAsync(
-      `node dist/cli/stamp.js context ${fixturesPath} --format toon --out ${outDir}`
+      `node dist/cli/stamp.js context ${fixturesPath} --format toon --out ${outDir}`,
     );
 
     expect(stdout).toContain('context files written successfully');

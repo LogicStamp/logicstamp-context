@@ -64,13 +64,11 @@ export interface ProjectManifest {
  * Filter out internal components from dependencies
  * Internal components are defined in the same file but not exported
  */
-function filterInternalComponents(
-  contract: UIFContract
-): string[] {
+function filterInternalComponents(contract: UIFContract): string[] {
   // Get list of exported names from exports field
   const exportedNames = new Set<string>();
   let hasExportsList = false;
-  
+
   if (contract.exports) {
     if (contract.exports === 'default') {
       // Default export - we can't determine the specific name from exports field alone
@@ -82,7 +80,7 @@ function filterInternalComponents(
       hasExportsList = false;
     } else if (typeof contract.exports === 'object' && contract.exports.named) {
       // Multiple named exports - we have the explicit list
-      contract.exports.named.forEach(name => exportedNames.add(name));
+      contract.exports.named.forEach((name) => exportedNames.add(name));
       hasExportsList = true;
     }
   }
@@ -110,7 +108,9 @@ function filterInternalComponents(
   }
 
   // Return only external components (those not in internalComponents)
-  return contract.composition.components.filter(comp => !internalComponents.has(comp));
+  return contract.composition.components.filter(
+    (comp) => !internalComponents.has(comp),
+  );
 }
 
 /**
@@ -118,7 +118,7 @@ function filterInternalComponents(
  */
 export function buildDependencyGraph(
   contracts: UIFContract[],
-  options?: { includeHashIndices?: boolean }
+  options?: { includeHashIndices?: boolean },
 ): ProjectManifest {
   const components: Record<string, ComponentNode> = {};
 
@@ -187,7 +187,12 @@ export function buildDependencyGraph(
   }
 
   // Build hash indices if requested
-  let hashIndex: { structureHash: Record<string, string[]>; signatureHash: Record<string, string[]> } | undefined;
+  let hashIndex:
+    | {
+        structureHash: Record<string, string[]>;
+        signatureHash: Record<string, string[]>;
+      }
+    | undefined;
 
   if (options?.includeHashIndices) {
     hashIndex = buildHashIndices(components);
@@ -245,19 +250,26 @@ function buildHashIndices(components: Record<string, ComponentNode>): {
  */
 function findComponentByName(
   components: Record<string, ComponentNode>,
-  name: string
+  name: string,
 ): ComponentNode | null {
   // First try exact match
-  const exactMatch = Object.values(components).find((c) => c.entryId.endsWith(`/${name}.tsx`));
+  const exactMatch = Object.values(components).find((c) =>
+    c.entryId.endsWith(`/${name}.tsx`),
+  );
   if (exactMatch) return exactMatch;
 
   // Try with .ts extension
-  const tsMatch = Object.values(components).find((c) => c.entryId.endsWith(`/${name}.ts`));
+  const tsMatch = Object.values(components).find((c) =>
+    c.entryId.endsWith(`/${name}.ts`),
+  );
   if (tsMatch) return tsMatch;
 
   // Try partial match on component name
   const partialMatch = Object.values(components).find((c) => {
-    const componentName = c.entryId.split('/').pop()?.replace(/\.(tsx?|jsx?)$/, '');
+    const componentName = c.entryId
+      .split('/')
+      .pop()
+      ?.replace(/\.(tsx?|jsx?)$/, '');
     return componentName === name;
   });
 
@@ -267,10 +279,13 @@ function findComponentByName(
 /**
  * Write manifest to file
  */
-export async function writeManifest(manifest: ProjectManifest, outPath: string): Promise<void> {
+export async function writeManifest(
+  manifest: ProjectManifest,
+  outPath: string,
+): Promise<void> {
   const manifestPath = join(outPath, 'logicstamp.manifest.json');
   const json = JSON.stringify(manifest, null, 2);
-  
+
   try {
     await writeFile(manifestPath, json, 'utf8');
   } catch (error) {
@@ -281,7 +296,7 @@ export async function writeManifest(manifest: ProjectManifest, outPath: string):
       message: err.message,
       code: err.code,
     });
-    
+
     let userMessage: string;
     switch (err.code) {
       case 'ENOENT':
@@ -313,18 +328,26 @@ export function generateStats(manifest: ProjectManifest): {
     usageCount: node.usedBy.length,
   }));
 
-  const complexityStats = Object.entries(manifest.components).map(([id, node]) => ({
-    id,
-    dependencyCount: node.dependencies.length,
-  }));
+  const complexityStats = Object.entries(manifest.components).map(
+    ([id, node]) => ({
+      id,
+      dependencyCount: node.dependencies.length,
+    }),
+  );
 
   const isolated = Object.entries(manifest.components)
-    .filter(([_, node]) => node.usedBy.length === 0 && node.dependencies.length === 0)
+    .filter(
+      ([_, node]) => node.usedBy.length === 0 && node.dependencies.length === 0,
+    )
     .map(([id]) => id);
 
   return {
-    mostUsed: usageStats.sort((a, b) => b.usageCount - a.usageCount).slice(0, 10),
-    mostComplex: complexityStats.sort((a, b) => b.dependencyCount - a.dependencyCount).slice(0, 10),
+    mostUsed: usageStats
+      .sort((a, b) => b.usageCount - a.usageCount)
+      .slice(0, 10),
+    mostComplex: complexityStats
+      .sort((a, b) => b.dependencyCount - a.dependencyCount)
+      .slice(0, 10),
     isolated,
   };
 }

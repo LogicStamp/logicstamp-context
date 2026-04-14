@@ -33,18 +33,26 @@ describe('Express.js End-to-End Tests', () => {
 
       expect(ast.backend?.routes).toBeDefined();
       expect(ast.backend?.routes?.length).toBeGreaterThan(0);
-      
+
       const routes = ast.backend!.routes!;
-      expect(routes.some(r => r.method === 'GET' && r.path === '/')).toBe(true);
-      expect(routes.some(r => r.method === 'GET' && r.path === '/:id')).toBe(true);
-      expect(routes.some(r => r.method === 'POST' && r.path === '/')).toBe(true);
+      expect(routes.some((r) => r.method === 'GET' && r.path === '/')).toBe(
+        true,
+      );
+      expect(routes.some((r) => r.method === 'GET' && r.path === '/:id')).toBe(
+        true,
+      );
+      expect(routes.some((r) => r.method === 'POST' && r.path === '/')).toBe(
+        true,
+      );
     });
 
     it('should extract route parameters', async () => {
       const routesPath = join(fixturesPath, 'routes/users.ts');
       const ast = await extractFromFile(routesPath);
 
-      const routeWithParams = ast.backend?.routes?.find(r => r.path === '/:id');
+      const routeWithParams = ast.backend?.routes?.find(
+        (r) => r.path === '/:id',
+      );
       expect(routeWithParams?.params).toEqual(['id']);
     });
 
@@ -53,12 +61,15 @@ describe('Express.js End-to-End Tests', () => {
       const ast = await extractFromFile(routesPath);
 
       const routes = ast.backend?.routes || [];
-      expect(routes.some(r => r.handler === 'getUsers')).toBe(true);
-      expect(routes.some(r => r.handler === 'createUser')).toBe(true);
+      expect(routes.some((r) => r.handler === 'getUsers')).toBe(true);
+      expect(routes.some((r) => r.handler === 'createUser')).toBe(true);
     });
 
     it('should extract functions from controllers', async () => {
-      const controllerPath = join(fixturesPath, 'controllers/userController.ts');
+      const controllerPath = join(
+        fixturesPath,
+        'controllers/userController.ts',
+      );
       const ast = await extractFromFile(controllerPath);
 
       // Controllers are TypeScript modules, not Express route files
@@ -116,7 +127,10 @@ describe('Express.js End-to-End Tests', () => {
     });
 
     it('should build contract for Express controller', async () => {
-      const controllerPath = join(fixturesPath, 'controllers/userController.ts');
+      const controllerPath = join(
+        fixturesPath,
+        'controllers/userController.ts',
+      );
       const ast = await extractFromFile(controllerPath);
       const { text } = await readFileWithText(controllerPath);
 
@@ -191,8 +205,8 @@ describe('Express.js End-to-End Tests', () => {
 
       const manifest = buildDependencyGraph(contracts);
 
-      const routeFiles = Object.values(manifest.components).filter(c => 
-        c.entryId.includes('routes/')
+      const routeFiles = Object.values(manifest.components).filter((c) =>
+        c.entryId.includes('routes/'),
       );
       expect(routeFiles.length).toBeGreaterThan(0);
     });

@@ -24,27 +24,31 @@ describe('ignoreCommand', () => {
 
   it('should throw error when no paths provided', async () => {
     await expect(ignoreCommand({ paths: [] })).rejects.toThrow(
-      'No paths provided. Usage: stamp ignore <path1> [path2] ...'
+      'No paths provided. Usage: stamp ignore <path1> [path2] ...',
     );
   });
 
   it('should add paths to .stampignore', async () => {
     vi.mocked(stampignore.readStampignore).mockResolvedValue({ ignore: [] });
-    vi.mocked(stampignore.addToStampignore).mockResolvedValue({ added: true, created: false });
+    vi.mocked(stampignore.addToStampignore).mockResolvedValue({
+      added: true,
+      created: false,
+    });
     vi.mocked(fsx.normalizeEntryId).mockImplementation((p) => p);
     vi.mocked(fsx.getRelativePath).mockImplementation((_, p) => p);
 
     await ignoreCommand({ paths: ['src/secrets.ts'] });
 
     expect(stampignore.addToStampignore).toHaveBeenCalled();
-    expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Added')
-    );
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Added'));
   });
 
   it('should handle absolute paths by converting to relative', async () => {
     vi.mocked(stampignore.readStampignore).mockResolvedValue({ ignore: [] });
-    vi.mocked(stampignore.addToStampignore).mockResolvedValue({ added: true, created: false });
+    vi.mocked(stampignore.addToStampignore).mockResolvedValue({
+      added: true,
+      created: false,
+    });
     vi.mocked(fsx.normalizeEntryId).mockImplementation((p) => p);
     vi.mocked(fsx.getRelativePath).mockReturnValue('src/secrets.ts');
 
@@ -64,13 +68,16 @@ describe('ignoreCommand', () => {
 
     expect(stampignore.addToStampignore).not.toHaveBeenCalled();
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('already in .stampignore')
+      expect.stringContaining('already in .stampignore'),
     );
   });
 
   it('should not output when quiet flag is set', async () => {
     vi.mocked(stampignore.readStampignore).mockResolvedValue({ ignore: [] });
-    vi.mocked(stampignore.addToStampignore).mockResolvedValue({ added: true, created: false });
+    vi.mocked(stampignore.addToStampignore).mockResolvedValue({
+      added: true,
+      created: false,
+    });
     vi.mocked(fsx.normalizeEntryId).mockImplementation((p) => p);
     vi.mocked(fsx.getRelativePath).mockImplementation((_, p) => p);
 
@@ -81,20 +88,26 @@ describe('ignoreCommand', () => {
 
   it('should show created message when .stampignore is created', async () => {
     vi.mocked(stampignore.readStampignore).mockResolvedValue({ ignore: [] });
-    vi.mocked(stampignore.addToStampignore).mockResolvedValue({ added: true, created: true });
+    vi.mocked(stampignore.addToStampignore).mockResolvedValue({
+      added: true,
+      created: true,
+    });
     vi.mocked(fsx.normalizeEntryId).mockImplementation((p) => p);
     vi.mocked(fsx.getRelativePath).mockImplementation((_, p) => p);
 
     await ignoreCommand({ paths: ['src/secrets.ts'] });
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Created .stampignore')
+      expect.stringContaining('Created .stampignore'),
     );
   });
 
   it('should handle multiple paths', async () => {
     vi.mocked(stampignore.readStampignore).mockResolvedValue({ ignore: [] });
-    vi.mocked(stampignore.addToStampignore).mockResolvedValue({ added: true, created: false });
+    vi.mocked(stampignore.addToStampignore).mockResolvedValue({
+      added: true,
+      created: false,
+    });
     vi.mocked(fsx.normalizeEntryId).mockImplementation((p) => p);
     vi.mocked(fsx.getRelativePath).mockImplementation((_, p) => p);
 
@@ -102,14 +115,19 @@ describe('ignoreCommand', () => {
 
     expect(stampignore.addToStampignore).toHaveBeenCalledWith(
       expect.any(String),
-      ['src/secrets.ts', 'src/config.ts']
+      ['src/secrets.ts', 'src/config.ts'],
     );
   });
 
   it('should filter out duplicates from normalized paths', async () => {
     vi.mocked(stampignore.readStampignore).mockResolvedValue({ ignore: [] });
-    vi.mocked(stampignore.addToStampignore).mockResolvedValue({ added: true, created: false });
-    vi.mocked(fsx.normalizeEntryId).mockImplementation((p) => p.replace(/\\/g, '/'));
+    vi.mocked(stampignore.addToStampignore).mockResolvedValue({
+      added: true,
+      created: false,
+    });
+    vi.mocked(fsx.normalizeEntryId).mockImplementation((p) =>
+      p.replace(/\\/g, '/'),
+    );
     vi.mocked(fsx.getRelativePath).mockImplementation((_, p) => p);
 
     await ignoreCommand({ paths: ['src/secrets.ts', 'src\\secrets.ts'] });

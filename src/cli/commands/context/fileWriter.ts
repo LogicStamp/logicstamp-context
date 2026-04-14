@@ -6,8 +6,16 @@ import { writeFile, mkdir } from 'node:fs/promises';
 import { dirname, join, resolve, relative, basename } from 'node:path';
 import { cwd } from 'node:process';
 import { createRequire } from 'module';
-import type { LogicStampBundle, LogicStampIndex, FolderInfo } from '../../../core/pack.js';
-import { getFolderPath, normalizeEntryId, toForwardSlashes } from '../../../utils/fsx.js';
+import type {
+  LogicStampBundle,
+  LogicStampIndex,
+  FolderInfo,
+} from '../../../core/pack.js';
+import {
+  getFolderPath,
+  normalizeEntryId,
+  toForwardSlashes,
+} from '../../../utils/fsx.js';
 import { estimateGPT4Tokens } from '../../../utils/tokens.js';
 import { formatBundlesForFolder } from './bundleFormatter.js';
 import { debugError } from '../../../utils/debug.js';
@@ -38,12 +46,12 @@ export function displayProjectRoot(projectRoot: string): string {
   const currentDir = cwd();
   const resolvedRoot = resolve(projectRoot);
   const resolvedCurrent = resolve(currentDir);
-  
+
   // If it's the current directory, show the folder name instead of "."
   if (resolvedRoot === resolvedCurrent) {
     return basename(resolvedRoot);
   }
-  
+
   // Try to show relative path from current directory
   try {
     const relPath = relative(currentDir, resolvedRoot);
@@ -54,7 +62,7 @@ export function displayProjectRoot(projectRoot: string): string {
   } catch {
     // If relative path calculation fails, fall back to absolute
   }
-  
+
   // Fall back to absolute path (normalized)
   return displayPath(resolvedRoot);
 }
@@ -66,7 +74,7 @@ export function displayProjectRoot(projectRoot: string): string {
 export function displayFilePath(filePath: string): string {
   const currentDir = cwd();
   const resolvedPath = resolve(filePath);
-  
+
   // Try to show relative path from current directory
   try {
     const relPath = relative(currentDir, resolvedPath);
@@ -77,7 +85,7 @@ export function displayFilePath(filePath: string): string {
   } catch {
     // If relative path calculation fails, fall back to absolute
   }
-  
+
   // Fall back to absolute path (normalized)
   return displayPath(resolvedPath);
 }
@@ -85,7 +93,10 @@ export function displayFilePath(filePath: string): string {
 /**
  * Detect if a folder is a root (application entry point) and assign a label
  */
-export function detectRootFolder(relativePath: string, components: string[]): { isRoot: boolean; rootLabel?: string } {
+export function detectRootFolder(
+  relativePath: string,
+  components: string[],
+): { isRoot: boolean; rootLabel?: string } {
   // Project root is always a root
   if (relativePath === '.') {
     return { isRoot: true, rootLabel: 'Project Root' };
@@ -95,7 +106,10 @@ export function detectRootFolder(relativePath: string, components: string[]): { 
   const pathLower = relativePath.toLowerCase();
 
   // Next.js app router
-  if (pathLower.includes('/app') && components.some(c => c === 'page.tsx' || c === 'layout.tsx')) {
+  if (
+    pathLower.includes('/app') &&
+    components.some((c) => c === 'page.tsx' || c === 'layout.tsx')
+  ) {
     return { isRoot: true, rootLabel: 'Next.js App' };
   }
 
@@ -128,7 +142,9 @@ export function detectRootFolder(relativePath: string, components: string[]): { 
 /**
  * Group bundles by folder
  */
-export function groupBundlesByFolder(bundles: LogicStampBundle[]): Map<string, LogicStampBundle[]> {
+export function groupBundlesByFolder(
+  bundles: LogicStampBundle[],
+): Map<string, LogicStampBundle[]> {
   const bundlesByFolder = new Map<string, LogicStampBundle[]>();
 
   for (const bundle of bundles) {
@@ -155,8 +171,12 @@ export async function writeContextFiles(
     format: 'json' | 'pretty' | 'ndjson' | 'toon';
     quiet?: boolean;
     verbose?: boolean;
-  }
-): Promise<{ filesWritten: number; folderInfos: FolderInfo[]; totalTokenEstimate: number }> {
+  },
+): Promise<{
+  filesWritten: number;
+  folderInfos: FolderInfo[];
+  totalTokenEstimate: number;
+}> {
   const bundlesByFolder = groupBundlesByFolder(bundles);
   const normalizedRoot = normalizeEntryId(projectRoot);
   const folderInfos: FolderInfo[] = [];
@@ -164,7 +184,9 @@ export async function writeContextFiles(
   let totalTokenEstimate = 0;
 
   if (!options.quiet) {
-    console.log(`📝 Writing context files for ${bundlesByFolder.size} folders...`);
+    console.log(
+      `📝 Writing context files for ${bundlesByFolder.size} folders...`,
+    );
   }
 
   for (const [folderPath, folderBundles] of bundlesByFolder) {
@@ -182,10 +204,12 @@ export async function writeContextFiles(
     }
 
     // Extract component file names from bundle entryIds
-    const components = folderBundles.map(b => {
+    const components = folderBundles.map((b) => {
       const normalized = normalizeEntryId(b.entryId);
       const lastSlash = normalized.lastIndexOf('/');
-      return lastSlash !== -1 ? normalized.substring(lastSlash + 1) : normalized;
+      return lastSlash !== -1
+        ? normalized.substring(lastSlash + 1)
+        : normalized;
     });
 
     // Detect if this is a root folder
@@ -202,10 +226,16 @@ export async function writeContextFiles(
     // Use .toon extension for TOON format, .json for all others
     const ext = options.format === 'toon' ? '.toon' : '.json';
     const contextBaseName = `context${ext}`;
-    const contextFileName = relativePath === '.' ? contextBaseName : join(relativePath, contextBaseName);
-    const contextFilePath = relativePath === '.' ? contextBaseName : `${relativePath}/${contextBaseName}`;
+    const contextFileName =
+      relativePath === '.'
+        ? contextBaseName
+        : join(relativePath, contextBaseName);
+    const contextFilePath =
+      relativePath === '.'
+        ? contextBaseName
+        : `${relativePath}/${contextBaseName}`;
     const folderContextPath = join(outputDir, contextFileName);
-    
+
     try {
       await mkdir(dirname(folderContextPath), { recursive: true });
       await writeFile(folderContextPath, folderOutput, 'utf8');
@@ -218,7 +248,7 @@ export async function writeContextFiles(
         message: err.message,
         code: err.code,
       });
-      
+
       let userMessage: string;
       switch (err.code) {
         case 'ENOENT':
@@ -236,7 +266,9 @@ export async function writeContextFiles(
       throw new Error(userMessage);
     }
     if (!options.quiet && options.verbose) {
-      console.log(`   ✓ ${displayFilePath(folderContextPath)} (${folderBundles.length} bundles)`);
+      console.log(
+        `   ✓ ${displayFilePath(folderContextPath)} (${folderBundles.length} bundles)`,
+      );
     }
 
     // Add to folder info array
@@ -268,7 +300,7 @@ export async function writeMainIndex(
   options: {
     quiet?: boolean;
     suppressSuccessIndicator?: boolean;
-  }
+  },
 ): Promise<void> {
   const mainContextPath = join(outputDir, 'context_main.json');
   const normalizedRoot = normalizeEntryId(projectRoot);
@@ -302,7 +334,7 @@ export async function writeMainIndex(
   };
 
   const indexOutput = JSON.stringify(index, null, 2);
-  
+
   try {
     await writeFile(mainContextPath, indexOutput, 'utf8');
   } catch (error) {
@@ -312,7 +344,7 @@ export async function writeMainIndex(
       message: err.message,
       code: err.code,
     });
-    
+
     let userMessage: string;
     switch (err.code) {
       case 'ENOENT':
@@ -329,12 +361,13 @@ export async function writeMainIndex(
     }
     throw new Error(userMessage);
   }
-  
+
   if (options.quiet && !options.suppressSuccessIndicator) {
     // Minimal output in quiet mode (unless suppressed for internal calls)
     process.stdout.write('✓\n');
   } else if (!options.quiet) {
-    console.log(`   ✓ ${displayFilePath(mainContextPath)} (index of ${bundlesByFolderSize} folders)`);
+    console.log(
+      `   ✓ ${displayFilePath(mainContextPath)} (index of ${bundlesByFolderSize} folders)`,
+    );
   }
 }
-

@@ -48,7 +48,8 @@ describe('codeSanitizer utilities', () => {
             line: 1,
             column: 12,
             type: 'API Key',
-            snippet: "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
+            snippet:
+              "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
             severity: 'high',
           },
         ],
@@ -95,7 +96,8 @@ describe('codeSanitizer utilities', () => {
             line: 1,
             column: 12,
             type: 'API Key',
-            snippet: "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
+            snippet:
+              "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
             severity: 'high',
           },
         ],
@@ -110,7 +112,9 @@ describe('codeSanitizer utilities', () => {
       const result = sanitizeCode(code, filePath, report, testDir);
 
       expect(result.sanitized).toContain('PRIVATE_DATA');
-      expect(result.sanitized).not.toContain('FAKE_API_KEY_1234567890abcdefghijklmnop');
+      expect(result.sanitized).not.toContain(
+        'FAKE_API_KEY_1234567890abcdefghijklmnop',
+      );
       expect(result.sanitized).toContain("const apiKey = 'PRIVATE_DATA';");
       expect(result.secretsReplaced).toBe(true);
       expect(result.matchCount).toBe(1);
@@ -130,7 +134,8 @@ describe('codeSanitizer utilities', () => {
             line: 2,
             column: 15,
             type: 'Password',
-            snippet: "const password = 'FAKE_PASSWORD_1234567890abcdefghijklmnop';",
+            snippet:
+              "const password = 'FAKE_PASSWORD_1234567890abcdefghijklmnop';",
             severity: 'high',
           },
         ],
@@ -143,7 +148,9 @@ const password = 'FAKE_PASSWORD_1234567890abcdefghijklmnop';`;
       const result = sanitizeCode(code, filePath, report, testDir);
 
       expect(result.sanitized).toContain('PRIVATE_DATA');
-      expect(result.sanitized).not.toContain('FAKE_PASSWORD_1234567890abcdefghijklmnop');
+      expect(result.sanitized).not.toContain(
+        'FAKE_PASSWORD_1234567890abcdefghijklmnop',
+      );
       expect(result.sanitized).toContain("const password = 'PRIVATE_DATA';");
       // Other lines should remain unchanged
       expect(result.sanitized).toContain("const apiKey = 'some_key';");
@@ -165,19 +172,23 @@ const password = 'FAKE_PASSWORD_1234567890abcdefghijklmnop';`;
             line: 1,
             column: 12,
             type: 'Token',
-            snippet: 'const token = "FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz";',
+            snippet:
+              'const token = "FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz";',
             severity: 'high',
           },
         ],
         filesWithSecrets: ['src/auth.ts'],
       };
 
-      const code = 'const token = "FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz";';
+      const code =
+        'const token = "FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz";';
       const filePath = resolve(testDir, 'src/auth.ts');
       const result = sanitizeCode(code, filePath, report, testDir);
 
       expect(result.sanitized).toContain('PRIVATE_DATA');
-      expect(result.sanitized).not.toContain('FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz');
+      expect(result.sanitized).not.toContain(
+        'FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz',
+      );
       expect(result.sanitized).toContain('const token = "PRIVATE_DATA";');
       expect(result.secretsReplaced).toBe(true);
       expect(result.matchCount).toBe(1);
@@ -197,7 +208,8 @@ const password = 'FAKE_PASSWORD_1234567890abcdefghijklmnop';`;
             line: 1,
             column: 12,
             type: 'API Key',
-            snippet: "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
+            snippet:
+              "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
             severity: 'high',
           },
           {
@@ -205,7 +217,8 @@ const password = 'FAKE_PASSWORD_1234567890abcdefghijklmnop';`;
             line: 2,
             column: 15,
             type: 'Password',
-            snippet: "const password = 'FAKE_PASSWORD_1234567890abcdefghijklmnop';",
+            snippet:
+              "const password = 'FAKE_PASSWORD_1234567890abcdefghijklmnop';",
             severity: 'high',
           },
           {
@@ -213,7 +226,8 @@ const password = 'FAKE_PASSWORD_1234567890abcdefghijklmnop';`;
             line: 3,
             column: 12,
             type: 'Token',
-            snippet: "const token = 'FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz';",
+            snippet:
+              "const token = 'FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz';",
             severity: 'high',
           },
         ],
@@ -227,9 +241,15 @@ const token = 'FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz';`;
       const result = sanitizeCode(code, filePath, report, testDir);
 
       expect(result.sanitized).toContain('PRIVATE_DATA');
-      expect(result.sanitized).not.toContain('FAKE_API_KEY_1234567890abcdefghijklmnop');
-      expect(result.sanitized).not.toContain('FAKE_PASSWORD_1234567890abcdefghijklmnop');
-      expect(result.sanitized).not.toContain('FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz');
+      expect(result.sanitized).not.toContain(
+        'FAKE_API_KEY_1234567890abcdefghijklmnop',
+      );
+      expect(result.sanitized).not.toContain(
+        'FAKE_PASSWORD_1234567890abcdefghijklmnop',
+      );
+      expect(result.sanitized).not.toContain(
+        'FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz',
+      );
       expect(result.sanitized).toContain("const apiKey = 'PRIVATE_DATA';");
       expect(result.sanitized).toContain("const password = 'PRIVATE_DATA';");
       expect(result.sanitized).toContain("const token = 'PRIVATE_DATA';");
@@ -243,7 +263,9 @@ const token = 'FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz';`;
       const result = sanitizeCode(code, filePath, null, testDir);
 
       expect(result.sanitized).toBe(code);
-      expect(result.sanitized).toContain('FAKE_API_KEY_1234567890abcdefghijklmnop');
+      expect(result.sanitized).toContain(
+        'FAKE_API_KEY_1234567890abcdefghijklmnop',
+      );
       expect(result.secretsReplaced).toBe(false);
       expect(result.matchCount).toBe(0);
     });
@@ -283,7 +305,8 @@ const token = 'FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz';`;
             line: 1,
             column: 12,
             type: 'API Key',
-            snippet: "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
+            snippet:
+              "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
             severity: 'high',
           },
         ],
@@ -295,7 +318,9 @@ const token = 'FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz';`;
       const result = sanitizeCode(code, filePath, report, testDir);
 
       expect(result.sanitized).toBe(code);
-      expect(result.sanitized).toContain('FAKE_API_KEY_1234567890abcdefghijklmnop');
+      expect(result.sanitized).toContain(
+        'FAKE_API_KEY_1234567890abcdefghijklmnop',
+      );
       expect(result.secretsReplaced).toBe(false);
       expect(result.matchCount).toBe(0);
     });
@@ -314,20 +339,24 @@ const token = 'FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz';`;
             line: 1,
             column: 12,
             type: 'Database URL with Credentials',
-            snippet: "const dbUrl = 'postgres://user:password123@localhost:5432/db';",
+            snippet:
+              "const dbUrl = 'postgres://user:password123@localhost:5432/db';",
             severity: 'high',
           },
         ],
         filesWithSecrets: ['src/db.ts'],
       };
 
-      const code = "const dbUrl = 'postgres://user:password123@localhost:5432/db';";
+      const code =
+        "const dbUrl = 'postgres://user:password123@localhost:5432/db';";
       const filePath = resolve(testDir, 'src/db.ts');
       const result = sanitizeCode(code, filePath, report, testDir);
 
       expect(result.sanitized).toContain('PRIVATE_DATA');
       expect(result.sanitized).not.toContain('password123');
-      expect(result.sanitized).toContain('postgres://user:PRIVATE_DATA@localhost:5432/db');
+      expect(result.sanitized).toContain(
+        'postgres://user:PRIVATE_DATA@localhost:5432/db',
+      );
       expect(result.secretsReplaced).toBe(true);
       expect(result.matchCount).toBe(1);
     });
@@ -346,7 +375,8 @@ const token = 'FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz';`;
             line: 1,
             column: 12,
             type: 'API Key',
-            snippet: "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
+            snippet:
+              "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
             severity: 'high',
           },
           {
@@ -354,7 +384,8 @@ const token = 'FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz';`;
             line: 2,
             column: 12,
             type: 'Token',
-            snippet: 'const token = "FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz";',
+            snippet:
+              'const token = "FAKE_TOKEN_1234567890abcdefghijklmnopqrstuvwxyz";',
             severity: 'high',
           },
           {
@@ -396,7 +427,8 @@ const secret = \`FAKE_SECRET_1234567890abcdefghijklmnop\`;`;
             line: 3,
             column: 12,
             type: 'API Key',
-            snippet: "  const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
+            snippet:
+              "  const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
             severity: 'high',
           },
         ],
@@ -413,11 +445,15 @@ const secret = \`FAKE_SECRET_1234567890abcdefghijklmnop\`;`;
 
       // Should preserve function structure
       expect(result.sanitized).toContain('export function getConfig()');
-      expect(result.sanitized).toContain("const baseUrl = 'https://api.example.com';");
+      expect(result.sanitized).toContain(
+        "const baseUrl = 'https://api.example.com';",
+      );
       expect(result.sanitized).toContain('return { baseUrl, apiKey };');
       // Should sanitize the secret
       expect(result.sanitized).toContain("const apiKey = 'PRIVATE_DATA';");
-      expect(result.sanitized).not.toContain('FAKE_API_KEY_1234567890abcdefghijklmnop');
+      expect(result.sanitized).not.toContain(
+        'FAKE_API_KEY_1234567890abcdefghijklmnop',
+      );
       expect(result.secretsReplaced).toBe(true);
       expect(result.matchCount).toBe(1);
     });
@@ -436,7 +472,8 @@ const secret = \`FAKE_SECRET_1234567890abcdefghijklmnop\`;`;
             line: 1,
             column: 12,
             type: 'API Key',
-            snippet: "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
+            snippet:
+              "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
             severity: 'high',
           },
         ],
@@ -449,7 +486,9 @@ const secret = \`FAKE_SECRET_1234567890abcdefghijklmnop\`;`;
       const result = sanitizeCode(code, absolutePath, report, testDir);
 
       expect(result.sanitized).toContain('PRIVATE_DATA');
-      expect(result.sanitized).not.toContain('FAKE_API_KEY_1234567890abcdefghijklmnop');
+      expect(result.sanitized).not.toContain(
+        'FAKE_API_KEY_1234567890abcdefghijklmnop',
+      );
       expect(result.secretsReplaced).toBe(true);
       expect(result.matchCount).toBe(1);
     });
@@ -468,7 +507,8 @@ const secret = \`FAKE_SECRET_1234567890abcdefghijklmnop\`;`;
             line: 1,
             column: 12,
             type: 'API Key',
-            snippet: "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
+            snippet:
+              "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
             severity: 'high',
           },
           {
@@ -476,7 +516,8 @@ const secret = \`FAKE_SECRET_1234567890abcdefghijklmnop\`;`;
             line: 10,
             column: 15,
             type: 'Password',
-            snippet: "  const password = 'FAKE_PASSWORD_1234567890abcdefghijklmnop';",
+            snippet:
+              "  const password = 'FAKE_PASSWORD_1234567890abcdefghijklmnop';",
             severity: 'high',
           },
         ],
@@ -524,7 +565,8 @@ function getPassword() {
             line: 1,
             column: 12,
             type: 'API Key',
-            snippet: "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
+            snippet:
+              "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
             severity: 'high',
           },
         ],
@@ -564,7 +606,8 @@ function getPassword() {
       };
 
       // Line without quotes around the URL (no full match, triggers fallback)
-      const code = 'const url = postgres://admin:secretpassword123@host:5432/db';
+      const code =
+        'const url = postgres://admin:secretpassword123@host:5432/db';
       const filePath = resolve(testDir, 'src/db.ts');
       const result = sanitizeCode(code, filePath, report, testDir);
 
@@ -601,7 +644,9 @@ function getPassword() {
       const result = sanitizeCode(code, filePath, report, testDir);
 
       expect(result.sanitized).toContain('PRIVATE_DATA');
-      expect(result.sanitized).not.toContain('FAKE_API_KEY_1234567890abcdefghijklmnop');
+      expect(result.sanitized).not.toContain(
+        'FAKE_API_KEY_1234567890abcdefghijklmnop',
+      );
       expect(result.secretsReplaced).toBe(true);
     });
 
@@ -632,7 +677,9 @@ function getPassword() {
       const result = sanitizeCode(code, filePath, report, testDir);
 
       expect(result.sanitized).toContain('PRIVATE_DATA');
-      expect(result.sanitized).not.toContain('UNQUOTED_SECRET_VALUE_1234567890');
+      expect(result.sanitized).not.toContain(
+        'UNQUOTED_SECRET_VALUE_1234567890',
+      );
       expect(result.secretsReplaced).toBe(true);
     });
 
@@ -650,7 +697,8 @@ function getPassword() {
             line: 1,
             column: 1,
             type: 'Private Key',
-            snippet: '-----BEGIN PRIVATE KEY-----MIIEvQIBAD-----END PRIVATE KEY-----',
+            snippet:
+              '-----BEGIN PRIVATE KEY-----MIIEvQIBAD-----END PRIVATE KEY-----',
             severity: 'critical',
           },
         ],
@@ -658,7 +706,8 @@ function getPassword() {
       };
 
       // Single-line private key (minified/encoded format)
-      const code = 'const key = "-----BEGIN PRIVATE KEY-----MIIEvQIBADANBgkq-----END PRIVATE KEY-----";';
+      const code =
+        'const key = "-----BEGIN PRIVATE KEY-----MIIEvQIBADANBgkq-----END PRIVATE KEY-----";';
       const filePath = resolve(testDir, 'src/keys.ts');
       const result = sanitizeCode(code, filePath, report, testDir);
 
@@ -683,7 +732,8 @@ function getPassword() {
             line: 1,
             column: 1,
             type: 'Private Key',
-            snippet: '-----BEGIN RSA PRIVATE KEY-----MIIEow-----END RSA PRIVATE KEY-----',
+            snippet:
+              '-----BEGIN RSA PRIVATE KEY-----MIIEow-----END RSA PRIVATE KEY-----',
             severity: 'critical',
           },
         ],
@@ -691,7 +741,8 @@ function getPassword() {
       };
 
       // Single-line RSA private key
-      const code = '-----BEGIN RSA PRIVATE KEY-----MIIEowIBAAKCAQEA0Z3VS5JJ-----END RSA PRIVATE KEY-----';
+      const code =
+        '-----BEGIN RSA PRIVATE KEY-----MIIEowIBAAKCAQEA0Z3VS5JJ-----END RSA PRIVATE KEY-----';
       const filePath = resolve(testDir, 'src/keys.ts');
       const result = sanitizeCode(code, filePath, report, testDir);
 
@@ -730,7 +781,9 @@ function getPassword() {
       const result = sanitizeCode(code, filePath, report, testDir);
 
       expect(result.sanitized).toContain('PRIVATE_DATA');
-      expect(result.sanitized).not.toContain('ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcd');
+      expect(result.sanitized).not.toContain(
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcd',
+      );
       expect(result.secretsReplaced).toBe(true);
     });
 
@@ -749,7 +802,8 @@ function getPassword() {
             line: 1,
             column: 12,
             type: 'API Key',
-            snippet: "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
+            snippet:
+              "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop';",
             severity: 'high',
           },
         ],
@@ -793,12 +847,17 @@ function getPassword() {
         filesWithSecrets: ['src/config.ts'],
       };
 
-      const code = "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop', secret = 'ANOTHER_SECRET_VALUE_1234567890xyz';";
+      const code =
+        "const apiKey = 'FAKE_API_KEY_1234567890abcdefghijklmnop', secret = 'ANOTHER_SECRET_VALUE_1234567890xyz';";
       const filePath = resolve(testDir, 'src/config.ts');
       const result = sanitizeCode(code, filePath, report, testDir);
 
-      expect(result.sanitized).not.toContain('FAKE_API_KEY_1234567890abcdefghijklmnop');
-      expect(result.sanitized).not.toContain('ANOTHER_SECRET_VALUE_1234567890xyz');
+      expect(result.sanitized).not.toContain(
+        'FAKE_API_KEY_1234567890abcdefghijklmnop',
+      );
+      expect(result.sanitized).not.toContain(
+        'ANOTHER_SECRET_VALUE_1234567890xyz',
+      );
       expect((result.sanitized.match(/PRIVATE_DATA/g) || []).length).toBe(2);
       expect(result.secretsReplaced).toBe(true);
       expect(result.matchCount).toBe(2);
@@ -818,20 +877,24 @@ function getPassword() {
             line: 1,
             column: 12,
             type: 'Database URL with Credentials',
-            snippet: "const dbUrl = 'mysql://root:mysqlpassword@localhost:3306/db';",
+            snippet:
+              "const dbUrl = 'mysql://root:mysqlpassword@localhost:3306/db';",
             severity: 'high',
           },
         ],
         filesWithSecrets: ['src/db.ts'],
       };
 
-      const code = "const dbUrl = 'mysql://root:mysqlpassword@localhost:3306/db';";
+      const code =
+        "const dbUrl = 'mysql://root:mysqlpassword@localhost:3306/db';";
       const filePath = resolve(testDir, 'src/db.ts');
       const result = sanitizeCode(code, filePath, report, testDir);
 
       expect(result.sanitized).toContain('PRIVATE_DATA');
       expect(result.sanitized).not.toContain('mysqlpassword');
-      expect(result.sanitized).toContain('mysql://root:PRIVATE_DATA@localhost:3306/db');
+      expect(result.sanitized).toContain(
+        'mysql://root:PRIVATE_DATA@localhost:3306/db',
+      );
       expect(result.secretsReplaced).toBe(true);
     });
 
@@ -849,22 +912,25 @@ function getPassword() {
             line: 1,
             column: 12,
             type: 'Database URL with Credentials',
-            snippet: "const dbUrl = \"mongodb://admin:mongopass123@localhost:27017/db\";",
+            snippet:
+              'const dbUrl = "mongodb://admin:mongopass123@localhost:27017/db";',
             severity: 'high',
           },
         ],
         filesWithSecrets: ['src/db.ts'],
       };
 
-      const code = 'const dbUrl = "mongodb://admin:mongopass123@localhost:27017/db";';
+      const code =
+        'const dbUrl = "mongodb://admin:mongopass123@localhost:27017/db";';
       const filePath = resolve(testDir, 'src/db.ts');
       const result = sanitizeCode(code, filePath, report, testDir);
 
       expect(result.sanitized).toContain('PRIVATE_DATA');
       expect(result.sanitized).not.toContain('mongopass123');
-      expect(result.sanitized).toContain('mongodb://admin:PRIVATE_DATA@localhost:27017/db');
+      expect(result.sanitized).toContain(
+        'mongodb://admin:PRIVATE_DATA@localhost:27017/db',
+      );
       expect(result.secretsReplaced).toBe(true);
     });
   });
 });
-

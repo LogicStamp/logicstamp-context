@@ -65,7 +65,9 @@ export function parseContextArgs(args: string[]): ContextOptions {
         case 'd': {
           const parsed = parseInt(value, 10);
           if (isNaN(parsed) || parsed < 0) {
-            console.error(`❌ Invalid depth value: ${value}. Must be a non-negative integer.`);
+            console.error(
+              `❌ Invalid depth value: ${value}. Must be a non-negative integer.`,
+            );
             process.exit(1);
           }
           options.depth = parsed;
@@ -91,7 +93,9 @@ export function parseContextArgs(args: string[]): ContextOptions {
         case 'm': {
           const parsed = parseInt(value, 10);
           if (isNaN(parsed) || parsed < 1) {
-            console.error(`❌ Invalid max-nodes value: ${value}. Must be a positive integer.`);
+            console.error(
+              `❌ Invalid max-nodes value: ${value}. Must be a positive integer.`,
+            );
             process.exit(1);
           }
           options.maxNodes = parsed;
@@ -99,7 +103,11 @@ export function parseContextArgs(args: string[]): ContextOptions {
           break;
         }
         case 'profile':
-          options.profile = value as 'llm-safe' | 'llm-chat' | 'ci-strict' | 'watch-fast';
+          options.profile = value as
+            | 'llm-safe'
+            | 'llm-chat'
+            | 'ci-strict'
+            | 'watch-fast';
           i++;
           break;
         case 'strict':
@@ -181,7 +189,7 @@ export function parseCompareArgs(args: string[]): CompareArgs {
 
   // Extract --baseline value
   let baseline: string | undefined;
-  const baselineIndex = args.findIndex(arg => arg === '--baseline');
+  const baselineIndex = args.findIndex((arg) => arg === '--baseline');
   if (baselineIndex !== -1 && args[baselineIndex + 1]) {
     baseline = args[baselineIndex + 1];
   }
@@ -212,7 +220,7 @@ export function parseCompareArgs(args: string[]): CompareArgs {
  */
 export function parseValidateArgs(args: string[]): ValidateArgs {
   const quiet = args.includes('--quiet') || args.includes('-q');
-  const filePath = args.filter(arg => arg !== '--quiet' && arg !== '-q')[0];
+  const filePath = args.filter((arg) => arg !== '--quiet' && arg !== '-q')[0];
 
   return {
     quiet,
@@ -301,10 +309,10 @@ export function parseCleanArgs(args: string[]): CleanOptions {
 export function parseStyleArgs(args: string[]): StyleOptions {
   // Style command uses same parsing as context, but StyleOptions omits includeStyle
   const contextOptions = parseContextArgs(args);
-  
+
   // Remove includeStyle since StyleOptions is Omit<ContextOptions, 'includeStyle'>
   const { includeStyle, ...styleOptions } = contextOptions;
-  
+
   return styleOptions as StyleOptions;
 }
 
@@ -327,8 +335,6 @@ export function parseIgnoreArgs(args: string[]): IgnoreArgs {
     const arg = args[i];
 
     if (arg === '--quiet' || arg === '-q') {
-      // Already handled above
-      continue;
     } else if (!arg.startsWith('--') && !arg.startsWith('-')) {
       // Non-option argument - could be targetDir or a path
       if (!options.targetDir && options.paths.length === 0) {
@@ -344,4 +350,3 @@ export function parseIgnoreArgs(args: string[]): IgnoreArgs {
 
   return options;
 }
-

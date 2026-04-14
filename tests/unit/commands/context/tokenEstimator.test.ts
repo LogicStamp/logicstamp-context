@@ -7,10 +7,16 @@ import { createMockManifest } from './helpers.js';
 
 // Mock dependencies before imports
 vi.mock('../../../../src/utils/tokens.js', () => ({
-  estimateGPT4Tokens: vi.fn((text: string) => Promise.resolve(Math.ceil(text.length / 4))),
-  estimateClaudeTokens: vi.fn((text: string) => Promise.resolve(Math.ceil(text.length / 4.5))),
+  estimateGPT4Tokens: vi.fn((text: string) =>
+    Promise.resolve(Math.ceil(text.length / 4)),
+  ),
+  estimateClaudeTokens: vi.fn((text: string) =>
+    Promise.resolve(Math.ceil(text.length / 4.5)),
+  ),
   formatTokenCount: vi.fn((n: number) => n.toLocaleString()),
-  getTokenizerStatus: vi.fn(() => Promise.resolve({ gpt4: true, claude: true })),
+  getTokenizerStatus: vi.fn(() =>
+    Promise.resolve({ gpt4: true, claude: true }),
+  ),
 }));
 
 vi.mock('../../../../src/utils/fsx.js', () => ({
@@ -53,7 +59,10 @@ import {
 } from '../../../../src/cli/commands/context/tokenEstimator.js';
 import { readFileWithText } from '../../../../src/utils/fsx.js';
 import { extractFromFile } from '../../../../src/core/astParser.js';
-import { buildContract, type ContractBuildResult } from '../../../../src/core/contractBuilder.js';
+import {
+  buildContract,
+  type ContractBuildResult,
+} from '../../../../src/core/contractBuilder.js';
 import { extractStyleMetadata } from '../../../../src/extractors/styling/index.js';
 import { pack } from '../../../../src/core/pack.js';
 import { formatBundles } from '../../../../src/cli/commands/context/bundleFormatter.js';
@@ -135,8 +144,14 @@ describe('tokenEstimator', () => {
   describe('generateModeComparison', () => {
     it('should read all source files for token calculation', async () => {
       vi.mocked(readFileWithText)
-        .mockResolvedValueOnce({ text: 'file1 content', path: '/project/src/A.tsx' })
-        .mockResolvedValueOnce({ text: 'file2 content', path: '/project/src/B.tsx' });
+        .mockResolvedValueOnce({
+          text: 'file1 content',
+          path: '/project/src/A.tsx',
+        })
+        .mockResolvedValueOnce({
+          text: 'file2 content',
+          path: '/project/src/B.tsx',
+        });
 
       const manifest = createMockManifest(['src/A.tsx', 'src/B.tsx']);
 
@@ -158,14 +173,16 @@ describe('tokenEstimator', () => {
           allowMissing: true,
           predictBehavior: false,
           quiet: true,
-        }
+        },
       );
 
       expect(readFileWithText).toHaveBeenCalledTimes(2);
     });
 
     it('should handle file read failures gracefully', async () => {
-      vi.mocked(readFileWithText).mockRejectedValue(new Error('File not found'));
+      vi.mocked(readFileWithText).mockRejectedValue(
+        new Error('File not found'),
+      );
 
       const manifest = createMockManifest(['src/A.tsx']);
 
@@ -188,14 +205,17 @@ describe('tokenEstimator', () => {
           allowMissing: true,
           predictBehavior: false,
           quiet: true,
-        }
+        },
       );
 
       expect(result).toBeDefined();
     });
 
     it('should return mode estimates for header+style mode', async () => {
-      vi.mocked(readFileWithText).mockResolvedValue({ text: 'content', path: '/project/src/A.tsx' });
+      vi.mocked(readFileWithText).mockResolvedValue({
+        text: 'content',
+        path: '/project/src/A.tsx',
+      });
 
       const manifest = createMockManifest(['src/A.tsx']);
 
@@ -217,7 +237,7 @@ describe('tokenEstimator', () => {
           allowMissing: true,
           predictBehavior: false,
           quiet: true,
-        }
+        },
       );
 
       expect(result.modeEstimates).toHaveProperty('none');
@@ -227,7 +247,10 @@ describe('tokenEstimator', () => {
     });
 
     it('should calculate actual source tokens using tokenizers', async () => {
-      vi.mocked(readFileWithText).mockResolvedValue({ text: 'x'.repeat(100), path: '/project/src/A.tsx' });
+      vi.mocked(readFileWithText).mockResolvedValue({
+        text: 'x'.repeat(100),
+        path: '/project/src/A.tsx',
+      });
 
       const manifest = createMockManifest(['src/A.tsx']);
 
@@ -249,7 +272,7 @@ describe('tokenEstimator', () => {
           allowMissing: true,
           predictBehavior: false,
           quiet: true,
-        }
+        },
       );
 
       // Token estimates based on mocked tokenizer (length / 4)
@@ -258,10 +281,18 @@ describe('tokenEstimator', () => {
 
     describe('header mode without style (rebuild with style)', () => {
       it('should rebuild contracts with style when current is header without style', async () => {
-        vi.mocked(readFileWithText).mockResolvedValue({ text: 'file content', path: '/project/src/A.tsx' });
+        vi.mocked(readFileWithText).mockResolvedValue({
+          text: 'file content',
+          path: '/project/src/A.tsx',
+        });
         vi.mocked(extractFromFile).mockResolvedValue({} as any);
-        vi.mocked(buildContract).mockReturnValue({ contract: { entryId: 'src/A.tsx' } as any, violations: [] } as ContractBuildResult);
-        vi.mocked(extractStyleMetadata).mockResolvedValue({ classes: [] } as any);
+        vi.mocked(buildContract).mockReturnValue({
+          contract: { entryId: 'src/A.tsx' } as any,
+          violations: [],
+        } as ContractBuildResult);
+        vi.mocked(extractStyleMetadata).mockResolvedValue({
+          classes: [],
+        } as any);
         vi.mocked(pack).mockResolvedValue(createMockBundle('src/A.tsx'));
         vi.mocked(formatBundles).mockReturnValue('formatted output');
 
@@ -285,7 +316,7 @@ describe('tokenEstimator', () => {
             allowMissing: true,
             predictBehavior: false,
             quiet: false,
-          }
+          },
         );
 
         // Should have called extractStyleMetadata to rebuild with style
@@ -296,10 +327,18 @@ describe('tokenEstimator', () => {
       });
 
       it('should respect quiet flag when rebuilding with style', async () => {
-        vi.mocked(readFileWithText).mockResolvedValue({ text: 'file content', path: '/project/src/A.tsx' });
+        vi.mocked(readFileWithText).mockResolvedValue({
+          text: 'file content',
+          path: '/project/src/A.tsx',
+        });
         vi.mocked(extractFromFile).mockResolvedValue({} as any);
-        vi.mocked(buildContract).mockReturnValue({ contract: { entryId: 'src/A.tsx' } as any, violations: [] } as ContractBuildResult);
-        vi.mocked(extractStyleMetadata).mockResolvedValue({ classes: [] } as any);
+        vi.mocked(buildContract).mockReturnValue({
+          contract: { entryId: 'src/A.tsx' } as any,
+          violations: [],
+        } as ContractBuildResult);
+        vi.mocked(extractStyleMetadata).mockResolvedValue({
+          classes: [],
+        } as any);
         vi.mocked(pack).mockResolvedValue(createMockBundle('src/A.tsx'));
         vi.mocked(formatBundles).mockReturnValue('formatted output');
 
@@ -323,7 +362,7 @@ describe('tokenEstimator', () => {
             allowMissing: true,
             predictBehavior: false,
             quiet: true, // Quiet mode
-          }
+          },
         );
 
         // Should not log the rebuild message when quiet
@@ -334,12 +373,20 @@ describe('tokenEstimator', () => {
       it('should skip files when file content cache miss', async () => {
         // First file succeeds, second file fails to read (not in cache)
         vi.mocked(readFileWithText)
-          .mockResolvedValueOnce({ text: 'file content A', path: '/project/src/A.tsx' })
+          .mockResolvedValueOnce({
+            text: 'file content A',
+            path: '/project/src/A.tsx',
+          })
           .mockRejectedValueOnce(new Error('File B not found')); // This file won't be in cache
 
         vi.mocked(extractFromFile).mockResolvedValue({} as any);
-        vi.mocked(buildContract).mockReturnValue({ contract: { entryId: 'src/A.tsx' } as any, violations: [] } as ContractBuildResult);
-        vi.mocked(extractStyleMetadata).mockResolvedValue({ classes: [] } as any);
+        vi.mocked(buildContract).mockReturnValue({
+          contract: { entryId: 'src/A.tsx' } as any,
+          violations: [],
+        } as ContractBuildResult);
+        vi.mocked(extractStyleMetadata).mockResolvedValue({
+          classes: [],
+        } as any);
         vi.mocked(pack).mockResolvedValue(createMockBundle('src/A.tsx'));
         vi.mocked(formatBundles).mockReturnValue('formatted output');
 
@@ -365,7 +412,7 @@ describe('tokenEstimator', () => {
             allowMissing: true,
             predictBehavior: false,
             quiet: true,
-          }
+          },
         );
 
         // Should still complete successfully even with cache misses
@@ -375,10 +422,18 @@ describe('tokenEstimator', () => {
       });
 
       it('should handle style extraction errors gracefully', async () => {
-        vi.mocked(readFileWithText).mockResolvedValue({ text: 'file content', path: '/project/src/A.tsx' });
+        vi.mocked(readFileWithText).mockResolvedValue({
+          text: 'file content',
+          path: '/project/src/A.tsx',
+        });
         vi.mocked(extractFromFile).mockResolvedValue({} as any);
-        vi.mocked(extractStyleMetadata).mockRejectedValue(new Error('Style extraction failed'));
-        vi.mocked(buildContract).mockReturnValue({ contract: { entryId: 'src/A.tsx' } as any, violations: [] } as ContractBuildResult);
+        vi.mocked(extractStyleMetadata).mockRejectedValue(
+          new Error('Style extraction failed'),
+        );
+        vi.mocked(buildContract).mockReturnValue({
+          contract: { entryId: 'src/A.tsx' } as any,
+          violations: [],
+        } as ContractBuildResult);
         vi.mocked(pack).mockResolvedValue(createMockBundle('src/A.tsx'));
         vi.mocked(formatBundles).mockReturnValue('formatted output');
 
@@ -403,7 +458,7 @@ describe('tokenEstimator', () => {
             allowMissing: true,
             predictBehavior: false,
             quiet: true,
-          }
+          },
         );
 
         expect(result).toBeDefined();
@@ -412,9 +467,14 @@ describe('tokenEstimator', () => {
       });
 
       it('should handle contract building errors gracefully', async () => {
-        vi.mocked(readFileWithText).mockResolvedValue({ text: 'file content', path: '/project/src/A.tsx' });
+        vi.mocked(readFileWithText).mockResolvedValue({
+          text: 'file content',
+          path: '/project/src/A.tsx',
+        });
         vi.mocked(extractFromFile).mockResolvedValue({} as any);
-        vi.mocked(extractStyleMetadata).mockResolvedValue({ classes: [] } as any);
+        vi.mocked(extractStyleMetadata).mockResolvedValue({
+          classes: [],
+        } as any);
         vi.mocked(buildContract).mockImplementation(() => {
           throw new Error('Contract building failed');
         });
@@ -442,17 +502,25 @@ describe('tokenEstimator', () => {
             allowMissing: true,
             predictBehavior: false,
             quiet: true,
-          }
+          },
         );
 
         expect(result).toBeDefined();
       });
 
       it('should throw when all style bundles fail', async () => {
-        vi.mocked(readFileWithText).mockResolvedValue({ text: 'file content', path: '/project/src/A.tsx' });
+        vi.mocked(readFileWithText).mockResolvedValue({
+          text: 'file content',
+          path: '/project/src/A.tsx',
+        });
         vi.mocked(extractFromFile).mockResolvedValue({} as any);
-        vi.mocked(buildContract).mockReturnValue({ contract: { entryId: 'src/A.tsx' } as any, violations: [] } as ContractBuildResult);
-        vi.mocked(extractStyleMetadata).mockResolvedValue({ classes: [] } as any);
+        vi.mocked(buildContract).mockReturnValue({
+          contract: { entryId: 'src/A.tsx' } as any,
+          violations: [],
+        } as ContractBuildResult);
+        vi.mocked(extractStyleMetadata).mockResolvedValue({
+          classes: [],
+        } as any);
         vi.mocked(pack).mockRejectedValue(new Error('Pack failed'));
         vi.mocked(formatBundles).mockReturnValue('formatted output');
 
@@ -478,17 +546,23 @@ describe('tokenEstimator', () => {
               allowMissing: true,
               predictBehavior: false,
               quiet: true,
-            }
-          )
+            },
+          ),
         ).rejects.toThrow('Failed to compile any style bundles');
       });
     });
 
     describe('header mode with style (rebuild without style)', () => {
       it('should respect quiet flag when rebuilding without style', async () => {
-        vi.mocked(readFileWithText).mockResolvedValue({ text: 'file content', path: '/project/src/A.tsx' });
+        vi.mocked(readFileWithText).mockResolvedValue({
+          text: 'file content',
+          path: '/project/src/A.tsx',
+        });
         vi.mocked(extractFromFile).mockResolvedValue({} as any);
-        vi.mocked(buildContract).mockReturnValue({ contract: { entryId: 'src/A.tsx' } as any, violations: [] } as ContractBuildResult);
+        vi.mocked(buildContract).mockReturnValue({
+          contract: { entryId: 'src/A.tsx' } as any,
+          violations: [],
+        } as ContractBuildResult);
         vi.mocked(pack).mockResolvedValue(createMockBundle('src/A.tsx'));
         vi.mocked(formatBundles).mockReturnValue('formatted output');
 
@@ -512,7 +586,7 @@ describe('tokenEstimator', () => {
             allowMissing: true,
             predictBehavior: false,
             quiet: true, // Quiet mode
-          }
+          },
         );
 
         // Should not log the rebuild message when quiet
@@ -523,11 +597,17 @@ describe('tokenEstimator', () => {
       it('should skip files when file content cache miss (no-style rebuild)', async () => {
         // First file succeeds, second file fails to read (not in cache)
         vi.mocked(readFileWithText)
-          .mockResolvedValueOnce({ text: 'file content A', path: '/project/src/A.tsx' })
+          .mockResolvedValueOnce({
+            text: 'file content A',
+            path: '/project/src/A.tsx',
+          })
           .mockRejectedValueOnce(new Error('File B not found')); // This file won't be in cache
 
         vi.mocked(extractFromFile).mockResolvedValue({} as any);
-        vi.mocked(buildContract).mockReturnValue({ contract: { entryId: 'src/A.tsx' } as any, violations: [] } as ContractBuildResult);
+        vi.mocked(buildContract).mockReturnValue({
+          contract: { entryId: 'src/A.tsx' } as any,
+          violations: [],
+        } as ContractBuildResult);
         vi.mocked(pack).mockResolvedValue(createMockBundle('src/A.tsx'));
         vi.mocked(formatBundles).mockReturnValue('formatted output');
 
@@ -553,7 +633,7 @@ describe('tokenEstimator', () => {
             allowMissing: true,
             predictBehavior: false,
             quiet: true,
-          }
+          },
         );
 
         // Should still complete successfully even with cache misses
@@ -563,7 +643,10 @@ describe('tokenEstimator', () => {
       });
 
       it('should handle contract building errors gracefully (no-style rebuild)', async () => {
-        vi.mocked(readFileWithText).mockResolvedValue({ text: 'file content', path: '/project/src/A.tsx' });
+        vi.mocked(readFileWithText).mockResolvedValue({
+          text: 'file content',
+          path: '/project/src/A.tsx',
+        });
         vi.mocked(extractFromFile).mockResolvedValue({} as any);
         vi.mocked(buildContract).mockImplementation(() => {
           throw new Error('Contract building failed');
@@ -592,16 +675,22 @@ describe('tokenEstimator', () => {
             allowMissing: true,
             predictBehavior: false,
             quiet: true,
-          }
+          },
         );
 
         expect(result).toBeDefined();
       });
 
       it('should throw when all no-style bundles fail', async () => {
-        vi.mocked(readFileWithText).mockResolvedValue({ text: 'file content', path: '/project/src/A.tsx' });
+        vi.mocked(readFileWithText).mockResolvedValue({
+          text: 'file content',
+          path: '/project/src/A.tsx',
+        });
         vi.mocked(extractFromFile).mockResolvedValue({} as any);
-        vi.mocked(buildContract).mockReturnValue({ contract: { entryId: 'src/A.tsx' } as any, violations: [] } as ContractBuildResult);
+        vi.mocked(buildContract).mockReturnValue({
+          contract: { entryId: 'src/A.tsx' } as any,
+          violations: [],
+        } as ContractBuildResult);
         vi.mocked(pack).mockRejectedValue(new Error('Pack failed'));
         vi.mocked(formatBundles).mockReturnValue('formatted output');
 
@@ -627,15 +716,18 @@ describe('tokenEstimator', () => {
               allowMissing: true,
               predictBehavior: false,
               quiet: true,
-            }
-          )
+            },
+          ),
         ).rejects.toThrow('Failed to compile any no-style bundles');
       });
     });
 
     describe('non-header mode estimation', () => {
       it('should use estimated values for none mode', async () => {
-        vi.mocked(readFileWithText).mockResolvedValue({ text: 'file content', path: '/project/src/A.tsx' });
+        vi.mocked(readFileWithText).mockResolvedValue({
+          text: 'file content',
+          path: '/project/src/A.tsx',
+        });
 
         const manifest = createMockManifest(['src/A.tsx']);
 
@@ -657,7 +749,7 @@ describe('tokenEstimator', () => {
             allowMissing: true,
             predictBehavior: false,
             quiet: true,
-          }
+          },
         );
 
         // Should use estimated values (75% and 85% of current)
@@ -668,7 +760,10 @@ describe('tokenEstimator', () => {
       });
 
       it('should use estimated values for full mode', async () => {
-        vi.mocked(readFileWithText).mockResolvedValue({ text: 'file content', path: '/project/src/A.tsx' });
+        vi.mocked(readFileWithText).mockResolvedValue({
+          text: 'file content',
+          path: '/project/src/A.tsx',
+        });
 
         const manifest = createMockManifest(['src/A.tsx']);
 
@@ -690,7 +785,7 @@ describe('tokenEstimator', () => {
             allowMissing: true,
             predictBehavior: false,
             quiet: true,
-          }
+          },
         );
 
         // Should use estimated values
@@ -720,7 +815,7 @@ describe('tokenEstimator', () => {
       await displayModeComparison(
         comparison,
         ['src/App.tsx', 'src/Button.tsx'],
-        150
+        150,
       );
 
       const calls = consoleSpy.mock.calls.flat().join('\n');
@@ -749,7 +844,7 @@ describe('tokenEstimator', () => {
       await displayModeComparison(
         comparison,
         ['src/App.tsx', 'src/Button.tsx', 'src/utils.ts'],
-        150
+        150,
       );
 
       const calls = consoleSpy.mock.calls.flat().join('\n');
@@ -797,7 +892,9 @@ describe('tokenEstimator', () => {
       };
 
       // Should not throw
-      await expect(displayModeComparison(comparison, [], 150)).resolves.not.toThrow();
+      await expect(
+        displayModeComparison(comparison, [], 150),
+      ).resolves.not.toThrow();
     });
 
     it('should display elapsed time', async () => {

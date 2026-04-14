@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { extractProps, normalizePropType } from '../../../src/extractors/react/index.js';
+import {
+  extractProps,
+  normalizePropType,
+} from '../../../src/extractors/react/index.js';
 import { createTestSourceFile } from '../test-helpers.js';
 
 describe('Prop Extractor', () => {
@@ -163,7 +166,10 @@ describe('Prop Extractor', () => {
       expect(props.initialState).toBeDefined();
       // initialState has default value, so it should be optional and return an object
       expect(typeof props.initialState).toBe('object');
-      if (typeof props.initialState === 'object' && 'type' in props.initialState) {
+      if (
+        typeof props.initialState === 'object' &&
+        'type' in props.initialState
+      ) {
         expect(props.initialState.type).toBe('boolean');
         expect(props.initialState.optional).toBe(true);
       }
@@ -563,7 +569,10 @@ describe('Prop Extractor', () => {
         expect(props.title).toBe('string');
 
         expect(props.subtitle).toBeDefined();
-        if (typeof props.subtitle === 'object' && 'optional' in props.subtitle) {
+        if (
+          typeof props.subtitle === 'object' &&
+          'optional' in props.subtitle
+        ) {
           expect(props.subtitle.optional).toBe(true);
         }
 
@@ -588,7 +597,10 @@ describe('Prop Extractor', () => {
         expect(props.title).toBe('string');
 
         expect(props.subtitle).toBeDefined();
-        if (typeof props.subtitle === 'object' && 'optional' in props.subtitle) {
+        if (
+          typeof props.subtitle === 'object' &&
+          'optional' in props.subtitle
+        ) {
           expect(props.subtitle.optional).toBe(true);
           expect(props.subtitle.type).not.toContain('undefined');
         }
@@ -632,7 +644,10 @@ describe('Prop Extractor', () => {
 
         expect(props.initialState).toBeDefined();
         // Parameters with default values are optional, so they return objects
-        if (typeof props.initialState === 'object' && 'type' in props.initialState) {
+        if (
+          typeof props.initialState === 'object' &&
+          'type' in props.initialState
+        ) {
           expect(props.initialState.type).toBe('boolean');
           expect(props.initialState.optional).toBe(true);
         }
@@ -677,7 +692,10 @@ describe('Prop Extractor', () => {
           expect(props.count.optional).toBe(true);
         }
         expect(props.multiplier).toBeDefined();
-        if (typeof props.multiplier === 'object' && 'type' in props.multiplier) {
+        if (
+          typeof props.multiplier === 'object' &&
+          'type' in props.multiplier
+        ) {
           expect(props.multiplier.type).toBe('number');
           expect(props.multiplier.optional).toBe(true);
         }
@@ -720,7 +738,10 @@ describe('Prop Extractor', () => {
 
         expect(props.options).toBeDefined();
         // Should infer as 'object' or the actual inferred type
-        expect(typeof props.options === 'string' || typeof props.options === 'object').toBe(true);
+        expect(
+          typeof props.options === 'string' ||
+            typeof props.options === 'object',
+        ).toBe(true);
       });
 
       it('should infer types from default array values', () => {
@@ -736,7 +757,9 @@ describe('Prop Extractor', () => {
 
         expect(props.items).toBeDefined();
         // Should infer as array type
-        expect(typeof props.items === 'string' || typeof props.items === 'object').toBe(true);
+        expect(
+          typeof props.items === 'string' || typeof props.items === 'object',
+        ).toBe(true);
       });
     });
   });
@@ -754,15 +777,15 @@ describe('Prop Extractor', () => {
       const result = normalizePropType('string', true);
       expect(result).toHaveProperty('type', 'string');
       expect(result).toHaveProperty('optional', true);
-      
+
       const result2 = normalizePropType('number', true);
       expect(result2).toHaveProperty('type', 'number');
       expect(result2).toHaveProperty('optional', true);
-      
+
       const result3 = normalizePropType('boolean', true);
       expect(result3).toHaveProperty('type', 'boolean');
       expect(result3).toHaveProperty('optional', true);
-      
+
       // For non-common types, it also returns an object with optional flag
       const result4 = normalizePropType('User', true);
       expect(result4).toHaveProperty('type', 'User');
@@ -771,7 +794,7 @@ describe('Prop Extractor', () => {
 
     it('should normalize literal unions', () => {
       const result = normalizePropType('"small" | "medium" | "large"', false);
-      
+
       expect(result).toHaveProperty('type', 'literal-union');
       expect(result).toHaveProperty('literals');
       if (typeof result === 'object' && 'literals' in result) {
@@ -787,12 +810,15 @@ describe('Prop Extractor', () => {
 
       const result2 = normalizePropType('(event: MouseEvent) => void', false);
       expect(result2).toHaveProperty('type', 'function');
-      expect(result2).toHaveProperty('signature', '(event: MouseEvent) => void');
+      expect(result2).toHaveProperty(
+        'signature',
+        '(event: MouseEvent) => void',
+      );
     });
 
     it('should remove undefined from unions', () => {
       const result = normalizePropType('string | undefined', true);
-      
+
       // Should not contain 'undefined' in the type
       if (typeof result === 'object' && 'type' in result) {
         expect(result.type).not.toContain('undefined');
@@ -801,7 +827,7 @@ describe('Prop Extractor', () => {
 
     it('should handle complex optional types', () => {
       const result = normalizePropType('User | null', true);
-      
+
       expect(result).toHaveProperty('optional', true);
     });
 
@@ -814,7 +840,7 @@ describe('Prop Extractor', () => {
     describe('Literal unions', () => {
       it('should normalize string literal unions', () => {
         const result = normalizePropType('"small" | "medium" | "large"', false);
-        
+
         expect(result).toHaveProperty('type', 'literal-union');
         expect(result).toHaveProperty('literals');
         if (typeof result === 'object' && 'literals' in result) {
@@ -824,8 +850,11 @@ describe('Prop Extractor', () => {
       });
 
       it('should normalize string literal unions with single quotes', () => {
-        const result = normalizePropType("'primary' | 'secondary' | 'tertiary'", false);
-        
+        const result = normalizePropType(
+          "'primary' | 'secondary' | 'tertiary'",
+          false,
+        );
+
         expect(result).toHaveProperty('type', 'literal-union');
         if (typeof result === 'object' && 'literals' in result) {
           expect(result.literals).toEqual(['primary', 'secondary', 'tertiary']);
@@ -834,7 +863,7 @@ describe('Prop Extractor', () => {
 
       it('should normalize number literal unions', () => {
         const result = normalizePropType('1 | 2 | 3', false);
-        
+
         expect(result).toHaveProperty('type', 'literal-union');
         if (typeof result === 'object' && 'literals' in result) {
           expect(result.literals).toEqual(['1', '2', '3']);
@@ -843,7 +872,7 @@ describe('Prop Extractor', () => {
 
       it('should normalize negative number literal unions', () => {
         const result = normalizePropType('-1 | 0 | 1', false);
-        
+
         expect(result).toHaveProperty('type', 'literal-union');
         if (typeof result === 'object' && 'literals' in result) {
           expect(result.literals).toEqual(['-1', '0', '1']);
@@ -852,7 +881,7 @@ describe('Prop Extractor', () => {
 
       it('should normalize decimal number literal unions', () => {
         const result = normalizePropType('1.5 | 2.0 | 3.14', false);
-        
+
         expect(result).toHaveProperty('type', 'literal-union');
         if (typeof result === 'object' && 'literals' in result) {
           expect(result.literals).toEqual(['1.5', '2.0', '3.14']);
@@ -861,7 +890,7 @@ describe('Prop Extractor', () => {
 
       it('should normalize hex number literal unions', () => {
         const result = normalizePropType('0xFF | 0x00 | 0x0A', false);
-        
+
         expect(result).toHaveProperty('type', 'literal-union');
         if (typeof result === 'object' && 'literals' in result) {
           // Literals are sorted alphabetically for determinism
@@ -871,7 +900,7 @@ describe('Prop Extractor', () => {
 
       it('should normalize boolean literal unions', () => {
         const result = normalizePropType('true | false', false);
-        
+
         expect(result).toHaveProperty('type', 'literal-union');
         if (typeof result === 'object' && 'literals' in result) {
           // Literals are sorted alphabetically for determinism
@@ -881,7 +910,7 @@ describe('Prop Extractor', () => {
 
       it('should normalize null literal unions', () => {
         const result = normalizePropType('null | "value"', false);
-        
+
         expect(result).toHaveProperty('type', 'literal-union');
         if (typeof result === 'object' && 'literals' in result) {
           expect(result.literals).toEqual(['null', 'value']);
@@ -890,7 +919,7 @@ describe('Prop Extractor', () => {
 
       it('should normalize mixed literal unions', () => {
         const result = normalizePropType('"small" | 1 | true | null', false);
-        
+
         expect(result).toHaveProperty('type', 'literal-union');
         if (typeof result === 'object' && 'literals' in result) {
           // Literals are sorted alphabetically for determinism
@@ -900,7 +929,7 @@ describe('Prop Extractor', () => {
 
       it('should handle optional literal unions', () => {
         const result = normalizePropType('"small" | "medium" | "large"', true);
-        
+
         expect(result).toHaveProperty('type', 'literal-union');
         expect(result).toHaveProperty('optional', true);
         if (typeof result === 'object' && 'literals' in result) {
@@ -913,7 +942,7 @@ describe('Prop Extractor', () => {
     describe('Undefined union removal', () => {
       it('should remove undefined from start of union', () => {
         const result = normalizePropType('undefined | string', true);
-        
+
         if (typeof result === 'object' && 'type' in result) {
           expect(result.type).not.toContain('undefined');
           expect(result.type).toBe('string');
@@ -922,7 +951,7 @@ describe('Prop Extractor', () => {
 
       it('should remove undefined from end of union', () => {
         const result = normalizePropType('string | undefined', true);
-        
+
         if (typeof result === 'object' && 'type' in result) {
           expect(result.type).not.toContain('undefined');
           expect(result.type).toBe('string');
@@ -931,7 +960,7 @@ describe('Prop Extractor', () => {
 
       it('should remove undefined from middle of union', () => {
         const result = normalizePropType('string | undefined | number', true);
-        
+
         if (typeof result === 'object' && 'type' in result) {
           expect(result.type).not.toContain('undefined');
           expect(result.type).toBe('string | number');
@@ -939,8 +968,11 @@ describe('Prop Extractor', () => {
       });
 
       it('should handle multiple undefined occurrences', () => {
-        const result = normalizePropType('undefined | string | undefined | number', true);
-        
+        const result = normalizePropType(
+          'undefined | string | undefined | number',
+          true,
+        );
+
         if (typeof result === 'object' && 'type' in result) {
           expect(result.type).not.toContain('undefined');
           expect(result.type).toBe('string | number');
@@ -948,8 +980,11 @@ describe('Prop Extractor', () => {
       });
 
       it('should preserve other union members when removing undefined', () => {
-        const result = normalizePropType('string | number | boolean | undefined', true);
-        
+        const result = normalizePropType(
+          'string | number | boolean | undefined',
+          true,
+        );
+
         if (typeof result === 'object' && 'type' in result) {
           expect(result.type).not.toContain('undefined');
           expect(result.type).toContain('string');
@@ -969,7 +1004,10 @@ describe('Prop Extractor', () => {
       it('should normalize function types with parameters', () => {
         const result = normalizePropType('(event: MouseEvent) => void', false);
         expect(result).toHaveProperty('type', 'function');
-        expect(result).toHaveProperty('signature', '(event: MouseEvent) => void');
+        expect(result).toHaveProperty(
+          'signature',
+          '(event: MouseEvent) => void',
+        );
       });
 
       it('should normalize function types with return types', () => {
@@ -1001,25 +1039,33 @@ describe('Prop Extractor', () => {
       it('should handle complex generic types', () => {
         const result = normalizePropType('Promise<Response<string>>', false);
         expect(result).toBeDefined();
-        expect(typeof result === 'string' || typeof result === 'object').toBe(true);
+        expect(typeof result === 'string' || typeof result === 'object').toBe(
+          true,
+        );
       });
 
       it('should handle array types', () => {
         const result = normalizePropType('string[]', false);
         expect(result).toBeDefined();
-        expect(typeof result === 'string' || typeof result === 'object').toBe(true);
+        expect(typeof result === 'string' || typeof result === 'object').toBe(
+          true,
+        );
       });
 
       it('should handle tuple types', () => {
         const result = normalizePropType('[string, number]', false);
         expect(result).toBeDefined();
-        expect(typeof result === 'string' || typeof result === 'object').toBe(true);
+        expect(typeof result === 'string' || typeof result === 'object').toBe(
+          true,
+        );
       });
 
       it('should handle intersection types', () => {
         const result = normalizePropType('A & B', false);
         expect(result).toBeDefined();
-        expect(typeof result === 'string' || typeof result === 'object').toBe(true);
+        expect(typeof result === 'string' || typeof result === 'object').toBe(
+          true,
+        );
       });
     });
   });
@@ -1051,18 +1097,23 @@ describe('Prop Extractor', () => {
     it('should have debug logging infrastructure in place', () => {
       const originalEnv = process.env.LOGICSTAMP_DEBUG;
       process.env.LOGICSTAMP_DEBUG = '1';
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
-      const sourceFile = createTestSourceFile('interface TestProps { x: string; }');
+      const sourceFile = createTestSourceFile(
+        'interface TestProps { x: string; }',
+      );
 
       extractProps(sourceFile);
 
       // If errors were logged, verify they have the correct format
       const errorCalls = consoleErrorSpy.mock.calls;
       if (errorCalls.length > 0) {
-        const hasPropExtractorLog = errorCalls.some(call =>
-          call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
-          call[0]?.toString().includes('propExtractor')
+        const hasPropExtractorLog = errorCalls.some(
+          (call) =>
+            call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
+            call[0]?.toString().includes('propExtractor'),
         );
         expect(hasPropExtractorLog).toBe(true);
       }
@@ -1076,4 +1127,3 @@ describe('Prop Extractor', () => {
     });
   });
 });
-

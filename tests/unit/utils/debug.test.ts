@@ -37,7 +37,9 @@ describe('debug utilities', () => {
       debugLog('testModule', 'test message');
 
       expect(console.log).toHaveBeenCalledTimes(1);
-      expect(console.log).toHaveBeenCalledWith('[LogicStamp][DEBUG] testModule: test message');
+      expect(console.log).toHaveBeenCalledWith(
+        '[LogicStamp][DEBUG] testModule: test message',
+      );
     });
 
     it('should log with context when LOGICSTAMP_DEBUG is "1" and context provided', () => {
@@ -49,7 +51,7 @@ describe('debug utilities', () => {
       expect(console.log).toHaveBeenCalledTimes(1);
       expect(console.log).toHaveBeenCalledWith(
         '[LogicStamp][DEBUG] testModule: test message',
-        context
+        context,
       );
     });
 
@@ -62,7 +64,7 @@ describe('debug utilities', () => {
       expect(console.log).toHaveBeenCalledTimes(1);
       expect(console.log).toHaveBeenCalledWith(
         '[LogicStamp][DEBUG] testModule: test message',
-        context
+        context,
       );
     });
   });
@@ -93,7 +95,7 @@ describe('debug utilities', () => {
       expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error).toHaveBeenCalledWith(
         '[LogicStamp][DEBUG] testModule.testFunction error:',
-        context
+        context,
       );
     });
   });

@@ -94,7 +94,10 @@ function isProcessAlive(pid: number): boolean | 'unknown' {
 /**
  * Check if lock file is stale (process dead or too old)
  */
-async function isLockStale(lockPath: string, staleThreshold: number): Promise<boolean> {
+async function isLockStale(
+  lockPath: string,
+  staleThreshold: number,
+): Promise<boolean> {
   try {
     const content = await readFile(lockPath, 'utf-8');
 
@@ -158,11 +161,14 @@ async function removeStale(lockPath: string): Promise<void> {
  */
 async function writeLockFileExclusive(
   lockPath: string,
-  content: LockFileContent
+  content: LockFileContent,
 ): Promise<void> {
   let handle: Awaited<ReturnType<typeof open>> | undefined;
   try {
-    handle = await open(lockPath, constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY);
+    handle = await open(
+      lockPath,
+      constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY,
+    );
     await handle.writeFile(JSON.stringify(content));
     await handle.close();
     handle = undefined;
@@ -205,7 +211,7 @@ async function writeLockFileExclusive(
  */
 export async function acquireLock(
   filePath: string,
-  options: LockOptions = {}
+  options: LockOptions = {},
 ): Promise<LockRelease | null> {
   const {
     timeout = 5000,
@@ -229,7 +235,7 @@ export async function acquireLock(
       if (Date.now() - startTime >= timeout) {
         return null;
       }
-      await new Promise(resolve => setTimeout(resolve, 10 + retry * 5)); // 10, 15, 20, 25, 30ms
+      await new Promise((resolve) => setTimeout(resolve, 10 + retry * 5)); // 10, 15, 20, 25, 30ms
       try {
         await writeLockFileExclusive(lockPath, lockContent);
         // Successfully acquired lock!
@@ -284,7 +290,7 @@ export async function acquireLock(
           // Delay after removing stale lock to let filesystem catch up
           // Especially important on Windows where file deletion can be asynchronous
           // Use longer delay under load (when tests run in parallel)
-          await new Promise(resolve => setTimeout(resolve, 20));
+          await new Promise((resolve) => setTimeout(resolve, 20));
           // Retry immediately after removing stale lock
           continue;
         }
@@ -307,8 +313,8 @@ export async function acquireLock(
         }
 
         // File exists, wait before retrying
-        await new Promise(resolve => setTimeout(resolve, retryInterval));
-        
+        await new Promise((resolve) => setTimeout(resolve, retryInterval));
+
         // After waiting, check again if file still exists
         // On Windows, the file might have been deleted while we waited, but the
         // filesystem hasn't fully propagated the deletion yet. Try to acquire immediately.
@@ -358,7 +364,7 @@ export async function acquireLock(
 export async function withLock<T>(
   filePath: string,
   fn: () => Promise<T>,
-  options: LockOptions = {}
+  options: LockOptions = {},
 ): Promise<T> {
   const lock = await acquireLock(filePath, options);
 

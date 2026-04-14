@@ -43,7 +43,10 @@ describe('Token Estimation Utilities', () => {
     });
 
     it('should handle JSON-like content', async () => {
-      const jsonText = JSON.stringify({ key: 'value', nested: { array: [1, 2, 3] } });
+      const jsonText = JSON.stringify({
+        key: 'value',
+        nested: { array: [1, 2, 3] },
+      });
       const tokens = await estimateGPT4Tokens(jsonText);
 
       expect(tokens).toBeGreaterThan(0);
@@ -90,7 +93,10 @@ describe('Token Estimation Utilities', () => {
     });
 
     it('should handle JSON-like content', async () => {
-      const jsonText = JSON.stringify({ key: 'value', nested: { array: [1, 2, 3] } });
+      const jsonText = JSON.stringify({
+        key: 'value',
+        nested: { array: [1, 2, 3] },
+      });
       const tokens = await estimateClaudeTokens(jsonText);
 
       expect(tokens).toBeGreaterThan(0);
@@ -101,19 +107,19 @@ describe('Token Estimation Utilities', () => {
   describe('Token estimation consistency', () => {
     it('should produce consistent results for the same input', async () => {
       const text = 'This is a test string for token estimation.';
-      
+
       const tokens1 = await estimateGPT4Tokens(text);
       const tokens2 = await estimateGPT4Tokens(text);
-      
+
       expect(tokens1).toBe(tokens2);
     });
 
     it('should produce different estimates for GPT-4 vs Claude', async () => {
       const text = 'This is a test string for token estimation.';
-      
+
       const gpt4Tokens = await estimateGPT4Tokens(text);
       const claudeTokens = await estimateClaudeTokens(text);
-      
+
       // Claude typically uses slightly more tokens (4.5 chars/token vs 4 chars/token)
       // So Claude estimate should be slightly lower for the same text
       expect(claudeTokens).toBeLessThanOrEqual(gpt4Tokens);
@@ -130,7 +136,7 @@ describe('Token Estimation Utilities', () => {
       const text = '!@#$%^&*()_+-=[]{}|;:,.<>?';
       const gpt4Tokens = await estimateGPT4Tokens(text);
       const claudeTokens = await estimateClaudeTokens(text);
-      
+
       expect(gpt4Tokens).toBeGreaterThan(0);
       expect(claudeTokens).toBeGreaterThan(0);
     });
@@ -139,7 +145,7 @@ describe('Token Estimation Utilities', () => {
       const text = 'Hello 世界 🌍';
       const gpt4Tokens = await estimateGPT4Tokens(text);
       const claudeTokens = await estimateClaudeTokens(text);
-      
+
       expect(gpt4Tokens).toBeGreaterThan(0);
       expect(claudeTokens).toBeGreaterThan(0);
     });
@@ -221,4 +227,3 @@ Line 3`;
     });
   });
 });
-

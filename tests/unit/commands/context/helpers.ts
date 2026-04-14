@@ -11,14 +11,17 @@ import type { ProjectManifest } from '../../../../src/core/manifest.js';
  */
 export function createMockContract(
   entryId: string,
-  overrides?: Partial<UIFContract>
+  overrides?: Partial<UIFContract>,
 ): UIFContract {
   return {
     type: 'UIFContract',
     schemaVersion: '0.4',
     kind: 'react:component',
     entryId,
-    description: `Mock ${entryId.split('/').pop()?.replace(/\.[tj]sx?$/, '')} component`,
+    description: `Mock ${entryId
+      .split('/')
+      .pop()
+      ?.replace(/\.[tj]sx?$/, '')} component`,
     composition: {
       variables: [],
       hooks: [],
@@ -30,7 +33,14 @@ export function createMockContract(
       props: {},
       emits: {},
     },
-    exports: { named: [entryId.split('/').pop()?.replace(/\.[tj]sx?$/, '') || 'Component'] },
+    exports: {
+      named: [
+        entryId
+          .split('/')
+          .pop()
+          ?.replace(/\.[tj]sx?$/, '') || 'Component',
+      ],
+    },
     semanticHash: `semantic-${entryId.replace(/[/\\]/g, '-')}`,
     fileHash: `fileHash-${entryId.replace(/[/\\]/g, '-')}`,
     ...overrides,
@@ -42,7 +52,7 @@ export function createMockContract(
  */
 export function createMockBundle(
   entryId: string,
-  contracts?: UIFContract[]
+  contracts?: UIFContract[],
 ): LogicStampBundle {
   const nodeContracts = contracts || [createMockContract(entryId)];
 
@@ -54,7 +64,7 @@ export function createMockBundle(
     createdAt: new Date().toISOString(),
     bundleHash: `bundleHash-${entryId.replace(/[/\\]/g, '-')}`,
     graph: {
-      nodes: nodeContracts.map(contract => ({
+      nodes: nodeContracts.map((contract) => ({
         entryId: contract.entryId,
         contract,
       })),
@@ -72,17 +82,20 @@ export function createMockBundle(
  */
 export function createMockManifest(
   roots: string[],
-  leaves?: string[]
+  leaves?: string[],
 ): ProjectManifest {
-  const components: Record<string, {
-    entryId: string;
-    description: string;
-    dependencies: string[];
-    usedBy: string[];
-    imports: string[];
-    routes: string[];
-    semanticHash: string;
-  }> = {};
+  const components: Record<
+    string,
+    {
+      entryId: string;
+      description: string;
+      dependencies: string[];
+      usedBy: string[];
+      imports: string[];
+      routes: string[];
+      semanticHash: string;
+    }
+  > = {};
 
   for (const root of roots) {
     components[root] = {
@@ -111,19 +124,21 @@ export function createMockManifest(
 /**
  * Create mock token estimates for testing
  */
-export function createMockTokenEstimates(overrides?: Partial<{
-  currentGPT4: number;
-  currentClaude: number;
-  sourceTokensGPT4: number;
-  sourceTokensClaude: number;
-  modeEstimates: {
-    none: { gpt4: number; claude: number };
-    header: { gpt4: number; claude: number };
-    full: { gpt4: number; claude: number };
-  };
-  savingsGPT4: string;
-  savingsClaude: string;
-}>) {
+export function createMockTokenEstimates(
+  overrides?: Partial<{
+    currentGPT4: number;
+    currentClaude: number;
+    sourceTokensGPT4: number;
+    sourceTokensClaude: number;
+    modeEstimates: {
+      none: { gpt4: number; claude: number };
+      header: { gpt4: number; claude: number };
+      full: { gpt4: number; claude: number };
+    };
+    savingsGPT4: string;
+    savingsClaude: string;
+  }>,
+) {
   return {
     currentGPT4: 1000,
     currentClaude: 1100,
@@ -143,11 +158,13 @@ export function createMockTokenEstimates(overrides?: Partial<{
 /**
  * Create a mock bundle stats object for testing
  */
-export function createMockBundleStats(overrides?: Partial<{
-  totalNodes: number;
-  totalEdges: number;
-  totalMissing: number;
-}>) {
+export function createMockBundleStats(
+  overrides?: Partial<{
+    totalNodes: number;
+    totalEdges: number;
+    totalMissing: number;
+  }>,
+) {
   return {
     totalNodes: 10,
     totalEdges: 5,

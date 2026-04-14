@@ -198,6 +198,7 @@ logicstamp-context/
 
 3. **Build and test**
    ```bash
+   npm run lint
    npm run build
 
    # Test manually
@@ -238,6 +239,8 @@ refactor: Extract AST parsing logic
 - Prefer explicit types over `any`
 - Use interfaces for public APIs
 - Document complex logic with comments
+- Run `npm run lint` before opening a PR
+- Use `npm run format` to apply Biome formatting when needed
 
 Example:
 ```typescript
@@ -301,9 +304,10 @@ See [`tests/README.md`](../tests/README.md) for detailed test documentation.
 
 ### Before Submitting a PR
 
-Ensure all tests pass:
+Ensure all checks pass:
 
 ```bash
+npm run lint
 npm run build
 npm test
 ```

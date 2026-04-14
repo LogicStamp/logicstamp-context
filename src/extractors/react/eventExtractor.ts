@@ -2,7 +2,13 @@
  * Event Extractor - Extracts event handlers and route patterns from AST
  */
 
-import { SourceFile, SyntaxKind, ArrowFunction, JsxExpression, Node } from 'ts-morph';
+import {
+  type SourceFile,
+  SyntaxKind,
+  type ArrowFunction,
+  type JsxExpression,
+  Node,
+} from 'ts-morph';
 import type { EventType, PropType } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
 
@@ -10,14 +16,14 @@ import { debugError } from '../../utils/debug.js';
  * Extract event handlers from JSX attributes
  * Only includes handlers that are part of the component's public API (props)
  * Filters out internal handlers that are not props
- * 
+ *
  * @param source - The source file to extract events from
  * @param props - The component's props (from Props interface/type)
  * @returns Record of event handler names to their types
  */
 export function extractEvents(
   source: SourceFile,
-  props: Record<string, PropType> = {}
+  props: Record<string, PropType> = {},
 ): Record<string, EventType> {
   const events: Record<string, EventType> = {};
   const filePath = source.getFilePath?.() ?? 'unknown';
@@ -32,18 +38,23 @@ export function extractEvents(
           // Only include handlers that are props (public API)
           // This filters out internal handlers and inline handlers that are not part of the component's public API
           // Use hasOwnProperty to avoid inherited prototype properties
-          const isProp = Object.prototype.hasOwnProperty.call(props, name);
+          const isProp = Object.hasOwn(props, name);
 
           if (isProp) {
             // Get prop type once to avoid duplication
             const propType = props[name];
             const initializer = attr.getInitializer();
-            
+
             // Extract function signature - prop type signature is authoritative
-            let signature = '() => void';  // default
-            
+            let signature = '() => void'; // default
+
             // First priority: use prop type signature if available (most accurate)
-            if (propType && typeof propType === 'object' && 'signature' in propType && typeof propType.signature === 'string') {
+            if (
+              propType &&
+              typeof propType === 'object' &&
+              'signature' in propType &&
+              typeof propType.signature === 'string'
+            ) {
               signature = propType.signature;
             } else if (initializer && Node.isJsxExpression(initializer)) {
               // Only parse from JSX expressions if no prop signature exists
@@ -59,14 +70,16 @@ export function extractEvents(
                   const parameters = arrowFunc.getParameters();
                   // Explicitly handle both 0 params and >0 params cases for clarity
                   if (parameters.length > 0) {
-                    const paramTexts = parameters.map(param => {
+                    const paramTexts = parameters.map((param) => {
                       const paramName = param.getName();
                       const paramType = param.getType();
                       // Try to get type text, fallback to just name
                       // Note: getText() can produce fully-qualified types, but we use it as-is for now
                       try {
                         const typeText = paramType.getText();
-                        return typeText !== 'any' ? `${paramName}: ${typeText}` : paramName;
+                        return typeText !== 'any'
+                          ? `${paramName}: ${typeText}`
+                          : paramName;
                       } catch {
                         return paramName;
                       }
@@ -91,7 +104,7 @@ export function extractEvents(
             // If it's a prop, always include it (even if no initializer and no signature - use default)
             events[name] = {
               type: 'function',
-              signature
+              signature,
             };
           }
           // If handler is not a prop, skip it (it's an internal handler or inline handler)
@@ -131,7 +144,7 @@ export function extractJsxRoutes(source: SourceFile): string[] {
         const attrName = attr.getNameNode().getText().toLowerCase();
         // Common route-related attribute names
         const routeAttributes = ['path', 'to', 'href', 'as', 'route', 'src'];
-        
+
         if (routeAttributes.includes(attrName)) {
           const initializer = attr.getInitializer();
           if (initializer) {

@@ -17,7 +17,9 @@ export function normalizeName(name: string): string {
   }
   // Extract just the basename (last part after /)
   const parts = stripped.split('/');
-  const basename = stripped.includes('/') ? (parts[parts.length - 1] ?? stripped) : stripped;
+  const basename = stripped.includes('/')
+    ? (parts[parts.length - 1] ?? stripped)
+    : stripped;
   // Normalize to lowercase for case-insensitive comparison
   return basename.toLowerCase();
 }
@@ -38,14 +40,17 @@ function normalizeObject(obj: Record<string, any>): Record<string, any> {
     return obj;
   }
   if (Array.isArray(obj)) {
-    return obj.map(item => normalizeObject(item));
+    return obj.map((item) => normalizeObject(item));
   }
   const sorted = Object.keys(obj)
     .sort()
-    .reduce((acc, key) => {
-      acc[key] = normalizeObject(obj[key]);
-      return acc;
-    }, {} as Record<string, any>);
+    .reduce(
+      (acc, key) => {
+        acc[key] = normalizeObject(obj[key]);
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
   return sorted;
 }
 
@@ -57,7 +62,9 @@ function valuesEqual(a: any, b: any): boolean {
   if (a === null || b === null) return a === b;
   if (typeof a !== typeof b) return false;
   if (typeof a !== 'object') return a === b;
-  return JSON.stringify(normalizeObject(a)) === JSON.stringify(normalizeObject(b));
+  return (
+    JSON.stringify(normalizeObject(a)) === JSON.stringify(normalizeObject(b))
+  );
 }
 
 /**
@@ -73,7 +80,10 @@ function objectsEqual(a: Record<string, any>, b: Record<string, any>): boolean {
 /**
  * Index bundles into a map of entryId -> LiteSig
  */
-export function index(bundles: LogicStampBundle[], normalize = false): Map<string, LiteSig> {
+export function index(
+  bundles: LogicStampBundle[],
+  normalize = false,
+): Map<string, LiteSig> {
   const m = new Map<string, LiteSig>();
   for (const b of bundles) {
     for (const n of b.graph.nodes) {
@@ -86,13 +96,15 @@ export function index(bundles: LogicStampBundle[], normalize = false): Map<strin
       // Filter and build props object with valid keys only
       const propsObj: Record<string, any> = {};
       for (const key of Object.keys(rawProps)) {
-        if (typeof key === 'string' &&
-            key.length > 0 &&
-            !key.includes('\n') &&
-            !key.includes('\r') &&
-            !key.includes('{') &&
-            !key.includes('}') &&
-            /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key)) {
+        if (
+          typeof key === 'string' &&
+          key.length > 0 &&
+          !key.includes('\n') &&
+          !key.includes('\r') &&
+          !key.includes('{') &&
+          !key.includes('}') &&
+          /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key)
+        ) {
           propsObj[key] = rawProps[key];
         }
       }
@@ -100,29 +112,45 @@ export function index(bundles: LogicStampBundle[], normalize = false): Map<strin
       // Filter and build emits object with valid keys only
       const emitsObj: Record<string, any> = {};
       for (const key of Object.keys(rawEmits)) {
-        if (typeof key === 'string' &&
-            key.length > 0 &&
-            !key.includes('\n') &&
-            !key.includes('\r') &&
-            !key.includes('{') &&
-            !key.includes('}') &&
-            /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key)) {
+        if (
+          typeof key === 'string' &&
+          key.length > 0 &&
+          !key.includes('\n') &&
+          !key.includes('\r') &&
+          !key.includes('{') &&
+          !key.includes('}') &&
+          /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key)
+        ) {
           emitsObj[key] = rawEmits[key];
         }
       }
 
       const sig: LiteSig = {
         semanticHash: c.semanticHash,
-        imports: normalize ? normalizeNames(c.composition?.imports ?? []) : (c.composition?.imports ?? []),
-        hooks: normalize ? normalizeNames(c.composition?.hooks ?? []) : (c.composition?.hooks ?? []),
-        functions: normalize ? normalizeNames(c.composition?.functions ?? []) : (c.composition?.functions ?? []),
-        components: normalize ? normalizeNames(c.composition?.components ?? []) : (c.composition?.components ?? []),
+        imports: normalize
+          ? normalizeNames(c.composition?.imports ?? [])
+          : (c.composition?.imports ?? []),
+        hooks: normalize
+          ? normalizeNames(c.composition?.hooks ?? [])
+          : (c.composition?.hooks ?? []),
+        functions: normalize
+          ? normalizeNames(c.composition?.functions ?? [])
+          : (c.composition?.functions ?? []),
+        components: normalize
+          ? normalizeNames(c.composition?.components ?? [])
+          : (c.composition?.components ?? []),
         props: propsObj,
         emits: emitsObj,
-        variables: normalize ? normalizeNames(c.composition?.variables ?? []) : (c.composition?.variables ?? []),
+        variables: normalize
+          ? normalizeNames(c.composition?.variables ?? [])
+          : (c.composition?.variables ?? []),
         state: c.interface?.state ?? {},
-        exportKind: typeof c.exports === 'string' ? 'default'
-                   : Array.isArray(c.exports?.named) && c.exports.named.length > 0 ? 'named' : 'none',
+        exportKind:
+          typeof c.exports === 'string'
+            ? 'default'
+            : Array.isArray(c.exports?.named) && c.exports.named.length > 0
+              ? 'named'
+              : 'none',
         apiSignature: c.interface?.apiSignature,
       };
       m.set(c.entryId.toLowerCase(), sig);
@@ -135,7 +163,11 @@ export function index(bundles: LogicStampBundle[], normalize = false): Map<strin
  * Compare two arrays with optional normalization
  * Always sorts arrays for order-independence
  */
-export function arraysEqual(a: string[], b: string[], normalize = false): boolean {
+export function arraysEqual(
+  a: string[],
+  b: string[],
+  normalize = false,
+): boolean {
   if (normalize) {
     const aNorm = normalizeNames(a);
     const bNorm = normalizeNames(b);
@@ -151,7 +183,12 @@ export function arraysEqual(a: string[], b: string[], normalize = false): boolea
  * Diff two indexed bundles with detailed change information
  * @param ignoreHashOnly - If true, ignore hash-only changes (useful for git baseline comparisons where hash may differ due to TypeScript project resolution differences between worktree and working directory contexts)
  */
-export function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>, normalize = false, ignoreHashOnly = false): CompareResult {
+export function diff(
+  oldIdx: Map<string, LiteSig>,
+  newIdx: Map<string, LiteSig>,
+  normalize = false,
+  ignoreHashOnly = false,
+): CompareResult {
   const added: string[] = [];
   const removed: string[] = [];
   const changed: CompareResult['changed'] = [];
@@ -187,7 +224,10 @@ export function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>,
       // Compare props, emits, and state
       // In git baseline mode (ignoreHashOnly=true), only detect structural changes (added/removed keys)
       // because type values can differ due to TypeScript resolution differences between worktree and working directory
-      const hasStructuralChanges = (oldObj: Record<string, any>, newObj: Record<string, any>) => {
+      const hasStructuralChanges = (
+        oldObj: Record<string, any>,
+        newObj: Record<string, any>,
+      ) => {
         const oldKeys = new Set(Object.keys(oldObj));
         const newKeys = new Set(Object.keys(newObj));
         for (const k of oldKeys) if (!newKeys.has(k)) return true;
@@ -195,15 +235,27 @@ export function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>,
         return false;
       };
 
-      const propsHaveStructuralChanges = hasStructuralChanges(oldProps, newProps);
-      const emitsHaveStructuralChanges = hasStructuralChanges(oldEmits, newEmits);
+      const propsHaveStructuralChanges = hasStructuralChanges(
+        oldProps,
+        newProps,
+      );
+      const emitsHaveStructuralChanges = hasStructuralChanges(
+        oldEmits,
+        newEmits,
+      );
       const stateHasStructuralChanges = hasStructuralChanges(a.state, b.state);
 
       // Full comparison (includes type changes) - only when NOT in git baseline mode
-      const propsHaveChanges = ignoreHashOnly ? propsHaveStructuralChanges : !objectsEqual(oldProps, newProps);
-      const emitsHaveChanges = ignoreHashOnly ? emitsHaveStructuralChanges : !objectsEqual(oldEmits, newEmits);
-      const stateHasChanges = ignoreHashOnly ? stateHasStructuralChanges : !objectsEqual(a.state, b.state);
-      
+      const propsHaveChanges = ignoreHashOnly
+        ? propsHaveStructuralChanges
+        : !objectsEqual(oldProps, newProps);
+      const emitsHaveChanges = ignoreHashOnly
+        ? emitsHaveStructuralChanges
+        : !objectsEqual(oldEmits, newEmits);
+      const stateHasChanges = ignoreHashOnly
+        ? stateHasStructuralChanges
+        : !objectsEqual(a.state, b.state);
+
       const hasNonHashChanges =
         !arraysEqual(a.imports, b.imports, normalize) ||
         !arraysEqual(a.hooks, b.hooks, normalize) ||
@@ -217,7 +269,10 @@ export function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>,
         !objectsEqual(a.apiSignature ?? {}, b.apiSignature ?? {});
 
       // Only include hash change if there are other changes, or if ignoreHashOnly is false
-      if (a.semanticHash !== b.semanticHash && (!ignoreHashOnly || hasNonHashChanges)) {
+      if (
+        a.semanticHash !== b.semanticHash &&
+        (!ignoreHashOnly || hasNonHashChanges)
+      ) {
         deltas.push({ type: 'hash', old: a.semanticHash, new: b.semanticHash });
       }
 
@@ -234,7 +289,11 @@ export function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>,
       }
 
       if (!arraysEqual(a.components, b.components, normalize)) {
-        deltas.push({ type: 'components', old: a.components, new: b.components });
+        deltas.push({
+          type: 'components',
+          old: a.components,
+          new: b.components,
+        });
       }
 
       // Add props delta (full objects, diff computed on display)
@@ -260,7 +319,11 @@ export function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>,
       }
 
       if (!objectsEqual(a.apiSignature ?? {}, b.apiSignature ?? {})) {
-        deltas.push({ type: 'apiSignature', old: a.apiSignature ?? null, new: b.apiSignature ?? null });
+        deltas.push({
+          type: 'apiSignature',
+          old: a.apiSignature ?? null,
+          new: b.apiSignature ?? null,
+        });
       }
 
       if (deltas.length > 0) {
@@ -270,9 +333,8 @@ export function diff(oldIdx: Map<string, LiteSig>, newIdx: Map<string, LiteSig>,
   }
 
   // Only removals and changes qualify as drift; additions are growth, not drift
-  const status = removed.length === 0 && changed.length === 0
-    ? 'PASS'
-    : 'DRIFT';
+  const status =
+    removed.length === 0 && changed.length === 0 ? 'PASS' : 'DRIFT';
 
   return { status, added, removed, changed };
 }

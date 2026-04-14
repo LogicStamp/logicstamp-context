@@ -26,13 +26,19 @@ describe('handleStyle', () => {
   });
 
   it('should show help when --help flag is provided', async () => {
-    const printFoxSpy = vi.spyOn(initHandler, 'printFoxIcon').mockImplementation(() => {});
-    const getHelpSpy = vi.spyOn(parser, 'getStyleHelp').mockReturnValue('Style help text');
+    const printFoxSpy = vi
+      .spyOn(initHandler, 'printFoxIcon')
+      .mockImplementation(() => {});
+    const getHelpSpy = vi
+      .spyOn(parser, 'getStyleHelp')
+      .mockReturnValue('Style help text');
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`Exit called with code ${code}`);
     });
 
-    await expect(handleStyle(['--help'])).rejects.toThrow('Exit called with code 0');
+    await expect(handleStyle(['--help'])).rejects.toThrow(
+      'Exit called with code 0',
+    );
 
     expect(printFoxSpy).toHaveBeenCalled();
     expect(getHelpSpy).toHaveBeenCalled();
@@ -41,13 +47,19 @@ describe('handleStyle', () => {
   });
 
   it('should show help when -h flag is provided', async () => {
-    const printFoxSpy = vi.spyOn(initHandler, 'printFoxIcon').mockImplementation(() => {});
-    const getHelpSpy = vi.spyOn(parser, 'getStyleHelp').mockReturnValue('Style help text');
+    const printFoxSpy = vi
+      .spyOn(initHandler, 'printFoxIcon')
+      .mockImplementation(() => {});
+    const getHelpSpy = vi
+      .spyOn(parser, 'getStyleHelp')
+      .mockReturnValue('Style help text');
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`Exit called with code ${code}`);
     });
 
-    await expect(handleStyle(['-h'])).rejects.toThrow('Exit called with code 0');
+    await expect(handleStyle(['-h'])).rejects.toThrow(
+      'Exit called with code 0',
+    );
 
     expect(printFoxSpy).toHaveBeenCalled();
     expect(getHelpSpy).toHaveBeenCalled();
@@ -59,16 +71,20 @@ describe('handleStyle', () => {
       throw new Error(`Exit called with code ${code}`);
     });
 
-    await expect(handleStyle(['--compare-modes'])).rejects.toThrow('Exit called with code 1');
+    await expect(handleStyle(['--compare-modes'])).rejects.toThrow(
+      'Exit called with code 1',
+    );
 
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('--compare-modes is not available')
+      expect.stringContaining('--compare-modes is not available'),
     );
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
 
   it('should call styleCommand with parsed options', async () => {
-    const styleSpy = vi.spyOn(styleCommand, 'styleCommand').mockResolvedValue(undefined);
+    const styleSpy = vi
+      .spyOn(styleCommand, 'styleCommand')
+      .mockResolvedValue(undefined);
     const parseSpy = vi.spyOn(parser, 'parseStyleArgs').mockReturnValue({
       depth: 2,
       includeCode: 'header',
@@ -129,7 +145,7 @@ describe('handleStyle', () => {
 
     expect(console.error).toHaveBeenCalledWith(
       '❌ Style context compilation failed:',
-      'Style compilation failed'
+      'Style compilation failed',
     );
     expect(console.error).toHaveBeenCalledWith('Error stack trace');
     expect(process.exit).toHaveBeenCalledWith(1);

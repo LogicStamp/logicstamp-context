@@ -99,7 +99,7 @@ describe('llmContext utils', () => {
       expect(writeFile).toHaveBeenCalledWith(
         join(testDir, 'LLM_CONTEXT.md'),
         content,
-        'utf-8'
+        'utf-8',
       );
     });
   });
@@ -116,7 +116,7 @@ describe('llmContext utils', () => {
 
     it('should create file when config preference is "added"', async () => {
       const packageContent = 'Package LLM context content';
-      // Mock access: 
+      // Mock access:
       // - First call: llmContextExists check (should fail - file doesn't exist in testDir)
       // - Next 3 calls: readPackageLLMContext tries 3 paths, last one succeeds
       vi.mocked(access)
@@ -135,7 +135,7 @@ describe('llmContext utils', () => {
       expect(writeFile).toHaveBeenCalledWith(
         join(testDir, 'LLM_CONTEXT.md'),
         packageContent,
-        'utf-8'
+        'utf-8',
       );
     });
 
@@ -166,7 +166,9 @@ describe('llmContext utils', () => {
       vi.mocked(config.readConfig).mockResolvedValue({
         llmContextPreference: 'added',
       });
-      vi.mocked(readFile).mockRejectedValue(new Error('Package file not found'));
+      vi.mocked(readFile).mockRejectedValue(
+        new Error('Package file not found'),
+      );
 
       const result = await smartLLMContextSetup(testDir);
 

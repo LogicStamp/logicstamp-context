@@ -6,7 +6,10 @@ import { resolve, dirname, join, relative } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import chokidar from 'chokidar';
 import { globFiles, toForwardSlashes } from '../../../../utils/fsx.js';
-import { readStampignore, filterIgnoredFiles } from '../../../../utils/stampignore.js';
+import {
+  readStampignore,
+  filterIgnoredFiles,
+} from '../../../../utils/stampignore.js';
 import { buildDependencyGraph } from '../../../../core/manifest.js';
 import type { LogicStampBundle } from '../../../../core/pack.js';
 import { normalizeEntryId } from '../../../../utils/fsx.js';
@@ -18,13 +21,26 @@ import {
   deleteStrictWatchStatus,
   getWatchStatusPath,
 } from '../../../../utils/config.js';
-import { registerCleanup, gracefulShutdown, registerSyncCleanupPath, registerSignalHandlers } from '../../../../utils/cleanup.js';
+import {
+  registerCleanup,
+  gracefulShutdown,
+  registerSyncCleanupPath,
+  registerSignalHandlers,
+} from '../../../../utils/cleanup.js';
 import type {
   WatchLogEntry,
   StrictWatchStatus,
 } from '../../../../utils/config.js';
-import { detectViolations, displayViolations } from '../../../../core/violations.js';
-import { getChanges, showChanges, type BundleChanges, type ContractDiff } from './watchDiff.js';
+import {
+  detectViolations,
+  displayViolations,
+} from '../../../../core/violations.js';
+import {
+  getChanges,
+  showChanges,
+  type BundleChanges,
+  type ContractDiff,
+} from './watchDiff.js';
 import {
   initializeWatchCache,
   incrementalRebuild,
@@ -47,7 +63,10 @@ function formatErrorMessage(error: unknown): string {
 /**
  * Display session status block
  */
-function displaySessionStatus(status: StrictWatchStatus, options: { quiet?: boolean } = {}): void {
+function displaySessionStatus(
+  status: StrictWatchStatus,
+  options: { quiet?: boolean } = {},
+): void {
   if (options.quiet) return;
 
   const activeErrors = status.lastCheck?.errors ?? 0;
@@ -63,14 +82,20 @@ function displaySessionStatus(status: StrictWatchStatus, options: { quiet?: bool
 /**
  * Start watch mode - monitors file changes and recompiles context
  */
-export async function startWatchMode(options: ContextOptions, projectRoot: string, initialCache: WatchCache | null = null): Promise<void> {
+export async function startWatchMode(
+  options: ContextOptions,
+  projectRoot: string,
+  initialCache: WatchCache | null = null,
+): Promise<void> {
   // Register signal handlers so Ctrl+C goes through gracefulShutdown
   registerSignalHandlers();
 
   if (!options.quiet) {
     console.log(`\n👀 Watch mode enabled. Watching for file changes...`);
     if (options.strictWatch) {
-      console.log(`   🔒 Strict mode: tracking breaking changes and violations`);
+      console.log(
+        `   🔒 Strict mode: tracking breaking changes and violations`,
+      );
     }
     console.log(`   Press Ctrl+C to stop\n`);
   }
@@ -95,36 +120,42 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
   } catch (error) {
     // Non-fatal - continue even if status file can't be written
     if (!options.quiet) {
-      console.warn(`   ⚠️  Warning: Could not write watch status file: ${(error as Error).message}`);
+      console.warn(
+        `   ⚠️  Warning: Could not write watch status file: ${(error as Error).message}`,
+      );
     }
   }
 
   let debounceTimer: NodeJS.Timeout | null = null;
   let isRegenerating = false; // Flag-based lock to prevent race conditions
-  let changedFiles: Set<string> = new Set();
+  const changedFiles: Set<string> = new Set();
   /** Snapshot for `getChanges` / strict-watch: set on first load; reset when watch cache is recovered after an error (new stable tree). */
   let baselineBundles: LogicStampBundle[] | null = null;
   let previousBundles: LogicStampBundle[] | null = null; // Last state - for incremental tracking
   let watchCache: WatchCache | null = initialCache;
 
   // Strict watch mode state
-  let strictWatchStatus: StrictWatchStatus | null = options.strictWatch ? {
-    active: true,
-    startedAt: new Date().toISOString(),
-    cumulativeViolations: 0,
-    cumulativeErrors: 0,
-    cumulativeWarnings: 0,
-    totalErrorsDetected: 0,
-    totalWarningsDetected: 0,
-    resolvedCount: 0,
-    regenerationCount: 0,
-  } : null;
+  const strictWatchStatus: StrictWatchStatus | null = options.strictWatch
+    ? {
+        active: true,
+        startedAt: new Date().toISOString(),
+        cumulativeViolations: 0,
+        cumulativeErrors: 0,
+        cumulativeWarnings: 0,
+        totalErrorsDetected: 0,
+        totalWarningsDetected: 0,
+        resolvedCount: 0,
+        regenerationCount: 0,
+      }
+    : null;
 
   // Debounce delay in milliseconds (wait 500ms after last change before regenerating)
   const DEBOUNCE_DELAY = 500;
 
   // Helper to load all bundles from context files
-  const loadAllBundles = async (outputDir: string): Promise<LogicStampBundle[]> => {
+  const loadAllBundles = async (
+    outputDir: string,
+  ): Promise<LogicStampBundle[]> => {
     const mainIndexPath = join(outputDir, 'context_main.json');
     let mainIndexContent: string;
     try {
@@ -135,17 +166,23 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
         return [];
       }
       if (!options.quiet) {
-        console.warn(`   ⚠️  Watch: could not read context index (${mainIndexPath}): ${formatErrorMessage(error)}`);
+        console.warn(
+          `   ⚠️  Watch: could not read context index (${mainIndexPath}): ${formatErrorMessage(error)}`,
+        );
       }
       return [];
     }
 
     let mainIndex: { folders?: Array<{ contextFile?: string }> };
     try {
-      mainIndex = JSON.parse(mainIndexContent) as { folders?: Array<{ contextFile?: string }> };
+      mainIndex = JSON.parse(mainIndexContent) as {
+        folders?: Array<{ contextFile?: string }>;
+      };
     } catch (error) {
       if (!options.quiet) {
-        console.warn(`   ⚠️  Watch: context index is not valid JSON (${mainIndexPath}): ${formatErrorMessage(error)}`);
+        console.warn(
+          `   ⚠️  Watch: context index is not valid JSON (${mainIndexPath}): ${formatErrorMessage(error)}`,
+        );
       }
       return [];
     }
@@ -162,7 +199,9 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
             allBundles.push(...bundles);
           } catch (error) {
             if (!options.quiet) {
-              console.warn(`   ⚠️  Watch: could not load folder context ${contextPath}: ${formatErrorMessage(error)}`);
+              console.warn(
+                `   ⚠️  Watch: could not load folder context ${contextPath}: ${formatErrorMessage(error)}`,
+              );
             }
           }
         }
@@ -173,10 +212,15 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
   };
 
   /** After incremental failure, run a full rebuild and re-init cache so watch mode can recover. */
-  const attemptWatchCacheRecovery = async (): Promise<{ cache: WatchCache; bundles: LogicStampBundle[] } | null> => {
+  const attemptWatchCacheRecovery = async (): Promise<{
+    cache: WatchCache;
+    bundles: LogicStampBundle[];
+  } | null> => {
     try {
       const outPathResolved = resolve(options.out);
-      const outputDirResolved = outPathResolved.endsWith('.json') ? dirname(outPathResolved) : outPathResolved;
+      const outputDirResolved = outPathResolved.endsWith('.json')
+        ? dirname(outPathResolved)
+        : outPathResolved;
       const regenerateOptions: ContextOptions = {
         ...options,
         watch: false,
@@ -188,28 +232,44 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
       const newBundles = await loadAllBundles(outputDirResolved);
       if (newBundles.length === 0) {
         if (!options.quiet) {
-          console.warn('   ⚠️  Full rebuild after error produced no bundles; incremental watch stays disabled.');
+          console.warn(
+            '   ⚠️  Full rebuild after error produced no bundles; incremental watch stays disabled.',
+          );
         }
         return null;
       }
       const files = await globFiles(projectRoot);
       const stampignore = await readStampignore(projectRoot);
-      const filteredFiles = stampignore ? filterIgnoredFiles(files, stampignore.ignore, projectRoot) : files;
-      const { contracts } = await buildContractsFromFiles(filteredFiles, projectRoot, {
-        includeStyle: options.includeStyle,
-        styleMode: options.styleMode,
-        predictBehavior: options.predictBehavior,
-        quiet: true,
-      });
+      const filteredFiles = stampignore
+        ? filterIgnoredFiles(files, stampignore.ignore, projectRoot)
+        : files;
+      const { contracts } = await buildContractsFromFiles(
+        filteredFiles,
+        projectRoot,
+        {
+          includeStyle: options.includeStyle,
+          styleMode: options.styleMode,
+          predictBehavior: options.predictBehavior,
+          quiet: true,
+        },
+      );
       const manifest = buildDependencyGraph(contracts);
-      const cache = await initializeWatchCache(filteredFiles, contracts, manifest, newBundles, projectRoot);
+      const cache = await initializeWatchCache(
+        filteredFiles,
+        contracts,
+        manifest,
+        newBundles,
+        projectRoot,
+      );
       if (cache == null) {
         return null;
       }
       return { cache, bundles: newBundles };
     } catch (error) {
       if (!options.quiet) {
-        console.warn(`   ⚠️  Watch: full rebuild recovery failed: ${formatErrorMessage(error)}`);
+        console.warn(
+          `   ⚠️  Watch: full rebuild recovery failed: ${formatErrorMessage(error)}`,
+        );
       }
       return null;
     }
@@ -231,305 +291,383 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
         const startTime = Date.now();
 
         try {
-        // Determine output directory
-      const outPath = resolve(options.out);
-      const outputDir = outPath.endsWith('.json') ? dirname(outPath) : outPath;
+          // Determine output directory
+          const outPath = resolve(options.out);
+          const outputDir = outPath.endsWith('.json')
+            ? dirname(outPath)
+            : outPath;
 
-      // Load baseline bundles for state-based comparison (like git diff).
-      // Set on first successful load; also updated after error recovery (full rebuild) so diffs stay meaningful.
-      if (!baselineBundles) {
-        baselineBundles = await loadAllBundles(outputDir);
-        previousBundles = baselineBundles;
-      }
-
-      if (!options.quiet) {
-        const fileList = changedFileList.length > 3 
-          ? `${changedFileList.slice(0, 3).join(', ')}, ... (+${changedFileList.length - 3} more)`
-          : changedFileList.join(', ');
-        console.log(`\n🔄 Recompiling (${changedFileList.length} file${changedFileList.length > 1 ? 's' : ''} changed)...`);
-      }
-
-      let newBundles: LogicStampBundle[];
-
-      // Use incremental rebuild if cache exists, otherwise do full rebuild (fallback)
-      if (watchCache) {
-        // Incremental rebuild - only rebuild affected bundles
-        const result = await incrementalRebuild(changedFileList, watchCache, options, projectRoot);
-        newBundles = result.bundles;
-
-        // Write only changed context files
-        const bundlesByFolder = groupBundlesByFolder(newBundles);
-        const changedFolders = new Set<string>();
-        for (const bundleId of result.updatedBundles) {
-          const bundle = newBundles.find(b => b.entryId === bundleId);
-          if (bundle) {
-            const folderPath = bundle.entryId.substring(0, bundle.entryId.lastIndexOf('/') || bundle.entryId.length);
-            changedFolders.add(folderPath);
+          // Load baseline bundles for state-based comparison (like git diff).
+          // Set on first successful load; also updated after error recovery (full rebuild) so diffs stay meaningful.
+          if (!baselineBundles) {
+            baselineBundles = await loadAllBundles(outputDir);
+            previousBundles = baselineBundles;
           }
-        }
 
-        // Write context files for changed folders only
-        // (This is a simplified version - full implementation would write individual files)
-        // For now, we'll write all files but this can be optimized further
-        const { folderInfos, totalTokenEstimate } = await writeContextFiles(newBundles, outputDir, projectRoot, {
-          format: options.format,
-          quiet: true,
-        });
-        
-        // Get contracts for main index (from cache if available)
-        const allContracts = watchCache ? Array.from(watchCache.contracts.values()) : [];
-        await writeMainIndex(outputDir, folderInfos, allContracts, newBundles, bundlesByFolder.size, totalTokenEstimate, projectRoot, {
-          quiet: true,
-          suppressSuccessIndicator: true,
-        });
-      } else {
-        // Fallback: Full rebuild if cache not available (shouldn't happen normally)
-        const regenerateOptions: ContextOptions = {
-          ...options,
-          watch: false,
-          strictMissing: false,
-          quiet: true,
-          suppressSuccessIndicator: true,
-        };
+          if (!options.quiet) {
+            const fileList =
+              changedFileList.length > 3
+                ? `${changedFileList.slice(0, 3).join(', ')}, ... (+${changedFileList.length - 3} more)`
+                : changedFileList.join(', ');
+            console.log(
+              `\n🔄 Recompiling (${changedFileList.length} file${changedFileList.length > 1 ? 's' : ''} changed)...`,
+            );
+          }
 
-        await contextCommand(regenerateOptions);
+          let newBundles: LogicStampBundle[];
 
-        // Load bundles and initialize cache
-        newBundles = await loadAllBundles(outputDir);
-        
-        // Initialize cache for next incremental rebuild
-        if (newBundles.length > 0) {
-          // We need contracts and manifest - reload them from the build
-          const files = await globFiles(projectRoot);
-          const stampignore = await readStampignore(projectRoot);
-          const filteredFiles = stampignore ? filterIgnoredFiles(files, stampignore.ignore, projectRoot) : files;
-          const { contracts } = await buildContractsFromFiles(filteredFiles, projectRoot, {
-            includeStyle: options.includeStyle,
-            styleMode: options.styleMode,
-            predictBehavior: options.predictBehavior,
-            quiet: true,
-          });
-          const manifest = buildDependencyGraph(contracts);
-          watchCache = await initializeWatchCache(filteredFiles, contracts, manifest, newBundles, projectRoot);
-        }
-      }
-      
-      const durationMs = Date.now() - startTime;
-      // Compare against BASELINE (starting state), not previous state
-      // This gives us cumulative diff like `git diff` - if changes are reverted, diff is empty
-      const changes = baselineBundles && baselineBundles.length > 0
-        ? getChanges(baselineBundles, newBundles)
-        : null;
+          // Use incremental rebuild if cache exists, otherwise do full rebuild (fallback)
+          if (watchCache) {
+            // Incremental rebuild - only rebuild affected bundles
+            const result = await incrementalRebuild(
+              changedFileList,
+              watchCache,
+              options,
+              projectRoot,
+            );
+            newBundles = result.bundles;
 
-      if (!options.quiet) {
-        if (changes && (changes.changed.length > 0 || changes.added.length > 0 || changes.removed.length > 0 || changes.bundleChanged.length > 0)) {
-          showChanges(baselineBundles!, newBundles, changedFileList[0] || 'unknown', { debug: options.debug });
-        }
-        console.log(`\n✅ Recompiled\n`);
-      }
-
-      // Update previousBundles for incremental tracking (still useful for other operations)
-      previousBundles = newBundles;
-
-      // Strict watch mode: detect and report violations (state-based, like git diff)
-      // Violations are calculated from current state vs baseline, not accumulated
-      if (options.strictWatch && strictWatchStatus) {
-        const hasChanges = changes && (
-          changes.changed.length > 0 ||
-          changes.added.length > 0 ||
-          changes.removed.length > 0 ||
-          changes.bundleChanged.length > 0
-        );
-
-        // Track previous state to detect new violations and resolution
-        const previousActiveErrors = strictWatchStatus.lastCheck?.errors ?? 0;
-        const previousActiveWarnings = strictWatchStatus.lastCheck?.warnings ?? 0;
-        const hadActiveViolations = previousActiveErrors > 0 || previousActiveWarnings > 0;
-
-        if (hasChanges) {
-          const violations = detectViolations({ type: 'watch', changes });
-          const errors = violations.filter(v => v.severity === 'error');
-          const warnings = violations.filter(v => v.severity === 'warning');
-
-          strictWatchStatus.regenerationCount++;
-
-          if (violations.length > 0) {
-            // Only increment totals if these are NEW violations (first time seeing violations, or count increased)
-            const isNewViolation = !hadActiveViolations;
-            const violationCountIncreased = errors.length > previousActiveErrors || warnings.length > previousActiveWarnings;
-            
-            if (isNewViolation || violationCountIncreased) {
-              // Calculate new violations (only count increases, not existing ones)
-              if (isNewViolation) {
-                // First time violations appear - count all of them
-                strictWatchStatus.totalErrorsDetected += errors.length;
-                strictWatchStatus.totalWarningsDetected += warnings.length;
-              } else {
-                // Violations increased - only count the new ones
-                const newErrors = Math.max(0, errors.length - previousActiveErrors);
-                const newWarnings = Math.max(0, warnings.length - previousActiveWarnings);
-                strictWatchStatus.totalErrorsDetected += newErrors;
-                strictWatchStatus.totalWarningsDetected += newWarnings;
+            // Write only changed context files
+            const bundlesByFolder = groupBundlesByFolder(newBundles);
+            const changedFolders = new Set<string>();
+            for (const bundleId of result.updatedBundles) {
+              const bundle = newBundles.find((b) => b.entryId === bundleId);
+              if (bundle) {
+                const folderPath = bundle.entryId.substring(
+                  0,
+                  bundle.entryId.lastIndexOf('/') || bundle.entryId.length,
+                );
+                changedFolders.add(folderPath);
               }
             }
 
-            // Update state-based counts (current state, not cumulative)
-            strictWatchStatus.cumulativeViolations = violations.length;
-            strictWatchStatus.cumulativeErrors = errors.length;
-            strictWatchStatus.cumulativeWarnings = warnings.length;
+            // Write context files for changed folders only
+            // (This is a simplified version - full implementation would write individual files)
+            // For now, we'll write all files but this can be optimized further
+            const { folderInfos, totalTokenEstimate } = await writeContextFiles(
+              newBundles,
+              outputDir,
+              projectRoot,
+              {
+                format: options.format,
+                quiet: true,
+              },
+            );
 
-            // Store current violations
-            strictWatchStatus.lastCheck = {
-              timestamp: new Date().toISOString(),
-              totalViolations: violations.length,
-              errors: errors.length,
-              warnings: warnings.length,
-              violations,
-              changedFiles: changedFileList,
+            // Get contracts for main index (from cache if available)
+            const allContracts = watchCache
+              ? Array.from(watchCache.contracts.values())
+              : [];
+            await writeMainIndex(
+              outputDir,
+              folderInfos,
+              allContracts,
+              newBundles,
+              bundlesByFolder.size,
+              totalTokenEstimate,
+              projectRoot,
+              {
+                quiet: true,
+                suppressSuccessIndicator: true,
+              },
+            );
+          } else {
+            // Fallback: Full rebuild if cache not available (shouldn't happen normally)
+            const regenerateOptions: ContextOptions = {
+              ...options,
+              watch: false,
+              strictMissing: false,
+              quiet: true,
+              suppressSuccessIndicator: true,
             };
 
-            // Display violations to console (only if status changed)
-            if (!options.quiet) {
-              const statusChanged = errors.length !== previousActiveErrors || warnings.length !== previousActiveWarnings;
-              if (statusChanged) {
+            await contextCommand(regenerateOptions);
+
+            // Load bundles and initialize cache
+            newBundles = await loadAllBundles(outputDir);
+
+            // Initialize cache for next incremental rebuild
+            if (newBundles.length > 0) {
+              // We need contracts and manifest - reload them from the build
+              const files = await globFiles(projectRoot);
+              const stampignore = await readStampignore(projectRoot);
+              const filteredFiles = stampignore
+                ? filterIgnoredFiles(files, stampignore.ignore, projectRoot)
+                : files;
+              const { contracts } = await buildContractsFromFiles(
+                filteredFiles,
+                projectRoot,
+                {
+                  includeStyle: options.includeStyle,
+                  styleMode: options.styleMode,
+                  predictBehavior: options.predictBehavior,
+                  quiet: true,
+                },
+              );
+              const manifest = buildDependencyGraph(contracts);
+              watchCache = await initializeWatchCache(
+                filteredFiles,
+                contracts,
+                manifest,
+                newBundles,
+                projectRoot,
+              );
+            }
+          }
+
+          const durationMs = Date.now() - startTime;
+          // Compare against BASELINE (starting state), not previous state
+          // This gives us cumulative diff like `git diff` - if changes are reverted, diff is empty
+          const changes =
+            baselineBundles && baselineBundles.length > 0
+              ? getChanges(baselineBundles, newBundles)
+              : null;
+
+          if (!options.quiet) {
+            if (
+              changes &&
+              (changes.changed.length > 0 ||
+                changes.added.length > 0 ||
+                changes.removed.length > 0 ||
+                changes.bundleChanged.length > 0)
+            ) {
+              showChanges(
+                baselineBundles!,
+                newBundles,
+                changedFileList[0] || 'unknown',
+                { debug: options.debug },
+              );
+            }
+            console.log(`\n✅ Recompiled\n`);
+          }
+
+          // Update previousBundles for incremental tracking (still useful for other operations)
+          previousBundles = newBundles;
+
+          // Strict watch mode: detect and report violations (state-based, like git diff)
+          // Violations are calculated from current state vs baseline, not accumulated
+          if (options.strictWatch && strictWatchStatus) {
+            const hasChanges =
+              changes &&
+              (changes.changed.length > 0 ||
+                changes.added.length > 0 ||
+                changes.removed.length > 0 ||
+                changes.bundleChanged.length > 0);
+
+            // Track previous state to detect new violations and resolution
+            const previousActiveErrors =
+              strictWatchStatus.lastCheck?.errors ?? 0;
+            const previousActiveWarnings =
+              strictWatchStatus.lastCheck?.warnings ?? 0;
+            const hadActiveViolations =
+              previousActiveErrors > 0 || previousActiveWarnings > 0;
+
+            if (hasChanges) {
+              const violations = detectViolations({ type: 'watch', changes });
+              const errors = violations.filter((v) => v.severity === 'error');
+              const warnings = violations.filter(
+                (v) => v.severity === 'warning',
+              );
+
+              strictWatchStatus.regenerationCount++;
+
+              if (violations.length > 0) {
+                // Only increment totals if these are NEW violations (first time seeing violations, or count increased)
+                const isNewViolation = !hadActiveViolations;
+                const violationCountIncreased =
+                  errors.length > previousActiveErrors ||
+                  warnings.length > previousActiveWarnings;
+
                 if (isNewViolation || violationCountIncreased) {
-                  // Show appropriate emoji based on severity: ❌ for errors, ⚠️ for warnings only
-                  if (errors.length > 0) {
-                    console.log(`\n❌ Breaking change detected`);
-                  } else if (warnings.length > 0) {
-                    console.log(`\n⚠️  Warning detected`);
+                  // Calculate new violations (only count increases, not existing ones)
+                  if (isNewViolation) {
+                    // First time violations appear - count all of them
+                    strictWatchStatus.totalErrorsDetected += errors.length;
+                    strictWatchStatus.totalWarningsDetected += warnings.length;
+                  } else {
+                    // Violations increased - only count the new ones
+                    const newErrors = Math.max(
+                      0,
+                      errors.length - previousActiveErrors,
+                    );
+                    const newWarnings = Math.max(
+                      0,
+                      warnings.length - previousActiveWarnings,
+                    );
+                    strictWatchStatus.totalErrorsDetected += newErrors;
+                    strictWatchStatus.totalWarningsDetected += newWarnings;
                   }
                 }
-                displayViolations(violations, { quiet: options.quiet });
-                displaySessionStatus(strictWatchStatus, { quiet: options.quiet });
+
+                // Update state-based counts (current state, not cumulative)
+                strictWatchStatus.cumulativeViolations = violations.length;
+                strictWatchStatus.cumulativeErrors = errors.length;
+                strictWatchStatus.cumulativeWarnings = warnings.length;
+
+                // Store current violations
+                strictWatchStatus.lastCheck = {
+                  timestamp: new Date().toISOString(),
+                  totalViolations: violations.length,
+                  errors: errors.length,
+                  warnings: warnings.length,
+                  violations,
+                  changedFiles: changedFileList,
+                };
+
+                // Display violations to console (only if status changed)
+                if (!options.quiet) {
+                  const statusChanged =
+                    errors.length !== previousActiveErrors ||
+                    warnings.length !== previousActiveWarnings;
+                  if (statusChanged) {
+                    if (isNewViolation || violationCountIncreased) {
+                      // Show appropriate emoji based on severity: ❌ for errors, ⚠️ for warnings only
+                      if (errors.length > 0) {
+                        console.log(`\n❌ Breaking change detected`);
+                      } else if (warnings.length > 0) {
+                        console.log(`\n⚠️  Warning detected`);
+                      }
+                    }
+                    displayViolations(violations, { quiet: options.quiet });
+                    displaySessionStatus(strictWatchStatus, {
+                      quiet: options.quiet,
+                    });
+                  }
+                }
+
+                // Write current violations state to disk
+                await writeStrictWatchStatus(projectRoot, strictWatchStatus);
+              } else {
+                // Changes exist but no violations - violations were resolved
+                if (hadActiveViolations) {
+                  strictWatchStatus.resolvedCount++;
+                }
+
+                strictWatchStatus.cumulativeViolations = 0;
+                strictWatchStatus.cumulativeErrors = 0;
+                strictWatchStatus.cumulativeWarnings = 0;
+                strictWatchStatus.lastCheck = undefined;
+
+                // Display resolution message and status
+                if (!options.quiet && hadActiveViolations) {
+                  console.log(`\n✅ Violation resolved`);
+                  displaySessionStatus(strictWatchStatus, {
+                    quiet: options.quiet,
+                  });
+                }
+
+                await deleteStrictWatchStatus(projectRoot);
+              }
+            } else {
+              // No changes from baseline - clear violations (state reverted)
+              if (hadActiveViolations) {
+                strictWatchStatus.resolvedCount++;
+              }
+
+              strictWatchStatus.cumulativeViolations = 0;
+              strictWatchStatus.cumulativeErrors = 0;
+              strictWatchStatus.cumulativeWarnings = 0;
+              strictWatchStatus.lastCheck = undefined;
+
+              // Display resolution message and status
+              if (!options.quiet && hadActiveViolations) {
+                console.log(`\n✅ Violation resolved`);
+                displaySessionStatus(strictWatchStatus, {
+                  quiet: options.quiet,
+                });
+              }
+
+              await deleteStrictWatchStatus(projectRoot);
+            }
+          }
+
+          // Log structured data for MCP server (only if --log-file flag is set)
+          // Appends each event to the log file for event history
+          if (options.logFile) {
+            if (changes) {
+              const logEntry: WatchLogEntry = {
+                timestamp: new Date().toISOString(),
+                changedFiles: changedFileList,
+                fileCount: changedFileList.length,
+                durationMs,
+                modifiedContracts: changes.changed.map((c) => ({
+                  entryId: c.entryId,
+                  semanticHashChanged: !!c.semanticHash,
+                  fileHashChanged: !!c.fileHash,
+                  semanticHash: c.semanticHash,
+                  fileHash: c.fileHash,
+                })),
+                modifiedBundles: changes.bundleChanged.map((b) => ({
+                  entryId: b.entryId,
+                  bundleHash: { old: b.oldHash, new: b.newHash },
+                })),
+                addedContracts:
+                  changes.added.length > 0 ? changes.added : undefined,
+                removedContracts:
+                  changes.removed.length > 0 ? changes.removed : undefined,
+                summary: {
+                  modifiedContractsCount: changes.changed.length,
+                  modifiedBundlesCount: changes.bundleChanged.length,
+                  addedContractsCount: changes.added.length,
+                  removedContractsCount: changes.removed.length,
+                },
+              };
+              await appendWatchLog(projectRoot, logEntry);
+            } else if (changedFileList.length > 0) {
+              // Log even if no changes detected (file changed but no contract changes)
+              const logEntry: WatchLogEntry = {
+                timestamp: new Date().toISOString(),
+                changedFiles: changedFileList,
+                fileCount: changedFileList.length,
+                durationMs,
+              };
+              await appendWatchLog(projectRoot, logEntry);
+            }
+          }
+        } catch (error) {
+          const durationMs = Date.now() - startTime;
+          const errorMessage = formatErrorMessage(error);
+
+          if (!options.quiet) {
+            console.error(`   ❌ Error: ${errorMessage}\n`);
+          }
+
+          if (options.logFile) {
+            try {
+              const logEntry: WatchLogEntry = {
+                timestamp: new Date().toISOString(),
+                changedFiles: changedFileList,
+                fileCount: changedFileList.length,
+                durationMs,
+                error: errorMessage,
+              };
+              await appendWatchLog(projectRoot, logEntry);
+            } catch (logError) {
+              if (!options.quiet) {
+                console.warn(
+                  `   ⚠️  Watch: could not append watch log: ${formatErrorMessage(logError)}`,
+                );
               }
             }
+          }
 
-            // Write current violations state to disk
-            await writeStrictWatchStatus(projectRoot, strictWatchStatus);
+          const recovery = await attemptWatchCacheRecovery();
+          if (recovery != null) {
+            watchCache = recovery.cache;
+            baselineBundles = recovery.bundles;
+            previousBundles = recovery.bundles;
+            if (!options.quiet) {
+              console.log(`   ✅ Watch cache restored after full rebuild.\n`);
+            }
           } else {
-            // Changes exist but no violations - violations were resolved
-            if (hadActiveViolations) {
-              strictWatchStatus.resolvedCount++;
+            watchCache = null;
+            if (!options.quiet) {
+              console.warn(
+                '   ⚠️  Each file change will run a full context rebuild until a rebuild succeeds.\n',
+              );
             }
-
-            strictWatchStatus.cumulativeViolations = 0;
-            strictWatchStatus.cumulativeErrors = 0;
-            strictWatchStatus.cumulativeWarnings = 0;
-            strictWatchStatus.lastCheck = undefined;
-
-            // Display resolution message and status
-            if (!options.quiet && hadActiveViolations) {
-              console.log(`\n✅ Violation resolved`);
-              displaySessionStatus(strictWatchStatus, { quiet: options.quiet });
-            }
-
-            await deleteStrictWatchStatus(projectRoot);
-          }
-        } else {
-          // No changes from baseline - clear violations (state reverted)
-          if (hadActiveViolations) {
-            strictWatchStatus.resolvedCount++;
-          }
-
-          strictWatchStatus.cumulativeViolations = 0;
-          strictWatchStatus.cumulativeErrors = 0;
-          strictWatchStatus.cumulativeWarnings = 0;
-          strictWatchStatus.lastCheck = undefined;
-
-          // Display resolution message and status
-          if (!options.quiet && hadActiveViolations) {
-            console.log(`\n✅ Violation resolved`);
-            displaySessionStatus(strictWatchStatus, { quiet: options.quiet });
-          }
-
-          await deleteStrictWatchStatus(projectRoot);
-        }
-      }
-
-      // Log structured data for MCP server (only if --log-file flag is set)
-      // Appends each event to the log file for event history
-      if (options.logFile) {
-        if (changes) {
-          const logEntry: WatchLogEntry = {
-            timestamp: new Date().toISOString(),
-            changedFiles: changedFileList,
-            fileCount: changedFileList.length,
-            durationMs,
-            modifiedContracts: changes.changed.map(c => ({
-              entryId: c.entryId,
-              semanticHashChanged: !!c.semanticHash,
-              fileHashChanged: !!c.fileHash,
-              semanticHash: c.semanticHash,
-              fileHash: c.fileHash,
-            })),
-            modifiedBundles: changes.bundleChanged.map(b => ({
-              entryId: b.entryId,
-              bundleHash: { old: b.oldHash, new: b.newHash },
-            })),
-            addedContracts: changes.added.length > 0 ? changes.added : undefined,
-            removedContracts: changes.removed.length > 0 ? changes.removed : undefined,
-            summary: {
-              modifiedContractsCount: changes.changed.length,
-              modifiedBundlesCount: changes.bundleChanged.length,
-              addedContractsCount: changes.added.length,
-              removedContractsCount: changes.removed.length,
-            },
-          };
-          await appendWatchLog(projectRoot, logEntry);
-        } else if (changedFileList.length > 0) {
-          // Log even if no changes detected (file changed but no contract changes)
-          const logEntry: WatchLogEntry = {
-            timestamp: new Date().toISOString(),
-            changedFiles: changedFileList,
-            fileCount: changedFileList.length,
-            durationMs,
-          };
-          await appendWatchLog(projectRoot, logEntry);
-        }
-      }
-    } catch (error) {
-      const durationMs = Date.now() - startTime;
-      const errorMessage = formatErrorMessage(error);
-
-      if (!options.quiet) {
-        console.error(`   ❌ Error: ${errorMessage}\n`);
-      }
-
-      if (options.logFile) {
-        try {
-          const logEntry: WatchLogEntry = {
-            timestamp: new Date().toISOString(),
-            changedFiles: changedFileList,
-            fileCount: changedFileList.length,
-            durationMs,
-            error: errorMessage,
-          };
-          await appendWatchLog(projectRoot, logEntry);
-        } catch (logError) {
-          if (!options.quiet) {
-            console.warn(`   ⚠️  Watch: could not append watch log: ${formatErrorMessage(logError)}`);
           }
         }
-      }
-
-      const recovery = await attemptWatchCacheRecovery();
-      if (recovery != null) {
-        watchCache = recovery.cache;
-        baselineBundles = recovery.bundles;
-        previousBundles = recovery.bundles;
-        if (!options.quiet) {
-          console.log(`   ✅ Watch cache restored after full rebuild.\n`);
-        }
-      } else {
-        watchCache = null;
-        if (!options.quiet) {
-          console.warn(
-            '   ⚠️  Each file change will run a full context rebuild until a rebuild succeeds.\n',
-          );
-        }
-      }
-    }
       }
     } finally {
       isRegenerating = false;
@@ -542,7 +680,9 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
     }
     debounceTimer = setTimeout(() => {
       void regenerate().catch((err) => {
-        console.error(`   ❌ Watch: unexpected regenerate failure: ${formatErrorMessage(err)}\n`);
+        console.error(
+          `   ❌ Watch: unexpected regenerate failure: ${formatErrorMessage(err)}\n`,
+        );
       });
     }, DEBOUNCE_DELAY);
   };
@@ -556,13 +696,17 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
     if (!options.quiet) {
       console.log(`   Watching: ${displayProjectRoot(projectRoot)}`);
       if (normalizedOutputDir !== projectRoot) {
-        console.log(`   Ignoring output directory: ${displayProjectRoot(normalizedOutputDir)}`);
+        console.log(
+          `   Ignoring output directory: ${displayProjectRoot(normalizedOutputDir)}`,
+        );
       }
-      console.log(`   Ignoring: context.json files, node_modules, dist, build, etc.\n`);
+      console.log(
+        `   Ignoring: context.json files, node_modules, dist, build, etc.\n`,
+      );
     }
 
     // Build file extensions to watch
-    const watchedExtensions = options.includeStyle 
+    const watchedExtensions = options.includeStyle
       ? ['.ts', '.tsx', '.css', '.scss', '.module.css', '.module.scss']
       : ['.ts', '.tsx'];
 
@@ -579,7 +723,14 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
         /context_main\.json$/,
         /context_compare_modes\.json$/,
         // Ignore output directory if different from project root
-        ...(outputDir !== projectRoot ? [new RegExp('^' + toForwardSlashes(relative(projectRoot, normalizedOutputDir)))] : []),
+        ...(outputDir !== projectRoot
+          ? [
+              new RegExp(
+                '^' +
+                  toForwardSlashes(relative(projectRoot, normalizedOutputDir)),
+              ),
+            ]
+          : []),
         // Ignore common build/dependency directories
         /node_modules/,
         /dist/,
@@ -600,39 +751,49 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
     const shouldTrigger = (filePath: string): boolean => {
       // Normalize path separators
       const normalizedPath = toForwardSlashes(filePath);
-      
+
       // Debug logging (can be enabled with LOGICSTAMP_DEBUG=1)
       if (process.env.LOGICSTAMP_DEBUG === '1' && !options.quiet) {
         console.log(`[DEBUG] Watch event for: ${normalizedPath}`);
       }
 
       // Check if it's a .stampignore file
-      if (normalizedPath.endsWith('.stampignore') || normalizedPath.includes('/.stampignore')) {
+      if (
+        normalizedPath.endsWith('.stampignore') ||
+        normalizedPath.includes('/.stampignore')
+      ) {
         return true;
       }
 
       // Check if it matches watched extensions
-      const matches = watchedExtensions.some(ext => normalizedPath.endsWith(ext));
-      
+      const matches = watchedExtensions.some((ext) =>
+        normalizedPath.endsWith(ext),
+      );
+
       if (process.env.LOGICSTAMP_DEBUG === '1' && !options.quiet && matches) {
         console.log(`[DEBUG] Matched extension for: ${normalizedPath}`);
       }
-      
+
       return matches;
     };
 
     // Helper to track file change and trigger regeneration
-    const trackAndRegenerate = (path: string, eventType: 'change' | 'add' | 'unlink') => {
+    const trackAndRegenerate = (
+      path: string,
+      eventType: 'change' | 'add' | 'unlink',
+    ) => {
       if (shouldTrigger(path)) {
         // Normalize path relative to project root
         const normalizedPath = normalizeEntryId(relative(projectRoot, path));
         changedFiles.add(normalizedPath);
-        
+
         if (!options.quiet && changedFiles.size === 1) {
           // Only show first change, debounce will handle batching
-          console.log(`📝 ${eventType === 'add' ? 'New file' : eventType === 'unlink' ? 'Deleted file' : 'Changed'}: ${normalizedPath}`);
+          console.log(
+            `📝 ${eventType === 'add' ? 'New file' : eventType === 'unlink' ? 'Deleted file' : 'Changed'}: ${normalizedPath}`,
+          );
         }
-        
+
         debouncedRegenerate();
       }
     };
@@ -654,7 +815,8 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
 
     // Handle watcher errors
     watcher.on('error', async (error: unknown) => {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       console.error(`❌ Watch error: ${errorMessage}`);
       await gracefulShutdown(1);
     });
@@ -670,75 +832,99 @@ export async function startWatchMode(options: ContextOptions, projectRoot: strin
 
     // Register cleanup handler with the central cleanup registry
     // This ensures cleanup runs on any exit (SIGINT, SIGTERM, errors, etc.)
-    registerCleanup('watch-mode', async () => {
-      // Close the file watcher
-      await watcher.close();
+    registerCleanup(
+      'watch-mode',
+      async () => {
+        // Close the file watcher
+        await watcher.close();
 
-      // Clean up watch status file
-      try {
-        await deleteWatchStatus(projectRoot);
-      } catch {
-        // Ignore errors during cleanup
-      }
-
-      // Show final summary and clean up strict watch status
-      if (!options.quiet) {
-        console.log(`\n👋 Watch mode stopped`);
-
-        if (options.strictWatch && strictWatchStatus) {
-          const activeErrors = strictWatchStatus.lastCheck?.errors ?? 0;
-          const activeWarnings = strictWatchStatus.lastCheck?.warnings ?? 0;
-          const activeTotal = activeErrors + activeWarnings;
-
-          // Helper for pluralization
-          const pluralize = (count: number, singular: string, plural: string) => 
-            count === 1 ? singular : plural;
-
-          // Determine emoji and message based on errors/warnings
-          let emoji: string;
-          let message: string;
-          
-          if (activeErrors === 0 && activeWarnings === 0) {
-            emoji = '✅';
-            message = 'Strict Watch session complete - no violations detected';
-          } else if (activeErrors === 0 && activeWarnings > 0) {
-            emoji = '⚠️';
-            message = `Strict Watch session complete - ${activeWarnings} ${pluralize(activeWarnings, 'warning', 'warnings')} detected`;
-          } else {
-            emoji = '❌';
-            const parts: string[] = [];
-            if (activeErrors > 0) {
-              parts.push(`${activeErrors} ${pluralize(activeErrors, 'error', 'errors')}`);
-            }
-            if (activeWarnings > 0) {
-              parts.push(`${activeWarnings} ${pluralize(activeWarnings, 'warning', 'warnings')}`);
-            }
-            message = `Strict Watch session complete - ${parts.join(', ')} detected`;
-          }
-
-          console.log(`\n${emoji} ${message}`);
-
-          console.log(`\n📊 Session summary:`);
-          console.log(`   ❌ Errors detected:   ${strictWatchStatus.totalErrorsDetected}`);
-          console.log(`   ⚠️  Warnings detected: ${strictWatchStatus.totalWarningsDetected}`);
-          console.log(`   🔧 Resolved:          ${strictWatchStatus.resolvedCount}`);
-          console.log(`   📌 Active:            ${activeTotal}`);
-
-          if (activeTotal > 0) {
-            console.log(`\n   Report saved to: .logicstamp/strict_watch_violations.json`);
-          }
-        }
-      }
-
-      // Clean up strict watch status file if no violations
-      if (!options.strictWatch || !strictWatchStatus || strictWatchStatus.cumulativeViolations === 0) {
+        // Clean up watch status file
         try {
-          await deleteStrictWatchStatus(projectRoot);
+          await deleteWatchStatus(projectRoot);
         } catch {
           // Ignore errors during cleanup
         }
-      }
-    }, 1); // Priority 1 - run early since other cleanup might depend on watch being stopped
+
+        // Show final summary and clean up strict watch status
+        if (!options.quiet) {
+          console.log(`\n👋 Watch mode stopped`);
+
+          if (options.strictWatch && strictWatchStatus) {
+            const activeErrors = strictWatchStatus.lastCheck?.errors ?? 0;
+            const activeWarnings = strictWatchStatus.lastCheck?.warnings ?? 0;
+            const activeTotal = activeErrors + activeWarnings;
+
+            // Helper for pluralization
+            const pluralize = (
+              count: number,
+              singular: string,
+              plural: string,
+            ) => (count === 1 ? singular : plural);
+
+            // Determine emoji and message based on errors/warnings
+            let emoji: string;
+            let message: string;
+
+            if (activeErrors === 0 && activeWarnings === 0) {
+              emoji = '✅';
+              message =
+                'Strict Watch session complete - no violations detected';
+            } else if (activeErrors === 0 && activeWarnings > 0) {
+              emoji = '⚠️';
+              message = `Strict Watch session complete - ${activeWarnings} ${pluralize(activeWarnings, 'warning', 'warnings')} detected`;
+            } else {
+              emoji = '❌';
+              const parts: string[] = [];
+              if (activeErrors > 0) {
+                parts.push(
+                  `${activeErrors} ${pluralize(activeErrors, 'error', 'errors')}`,
+                );
+              }
+              if (activeWarnings > 0) {
+                parts.push(
+                  `${activeWarnings} ${pluralize(activeWarnings, 'warning', 'warnings')}`,
+                );
+              }
+              message = `Strict Watch session complete - ${parts.join(', ')} detected`;
+            }
+
+            console.log(`\n${emoji} ${message}`);
+
+            console.log(`\n📊 Session summary:`);
+            console.log(
+              `   ❌ Errors detected:   ${strictWatchStatus.totalErrorsDetected}`,
+            );
+            console.log(
+              `   ⚠️  Warnings detected: ${strictWatchStatus.totalWarningsDetected}`,
+            );
+            console.log(
+              `   🔧 Resolved:          ${strictWatchStatus.resolvedCount}`,
+            );
+            console.log(`   📌 Active:            ${activeTotal}`);
+
+            if (activeTotal > 0) {
+              console.log(
+                `\n   Report saved to: .logicstamp/strict_watch_violations.json`,
+              );
+            }
+          }
+        }
+
+        // Clean up strict watch status file if no violations
+        if (
+          !options.strictWatch ||
+          !strictWatchStatus ||
+          strictWatchStatus.cumulativeViolations === 0
+        ) {
+          try {
+            await deleteStrictWatchStatus(projectRoot);
+          } catch {
+            // Ignore errors during cleanup
+          }
+        }
+      },
+      1,
+    ); // Priority 1 - run early since other cleanup might depend on watch being stopped
 
     // Keep process alive indefinitely
     await new Promise(() => {}); // Never resolves, keeps process running

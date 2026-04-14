@@ -253,9 +253,11 @@ describe('hookParameterExtractor', () => {
             },
             {
               getName: () => 'useValid',
-              getModifiers: () => [{
-                getKind: () => 95, // ExportKeyword
-              }],
+              getModifiers: () => [
+                {
+                  getKind: () => 95, // ExportKeyword
+                },
+              ],
             },
           ],
         });
@@ -266,18 +268,24 @@ describe('hookParameterExtractor', () => {
       it('should continue when variable statement check throws', () => {
         const mockSource = createMockSourceFile({
           getFunctions: () => [],
-          getVariableStatements: () => [{
-            getModifiers: () => {
-              throw new Error('Modifiers error');
+          getVariableStatements: () => [
+            {
+              getModifiers: () => {
+                throw new Error('Modifiers error');
+              },
             },
-          }],
-          getExportDeclarations: () => [{
-            getModuleSpecifierValue: () => undefined,
-            getNamedExports: () => [{
-              getName: () => 'useExported',
-              getAliasNode: () => null,
-            }],
-          }],
+          ],
+          getExportDeclarations: () => [
+            {
+              getModuleSpecifierValue: () => undefined,
+              getNamedExports: () => [
+                {
+                  getName: () => 'useExported',
+                  getAliasNode: () => null,
+                },
+              ],
+            },
+          ],
         });
 
         expect(hasExportedHooks(mockSource as any)).toBe(true);
@@ -287,11 +295,13 @@ describe('hookParameterExtractor', () => {
         const mockSource = createMockSourceFile({
           getFunctions: () => [],
           getVariableStatements: () => [],
-          getExportDeclarations: () => [{
-            getModuleSpecifierValue: () => {
-              throw new Error('Module spec error');
+          getExportDeclarations: () => [
+            {
+              getModuleSpecifierValue: () => {
+                throw new Error('Module spec error');
+              },
             },
-          }],
+          ],
           getExportAssignments: () => [],
         });
 
@@ -304,11 +314,13 @@ describe('hookParameterExtractor', () => {
           getFunctions: () => [],
           getVariableStatements: () => [],
           getExportDeclarations: () => [],
-          getExportAssignments: () => [{
-            isExportEquals: () => {
-              throw new Error('Export equals error');
+          getExportAssignments: () => [
+            {
+              isExportEquals: () => {
+                throw new Error('Export equals error');
+              },
             },
-          }],
+          ],
         });
 
         expect(hasExportedHooks(mockSource as any)).toBe(false);
@@ -603,24 +615,30 @@ describe('hookParameterExtractor', () => {
 
       it('should continue when function iteration throws', () => {
         const mockSource = createMockSourceFile({
-          getFunctions: () => [{
-            getName: () => {
-              throw new Error('Name error');
+          getFunctions: () => [
+            {
+              getName: () => {
+                throw new Error('Name error');
+              },
             },
-          }],
-          getVariableDeclarations: () => [{
-            getName: () => 'useValid',
-            getInitializer: () => ({
-              getKind: () => 219, // ArrowFunction
-              getParameters: () => [{
-                getName: () => 'param',
-                getTypeNode: () => ({ getText: () => 'string' }),
-                hasQuestionToken: () => false,
-                isRestParameter: () => false,
-                hasInitializer: () => false,
-              }],
-            }),
-          }],
+          ],
+          getVariableDeclarations: () => [
+            {
+              getName: () => 'useValid',
+              getInitializer: () => ({
+                getKind: () => 219, // ArrowFunction
+                getParameters: () => [
+                  {
+                    getName: () => 'param',
+                    getTypeNode: () => ({ getText: () => 'string' }),
+                    hasQuestionToken: () => false,
+                    isRestParameter: () => false,
+                    hasInitializer: () => false,
+                  },
+                ],
+              }),
+            },
+          ],
         });
 
         // Mock isExported to return true for useValid
@@ -630,34 +648,40 @@ describe('hookParameterExtractor', () => {
 
       it('should continue when parameter extraction throws', () => {
         const mockSource = createMockSourceFile({
-          getFunctions: () => [{
-            getName: () => 'useHook',
-            getModifiers: () => [{ getKind: () => 95 }], // ExportKeyword
-            getParameters: () => [
-              {
-                getName: () => {
-                  throw new Error('Param error');
+          getFunctions: () => [
+            {
+              getName: () => 'useHook',
+              getModifiers: () => [{ getKind: () => 95 }], // ExportKeyword
+              getParameters: () => [
+                {
+                  getName: () => {
+                    throw new Error('Param error');
+                  },
                 },
-              },
-              {
-                getName: () => 'validParam',
-                getTypeNode: () => ({ getText: () => 'number' }),
-                hasQuestionToken: () => false,
-                isRestParameter: () => false,
-                hasInitializer: () => false,
-                getType: () => ({ getText: () => 'number' }),
-              },
-            ],
-          }],
+                {
+                  getName: () => 'validParam',
+                  getTypeNode: () => ({ getText: () => 'number' }),
+                  hasQuestionToken: () => false,
+                  isRestParameter: () => false,
+                  hasInitializer: () => false,
+                  getType: () => ({ getText: () => 'number' }),
+                },
+              ],
+            },
+          ],
           getVariableDeclarations: () => [],
-          getVariableStatements: () => [{
-            getModifiers: () => [{ getKind: () => 95 }],
-            getDeclarationList: () => ({
-              getDeclarations: () => [{
-                getName: () => 'useHook',
-              }],
-            }),
-          }],
+          getVariableStatements: () => [
+            {
+              getModifiers: () => [{ getKind: () => 95 }],
+              getDeclarationList: () => ({
+                getDeclarations: () => [
+                  {
+                    getName: () => 'useHook',
+                  },
+                ],
+              }),
+            },
+          ],
           getExportDeclarations: () => [],
           getExportAssignments: () => [],
         });
@@ -680,11 +704,13 @@ describe('hookParameterExtractor', () => {
       it('should continue when variable declaration iteration throws', () => {
         const mockSource = createMockSourceFile({
           getFunctions: () => [],
-          getVariableDeclarations: () => [{
-            getName: () => {
-              throw new Error('Name error');
+          getVariableDeclarations: () => [
+            {
+              getName: () => {
+                throw new Error('Name error');
+              },
             },
-          }],
+          ],
         });
 
         const params = extractHookParameters(mockSource as any);
@@ -693,35 +719,43 @@ describe('hookParameterExtractor', () => {
 
       it('should handle error in type inference', () => {
         const mockSource = createMockSourceFile({
-          getFunctions: () => [{
-            getName: () => 'useHook',
-            getModifiers: () => [{ getKind: () => 95 }],
-            getParameters: () => [{
-              getName: () => 'param',
-              getTypeNode: () => null,
-              hasInitializer: () => true,
-              getInitializer: () => ({
-                getKind: () => 999, // Unknown
-                getType: () => {
-                  throw new Error('Type error');
+          getFunctions: () => [
+            {
+              getName: () => 'useHook',
+              getModifiers: () => [{ getKind: () => 95 }],
+              getParameters: () => [
+                {
+                  getName: () => 'param',
+                  getTypeNode: () => null,
+                  hasInitializer: () => true,
+                  getInitializer: () => ({
+                    getKind: () => 999, // Unknown
+                    getType: () => {
+                      throw new Error('Type error');
+                    },
+                  }),
+                  hasQuestionToken: () => false,
+                  isRestParameter: () => false,
+                  getType: () => {
+                    throw new Error('Type error');
+                  },
                 },
-              }),
-              hasQuestionToken: () => false,
-              isRestParameter: () => false,
-              getType: () => {
-                throw new Error('Type error');
-              },
-            }],
-          }],
+              ],
+            },
+          ],
           getVariableDeclarations: () => [],
-          getVariableStatements: () => [{
-            getModifiers: () => [{ getKind: () => 95 }],
-            getDeclarationList: () => ({
-              getDeclarations: () => [{
-                getName: () => 'useHook',
-              }],
-            }),
-          }],
+          getVariableStatements: () => [
+            {
+              getModifiers: () => [{ getKind: () => 95 }],
+              getDeclarationList: () => ({
+                getDeclarations: () => [
+                  {
+                    getName: () => 'useHook',
+                  },
+                ],
+              }),
+            },
+          ],
           getExportDeclarations: () => [],
           getExportAssignments: () => [],
         });

@@ -48,7 +48,7 @@ describe('validate-index CLI', () => {
     // Dynamic import to re-execute the module
     await import('../../../src/cli/validate-index.js');
     // Allow async operations to complete
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
   }
 
   describe('--help flag', () => {
@@ -57,7 +57,7 @@ describe('validate-index CLI', () => {
 
       expect(console.log).toHaveBeenCalled();
       const logCalls = vi.mocked(console.log).mock.calls;
-      const helpOutput = logCalls.map(call => call[0]).join('\n');
+      const helpOutput = logCalls.map((call) => call[0]).join('\n');
 
       expect(helpOutput).toContain('LogicStamp Validate');
       expect(helpOutput).toContain('USAGE:');
@@ -70,7 +70,7 @@ describe('validate-index CLI', () => {
 
       expect(console.log).toHaveBeenCalled();
       const logCalls = vi.mocked(console.log).mock.calls;
-      const helpOutput = logCalls.map(call => call[0]).join('\n');
+      const helpOutput = logCalls.map((call) => call[0]).join('\n');
 
       expect(helpOutput).toContain('LogicStamp Validate');
       expect(exitCode).toBe(0);
@@ -85,7 +85,9 @@ describe('validate-index CLI', () => {
     it('should pass file path to validateCommand', async () => {
       await runCli(['docs/context.json']);
 
-      expect(validate.validateCommand).toHaveBeenCalledWith('docs/context.json');
+      expect(validate.validateCommand).toHaveBeenCalledWith(
+        'docs/context.json',
+      );
     });
 
     it('should pass undefined when no file path provided', async () => {
@@ -105,7 +107,7 @@ describe('validate-index CLI', () => {
       expect(exitCode).toBe(1);
       expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining('Validation failed'),
-        'Validation failed'
+        'Validation failed',
       );
     });
 
@@ -118,8 +120,10 @@ describe('validate-index CLI', () => {
 
       // Stack is printed in a separate console.error call
       const errorCalls = vi.mocked(console.error).mock.calls;
-      const hasStackCall = errorCalls.some(call =>
-        call.some(arg => typeof arg === 'string' && arg.includes('at test.ts'))
+      const hasStackCall = errorCalls.some((call) =>
+        call.some(
+          (arg) => typeof arg === 'string' && arg.includes('at test.ts'),
+        ),
       );
       expect(hasStackCall).toBe(true);
     });
@@ -130,7 +134,7 @@ describe('validate-index CLI', () => {
       await runCli(['--help']);
 
       const logCalls = vi.mocked(console.log).mock.calls;
-      const helpOutput = logCalls.map(call => call[0]).join('\n');
+      const helpOutput = logCalls.map((call) => call[0]).join('\n');
 
       expect(helpOutput).toContain('EXAMPLES:');
       expect(helpOutput).toContain('logicstamp-validate');
@@ -141,7 +145,7 @@ describe('validate-index CLI', () => {
       await runCli(['--help']);
 
       const logCalls = vi.mocked(console.log).mock.calls;
-      const helpOutput = logCalls.map(call => call[0]).join('\n');
+      const helpOutput = logCalls.map((call) => call[0]).join('\n');
 
       expect(helpOutput).toContain('NOTES:');
       expect(helpOutput).toContain('bundle structure');
@@ -152,7 +156,7 @@ describe('validate-index CLI', () => {
       await runCli(['--help']);
 
       const logCalls = vi.mocked(console.log).mock.calls;
-      const helpOutput = logCalls.map(call => call[0]).join('\n');
+      const helpOutput = logCalls.map((call) => call[0]).join('\n');
 
       expect(helpOutput).toContain('OPTIONS:');
       expect(helpOutput).toContain('-h, --help');

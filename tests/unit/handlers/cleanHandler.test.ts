@@ -26,8 +26,12 @@ describe('handleClean', () => {
   });
 
   it('should show help when --help flag is provided', async () => {
-    const printFoxSpy = vi.spyOn(initHandler, 'printFoxIcon').mockImplementation(() => {});
-    const getHelpSpy = vi.spyOn(parser, 'getCleanHelp').mockReturnValue('Clean help text');
+    const printFoxSpy = vi
+      .spyOn(initHandler, 'printFoxIcon')
+      .mockImplementation(() => {});
+    const getHelpSpy = vi
+      .spyOn(parser, 'getCleanHelp')
+      .mockReturnValue('Clean help text');
 
     await handleClean(['--help']);
 
@@ -38,8 +42,12 @@ describe('handleClean', () => {
   });
 
   it('should show help when -h flag is provided', async () => {
-    const printFoxSpy = vi.spyOn(initHandler, 'printFoxIcon').mockImplementation(() => {});
-    const getHelpSpy = vi.spyOn(parser, 'getCleanHelp').mockReturnValue('Clean help text');
+    const printFoxSpy = vi
+      .spyOn(initHandler, 'printFoxIcon')
+      .mockImplementation(() => {});
+    const getHelpSpy = vi
+      .spyOn(parser, 'getCleanHelp')
+      .mockReturnValue('Clean help text');
 
     await handleClean(['-h']);
 
@@ -52,13 +60,15 @@ describe('handleClean', () => {
     await handleClean(['--compare-modes']);
 
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('--compare-modes is not available')
+      expect.stringContaining('--compare-modes is not available'),
     );
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 
   it('should call cleanCommand with parsed options', async () => {
-    const cleanSpy = vi.spyOn(cleanCommand, 'cleanCommand').mockResolvedValue(undefined);
+    const cleanSpy = vi
+      .spyOn(cleanCommand, 'cleanCommand')
+      .mockResolvedValue(undefined);
     const parseSpy = vi.spyOn(parser, 'parseCleanArgs').mockReturnValue({
       all: false,
       yes: false,
@@ -83,7 +93,10 @@ describe('handleClean', () => {
 
     await handleClean([]);
 
-    expect(console.error).toHaveBeenCalledWith('❌ Clean failed:', 'Clean failed');
+    expect(console.error).toHaveBeenCalledWith(
+      '❌ Clean failed:',
+      'Clean failed',
+    );
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 });

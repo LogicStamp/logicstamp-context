@@ -3,12 +3,19 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createMockBundle, createMockContract, createMockManifest, createMockTokenEstimates } from './helpers.js';
+import {
+  createMockBundle,
+  createMockContract,
+  createMockManifest,
+  createMockTokenEstimates,
+} from './helpers.js';
 
 // Mock tokens module
 vi.mock('../../../../src/utils/tokens.js', () => ({
   formatTokenCount: vi.fn((n: number) => n.toLocaleString()),
-  getTokenizerStatus: vi.fn(() => Promise.resolve({ gpt4: true, claude: true })),
+  getTokenizerStatus: vi.fn(() =>
+    Promise.resolve({ gpt4: true, claude: true }),
+  ),
 }));
 
 // Import after mocks
@@ -26,7 +33,10 @@ describe('statsCalculator', () => {
     vi.clearAllMocks();
     consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     // Reset tokenizer status mock to default (both available)
-    vi.mocked(tokens.getTokenizerStatus).mockResolvedValue({ gpt4: true, claude: true });
+    vi.mocked(tokens.getTokenizerStatus).mockResolvedValue({
+      gpt4: true,
+      claude: true,
+    });
   });
 
   afterEach(() => {
@@ -40,9 +50,7 @@ describe('statsCalculator', () => {
           createMockContract('src/App.tsx'),
           createMockContract('src/Button.tsx'),
         ]),
-        createMockBundle('src/Card.tsx', [
-          createMockContract('src/Card.tsx'),
-        ]),
+        createMockBundle('src/Card.tsx', [createMockContract('src/Card.tsx')]),
       ];
 
       const stats = calculateStats(bundles);
@@ -73,7 +81,11 @@ describe('statsCalculator', () => {
 
       const bundle2 = createMockBundle('src/Card.tsx');
       bundle2.meta.missing = [
-        { name: 'react-icons', reason: 'external', referencedBy: 'src/Card.tsx' },
+        {
+          name: 'react-icons',
+          reason: 'external',
+          referencedBy: 'src/Card.tsx',
+        },
         { name: 'date-fns', reason: 'external', referencedBy: 'src/Card.tsx' },
       ];
 
@@ -119,7 +131,7 @@ describe('statsCalculator', () => {
         bundles,
         stats,
         tokenEstimates,
-        elapsed
+        elapsed,
       );
 
       expect(output).toEqual({
@@ -144,9 +156,18 @@ describe('statsCalculator', () => {
     });
 
     it('should include all required fields', () => {
-      const contracts = [createMockContract('src/A.tsx'), createMockContract('src/B.tsx')];
-      const manifest = createMockManifest(['src/A.tsx', 'src/B.tsx'], ['src/B.tsx']);
-      const bundles = [createMockBundle('src/A.tsx'), createMockBundle('src/B.tsx')];
+      const contracts = [
+        createMockContract('src/A.tsx'),
+        createMockContract('src/B.tsx'),
+      ];
+      const manifest = createMockManifest(
+        ['src/A.tsx', 'src/B.tsx'],
+        ['src/B.tsx'],
+      );
+      const bundles = [
+        createMockBundle('src/A.tsx'),
+        createMockBundle('src/B.tsx'),
+      ];
       const stats = { totalNodes: 10, totalEdges: 5, totalMissing: 2 };
       const tokenEstimates = createMockTokenEstimates();
       const elapsed = 200;
@@ -157,7 +178,7 @@ describe('statsCalculator', () => {
         bundles,
         stats,
         tokenEstimates,
-        elapsed
+        elapsed,
       ) as Record<string, unknown>;
 
       // Verify all expected keys are present
@@ -177,7 +198,7 @@ describe('statsCalculator', () => {
         'elapsedMs',
       ];
 
-      expectedKeys.forEach(key => {
+      expectedKeys.forEach((key) => {
         expect(output).toHaveProperty(key);
       });
     });
@@ -202,7 +223,7 @@ describe('statsCalculator', () => {
         bundles,
         stats,
         tokenEstimates,
-        100
+        100,
       ) as Record<string, unknown>;
 
       expect(output.totalComponents).toBe(3);
@@ -238,15 +259,24 @@ describe('statsCalculator', () => {
       const stats = { totalNodes: 5, totalEdges: 3, totalMissing: 0 };
       const tokenEstimates = createMockTokenEstimates();
 
-      await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, defaultOptions);
+      await generateSummary(
+        contracts,
+        manifest,
+        bundles,
+        stats,
+        tokenEstimates,
+        defaultOptions,
+      );
 
       // Verify console.log was called with summary info
       expect(consoleSpy).toHaveBeenCalled();
 
       // Check that key summary items were logged
-      const calls = consoleSpy.mock.calls.map(c => c[0]);
+      const calls = consoleSpy.mock.calls.map((c) => c[0]);
       expect(calls.some((c: string) => c.includes('Summary'))).toBe(true);
-      expect(calls.some((c: string) => c.includes('Total components'))).toBe(true);
+      expect(calls.some((c: string) => c.includes('Total components'))).toBe(
+        true,
+      );
     });
 
     it('should show token counts for current mode', async () => {
@@ -256,9 +286,16 @@ describe('statsCalculator', () => {
       const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
       const tokenEstimates = createMockTokenEstimates();
 
-      await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, defaultOptions);
+      await generateSummary(
+        contracts,
+        manifest,
+        bundles,
+        stats,
+        tokenEstimates,
+        defaultOptions,
+      );
 
-      const calls = consoleSpy.mock.calls.map(c => c[0]);
+      const calls = consoleSpy.mock.calls.map((c) => c[0]);
       expect(calls.some((c: string) => c.includes('Token Count'))).toBe(true);
       expect(calls.some((c: string) => c.includes('GPT-4o'))).toBe(true);
       expect(calls.some((c: string) => c.includes('Claude'))).toBe(true);
@@ -271,9 +308,16 @@ describe('statsCalculator', () => {
       const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
       const tokenEstimates = createMockTokenEstimates();
 
-      await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, defaultOptions);
+      await generateSummary(
+        contracts,
+        manifest,
+        bundles,
+        stats,
+        tokenEstimates,
+        defaultOptions,
+      );
 
-      const calls = consoleSpy.mock.calls.map(c => c[0]);
+      const calls = consoleSpy.mock.calls.map((c) => c[0]);
       expect(calls.some((c: string) => c.includes('Raw source'))).toBe(true);
       expect(calls.some((c: string) => c.includes('Savings'))).toBe(true);
     });
@@ -285,10 +329,19 @@ describe('statsCalculator', () => {
       const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
       const tokenEstimates = createMockTokenEstimates();
 
-      await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, defaultOptions);
+      await generateSummary(
+        contracts,
+        manifest,
+        bundles,
+        stats,
+        tokenEstimates,
+        defaultOptions,
+      );
 
-      const calls = consoleSpy.mock.calls.map(c => c[0]);
-      expect(calls.some((c: string) => c.includes('--compare-modes'))).toBe(true);
+      const calls = consoleSpy.mock.calls.map((c) => c[0]);
+      expect(calls.some((c: string) => c.includes('--compare-modes'))).toBe(
+        true,
+      );
     });
 
     it('should show missing dependencies when present', async () => {
@@ -302,10 +355,19 @@ describe('statsCalculator', () => {
       const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 1 };
       const tokenEstimates = createMockTokenEstimates();
 
-      await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, defaultOptions);
+      await generateSummary(
+        contracts,
+        manifest,
+        bundles,
+        stats,
+        tokenEstimates,
+        defaultOptions,
+      );
 
-      const calls = consoleSpy.mock.calls.map(c => c[0]);
-      expect(calls.some((c: string) => c.includes('Missing dependencies'))).toBe(true);
+      const calls = consoleSpy.mock.calls.map((c) => c[0]);
+      expect(
+        calls.some((c: string) => c.includes('Missing dependencies')),
+      ).toBe(true);
     });
 
     describe('mode labels', () => {
@@ -316,13 +378,20 @@ describe('statsCalculator', () => {
         const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
         const tokenEstimates = createMockTokenEstimates();
 
-        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
-          ...defaultOptions,
-          includeCode: 'header',
-          includeStyle: false,
-        });
+        await generateSummary(
+          contracts,
+          manifest,
+          bundles,
+          stats,
+          tokenEstimates,
+          {
+            ...defaultOptions,
+            includeCode: 'header',
+            includeStyle: false,
+          },
+        );
 
-        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const calls = consoleSpy.mock.calls.map((c) => c[0]);
         expect(calls.some((c: string) => c.includes('header mode'))).toBe(true);
       });
 
@@ -333,14 +402,23 @@ describe('statsCalculator', () => {
         const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
         const tokenEstimates = createMockTokenEstimates();
 
-        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
-          ...defaultOptions,
-          includeCode: 'header',
-          includeStyle: true,
-        });
+        await generateSummary(
+          contracts,
+          manifest,
+          bundles,
+          stats,
+          tokenEstimates,
+          {
+            ...defaultOptions,
+            includeCode: 'header',
+            includeStyle: true,
+          },
+        );
 
-        const calls = consoleSpy.mock.calls.map(c => c[0]);
-        expect(calls.some((c: string) => c.includes('header+style mode'))).toBe(true);
+        const calls = consoleSpy.mock.calls.map((c) => c[0]);
+        expect(calls.some((c: string) => c.includes('header+style mode'))).toBe(
+          true,
+        );
       });
 
       it('should show "full" mode label', async () => {
@@ -350,13 +428,20 @@ describe('statsCalculator', () => {
         const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
         const tokenEstimates = createMockTokenEstimates();
 
-        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
-          ...defaultOptions,
-          includeCode: 'full',
-          includeStyle: false,
-        });
+        await generateSummary(
+          contracts,
+          manifest,
+          bundles,
+          stats,
+          tokenEstimates,
+          {
+            ...defaultOptions,
+            includeCode: 'full',
+            includeStyle: false,
+          },
+        );
 
-        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const calls = consoleSpy.mock.calls.map((c) => c[0]);
         expect(calls.some((c: string) => c.includes('full mode'))).toBe(true);
       });
 
@@ -367,14 +452,23 @@ describe('statsCalculator', () => {
         const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
         const tokenEstimates = createMockTokenEstimates();
 
-        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
-          ...defaultOptions,
-          includeCode: 'full',
-          includeStyle: true,
-        });
+        await generateSummary(
+          contracts,
+          manifest,
+          bundles,
+          stats,
+          tokenEstimates,
+          {
+            ...defaultOptions,
+            includeCode: 'full',
+            includeStyle: true,
+          },
+        );
 
-        const calls = consoleSpy.mock.calls.map(c => c[0]);
-        expect(calls.some((c: string) => c.includes('full+style mode'))).toBe(true);
+        const calls = consoleSpy.mock.calls.map((c) => c[0]);
+        expect(calls.some((c: string) => c.includes('full+style mode'))).toBe(
+          true,
+        );
       });
 
       it('should show "none" mode label', async () => {
@@ -384,20 +478,30 @@ describe('statsCalculator', () => {
         const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
         const tokenEstimates = createMockTokenEstimates();
 
-        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, {
-          ...defaultOptions,
-          includeCode: 'none',
-          includeStyle: false,
-        });
+        await generateSummary(
+          contracts,
+          manifest,
+          bundles,
+          stats,
+          tokenEstimates,
+          {
+            ...defaultOptions,
+            includeCode: 'none',
+            includeStyle: false,
+          },
+        );
 
-        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const calls = consoleSpy.mock.calls.map((c) => c[0]);
         expect(calls.some((c: string) => c.includes('none mode'))).toBe(true);
       });
     });
 
     describe('tokenizer status', () => {
       it('should show tip when GPT-4 tokenizer is missing', async () => {
-        vi.mocked(tokens.getTokenizerStatus).mockResolvedValue({ gpt4: false, claude: true });
+        vi.mocked(tokens.getTokenizerStatus).mockResolvedValue({
+          gpt4: false,
+          claude: true,
+        });
 
         const contracts = [createMockContract('src/App.tsx')];
         const manifest = createMockManifest(['src/App.tsx']);
@@ -405,16 +509,26 @@ describe('statsCalculator', () => {
         const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
         const tokenEstimates = createMockTokenEstimates();
 
-        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, defaultOptions);
+        await generateSummary(
+          contracts,
+          manifest,
+          bundles,
+          stats,
+          tokenEstimates,
+          defaultOptions,
+        );
 
-        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const calls = consoleSpy.mock.calls.map((c) => c[0]);
         const tipLine = calls.find((c: string) => c.includes('💡 Install'));
         expect(tipLine).toBeDefined();
         expect(tipLine).toContain('@dqbd/tiktoken');
       });
 
       it('should show tip when Claude tokenizer is missing', async () => {
-        vi.mocked(tokens.getTokenizerStatus).mockResolvedValue({ gpt4: true, claude: false });
+        vi.mocked(tokens.getTokenizerStatus).mockResolvedValue({
+          gpt4: true,
+          claude: false,
+        });
 
         const contracts = [createMockContract('src/App.tsx')];
         const manifest = createMockManifest(['src/App.tsx']);
@@ -422,16 +536,26 @@ describe('statsCalculator', () => {
         const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
         const tokenEstimates = createMockTokenEstimates();
 
-        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, defaultOptions);
+        await generateSummary(
+          contracts,
+          manifest,
+          bundles,
+          stats,
+          tokenEstimates,
+          defaultOptions,
+        );
 
-        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const calls = consoleSpy.mock.calls.map((c) => c[0]);
         const tipLine = calls.find((c: string) => c.includes('💡 Install'));
         expect(tipLine).toBeDefined();
         expect(tipLine).toContain('@anthropic-ai/tokenizer');
       });
 
       it('should show tip when both tokenizers are missing', async () => {
-        vi.mocked(tokens.getTokenizerStatus).mockResolvedValue({ gpt4: false, claude: false });
+        vi.mocked(tokens.getTokenizerStatus).mockResolvedValue({
+          gpt4: false,
+          claude: false,
+        });
 
         const contracts = [createMockContract('src/App.tsx')];
         const manifest = createMockManifest(['src/App.tsx']);
@@ -439,9 +563,16 @@ describe('statsCalculator', () => {
         const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
         const tokenEstimates = createMockTokenEstimates();
 
-        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, defaultOptions);
+        await generateSummary(
+          contracts,
+          manifest,
+          bundles,
+          stats,
+          tokenEstimates,
+          defaultOptions,
+        );
 
-        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const calls = consoleSpy.mock.calls.map((c) => c[0]);
         const tipLine = calls.find((c: string) => c.includes('💡 Install'));
         expect(tipLine).toBeDefined();
         expect(tipLine).toContain('@dqbd/tiktoken');
@@ -449,7 +580,10 @@ describe('statsCalculator', () => {
       });
 
       it('should not show tip when both tokenizers are available', async () => {
-        vi.mocked(tokens.getTokenizerStatus).mockResolvedValue({ gpt4: true, claude: true });
+        vi.mocked(tokens.getTokenizerStatus).mockResolvedValue({
+          gpt4: true,
+          claude: true,
+        });
 
         const contracts = [createMockContract('src/App.tsx')];
         const manifest = createMockManifest(['src/App.tsx']);
@@ -457,15 +591,25 @@ describe('statsCalculator', () => {
         const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
         const tokenEstimates = createMockTokenEstimates();
 
-        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, defaultOptions);
+        await generateSummary(
+          contracts,
+          manifest,
+          bundles,
+          stats,
+          tokenEstimates,
+          defaultOptions,
+        );
 
-        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const calls = consoleSpy.mock.calls.map((c) => c[0]);
         const tipLine = calls.find((c: string) => c.includes('💡 Install'));
         expect(tipLine).toBeUndefined();
       });
 
       it('should show approximation method when tokenizers are missing', async () => {
-        vi.mocked(tokens.getTokenizerStatus).mockResolvedValue({ gpt4: false, claude: false });
+        vi.mocked(tokens.getTokenizerStatus).mockResolvedValue({
+          gpt4: false,
+          claude: false,
+        });
 
         const contracts = [createMockContract('src/App.tsx')];
         const manifest = createMockManifest(['src/App.tsx']);
@@ -473,16 +617,26 @@ describe('statsCalculator', () => {
         const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
         const tokenEstimates = createMockTokenEstimates();
 
-        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, defaultOptions);
+        await generateSummary(
+          contracts,
+          manifest,
+          bundles,
+          stats,
+          tokenEstimates,
+          defaultOptions,
+        );
 
-        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const calls = consoleSpy.mock.calls.map((c) => c[0]);
         const methodLine = calls.find((c: string) => c.includes('Method:'));
         expect(methodLine).toBeDefined();
         expect(methodLine).toContain('approximation');
       });
 
       it('should show tiktoken method when GPT-4 tokenizer is available', async () => {
-        vi.mocked(tokens.getTokenizerStatus).mockResolvedValue({ gpt4: true, claude: false });
+        vi.mocked(tokens.getTokenizerStatus).mockResolvedValue({
+          gpt4: true,
+          claude: false,
+        });
 
         const contracts = [createMockContract('src/App.tsx')];
         const manifest = createMockManifest(['src/App.tsx']);
@@ -490,9 +644,16 @@ describe('statsCalculator', () => {
         const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
         const tokenEstimates = createMockTokenEstimates();
 
-        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, defaultOptions);
+        await generateSummary(
+          contracts,
+          manifest,
+          bundles,
+          stats,
+          tokenEstimates,
+          defaultOptions,
+        );
 
-        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const calls = consoleSpy.mock.calls.map((c) => c[0]);
         const methodLine = calls.find((c: string) => c.includes('Method:'));
         expect(methodLine).toBeDefined();
         expect(methodLine).toContain('tiktoken');
@@ -514,10 +675,19 @@ describe('statsCalculator', () => {
         const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 15 };
         const tokenEstimates = createMockTokenEstimates();
 
-        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, defaultOptions);
+        await generateSummary(
+          contracts,
+          manifest,
+          bundles,
+          stats,
+          tokenEstimates,
+          defaultOptions,
+        );
 
-        const calls = consoleSpy.mock.calls.map(c => c[0]);
-        const moreLine = calls.find((c: string) => c.includes('... and') && c.includes('more'));
+        const calls = consoleSpy.mock.calls.map((c) => c[0]);
+        const moreLine = calls.find(
+          (c: string) => c.includes('... and') && c.includes('more'),
+        );
         expect(moreLine).toBeDefined();
         // Should show "... and 5 more" (15 - 10 = 5)
         expect(moreLine).toContain('... and 5 more');
@@ -537,15 +707,26 @@ describe('statsCalculator', () => {
         const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 10 };
         const tokenEstimates = createMockTokenEstimates();
 
-        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, defaultOptions);
+        await generateSummary(
+          contracts,
+          manifest,
+          bundles,
+          stats,
+          tokenEstimates,
+          defaultOptions,
+        );
 
-        const calls = consoleSpy.mock.calls.map(c => c[0]);
-        const moreLine = calls.find((c: string) => c.includes('... and') && c.includes('more'));
+        const calls = consoleSpy.mock.calls.map((c) => c[0]);
+        const moreLine = calls.find(
+          (c: string) => c.includes('... and') && c.includes('more'),
+        );
         // Should NOT show "... and X more" when exactly 10
         expect(moreLine).toBeUndefined();
 
         // Count dependency lines
-        const dependencyLines = calls.filter((c: string) => c.trim().startsWith('- dependency-'));
+        const dependencyLines = calls.filter((c: string) =>
+          c.trim().startsWith('- dependency-'),
+        );
         expect(dependencyLines.length).toBe(10);
       });
 
@@ -556,11 +737,20 @@ describe('statsCalculator', () => {
         const stats = { totalNodes: 1, totalEdges: 0, totalMissing: 0 };
         const tokenEstimates = createMockTokenEstimates();
 
-        await generateSummary(contracts, manifest, bundles, stats, tokenEstimates, defaultOptions);
+        await generateSummary(
+          contracts,
+          manifest,
+          bundles,
+          stats,
+          tokenEstimates,
+          defaultOptions,
+        );
 
-        const calls = consoleSpy.mock.calls.map(c => c[0]);
+        const calls = consoleSpy.mock.calls.map((c) => c[0]);
         // The warning section with emoji should not appear when there are no missing deps
-        expect(calls.some((c: string) => c.includes('⚠️  Missing dependencies'))).toBe(false);
+        expect(
+          calls.some((c: string) => c.includes('⚠️  Missing dependencies')),
+        ).toBe(false);
       });
     });
   });

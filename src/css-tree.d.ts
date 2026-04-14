@@ -19,4 +19,3 @@ declare module 'css-tree' {
   export function parse(css: string, options?: ParseOptions): CssNode;
   export function walk(ast: CssNode, callback: (node: CssNode) => void): void;
 }
-

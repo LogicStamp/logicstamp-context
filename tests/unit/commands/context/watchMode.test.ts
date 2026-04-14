@@ -52,7 +52,10 @@ vi.mock('../../../../src/utils/config.js', () => ({
   appendWatchLog: vi.fn().mockResolvedValue(undefined),
   writeStrictWatchStatus: vi.fn().mockResolvedValue(undefined),
   deleteStrictWatchStatus: vi.fn().mockResolvedValue(undefined),
-  getWatchStatusPath: vi.fn((projectRoot: string) => `${projectRoot}/.logicstamp/context_watch-status.json`),
+  getWatchStatusPath: vi.fn(
+    (projectRoot: string) =>
+      `${projectRoot}/.logicstamp/context_watch-status.json`,
+  ),
 }));
 
 vi.mock('../../../../src/utils/cleanup.js', () => ({
@@ -69,7 +72,11 @@ vi.mock('../../../../src/cli/commands/context/watchMode/watchDiff.js', () => ({
 
 vi.mock('../../../../src/cli/commands/context/index.js', () => ({
   buildContractsFromFiles: vi.fn(),
-  writeContextFiles: vi.fn().mockResolvedValue({ filesWritten: 1, folderInfos: [], totalTokenEstimate: 500 }),
+  writeContextFiles: vi.fn().mockResolvedValue({
+    filesWritten: 1,
+    folderInfos: [],
+    totalTokenEstimate: 500,
+  }),
   writeMainIndex: vi.fn().mockResolvedValue(undefined),
   groupBundlesByFolder: vi.fn(() => new Map()),
   displayPath: vi.fn((p: string) => p),
@@ -109,7 +116,9 @@ describe('watchMode', () => {
       on: vi.fn().mockReturnThis(),
       close: vi.fn().mockResolvedValue(undefined),
     };
-    vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+    vi.mocked(chokidar.watch).mockReturnValue(
+      mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+    );
   });
 
   afterEach(() => {
@@ -144,10 +153,14 @@ describe('watchMode', () => {
       const watchPromise = startWatchMode(options, '/project', null);
 
       // Let microtasks run
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Watch mode enabled'));
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Press Ctrl+C to stop'));
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Watch mode enabled'),
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Press Ctrl+C to stop'),
+      );
     });
 
     it('should display strict mode message when strictWatch enabled', async () => {
@@ -172,9 +185,11 @@ describe('watchMode', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Strict mode'));
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Strict mode'),
+      );
     });
 
     it('should not display startup messages when quiet', async () => {
@@ -198,7 +213,7 @@ describe('watchMode', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Console should not be called with startup messages
       const calls = consoleSpy.mock.calls.flat().join('\n');
@@ -226,7 +241,7 @@ describe('watchMode', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(configModule.writeWatchStatus).toHaveBeenCalledWith(
         '/project',
@@ -234,12 +249,14 @@ describe('watchMode', () => {
           active: true,
           projectRoot: '/project',
           pid: process.pid,
-        })
+        }),
       );
     });
 
     it('should warn but continue if watch status file cannot be written', async () => {
-      vi.mocked(configModule.writeWatchStatus).mockRejectedValueOnce(new Error('Permission denied'));
+      vi.mocked(configModule.writeWatchStatus).mockRejectedValueOnce(
+        new Error('Permission denied'),
+      );
 
       const options: ContextOptions = {
         out: '.logicstamp',
@@ -261,10 +278,10 @@ describe('watchMode', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Could not write watch status file')
+        expect.stringContaining('Could not write watch status file'),
       );
     });
 
@@ -289,12 +306,12 @@ describe('watchMode', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(cleanupModule.registerCleanup).toHaveBeenCalledWith(
         'watch-mode',
         expect.any(Function),
-        1
+        1,
       );
     });
   });
@@ -321,7 +338,7 @@ describe('watchMode', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(chokidar.watch).toHaveBeenCalledWith(
         '/project',
@@ -329,7 +346,7 @@ describe('watchMode', () => {
           ignoreInitial: true,
           persistent: true,
           depth: 99,
-        })
+        }),
       );
     });
 
@@ -355,7 +372,7 @@ describe('watchMode', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Check that console logged the watched extensions including style files
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('.css'));
@@ -383,7 +400,7 @@ describe('watchMode', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const onCalls = mockWatcher.on.mock.calls;
       const eventTypes = onCalls.map((call) => call[0] as string);
@@ -419,21 +436,23 @@ describe('watchMode', () => {
 
       // Set up mock watcher to capture event handlers
       let changeHandler: ((path: string) => void) | undefined;
-      mockWatcher.on.mockImplementation((event: string, handler: (path: string) => void) => {
-        if (event === 'change') {
-          changeHandler = handler;
-        }
-        return mockWatcher;
-      });
+      mockWatcher.on.mockImplementation(
+        (event: string, handler: (path: string) => void) => {
+          if (event === 'change') {
+            changeHandler = handler;
+          }
+          return mockWatcher;
+        },
+      );
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Simulate file change for non-TS file
       if (changeHandler) {
         changeHandler('/project/readme.md');
       }
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Should NOT log "Changed" for non-TS file
       const calls = consoleSpy.mock.calls.flat().join('\n');
@@ -461,23 +480,27 @@ describe('watchMode', () => {
       };
 
       let changeHandler: ((path: string) => void) | undefined;
-      mockWatcher.on.mockImplementation((event: string, handler: (path: string) => void) => {
-        if (event === 'change') {
-          changeHandler = handler;
-        }
-        return mockWatcher;
-      });
+      mockWatcher.on.mockImplementation(
+        (event: string, handler: (path: string) => void) => {
+          if (event === 'change') {
+            changeHandler = handler;
+          }
+          return mockWatcher;
+        },
+      );
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Simulate change to .stampignore
       if (changeHandler) {
         changeHandler('/project/.stampignore');
       }
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Changed'));
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Changed'),
+      );
     });
   });
 
@@ -503,14 +526,14 @@ describe('watchMode', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Should extract directory from .json path
       expect(configModule.writeWatchStatus).toHaveBeenCalledWith(
         '/project',
         expect.objectContaining({
           outputDir: '.logicstamp',
-        })
+        }),
       );
     });
 
@@ -535,13 +558,13 @@ describe('watchMode', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(configModule.writeWatchStatus).toHaveBeenCalledWith(
         '/project',
         expect.objectContaining({
           outputDir: 'output',
-        })
+        }),
       );
     });
   });

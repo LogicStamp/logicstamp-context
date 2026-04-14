@@ -2,11 +2,25 @@
  * Prop Extractor - Extracts component props from TypeScript interfaces/types
  */
 
-import { SourceFile, Node, Type, InterfaceDeclaration, TypeAliasDeclaration, PropertySignature, Symbol as TsMorphSymbol } from 'ts-morph';
+import {
+  type SourceFile,
+  Node,
+  type Type,
+  type InterfaceDeclaration,
+  type TypeAliasDeclaration,
+  type PropertySignature,
+  type Symbol as TsMorphSymbol,
+} from 'ts-morph';
 import type { PropType } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
-import { normalizePropType, stripUndefinedFromUnionText } from '../shared/propTypeNormalizer.js';
-import { hasExportedHooks, extractHookParameters } from './hookParameterExtractor.js';
+import {
+  normalizePropType,
+  stripUndefinedFromUnionText,
+} from '../shared/propTypeNormalizer.js';
+import {
+  hasExportedHooks,
+  extractHookParameters,
+} from './hookParameterExtractor.js';
 
 // TypeScript TypeFlags.Undefined constant (0x4000 = 16384)
 // Used for checking if a union type includes undefined
@@ -20,7 +34,7 @@ const TYPEFLAG_UNDEFINED = 16384; // ts.TypeFlags.Undefined
 function safeExtract<T>(
   fn: () => T,
   defaultValue: T,
-  errorContext?: { filePath: string; context: string }
+  errorContext?: { filePath: string; context: string },
 ): T {
   try {
     return fn();
@@ -63,7 +77,10 @@ function isUndefinedType(type: Type): boolean {
  * Check if a union type contains undefined and extract the non-undefined type text
  * Returns { hasUndefined, typeText } where typeText excludes undefined
  */
-function analyzeUnionForUndefined(propType: Type): { hasUndefined: boolean; typeText: string } {
+function analyzeUnionForUndefined(propType: Type): {
+  hasUndefined: boolean;
+  typeText: string;
+} {
   if (!propType.isUnion()) {
     return { hasUndefined: false, typeText: propType.getText() };
   }
@@ -76,8 +93,8 @@ function analyzeUnionForUndefined(propType: Type): { hasUndefined: boolean; type
   }
 
   const typeText = unionTypes
-    .filter(ut => !isUndefinedType(ut))
-    .map(ut => ut.getText())
+    .filter((ut) => !isUndefinedType(ut))
+    .map((ut) => ut.getText())
     .join(' | ');
 
   return { hasUndefined: true, typeText };
@@ -86,7 +103,9 @@ function analyzeUnionForUndefined(propType: Type): { hasUndefined: boolean; type
 /**
  * Extract a single prop from an interface property
  */
-function extractInterfaceProp(prop: PropertySignature): { name: string; propType: PropType } | null {
+function extractInterfaceProp(
+  prop: PropertySignature,
+): { name: string; propType: PropType } | null {
   const name = prop.getName();
   let isOptional = prop.hasQuestionToken();
   let type = prop.getType().getText();
@@ -115,7 +134,7 @@ function extractInterfaceProp(prop: PropertySignature): { name: string; propType
  */
 function extractPropsFromInterface(
   iface: InterfaceDeclaration,
-  filePath: string
+  filePath: string,
 ): Record<string, PropType> {
   const props: Record<string, PropType> = {};
 
@@ -124,11 +143,10 @@ function extractPropsFromInterface(
   }
 
   for (const prop of iface.getProperties()) {
-    const result = safeExtract(
-      () => extractInterfaceProp(prop),
-      null,
-      { filePath, context: 'props-interface-property' }
-    );
+    const result = safeExtract(() => extractInterfaceProp(prop), null, {
+      filePath,
+      context: 'props-interface-property',
+    });
 
     if (result) {
       props[result.name] = result.propType;
@@ -143,7 +161,7 @@ function extractPropsFromInterface(
  */
 function extractTypeAliasProp(
   prop: TsMorphSymbol,
-  typeAlias: TypeAliasDeclaration
+  typeAlias: TypeAliasDeclaration,
 ): { name: string; propType: PropType } | null {
   const name = prop.getName();
   let isOptional = false;
@@ -186,7 +204,7 @@ function extractTypeAliasProp(
  */
 function extractPropsFromTypeAlias(
   typeAlias: TypeAliasDeclaration,
-  filePath: string
+  filePath: string,
 ): Record<string, PropType> {
   const props: Record<string, PropType> = {};
 
@@ -201,7 +219,7 @@ function extractPropsFromTypeAlias(
     const result = safeExtract(
       () => extractTypeAliasProp(prop, typeAlias),
       null,
-      { filePath, context: 'props-typealias-property' }
+      { filePath, context: 'props-typealias-property' },
     );
 
     if (result) {
@@ -221,33 +239,31 @@ export function extractProps(source: SourceFile): Record<string, PropType> {
   const filePath = source.getFilePath?.() ?? 'unknown';
 
   // Extract props from interfaces ending with Props
-  const interfaces = safeExtract(
-    () => source.getInterfaces(),
-    [],
-    { filePath, context: 'props-interfaces-batch' }
-  );
+  const interfaces = safeExtract(() => source.getInterfaces(), [], {
+    filePath,
+    context: 'props-interfaces-batch',
+  });
 
   for (const iface of interfaces) {
     const ifaceProps = safeExtract(
       () => extractPropsFromInterface(iface, filePath),
       {},
-      { filePath, context: 'props-interface' }
+      { filePath, context: 'props-interface' },
     );
     Object.assign(props, ifaceProps);
   }
 
   // Extract props from type aliases ending with Props
-  const typeAliases = safeExtract(
-    () => source.getTypeAliases(),
-    [],
-    { filePath, context: 'props-typealiases-batch' }
-  );
+  const typeAliases = safeExtract(() => source.getTypeAliases(), [], {
+    filePath,
+    context: 'props-typealiases-batch',
+  });
 
   for (const typeAlias of typeAliases) {
     const typeAliasProps = safeExtract(
       () => extractPropsFromTypeAlias(typeAlias, filePath),
       {},
-      { filePath, context: 'props-typealias' }
+      { filePath, context: 'props-typealias' },
     );
     Object.assign(props, typeAliasProps);
   }

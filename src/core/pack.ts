@@ -67,10 +67,13 @@ const PACKAGE_VERSION = `${pkg.name}@${pkg.version}`;
  * Check if a component name is an internal component (function defined in the same file)
  * Internal components appear in both composition.functions and composition.components of a contract
  */
-function isInternalComponent(contract: UIFContract, componentName: string): boolean {
+function isInternalComponent(
+  contract: UIFContract,
+  componentName: string,
+): boolean {
   const functionsSet = new Set(contract.composition.functions);
   const componentsSet = new Set(contract.composition.components);
-  
+
   // A component is internal if it appears in both functions and components arrays
   // This means it's a function component defined in the same file
   return functionsSet.has(componentName) && componentsSet.has(componentName);
@@ -84,49 +87,49 @@ function isInternalComponent(contract: UIFContract, componentName: string): bool
 function filterInternalComponentsFromMissing(
   missing: MissingDependency[],
   nodes: BundleNode[],
-  contractsMap: Map<string, UIFContract> | undefined
+  contractsMap: Map<string, UIFContract> | undefined,
 ): MissingDependency[] {
   // Build a map of entryId -> contract for quick lookup
   // Only use contracts we already have (no I/O to avoid timeouts)
   const contractMap = new Map<string, UIFContract>();
-  
+
   // Add contracts from nodes (already loaded)
   for (const node of nodes) {
     if (node.contract) {
       contractMap.set(node.entryId, node.contract);
     }
   }
-  
+
   // Add contracts from contractsMap (in-memory)
   if (contractsMap) {
     for (const [key, contract] of contractsMap.entries()) {
       contractMap.set(key, contract);
     }
   }
-  
+
   // Filter missing dependencies
   const filtered: MissingDependency[] = [];
-  
+
   for (const dep of missing) {
     // If referencedBy is not set, we can't check if it's internal - keep it
     if (!dep.referencedBy) {
       filtered.push(dep);
       continue;
     }
-    
+
     // Only check contracts we already have loaded (no I/O)
     const contract = contractMap.get(dep.referencedBy);
-    
+
     // If we have the contract, check if the dependency is an internal component
     if (contract && isInternalComponent(contract, dep.name)) {
       // This is an internal component - skip it (don't add to filtered)
       continue;
     }
-    
+
     // Not an internal component (or contract not available) - keep it
     filtered.push(dep);
   }
-  
+
   return filtered;
 }
 
@@ -301,7 +304,7 @@ export async function pack(
   entryId: string,
   manifest: ProjectManifest,
   options: PackOptions,
-  projectRoot: string
+  projectRoot: string,
 ): Promise<LogicStampBundle> {
   // Normalize entry ID
   const normalizedEntry = normalizeEntryId(entryId);
@@ -310,12 +313,13 @@ export async function pack(
   const manifestKey = resolveKey(manifest, normalizedEntry);
   if (!manifestKey) {
     const componentKeys = Object.keys(manifest.components).slice(0, 5);
-    const suggestions = componentKeys.length > 0
-      ? `\nAvailable components:\n${componentKeys.map(k => `  - ${k}`).join('\n')}${componentKeys.length < manifest.totalComponents ? `\n  ... and ${manifest.totalComponents - componentKeys.length} more` : ''}`
-      : '';
+    const suggestions =
+      componentKeys.length > 0
+        ? `\nAvailable components:\n${componentKeys.map((k) => `  - ${k}`).join('\n')}${componentKeys.length < manifest.totalComponents ? `\n  ... and ${manifest.totalComponents - componentKeys.length} more` : ''}`
+        : '';
     throw new Error(
       `Component not found: ${entryId} (normalized: ${normalizedEntry}).` +
-      suggestions
+        suggestions,
     );
   }
 
@@ -328,7 +332,7 @@ export async function pack(
     manifest,
     options.depth,
     options.maxNodes,
-    projectRoot
+    projectRoot,
   );
 
   // Load contracts for all visited nodes
@@ -340,15 +344,19 @@ export async function pack(
 
   for (const manifestKey of Array.from(visited)) {
     // Try to get contract from in-memory map first (standalone mode), then from sidecar file
-    const contract = options.contractsMap?.get(manifestKey) || await loadContract(manifestKey, projectRoot);
+    const contract =
+      options.contractsMap?.get(manifestKey) ||
+      (await loadContract(manifestKey, projectRoot));
 
     if (!contract) {
-      const absolutePath = isAbsolute(manifestKey) ? manifestKey : resolve(projectRoot, manifestKey);
+      const absolutePath = isAbsolute(manifestKey)
+        ? manifestKey
+        : resolve(projectRoot, manifestKey);
       const sidecarPath = `${absolutePath}.uif.json`;
       if (options.strict) {
         throw new Error(
           `Missing contract for ${manifestKey} (strict mode enabled). ` +
-          `Expected sidecar at: ${sidecarPath}`
+            `Expected sidecar at: ${sidecarPath}`,
         );
       }
 
@@ -377,20 +385,24 @@ export async function pack(
 
     // Validate hash lock if enabled
     if (options.hashLock && contract) {
-      const isValid = await validateHashLock(contract, manifestKey, projectRoot);
+      const isValid = await validateHashLock(
+        contract,
+        manifestKey,
+        projectRoot,
+      );
       if (!isValid) {
         throw new Error(
           `Hash lock validation failed for ${manifestKey}. ` +
-          `The file has been modified since the contract was generated. ` +
-          `Run 'logicstamp compile' to regenerate contracts.`
+            `The file has been modified since the contract was generated. ` +
+            `Run 'logicstamp compile' to regenerate contracts.`,
         );
       }
     }
 
     // Get code/header based on options
     // Use manifestKey with projectRoot for file operations
-    let codeHeader: string | null | undefined = undefined;
-    let code: string | null | undefined = undefined;
+    let codeHeader: string | null | undefined;
+    let code: string | null | undefined;
 
     if (options.includeCode === 'header') {
       const headerResult = await extractCodeHeader(manifestKey, projectRoot);
@@ -433,8 +445,8 @@ export async function pack(
   if (nodes.length === 0) {
     throw new Error(
       `No nodes packed. ` +
-      `Entry component '${actualEntryId}' was found in manifest, but no contracts could be loaded. ` +
-      `Run 'logicstamp compile' to generate sidecar files, or check that path/name matches manifest keys.`
+        `Entry component '${actualEntryId}' was found in manifest, but no contracts could be loaded. ` +
+        `Run 'logicstamp compile' to generate sidecar files, or check that path/name matches manifest keys.`,
     );
   }
 
@@ -444,7 +456,7 @@ export async function pack(
   const filteredMissing = filterInternalComponentsFromMissing(
     missing,
     nodes,
-    options.contractsMap
+    options.contractsMap,
   );
 
   // Build edges
@@ -491,7 +503,7 @@ export async function pack(
   if (bundle.graph.nodes.length === 0) {
     throw new Error(
       `No nodes packed. ` +
-      `Run 'logicstamp compile' to generate contracts, or check path/name against manifest keys.`
+        `Run 'logicstamp compile' to generate contracts, or check path/name against manifest keys.`,
     );
   }
 
@@ -501,7 +513,10 @@ export async function pack(
 /**
  * Format bundle for output
  */
-export function formatBundle(bundle: LogicStampBundle, format: BundleFormat): string {
+export function formatBundle(
+  bundle: LogicStampBundle,
+  format: BundleFormat,
+): string {
   switch (format) {
     case 'json':
       return JSON.stringify(bundle);

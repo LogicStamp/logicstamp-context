@@ -24,6 +24,9 @@
   ],
   "scripts": {
     "build": "tsc",
+    "lint": "biome lint src tests vitest.config.ts",
+    "lint:fix": "biome lint --write src tests vitest.config.ts",
+    "format": "biome format --write src tests biome.json package.json tsconfig.json vitest.config.ts",
     "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -76,6 +79,7 @@
     "@dqbd/tiktoken": "^1.0.17"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.11",
     "@types/node": "^20.19.27",
     "@vitest/coverage-v8": "^4.0.16",
     "@vitest/ui": "^4.0.16",

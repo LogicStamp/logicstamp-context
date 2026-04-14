@@ -50,7 +50,9 @@ describe('stamp CLI routing', () => {
     vi.mocked(parser.getMainHelp).mockReturnValue('Main help text');
     vi.mocked(parser.getSecurityHelp).mockReturnValue('Security help text');
     vi.mocked(security.securityHardResetCommand).mockResolvedValue();
-    vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify({ version: '1.0.0' }));
+    vi.mocked(fs.readFile).mockResolvedValue(
+      JSON.stringify({ version: '1.0.0' }),
+    );
 
     vi.clearAllMocks();
     vi.resetModules();
@@ -69,7 +71,7 @@ describe('stamp CLI routing', () => {
     // Dynamic import to re-execute the module
     await import('../../../src/cli/stamp.js');
     // Allow async operations to complete
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
   }
 
   // Tests for commands that don't call process.exit immediately
@@ -106,7 +108,10 @@ describe('stamp CLI routing', () => {
   it('should route context compare to handleCompare', async () => {
     await runMain(['context', 'compare', 'old.json', 'new.json']);
 
-    expect(handlers.handleCompare).toHaveBeenCalledWith(['old.json', 'new.json']);
+    expect(handlers.handleCompare).toHaveBeenCalledWith([
+      'old.json',
+      'new.json',
+    ]);
   });
 
   it('should route context clean to handleClean', async () => {
@@ -131,7 +136,7 @@ describe('stamp CLI routing', () => {
     await runMain(['unknown-command']);
 
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Unknown command')
+      expect.stringContaining('Unknown command'),
     );
     expect(exitCode).toBe(1);
   });
@@ -140,7 +145,7 @@ describe('stamp CLI routing', () => {
     await runMain(['security', 'unknown']);
 
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Unknown security command')
+      expect.stringContaining('Unknown security command'),
     );
     expect(exitCode).toBe(1);
   });
@@ -149,7 +154,7 @@ describe('stamp CLI routing', () => {
     await runMain(['security', 'scan', '--hard-reset']);
 
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('--hard-reset is not available')
+      expect.stringContaining('--hard-reset is not available'),
     );
     expect(exitCode).toBe(1);
   });
@@ -158,19 +163,27 @@ describe('stamp CLI routing', () => {
     await runMain(['security']);
 
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('requires a subcommand')
+      expect.stringContaining('requires a subcommand'),
     );
     expect(exitCode).toBe(1);
   });
 
   it('should pass security hard reset options correctly', async () => {
-    await runMain(['security', '--hard-reset', '--force', '--quiet', './custom/path', '--out', 'report.json']);
+    await runMain([
+      'security',
+      '--hard-reset',
+      '--force',
+      '--quiet',
+      './custom/path',
+      '--out',
+      'report.json',
+    ]);
 
     expect(security.securityHardResetCommand).toHaveBeenCalledWith(
       expect.objectContaining({
         force: true,
         quiet: true,
-      })
+      }),
     );
   });
 
@@ -183,6 +196,11 @@ describe('stamp CLI routing', () => {
   it('should handle context with multiple flags', async () => {
     await runMain(['context', '--depth', '3', '--include-style', './src']);
 
-    expect(handlers.handleGenerate).toHaveBeenCalledWith(['--depth', '3', '--include-style', './src']);
+    expect(handlers.handleGenerate).toHaveBeenCalledWith([
+      '--depth',
+      '3',
+      '--include-style',
+      './src',
+    ]);
   });
 });

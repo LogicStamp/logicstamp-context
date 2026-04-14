@@ -2,7 +2,13 @@
  * Styled JSX extractor - Extracts CSS content from <style jsx> blocks
  */
 
-import { SourceFile, SyntaxKind, JsxElement, Node, type JsxAttributeLike } from 'ts-morph';
+import {
+  type SourceFile,
+  SyntaxKind,
+  type JsxElement,
+  Node,
+  type JsxAttributeLike,
+} from 'ts-morph';
 import * as csstree from 'css-tree';
 import { debugError } from '../../utils/debug.js';
 
@@ -56,7 +62,12 @@ function extractCssFromExpr(expr: Node): string | null {
 /**
  * Extract CSS content from <style jsx> blocks
  */
-export function extractStyledJsx(source: SourceFile): { css: string; global?: boolean; selectors?: string[]; properties?: string[] } | null {
+export function extractStyledJsx(source: SourceFile): {
+  css: string;
+  global?: boolean;
+  selectors?: string[];
+  properties?: string[];
+} | null {
   const cssBlocks: string[] = [];
   let foundGlobal = false;
   const filePath = source.getFilePath?.() ?? 'unknown';
@@ -65,9 +76,7 @@ export function extractStyledJsx(source: SourceFile): { css: string; global?: bo
     // Find all JSX elements
     let jsxElements: JsxElement[] = [];
     try {
-      jsxElements = [
-        ...source.getDescendantsOfKind(SyntaxKind.JsxElement),
-      ];
+      jsxElements = [...source.getDescendantsOfKind(SyntaxKind.JsxElement)];
     } catch (error) {
       debugError('styleExtractor', 'extractStyledJsx', {
         filePath,
@@ -147,7 +156,9 @@ export function extractStyledJsx(source: SourceFile): { css: string; global?: bo
 
   // generate is available on css-tree but not in TypeScript types
   // Safe fallback in case css-tree changes and generate is no longer available
-  const maybeGenerate = (csstree as unknown as { generate?: (node: any) => string }).generate;
+  const maybeGenerate = (
+    csstree as unknown as { generate?: (node: any) => string }
+  ).generate;
   const generate = typeof maybeGenerate === 'function' ? maybeGenerate : null;
 
   // Note: If generate is missing, selector extraction is skipped but properties extraction still works.
@@ -187,7 +198,11 @@ export function extractStyledJsx(source: SourceFile): { css: string; global?: bo
         // Extract properties from Declaration nodes
         if (node.type === 'Declaration' && typeof node.property === 'string') {
           const property = node.property;
-          if (!property.startsWith('$') && !property.startsWith('@') && /^[a-z][a-z0-9-]*$/i.test(property)) {
+          if (
+            !property.startsWith('$') &&
+            !property.startsWith('@') &&
+            /^[a-z][a-z0-9-]*$/i.test(property)
+          ) {
             properties.add(property);
           }
         }
@@ -219,7 +234,10 @@ export function extractStyledJsx(source: SourceFile): { css: string; global?: bo
   }
 
   // Combine valid CSS blocks (or all blocks if parsing failed)
-  const combinedCss = validCssBlocks.length > 0 ? validCssBlocks.join('\n') : cssBlocks.join('\n');
+  const combinedCss =
+    validCssBlocks.length > 0
+      ? validCssBlocks.join('\n')
+      : cssBlocks.join('\n');
 
   return {
     css: combinedCss,
@@ -228,4 +246,3 @@ export function extractStyledJsx(source: SourceFile): { css: string; global?: bo
     ...(properties.size > 0 && { properties: Array.from(properties).sort() }),
   };
 }
-

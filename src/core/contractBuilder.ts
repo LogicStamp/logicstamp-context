@@ -27,7 +27,11 @@
  * Contract Builder - Assembles UIFContract objects from AST data
  */
 
-import type { UIFContract, ContractPreset, ExportMetadata } from '../types/UIFContract.js';
+import type {
+  UIFContract,
+  ContractPreset,
+  ExportMetadata,
+} from '../types/UIFContract.js';
 import type { AstExtract } from './astParser.js';
 import {
   buildLogicSignature,
@@ -77,13 +81,14 @@ function extractExportsMetadata(ast: AstExtract): ExportMetadata | undefined {
 export function buildContract(
   entryId: string,
   ast: AstExtract,
-  params: ContractBuildParams
+  params: ContractBuildParams,
 ): ContractBuildResult {
   // Build logic signature with preset validation
-  const { signature, prediction: presetPredictions, violations } = buildLogicSignature(
-    ast,
-    params.preset
-  );
+  const {
+    signature,
+    prediction: presetPredictions,
+    violations,
+  } = buildLogicSignature(ast, params.preset);
 
   // Generate additional behavioral predictions (only if enabled)
   const behavioralPredictions = params.enablePredictions
@@ -110,7 +115,9 @@ export function buildContract(
       components: ast.components,
       functions: ast.functions,
       imports: ast.imports,
-      ...(ast.backend?.languageSpecific && { languageSpecific: ast.backend.languageSpecific }),
+      ...(ast.backend?.languageSpecific && {
+        languageSpecific: ast.backend.languageSpecific,
+      }),
     },
     interface: signature,
     exports,
@@ -131,7 +138,7 @@ export function buildContract(
  */
 export function mergeContractUpdate(
   existing: UIFContract,
-  updated: UIFContract
+  updated: UIFContract,
 ): UIFContract {
   return {
     ...updated,
@@ -142,10 +149,12 @@ export function mergeContractUpdate(
     metrics: existing.metrics || updated.metrics,
     links: existing.links || updated.links,
     // nextjs metadata should be auto-updated with shallow merge for future extensibility
-    nextjs: updated.nextjs ? {
-      ...(existing.nextjs ?? {}),
-      ...updated.nextjs
-    } : existing.nextjs,
+    nextjs: updated.nextjs
+      ? {
+          ...(existing.nextjs ?? {}),
+          ...updated.nextjs,
+        }
+      : existing.nextjs,
     // usedIn is never persisted (computed at manifest time)
     usedIn: undefined,
   };

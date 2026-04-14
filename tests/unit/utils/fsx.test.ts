@@ -10,7 +10,11 @@ const { realGlob, mockGlobBehavior } = vi.hoisted(() => {
   const { glob } = require('glob') as { glob: typeof import('glob').glob };
   return {
     realGlob: glob,
-    mockGlobBehavior: { current: null as ((pattern: string, options: GlobOptions) => Promise<string[]>) | null },
+    mockGlobBehavior: {
+      current: null as
+        | ((pattern: string, options: GlobOptions) => Promise<string[]>)
+        | null,
+    },
   };
 });
 
@@ -37,7 +41,6 @@ import {
   getFolderPath,
   groupFilesByFolder,
 } from '../../../src/utils/fsx.js';
-
 
 describe('fsx utilities', () => {
   let testDir: string;
@@ -173,9 +176,10 @@ describe('fsx utilities', () => {
     it('should return absolute path unchanged', () => {
       const base = '/project';
       // Use platform-appropriate absolute path
-      const absolute = platform() === 'win32' 
-        ? resolve('C:\\absolute\\path\\file.ts')
-        : '/absolute/path/file.ts';
+      const absolute =
+        platform() === 'win32'
+          ? resolve('C:\\absolute\\path\\file.ts')
+          : '/absolute/path/file.ts';
       const resolved = resolvePath(base, absolute);
 
       // On Windows, resolve() normalizes the path, so we check that it's still absolute
@@ -197,8 +201,8 @@ describe('fsx utilities', () => {
       const files = await globFiles(testDir, '.ts,.tsx');
 
       expect(files.length).toBeGreaterThan(0);
-      expect(files.some(f => f.includes('file1.ts'))).toBe(true);
-      expect(files.some(f => f.includes('file2.tsx'))).toBe(true);
+      expect(files.some((f) => f.includes('file1.ts'))).toBe(true);
+      expect(files.some((f) => f.includes('file2.tsx'))).toBe(true);
     });
 
     it('should exclude test files by default', async () => {
@@ -208,9 +212,9 @@ describe('fsx utilities', () => {
 
       const files = await globFiles(testDir, '.ts');
 
-      expect(files.some(f => f.includes('file.test.ts'))).toBe(false);
-      expect(files.some(f => f.includes('file.spec.ts'))).toBe(false);
-      expect(files.some(f => f.includes('file.ts'))).toBe(true);
+      expect(files.some((f) => f.includes('file.test.ts'))).toBe(false);
+      expect(files.some((f) => f.includes('file.spec.ts'))).toBe(false);
+      expect(files.some((f) => f.includes('file.ts'))).toBe(true);
     });
 
     it('should exclude node_modules', async () => {
@@ -220,7 +224,7 @@ describe('fsx utilities', () => {
 
       const files = await globFiles(testDir, '.ts');
 
-      expect(files.some(f => f.includes('node_modules'))).toBe(false);
+      expect(files.some((f) => f.includes('node_modules'))).toBe(false);
     });
 
     it('should handle custom extensions', async () => {
@@ -238,7 +242,7 @@ describe('fsx utilities', () => {
       const files = await globFiles(testDir, 'js');
 
       expect(files.length).toBeGreaterThan(0);
-      expect(files.some(f => f.includes('file.js'))).toBe(true);
+      expect(files.some((f) => f.includes('file.js'))).toBe(true);
     });
 
     it('should remove duplicates and sort results', async () => {
@@ -264,7 +268,7 @@ describe('fsx utilities', () => {
         };
 
         await expect(globFiles(testDir, '.ts,.tsx')).rejects.toThrow(
-          /All glob patterns failed/
+          /All glob patterns failed/,
         );
       });
 
@@ -273,7 +277,10 @@ describe('fsx utilities', () => {
         await writeFile(join(testDir, 'file.ts'), 'content');
 
         let callCount = 0;
-        mockGlobBehavior.current = async (pattern: string, options: GlobOptions) => {
+        mockGlobBehavior.current = async (
+          pattern: string,
+          options: GlobOptions,
+        ) => {
           callCount++;
           if (pattern === '**/*.tsx') {
             throw new Error('EACCES: permission denied');
@@ -286,7 +293,7 @@ describe('fsx utilities', () => {
 
         // Should have results from successful .ts pattern only
         expect(files.length).toBe(1);
-        expect(files.some(f => f.includes('file.ts'))).toBe(true);
+        expect(files.some((f) => f.includes('file.ts'))).toBe(true);
         expect(callCount).toBe(2);
       });
 
@@ -296,7 +303,10 @@ describe('fsx utilities', () => {
         await writeFile(join(testDir, 'c.js'), 'content');
 
         const patternsAttempted: string[] = [];
-        mockGlobBehavior.current = async (pattern: string, options: GlobOptions) => {
+        mockGlobBehavior.current = async (
+          pattern: string,
+          options: GlobOptions,
+        ) => {
           patternsAttempted.push(pattern);
           if (pattern === '**/*.tsx') {
             throw new Error('EACCES: permission denied');
@@ -307,8 +317,8 @@ describe('fsx utilities', () => {
         const files = await globFiles(testDir, '.ts,.tsx,.js');
 
         expect(files.length).toBe(2);
-        expect(files.some(f => f.endsWith('a.ts'))).toBe(true);
-        expect(files.some(f => f.endsWith('c.js'))).toBe(true);
+        expect(files.some((f) => f.endsWith('a.ts'))).toBe(true);
+        expect(files.some((f) => f.endsWith('c.js'))).toBe(true);
         // Verify all three patterns were attempted
         expect(patternsAttempted).toEqual(['**/*.ts', '**/*.tsx', '**/*.js']);
       });
@@ -324,7 +334,9 @@ describe('fsx utilities', () => {
       const sidecars = await findSidecarFiles(testDir);
 
       expect(sidecars.length).toBeGreaterThan(0);
-      expect(sidecars.some(f => f.includes('component.tsx.uif.json'))).toBe(true);
+      expect(sidecars.some((f) => f.includes('component.tsx.uif.json'))).toBe(
+        true,
+      );
     });
 
     it('should exclude node_modules', async () => {
@@ -333,7 +345,7 @@ describe('fsx utilities', () => {
 
       const sidecars = await findSidecarFiles(testDir);
 
-      expect(sidecars.some(f => f.includes('node_modules'))).toBe(false);
+      expect(sidecars.some((f) => f.includes('node_modules'))).toBe(false);
     });
 
     it('should return empty array when no sidecars exist', async () => {
@@ -437,7 +449,9 @@ describe('fsx utilities', () => {
       const grouped = groupFilesByFolder(files);
 
       expect(grouped.get('.')).toEqual(['file1.ts', 'file2.ts']);
-      expect(grouped.get('src/components')).toEqual(['src/components/Button.tsx']);
+      expect(grouped.get('src/components')).toEqual([
+        'src/components/Button.tsx',
+      ]);
     });
 
     it('should handle empty array', () => {

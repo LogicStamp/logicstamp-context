@@ -52,7 +52,10 @@ vi.mock('../../../../src/utils/config.js', () => ({
   appendWatchLog: vi.fn().mockResolvedValue(undefined),
   writeStrictWatchStatus: vi.fn().mockResolvedValue(undefined),
   deleteStrictWatchStatus: vi.fn().mockResolvedValue(undefined),
-  getWatchStatusPath: vi.fn((projectRoot: string) => `${projectRoot}/.logicstamp/context_watch-status.json`),
+  getWatchStatusPath: vi.fn(
+    (projectRoot: string) =>
+      `${projectRoot}/.logicstamp/context_watch-status.json`,
+  ),
 }));
 
 vi.mock('../../../../src/utils/cleanup.js', () => ({
@@ -69,7 +72,11 @@ vi.mock('../../../../src/cli/commands/context/watchMode/watchDiff.js', () => ({
 
 vi.mock('../../../../src/cli/commands/context/index.js', () => ({
   buildContractsFromFiles: vi.fn(),
-  writeContextFiles: vi.fn().mockResolvedValue({ filesWritten: 1, folderInfos: [], totalTokenEstimate: 500 }),
+  writeContextFiles: vi.fn().mockResolvedValue({
+    filesWritten: 1,
+    folderInfos: [],
+    totalTokenEstimate: 500,
+  }),
   writeMainIndex: vi.fn().mockResolvedValue(undefined),
   groupBundlesByFolder: vi.fn(() => new Map()),
   displayPath: vi.fn((p: string) => p),
@@ -102,7 +109,9 @@ describe('file extension filtering', () => {
       }),
       close: vi.fn().mockResolvedValue(undefined),
     };
-    vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+    vi.mocked(chokidar.watch).mockReturnValue(
+      mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+    );
   });
 
   afterEach(() => {
@@ -130,12 +139,12 @@ describe('file extension filtering', () => {
     };
 
     const watchPromise = startWatchMode(options, '/project', null);
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     if (changeHandler) {
       changeHandler('/project/src/App.js');
     }
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     const calls = consoleSpy.mock.calls.flat().join('\n');
     expect(calls).not.toContain('App.js');
@@ -162,12 +171,12 @@ describe('file extension filtering', () => {
     };
 
     const watchPromise = startWatchMode(options, '/project', null);
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     if (changeHandler) {
       changeHandler('/project/package.json');
     }
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     const calls = consoleSpy.mock.calls.flat().join('\n');
     expect(calls).not.toContain('package.json');
@@ -194,12 +203,12 @@ describe('file extension filtering', () => {
     };
 
     const watchPromise = startWatchMode(options, '/project', null);
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     if (changeHandler) {
       changeHandler('/project/src/Component.tsx');
     }
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     const calls = consoleSpy.mock.calls.flat().join('\n');
     expect(calls).toContain('Changed');
@@ -228,12 +237,12 @@ describe('file extension filtering', () => {
     };
 
     const watchPromise = startWatchMode(options, '/project', null);
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     if (changeHandler) {
       changeHandler('/project/src/styles.module.css');
     }
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     const calls = consoleSpy.mock.calls.flat().join('\n');
     expect(calls).toContain('Changed');
@@ -259,7 +268,9 @@ describe('add and unlink events', () => {
       }),
       close: vi.fn().mockResolvedValue(undefined),
     };
-    vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+    vi.mocked(chokidar.watch).mockReturnValue(
+      mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+    );
   });
 
   afterEach(() => {
@@ -287,12 +298,12 @@ describe('add and unlink events', () => {
     };
 
     const watchPromise = startWatchMode(options, '/project', null);
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     if (addHandler) {
       addHandler('/project/src/NewComponent.tsx');
     }
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     const calls = consoleSpy.mock.calls.flat().join('\n');
     expect(calls).toContain('New file');
@@ -320,12 +331,12 @@ describe('add and unlink events', () => {
     };
 
     const watchPromise = startWatchMode(options, '/project', null);
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     if (unlinkHandler) {
       unlinkHandler('/project/src/OldComponent.tsx');
     }
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     const calls = consoleSpy.mock.calls.flat().join('\n');
     expect(calls).toContain('Deleted file');
@@ -345,7 +356,9 @@ describe('ready event', () => {
       }),
       close: vi.fn().mockResolvedValue(undefined),
     };
-    vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+    vi.mocked(chokidar.watch).mockReturnValue(
+      mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+    );
 
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
@@ -369,7 +382,7 @@ describe('ready event', () => {
     };
 
     const watchPromise = startWatchMode(options, '/project', null);
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     if (readyHandler) {
       readyHandler();
@@ -391,7 +404,9 @@ describe('ready event', () => {
       }),
       close: vi.fn().mockResolvedValue(undefined),
     };
-    vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+    vi.mocked(chokidar.watch).mockReturnValue(
+      mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+    );
 
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
@@ -415,7 +430,7 @@ describe('ready event', () => {
     };
 
     const watchPromise = startWatchMode(options, '/project', null);
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     // Trigger ready multiple times
     if (readyHandler) {
@@ -425,7 +440,9 @@ describe('ready event', () => {
     }
 
     const calls = consoleSpy.mock.calls.flat();
-    const readyCount = calls.filter(call => call.includes('Watch mode active')).length;
+    const readyCount = calls.filter((call) =>
+      call.includes('Watch mode active'),
+    ).length;
     expect(readyCount).toBe(1);
     consoleSpy.mockRestore();
   });

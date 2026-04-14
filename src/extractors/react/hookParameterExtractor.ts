@@ -2,7 +2,13 @@
  * Hook Parameter Extractor - Extracts parameters from exported hook functions
  */
 
-import { SourceFile, Node, SyntaxKind, ArrowFunction, FunctionExpression } from 'ts-morph';
+import {
+  type SourceFile,
+  Node,
+  SyntaxKind,
+  type ArrowFunction,
+  type FunctionExpression,
+} from 'ts-morph';
 import type { PropType } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
 import { normalizePropType } from '../shared/propTypeNormalizer.js';
@@ -10,7 +16,7 @@ import { normalizePropType } from '../shared/propTypeNormalizer.js';
 /**
  * Check if file has any exported hooks using AST traversal
  * Handles all export forms: direct exports, export declarations, default exports
- * 
+ *
  * @internal Primarily used internally by propExtractor. Exported for advanced use cases.
  */
 export function hasExportedHooks(source: SourceFile): boolean {
@@ -22,9 +28,10 @@ export function hasExportedHooks(source: SourceFile): boolean {
         const name = func.getName();
         if (name && /^use[A-Z]/.test(name)) {
           const modifiers = func.getModifiers();
-          const isExported = modifiers.some(mod => 
-            mod.getKind() === SyntaxKind.ExportKeyword || 
-            mod.getKind() === SyntaxKind.DefaultKeyword
+          const isExported = modifiers.some(
+            (mod) =>
+              mod.getKind() === SyntaxKind.ExportKeyword ||
+              mod.getKind() === SyntaxKind.DefaultKeyword,
           );
           if (isExported) {
             return true;
@@ -34,15 +41,16 @@ export function hasExportedHooks(source: SourceFile): boolean {
         // Continue checking other functions
       }
     }
-    
+
     // Check variable declarations (export const useX = ...)
     const variableStatements = source.getVariableStatements();
     for (const varStmt of variableStatements) {
       try {
         const modifiers = varStmt.getModifiers();
-        const isExported = modifiers.some(mod => 
-          mod.getKind() === SyntaxKind.ExportKeyword || 
-          mod.getKind() === SyntaxKind.DefaultKeyword
+        const isExported = modifiers.some(
+          (mod) =>
+            mod.getKind() === SyntaxKind.ExportKeyword ||
+            mod.getKind() === SyntaxKind.DefaultKeyword,
         );
         if (isExported) {
           const declarations = varStmt.getDeclarationList().getDeclarations();
@@ -73,8 +81,10 @@ export function hasExportedHooks(source: SourceFile): boolean {
           const exportedName = namedExport.getName(); // Name after 'as' (or original if no alias)
           const localName = namedExport.getAliasNode()?.getText(); // Name before 'as' (if aliased)
           // Check if either local or exported name matches hook pattern
-          if ((exportedName && /^use[A-Z]/.test(exportedName)) ||
-              (localName && /^use[A-Z]/.test(localName))) {
+          if (
+            (exportedName && /^use[A-Z]/.test(exportedName)) ||
+            (localName && /^use[A-Z]/.test(localName))
+          ) {
             return true;
           }
         }
@@ -110,7 +120,7 @@ export function hasExportedHooks(source: SourceFile): boolean {
         // Continue checking other export assignments
       }
     }
-    
+
     return false;
   } catch {
     return false;
@@ -126,7 +136,7 @@ function inferParamType(param: any): string {
     if (typeNode) {
       return typeNode.getText();
     }
-    
+
     // Infer type from default value if no explicit type
     const hasDefault = param.hasInitializer();
     if (hasDefault) {
@@ -137,7 +147,10 @@ function inferParamType(param: any): string {
           return 'string';
         } else if (initKind === SyntaxKind.NumericLiteral) {
           return 'number';
-        } else if (initKind === SyntaxKind.TrueKeyword || initKind === SyntaxKind.FalseKeyword) {
+        } else if (
+          initKind === SyntaxKind.TrueKeyword ||
+          initKind === SyntaxKind.FalseKeyword
+        ) {
           return 'boolean';
         } else if (initKind === SyntaxKind.NullKeyword) {
           return 'null';
@@ -168,7 +181,7 @@ function inferParamType(param: any): string {
       }
       return 'unknown';
     }
-    
+
     // Try to get type from TypeScript's type checker
     try {
       return param.getType().getText();
@@ -206,10 +219,13 @@ function isExported(source: SourceFile, name: string): boolean {
     for (const func of functions) {
       if (func.getName() === name) {
         const modifiers = func.getModifiers();
-        if (modifiers.some(mod => 
-          mod.getKind() === SyntaxKind.ExportKeyword || 
-          mod.getKind() === SyntaxKind.DefaultKeyword
-        )) {
+        if (
+          modifiers.some(
+            (mod) =>
+              mod.getKind() === SyntaxKind.ExportKeyword ||
+              mod.getKind() === SyntaxKind.DefaultKeyword,
+          )
+        ) {
           return true;
         }
       }
@@ -219,9 +235,10 @@ function isExported(source: SourceFile, name: string): boolean {
     const variableStatements = source.getVariableStatements();
     for (const varStmt of variableStatements) {
       const modifiers = varStmt.getModifiers();
-      const hasExportModifier = modifiers.some(mod => 
-        mod.getKind() === SyntaxKind.ExportKeyword || 
-        mod.getKind() === SyntaxKind.DefaultKeyword
+      const hasExportModifier = modifiers.some(
+        (mod) =>
+          mod.getKind() === SyntaxKind.ExportKeyword ||
+          mod.getKind() === SyntaxKind.DefaultKeyword,
       );
       if (hasExportModifier) {
         const declarations = varStmt.getDeclarationList().getDeclarations();
@@ -276,10 +293,12 @@ function isExported(source: SourceFile, name: string): boolean {
 /**
  * Extract parameters from hook function definitions (functions starting with "use")
  * Returns parameters as props for hook files
- * 
+ *
  * @internal Primarily used internally by propExtractor. Exported for advanced use cases.
  */
-export function extractHookParameters(source: SourceFile): Record<string, PropType> {
+export function extractHookParameters(
+  source: SourceFile,
+): Record<string, PropType> {
   const params: Record<string, PropType> = {};
   const filePath = source.getFilePath?.() ?? 'unknown';
 
@@ -300,13 +319,21 @@ export function extractHookParameters(source: SourceFile): Record<string, PropTy
                   const paramName = param.getName();
                   const typeText = inferParamType(param);
                   const isParamOptional = inferParamOptional(param);
-                  params[paramName] = normalizePropType(typeText, isParamOptional);
+                  params[paramName] = normalizePropType(
+                    typeText,
+                    isParamOptional,
+                  );
                 } catch (error) {
-                  debugError('hookParameterExtractor', 'extractHookParameters', {
-                    filePath,
-                    error: error instanceof Error ? error.message : String(error),
-                    context: 'hook-parameter',
-                  });
+                  debugError(
+                    'hookParameterExtractor',
+                    'extractHookParameters',
+                    {
+                      filePath,
+                      error:
+                        error instanceof Error ? error.message : String(error),
+                      context: 'hook-parameter',
+                    },
+                  );
                   // Continue with next parameter
                 }
               });
@@ -336,12 +363,13 @@ export function extractHookParameters(source: SourceFile): Record<string, PropTy
           const name = varDecl.getName();
           if (name && /^use[A-Z]/.test(name)) {
             const initializer = varDecl.getInitializer();
-            
+
             // Check if it's an arrow function or function expression
-            if (initializer && (
-              Node.isArrowFunction(initializer) || 
-              Node.isFunctionExpression(initializer)
-            )) {
+            if (
+              initializer &&
+              (Node.isArrowFunction(initializer) ||
+                Node.isFunctionExpression(initializer))
+            ) {
               // Check if variable is exported (including via export declarations)
               const isExportedHook = isExported(source, name);
 
@@ -352,13 +380,23 @@ export function extractHookParameters(source: SourceFile): Record<string, PropTy
                     const paramName = param.getName();
                     const typeText = inferParamType(param);
                     const isParamOptional = inferParamOptional(param);
-                    params[paramName] = normalizePropType(typeText, isParamOptional);
+                    params[paramName] = normalizePropType(
+                      typeText,
+                      isParamOptional,
+                    );
                   } catch (error) {
-                    debugError('hookParameterExtractor', 'extractHookParameters', {
-                      filePath,
-                      error: error instanceof Error ? error.message : String(error),
-                      context: 'hook-arrow-parameter',
-                    });
+                    debugError(
+                      'hookParameterExtractor',
+                      'extractHookParameters',
+                      {
+                        filePath,
+                        error:
+                          error instanceof Error
+                            ? error.message
+                            : String(error),
+                        context: 'hook-arrow-parameter',
+                      },
+                    );
                     // Continue with next parameter
                   }
                 });

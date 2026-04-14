@@ -26,13 +26,19 @@ describe('handleSecurityScan', () => {
   });
 
   it('should show help when --help flag is provided', async () => {
-    const printFoxSpy = vi.spyOn(initHandler, 'printFoxIcon').mockImplementation(() => {});
-    const getHelpSpy = vi.spyOn(parser, 'getSecurityScanHelp').mockReturnValue('Security help text');
+    const printFoxSpy = vi
+      .spyOn(initHandler, 'printFoxIcon')
+      .mockImplementation(() => {});
+    const getHelpSpy = vi
+      .spyOn(parser, 'getSecurityScanHelp')
+      .mockReturnValue('Security help text');
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`Exit called with code ${code}`);
     });
 
-    await expect(handleSecurityScan(['--help'])).rejects.toThrow('Exit called with code 0');
+    await expect(handleSecurityScan(['--help'])).rejects.toThrow(
+      'Exit called with code 0',
+    );
 
     expect(printFoxSpy).toHaveBeenCalled();
     expect(getHelpSpy).toHaveBeenCalled();
@@ -41,13 +47,19 @@ describe('handleSecurityScan', () => {
   });
 
   it('should show help when -h flag is provided', async () => {
-    const printFoxSpy = vi.spyOn(initHandler, 'printFoxIcon').mockImplementation(() => {});
-    const getHelpSpy = vi.spyOn(parser, 'getSecurityScanHelp').mockReturnValue('Security help text');
+    const printFoxSpy = vi
+      .spyOn(initHandler, 'printFoxIcon')
+      .mockImplementation(() => {});
+    const getHelpSpy = vi
+      .spyOn(parser, 'getSecurityScanHelp')
+      .mockReturnValue('Security help text');
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`Exit called with code ${code}`);
     });
 
-    await expect(handleSecurityScan(['-h'])).rejects.toThrow('Exit called with code 0');
+    await expect(handleSecurityScan(['-h'])).rejects.toThrow(
+      'Exit called with code 0',
+    );
 
     expect(printFoxSpy).toHaveBeenCalled();
     expect(getHelpSpy).toHaveBeenCalled();
@@ -55,7 +67,9 @@ describe('handleSecurityScan', () => {
   });
 
   it('should parse quiet flag', async () => {
-    const securitySpy = vi.spyOn(securityCommand, 'securityScanCommand').mockResolvedValue(undefined);
+    const securitySpy = vi
+      .spyOn(securityCommand, 'securityScanCommand')
+      .mockResolvedValue(undefined);
 
     await handleSecurityScan(['--quiet']);
 
@@ -67,7 +81,9 @@ describe('handleSecurityScan', () => {
   });
 
   it('should parse quiet short flag', async () => {
-    const securitySpy = vi.spyOn(securityCommand, 'securityScanCommand').mockResolvedValue(undefined);
+    const securitySpy = vi
+      .spyOn(securityCommand, 'securityScanCommand')
+      .mockResolvedValue(undefined);
 
     await handleSecurityScan(['-q']);
 
@@ -79,7 +95,9 @@ describe('handleSecurityScan', () => {
   });
 
   it('should parse entry path', async () => {
-    const securitySpy = vi.spyOn(securityCommand, 'securityScanCommand').mockResolvedValue(undefined);
+    const securitySpy = vi
+      .spyOn(securityCommand, 'securityScanCommand')
+      .mockResolvedValue(undefined);
 
     await handleSecurityScan(['src/App.tsx']);
 
@@ -91,7 +109,9 @@ describe('handleSecurityScan', () => {
   });
 
   it('should parse out flag', async () => {
-    const securitySpy = vi.spyOn(securityCommand, 'securityScanCommand').mockResolvedValue(undefined);
+    const securitySpy = vi
+      .spyOn(securityCommand, 'securityScanCommand')
+      .mockResolvedValue(undefined);
 
     await handleSecurityScan(['--out', 'report.json']);
 
@@ -103,7 +123,9 @@ describe('handleSecurityScan', () => {
   });
 
   it('should parse out short flag', async () => {
-    const securitySpy = vi.spyOn(securityCommand, 'securityScanCommand').mockResolvedValue(undefined);
+    const securitySpy = vi
+      .spyOn(securityCommand, 'securityScanCommand')
+      .mockResolvedValue(undefined);
 
     await handleSecurityScan(['-o', 'report.json']);
 
@@ -115,9 +137,16 @@ describe('handleSecurityScan', () => {
   });
 
   it('should parse all options together', async () => {
-    const securitySpy = vi.spyOn(securityCommand, 'securityScanCommand').mockResolvedValue(undefined);
+    const securitySpy = vi
+      .spyOn(securityCommand, 'securityScanCommand')
+      .mockResolvedValue(undefined);
 
-    await handleSecurityScan(['src/App.tsx', '--out', 'report.json', '--quiet']);
+    await handleSecurityScan([
+      'src/App.tsx',
+      '--out',
+      'report.json',
+      '--quiet',
+    ]);
 
     expect(securitySpy).toHaveBeenCalledWith({
       entry: 'src/App.tsx',
@@ -133,7 +162,10 @@ describe('handleSecurityScan', () => {
 
     await handleSecurityScan([]);
 
-    expect(console.error).toHaveBeenCalledWith('❌ Security scan failed:', 'Security scan failed');
+    expect(console.error).toHaveBeenCalledWith(
+      '❌ Security scan failed:',
+      'Security scan failed',
+    );
     expect(console.error).toHaveBeenCalledWith('Error stack trace');
     expect(process.exit).toHaveBeenCalledWith(1);
   });

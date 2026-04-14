@@ -33,7 +33,7 @@ describe('cleanOrphanedFiles', () => {
 
     const count = await cleanOrphanedFiles(
       ['src/old.json', 'lib/old.json'],
-      '/project'
+      '/project',
     );
 
     expect(count).toBe(2);
@@ -43,14 +43,11 @@ describe('cleanOrphanedFiles', () => {
   it('should handle delete errors gracefully', async () => {
     vi.mocked(fs.unlink).mockRejectedValue(new Error('Permission denied'));
 
-    const count = await cleanOrphanedFiles(
-      ['src/old.json'],
-      '/project'
-    );
+    const count = await cleanOrphanedFiles(['src/old.json'], '/project');
 
     expect(count).toBe(0);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to delete')
+      expect.stringContaining('Failed to delete'),
     );
   });
 

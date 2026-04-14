@@ -3,7 +3,7 @@
  * Uses css-tree AST parser for robust CSS parsing (consistent with ts-morph for TS/TSX)
  */
 
-import { SourceFile } from 'ts-morph';
+import type { SourceFile } from 'ts-morph';
 import { readFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { parse, walk } from 'css-tree';
@@ -13,7 +13,10 @@ import { debugError } from '../../utils/debug.js';
 /**
  * Parse SCSS/CSS file content to extract style information using css-tree AST parser
  */
-export async function parseStyleFile(filePath: string, importPath: string): Promise<{
+export async function parseStyleFile(
+  filePath: string,
+  importPath: string,
+): Promise<{
   selectors: string[];
   properties: string[];
   hasVariables: boolean;
@@ -50,29 +53,143 @@ export async function parseStyleFile(filePath: string, importPath: string): Prom
 
     // Valid HTML element names for type selectors
     const validElements = new Set([
-      'div', 'span', 'p', 'a', 'button', 'input', 'form', 'label',
-      'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'dl',
-      'dt', 'dd', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'td',
-      'th', 'img', 'svg', 'path', 'circle', 'rect', 'line', 'polyline',
-      'polygon', 'g', 'defs', 'use', 'symbol', 'mask', 'clipPath',
-      'section', 'article', 'aside', 'nav', 'header', 'footer', 'main',
-      'figure', 'figcaption', 'time', 'mark', 'code', 'pre', 'blockquote',
-      'hr', 'br', 'strong', 'em', 'b', 'i', 'u', 's', 'small', 'sub', 'sup',
-      'select', 'option', 'textarea', 'fieldset', 'legend', 'datalist',
-      'output', 'progress', 'meter', 'details', 'summary', 'dialog',
-      'menu', 'menuitem', 'canvas', 'audio', 'video', 'source', 'track',
-      'embed', 'object', 'param', 'iframe', 'picture',
-      'template', 'slot', 'script', 'noscript', 'style', 'link', 'meta',
-      'title', 'head', 'body', 'html',
+      'div',
+      'span',
+      'p',
+      'a',
+      'button',
+      'input',
+      'form',
+      'label',
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+      'ul',
+      'ol',
+      'li',
+      'dl',
+      'dt',
+      'dd',
+      'table',
+      'thead',
+      'tbody',
+      'tfoot',
+      'tr',
+      'td',
+      'th',
+      'img',
+      'svg',
+      'path',
+      'circle',
+      'rect',
+      'line',
+      'polyline',
+      'polygon',
+      'g',
+      'defs',
+      'use',
+      'symbol',
+      'mask',
+      'clipPath',
+      'section',
+      'article',
+      'aside',
+      'nav',
+      'header',
+      'footer',
+      'main',
+      'figure',
+      'figcaption',
+      'time',
+      'mark',
+      'code',
+      'pre',
+      'blockquote',
+      'hr',
+      'br',
+      'strong',
+      'em',
+      'b',
+      'i',
+      'u',
+      's',
+      'small',
+      'sub',
+      'sup',
+      'select',
+      'option',
+      'textarea',
+      'fieldset',
+      'legend',
+      'datalist',
+      'output',
+      'progress',
+      'meter',
+      'details',
+      'summary',
+      'dialog',
+      'menu',
+      'menuitem',
+      'canvas',
+      'audio',
+      'video',
+      'source',
+      'track',
+      'embed',
+      'object',
+      'param',
+      'iframe',
+      'picture',
+      'template',
+      'slot',
+      'script',
+      'noscript',
+      'style',
+      'link',
+      'meta',
+      'title',
+      'head',
+      'body',
+      'html',
     ]);
 
     // File extensions to filter out (might appear in URLs)
     const fileExtensions = new Set([
-      '.css', '.scss', '.sass', '.less', '.styl',
-      '.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp', '.ico',
-      '.woff', '.woff2', '.ttf', '.otf', '.eot',
-      '.js', '.jsx', '.ts', '.tsx', '.json', '.xml', '.html', '.htm',
-      '.pdf', '.zip', '.mp4', '.mp3', '.wav', '.mov', '.avi'
+      '.css',
+      '.scss',
+      '.sass',
+      '.less',
+      '.styl',
+      '.jpg',
+      '.jpeg',
+      '.png',
+      '.gif',
+      '.svg',
+      '.webp',
+      '.ico',
+      '.woff',
+      '.woff2',
+      '.ttf',
+      '.otf',
+      '.eot',
+      '.js',
+      '.jsx',
+      '.ts',
+      '.tsx',
+      '.json',
+      '.xml',
+      '.html',
+      '.htm',
+      '.pdf',
+      '.zip',
+      '.mp4',
+      '.mp3',
+      '.wav',
+      '.mov',
+      '.avi',
     ]);
 
     // Walk the AST to extract selectors and properties
@@ -92,7 +209,10 @@ export async function parseStyleFile(filePath: string, importPath: string): Prom
               if (name && typeof name === 'string') {
                 // Skip file extensions
                 const selector = `.${name}`;
-                if (!fileExtensions.has(selector.toLowerCase()) && !/^\.\d+$/.test(selector)) {
+                if (
+                  !fileExtensions.has(selector.toLowerCase()) &&
+                  !/^\.\d+$/.test(selector)
+                ) {
                   selectors.add(selector);
                 }
               }
@@ -109,7 +229,11 @@ export async function parseStyleFile(filePath: string, importPath: string): Prom
             else if (selectorNode.type === 'TypeSelector') {
               const typeSel = selectorNode as any;
               const name = typeSel.name;
-              if (name && typeof name === 'string' && validElements.has(name.toLowerCase())) {
+              if (
+                name &&
+                typeof name === 'string' &&
+                validElements.has(name.toLowerCase())
+              ) {
                 selectors.add(name.toLowerCase());
               }
             }
@@ -178,7 +302,10 @@ export async function parseStyleFile(filePath: string, importPath: string): Prom
 /**
  * Extract SCSS module metadata from source file
  */
-export async function extractScssMetadata(source: SourceFile, filePath: string): Promise<{
+export async function extractScssMetadata(
+  source: SourceFile,
+  filePath: string,
+): Promise<{
   scssModule?: string;
   scssDetails?: {
     selectors: string[];
@@ -205,9 +332,12 @@ export async function extractScssMetadata(source: SourceFile, filePath: string):
     } = {};
 
     // Check for SCSS module imports and parse them
-    const scssModuleImport = source.getImportDeclarations().find(imp => {
+    const scssModuleImport = source.getImportDeclarations().find((imp) => {
       const moduleSpecifier = imp.getModuleSpecifierValue();
-      return moduleSpecifier.endsWith('.module.scss') || moduleSpecifier.endsWith('.scss');
+      return (
+        moduleSpecifier.endsWith('.module.scss') ||
+        moduleSpecifier.endsWith('.scss')
+      );
     });
 
     if (scssModuleImport) {
@@ -238,4 +368,3 @@ export async function extractScssMetadata(source: SourceFile, filePath: string):
     return {};
   }
 }
-

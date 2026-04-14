@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { extractEvents, extractJsxRoutes } from '../../../src/extractors/react/index.js';
+import {
+  extractEvents,
+  extractJsxRoutes,
+} from '../../../src/extractors/react/index.js';
 import { createTestSourceFile } from '../test-helpers.js';
 
 describe('Event Extractor', () => {
@@ -23,7 +26,14 @@ describe('Event Extractor', () => {
 
       const sourceFile = createTestSourceFile(sourceCode);
 
-      const props = { onClick: { type: 'function', signature: '() => void', optional: true }, onEdit: { type: 'function', signature: '(id: string) => void', optional: true } };
+      const props = {
+        onClick: { type: 'function', signature: '() => void', optional: true },
+        onEdit: {
+          type: 'function',
+          signature: '(id: string) => void',
+          optional: true,
+        },
+      };
       const events = extractEvents(sourceFile, props);
 
       expect(events.onClick).toBeDefined();
@@ -81,8 +91,16 @@ describe('Event Extractor', () => {
 
       const props = {
         onClick: { type: 'function', signature: '() => void', optional: true },
-        onChange: { type: 'function', signature: '(e: React.ChangeEvent) => void', optional: true },
-        onSubmit: { type: 'function', signature: '(e: FormEvent) => void', optional: true }
+        onChange: {
+          type: 'function',
+          signature: '(e: React.ChangeEvent) => void',
+          optional: true,
+        },
+        onSubmit: {
+          type: 'function',
+          signature: '(e: FormEvent) => void',
+          optional: true,
+        },
       };
       const events = extractEvents(sourceFile, props);
 
@@ -112,13 +130,20 @@ describe('Event Extractor', () => {
 
       const props = {
         onClick: { type: 'function', signature: '() => void', optional: true },
-        onChange: { type: 'function', signature: '(e: React.ChangeEvent) => void', optional: true }
+        onChange: {
+          type: 'function',
+          signature: '(e: React.ChangeEvent) => void',
+          optional: true,
+        },
       };
       const events = extractEvents(sourceFile, props);
 
       expect(events.onClick).toHaveProperty('signature', '() => void');
       expect(events.onChange).toBeDefined();
-      expect(events.onChange).toHaveProperty('signature', '(e: React.ChangeEvent) => void');
+      expect(events.onChange).toHaveProperty(
+        'signature',
+        '(e: React.ChangeEvent) => void',
+      );
     });
 
     it('should not extract non-event attributes', () => {
@@ -178,7 +203,7 @@ describe('Event Extractor', () => {
       const sourceFile = createTestSourceFile(sourceCode);
 
       const props = {
-        onClick: { type: 'function', signature: '() => void', optional: true }
+        onClick: { type: 'function', signature: '() => void', optional: true },
       };
       const events = extractEvents(sourceFile, props);
 
@@ -202,7 +227,7 @@ describe('Event Extractor', () => {
       const sourceFile = createTestSourceFile(sourceCode);
 
       const props = {
-        onClick: { type: 'function', signature: '() => void', optional: true }
+        onClick: { type: 'function', signature: '() => void', optional: true },
       };
       const events = extractEvents(sourceFile, props);
 
@@ -228,7 +253,7 @@ describe('Event Extractor', () => {
 
       // Prop without signature field (edge case)
       const props = {
-        onClick: { type: 'function', optional: true }
+        onClick: { type: 'function', optional: true },
       };
       const events = extractEvents(sourceFile, props);
 
@@ -264,7 +289,7 @@ describe('Event Extractor', () => {
 
       // Prop exists but without signature field
       const props = {
-        onClick: { type: 'function', optional: true }
+        onClick: { type: 'function', optional: true },
       };
       const events = extractEvents(sourceFile, props);
 
@@ -290,7 +315,7 @@ describe('Event Extractor', () => {
       const sourceFile = createTestSourceFile(sourceCode);
 
       const props = {
-        onClick: { type: 'function', optional: true }
+        onClick: { type: 'function', optional: true },
       };
       const events = extractEvents(sourceFile, props);
 
@@ -308,7 +333,7 @@ describe('Event Extractor', () => {
       const sourceFile = createTestSourceFile(sourceCode);
 
       const props = {
-        onData: { type: 'function', optional: true }
+        onData: { type: 'function', optional: true },
       };
       const events = extractEvents(sourceFile, props);
 
@@ -329,7 +354,11 @@ describe('Event Extractor', () => {
       const sourceFile = createTestSourceFile(sourceCode);
 
       const props = {
-        handleClick: { type: 'function', signature: '() => void', optional: true }
+        handleClick: {
+          type: 'function',
+          signature: '() => void',
+          optional: true,
+        },
       };
       const events = extractEvents(sourceFile, props);
 
@@ -348,7 +377,7 @@ describe('Event Extractor', () => {
       const sourceFile = createTestSourceFile(sourceCode);
 
       const props = {
-        onClick: { type: 'function', optional: true }
+        onClick: { type: 'function', optional: true },
       };
       const events = extractEvents(sourceFile, props);
 
@@ -443,7 +472,7 @@ describe('Event Extractor', () => {
 
       const routes = extractJsxRoutes(sourceFile);
 
-      expect(routes.filter(r => r === '/home').length).toBe(1);
+      expect(routes.filter((r) => r === '/home').length).toBe(1);
     });
 
     it('should extract routes from JSX expressions with string literals', () => {
@@ -650,7 +679,9 @@ describe('Event Extractor', () => {
     it('should have debug logging infrastructure in place', () => {
       const originalEnv = process.env.LOGICSTAMP_DEBUG;
       process.env.LOGICSTAMP_DEBUG = '1';
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       const sourceFile = createTestSourceFile('<button onClick={() => {}} />');
 
@@ -660,9 +691,10 @@ describe('Event Extractor', () => {
       // If errors were logged, verify they have the correct format
       const errorCalls = consoleErrorSpy.mock.calls;
       if (errorCalls.length > 0) {
-        const hasEventExtractorLog = errorCalls.some(call =>
-          call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
-          call[0]?.toString().includes('eventExtractor')
+        const hasEventExtractorLog = errorCalls.some(
+          (call) =>
+            call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
+            call[0]?.toString().includes('eventExtractor'),
         );
         expect(hasEventExtractorLog).toBe(true);
       }
@@ -676,4 +708,3 @@ describe('Event Extractor', () => {
     });
   });
 });
-

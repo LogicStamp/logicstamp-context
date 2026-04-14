@@ -76,7 +76,10 @@ describe('contractBuilder', () => {
       };
 
       vi.mocked(extractFromFile).mockResolvedValue(mockAst);
-      vi.mocked(readFileWithText).mockResolvedValue({ text: 'file content', path: '/project/src/Button.tsx' });
+      vi.mocked(readFileWithText).mockResolvedValue({
+        text: 'file content',
+        path: '/project/src/Button.tsx',
+      });
       vi.mocked(buildContract).mockReturnValue({
         contract: createMockContract('src/Button.tsx'),
         violations: [],
@@ -85,7 +88,7 @@ describe('contractBuilder', () => {
       const result = await buildContractsFromFiles(
         ['src/Button.tsx'],
         '/project',
-        { predictBehavior: false }
+        { predictBehavior: false },
       );
 
       expect(result.contracts.length).toBe(1);
@@ -99,7 +102,7 @@ describe('contractBuilder', () => {
       const result = await buildContractsFromFiles(
         ['src/Invalid.tsx'],
         '/project',
-        { predictBehavior: false, quiet: true }
+        { predictBehavior: false, quiet: true },
       );
 
       expect(result.contracts).toEqual([]);
@@ -109,11 +112,10 @@ describe('contractBuilder', () => {
     it('should log warning for skipped files when not quiet', async () => {
       vi.mocked(extractFromFile).mockRejectedValue(new Error('Parse error'));
 
-      await buildContractsFromFiles(
-        ['src/Invalid.tsx'],
-        '/project',
-        { predictBehavior: false, quiet: false }
-      );
+      await buildContractsFromFiles(['src/Invalid.tsx'], '/project', {
+        predictBehavior: false,
+        quiet: false,
+      });
 
       expect(consoleWarnSpy).toHaveBeenCalled();
       const calls = consoleWarnSpy.mock.calls.flat().join(' ');
@@ -124,11 +126,10 @@ describe('contractBuilder', () => {
     it('should suppress warnings when quiet flag is true', async () => {
       vi.mocked(extractFromFile).mockRejectedValue(new Error('Parse error'));
 
-      await buildContractsFromFiles(
-        ['src/Invalid.tsx'],
-        '/project',
-        { predictBehavior: false, quiet: true }
-      );
+      await buildContractsFromFiles(['src/Invalid.tsx'], '/project', {
+        predictBehavior: false,
+        quiet: true,
+      });
 
       expect(consoleWarnSpy).not.toHaveBeenCalled();
     });
@@ -149,7 +150,10 @@ describe('contractBuilder', () => {
       };
 
       vi.mocked(extractFromFile).mockResolvedValue(mockAst);
-      vi.mocked(readFileWithText).mockResolvedValue({ text: 'content', path: '/project/src/Button.tsx' });
+      vi.mocked(readFileWithText).mockResolvedValue({
+        text: 'content',
+        path: '/project/src/Button.tsx',
+      });
       vi.mocked(extractStyleMetadata).mockResolvedValue({});
       vi.mocked(buildContract).mockReturnValue({
         contract: createMockContract('src/Button.tsx'),
@@ -157,29 +161,30 @@ describe('contractBuilder', () => {
       });
 
       // Without includeStyle
-      await buildContractsFromFiles(
-        ['src/Button.tsx'],
-        '/project',
-        { predictBehavior: false, includeStyle: false }
-      );
+      await buildContractsFromFiles(['src/Button.tsx'], '/project', {
+        predictBehavior: false,
+        includeStyle: false,
+      });
 
       expect(extractStyleMetadata).not.toHaveBeenCalled();
 
       // With includeStyle
       vi.clearAllMocks();
       vi.mocked(extractFromFile).mockResolvedValue(mockAst);
-      vi.mocked(readFileWithText).mockResolvedValue({ text: 'content', path: '/project/src/Button.tsx' });
+      vi.mocked(readFileWithText).mockResolvedValue({
+        text: 'content',
+        path: '/project/src/Button.tsx',
+      });
       vi.mocked(extractStyleMetadata).mockResolvedValue({});
       vi.mocked(buildContract).mockReturnValue({
         contract: createMockContract('src/Button.tsx'),
         violations: [],
       });
 
-      await buildContractsFromFiles(
-        ['src/Button.tsx'],
-        '/project',
-        { predictBehavior: false, includeStyle: true }
-      );
+      await buildContractsFromFiles(['src/Button.tsx'], '/project', {
+        predictBehavior: false,
+        includeStyle: true,
+      });
 
       expect(extractStyleMetadata).toHaveBeenCalled();
     });
@@ -202,7 +207,10 @@ describe('contractBuilder', () => {
       vi.mocked(extractFromFile).mockResolvedValue(mockAst);
       vi.mocked(readFileWithText)
         .mockResolvedValueOnce({ text: '12345', path: '/project/src/A.tsx' }) // 5 chars
-        .mockResolvedValueOnce({ text: '1234567890', path: '/project/src/B.tsx' }); // 10 chars
+        .mockResolvedValueOnce({
+          text: '1234567890',
+          path: '/project/src/B.tsx',
+        }); // 10 chars
       vi.mocked(buildContract).mockReturnValue({
         contract: createMockContract('src/Component.tsx'),
         violations: [],
@@ -211,7 +219,7 @@ describe('contractBuilder', () => {
       const result = await buildContractsFromFiles(
         ['src/A.tsx', 'src/B.tsx'],
         '/project',
-        { predictBehavior: false }
+        { predictBehavior: false },
       );
 
       expect(result.totalSourceSize).toBe(15);
@@ -233,8 +241,13 @@ describe('contractBuilder', () => {
       };
 
       vi.mocked(extractFromFile).mockResolvedValue(mockAst);
-      vi.mocked(readFileWithText).mockResolvedValue({ text: 'content', path: '/project/src/Button.tsx' });
-      vi.mocked(extractStyleMetadata).mockRejectedValue(new Error('Style error'));
+      vi.mocked(readFileWithText).mockResolvedValue({
+        text: 'content',
+        path: '/project/src/Button.tsx',
+      });
+      vi.mocked(extractStyleMetadata).mockRejectedValue(
+        new Error('Style error'),
+      );
       vi.mocked(buildContract).mockReturnValue({
         contract: createMockContract('src/Button.tsx'),
         violations: [],
@@ -243,7 +256,7 @@ describe('contractBuilder', () => {
       const result = await buildContractsFromFiles(
         ['src/Button.tsx'],
         '/project',
-        { predictBehavior: false, includeStyle: true, quiet: true }
+        { predictBehavior: false, includeStyle: true, quiet: true },
       );
 
       // Should still succeed even if style extraction fails
@@ -267,18 +280,23 @@ describe('contractBuilder', () => {
       };
 
       vi.mocked(extractFromFile).mockResolvedValue(mockAst);
-      vi.mocked(readFileWithText).mockResolvedValue({ text: 'content', path: '/project/src/Button.tsx' });
-      vi.mocked(extractStyleMetadata).mockRejectedValue(new Error('Style error'));
+      vi.mocked(readFileWithText).mockResolvedValue({
+        text: 'content',
+        path: '/project/src/Button.tsx',
+      });
+      vi.mocked(extractStyleMetadata).mockRejectedValue(
+        new Error('Style error'),
+      );
       vi.mocked(buildContract).mockReturnValue({
         contract: createMockContract('src/Button.tsx'),
         violations: [],
       });
 
-      await buildContractsFromFiles(
-        ['src/Button.tsx'],
-        '/project',
-        { predictBehavior: false, includeStyle: true, quiet: false }
-      );
+      await buildContractsFromFiles(['src/Button.tsx'], '/project', {
+        predictBehavior: false,
+        includeStyle: true,
+        quiet: false,
+      });
 
       expect(consoleWarnSpy).toHaveBeenCalled();
       const calls = consoleWarnSpy.mock.calls.flat().join(' ');
@@ -301,7 +319,10 @@ describe('contractBuilder', () => {
       };
 
       vi.mocked(extractFromFile).mockResolvedValue(mockAst);
-      vi.mocked(readFileWithText).mockResolvedValue({ text: 'content', path: '/project/src/Button.tsx' });
+      vi.mocked(readFileWithText).mockResolvedValue({
+        text: 'content',
+        path: '/project/src/Button.tsx',
+      });
       vi.mocked(buildContract).mockReturnValue({
         contract: createMockContract('src/Button.tsx'),
         violations: [],
@@ -310,7 +331,7 @@ describe('contractBuilder', () => {
       const result = await buildContractsFromFiles(
         ['/project/src/Button.tsx'],
         '/project',
-        { predictBehavior: false }
+        { predictBehavior: false },
       );
 
       expect(result.contracts.length).toBe(1);
@@ -334,7 +355,10 @@ describe('contractBuilder', () => {
       };
 
       vi.mocked(extractFromFile).mockResolvedValue(mockAst);
-      vi.mocked(readFileWithText).mockResolvedValue({ text: 'content', path: '/project/src/Button.tsx' });
+      vi.mocked(readFileWithText).mockResolvedValue({
+        text: 'content',
+        path: '/project/src/Button.tsx',
+      });
       vi.mocked(buildContract).mockReturnValue({
         contract: null,
         violations: [],
@@ -343,7 +367,7 @@ describe('contractBuilder', () => {
       const result = await buildContractsFromFiles(
         ['src/Button.tsx'],
         '/project',
-        { predictBehavior: false }
+        { predictBehavior: false },
       );
 
       expect(result.contracts).toEqual([]);

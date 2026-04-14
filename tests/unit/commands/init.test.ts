@@ -33,8 +33,14 @@ describe('init', () => {
     });
 
     // Default to non-TTY mode (non-interactive)
-    Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true });
-    Object.defineProperty(process.stdin, 'isTTY', { value: false, writable: true });
+    Object.defineProperty(process.stdout, 'isTTY', {
+      value: false,
+      writable: true,
+    });
+    Object.defineProperty(process.stdin, 'isTTY', {
+      value: false,
+      writable: true,
+    });
 
     // Reset all mocks
     vi.clearAllMocks();
@@ -42,10 +48,15 @@ describe('init', () => {
     // Default mock implementations
     vi.mocked(gitignore.readGitignore).mockResolvedValue('');
     vi.mocked(gitignore.hasLogicStampPatterns).mockReturnValue(false);
-    vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({ added: true, created: false });
+    vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({
+      added: true,
+      created: false,
+    });
     vi.mocked(config.updateConfig).mockResolvedValue();
     vi.mocked(llmContext.llmContextExists).mockResolvedValue(false);
-    vi.mocked(llmContext.readPackageLLMContext).mockResolvedValue('# LLM Context');
+    vi.mocked(llmContext.readPackageLLMContext).mockResolvedValue(
+      '# LLM Context',
+    );
     vi.mocked(llmContext.writeLLMContext).mockResolvedValue();
     vi.mocked(security.securityScanCommand).mockResolvedValue({
       secretsFound: false,
@@ -65,15 +76,23 @@ describe('init', () => {
   afterEach(() => {
     console.log = originalConsoleLog;
     console.error = originalConsoleError;
-    Object.defineProperty(process.stdout, 'isTTY', { value: originalStdoutIsTTY, writable: true });
-    Object.defineProperty(process.stdin, 'isTTY', { value: originalStdinIsTTY, writable: true });
+    Object.defineProperty(process.stdout, 'isTTY', {
+      value: originalStdoutIsTTY,
+      writable: true,
+    });
+    Object.defineProperty(process.stdin, 'isTTY', {
+      value: originalStdinIsTTY,
+      writable: true,
+    });
     vi.restoreAllMocks();
   });
 
   it('should initialize with default options', async () => {
     await init();
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Initializing LogicStamp'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Initializing LogicStamp'),
+    );
     expect(gitignore.ensureGitignorePatterns).toHaveBeenCalled();
     expect(llmContext.writeLLMContext).toHaveBeenCalled();
     expect(security.securityScanCommand).toHaveBeenCalled();
@@ -83,27 +102,31 @@ describe('init', () => {
     await init({ skipGitignore: true });
 
     expect(gitignore.ensureGitignorePatterns).not.toHaveBeenCalled();
-    expect(config.updateConfig).toHaveBeenCalledWith(
-      expect.any(String),
-      { gitignorePreference: 'skipped' }
-    );
+    expect(config.updateConfig).toHaveBeenCalledWith(expect.any(String), {
+      gitignorePreference: 'skipped',
+    });
   });
 
   it('should skip security scan when noSecure is true', async () => {
     await init({ noSecure: true });
 
     expect(security.securityScanCommand).not.toHaveBeenCalled();
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('initialization complete'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('initialization complete'),
+    );
   });
 
   it('should handle existing gitignore patterns', async () => {
     vi.mocked(gitignore.hasLogicStampPatterns).mockReturnValue(true);
-    vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({ added: false, created: false });
+    vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({
+      added: false,
+      created: false,
+    });
 
     await init();
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('already contains all LogicStamp patterns')
+      expect.stringContaining('already contains all LogicStamp patterns'),
     );
   });
 
@@ -114,27 +137,33 @@ describe('init', () => {
 
     expect(llmContext.writeLLMContext).not.toHaveBeenCalled();
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('LLM_CONTEXT.md already exists')
+      expect.stringContaining('LLM_CONTEXT.md already exists'),
     );
   });
 
   it('should create gitignore when it does not exist', async () => {
-    vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({ added: true, created: true });
+    vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({
+      added: true,
+      created: true,
+    });
 
     await init();
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Created .gitignore')
+      expect.stringContaining('Created .gitignore'),
     );
   });
 
   it('should add patterns to existing gitignore', async () => {
-    vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({ added: true, created: false });
+    vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({
+      added: true,
+      created: false,
+    });
 
     await init();
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Added LogicStamp patterns')
+      expect.stringContaining('Added LogicStamp patterns'),
     );
   });
 
@@ -145,42 +174,48 @@ describe('init', () => {
 
     expect(llmContext.writeLLMContext).toHaveBeenCalledWith(
       expect.any(String),
-      expect.stringContaining('# LLM Context')
+      expect.stringContaining('# LLM Context'),
     );
   });
 
   it('should handle gitignore setup errors gracefully', async () => {
-    vi.mocked(gitignore.ensureGitignorePatterns).mockRejectedValue(new Error('Permission denied'));
+    vi.mocked(gitignore.ensureGitignorePatterns).mockRejectedValue(
+      new Error('Permission denied'),
+    );
 
     await init();
 
     expect(console.error).toHaveBeenCalledWith(
       expect.stringContaining('Failed to update .gitignore'),
-      expect.any(String)
+      expect.any(String),
     );
     // Should continue with the rest of init
     expect(llmContext.writeLLMContext).toHaveBeenCalled();
   });
 
   it('should handle LLM context creation errors gracefully', async () => {
-    vi.mocked(llmContext.writeLLMContext).mockRejectedValue(new Error('Write failed'));
+    vi.mocked(llmContext.writeLLMContext).mockRejectedValue(
+      new Error('Write failed'),
+    );
 
     await init();
 
     expect(console.error).toHaveBeenCalledWith(
       expect.stringContaining('Failed to create LLM_CONTEXT.md'),
-      expect.any(String)
+      expect.any(String),
     );
   });
 
   it('should handle security scan errors gracefully', async () => {
-    vi.mocked(security.securityScanCommand).mockRejectedValue(new Error('Scan failed'));
+    vi.mocked(security.securityScanCommand).mockRejectedValue(
+      new Error('Scan failed'),
+    );
 
     await init();
 
     expect(console.error).toHaveBeenCalledWith(
       expect.stringContaining('Security scan failed'),
-      expect.any(String)
+      expect.any(String),
     );
   });
 
@@ -207,29 +242,31 @@ describe('init', () => {
   it('should update config with preferences', async () => {
     await init();
 
-    expect(config.updateConfig).toHaveBeenCalledWith(
-      expect.any(String),
-      { gitignorePreference: 'added' }
-    );
-    expect(config.updateConfig).toHaveBeenCalledWith(
-      expect.any(String),
-      { llmContextPreference: 'added' }
-    );
+    expect(config.updateConfig).toHaveBeenCalledWith(expect.any(String), {
+      gitignorePreference: 'added',
+    });
+    expect(config.updateConfig).toHaveBeenCalledWith(expect.any(String), {
+      llmContextPreference: 'added',
+    });
   });
 
   it('should use target directory when provided', async () => {
     await init({ targetDir: '/custom/path' });
 
     expect(gitignore.ensureGitignorePatterns).toHaveBeenCalledWith(
-      expect.stringContaining('custom')
+      expect.stringContaining('custom'),
     );
   });
 
   it('should show next steps when noSecure is true', async () => {
     await init({ noSecure: true });
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Next steps'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('stamp context'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Next steps'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('stamp context'),
+    );
   });
 
   it('should pass noExit option to security scan', async () => {
@@ -238,18 +275,21 @@ describe('init', () => {
     expect(security.securityScanCommand).toHaveBeenCalledWith(
       expect.objectContaining({
         noExit: true,
-      })
+      }),
     );
   });
 
   it('should update existing gitignore section with missing patterns', async () => {
     vi.mocked(gitignore.hasLogicStampPatterns).mockReturnValue(true);
-    vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({ added: true, created: false });
+    vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({
+      added: true,
+      created: false,
+    });
 
     await init();
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Updated existing LogicStamp section')
+      expect.stringContaining('Updated existing LogicStamp section'),
     );
   });
 
@@ -260,8 +300,14 @@ describe('init', () => {
   describe('TTY mode branches', () => {
     it('should skip prompts when not in TTY mode', async () => {
       // Non-TTY mode (default in tests) - should auto-accept
-      Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true });
-      Object.defineProperty(process.stdin, 'isTTY', { value: false, writable: true });
+      Object.defineProperty(process.stdout, 'isTTY', {
+        value: false,
+        writable: true,
+      });
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: false,
+        writable: true,
+      });
 
       await init();
 
@@ -272,8 +318,14 @@ describe('init', () => {
 
     it('should skip prompts when autoYes is true (security scan enabled)', async () => {
       // TTY mode but autoYes=true (security scan runs by default)
-      Object.defineProperty(process.stdout, 'isTTY', { value: true, writable: true });
-      Object.defineProperty(process.stdin, 'isTTY', { value: true, writable: true });
+      Object.defineProperty(process.stdout, 'isTTY', {
+        value: true,
+        writable: true,
+      });
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        writable: true,
+      });
 
       await init();
 
@@ -283,8 +335,14 @@ describe('init', () => {
     });
 
     it('should skip prompts when yes option is explicitly set', async () => {
-      Object.defineProperty(process.stdout, 'isTTY', { value: true, writable: true });
-      Object.defineProperty(process.stdin, 'isTTY', { value: true, writable: true });
+      Object.defineProperty(process.stdout, 'isTTY', {
+        value: true,
+        writable: true,
+      });
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        writable: true,
+      });
 
       await init({ yes: true, noSecure: true });
 
@@ -313,8 +371,14 @@ describe('init', () => {
     it('should set autoYes to false when noSecure is true and yes is false', async () => {
       // This would enable prompts, but we can't easily test prompts without mocking readline
       // The important thing is that the branch is covered
-      Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true });
-      Object.defineProperty(process.stdin, 'isTTY', { value: false, writable: true });
+      Object.defineProperty(process.stdout, 'isTTY', {
+        value: false,
+        writable: true,
+      });
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: false,
+        writable: true,
+      });
 
       await init({ noSecure: true, yes: false });
 
@@ -327,41 +391,51 @@ describe('init', () => {
     it('should skip gitignore when user declines in interactive mode', async () => {
       // This is hard to test without mocking readline, but we can verify
       // the skip path exists by checking the config update
-      Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true });
-      Object.defineProperty(process.stdin, 'isTTY', { value: false, writable: true });
+      Object.defineProperty(process.stdout, 'isTTY', {
+        value: false,
+        writable: true,
+      });
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: false,
+        writable: true,
+      });
 
       // When skipGitignore is true, should update config with 'skipped'
       await init({ skipGitignore: true });
 
-      expect(config.updateConfig).toHaveBeenCalledWith(
-        expect.any(String),
-        { gitignorePreference: 'skipped' }
-      );
+      expect(config.updateConfig).toHaveBeenCalledWith(expect.any(String), {
+        gitignorePreference: 'skipped',
+      });
     });
 
     it('should handle gitignore when patterns already exist but need update', async () => {
       vi.mocked(gitignore.hasLogicStampPatterns).mockReturnValue(true);
-      vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({ added: true, created: false });
+      vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({
+        added: true,
+        created: false,
+      });
 
       await init();
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Updated existing LogicStamp section')
+        expect.stringContaining('Updated existing LogicStamp section'),
       );
-      expect(config.updateConfig).toHaveBeenCalledWith(
-        expect.any(String),
-        { gitignorePreference: 'added' }
-      );
+      expect(config.updateConfig).toHaveBeenCalledWith(expect.any(String), {
+        gitignorePreference: 'added',
+      });
     });
 
     it('should handle gitignore when patterns already exist and complete', async () => {
       vi.mocked(gitignore.hasLogicStampPatterns).mockReturnValue(true);
-      vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({ added: false, created: false });
+      vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({
+        added: false,
+        created: false,
+      });
 
       await init();
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('already contains all LogicStamp patterns')
+        expect.stringContaining('already contains all LogicStamp patterns'),
       );
     });
   });
@@ -370,7 +444,9 @@ describe('init', () => {
     it('should skip LLM context when user declines in interactive mode', async () => {
       // This is hard to test without mocking readline, but we can verify
       // the skip path exists by checking the config update
-      vi.mocked(llmContext.readPackageLLMContext).mockResolvedValue('# LLM Context');
+      vi.mocked(llmContext.readPackageLLMContext).mockResolvedValue(
+        '# LLM Context',
+      );
 
       // When user would decline, should update config with 'skipped'
       // But in non-TTY mode, defaults to yes, so we test the skip path differently
@@ -387,25 +463,27 @@ describe('init', () => {
 
       expect(llmContext.writeLLMContext).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining('# LLM Context')
+        expect.stringContaining('# LLM Context'),
       );
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Created LLM_CONTEXT.md with default template')
+        expect.stringContaining('Created LLM_CONTEXT.md with default template'),
       );
     });
 
     it('should use package template when available', async () => {
       const packageContent = '# Package LLM Context\nCustom content';
-      vi.mocked(llmContext.readPackageLLMContext).mockResolvedValue(packageContent);
+      vi.mocked(llmContext.readPackageLLMContext).mockResolvedValue(
+        packageContent,
+      );
 
       await init();
 
       expect(llmContext.writeLLMContext).toHaveBeenCalledWith(
         expect.any(String),
-        packageContent
+        packageContent,
       );
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Created LLM_CONTEXT.md')
+        expect.stringContaining('Created LLM_CONTEXT.md'),
       );
     });
   });
@@ -429,12 +507,15 @@ describe('init', () => {
       await init();
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Initialization complete')
+        expect.stringContaining('Initialization complete'),
       );
     });
 
     it('should show gitignore summary when gitignoreAdded is true', async () => {
-      vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({ added: true, created: false });
+      vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({
+        added: true,
+        created: false,
+      });
       vi.mocked(security.securityScanCommand).mockResolvedValue({
         secretsFound: false,
         report: {
@@ -452,13 +533,16 @@ describe('init', () => {
       await init();
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Added LogicStamp patterns to .gitignore')
+        expect.stringContaining('Added LogicStamp patterns to .gitignore'),
       );
     });
 
     it('should show gitignore already exists when patterns present but not added', async () => {
       vi.mocked(gitignore.hasLogicStampPatterns).mockReturnValue(true);
-      vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({ added: false, created: false });
+      vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({
+        added: false,
+        created: false,
+      });
       vi.mocked(security.securityScanCommand).mockResolvedValue({
         secretsFound: false,
         report: {
@@ -476,7 +560,7 @@ describe('init', () => {
       await init();
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('LogicStamp patterns already in .gitignore')
+        expect.stringContaining('LogicStamp patterns already in .gitignore'),
       );
     });
 
@@ -498,7 +582,7 @@ describe('init', () => {
       await init();
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Generated LLM_CONTEXT.md')
+        expect.stringContaining('Generated LLM_CONTEXT.md'),
       );
     });
 
@@ -521,7 +605,7 @@ describe('init', () => {
       await init();
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('LLM_CONTEXT.md already exists')
+        expect.stringContaining('LLM_CONTEXT.md already exists'),
       );
     });
 
@@ -543,10 +627,10 @@ describe('init', () => {
       await init();
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('files scanned, 3 secrets found')
+        expect.stringContaining('files scanned, 3 secrets found'),
       );
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Report written to stamp_security_report.json')
+        expect.stringContaining('Report written to stamp_security_report.json'),
       );
     });
 
@@ -568,10 +652,10 @@ describe('init', () => {
       await init();
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('No secrets detected')
+        expect.stringContaining('No secrets detected'),
       );
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Report written to stamp_security_report.json')
+        expect.stringContaining('Report written to stamp_security_report.json'),
       );
     });
 
@@ -584,7 +668,7 @@ describe('init', () => {
 
       // Should not crash, should show initialization complete
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Initialization complete')
+        expect.stringContaining('Initialization complete'),
       );
     });
 
@@ -606,13 +690,15 @@ describe('init', () => {
 
   describe('error handling branches', () => {
     it('should handle readGitignore errors in gitignore setup', async () => {
-      vi.mocked(gitignore.readGitignore).mockRejectedValue(new Error('Read failed'));
+      vi.mocked(gitignore.readGitignore).mockRejectedValue(
+        new Error('Read failed'),
+      );
 
       await init();
 
       expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to update .gitignore'),
-        expect.any(String)
+        expect.any(String),
       );
       // Should continue with LLM context setup
       expect(llmContext.writeLLMContext).toHaveBeenCalled();
@@ -627,40 +713,46 @@ describe('init', () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to update .gitignore'),
-        expect.any(String)
+        expect.any(String),
       );
     });
 
     it('should handle readPackageLLMContext errors', async () => {
-      vi.mocked(llmContext.readPackageLLMContext).mockRejectedValue(new Error('Read failed'));
+      vi.mocked(llmContext.readPackageLLMContext).mockRejectedValue(
+        new Error('Read failed'),
+      );
 
       await init();
 
       expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to create LLM_CONTEXT.md'),
-        expect.any(String)
+        expect.any(String),
       );
     });
 
     it('should handle llmContextExists errors', async () => {
-      vi.mocked(llmContext.llmContextExists).mockRejectedValue(new Error('Check failed'));
+      vi.mocked(llmContext.llmContextExists).mockRejectedValue(
+        new Error('Check failed'),
+      );
 
       await init();
 
       expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to create LLM_CONTEXT.md'),
-        expect.any(String)
+        expect.any(String),
       );
     });
 
     it('should handle non-Error exceptions in gitignore setup', async () => {
-      vi.mocked(gitignore.ensureGitignorePatterns).mockRejectedValue('String error');
+      vi.mocked(gitignore.ensureGitignorePatterns).mockRejectedValue(
+        'String error',
+      );
 
       await init();
 
       expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to update .gitignore'),
-        expect.any(String)
+        expect.any(String),
       );
     });
 
@@ -671,7 +763,7 @@ describe('init', () => {
 
       expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining('Failed to create LLM_CONTEXT.md'),
-        expect.any(String)
+        expect.any(String),
       );
     });
   });
@@ -687,10 +779,9 @@ describe('init', () => {
     it('should update config with skipped preference when skipGitignore is true', async () => {
       await init({ skipGitignore: true });
 
-      expect(config.updateConfig).toHaveBeenCalledWith(
-        expect.any(String),
-        { gitignorePreference: 'skipped' }
-      );
+      expect(config.updateConfig).toHaveBeenCalledWith(expect.any(String), {
+        gitignorePreference: 'skipped',
+      });
     });
   });
 
@@ -699,7 +790,7 @@ describe('init', () => {
       await init();
 
       expect(gitignore.ensureGitignorePatterns).toHaveBeenCalledWith(
-        expect.any(String) // Should resolve to current directory
+        expect.any(String), // Should resolve to current directory
       );
     });
 
@@ -707,7 +798,7 @@ describe('init', () => {
       await init({ targetDir: './relative/path' });
 
       expect(gitignore.ensureGitignorePatterns).toHaveBeenCalledWith(
-        expect.stringMatching(/relative[\\/]path/)
+        expect.stringMatching(/relative[\\/]path/),
       );
     });
   });

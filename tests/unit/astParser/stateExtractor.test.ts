@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { extractState, extractVariables } from '../../../src/extractors/react/index.js';
+import {
+  extractState,
+  extractVariables,
+} from '../../../src/extractors/react/index.js';
 import { createTestSourceFile } from '../test-helpers.js';
 
 describe('State Extractor', () => {
@@ -176,7 +179,9 @@ describe('State Extractor', () => {
 
       const variables = extractVariables(sourceFile);
 
-      expect(variables.filter(v => v === 'count').length).toBeLessThanOrEqual(1);
+      expect(variables.filter((v) => v === 'count').length).toBeLessThanOrEqual(
+        1,
+      );
     });
   });
 
@@ -218,7 +223,9 @@ describe('State Extractor', () => {
     it('should have debug logging infrastructure in place', () => {
       const originalEnv = process.env.LOGICSTAMP_DEBUG;
       process.env.LOGICSTAMP_DEBUG = '1';
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       const sourceFile = createTestSourceFile('const [x, setX] = useState(0);');
 
@@ -228,9 +235,10 @@ describe('State Extractor', () => {
       // If errors were logged, verify they have the correct format
       const errorCalls = consoleErrorSpy.mock.calls;
       if (errorCalls.length > 0) {
-        const hasStateExtractorLog = errorCalls.some(call =>
-          call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
-          call[0]?.toString().includes('stateExtractor')
+        const hasStateExtractorLog = errorCalls.some(
+          (call) =>
+            call[0]?.toString().includes('[LogicStamp][DEBUG]') &&
+            call[0]?.toString().includes('stateExtractor'),
         );
         expect(hasStateExtractorLog).toBe(true);
       }
@@ -244,4 +252,3 @@ describe('State Extractor', () => {
     });
   });
 });
-

@@ -12,7 +12,8 @@ import {
 describe('secretDetector utilities', () => {
   describe('scanFileForSecrets', () => {
     it('should detect API keys', () => {
-      const content = "const apiKey = 'FAKE_API_KEY_DO_NOT_USE_1234567890abcdefghijklmnop';";
+      const content =
+        "const apiKey = 'FAKE_API_KEY_DO_NOT_USE_1234567890abcdefghijklmnop';";
       const filePath = 'src/config.ts';
       const matches = scanFileForSecrets(filePath, content);
 
@@ -110,7 +111,8 @@ describe('secretDetector utilities', () => {
     });
 
     it('should detect passwords', () => {
-      const content = "const password = 'FAKE_PASSWORD_DO_NOT_USE_1234567890abcdefghijklmnop';";
+      const content =
+        "const password = 'FAKE_PASSWORD_DO_NOT_USE_1234567890abcdefghijklmnop';";
       const matches = scanFileForSecrets('config.ts', content);
 
       const passwordMatch = matches.find((m) => m.type === 'Password');
@@ -120,7 +122,8 @@ describe('secretDetector utilities', () => {
     });
 
     it('should detect tokens', () => {
-      const content = "const token = 'FAKE_TOKEN_DO_NOT_USE_1234567890abcdefghijklmnopqrstuvwxyz';";
+      const content =
+        "const token = 'FAKE_TOKEN_DO_NOT_USE_1234567890abcdefghijklmnopqrstuvwxyz';";
       const matches = scanFileForSecrets('auth.ts', content);
 
       const tokenMatch = matches.find((m) => m.type === 'Token');
@@ -129,7 +132,8 @@ describe('secretDetector utilities', () => {
     });
 
     it('should detect OAuth secrets', () => {
-      const content = "const oauthSecret = 'FAKE_OAUTH_SECRET_DO_NOT_USE_1234567890abcdefghijklmnop';";
+      const content =
+        "const oauthSecret = 'FAKE_OAUTH_SECRET_DO_NOT_USE_1234567890abcdefghijklmnop';";
       const matches = scanFileForSecrets('oauth.ts', content);
 
       const oauthMatch = matches.find((m) => m.type === 'OAuth Secret');
@@ -138,16 +142,20 @@ describe('secretDetector utilities', () => {
     });
 
     it('should detect database URLs with credentials', () => {
-      const content = "const dbUrl = 'postgres://user:password@localhost:5432/db';";
+      const content =
+        "const dbUrl = 'postgres://user:password@localhost:5432/db';";
       const matches = scanFileForSecrets('db.ts', content);
 
-      const dbMatch = matches.find((m) => m.type === 'Database URL with Credentials');
+      const dbMatch = matches.find(
+        (m) => m.type === 'Database URL with Credentials',
+      );
       expect(dbMatch).toBeDefined();
       expect(dbMatch?.severity).toBe('high');
     });
 
     it('should detect JWT secrets', () => {
-      const content = "const jwtSecret = 'FAKE_JWT_SECRET_DO_NOT_USE_1234567890abcdefghijklmnop';";
+      const content =
+        "const jwtSecret = 'FAKE_JWT_SECRET_DO_NOT_USE_1234567890abcdefghijklmnop';";
       const matches = scanFileForSecrets('jwt.ts', content);
 
       const jwtMatch = matches.find((m) => m.type === 'JWT Secret');
@@ -156,7 +164,8 @@ describe('secretDetector utilities', () => {
     });
 
     it('should detect generic secrets', () => {
-      const content = "const secret = 'FAKE_SECRET_KEY_DO_NOT_USE_1234567890abcdefghijklmnop';";
+      const content =
+        "const secret = 'FAKE_SECRET_KEY_DO_NOT_USE_1234567890abcdefghijklmnop';";
       const matches = scanFileForSecrets('config.ts', content);
 
       const secretMatch = matches.find((m) => m.type === 'Secret');
@@ -200,7 +209,8 @@ const auth = {
     });
 
     it('should include correct column numbers', () => {
-      const content = "    const apiKey = 'FAKE_API_KEY_DO_NOT_USE_1234567890abcdefghijklmnop';";
+      const content =
+        "    const apiKey = 'FAKE_API_KEY_DO_NOT_USE_1234567890abcdefghijklmnop';";
       const matches = scanFileForSecrets('file.ts', content);
 
       if (matches.length > 0) {
@@ -211,7 +221,8 @@ const auth = {
     });
 
     it('should include snippet in match', () => {
-      const content = "const apiKey = 'FAKE_API_KEY_DO_NOT_USE_1234567890abcdefghijklmnop';";
+      const content =
+        "const apiKey = 'FAKE_API_KEY_DO_NOT_USE_1234567890abcdefghijklmnop';";
       const matches = scanFileForSecrets('file.ts', content);
 
       if (matches.length > 0) {
@@ -236,7 +247,8 @@ const auth = {
       // Create a line longer than MAX_LINE_LENGTH (1000 chars) with a secret
       const longPrefix = 'x'.repeat(1001);
       const secretLine = `${longPrefix}apiKey = 'FAKE_API_KEY_DO_NOT_USE_1234567890abcdefghijklmnop';`;
-      const normalLine = "const apiKey = 'FAKE_API_KEY_DO_NOT_USE_1234567890abcdefghijklmnop';";
+      const normalLine =
+        "const apiKey = 'FAKE_API_KEY_DO_NOT_USE_1234567890abcdefghijklmnop';";
       const content = `${secretLine}\n${normalLine}`;
       const matches = scanFileForSecrets('test.ts', content);
 
@@ -257,10 +269,14 @@ const token = \`FAKE_TOKEN_DO_NOT_USE_1234567890abcdefghijklmnopqrstuvwxyz\`;`;
     });
 
     it('should handle JSON format', () => {
-      const content = JSON.stringify({
-        apiKey: 'FAKE_API_KEY_DO_NOT_USE_1234567890abcdefghijklmnop',
-        password: 'FAKE_PASSWORD_DO_NOT_USE_1234567890abcdefghijklmnop',
-      }, null, 2);
+      const content = JSON.stringify(
+        {
+          apiKey: 'FAKE_API_KEY_DO_NOT_USE_1234567890abcdefghijklmnop',
+          password: 'FAKE_PASSWORD_DO_NOT_USE_1234567890abcdefghijklmnop',
+        },
+        null,
+        2,
+      );
       const matches = scanFileForSecrets('config.json', content);
 
       expect(matches.length).toBeGreaterThan(0);
@@ -275,7 +291,8 @@ const token = \`FAKE_TOKEN_DO_NOT_USE_1234567890abcdefghijklmnopqrstuvwxyz\`;`;
           line: 1,
           column: 1,
           type: 'API Key',
-          snippet: 'apiKey = "example_key_1234567890abcdefghijklmnopqrstuvwxyz"',
+          snippet:
+            'apiKey = "example_key_1234567890abcdefghijklmnopqrstuvwxyz"',
           severity: 'high',
         },
         {
@@ -348,7 +365,8 @@ const token = \`FAKE_TOKEN_DO_NOT_USE_1234567890abcdefghijklmnopqrstuvwxyz\`;`;
           line: 1,
           column: 1,
           type: 'API Key',
-          snippet: '// apiKey = "some_key_1234567890abcdefghijklmnopqrstuvwxyz"',
+          snippet:
+            '// apiKey = "some_key_1234567890abcdefghijklmnopqrstuvwxyz"',
           severity: 'high',
         },
         {
@@ -356,7 +374,8 @@ const token = \`FAKE_TOKEN_DO_NOT_USE_1234567890abcdefghijklmnopqrstuvwxyz\`;`;
           line: 2,
           column: 1,
           type: 'API Key',
-          snippet: '/* apiKey = "some_key_1234567890abcdefghijklmnopqrstuvwxyz" */',
+          snippet:
+            '/* apiKey = "some_key_1234567890abcdefghijklmnopqrstuvwxyz" */',
           severity: 'high',
         },
         {
@@ -364,7 +383,8 @@ const token = \`FAKE_TOKEN_DO_NOT_USE_1234567890abcdefghijklmnopqrstuvwxyz\`;`;
           line: 3,
           column: 1,
           type: 'API Key',
-          snippet: 'const apiKey = "some_key_1234567890abcdefghijklmnopqrstuvwxyz"; // comment',
+          snippet:
+            'const apiKey = "some_key_1234567890abcdefghijklmnopqrstuvwxyz"; // comment',
           severity: 'high',
         },
       ];
@@ -374,7 +394,9 @@ const token = \`FAKE_TOKEN_DO_NOT_USE_1234567890abcdefghijklmnopqrstuvwxyz\`;`;
       // Should filter out pure comments (first two)
       // But keep the one with actual assignment (third one)
       expect(filtered.length).toBeGreaterThan(0);
-      const hasAssignment = filtered.some((m) => m.snippet.includes('const apiKey'));
+      const hasAssignment = filtered.some((m) =>
+        m.snippet.includes('const apiKey'),
+      );
       expect(hasAssignment).toBe(true);
     });
 
@@ -416,7 +438,8 @@ const token = \`FAKE_TOKEN_DO_NOT_USE_1234567890abcdefghijklmnopqrstuvwxyz\`;`;
           line: 1,
           column: 1,
           type: 'API Key',
-          snippet: 'const apiKey = "FAKE_API_KEY_DO_NOT_USE_1234567890abcdefghijklmnop";',
+          snippet:
+            'const apiKey = "FAKE_API_KEY_DO_NOT_USE_1234567890abcdefghijklmnop";',
           severity: 'high',
         },
         {
@@ -424,7 +447,8 @@ const token = \`FAKE_TOKEN_DO_NOT_USE_1234567890abcdefghijklmnopqrstuvwxyz\`;`;
           line: 2,
           column: 1,
           type: 'Password',
-          snippet: 'const password = "FAKE_PASSWORD_DO_NOT_USE_1234567890abcdefghijklmnop";',
+          snippet:
+            'const password = "FAKE_PASSWORD_DO_NOT_USE_1234567890abcdefghijklmnop";',
           severity: 'high',
         },
       ];
@@ -446,7 +470,8 @@ const token = \`FAKE_TOKEN_DO_NOT_USE_1234567890abcdefghijklmnopqrstuvwxyz\`;`;
           line: 5,
           column: 10,
           type: 'API Key',
-          snippet: 'const apiKey = "FAKE_API_KEY_DO_NOT_USE_1234567890abcdefghijklmnop";',
+          snippet:
+            'const apiKey = "FAKE_API_KEY_DO_NOT_USE_1234567890abcdefghijklmnop";',
           severity: 'high',
         },
       ];
@@ -479,7 +504,8 @@ const token = \`FAKE_TOKEN_DO_NOT_USE_1234567890abcdefghijklmnopqrstuvwxyz\`;`;
           line: 2,
           column: 1,
           type: 'API Key',
-          snippet: 'const apiKey: string = "real_key_1234567890abcdefghijklmnopqrstuvwxyz";',
+          snippet:
+            'const apiKey: string = "real_key_1234567890abcdefghijklmnopqrstuvwxyz";',
           severity: 'high',
         },
       ];
@@ -487,7 +513,9 @@ const token = \`FAKE_TOKEN_DO_NOT_USE_1234567890abcdefghijklmnopqrstuvwxyz\`;`;
       const filtered = filterFalsePositives(matches);
 
       // Should filter out the comment
-      const commentMatch = filtered.find((m) => m.snippet.includes('Documentation'));
+      const commentMatch = filtered.find((m) =>
+        m.snippet.includes('Documentation'),
+      );
       expect(commentMatch).toBeUndefined();
 
       // Should keep the real assignment (even though it has a colon for TypeScript type)
@@ -496,4 +524,3 @@ const token = \`FAKE_TOKEN_DO_NOT_USE_1234567890abcdefghijklmnopqrstuvwxyz\`;`;
     });
   });
 });
-

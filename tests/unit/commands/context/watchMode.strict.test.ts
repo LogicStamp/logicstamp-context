@@ -3,10 +3,15 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import type { BundleChanges, ContractDiff } from '../../../../src/cli/commands/context/watchMode/watchDiff.js';
+import type {
+  BundleChanges,
+  ContractDiff,
+} from '../../../../src/cli/commands/context/watchMode/watchDiff.js';
 
 // Helper to create mock bundle changes
-function createMockBundleChanges(overrides?: Partial<BundleChanges>): BundleChanges {
+function createMockBundleChanges(
+  overrides?: Partial<BundleChanges>,
+): BundleChanges {
   return {
     added: [],
     removed: [],
@@ -17,7 +22,9 @@ function createMockBundleChanges(overrides?: Partial<BundleChanges>): BundleChan
 }
 
 // Helper to create mock contract diff
-function createMockContractDiff(overrides?: Partial<ContractDiff>): ContractDiff {
+function createMockContractDiff(
+  overrides?: Partial<ContractDiff>,
+): ContractDiff {
   return {
     props: { added: [], removed: [], changed: [] },
     emits: { added: [], removed: [], changed: [] },
@@ -275,7 +282,14 @@ describe('Session status tracking', () => {
       cumulativeViolations: 1,
       cumulativeErrors: 1,
       totalErrorsDetected: 1,
-      lastCheck: { timestamp: new Date().toISOString(), totalViolations: 1, errors: 1, warnings: 0, violations: [], changedFiles: [] },
+      lastCheck: {
+        timestamp: new Date().toISOString(),
+        totalViolations: 1,
+        errors: 1,
+        warnings: 0,
+        violations: [],
+        changedFiles: [],
+      },
     };
     expect(status.totalErrorsDetected).toBe(1);
     expect(status.resolvedCount).toBe(0);
@@ -298,7 +312,14 @@ describe('Session status tracking', () => {
       cumulativeViolations: 2,
       cumulativeErrors: 2,
       totalErrorsDetected: 3, // 1 + 2 new errors
-      lastCheck: { timestamp: new Date().toISOString(), totalViolations: 2, errors: 2, warnings: 0, violations: [], changedFiles: [] },
+      lastCheck: {
+        timestamp: new Date().toISOString(),
+        totalViolations: 2,
+        errors: 2,
+        warnings: 0,
+        violations: [],
+        changedFiles: [],
+      },
     };
     expect(status.totalErrorsDetected).toBe(3);
     expect(status.resolvedCount).toBe(1);

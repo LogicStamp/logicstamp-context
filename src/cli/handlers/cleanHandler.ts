@@ -15,7 +15,9 @@ export async function handleClean(args: string[]): Promise<void> {
 
   // Explicitly reject --compare-modes (only available in stamp context, not stamp context clean)
   if (args.includes('--compare-modes')) {
-    console.error('❌ --compare-modes is not available for "stamp context clean". Use "stamp context --compare-modes" instead.');
+    console.error(
+      '❌ --compare-modes is not available for "stamp context clean". Use "stamp context --compare-modes" instead.',
+    );
     process.exit(1);
   }
 
@@ -31,4 +33,3 @@ export async function handleClean(args: string[]): Promise<void> {
     process.exit(1);
   }
 }
-

@@ -28,22 +28,26 @@
  * Schema version 0.4
  */
 
-export type ContractPreset = 'submit-only' | 'nav-only' | 'display-only' | 'none';
+export type ContractPreset =
+  | 'submit-only'
+  | 'nav-only'
+  | 'display-only'
+  | 'none';
 
 /**
  * Component kind identifier in format 'language:type'
  * Examples: 'react:component', 'python:function', 'java:class', 'node:api'
  * Extensible to support any language and type combination
  */
-export type ContractKind = 
-  | 'react:component' 
-  | 'react:hook' 
-  | 'vue:component' 
-  | 'vue:composable' 
-  | 'ts:module' 
+export type ContractKind =
+  | 'react:component'
+  | 'react:hook'
+  | 'vue:component'
+  | 'vue:composable'
+  | 'ts:module'
   | 'node:cli'
-  | 'node:api'        // Backend API routes/handlers
-  | string;            // Allow any string matching pattern 'language:type' for extensibility
+  | 'node:api' // Backend API routes/handlers
+  | string; // Allow any string matching pattern 'language:type' for extensibility
 
 export interface LanguageSpecificVersion {
   /** Python decorators (e.g., ['@app.get', '@app.post']) */
@@ -58,8 +62,8 @@ export interface LanguageSpecificVersion {
 
 export interface ComponentVersion {
   variables: string[];
-  hooks: string[];        // React hooks (empty [] for non-React files)
-  components: string[];   // React/Vue components (empty [] for non-React/Vue files)
+  hooks: string[]; // React hooks (empty [] for non-React files)
+  components: string[]; // React/Vue components (empty [] for non-React/Vue files)
   functions: string[];
   imports?: string[];
   /** Language-specific extensions (e.g., decorators for Python, annotations for Java) */
@@ -70,23 +74,25 @@ export interface ComponentVersion {
  * Prop type descriptors
  */
 export type PropType =
-  | string  // Simple types: "boolean", "string", "number", etc.
-  | string[]  // Legacy literal union format: ["\"primary\"", "\"secondary\""]
-  | {  // Rich type descriptor
+  | string // Simple types: "boolean", "string", "number", etc.
+  | string[] // Legacy literal union format: ["\"primary\"", "\"secondary\""]
+  | {
+      // Rich type descriptor
       type: 'literal-union' | 'function' | 'object' | 'array' | string;
       optional?: boolean;
-      literals?: string[];  // For literal-union
-      signature?: string;   // For function types
+      literals?: string[]; // For literal-union
+      signature?: string; // For function types
     };
 
 /**
  * Event type descriptors
  */
 export type EventType =
-  | string  // Legacy: "function", "arrow function"
-  | {  // Normalized event descriptor
+  | string // Legacy: "function", "arrow function"
+  | {
+      // Normalized event descriptor
       type: 'function';
-      signature: string;  // e.g., "() => void"
+      signature: string; // e.g., "() => void"
       optional?: boolean;
     };
 
@@ -102,9 +108,9 @@ export interface ApiSignature {
 }
 
 export interface LogicSignature {
-  props: Record<string, PropType>;     // Component props (empty {} for backend files)
-  emits: Record<string, EventType>;    // Component events (empty {} for backend files)
-  state?: Record<string, string>;      // Component state (empty {} for backend files)
+  props: Record<string, PropType>; // Component props (empty {} for backend files)
+  emits: Record<string, EventType>; // Component events (empty {} for backend files)
+  state?: Record<string, string>; // Component state (empty {} for backend files)
   /** API signature for backend functions/methods (parameters, return types, etc.) */
   apiSignature?: ApiSignature;
 }
@@ -138,7 +144,15 @@ export interface ContractLinks {
 export interface NextJSMetadata {
   isInAppDir?: boolean;
   directive?: 'client' | 'server';
-  routeRole?: 'page' | 'layout' | 'loading' | 'error' | 'not-found' | 'template' | 'default' | 'route';
+  routeRole?:
+    | 'page'
+    | 'layout'
+    | 'loading'
+    | 'error'
+    | 'not-found'
+    | 'template'
+    | 'default'
+    | 'route';
   segmentPath?: string; // Route path derived from file structure (e.g., '/blog/[slug]', '/api/users')
   metadata?: {
     static?: Record<string, unknown>; // From `export const metadata = {...}`
@@ -146,10 +160,7 @@ export interface NextJSMetadata {
   };
 }
 
-export type ExportMetadata =
-  | 'default'
-  | 'named'
-  | { named: string[] };
+export type ExportMetadata = 'default' | 'named' | { named: string[] };
 
 /**
  * Style metadata extracted from component
@@ -158,7 +169,7 @@ export interface StyleSources {
   // Tailwind with detailed class categorization
   tailwind?: {
     categories?: Record<string, string[]>; // layout, spacing, colors, etc. (full mode only)
-    categoriesUsed?: string[];              // category names only (lean mode)
+    categoriesUsed?: string[]; // category names only (lean mode)
     breakpoints?: string[]; // sm, md, lg, xl, 2xl
     classCount: number;
   };
@@ -183,10 +194,12 @@ export interface StyleSources {
   };
 
   // Inline styles
-  inlineStyles?: boolean | {
-    properties?: string[]; // CSS property names (e.g., ['animationDelay', 'transformOrigin', 'color'])
-    values?: Record<string, string>; // Property-value pairs (e.g., { animationDelay: '2s', color: 'blue' })
-  };
+  inlineStyles?:
+    | boolean
+    | {
+        properties?: string[]; // CSS property names (e.g., ['animationDelay', 'transformOrigin', 'color'])
+        values?: Record<string, string>; // Property-value pairs (e.g., { animationDelay: '2s', color: 'blue' })
+      };
 
   // Styled JSX with CSS content extraction
   styledJsx?: {
@@ -295,22 +308,22 @@ export interface LayoutMetadata {
   cols?: string;
   hasHeroPattern?: boolean;
   hasFeatureCards?: boolean;
-  sections?: string[];       // full mode
-  sectionCount?: number;     // lean mode
+  sections?: string[]; // full mode
+  sectionCount?: number; // lean mode
 }
 
 export interface VisualMetadata {
-  colors?: string[];         // full mode
-  colorCount?: number;       // lean mode
-  spacing?: string[];        // full mode
-  spacingCount?: number;     // lean mode
+  colors?: string[]; // full mode
+  colorCount?: number; // lean mode
+  spacing?: string[]; // full mode
+  spacingCount?: number; // lean mode
   /**
    * Border radius token (e.g., "default", "sm", "md", "lg", "xl", "2xl", "3xl", "full")
    * Stores just the token, not the full class name (e.g., "lg" not "rounded-lg")
    */
   radius?: string;
-  typography?: string[];     // full mode
-  typographyCount?: number;  // lean mode
+  typography?: string[]; // full mode
+  typographyCount?: number; // lean mode
 }
 
 export interface AnimationMetadata {
@@ -338,8 +351,8 @@ export type StyleMode = 'lean' | 'full';
  */
 export interface StyleSummary {
   mode: StyleMode;
-  sources: string[];        // e.g. ['tailwind', 'shadcn', 'scss']
-  fullModeBytes?: number;   // JSON.stringify(fullStyleSources).length - only in lean mode
+  sources: string[]; // e.g. ['tailwind', 'shadcn', 'scss']
+  fullModeBytes?: number; // JSON.stringify(fullStyleSources).length - only in lean mode
 }
 
 export interface StyleMetadata {
@@ -349,24 +362,24 @@ export interface StyleMetadata {
   animation?: AnimationMetadata;
   /** Schema-validated optional field; stamp context style extraction does not set this yet */
   pageLayout?: PageLayoutMetadata;
-  summary?: StyleSummary;   // Style extraction summary
+  summary?: StyleSummary; // Style extraction summary
 }
 
 export interface UIFContract {
   type: 'UIFContract';
   schemaVersion: '0.4';
   kind: ContractKind;
-  entryId: string;  // Relative normalized path (e.g., src/App.tsx) - always uses forward slashes
+  entryId: string; // Relative normalized path (e.g., src/App.tsx) - always uses forward slashes
   description: string;
-  usedIn?: string[];  // Optional: only persisted when non-empty
+  usedIn?: string[]; // Optional: only persisted when non-empty
   composition: ComponentVersion;
   interface: LogicSignature;
-  exports?: ExportMetadata;  // Export type: default, named, or list of named exports
+  exports?: ExportMetadata; // Export type: default, named, or list of named exports
   prediction?: string[];
   metrics?: ContractMetrics;
   links?: ContractLinks;
-  nextjs?: NextJSMetadata;  // Next.js App Router metadata
-  style?: StyleMetadata;  // Optional style metadata
+  nextjs?: NextJSMetadata; // Next.js App Router metadata
+  style?: StyleMetadata; // Optional style metadata
   semanticHash: string;
   fileHash: string;
   /** @deprecated No longer generated as of v0.3.2. Use `entryId` instead (contains relative normalized path). Kept for backward compatibility with old contracts. */

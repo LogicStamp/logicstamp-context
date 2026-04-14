@@ -39,7 +39,7 @@ describe('CLI Ignore Command Tests', () => {
       // Run stamp ignore
       const { stdout } = await execAsync(
         `node "${stampCliPath}" ignore src/secrets.ts`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Verify output messages
@@ -65,7 +65,7 @@ describe('CLI Ignore Command Tests', () => {
       // Run stamp ignore with multiple paths
       const { stdout } = await execAsync(
         `node "${stampCliPath}" ignore src/secrets.ts config/api-keys.json src/credentials/`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Verify output messages
@@ -100,7 +100,7 @@ describe('CLI Ignore Command Tests', () => {
       // Run stamp ignore to add new path
       const { stdout } = await execAsync(
         `node "${stampCliPath}" ignore src/new-secrets.ts`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Verify output messages
@@ -130,11 +130,13 @@ describe('CLI Ignore Command Tests', () => {
       // Try to add the same path again
       const { stdout } = await execAsync(
         `node "${stampCliPath}" ignore src/secrets.ts`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Verify output messages
-      expect(stdout).toContain('All specified paths are already in .stampignore');
+      expect(stdout).toContain(
+        'All specified paths are already in .stampignore',
+      );
 
       // Verify .stampignore still has only one entry
       const stampignoreContent = await readFile(stampignorePath, 'utf-8');
@@ -151,7 +153,7 @@ describe('CLI Ignore Command Tests', () => {
       // Run stamp ignore with glob patterns
       const { stdout } = await execAsync(
         `node "${stampCliPath}" ignore "**/secrets.ts" "**/*.key"`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Verify output messages
@@ -175,7 +177,7 @@ describe('CLI Ignore Command Tests', () => {
       // Run stamp ignore with --quiet flag
       const { stdout } = await execAsync(
         `node "${stampCliPath}" ignore src/secrets.ts --quiet`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Verify output is minimal (no verbose messages)
@@ -198,7 +200,7 @@ describe('CLI Ignore Command Tests', () => {
       // Run stamp ignore --help
       const { stdout } = await execAsync(
         `node "${stampCliPath}" ignore --help`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Verify help text is shown
@@ -216,10 +218,7 @@ describe('CLI Ignore Command Tests', () => {
       // Run stamp ignore without paths
       let error: Error | null = null;
       try {
-        await execAsync(
-          `node "${stampCliPath}" ignore`,
-          { cwd: testDir }
-        );
+        await execAsync(`node "${stampCliPath}" ignore`, { cwd: testDir });
       } catch (e) {
         error = e as Error;
       }
@@ -228,7 +227,8 @@ describe('CLI Ignore Command Tests', () => {
       expect(error).not.toBeNull();
       if (error) {
         // Check both stdout and stderr for the error message
-        const errorOutput = (error as any).stderr || (error as any).stdout || error.message;
+        const errorOutput =
+          (error as any).stderr || (error as any).stdout || error.message;
         expect(errorOutput).toContain('No paths provided');
       }
     }, 30000);
@@ -240,7 +240,7 @@ describe('CLI Ignore Command Tests', () => {
       // Run stamp ignore with paths that need normalization
       const { stdout } = await execAsync(
         `node "${stampCliPath}" ignore "./src/secrets.ts" "src\\config\\keys.json"`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Verify .stampignore was created
@@ -269,7 +269,7 @@ describe('CLI Ignore Command Tests', () => {
       // Try to add mix of new and existing paths
       const { stdout } = await execAsync(
         `node "${stampCliPath}" ignore src/old-secrets.ts src/new-secrets.ts`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Should add only the new path
@@ -286,4 +286,3 @@ describe('CLI Ignore Command Tests', () => {
     }, 30000);
   });
 });
-

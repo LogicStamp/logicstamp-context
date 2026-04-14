@@ -54,7 +54,9 @@ export function fileHash(content: string): string {
  */
 export function structureHash(ast: AstExtract): string;
 export function structureHash(version: ComponentVersion): string;
-export function structureHash(astOrVersion: AstExtract | ComponentVersion): string {
+export function structureHash(
+  astOrVersion: AstExtract | ComponentVersion,
+): string {
   const payload = {
     variables: [...(astOrVersion.variables || [])].sort(),
     hooks: [...(astOrVersion.hooks || [])].sort(),
@@ -74,7 +76,9 @@ export function signatureHash(signature: LogicSignature): string {
     props: sortObject(signature.props),
     emits: sortObject(signature.emits),
     state: signature.state ? sortObject(signature.state) : undefined,
-    apiSignature: signature.apiSignature ? sortObject(signature.apiSignature as Record<string, unknown>) : undefined,
+    apiSignature: signature.apiSignature
+      ? sortObject(signature.apiSignature as Record<string, unknown>)
+      : undefined,
   };
 
   return sha256Hex(stableStringify(payload));
@@ -87,7 +91,10 @@ export function signatureHash(signature: LogicSignature): string {
  *
  * semanticHash = hash(structureHash + signatureHash + schemaVersion)
  */
-export function semanticHashFromAst(ast: AstExtract, signature: LogicSignature): string {
+export function semanticHashFromAst(
+  ast: AstExtract,
+  signature: LogicSignature,
+): string {
   // Combine structure and signature hashes with schema version
   const payload = {
     schemaVersion: SCHEMA_VERSION,
@@ -101,7 +108,9 @@ export function semanticHashFromAst(ast: AstExtract, signature: LogicSignature):
       props: sortObject(signature.props),
       emits: sortObject(signature.emits),
       state: signature.state ? sortObject(signature.state) : undefined,
-      apiSignature: signature.apiSignature ? sortObject(signature.apiSignature as Record<string, unknown>) : undefined,
+      apiSignature: signature.apiSignature
+        ? sortObject(signature.apiSignature as Record<string, unknown>)
+        : undefined,
     },
     // Include backend metadata for backend files
     ...(ast.backend && {
@@ -109,7 +118,7 @@ export function semanticHashFromAst(ast: AstExtract, signature: LogicSignature):
         framework: ast.backend.framework,
         routes: ast.backend.routes
           ? ast.backend.routes
-              .map(route => ({
+              .map((route) => ({
                 path: route.path,
                 method: route.method,
                 handler: route.handler,
@@ -118,7 +127,9 @@ export function semanticHashFromAst(ast: AstExtract, signature: LogicSignature):
               .sort((a, b) => {
                 // Sort routes by method, then path for determinism
                 const methodCompare = a.method.localeCompare(b.method);
-                return methodCompare !== 0 ? methodCompare : a.path.localeCompare(b.path);
+                return methodCompare !== 0
+                  ? methodCompare
+                  : a.path.localeCompare(b.path);
               })
           : undefined,
         controller: ast.backend.controller
@@ -158,7 +169,7 @@ export function semanticHashFromAst(ast: AstExtract, signature: LogicSignature):
 export function bundleHash(
   nodes: Array<{ entryId: string; semanticHash: string }>,
   depth: number,
-  schemaVersion = '0.1'
+  schemaVersion = '0.1',
 ): string {
   // Sort nodes by entryId for determinism
   const ordered = [...nodes].sort((a, b) => a.entryId.localeCompare(b.entryId));
@@ -166,7 +177,10 @@ export function bundleHash(
   const payload = {
     schemaVersion,
     depth,
-    nodes: ordered.map(n => ({ entryId: n.entryId, semanticHash: n.semanticHash })),
+    nodes: ordered.map((n) => ({
+      entryId: n.entryId,
+      semanticHash: n.semanticHash,
+    })),
   };
 
   const hash = createHash('sha256')
@@ -187,10 +201,13 @@ export function stableStringify(obj: unknown): string {
       // Sort object keys recursively
       return Object.keys(v as Record<string, unknown>)
         .sort()
-        .reduce((o, key) => {
-          o[key] = (v as Record<string, unknown>)[key];
-          return o;
-        }, {} as Record<string, unknown>);
+        .reduce(
+          (o, key) => {
+            o[key] = (v as Record<string, unknown>)[key];
+            return o;
+          },
+          {} as Record<string, unknown>,
+        );
     }
     if (Array.isArray(v)) {
       // NOTE: Arrays are expected to be normalized and deterministically ordered
@@ -210,21 +227,28 @@ export function stableStringify(obj: unknown): string {
 function sortObject<T extends Record<string, unknown>>(obj: T): T {
   const sorted = Object.keys(obj)
     .sort()
-    .reduce((acc, key) => {
-      const value = obj[key];
-      // Recursively sort nested objects
-      if (value && typeof value === 'object' && !Array.isArray(value) && value !== null) {
-        acc[key] = sortObject(value as Record<string, unknown>);
-      } 
-      // Sort arrays for determinism (e.g., literals arrays in PropType objects)
-      else if (Array.isArray(value)) {
-        acc[key] = [...value].sort();
-      } 
-      else {
-        acc[key] = value;
-      }
-      return acc;
-    }, {} as Record<string, unknown>);
+    .reduce(
+      (acc, key) => {
+        const value = obj[key];
+        // Recursively sort nested objects
+        if (
+          value &&
+          typeof value === 'object' &&
+          !Array.isArray(value) &&
+          value !== null
+        ) {
+          acc[key] = sortObject(value as Record<string, unknown>);
+        }
+        // Sort arrays for determinism (e.g., literals arrays in PropType objects)
+        else if (Array.isArray(value)) {
+          acc[key] = [...value].sort();
+        } else {
+          acc[key] = value;
+        }
+        return acc;
+      },
+      {} as Record<string, unknown>,
+    );
 
   return sorted as T;
 }

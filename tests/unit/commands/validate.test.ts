@@ -60,7 +60,9 @@ describe('validateBundles', () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors).toBe(1);
-    expect(result.messages).toContain('Invalid format: expected array of bundles');
+    expect(result.messages).toContain(
+      'Invalid format: expected array of bundles',
+    );
   });
 
   it('should detect invalid bundle type', () => {
@@ -78,7 +80,7 @@ describe('validateBundles', () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors).toBeGreaterThan(0);
-    expect(result.messages.some(m => m.includes('Invalid type'))).toBe(true);
+    expect(result.messages.some((m) => m.includes('Invalid type'))).toBe(true);
   });
 
   it('should detect invalid schemaVersion', () => {
@@ -96,7 +98,9 @@ describe('validateBundles', () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors).toBeGreaterThan(0);
-    expect(result.messages.some(m => m.includes('Invalid schemaVersion'))).toBe(true);
+    expect(
+      result.messages.some((m) => m.includes('Invalid schemaVersion')),
+    ).toBe(true);
   });
 
   it('should detect missing entryId', () => {
@@ -114,7 +118,9 @@ describe('validateBundles', () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors).toBeGreaterThan(0);
-    expect(result.messages.some(m => m.includes('Missing entryId'))).toBe(true);
+    expect(result.messages.some((m) => m.includes('Missing entryId'))).toBe(
+      true,
+    );
   });
 
   it('should detect invalid graph structure', () => {
@@ -132,7 +138,9 @@ describe('validateBundles', () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors).toBeGreaterThan(0);
-    expect(result.messages.some(m => m.includes('Invalid graph structure'))).toBe(true);
+    expect(
+      result.messages.some((m) => m.includes('Invalid graph structure')),
+    ).toBe(true);
   });
 
   it('should detect invalid meta structure', () => {
@@ -150,7 +158,9 @@ describe('validateBundles', () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors).toBeGreaterThan(0);
-    expect(result.messages.some(m => m.includes('Invalid meta structure'))).toBe(true);
+    expect(
+      result.messages.some((m) => m.includes('Invalid meta structure')),
+    ).toBe(true);
   });
 
   it('should detect invalid contract type in nodes', () => {
@@ -179,7 +189,9 @@ describe('validateBundles', () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors).toBeGreaterThan(0);
-    expect(result.messages.some(m => m.includes('invalid contract type'))).toBe(true);
+    expect(
+      result.messages.some((m) => m.includes('invalid contract type')),
+    ).toBe(true);
   });
 
   it('should warn about unexpected contract version', () => {
@@ -207,7 +219,9 @@ describe('validateBundles', () => {
     const result = validateBundles(bundles);
 
     expect(result.warnings).toBeGreaterThan(0);
-    expect(result.messages.some(m => m.includes('unexpected contract version'))).toBe(true);
+    expect(
+      result.messages.some((m) => m.includes('unexpected contract version')),
+    ).toBe(true);
   });
 
   it('should warn about unexpected bundleHash format', () => {
@@ -225,7 +239,11 @@ describe('validateBundles', () => {
     const result = validateBundles(bundles);
 
     expect(result.warnings).toBeGreaterThan(0);
-    expect(result.messages.some(m => m.includes('bundleHash has unexpected format'))).toBe(true);
+    expect(
+      result.messages.some((m) =>
+        m.includes('bundleHash has unexpected format'),
+      ),
+    ).toBe(true);
   });
 
   it('should count nodes and edges correctly', () => {
@@ -234,8 +252,14 @@ describe('validateBundles', () => {
         entryId: 'test1',
         graph: {
           nodes: [
-            { entryId: 'a', contract: { type: 'UIFContract', schemaVersion: '0.4' } },
-            { entryId: 'b', contract: { type: 'UIFContract', schemaVersion: '0.4' } },
+            {
+              entryId: 'a',
+              contract: { type: 'UIFContract', schemaVersion: '0.4' },
+            },
+            {
+              entryId: 'b',
+              contract: { type: 'UIFContract', schemaVersion: '0.4' },
+            },
           ],
           edges: [['a', 'b']],
         },
@@ -244,7 +268,10 @@ describe('validateBundles', () => {
         entryId: 'test2',
         graph: {
           nodes: [
-            { entryId: 'c', contract: { type: 'UIFContract', schemaVersion: '0.4' } },
+            {
+              entryId: 'c',
+              contract: { type: 'UIFContract', schemaVersion: '0.4' },
+            },
           ],
           edges: [],
         },
@@ -272,9 +299,7 @@ describe('multiFileValidate', () => {
     const mockIndex = {
       type: 'LogicStampIndex',
       schemaVersion: '0.2',
-      folders: [
-        { path: 'src', contextFile: 'src/context.json', bundles: 1 },
-      ],
+      folders: [{ path: 'src', contextFile: 'src/context.json', bundles: 1 }],
     };
 
     const mockBundles = [createValidBundle({ entryId: 'src/App.tsx' })];
@@ -299,14 +324,17 @@ describe('multiFileValidate', () => {
   });
 
   it('should handle invalid index file type', async () => {
-    vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify({
-      type: 'WrongType',
-      schemaVersion: '0.2',
-      folders: [],
-    }));
+    vi.mocked(fs.readFile).mockResolvedValue(
+      JSON.stringify({
+        type: 'WrongType',
+        schemaVersion: '0.2',
+        folders: [],
+      }),
+    );
 
-    await expect(multiFileValidate('/project/context_main.json'))
-      .rejects.toThrow("Invalid index file: expected type 'LogicStampIndex'");
+    await expect(
+      multiFileValidate('/project/context_main.json'),
+    ).rejects.toThrow("Invalid index file: expected type 'LogicStampIndex'");
   });
 
   it('should handle file not found', async () => {
@@ -314,17 +342,16 @@ describe('multiFileValidate', () => {
     error.code = 'ENOENT';
     vi.mocked(fs.readFile).mockRejectedValue(error);
 
-    await expect(multiFileValidate('/project/context_main.json'))
-      .rejects.toThrow('File not found');
+    await expect(
+      multiFileValidate('/project/context_main.json'),
+    ).rejects.toThrow('File not found');
   });
 
   it('should mark folders as invalid when context file fails', async () => {
     const mockIndex = {
       type: 'LogicStampIndex',
       schemaVersion: '0.2',
-      folders: [
-        { path: 'src', contextFile: 'src/context.json', bundles: 1 },
-      ],
+      folders: [{ path: 'src', contextFile: 'src/context.json', bundles: 1 }],
     };
 
     vi.mocked(fs.readFile).mockImplementation(async (path) => {
@@ -356,7 +383,7 @@ describe('multiFileValidate', () => {
     await multiFileValidate('/project/context_main.json');
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('schema version 0.1')
+      expect.stringContaining('schema version 0.1'),
     );
   });
 
@@ -374,7 +401,7 @@ describe('multiFileValidate', () => {
     await multiFileValidate('/project/context_main.json');
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Unknown schema version')
+      expect.stringContaining('Unknown schema version'),
     );
   });
 });
@@ -423,7 +450,7 @@ describe('validateCommand', () => {
 
     expect(exitCode).toBe(0);
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Valid context file')
+      expect.stringContaining('Valid context file'),
     );
   });
 
@@ -454,7 +481,7 @@ describe('validateCommand', () => {
 
     expect(exitCode).toBe(1);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('File not found')
+      expect.stringContaining('File not found'),
     );
   });
 
@@ -465,7 +492,7 @@ describe('validateCommand', () => {
 
     expect(exitCode).toBe(1);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid JSON')
+      expect.stringContaining('Invalid JSON'),
     );
   });
 
@@ -476,7 +503,7 @@ describe('validateCommand', () => {
 
     expect(exitCode).toBe(1);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('expected array of bundles')
+      expect.stringContaining('expected array of bundles'),
     );
   });
 
@@ -514,9 +541,7 @@ describe('validateCommand', () => {
     const mockIndex = {
       type: 'LogicStampIndex',
       schemaVersion: '0.2',
-      folders: [
-        { path: 'src', contextFile: 'src/context.json', bundles: 1 },
-      ],
+      folders: [{ path: 'src', contextFile: 'src/context.json', bundles: 1 }],
     };
 
     const mockBundles = [createValidBundle({ entryId: 'src/App.tsx' })];
@@ -536,7 +561,7 @@ describe('validateCommand', () => {
 
     expect(exitCode).toBe(0);
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Validating all context files')
+      expect.stringContaining('Validating all context files'),
     );
   });
 });

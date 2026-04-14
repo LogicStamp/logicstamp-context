@@ -46,14 +46,25 @@ describe('securityScanCommand', () => {
 
     // Default mock implementations
     vi.mocked(fsx.globFiles).mockResolvedValue(['src/app.ts', 'src/config.ts']);
-    vi.mocked(fsx.readFileWithText).mockResolvedValue({ text: 'const x = 1;', bom: false });
+    vi.mocked(fsx.readFileWithText).mockResolvedValue({
+      text: 'const x = 1;',
+      bom: false,
+    });
     vi.mocked(secretDetector.scanFileForSecrets).mockReturnValue([]);
-    vi.mocked(secretDetector.filterFalsePositives).mockImplementation((matches) => matches);
+    vi.mocked(secretDetector.filterFalsePositives).mockImplementation(
+      (matches) => matches,
+    );
     vi.mocked(fs.mkdir).mockResolvedValue(undefined);
     vi.mocked(fs.writeFile).mockResolvedValue(undefined);
     vi.mocked(fs.stat).mockResolvedValue({ size: 100 } as any);
-    vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({ added: false, created: false });
-    vi.mocked(gitignore.ensurePatternInGitignore).mockResolvedValue({ added: false, created: false });
+    vi.mocked(gitignore.ensureGitignorePatterns).mockResolvedValue({
+      added: false,
+      created: false,
+    });
+    vi.mocked(gitignore.ensurePatternInGitignore).mockResolvedValue({
+      added: false,
+      created: false,
+    });
   });
 
   afterEach(() => {
@@ -123,7 +134,7 @@ describe('securityScanCommand', () => {
     expect(fs.writeFile).toHaveBeenCalledWith(
       expect.stringContaining('report.json'),
       expect.any(String),
-      'utf8'
+      'utf8',
     );
   });
 
@@ -134,7 +145,7 @@ describe('securityScanCommand', () => {
 
     expect(fsx.readFileWithText).not.toHaveBeenCalled();
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('file too large')
+      expect.stringContaining('file too large'),
     );
   });
 
@@ -167,7 +178,7 @@ describe('securityScanCommand', () => {
 
     // The warning is logged as a single string
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringMatching(/Skipped.*Binary file/)
+      expect.stringMatching(/Skipped.*Binary file/),
     );
     expect(result?.secretsFound).toBe(false);
   });
@@ -188,12 +199,14 @@ describe('securityScanCommand', () => {
   });
 
   it('should handle gitignore update errors gracefully', async () => {
-    vi.mocked(gitignore.ensureGitignorePatterns).mockRejectedValue(new Error('No permission'));
+    vi.mocked(gitignore.ensureGitignorePatterns).mockRejectedValue(
+      new Error('No permission'),
+    );
 
     const result = await securityScanCommand({ noExit: true });
 
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Could not update .gitignore')
+      expect.stringContaining('Could not update .gitignore'),
     );
     // Should still complete successfully
     expect(result?.secretsFound).toBe(false);
@@ -203,7 +216,7 @@ describe('securityScanCommand', () => {
     await securityScanCommand({ quiet: true, noExit: true });
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringMatching(/^\{.*filesScanned.*\}$/)
+      expect.stringMatching(/^\{.*filesScanned.*\}$/),
     );
   });
 
@@ -211,18 +224,19 @@ describe('securityScanCommand', () => {
     await securityScanCommand({ noExit: true });
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Scanning for secrets')
+      expect.stringContaining('Scanning for secrets'),
     );
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Scanning')
+      expect.stringContaining('Scanning'),
     );
   });
 
   it('should throw error when report cannot be written', async () => {
     vi.mocked(fs.writeFile).mockRejectedValue(new Error('Disk full'));
 
-    await expect(securityScanCommand({ noExit: true }))
-      .rejects.toThrow('Failed to write security report');
+    await expect(securityScanCommand({ noExit: true })).rejects.toThrow(
+      'Failed to write security report',
+    );
   });
 
   it('should filter false positives from matches', async () => {
@@ -266,7 +280,7 @@ describe('securityHardResetCommand', () => {
 
     expect(fs.unlink).toHaveBeenCalled();
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Reset complete')
+      expect.stringContaining('Reset complete'),
     );
   });
 
@@ -278,7 +292,7 @@ describe('securityHardResetCommand', () => {
     await securityHardResetCommand({ force: true });
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining("No report file to reset")
+      expect.stringContaining('No report file to reset'),
     );
   });
 
@@ -287,8 +301,9 @@ describe('securityHardResetCommand', () => {
     error.code = 'EACCES';
     vi.mocked(fs.unlink).mockRejectedValue(error);
 
-    await expect(securityHardResetCommand({ force: true }))
-      .rejects.toThrow('Failed to delete report file');
+    await expect(securityHardResetCommand({ force: true })).rejects.toThrow(
+      'Failed to delete report file',
+    );
   });
 
   it('should not delete when user declines prompt', async () => {
@@ -297,7 +312,7 @@ describe('securityHardResetCommand', () => {
 
     expect(fs.unlink).not.toHaveBeenCalled();
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Reset cancelled')
+      expect.stringContaining('Reset cancelled'),
     );
     expect(exitCode).toBe(0);
   });

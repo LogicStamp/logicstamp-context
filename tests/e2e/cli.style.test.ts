@@ -34,7 +34,7 @@ describe('CLI Style Command Tests', () => {
       const outDir = join(outputPath, 'basic-style');
 
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context style ${fixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context style ${fixturesPath} --out ${outDir}`,
       );
 
       // Verify output messages
@@ -78,20 +78,20 @@ describe('CLI Style Command Tests', () => {
 
       // Generate with style command
       await execAsync(
-        `node dist/cli/stamp.js context style ${fixturesPath} --out ${styleDir}`
+        `node dist/cli/stamp.js context style ${fixturesPath} --out ${styleDir}`,
       );
 
       // Generate with --include-style flag
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --include-style --out ${includeStyleDir}`
+        `node dist/cli/stamp.js context ${fixturesPath} --include-style --out ${includeStyleDir}`,
       );
 
       // Read both outputs
       const styleIndex = JSON.parse(
-        await readFile(join(styleDir, 'context_main.json'), 'utf-8')
+        await readFile(join(styleDir, 'context_main.json'), 'utf-8'),
       );
       const includeStyleIndex = JSON.parse(
-        await readFile(join(includeStyleDir, 'context_main.json'), 'utf-8')
+        await readFile(join(includeStyleDir, 'context_main.json'), 'utf-8'),
       );
 
       // Both should have folders
@@ -100,18 +100,28 @@ describe('CLI Style Command Tests', () => {
 
       // Read first folder's bundles from both
       const styleBundles = JSON.parse(
-        await readFile(join(styleDir, styleIndex.folders[0].contextFile), 'utf-8')
+        await readFile(
+          join(styleDir, styleIndex.folders[0].contextFile),
+          'utf-8',
+        ),
       );
       const includeStyleBundles = JSON.parse(
-        await readFile(join(includeStyleDir, includeStyleIndex.folders[0].contextFile), 'utf-8')
+        await readFile(
+          join(includeStyleDir, includeStyleIndex.folders[0].contextFile),
+          'utf-8',
+        ),
       );
 
       // Both should have style metadata in nodes
       const hasStyleInStyleCmd = styleBundles.some((bundle: any) =>
-        bundle.graph.nodes.some((node: any) => node.contract?.style !== undefined)
+        bundle.graph.nodes.some(
+          (node: any) => node.contract?.style !== undefined,
+        ),
       );
       const hasStyleInIncludeFlag = includeStyleBundles.some((bundle: any) =>
-        bundle.graph.nodes.some((node: any) => node.contract?.style !== undefined)
+        bundle.graph.nodes.some(
+          (node: any) => node.contract?.style !== undefined,
+        ),
       );
 
       expect(hasStyleInStyleCmd).toBe(true);
@@ -123,7 +133,7 @@ describe('CLI Style Command Tests', () => {
 
       // Run with fixtures path explicitly provided
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context style ${fixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context style ${fixturesPath} --out ${outDir}`,
       );
 
       expect(stdout).toContain('context files written successfully');
@@ -143,12 +153,12 @@ describe('CLI Style Command Tests', () => {
       const outDir = join(outputPath, 'style-fields');
 
       await execAsync(
-        `node dist/cli/stamp.js context style ${fixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context style ${fixturesPath} --out ${outDir}`,
       );
 
       // Read all bundles from all folders
       const mainIndex = JSON.parse(
-        await readFile(join(outDir, 'context_main.json'), 'utf-8')
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
       );
 
       let foundStyleMetadata = false;
@@ -194,12 +204,12 @@ describe('CLI Style Command Tests', () => {
       const outDir = join(outputPath, 'tailwind-check');
 
       await execAsync(
-        `node dist/cli/stamp.js context style ${fixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context style ${fixturesPath} --out ${outDir}`,
       );
 
       // Read all bundles
       const mainIndex = JSON.parse(
-        await readFile(join(outDir, 'context_main.json'), 'utf-8')
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
       );
 
       let foundTailwindClasses = false;
@@ -232,12 +242,12 @@ describe('CLI Style Command Tests', () => {
       const outDir = join(outputPath, 'layout-check');
 
       await execAsync(
-        `node dist/cli/stamp.js context style ${fixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context style ${fixturesPath} --out ${outDir}`,
       );
 
       // Read all bundles
       const mainIndex = JSON.parse(
-        await readFile(join(outDir, 'context_main.json'), 'utf-8')
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
       );
 
       let foundLayoutInfo = false;
@@ -251,7 +261,12 @@ describe('CLI Style Command Tests', () => {
             if (node.contract?.style?.layout) {
               const layout = node.contract.style.layout;
               // Check if any layout properties are present
-              if (layout.type || layout.cols || layout.hasHeroPattern || layout.hasFeatureCards) {
+              if (
+                layout.type ||
+                layout.cols ||
+                layout.hasHeroPattern ||
+                layout.hasFeatureCards
+              ) {
                 foundLayoutInfo = true;
                 break;
               }
@@ -272,14 +287,14 @@ describe('CLI Style Command Tests', () => {
       const outDir = join(outputPath, 'style-with-depth');
 
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context style ${fixturesPath} --depth 2 --out ${outDir}`
+        `node dist/cli/stamp.js context style ${fixturesPath} --depth 2 --out ${outDir}`,
       );
 
       expect(stdout).toContain('context files written successfully');
 
       // Verify output
       const mainIndex = JSON.parse(
-        await readFile(join(outDir, 'context_main.json'), 'utf-8')
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
       );
       expect(mainIndex.folders.length).toBeGreaterThan(0);
     }, 30000);
@@ -288,14 +303,14 @@ describe('CLI Style Command Tests', () => {
       const outDir = join(outputPath, 'style-with-code');
 
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context style ${fixturesPath} --include-code full --out ${outDir}`
+        `node dist/cli/stamp.js context style ${fixturesPath} --include-code full --out ${outDir}`,
       );
 
       expect(stdout).toContain('context files written successfully');
 
       // Verify bundles were created successfully
       const mainIndex = JSON.parse(
-        await readFile(join(outDir, 'context_main.json'), 'utf-8')
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
       );
 
       // Just verify we got bundles - source code inclusion is tested in other test files
@@ -306,14 +321,14 @@ describe('CLI Style Command Tests', () => {
       const outDir = join(outputPath, 'style-with-profile');
 
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context style ${fixturesPath} --profile llm-safe --out ${outDir}`
+        `node dist/cli/stamp.js context style ${fixturesPath} --profile llm-safe --out ${outDir}`,
       );
 
       expect(stdout).toContain('context files written successfully');
 
       // Verify output
       const mainIndex = JSON.parse(
-        await readFile(join(outDir, 'context_main.json'), 'utf-8')
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
       );
       expect(mainIndex.folders.length).toBeGreaterThan(0);
     }, 30000);
@@ -322,7 +337,7 @@ describe('CLI Style Command Tests', () => {
       const outDir = join(outputPath, 'style-quiet');
 
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context style ${fixturesPath} --quiet --out ${outDir}`
+        `node dist/cli/stamp.js context style ${fixturesPath} --quiet --out ${outDir}`,
       );
 
       // In quiet mode, output should be minimal or JSON only
@@ -331,7 +346,7 @@ describe('CLI Style Command Tests', () => {
 
     it('should work with --stats flag', async () => {
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context style ${fixturesPath} --stats`
+        `node dist/cli/stamp.js context style ${fixturesPath} --stats`,
       );
 
       // Parse JSON output (last line)
@@ -350,14 +365,14 @@ describe('CLI Style Command Tests', () => {
       const outDir = join(outputPath, 'style-multi-flags');
 
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context style ${fixturesPath} --depth 2 --include-code header --out ${outDir}`
+        `node dist/cli/stamp.js context style ${fixturesPath} --depth 2 --include-code header --out ${outDir}`,
       );
 
       expect(stdout).toContain('context files written successfully');
 
       // Verify bundles have style metadata
       const mainIndex = JSON.parse(
-        await readFile(join(outDir, 'context_main.json'), 'utf-8')
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
       );
 
       const contextPath = join(outDir, mainIndex.folders[0].contextFile);
@@ -365,7 +380,7 @@ describe('CLI Style Command Tests', () => {
 
       // Check for style metadata
       const hasStyle = bundles.some((bundle: any) =>
-        bundle.graph.nodes.some((node: any) => node.contract?.style)
+        bundle.graph.nodes.some((node: any) => node.contract?.style),
       );
 
       expect(hasStyle).toBe(true);
@@ -375,7 +390,9 @@ describe('CLI Style Command Tests', () => {
 
   describe('Style command help and documentation', () => {
     it('should display help with --help flag', async () => {
-      const { stdout } = await execAsync('node dist/cli/stamp.js context style --help');
+      const { stdout } = await execAsync(
+        'node dist/cli/stamp.js context style --help',
+      );
 
       expect(stdout).toContain('Stamp Context Style');
       expect(stdout).toContain('Compile context with style metadata');
@@ -387,7 +404,9 @@ describe('CLI Style Command Tests', () => {
     }, 30000);
 
     it('should mention style command in main context help', async () => {
-      const { stdout } = await execAsync('node dist/cli/stamp.js context --help');
+      const { stdout } = await execAsync(
+        'node dist/cli/stamp.js context --help',
+      );
 
       expect(stdout).toContain('style');
       expect(stdout).toContain('--include-style');
@@ -399,7 +418,7 @@ describe('CLI Style Command Tests', () => {
       const outDir = join(outputPath, 'style-tokens');
 
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context style ${fixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context style ${fixturesPath} --out ${outDir}`,
       );
 
       // Verify token count is shown (simplified output)
@@ -427,7 +446,7 @@ describe('CLI Style Command Tests', () => {
     it('should handle invalid flags gracefully', async () => {
       try {
         await execAsync(
-          `node dist/cli/stamp.js context style ${fixturesPath} --invalid-flag-xyz`
+          `node dist/cli/stamp.js context style ${fixturesPath} --invalid-flag-xyz`,
         );
         expect.fail('Should have thrown an error');
       } catch (error: any) {
@@ -443,12 +462,12 @@ describe('CLI Style Command Tests', () => {
     it('should respect .stampignore and exclude ignored files', async () => {
       const testDir = join(outputPath, 'style-stampignore-test');
       await mkdir(testDir, { recursive: true });
-      
+
       // Copy fixture contents to test directory
       const fixturesPath = join(process.cwd(), 'tests/fixtures/simple-app');
       const testFixturesPath = join(testDir, 'simple-app');
       await cp(fixturesPath, testFixturesPath, { recursive: true });
-      
+
       const outDir = join(testDir, 'output');
 
       // Create .stampignore to ignore a specific file
@@ -457,12 +476,12 @@ describe('CLI Style Command Tests', () => {
         stampignorePath,
         JSON.stringify({
           ignore: ['src/components/Button.tsx'],
-        })
+        }),
       );
 
       // Run context style command
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context style ${testFixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context style ${testFixturesPath} --out ${outDir}`,
       );
 
       // Should mention excluded files
@@ -482,10 +501,13 @@ describe('CLI Style Command Tests', () => {
       for (const folder of index.folders) {
         const contextPath = join(outDir, folder.contextFile);
         const bundles = JSON.parse(await readFile(contextPath, 'utf-8'));
-        
+
         for (const bundle of bundles) {
           for (const node of bundle.graph.nodes) {
-            if (node.contract?.entryId && node.contract.entryId.includes('Button.tsx')) {
+            if (
+              node.contract?.entryId &&
+              node.contract.entryId.includes('Button.tsx')
+            ) {
               foundButton = true;
               break;
             }
@@ -502,12 +524,12 @@ describe('CLI Style Command Tests', () => {
     it('should respect .stampignore with glob patterns in style command', async () => {
       const testDir = join(outputPath, 'style-stampignore-glob-test');
       await mkdir(testDir, { recursive: true });
-      
+
       // Copy fixture contents to test directory
       const fixturesPath = join(process.cwd(), 'tests/fixtures/simple-app');
       const testFixturesPath = join(testDir, 'simple-app');
       await cp(fixturesPath, testFixturesPath, { recursive: true });
-      
+
       const outDir = join(testDir, 'output');
 
       // Create .stampignore with glob pattern
@@ -516,12 +538,12 @@ describe('CLI Style Command Tests', () => {
         stampignorePath,
         JSON.stringify({
           ignore: ['src/components/**'],
-        })
+        }),
       );
 
       // Run context style command
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context style ${testFixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context style ${testFixturesPath} --out ${outDir}`,
       );
 
       // Should mention excluded files
@@ -541,11 +563,14 @@ describe('CLI Style Command Tests', () => {
       for (const folder of index.folders) {
         const contextPath = join(outDir, folder.contextFile);
         const bundles = JSON.parse(await readFile(contextPath, 'utf-8'));
-        
+
         for (const bundle of bundles) {
           for (const node of bundle.graph.nodes) {
             const entryId = node.contract?.entryId || '';
-            if (entryId.includes('components/Button.tsx') || entryId.includes('components/Card.tsx')) {
+            if (
+              entryId.includes('components/Button.tsx') ||
+              entryId.includes('components/Card.tsx')
+            ) {
               foundComponent = true;
               break;
             }
@@ -562,12 +587,12 @@ describe('CLI Style Command Tests', () => {
     it('should work without .stampignore in style command', async () => {
       const testDir = join(outputPath, 'style-no-stampignore-test');
       await mkdir(testDir, { recursive: true });
-      
+
       // Copy fixture contents to test directory
       const fixturesPath = join(process.cwd(), 'tests/fixtures/simple-app');
       const testFixturesPath = join(testDir, 'simple-app');
       await cp(fixturesPath, testFixturesPath, { recursive: true });
-      
+
       const outDir = join(testDir, 'output');
 
       // Ensure .stampignore does not exist
@@ -580,7 +605,7 @@ describe('CLI Style Command Tests', () => {
 
       // Run context style command
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context style ${testFixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context style ${testFixturesPath} --out ${outDir}`,
       );
 
       // Should not mention excluded files

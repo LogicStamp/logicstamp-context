@@ -23,7 +23,7 @@ describe('NestJS End-to-End Tests', () => {
       const controllerPath = join(fixturesPath, 'users/users.controller.ts');
       const ast = await extractFromFile(controllerPath);
 
-      expect(ast.imports.some(imp => imp.includes('@nestjs'))).toBe(true);
+      expect(ast.imports.some((imp) => imp.includes('@nestjs'))).toBe(true);
     });
 
     it('should extract controller base path', async () => {
@@ -41,10 +41,16 @@ describe('NestJS End-to-End Tests', () => {
 
       expect(ast.backend?.routes).toBeDefined();
       const routes = ast.backend!.routes!;
-      
-      expect(routes.some(r => r.method === 'GET' && r.path === '')).toBe(true);
-      expect(routes.some(r => r.method === 'POST' && r.path === '')).toBe(true);
-      expect(routes.some(r => r.method === 'GET' && r.path === ':id')).toBe(true);
+
+      expect(routes.some((r) => r.method === 'GET' && r.path === '')).toBe(
+        true,
+      );
+      expect(routes.some((r) => r.method === 'POST' && r.path === '')).toBe(
+        true,
+      );
+      expect(routes.some((r) => r.method === 'GET' && r.path === ':id')).toBe(
+        true,
+      );
     });
 
     it('should extract method parameters and return types', async () => {
@@ -53,10 +59,10 @@ describe('NestJS End-to-End Tests', () => {
 
       expect(ast.backend?.routes).toBeDefined();
       const routes = ast.backend!.routes!;
-      
+
       // Check that routes have handlers
       expect(routes.length).toBeGreaterThan(0);
-      const routeWithHandler = routes.find(r => r.handler);
+      const routeWithHandler = routes.find((r) => r.handler);
       expect(routeWithHandler).toBeDefined();
     });
 
@@ -68,8 +74,12 @@ describe('NestJS End-to-End Tests', () => {
       expect(langSpecific?.annotations).toBeDefined();
       if (langSpecific?.annotations) {
         expect(langSpecific.annotations).toContain('@Controller');
-        expect(langSpecific.annotations.some(a => a.includes('@Get'))).toBe(true);
-        expect(langSpecific.annotations.some(a => a.includes('@Post'))).toBe(true);
+        expect(langSpecific.annotations.some((a) => a.includes('@Get'))).toBe(
+          true,
+        );
+        expect(langSpecific.annotations.some((a) => a.includes('@Post'))).toBe(
+          true,
+        );
       }
     });
 
@@ -205,13 +215,13 @@ describe('NestJS End-to-End Tests', () => {
 
       const manifest = buildDependencyGraph(contracts);
 
-      const controllerFiles = Object.values(manifest.components).filter(c => 
-        c.entryId.includes('controller')
+      const controllerFiles = Object.values(manifest.components).filter((c) =>
+        c.entryId.includes('controller'),
       );
-      const serviceFiles = Object.values(manifest.components).filter(c => 
-        c.entryId.includes('service')
+      const serviceFiles = Object.values(manifest.components).filter((c) =>
+        c.entryId.includes('service'),
       );
-      
+
       expect(controllerFiles.length).toBeGreaterThan(0);
       expect(serviceFiles.length).toBeGreaterThan(0);
     });

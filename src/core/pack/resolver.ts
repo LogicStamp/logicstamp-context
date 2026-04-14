@@ -11,7 +11,7 @@ import type { ProjectManifest, ComponentNode } from '../manifest.js';
  */
 export function resolveKey(
   manifest: ProjectManifest,
-  input: string
+  input: string,
 ): string | null {
   const normalized = normalizeEntryId(input);
 
@@ -23,7 +23,10 @@ export function resolveKey(
   // Try to find by normalized key match
   const entries = Object.entries(manifest.components);
   for (const [key, node] of entries) {
-    if (normalizeEntryId(key) === normalized || normalizeEntryId(node.entryId) === normalized) {
+    if (
+      normalizeEntryId(key) === normalized ||
+      normalizeEntryId(node.entryId) === normalized
+    ) {
       return key; // Return the manifest key, not the node's entryId
     }
   }
@@ -32,8 +35,14 @@ export function resolveKey(
   // Build name → [keys] index for ambiguous cases
   const nameMatches: string[] = [];
   for (const [key] of entries) {
-    const fileName = key.split(/[/\\]/).pop()?.replace(/\.(tsx?|jsx?)$/, '');
-    if (fileName === input || fileName === input.replace(/\.(tsx?|jsx?)$/, '')) {
+    const fileName = key
+      .split(/[/\\]/)
+      .pop()
+      ?.replace(/\.(tsx?|jsx?)$/, '');
+    if (
+      fileName === input ||
+      fileName === input.replace(/\.(tsx?|jsx?)$/, '')
+    ) {
       nameMatches.push(key);
     }
   }
@@ -54,7 +63,7 @@ export function resolveKey(
  */
 export function findComponentByName(
   manifest: ProjectManifest,
-  nameOrPath: string
+  nameOrPath: string,
 ): ComponentNode | null {
   const key = resolveKey(manifest, nameOrPath);
   return key ? manifest.components[key] : null;
@@ -68,7 +77,7 @@ export function findComponentByName(
 export function resolveDependency(
   manifest: ProjectManifest,
   depName: string,
-  parentId: string
+  parentId: string,
 ): string | null {
   // parentId is a manifest key (canonical identifier)
 
@@ -100,4 +109,3 @@ export function resolveDependency(
 
   return null;
 }
-

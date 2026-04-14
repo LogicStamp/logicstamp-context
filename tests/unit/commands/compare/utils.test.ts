@@ -17,7 +17,9 @@ vi.mock('node:fs/promises');
 // Mock tokens module
 vi.mock('../../../../src/utils/tokens.js', () => ({
   estimateGPT4Tokens: vi.fn((text: string) => Promise.resolve(text.length)),
-  estimateClaudeTokens: vi.fn((text: string) => Promise.resolve(Math.ceil(text.length * 1.2))),
+  estimateClaudeTokens: vi.fn((text: string) =>
+    Promise.resolve(Math.ceil(text.length * 1.2)),
+  ),
 }));
 
 // Mock debug module
@@ -28,7 +30,11 @@ vi.mock('../../../../src/utils/debug.js', () => ({
 /**
  * Helper to create a minimal valid bundle for testing
  */
-function createBundle(entryId: string, semanticHash: string, overrides: Record<string, any> = {}): LogicStampBundle {
+function createBundle(
+  entryId: string,
+  semanticHash: string,
+  overrides: Record<string, any> = {},
+): LogicStampBundle {
   return {
     type: 'LogicStampBundle',
     schemaVersion: '0.1',
@@ -71,7 +77,9 @@ function createBundle(entryId: string, semanticHash: string, overrides: Record<s
 
 describe('calculateTokens', () => {
   it('should return token counts for bundles', async () => {
-    const { estimateGPT4Tokens, estimateClaudeTokens } = await import('../../../../src/utils/tokens.js');
+    const { estimateGPT4Tokens, estimateClaudeTokens } = await import(
+      '../../../../src/utils/tokens.js'
+    );
     vi.mocked(estimateGPT4Tokens).mockResolvedValue(1000);
     vi.mocked(estimateClaudeTokens).mockResolvedValue(1200);
 
@@ -84,7 +92,9 @@ describe('calculateTokens', () => {
   });
 
   it('should handle empty bundles', async () => {
-    const { estimateGPT4Tokens, estimateClaudeTokens } = await import('../../../../src/utils/tokens.js');
+    const { estimateGPT4Tokens, estimateClaudeTokens } = await import(
+      '../../../../src/utils/tokens.js'
+    );
     vi.mocked(estimateGPT4Tokens).mockResolvedValue(0);
     vi.mocked(estimateClaudeTokens).mockResolvedValue(0);
 
@@ -113,9 +123,7 @@ describe('loadIndex', () => {
     const mockIndex = {
       type: 'LogicStampIndex',
       schemaVersion: '0.2',
-      folders: [
-        { path: 'src', contextFile: 'src/context.json', bundles: 1 },
-      ],
+      folders: [{ path: 'src', contextFile: 'src/context.json', bundles: 1 }],
     };
 
     vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockIndex));
@@ -132,25 +140,31 @@ describe('loadIndex', () => {
     error.code = 'ENOENT';
     vi.mocked(fs.readFile).mockRejectedValue(error);
 
-    await expect(loadIndex('/nonexistent/context_main.json')).rejects.toThrow('File not found');
+    await expect(loadIndex('/nonexistent/context_main.json')).rejects.toThrow(
+      'File not found',
+    );
   });
 
   it('should throw when index type is invalid', async () => {
-    vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify({
-      type: 'InvalidType',
-      schemaVersion: '0.2',
-      folders: [],
-    }));
+    vi.mocked(fs.readFile).mockResolvedValue(
+      JSON.stringify({
+        type: 'InvalidType',
+        schemaVersion: '0.2',
+        folders: [],
+      }),
+    );
 
     await expect(loadIndex('/path/to/context_main.json')).rejects.toThrow(
-      "Invalid index file: expected type 'LogicStampIndex'"
+      "Invalid index file: expected type 'LogicStampIndex'",
     );
   });
 
   it('should throw when JSON is invalid', async () => {
     vi.mocked(fs.readFile).mockResolvedValue('invalid json');
 
-    await expect(loadIndex('/path/to/context_main.json')).rejects.toThrow('Failed to load index');
+    await expect(loadIndex('/path/to/context_main.json')).rejects.toThrow(
+      'Failed to load index',
+    );
   });
 
   it('should warn about legacy schema version 0.1', async () => {
@@ -165,7 +179,7 @@ describe('loadIndex', () => {
     await loadIndex('/path/to/context_main.json');
 
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('schema version 0.1')
+      expect.stringContaining('schema version 0.1'),
     );
   });
 
@@ -181,7 +195,7 @@ describe('loadIndex', () => {
     await loadIndex('/path/to/context_main.json');
 
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Unknown schema version')
+      expect.stringContaining('Unknown schema version'),
     );
   });
 });
@@ -200,9 +214,7 @@ describe('findOrphanedFiles', () => {
     const newIndex = {
       type: 'LogicStampIndex',
       schemaVersion: '0.2',
-      folders: [
-        { path: 'src', contextFile: 'src/context.json', bundles: 1 },
-      ],
+      folders: [{ path: 'src', contextFile: 'src/context.json', bundles: 1 }],
     };
 
     const mockContent = JSON.stringify([{ type: 'LogicStampBundle' }]);
@@ -218,7 +230,7 @@ describe('findOrphanedFiles', () => {
     const result = await findOrphanedFiles(
       oldIndex as any,
       newIndex as any,
-      '/project'
+      '/project',
     );
 
     expect(result).toContain('lib/context.json');
@@ -237,9 +249,7 @@ describe('findOrphanedFiles', () => {
     const newIndex = {
       type: 'LogicStampIndex',
       schemaVersion: '0.2',
-      folders: [
-        { path: 'src', contextFile: 'src/context.json', bundles: 1 },
-      ],
+      folders: [{ path: 'src', contextFile: 'src/context.json', bundles: 1 }],
     };
 
     const enoentError = new Error('ENOENT') as NodeJS.ErrnoException;
@@ -256,7 +266,7 @@ describe('findOrphanedFiles', () => {
     const result = await findOrphanedFiles(
       oldIndex as any,
       newIndex as any,
-      '/project'
+      '/project',
     );
 
     expect(result).not.toContain('lib/context.json');
@@ -267,17 +277,13 @@ describe('findOrphanedFiles', () => {
     const oldIndex = {
       type: 'LogicStampIndex',
       schemaVersion: '0.2',
-      folders: [
-        { path: 'src', contextFile: 'src/context.json', bundles: 1 },
-      ],
+      folders: [{ path: 'src', contextFile: 'src/context.json', bundles: 1 }],
     };
 
     const newIndex = {
       type: 'LogicStampIndex',
       schemaVersion: '0.2',
-      folders: [
-        { path: 'src', contextFile: 'src/context.json', bundles: 1 },
-      ],
+      folders: [{ path: 'src', contextFile: 'src/context.json', bundles: 1 }],
     };
 
     vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify([]));
@@ -285,7 +291,7 @@ describe('findOrphanedFiles', () => {
     const result = await findOrphanedFiles(
       oldIndex as any,
       newIndex as any,
-      '/project'
+      '/project',
     );
 
     expect(result).toHaveLength(0);

@@ -10,7 +10,10 @@
  */
 
 import { contextCommand, type ContextOptions } from './commands/context.js';
-import { compareCommand, type CompareOptions } from './commands/compare/index.js';
+import {
+  compareCommand,
+  type CompareOptions,
+} from './commands/compare/index.js';
 
 async function main() {
   const args = process.argv.slice(2);

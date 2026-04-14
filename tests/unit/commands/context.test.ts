@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { contextCommand, type ContextOptions } from '../../../src/cli/commands/context.js';
+import {
+  contextCommand,
+  type ContextOptions,
+} from '../../../src/cli/commands/context.js';
 import * as fsx from '../../../src/utils/fsx.js';
 import * as stampignore from '../../../src/utils/stampignore.js';
 import * as manifest from '../../../src/core/manifest.js';
@@ -18,7 +21,12 @@ vi.mock('../../../src/cli/commands/context/index.js');
 vi.mock('../../../src/cli/commands/validate.js');
 vi.mock('../../../src/cli/commands/context/watchMode/watchMode.js');
 vi.mock('../../../src/core/pack/index.js', () => ({
-  getAndResetSanitizeStats: vi.fn(() => ({ filesWithSecrets: 0, totalSecretsReplaced: 0, filesProcessed: [], securityReportLoaded: false })),
+  getAndResetSanitizeStats: vi.fn(() => ({
+    filesWithSecrets: 0,
+    totalSecretsReplaced: 0,
+    filesProcessed: [],
+    securityReportLoaded: false,
+  })),
 }));
 vi.mock('node:fs/promises', () => ({
   mkdir: vi.fn().mockResolvedValue(undefined),
@@ -53,12 +61,21 @@ describe('contextCommand', () => {
     vi.clearAllMocks();
 
     // Default mock implementations
-    vi.mocked(fsx.globFiles).mockResolvedValue(['src/App.tsx', 'src/Button.tsx']);
+    vi.mocked(fsx.globFiles).mockResolvedValue([
+      'src/App.tsx',
+      'src/Button.tsx',
+    ]);
     vi.mocked(stampignore.readStampignore).mockResolvedValue({ ignore: [] });
-    vi.mocked(stampignore.filterIgnoredFiles).mockImplementation((files) => files);
+    vi.mocked(stampignore.filterIgnoredFiles).mockImplementation(
+      (files) => files,
+    );
     vi.mocked(contextHelpers.buildContractsFromFiles).mockResolvedValue({
       contracts: [
-        { entryId: 'src/App.tsx', type: 'UIFContract', schemaVersion: '0.4' } as any,
+        {
+          entryId: 'src/App.tsx',
+          type: 'UIFContract',
+          schemaVersion: '0.4',
+        } as any,
       ],
       analyzed: 1,
       totalSourceSize: 1000,
@@ -167,7 +184,7 @@ describe('contextCommand', () => {
 
     expect(exitCode).toBe(1);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('No TypeScript modules found')
+      expect.stringContaining('No TypeScript modules found'),
     );
   });
 
@@ -182,7 +199,7 @@ describe('contextCommand', () => {
 
     expect(exitCode).toBe(1);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('No components found')
+      expect.stringContaining('No components found'),
     );
   });
 
@@ -193,7 +210,7 @@ describe('contextCommand', () => {
 
     expect(exitCode).toBe(1);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('No bundles could be compiled')
+      expect.stringContaining('No bundles could be compiled'),
     );
   });
 
@@ -212,7 +229,7 @@ describe('contextCommand', () => {
 
     expect(exitCode).toBe(1);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Validation failed')
+      expect.stringContaining('Validation failed'),
     );
   });
 
@@ -222,7 +239,7 @@ describe('contextCommand', () => {
     expect(contextHelpers.writeContextFiles).not.toHaveBeenCalled();
     expect(contextHelpers.writeMainIndex).not.toHaveBeenCalled();
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Dry run')
+      expect.stringContaining('Dry run'),
     );
   });
 
@@ -235,9 +252,7 @@ describe('contextCommand', () => {
 
     await contextCommand({ ...defaultOptions, stats: true });
 
-    expect(console.log).toHaveBeenCalledWith(
-      expect.stringMatching(/^\{.*\}$/)
-    );
+    expect(console.log).toHaveBeenCalledWith(expect.stringMatching(/^\{.*\}$/));
   });
 
   it('should be quiet when quiet flag is set', async () => {
@@ -245,8 +260,8 @@ describe('contextCommand', () => {
 
     // Check that informational logs were not called
     const logCalls = vi.mocked(console.log).mock.calls;
-    const scanningCalls = logCalls.filter(call =>
-      typeof call[0] === 'string' && call[0].includes('Scanning')
+    const scanningCalls = logCalls.filter(
+      (call) => typeof call[0] === 'string' && call[0].includes('Scanning'),
     );
     expect(scanningCalls).toHaveLength(0);
   });
@@ -266,7 +281,7 @@ describe('contextCommand', () => {
     await contextCommand({ ...defaultOptions, profile: 'llm-safe' });
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('llm-safe')
+      expect.stringContaining('llm-safe'),
     );
   });
 
@@ -274,7 +289,7 @@ describe('contextCommand', () => {
     await contextCommand({ ...defaultOptions, profile: 'ci-strict' });
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('ci-strict')
+      expect.stringContaining('ci-strict'),
     );
   });
 
@@ -289,7 +304,7 @@ describe('contextCommand', () => {
 
     expect(exitCode).toBe(1);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Strict missing mode')
+      expect.stringContaining('Strict missing mode'),
     );
   });
 
@@ -305,7 +320,7 @@ describe('contextCommand', () => {
     await contextCommand(defaultOptions);
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Secret sanitization')
+      expect.stringContaining('Secret sanitization'),
     );
   });
 
@@ -313,12 +328,14 @@ describe('contextCommand', () => {
     await contextCommand({ ...defaultOptions, entry: './custom/path' });
 
     expect(fsx.globFiles).toHaveBeenCalledWith(
-      expect.stringContaining('custom')
+      expect.stringContaining('custom'),
     );
   });
 
   it('should handle compare modes flag', async () => {
-    vi.mocked(contextHelpers.generateModeComparison).mockResolvedValue({} as any);
+    vi.mocked(contextHelpers.generateModeComparison).mockResolvedValue(
+      {} as any,
+    );
     vi.mocked(contextHelpers.displayModeComparison).mockResolvedValue();
 
     await contextCommand({ ...defaultOptions, compareModes: true });
@@ -333,7 +350,7 @@ describe('contextCommand', () => {
     await contextCommand({ ...defaultOptions, profile: 'watch-fast' });
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('watch-fast')
+      expect.stringContaining('watch-fast'),
     );
   });
 
@@ -341,7 +358,7 @@ describe('contextCommand', () => {
     await contextCommand({ ...defaultOptions, profile: 'llm-chat' });
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('llm-chat')
+      expect.stringContaining('llm-chat'),
     );
   });
 
@@ -357,19 +374,23 @@ describe('contextCommand', () => {
     await contextCommand({ ...defaultOptions, watch: true, stats: true });
 
     // Stats output should still be generated (early return)
-    expect(console.log).toHaveBeenCalledWith(
-      expect.stringMatching(/^\{.*\}$/)
-    );
+    expect(console.log).toHaveBeenCalledWith(expect.stringMatching(/^\{.*\}$/));
     // Watch mode should not be started
     expect(contextHelpers.initializeWatchCache).not.toHaveBeenCalled();
   });
 
   it('should return early with compareModes when watch and compareModes are both set', async () => {
     // When compareModes is true, the function returns early before watch mode check
-    vi.mocked(contextHelpers.generateModeComparison).mockResolvedValue({} as any);
+    vi.mocked(contextHelpers.generateModeComparison).mockResolvedValue(
+      {} as any,
+    );
     vi.mocked(contextHelpers.displayModeComparison).mockResolvedValue();
 
-    await contextCommand({ ...defaultOptions, watch: true, compareModes: true });
+    await contextCommand({
+      ...defaultOptions,
+      watch: true,
+      compareModes: true,
+    });
 
     // Compare modes should still be displayed (early return)
     expect(contextHelpers.generateModeComparison).toHaveBeenCalled();
@@ -392,7 +413,7 @@ describe('contextCommand', () => {
     await contextCommand(defaultOptions);
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('2 warning(s)')
+      expect.stringContaining('2 warning(s)'),
     );
   });
 
@@ -404,7 +425,12 @@ describe('contextCommand', () => {
     // When both compareModes and stats are set, comparison data is written to file
     // instead of being displayed. We can't easily mock writeFile in ESM, but we can
     // verify that displayModeComparison is NOT called.
-    await contextCommand({ ...defaultOptions, compareModes: true, stats: true, quiet: true });
+    await contextCommand({
+      ...defaultOptions,
+      compareModes: true,
+      stats: true,
+      quiet: true,
+    });
 
     expect(contextHelpers.generateModeComparison).toHaveBeenCalled();
     // Should not call displayModeComparison when stats is set (writes to file instead)
@@ -421,27 +447,35 @@ describe('contextCommand', () => {
       expect.any(String),
       expect.any(Object),
       expect.objectContaining({ depth: 5 }),
-      expect.any(String)
+      expect.any(String),
     );
   });
 
   it('should respect user-set includeCode via command line argv', async () => {
     process.argv = ['node', 'stamp', 'context', '--include-code', 'full'];
 
-    await contextCommand({ ...defaultOptions, profile: 'llm-safe', includeCode: 'full' });
+    await contextCommand({
+      ...defaultOptions,
+      profile: 'llm-safe',
+      includeCode: 'full',
+    });
 
     expect(pack.pack).toHaveBeenCalledWith(
       expect.any(String),
       expect.any(Object),
       expect.objectContaining({ includeCode: 'full' }),
-      expect.any(String)
+      expect.any(String),
     );
   });
 
   it('should pack multiple root components', async () => {
     vi.mocked(manifest.buildDependencyGraph).mockReturnValue({
       components: {},
-      graph: { roots: ['src/App.tsx', 'src/Button.tsx', 'src/Header.tsx'], nodes: {}, edges: {} },
+      graph: {
+        roots: ['src/App.tsx', 'src/Button.tsx', 'src/Header.tsx'],
+        nodes: {},
+        edges: {},
+      },
     } as any);
 
     await contextCommand(defaultOptions);
@@ -480,7 +514,7 @@ describe('contextCommand', () => {
 
     expect(pack.pack).toHaveBeenCalledTimes(2);
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to pack')
+      expect.stringContaining('Failed to pack'),
     );
     // Should still write files for successful bundles
     expect(contextHelpers.writeContextFiles).toHaveBeenCalled();
@@ -489,7 +523,11 @@ describe('contextCommand', () => {
   it('should sort bundles by entryId for deterministic output', async () => {
     vi.mocked(manifest.buildDependencyGraph).mockReturnValue({
       components: {},
-      graph: { roots: ['src/Zebra.tsx', 'src/Alpha.tsx'], nodes: {}, edges: {} },
+      graph: {
+        roots: ['src/Zebra.tsx', 'src/Alpha.tsx'],
+        nodes: {},
+        edges: {},
+      },
     } as any);
 
     const bundles: pack.LogicStampBundle[] = [];
@@ -512,7 +550,8 @@ describe('contextCommand', () => {
 
     // formatBundles should receive sorted bundles
     expect(contextHelpers.formatBundles).toHaveBeenCalled();
-    const formatBundlesCall = vi.mocked(contextHelpers.formatBundles).mock.calls[0];
+    const formatBundlesCall = vi.mocked(contextHelpers.formatBundles).mock
+      .calls[0];
     const passedBundles = formatBundlesCall[0];
     expect(passedBundles[0].entryId).toBe('src/Alpha.tsx');
     expect(passedBundles[1].entryId).toBe('src/Zebra.tsx');
@@ -524,7 +563,7 @@ describe('contextCommand', () => {
     expect(contextHelpers.buildContractsFromFiles).toHaveBeenCalledWith(
       expect.any(Array),
       expect.any(String),
-      expect.objectContaining({ includeStyle: true })
+      expect.objectContaining({ includeStyle: true }),
     );
   });
 
@@ -534,7 +573,7 @@ describe('contextCommand', () => {
     expect(contextHelpers.buildContractsFromFiles).toHaveBeenCalledWith(
       expect.any(Array),
       expect.any(String),
-      expect.objectContaining({ predictBehavior: true })
+      expect.objectContaining({ predictBehavior: true }),
     );
   });
 
@@ -547,7 +586,11 @@ describe('contextCommand', () => {
     vi.mocked(contextHelpers.initializeWatchCache).mockResolvedValue({} as any);
 
     // Watch mode with strictMissing - should NOT exit because watch mode continues
-    await contextCommand({ ...defaultOptions, strictMissing: true, watch: true });
+    await contextCommand({
+      ...defaultOptions,
+      strictMissing: true,
+      watch: true,
+    });
 
     // Should exit due to watch+stats/compareModes incompatibility check happening AFTER stats check
     // Actually the code checks watch incompatibility AFTER successful run, so this will pass
@@ -557,31 +600,45 @@ describe('contextCommand', () => {
   });
 
   it('should log excluded file count when stampignore filters files', async () => {
-    vi.mocked(fsx.globFiles).mockResolvedValue(['src/App.tsx', 'src/Button.tsx', 'src/Secret.tsx']);
+    vi.mocked(fsx.globFiles).mockResolvedValue([
+      'src/App.tsx',
+      'src/Button.tsx',
+      'src/Secret.tsx',
+    ]);
     vi.mocked(stampignore.readStampignore).mockResolvedValue({
       ignore: ['src/Secret.tsx'],
     });
-    vi.mocked(stampignore.filterIgnoredFiles).mockReturnValue(['src/App.tsx', 'src/Button.tsx']);
+    vi.mocked(stampignore.filterIgnoredFiles).mockReturnValue([
+      'src/App.tsx',
+      'src/Button.tsx',
+    ]);
 
     await contextCommand(defaultOptions);
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Excluded 1 file(s)')
+      expect.stringContaining('Excluded 1 file(s)'),
     );
   });
 
   it('should not log excluded files in quiet mode', async () => {
-    vi.mocked(fsx.globFiles).mockResolvedValue(['src/App.tsx', 'src/Button.tsx', 'src/Secret.tsx']);
+    vi.mocked(fsx.globFiles).mockResolvedValue([
+      'src/App.tsx',
+      'src/Button.tsx',
+      'src/Secret.tsx',
+    ]);
     vi.mocked(stampignore.readStampignore).mockResolvedValue({
       ignore: ['src/Secret.tsx'],
     });
-    vi.mocked(stampignore.filterIgnoredFiles).mockReturnValue(['src/App.tsx', 'src/Button.tsx']);
+    vi.mocked(stampignore.filterIgnoredFiles).mockReturnValue([
+      'src/App.tsx',
+      'src/Button.tsx',
+    ]);
 
     await contextCommand({ ...defaultOptions, quiet: true });
 
     const logCalls = vi.mocked(console.log).mock.calls;
-    const excludedCalls = logCalls.filter(call =>
-      typeof call[0] === 'string' && call[0].includes('Excluded')
+    const excludedCalls = logCalls.filter(
+      (call) => typeof call[0] === 'string' && call[0].includes('Excluded'),
     );
     expect(excludedCalls).toHaveLength(0);
   });
@@ -590,7 +647,7 @@ describe('contextCommand', () => {
     await contextCommand(defaultOptions);
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Found 2 files')
+      expect.stringContaining('Found 2 files'),
     );
   });
 
@@ -598,7 +655,7 @@ describe('contextCommand', () => {
     await contextCommand(defaultOptions);
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Analyzed 1 components')
+      expect.stringContaining('Analyzed 1 components'),
     );
   });
 
@@ -606,7 +663,7 @@ describe('contextCommand', () => {
     await contextCommand(defaultOptions);
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Validation passed')
+      expect.stringContaining('Validation passed'),
     );
   });
 
@@ -620,7 +677,7 @@ describe('contextCommand', () => {
     await contextCommand(defaultOptions);
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('6 context files written')
+      expect.stringContaining('6 context files written'),
     );
   });
 
@@ -636,7 +693,7 @@ describe('contextCommand', () => {
     await contextCommand(defaultOptions);
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('no secret patterns detected')
+      expect.stringContaining('no secret patterns detected'),
     );
   });
 
@@ -652,10 +709,10 @@ describe('contextCommand', () => {
     await contextCommand(defaultOptions);
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('Security scan skipped')
+      expect.stringContaining('Security scan skipped'),
     );
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringContaining('stamp init')
+      expect.stringContaining('stamp init'),
     );
   });
 
@@ -663,7 +720,7 @@ describe('contextCommand', () => {
     await contextCommand(defaultOptions);
 
     expect(console.log).toHaveBeenCalledWith(
-      expect.stringMatching(/Completed in \d+ms/)
+      expect.stringMatching(/Completed in \d+ms/),
     );
   });
 });

@@ -3,7 +3,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { compareCommand, compareFolderContext } from '../../../../src/cli/commands/compare/singleFile.js';
+import {
+  compareCommand,
+  compareFolderContext,
+} from '../../../../src/cli/commands/compare/singleFile.js';
 import * as fs from 'node:fs/promises';
 import type { LogicStampBundle } from '../../../../src/core/pack.js';
 
@@ -25,7 +28,11 @@ vi.mock('../../../../src/utils/debug.js', () => ({
 /**
  * Helper to create a minimal valid bundle for testing
  */
-function createBundle(entryId: string, semanticHash: string, overrides: Record<string, any> = {}): LogicStampBundle {
+function createBundle(
+  entryId: string,
+  semanticHash: string,
+  overrides: Record<string, any> = {},
+): LogicStampBundle {
   return {
     type: 'LogicStampBundle',
     schemaVersion: '0.1',
@@ -190,19 +197,23 @@ describe('compareCommand', () => {
     error.code = 'ENOENT';
     vi.mocked(fs.readFile).mockRejectedValue(error);
 
-    await expect(compareCommand({
-      oldFile: 'nonexistent.json',
-      newFile: 'new.json',
-    })).rejects.toThrow('File not found');
+    await expect(
+      compareCommand({
+        oldFile: 'nonexistent.json',
+        newFile: 'new.json',
+      }),
+    ).rejects.toThrow('File not found');
   });
 
   it('should throw error when JSON is invalid', async () => {
     vi.mocked(fs.readFile).mockResolvedValue('invalid json');
 
-    await expect(compareCommand({
-      oldFile: 'old.json',
-      newFile: 'new.json',
-    })).rejects.toThrow('Failed to parse context files');
+    await expect(
+      compareCommand({
+        oldFile: 'old.json',
+        newFile: 'new.json',
+      }),
+    ).rejects.toThrow('Failed to parse context files');
   });
 
   it('should output minimal in quiet mode for PASS', async () => {
@@ -232,10 +243,12 @@ describe('compareCommand', () => {
       throw error;
     });
 
-    await expect(compareCommand({
-      oldFile: 'old.json',
-      newFile: 'new.json',
-    })).rejects.toThrow('File not found');
+    await expect(
+      compareCommand({
+        oldFile: 'old.json',
+        newFile: 'new.json',
+      }),
+    ).rejects.toThrow('File not found');
   });
 
   describe('gitBaseline mode - hash-only change filtering', () => {
@@ -431,7 +444,13 @@ describe('compareCommand', () => {
                 type: 'UIFContract',
                 schemaVersion: '0.4',
                 semanticHash: 'uif:hash123',
-                composition: { variables: [], imports: [], hooks: [], functions: [], components: [] },
+                composition: {
+                  variables: [],
+                  imports: [],
+                  hooks: [],
+                  functions: [],
+                  components: [],
+                },
                 interface: { props: {}, emits: {} },
                 // No exports - should resolve to 'none'
               },
@@ -489,7 +508,7 @@ describe('compareFolderContext', () => {
       'new/context.json',
       false,
       false,
-      false
+      false,
     );
 
     expect(result.status).toBe('PASS');
@@ -505,7 +524,7 @@ describe('compareFolderContext', () => {
       'new/context.json',
       true,
       false,
-      false
+      false,
     );
 
     expect(result.status).toBe('PASS');
@@ -524,7 +543,7 @@ describe('compareFolderContext', () => {
       'new/context.json',
       true,
       true,
-      false
+      false,
     );
 
     expect(result.status).toBe('PASS');
@@ -548,7 +567,7 @@ describe('compareFolderContext', () => {
       'new/context.json',
       false,
       false,
-      true
+      true,
     );
 
     // Hash-only change should be ignored in git baseline mode
@@ -560,13 +579,9 @@ describe('compareFolderContext', () => {
     error.code = 'ENOENT';
     vi.mocked(fs.readFile).mockRejectedValue(error);
 
-    await expect(compareFolderContext(
-      'nonexistent.json',
-      'new.json',
-      false,
-      false,
-      false
-    )).rejects.toThrow('File not found');
+    await expect(
+      compareFolderContext('nonexistent.json', 'new.json', false, false, false),
+    ).rejects.toThrow('File not found');
   });
 
   it('should throw error when new file not found', async () => {
@@ -582,13 +597,9 @@ describe('compareFolderContext', () => {
       throw error;
     });
 
-    await expect(compareFolderContext(
-      'old.json',
-      'nonexistent.json',
-      false,
-      false,
-      false
-    )).rejects.toThrow('File not found');
+    await expect(
+      compareFolderContext('old.json', 'nonexistent.json', false, false, false),
+    ).rejects.toThrow('File not found');
   });
 });
 
@@ -622,7 +633,9 @@ describe('compareCommand - token stats display', () => {
       stats: true,
     });
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Token Stats'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Token Stats'),
+    );
     expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Old:'));
     expect(console.log).toHaveBeenCalledWith(expect.stringContaining('New:'));
   });
@@ -639,7 +652,9 @@ describe('compareCommand - token stats display', () => {
       quiet: true,
     });
 
-    expect(console.log).not.toHaveBeenCalledWith(expect.stringContaining('Token Stats'));
+    expect(console.log).not.toHaveBeenCalledWith(
+      expect.stringContaining('Token Stats'),
+    );
   });
 });
 
@@ -718,7 +733,11 @@ describe('compareCommand - delta type displays', () => {
                   components: [],
                 },
                 interface: {
-                  props: { label: 'string', disabled: 'boolean', variant: 'string' },
+                  props: {
+                    label: 'string',
+                    disabled: 'boolean',
+                    variant: 'string',
+                  },
                   emits: {},
                 },
                 exports: 'default',
@@ -919,8 +938,12 @@ describe('compareCommand - delta type displays', () => {
       newFile: 'new.json',
     });
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('apiSignature'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('parameters'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('apiSignature'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('parameters'),
+    );
   });
 
   it('should display apiSignature returnType changes', async () => {
@@ -1012,8 +1035,12 @@ describe('compareCommand - delta type displays', () => {
       newFile: 'new.json',
     });
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('apiSignature'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('returnType'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('apiSignature'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('returnType'),
+    );
   });
 
   it('should display apiSignature added', async () => {
@@ -1102,8 +1129,12 @@ describe('compareCommand - delta type displays', () => {
       newFile: 'new.json',
     });
 
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('apiSignature'));
-    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('Added API signature'));
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('apiSignature'),
+    );
+    expect(console.log).toHaveBeenCalledWith(
+      expect.stringContaining('Added API signature'),
+    );
   });
 
   it('should display state delta', async () => {
@@ -1620,9 +1651,11 @@ describe('compareCommand - delta type displays', () => {
     error.code = 'EACCES';
     vi.mocked(fs.readFile).mockRejectedValue(error);
 
-    await expect(compareCommand({
-      oldFile: 'old.json',
-      newFile: 'new.json',
-    })).rejects.toThrow('Permission denied');
+    await expect(
+      compareCommand({
+        oldFile: 'old.json',
+        newFile: 'new.json',
+      }),
+    ).rejects.toThrow('Permission denied');
   });
 });

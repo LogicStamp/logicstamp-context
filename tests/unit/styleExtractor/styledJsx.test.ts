@@ -121,4 +121,3 @@ describe('Styled JSX Extractor', () => {
     expect(result?.properties).toContain('padding');
   });
 });
-

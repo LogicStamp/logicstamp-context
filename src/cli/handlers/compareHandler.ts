@@ -14,7 +14,11 @@ import {
 import { parseCompareArgs, getCompareHelp } from '../parser/index.js';
 import { printFoxIcon } from './initHandler.js';
 import { debugLog, debugError } from '../../utils/debug.js';
-import { detectViolations, displayViolations, type Violation } from '../../core/violations.js';
+import {
+  detectViolations,
+  displayViolations,
+  type Violation,
+} from '../../core/violations.js';
 import {
   parseGitBaseline,
   isGitRepo,
@@ -65,17 +69,30 @@ export async function handleCompare(args: string[]): Promise<void> {
 
   // Explicitly reject --compare-modes (only available in stamp context, not stamp context compare)
   if (args.includes('--compare-modes')) {
-    console.error('❌ --compare-modes is not available for "stamp context compare". Use "stamp context --compare-modes" instead.');
+    console.error(
+      '❌ --compare-modes is not available for "stamp context compare". Use "stamp context --compare-modes" instead.',
+    );
     return process.exit(1);
   }
 
-  const { stats, approve, cleanOrphaned, quiet, skipGitignore, strict, baseline, positionalArgs } = parseCompareArgs(args);
+  const {
+    stats,
+    approve,
+    cleanOrphaned,
+    quiet,
+    skipGitignore,
+    strict,
+    baseline,
+    positionalArgs,
+  } = parseCompareArgs(args);
 
   // Git baseline mode: --baseline git:<ref>
   if (baseline) {
     const gitBaseline = parseGitBaseline(baseline);
     if (!gitBaseline) {
-      console.error(`❌ Invalid baseline format: "${baseline}". Expected format: git:<ref> (e.g., git:main, git:HEAD)`);
+      console.error(
+        `❌ Invalid baseline format: "${baseline}". Expected format: git:<ref> (e.g., git:main, git:HEAD)`,
+      );
       return process.exit(1);
     }
     await handleGitBaselineCompare({
@@ -91,7 +108,14 @@ export async function handleCompare(args: string[]): Promise<void> {
 
   // Auto-mode: no files specified - use multi-file comparison with context_main.json
   if (positionalArgs.length === 0) {
-    await handleAutoCompareMode({ stats, approve, cleanOrphaned, quiet, skipGitignore, strict });
+    await handleAutoCompareMode({
+      stats,
+      approve,
+      cleanOrphaned,
+      quiet,
+      skipGitignore,
+      strict,
+    });
     return;
   }
 
@@ -106,12 +130,29 @@ export async function handleCompare(args: string[]): Promise<void> {
   const newFile = positionalArgs[1];
 
   // Detect if we're comparing context_main.json files (multi-file mode)
-  const isMultiFileMode = oldFile.endsWith('context_main.json') || newFile.endsWith('context_main.json');
+  const isMultiFileMode =
+    oldFile.endsWith('context_main.json') ||
+    newFile.endsWith('context_main.json');
 
   if (isMultiFileMode) {
-    await handleMultiFileCompareMode({ oldFile, newFile, stats, approve, cleanOrphaned, quiet, strict });
+    await handleMultiFileCompareMode({
+      oldFile,
+      newFile,
+      stats,
+      approve,
+      cleanOrphaned,
+      quiet,
+      strict,
+    });
   } else {
-    await handleSingleFileCompareMode({ oldFile, newFile, stats, approve, quiet, strict });
+    await handleSingleFileCompareMode({
+      oldFile,
+      newFile,
+      stats,
+      approve,
+      quiet,
+      strict,
+    });
   }
 }
 
@@ -123,7 +164,8 @@ async function handleAutoCompareMode(options: {
   skipGitignore: boolean;
   strict: boolean;
 }): Promise<void> {
-  const { stats, approve, cleanOrphaned, quiet, skipGitignore, strict } = options;
+  const { stats, approve, cleanOrphaned, quiet, skipGitignore, strict } =
+    options;
   const { tmpdir } = await import('node:os');
   const { join, dirname } = await import('node:path');
   const { copyFile, rm, mkdir } = await import('node:fs/promises');
@@ -131,7 +173,9 @@ async function handleAutoCompareMode(options: {
 
   // Check if context_main.json exists
   if (!existsSync('context_main.json')) {
-    console.error('❌ context_main.json not found. Run "stamp context" first to compile context files.');
+    console.error(
+      '❌ context_main.json not found. Run "stamp context" first to compile context files.',
+    );
     return process.exit(1);
   }
 
@@ -151,7 +195,9 @@ async function handleAutoCompareMode(options: {
       message: err.message,
       code: err.code,
     });
-    throw new Error(`Failed to create temp directory "${tempDir}": ${err.code === 'EACCES' ? 'Permission denied' : err.message}`);
+    throw new Error(
+      `Failed to create temp directory "${tempDir}": ${err.code === 'EACCES' ? 'Permission denied' : err.message}`,
+    );
   }
 
   if (!quiet) {
@@ -204,14 +250,18 @@ async function handleAutoCompareMode(options: {
 
       for (const folder of result.folders) {
         if (folder.componentResult && folder.status === 'DRIFT') {
-          const violations = detectViolations({ type: 'compare', result: folder.componentResult, gitBaseline: false });
+          const violations = detectViolations({
+            type: 'compare',
+            result: folder.componentResult,
+            gitBaseline: false,
+          });
           allViolations.push(...violations);
         }
       }
 
       if (allViolations.length > 0) {
         displayViolations(allViolations, { quiet });
-        const errors = allViolations.filter(v => v.severity === 'error');
+        const errors = allViolations.filter((v) => v.severity === 'error');
         if (errors.length > 0) {
           console.log(`\n❌ Strict mode: ${errors.length} error(s) detected`);
           await rm(tempDir, { recursive: true, force: true });
@@ -238,7 +288,7 @@ async function handleAutoCompareMode(options: {
         const { readFile } = await import('node:fs/promises');
         let newIndexContent: string;
         const indexPath = join(tempDir, 'context_main.json');
-        
+
         try {
           newIndexContent = await readFile(indexPath, 'utf8');
         } catch (error) {
@@ -249,9 +299,11 @@ async function handleAutoCompareMode(options: {
             message: err.message,
             code: err.code,
           });
-          throw new Error(`Failed to read index file "${indexPath}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`);
+          throw new Error(
+            `Failed to read index file "${indexPath}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`,
+          );
         }
-        
+
         let newIndex: any;
         try {
           newIndex = JSON.parse(newIndexContent);
@@ -262,7 +314,9 @@ async function handleAutoCompareMode(options: {
             operation: 'JSON.parse',
             message: err.message,
           });
-          throw new Error(`Failed to parse index file "${indexPath}": ${err.message}`);
+          throw new Error(
+            `Failed to parse index file "${indexPath}": ${err.message}`,
+          );
         }
 
         let copiedFiles = 0;
@@ -281,9 +335,11 @@ async function handleAutoCompareMode(options: {
               message: err.message,
               code: err.code,
             });
-            throw new Error(`Failed to create directory for "${destPath}": ${err.code === 'EACCES' ? 'Permission denied' : err.message}`);
+            throw new Error(
+              `Failed to create directory for "${destPath}": ${err.code === 'EACCES' ? 'Permission denied' : err.message}`,
+            );
           }
-          
+
           try {
             await copyFile(srcPath, destPath);
           } catch (error) {
@@ -295,7 +351,9 @@ async function handleAutoCompareMode(options: {
               message: err.message,
               code: err.code,
             });
-            throw new Error(`Failed to copy file from "${srcPath}" to "${destPath}": ${err.message}`);
+            throw new Error(
+              `Failed to copy file from "${srcPath}" to "${destPath}": ${err.message}`,
+            );
           }
           copiedFiles++;
           if (!quiet) {
@@ -310,18 +368,28 @@ async function handleAutoCompareMode(options: {
         }
 
         // Clean up orphaned files if requested
-        if (cleanOrphaned && result.orphanedFiles && result.orphanedFiles.length > 0) {
+        if (
+          cleanOrphaned &&
+          result.orphanedFiles &&
+          result.orphanedFiles.length > 0
+        ) {
           if (!quiet) {
             console.log('\n🗑️  Cleaning up orphaned files...');
           }
-          const deletedCount = await cleanOrphanedFiles(result.orphanedFiles, '.', quiet);
+          const deletedCount = await cleanOrphanedFiles(
+            result.orphanedFiles,
+            '.',
+            quiet,
+          );
           if (!quiet) {
             console.log(`   ✓ Deleted ${deletedCount} orphaned file(s)`);
           }
         }
 
         if (!quiet) {
-          console.log(`\n✅ ${copiedFiles + 1} context files updated successfully`);
+          console.log(
+            `\n✅ ${copiedFiles + 1} context files updated successfully`,
+          );
         }
 
         // Clean up temp directory
@@ -349,7 +417,10 @@ async function handleAutoCompareMode(options: {
       debugError('compareHandler', 'handleAutoCompareMode', {
         tempDir,
         operation: 'cleanup',
-        message: cleanupError instanceof Error ? cleanupError.message : String(cleanupError),
+        message:
+          cleanupError instanceof Error
+            ? cleanupError.message
+            : String(cleanupError),
       });
     }
 
@@ -376,7 +447,9 @@ async function handleGitBaselineCompare(options: {
 
   // Validate git repository
   if (!(await isGitRepo())) {
-    console.error('❌ Not a git repository. Git baseline comparison requires a git repository.');
+    console.error(
+      '❌ Not a git repository. Git baseline comparison requires a git repository.',
+    );
     return process.exit(1);
   }
 
@@ -386,7 +459,9 @@ async function handleGitBaselineCompare(options: {
   let refDescription: string;
   try {
     commitHash = await resolveGitRef(ref, { timeout: GIT_REF_RESOLVE_TIMEOUT });
-    refDescription = await describeGitRef(ref, { timeout: GIT_REF_DESCRIBE_TIMEOUT });
+    refDescription = await describeGitRef(ref, {
+      timeout: GIT_REF_DESCRIBE_TIMEOUT,
+    });
   } catch (error) {
     console.error(`❌ ${(error as Error).message}`);
     return process.exit(1);
@@ -394,7 +469,9 @@ async function handleGitBaselineCompare(options: {
 
   if (!quiet) {
     console.log(`Git baseline comparison`);
-    console.log(`  Baseline: ${refDescription} (${commitHash.substring(0, 8)})`);
+    console.log(
+      `  Baseline: ${refDescription} (${commitHash.substring(0, 8)})`,
+    );
     console.log(`  Current:  working tree\n`);
   }
 
@@ -403,7 +480,9 @@ async function handleGitBaselineCompare(options: {
   try {
     paths = await createBaselinePaths(process.cwd(), ref);
   } catch (error) {
-    console.error(`❌ Failed to create comparison directories: ${(error as Error).message}`);
+    console.error(
+      `❌ Failed to create comparison directories: ${(error as Error).message}`,
+    );
     return process.exit(1);
   }
 
@@ -415,7 +494,9 @@ async function handleGitBaselineCompare(options: {
       console.log(`🔄 Creating worktree at ${refDescription}...`);
     }
 
-    const worktree = await createWorktree(ref, paths.worktreeDir, { timeout: GIT_WORKTREE_TIMEOUT });
+    const worktree = await createWorktree(ref, paths.worktreeDir, {
+      timeout: GIT_WORKTREE_TIMEOUT,
+    });
 
     // Step 2: Generate context for baseline (from worktree)
     if (!quiet) {
@@ -492,8 +573,8 @@ async function handleGitBaselineCompare(options: {
       gitBaseline: true, // Enable path normalization for git baseline comparisons
     };
 
-    let result = await multiFileCompare(multiCompareOptions);
-    
+    const result = await multiFileCompare(multiCompareOptions);
+
     // Filter out git-ignored files from comparison results
     // This prevents false positives where git-ignored files (like next-env.d.ts)
     // exist in working directory but not in git worktree
@@ -506,33 +587,49 @@ async function handleGitBaselineCompare(options: {
         // Filter removed components that are git-ignored
         cr.removed = await filterGitIgnoredFiles(cr.removed, projectRoot);
         // Filter changed components that are git-ignored
-        cr.changed = (await Promise.all(
-          cr.changed.map(async ({ id, deltas }) => {
-            const filtered = await filterGitIgnoredFiles([id], projectRoot);
-            return filtered.length > 0 ? { id, deltas } : null;
-          })
-        )).filter((item): item is { id: string; deltas: any[] } => item !== null);
-        
+        cr.changed = (
+          await Promise.all(
+            cr.changed.map(async ({ id, deltas }) => {
+              const filtered = await filterGitIgnoredFiles([id], projectRoot);
+              return filtered.length > 0 ? { id, deltas } : null;
+            }),
+          )
+        ).filter(
+          (item): item is { id: string; deltas: any[] } => item !== null,
+        );
+
         // Recalculate status if all changes were filtered out
-        if (cr.added.length === 0 && cr.removed.length === 0 && cr.changed.length === 0) {
+        if (
+          cr.added.length === 0 &&
+          cr.removed.length === 0 &&
+          cr.changed.length === 0
+        ) {
           folder.status = 'PASS';
           // Update component result status as well
           cr.status = 'PASS';
         }
       }
     }
-    
+
     // Recalculate summary counts after filtering
-    const addedFolders = result.folders.filter(f => f.status === 'ADDED').length;
-    const orphanedFolders = result.folders.filter(f => f.status === 'ORPHANED').length;
-    const driftFolders = result.folders.filter(f => f.status === 'DRIFT').length;
-    const passFolders = result.folders.filter(f => f.status === 'PASS').length;
-    
+    const addedFolders = result.folders.filter(
+      (f) => f.status === 'ADDED',
+    ).length;
+    const orphanedFolders = result.folders.filter(
+      (f) => f.status === 'ORPHANED',
+    ).length;
+    const driftFolders = result.folders.filter(
+      (f) => f.status === 'DRIFT',
+    ).length;
+    const passFolders = result.folders.filter(
+      (f) => f.status === 'PASS',
+    ).length;
+
     // Recalculate component counts from filtered results
     let totalComponentsAdded = 0;
     let totalComponentsRemoved = 0;
     let totalComponentsChanged = 0;
-    
+
     for (const folder of result.folders) {
       if (folder.componentResult && folder.status === 'DRIFT') {
         totalComponentsAdded += folder.componentResult.added.length;
@@ -540,7 +637,7 @@ async function handleGitBaselineCompare(options: {
         totalComponentsChanged += folder.componentResult.changed.length;
       }
     }
-    
+
     // Update summary
     result.summary = {
       totalFolders: result.folders.length,
@@ -552,11 +649,11 @@ async function handleGitBaselineCompare(options: {
       totalComponentsRemoved,
       totalComponentsChanged,
     };
-    
+
     // Recalculate overall status
     // Only orphaned folders and drift folders qualify as drift; added folders are growth, not drift
     result.status = orphanedFolders > 0 || driftFolders > 0 ? 'DRIFT' : 'PASS';
-    
+
     displayMultiFileCompareResult(result, stats, quiet);
 
     // Strict mode: detect and report violations
@@ -565,14 +662,18 @@ async function handleGitBaselineCompare(options: {
 
       for (const folder of result.folders) {
         if (folder.componentResult && folder.status === 'DRIFT') {
-          const violations = detectViolations({ type: 'compare', result: folder.componentResult, gitBaseline: true });
+          const violations = detectViolations({
+            type: 'compare',
+            result: folder.componentResult,
+            gitBaseline: true,
+          });
           allViolations.push(...violations);
         }
       }
 
       if (allViolations.length > 0) {
         displayViolations(allViolations, { quiet });
-        const errors = allViolations.filter(v => v.severity === 'error');
+        const errors = allViolations.filter((v) => v.severity === 'error');
         if (errors.length > 0) {
           console.log(`\n❌ Strict mode: ${errors.length} error(s) detected`);
           await cleanupBaselinePaths(paths);
@@ -588,7 +689,9 @@ async function handleGitBaselineCompare(options: {
     // Just report drift status
     if (result.status === 'DRIFT') {
       if (!quiet) {
-        console.log(`\n📊 Summary: Changes detected compared to ${refDescription}`);
+        console.log(
+          `\n📊 Summary: Changes detected compared to ${refDescription}`,
+        );
       }
       return process.exit(1); // Exit 1 for drift (useful for CI)
     } else {
@@ -608,7 +711,9 @@ async function handleGitBaselineCompare(options: {
       });
     }
 
-    console.error(`❌ Git baseline comparison failed: ${(error as Error).message}`);
+    console.error(
+      `❌ Git baseline comparison failed: ${(error as Error).message}`,
+    );
     return process.exit(1);
   }
 }
@@ -622,7 +727,8 @@ async function handleMultiFileCompareMode(options: {
   quiet: boolean;
   strict: boolean;
 }): Promise<void> {
-  const { oldFile, newFile, stats, approve, cleanOrphaned, quiet, strict } = options;
+  const { oldFile, newFile, stats, approve, cleanOrphaned, quiet, strict } =
+    options;
 
   // Multi-file comparison mode
   const multiCompareOptions: MultiFileCompareOptions = {
@@ -644,14 +750,18 @@ async function handleMultiFileCompareMode(options: {
 
       for (const folder of result.folders) {
         if (folder.componentResult && folder.status === 'DRIFT') {
-          const violations = detectViolations({ type: 'compare', result: folder.componentResult, gitBaseline: false });
+          const violations = detectViolations({
+            type: 'compare',
+            result: folder.componentResult,
+            gitBaseline: false,
+          });
           allViolations.push(...violations);
         }
       }
 
       if (allViolations.length > 0) {
         displayViolations(allViolations, { quiet });
-        const errors = allViolations.filter(v => v.severity === 'error');
+        const errors = allViolations.filter((v) => v.severity === 'error');
         if (errors.length > 0) {
           console.log(`\n❌ Strict mode: ${errors.length} error(s) detected`);
           return process.exit(1);
@@ -678,7 +788,7 @@ async function handleMultiFileCompareMode(options: {
         // Copy all new context files
         const { readFile, copyFile, mkdir } = await import('node:fs/promises');
         const { dirname, join } = await import('node:path');
-        
+
         let newIndexContent: string;
         try {
           newIndexContent = await readFile(newFile, 'utf8');
@@ -690,9 +800,11 @@ async function handleMultiFileCompareMode(options: {
             message: err.message,
             code: err.code,
           });
-          throw new Error(`Failed to read index file "${newFile}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`);
+          throw new Error(
+            `Failed to read index file "${newFile}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`,
+          );
         }
-        
+
         let newIndex: any;
         try {
           newIndex = JSON.parse(newIndexContent);
@@ -703,7 +815,9 @@ async function handleMultiFileCompareMode(options: {
             operation: 'JSON.parse',
             message: err.message,
           });
-          throw new Error(`Failed to parse index file "${newFile}": ${err.message}`);
+          throw new Error(
+            `Failed to parse index file "${newFile}": ${err.message}`,
+          );
         }
 
         const baseDir = dirname(oldFile);
@@ -724,9 +838,11 @@ async function handleMultiFileCompareMode(options: {
               message: err.message,
               code: err.code,
             });
-            throw new Error(`Failed to create directory for "${destPath}": ${err.code === 'EACCES' ? 'Permission denied' : err.message}`);
+            throw new Error(
+              `Failed to create directory for "${destPath}": ${err.code === 'EACCES' ? 'Permission denied' : err.message}`,
+            );
           }
-          
+
           try {
             await copyFile(srcPath, destPath);
           } catch (error) {
@@ -738,7 +854,9 @@ async function handleMultiFileCompareMode(options: {
               message: err.message,
               code: err.code,
             });
-            throw new Error(`Failed to copy file from "${srcPath}" to "${destPath}": ${err.message}`);
+            throw new Error(
+              `Failed to copy file from "${srcPath}" to "${destPath}": ${err.message}`,
+            );
           }
           copiedFiles++;
           if (!quiet) {
@@ -753,18 +871,28 @@ async function handleMultiFileCompareMode(options: {
         }
 
         // Clean up orphaned files if requested
-        if (cleanOrphaned && result.orphanedFiles && result.orphanedFiles.length > 0) {
+        if (
+          cleanOrphaned &&
+          result.orphanedFiles &&
+          result.orphanedFiles.length > 0
+        ) {
           if (!quiet) {
             console.log('\n🗑️  Cleaning up orphaned files...');
           }
-          const deletedCount = await cleanOrphanedFiles(result.orphanedFiles, baseDir, quiet);
+          const deletedCount = await cleanOrphanedFiles(
+            result.orphanedFiles,
+            baseDir,
+            quiet,
+          );
           if (!quiet) {
             console.log(`   ✓ Deleted ${deletedCount} orphaned file(s)`);
           }
         }
 
         if (!quiet) {
-          console.log(`\n✅ ${copiedFiles + 1} context files updated successfully`);
+          console.log(
+            `\n✅ ${copiedFiles + 1} context files updated successfully`,
+          );
         }
         return process.exit(0); // Success: drift approved and updated
       } else {
@@ -807,11 +935,15 @@ async function handleSingleFileCompareMode(options: {
 
     // Strict mode: detect and report violations
     if (strict && result.status === 'DRIFT') {
-      const violations = detectViolations({ type: 'compare', result, gitBaseline: false });
+      const violations = detectViolations({
+        type: 'compare',
+        result,
+        gitBaseline: false,
+      });
 
       if (violations.length > 0) {
         displayViolations(violations, { quiet });
-        const errors = violations.filter(v => v.severity === 'error');
+        const errors = violations.filter((v) => v.severity === 'error');
         if (errors.length > 0) {
           console.log(`\n❌ Strict mode: ${errors.length} error(s) detected`);
           return process.exit(1);
@@ -831,7 +963,9 @@ async function handleSingleFileCompareMode(options: {
         }
       } else if (isTTY()) {
         // Interactive prompt (local dev convenience)
-        shouldUpdate = await promptYesNo(`Update ${oldFile} with ${newFile}? (y/N) `);
+        shouldUpdate = await promptYesNo(
+          `Update ${oldFile} with ${newFile}? (y/N) `,
+        );
       }
 
       if (shouldUpdate) {
@@ -856,4 +990,3 @@ async function handleSingleFileCompareMode(options: {
     return process.exit(1);
   }
 }
-

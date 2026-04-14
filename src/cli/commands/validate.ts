@@ -51,13 +51,17 @@ export function validateBundles(bundles: LogicStampBundle[]): ValidationResult {
     if (bundle.type !== 'LogicStampBundle') {
       result.valid = false;
       result.errors++;
-      result.messages.push(`${bundleLabel}: Invalid type (expected 'LogicStampBundle', got '${bundle.type}')`);
+      result.messages.push(
+        `${bundleLabel}: Invalid type (expected 'LogicStampBundle', got '${bundle.type}')`,
+      );
     }
 
     if (bundle.schemaVersion !== '0.1') {
       result.valid = false;
       result.errors++;
-      result.messages.push(`${bundleLabel}: Invalid schemaVersion (expected '0.1', got '${bundle.schemaVersion}')`);
+      result.messages.push(
+        `${bundleLabel}: Invalid schemaVersion (expected '0.1', got '${bundle.schemaVersion}')`,
+      );
     }
 
     if (!bundle.entryId) {
@@ -66,7 +70,11 @@ export function validateBundles(bundles: LogicStampBundle[]): ValidationResult {
       result.messages.push(`${bundleLabel}: Missing entryId`);
     }
 
-    if (!bundle.graph || !Array.isArray(bundle.graph.nodes) || !Array.isArray(bundle.graph.edges)) {
+    if (
+      !bundle.graph ||
+      !Array.isArray(bundle.graph.nodes) ||
+      !Array.isArray(bundle.graph.edges)
+    ) {
       result.valid = false;
       result.errors++;
       result.messages.push(`${bundleLabel}: Invalid graph structure`);
@@ -85,11 +93,15 @@ export function validateBundles(bundles: LogicStampBundle[]): ValidationResult {
         if (contract?.type !== 'UIFContract') {
           result.valid = false;
           result.errors++;
-          result.messages.push(`${bundleLabel}: Node ${node.entryId} has invalid contract type`);
+          result.messages.push(
+            `${bundleLabel}: Node ${node.entryId} has invalid contract type`,
+          );
         }
         if (contract?.schemaVersion !== '0.4') {
           result.warnings++;
-          result.messages.push(`${bundleLabel}: Node ${node.entryId} has unexpected contract version ${contract?.schemaVersion}`);
+          result.messages.push(
+            `${bundleLabel}: Node ${node.entryId} has unexpected contract version ${contract?.schemaVersion}`,
+          );
         }
       }
     }
@@ -134,7 +146,7 @@ export interface MultiFileValidationResult {
  */
 async function loadIndex(indexPath: string): Promise<LogicStampIndex> {
   let content: string;
-  
+
   try {
     content = await readFile(indexPath, 'utf8');
   } catch (error) {
@@ -144,27 +156,37 @@ async function loadIndex(indexPath: string): Promise<LogicStampIndex> {
       message: err.message,
       code: err.code,
     });
-    throw new Error(`Failed to load index from ${indexPath}: ${err.code === 'ENOENT' ? 'File not found' : err.message}`);
+    throw new Error(
+      `Failed to load index from ${indexPath}: ${err.code === 'ENOENT' ? 'File not found' : err.message}`,
+    );
   }
-  
+
   try {
     const index = JSON.parse(content) as LogicStampIndex;
 
     if (index.type !== 'LogicStampIndex') {
-      throw new Error(`Invalid index file: expected type 'LogicStampIndex', got '${index.type}'`);
+      throw new Error(
+        `Invalid index file: expected type 'LogicStampIndex', got '${index.type}'`,
+      );
     }
 
     // Backward compatibility: warn about old schema version
     if (index.schemaVersion === '0.1') {
-      console.warn(`⚠️  Warning: context_main.json uses schema version 0.1 (legacy format).`);
+      console.warn(
+        `⚠️  Warning: context_main.json uses schema version 0.1 (legacy format).`,
+      );
       console.warn(``);
-      console.warn(`   Consider recompiling with "stamp context" to upgrade to version 0.2 (relative paths).`);
+      console.warn(
+        `   Consider recompiling with "stamp context" to upgrade to version 0.2 (relative paths).`,
+      );
       console.warn(``);
       console.warn(`   Optional cleanup: "stamp context clean --all --yes".`);
       console.warn(``);
       console.warn(`   See docs/MIGRATION_0.3.2.md for details.\n`);
     } else if (index.schemaVersion !== '0.2') {
-      console.warn(`⚠️  Warning: Unknown schema version "${index.schemaVersion}". Expected '0.1' or '0.2'.`);
+      console.warn(
+        `⚠️  Warning: Unknown schema version "${index.schemaVersion}". Expected '0.1' or '0.2'.`,
+      );
     }
 
     return index;
@@ -181,9 +203,11 @@ async function loadIndex(indexPath: string): Promise<LogicStampIndex> {
 /**
  * Validate a single context file and return results
  */
-async function validateContextFile(contextPath: string): Promise<ValidationResult> {
+async function validateContextFile(
+  contextPath: string,
+): Promise<ValidationResult> {
   let content: string;
-  
+
   try {
     content = await readFile(contextPath, 'utf8');
   } catch (error) {
@@ -193,9 +217,11 @@ async function validateContextFile(contextPath: string): Promise<ValidationResul
       message: err.message,
       code: err.code,
     });
-    throw new Error(`Failed to read context file "${contextPath}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`);
+    throw new Error(
+      `Failed to read context file "${contextPath}": ${err.code === 'ENOENT' ? 'File not found' : err.message}`,
+    );
   }
-  
+
   try {
     const bundles = JSON.parse(content) as LogicStampBundle[];
     return validateBundles(bundles);
@@ -205,14 +231,18 @@ async function validateContextFile(contextPath: string): Promise<ValidationResul
       contextPath,
       message: err.message,
     });
-    throw new Error(`Failed to parse context file "${contextPath}": ${err.message}`);
+    throw new Error(
+      `Failed to parse context file "${contextPath}": ${err.message}`,
+    );
   }
 }
 
 /**
  * Multi-file validation - validates all context files using context_main.json index
  */
-export async function multiFileValidate(indexPath: string): Promise<MultiFileValidationResult> {
+export async function multiFileValidate(
+  indexPath: string,
+): Promise<MultiFileValidationResult> {
   const baseDir = dirname(indexPath);
 
   // Load index file
@@ -262,8 +292,8 @@ export async function multiFileValidate(indexPath: string): Promise<MultiFileVal
     }
   }
 
-  const validFolders = folderResults.filter(f => f.valid).length;
-  const invalidFolders = folderResults.filter(f => !f.valid).length;
+  const validFolders = folderResults.filter((f) => f.valid).length;
+  const invalidFolders = folderResults.filter((f) => !f.valid).length;
   const valid = invalidFolders === 0 && totalErrors === 0;
 
   return {
@@ -282,14 +312,19 @@ export async function multiFileValidate(indexPath: string): Promise<MultiFileVal
 /**
  * Display multi-file validation results
  */
-function displayMultiFileValidationResult(result: MultiFileValidationResult, quiet?: boolean): void {
+function displayMultiFileValidationResult(
+  result: MultiFileValidationResult,
+  quiet?: boolean,
+): void {
   // In quiet mode, only show status if invalid
   if (quiet && result.valid) {
     return;
   }
 
   if (!quiet) {
-    console.log(`\n${result.valid ? '✅' : '❌'} ${result.valid ? 'All context files are valid' : 'Validation failed'}\n`);
+    console.log(
+      `\n${result.valid ? '✅' : '❌'} ${result.valid ? 'All context files are valid' : 'Validation failed'}\n`,
+    );
 
     // Display summary
     console.log('📁 Validation Summary:');
@@ -314,10 +349,14 @@ function displayMultiFileValidationResult(result: MultiFileValidationResult, qui
       if (!quiet) {
         console.log(`   ✅ VALID: ${folder.contextFile}`);
         console.log(`      Path: ${folder.folderPath}`);
-        console.log(`      Bundles: ${folder.result.bundles}, Nodes: ${folder.result.nodes}, Edges: ${folder.result.edges}`);
+        console.log(
+          `      Bundles: ${folder.result.bundles}, Nodes: ${folder.result.nodes}, Edges: ${folder.result.edges}`,
+        );
         if (folder.result.warnings > 0) {
           console.log(`      Warnings: ${folder.result.warnings}`);
-          folder.result.messages.forEach(msg => console.log(`        ⚠️  ${msg}`));
+          folder.result.messages.forEach((msg) =>
+            console.log(`        ⚠️  ${msg}`),
+          );
         }
         console.log();
       }
@@ -326,7 +365,7 @@ function displayMultiFileValidationResult(result: MultiFileValidationResult, qui
       console.log(`   ❌ INVALID: ${folder.contextFile}`);
       console.log(`      Path: ${folder.folderPath}`);
       console.log(`      Errors: ${folder.result.errors}`);
-      folder.result.messages.forEach(msg => console.log(`        ❌ ${msg}`));
+      folder.result.messages.forEach((msg) => console.log(`        ❌ ${msg}`));
       console.log();
     }
   }
@@ -338,7 +377,10 @@ function displayMultiFileValidationResult(result: MultiFileValidationResult, qui
  * With no arguments: Validates all context files using context_main.json (multi-file mode)
  * With a file argument: Validates that specific file (single-file mode)
  */
-export async function validateCommand(filePath?: string, quiet?: boolean): Promise<void> {
+export async function validateCommand(
+  filePath?: string,
+  quiet?: boolean,
+): Promise<void> {
   // If no file specified, check for multi-file mode (context_main.json)
   if (!filePath) {
     const mainIndexPath = resolve('context_main.json');
@@ -360,7 +402,9 @@ export async function validateCommand(filePath?: string, quiet?: boolean): Promi
 
       // Multi-file mode - validate all context files
       if (!quiet) {
-        console.log(`🔍 Validating all context files using "${displayPath(mainIndexPath)}"...\n`);
+        console.log(
+          `🔍 Validating all context files using "${displayPath(mainIndexPath)}"...\n`,
+        );
       }
 
       try {
@@ -377,13 +421,17 @@ export async function validateCommand(filePath?: string, quiet?: boolean): Promi
           process.exit(1);
         }
       } catch (error) {
-        console.error(`❌ Multi-file validation failed: ${(error as Error).message}`);
+        console.error(
+          `❌ Multi-file validation failed: ${(error as Error).message}`,
+        );
         process.exit(1);
       }
     } catch {
       // context_main.json doesn't exist, fall back to single-file mode with context.json
       if (!quiet) {
-        console.log('ℹ️  context_main.json not found, falling back to single-file mode\n');
+        console.log(
+          'ℹ️  context_main.json not found, falling back to single-file mode\n',
+        );
       }
     }
   }
@@ -410,7 +458,7 @@ export async function validateCommand(filePath?: string, quiet?: boolean): Promi
       // Error handling continues below in the catch block
       throw error;
     }
-    
+
     let bundles: LogicStampBundle[];
     try {
       bundles = JSON.parse(content) as LogicStampBundle[];
@@ -438,12 +486,16 @@ export async function validateCommand(filePath?: string, quiet?: boolean): Promi
 
       // Check required fields
       if (bundle.type !== 'LogicStampBundle') {
-        console.error(`❌ ${bundleLabel}: Invalid type (expected 'LogicStampBundle', got '${bundle.type}')`);
+        console.error(
+          `❌ ${bundleLabel}: Invalid type (expected 'LogicStampBundle', got '${bundle.type}')`,
+        );
         errors++;
       }
 
       if (bundle.schemaVersion !== '0.1') {
-        console.error(`❌ ${bundleLabel}: Invalid schemaVersion (expected '0.1', got '${bundle.schemaVersion}')`);
+        console.error(
+          `❌ ${bundleLabel}: Invalid schemaVersion (expected '0.1', got '${bundle.schemaVersion}')`,
+        );
         errors++;
       }
 
@@ -452,7 +504,11 @@ export async function validateCommand(filePath?: string, quiet?: boolean): Promi
         errors++;
       }
 
-      if (!bundle.graph || !Array.isArray(bundle.graph.nodes) || !Array.isArray(bundle.graph.edges)) {
+      if (
+        !bundle.graph ||
+        !Array.isArray(bundle.graph.nodes) ||
+        !Array.isArray(bundle.graph.edges)
+      ) {
         console.error(`❌ ${bundleLabel}: Invalid graph structure`);
         errors++;
       }
@@ -467,18 +523,25 @@ export async function validateCommand(filePath?: string, quiet?: boolean): Promi
         for (const node of bundle.graph.nodes) {
           const contract = node.contract;
           if (contract?.type !== 'UIFContract') {
-            console.error(`❌ ${bundleLabel}: Node ${node.entryId} has invalid contract type`);
+            console.error(
+              `❌ ${bundleLabel}: Node ${node.entryId} has invalid contract type`,
+            );
             errors++;
           }
           if (contract?.schemaVersion !== '0.4') {
-            console.warn(`⚠️  ${bundleLabel}: Node ${node.entryId} has unexpected contract version ${contract?.schemaVersion}`);
+            console.warn(
+              `⚠️  ${bundleLabel}: Node ${node.entryId} has unexpected contract version ${contract?.schemaVersion}`,
+            );
             warnings++;
           }
         }
       }
 
       // Check hash format (bundle hashes use uifb: prefix)
-      if (bundle.bundleHash && !bundle.bundleHash.match(/^uifb:[a-f0-9]{24}$/)) {
+      if (
+        bundle.bundleHash &&
+        !bundle.bundleHash.match(/^uifb:[a-f0-9]{24}$/)
+      ) {
         console.warn(`⚠️  ${bundleLabel}: bundleHash has unexpected format`);
         warnings++;
       }
@@ -490,8 +553,12 @@ export async function validateCommand(filePath?: string, quiet?: boolean): Promi
         process.stdout.write('✓\n');
       } else {
         console.log(`✅ Valid context file with ${bundles.length} bundle(s)`);
-        console.log(`   Total nodes: ${bundles.reduce((sum, b) => sum + (b.graph?.nodes?.length || 0), 0)}`);
-        console.log(`   Total edges: ${bundles.reduce((sum, b) => sum + (b.graph?.edges?.length || 0), 0)}`);
+        console.log(
+          `   Total nodes: ${bundles.reduce((sum, b) => sum + (b.graph?.nodes?.length || 0), 0)}`,
+        );
+        console.log(
+          `   Total edges: ${bundles.reduce((sum, b) => sum + (b.graph?.edges?.length || 0), 0)}`,
+        );
       }
       process.exit(0);
     } else if (errors === 0) {
@@ -504,14 +571,18 @@ export async function validateCommand(filePath?: string, quiet?: boolean): Promi
       process.exit(0);
     } else {
       // Always show errors, even in quiet mode
-      console.error(`\n❌ Validation failed: ${errors} error(s), ${warnings} warning(s)`);
+      console.error(
+        `\n❌ Validation failed: ${errors} error(s), ${warnings} warning(s)`,
+      );
       process.exit(1);
     }
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       console.error(`❌ File not found: ${targetFile}`);
       if (!filePath) {
-        console.error('   Tip: Specify a file path or ensure context.json exists in the current directory');
+        console.error(
+          '   Tip: Specify a file path or ensure context.json exists in the current directory',
+        );
       }
     } else if (error instanceof SyntaxError) {
       console.error(`❌ Invalid JSON: ${error.message}`);

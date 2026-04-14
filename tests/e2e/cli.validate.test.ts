@@ -14,7 +14,11 @@ describe('CLI Validate Command Tests', () => {
   beforeEach(async () => {
     // Create a unique output directory for this test run
     const uniqueId = randomUUID().substring(0, 8);
-    outputPath = join(process.cwd(), 'tests/e2e/output', `validate-${uniqueId}`);
+    outputPath = join(
+      process.cwd(),
+      'tests/e2e/output',
+      `validate-${uniqueId}`,
+    );
     await mkdir(outputPath, { recursive: true });
   });
 
@@ -33,19 +37,20 @@ describe('CLI Validate Command Tests', () => {
     it('should validate a valid context.json file successfully', async () => {
       const outDir = join(outputPath, 'valid-context');
 
-
       // Generate a valid context file
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`,
       );
 
       // Get the first context file
-      const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
+      );
       const contextFile = join(outDir, index.folders[0].contextFile);
 
       // Validate it
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context validate ${contextFile}`
+        `node dist/cli/stamp.js context validate ${contextFile}`,
       );
 
       expect(stdout).toContain('✅ Valid context file');
@@ -58,7 +63,6 @@ describe('CLI Validate Command Tests', () => {
       const testDir = join(outputPath, 'validate-default');
       await mkdir(testDir, { recursive: true });
 
-
       // Copy fixture files to test directory
       const { cpSync } = await import('node:fs');
       cpSync(fixturesPath, testDir, { recursive: true });
@@ -66,11 +70,13 @@ describe('CLI Validate Command Tests', () => {
       // Generate context in the test directory
       await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Get the context file
-      const index = JSON.parse(await readFile(join(testDir, 'context_main.json'), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(testDir, 'context_main.json'), 'utf-8'),
+      );
       const contextFile = join(testDir, index.folders[0].contextFile);
       const contextContent = await readFile(contextFile, 'utf-8');
 
@@ -83,29 +89,32 @@ describe('CLI Validate Command Tests', () => {
       // Validate without specifying file (should fall back to context.json)
       const { stdout } = await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context validate`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
-      expect(stdout).toContain('context_main.json not found, falling back to single-file mode');
+      expect(stdout).toContain(
+        'context_main.json not found, falling back to single-file mode',
+      );
       expect(stdout).toContain('✅ Valid context file');
     }, 30000);
 
     it('should work with standalone validate command', async () => {
       const outDir = join(outputPath, 'standalone-validate');
 
-
       // Generate a valid context file
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`,
       );
 
       // Get the first context file
-      const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
+      );
       const contextFile = join(outDir, index.folders[0].contextFile);
 
       // Validate using standalone command
       const { stdout } = await execAsync(
-        `node dist/cli/validate-index.js ${contextFile}`
+        `node dist/cli/validate-index.js ${contextFile}`,
       );
 
       expect(stdout).toContain('✅ Valid context file');
@@ -117,7 +126,6 @@ describe('CLI Validate Command Tests', () => {
       const testDir = join(outputPath, 'validate-multifile');
       await mkdir(testDir, { recursive: true });
 
-
       // Copy fixture files to test directory
       const { cpSync } = await import('node:fs');
       cpSync(fixturesPath, testDir, { recursive: true });
@@ -125,13 +133,13 @@ describe('CLI Validate Command Tests', () => {
       // Generate context in the test directory (creates context_main.json + folder context files)
       await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Validate without specifying file (should use multi-file mode)
       const { stdout } = await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context validate`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       expect(stdout).toContain('🔍 Validating all context files using');
@@ -149,7 +157,6 @@ describe('CLI Validate Command Tests', () => {
       const testDir = join(outputPath, 'validate-multifile-invalid');
       await mkdir(testDir, { recursive: true });
 
-
       // Copy fixture files to test directory
       const { cpSync } = await import('node:fs');
       cpSync(fixturesPath, testDir, { recursive: true });
@@ -157,30 +164,42 @@ describe('CLI Validate Command Tests', () => {
       // Generate context in the test directory
       await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Corrupt one of the context files
-      const index = JSON.parse(await readFile(join(testDir, 'context_main.json'), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(testDir, 'context_main.json'), 'utf-8'),
+      );
       const contextFile = join(testDir, index.folders[0].contextFile);
-      await writeFile(contextFile, JSON.stringify([{
-        type: 'WrongType',
-        schemaVersion: '0.1',
-        entryId: 'test.tsx',
-        graph: { nodes: [], edges: [] },
-        meta: { missing: [], source: 'test' }
-      }]));
+      await writeFile(
+        contextFile,
+        JSON.stringify([
+          {
+            type: 'WrongType',
+            schemaVersion: '0.1',
+            entryId: 'test.tsx',
+            graph: { nodes: [], edges: [] },
+            meta: { missing: [], source: 'test' },
+          },
+        ]),
+      );
 
       // Validate (should fail)
       try {
         await execAsync(
           `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context validate`,
-          { cwd: testDir }
+          { cwd: testDir },
         );
         expect.fail('Should have failed validation');
       } catch (error: any) {
         expect(error.code).toBe(1);
-        const output = (error.stderr || error.stdout || error.message || '').toString();
+        const output = (
+          error.stderr ||
+          error.stdout ||
+          error.message ||
+          ''
+        ).toString();
         expect(output).toContain('❌ Validation failed');
         expect(output).toContain('❌ Invalid:');
         expect(output).toContain('❌ INVALID:');
@@ -191,7 +210,6 @@ describe('CLI Validate Command Tests', () => {
       const testDir = join(outputPath, 'validate-multifile-missing');
       await mkdir(testDir, { recursive: true });
 
-
       // Copy fixture files to test directory
       const { cpSync } = await import('node:fs');
       cpSync(fixturesPath, testDir, { recursive: true });
@@ -199,11 +217,13 @@ describe('CLI Validate Command Tests', () => {
       // Generate context in the test directory
       await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Delete one of the context files (but keep it in the index)
-      const index = JSON.parse(await readFile(join(testDir, 'context_main.json'), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(testDir, 'context_main.json'), 'utf-8'),
+      );
       const contextFile = join(testDir, index.folders[0].contextFile);
       await rm(contextFile);
 
@@ -211,12 +231,17 @@ describe('CLI Validate Command Tests', () => {
       try {
         await execAsync(
           `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context validate`,
-          { cwd: testDir }
+          { cwd: testDir },
         );
         expect.fail('Should have failed validation');
       } catch (error: any) {
         expect(error.code).toBe(1);
-        const output = (error.stderr || error.stdout || error.message || '').toString();
+        const output = (
+          error.stderr ||
+          error.stdout ||
+          error.message ||
+          ''
+        ).toString();
         expect(output).toContain('❌ Validation failed');
         expect(output).toContain('❌ Invalid:');
       }
@@ -226,7 +251,6 @@ describe('CLI Validate Command Tests', () => {
       const testDir = join(outputPath, 'validate-explicit-file');
       await mkdir(testDir, { recursive: true });
 
-
       // Copy fixture files to test directory
       const { cpSync } = await import('node:fs');
       cpSync(fixturesPath, testDir, { recursive: true });
@@ -234,17 +258,19 @@ describe('CLI Validate Command Tests', () => {
       // Generate context in the test directory
       await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Get one specific context file
-      const index = JSON.parse(await readFile(join(testDir, 'context_main.json'), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(testDir, 'context_main.json'), 'utf-8'),
+      );
       const contextFile = index.folders[0].contextFile;
 
       // Validate specific file (should use single-file mode, NOT multi-file mode)
       const { stdout } = await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context validate ${contextFile}`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Should NOT show multi-file mode output
@@ -260,7 +286,6 @@ describe('CLI Validate Command Tests', () => {
       const testDir = join(outputPath, 'validate-multifile-stats');
       await mkdir(testDir, { recursive: true });
 
-
       // Copy fixture files to test directory
       const { cpSync } = await import('node:fs');
       cpSync(fixturesPath, testDir, { recursive: true });
@@ -268,13 +293,13 @@ describe('CLI Validate Command Tests', () => {
       // Generate context in the test directory
       await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Validate
       const { stdout } = await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context validate`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Check for comprehensive statistics
@@ -297,173 +322,240 @@ describe('CLI Validate Command Tests', () => {
       const invalidFile = join(outputPath, 'invalid-not-array.json');
       await writeFile(invalidFile, JSON.stringify({ type: 'not-an-array' }));
 
-
       try {
         await execAsync(
-          `node dist/cli/stamp.js context validate ${invalidFile}`
+          `node dist/cli/stamp.js context validate ${invalidFile}`,
         );
         expect.fail('Should have failed validation');
       } catch (error: any) {
         expect(error.code).toBe(1);
-        const output = (error.stderr || error.stdout || error.message || '').toString();
+        const output = (
+          error.stderr ||
+          error.stdout ||
+          error.message ||
+          ''
+        ).toString();
         expect(output).toContain('Invalid format: expected array of bundles');
       }
     }, 30000);
 
     it('should reject bundle with wrong type', async () => {
       const invalidFile = join(outputPath, 'invalid-type.json');
-      await writeFile(invalidFile, JSON.stringify([{
-        type: 'WrongType',
-        schemaVersion: '0.1',
-        entryId: 'test.tsx',
-        graph: { nodes: [], edges: [] },
-        meta: { missing: [], source: 'test' }
-      }]));
-
+      await writeFile(
+        invalidFile,
+        JSON.stringify([
+          {
+            type: 'WrongType',
+            schemaVersion: '0.1',
+            entryId: 'test.tsx',
+            graph: { nodes: [], edges: [] },
+            meta: { missing: [], source: 'test' },
+          },
+        ]),
+      );
 
       try {
         await execAsync(
-          `node dist/cli/stamp.js context validate ${invalidFile}`
+          `node dist/cli/stamp.js context validate ${invalidFile}`,
         );
         expect.fail('Should have failed validation');
       } catch (error: any) {
         expect(error.code).toBe(1);
-        const output = (error.stderr || error.stdout || error.message || '').toString();
+        const output = (
+          error.stderr ||
+          error.stdout ||
+          error.message ||
+          ''
+        ).toString();
         expect(output).toContain("Invalid type (expected 'LogicStampBundle'");
       }
     }, 30000);
 
     it('should reject bundle with wrong schemaVersion', async () => {
       const invalidFile = join(outputPath, 'invalid-schema.json');
-      await writeFile(invalidFile, JSON.stringify([{
-        type: 'LogicStampBundle',
-        schemaVersion: '0.2',
-        entryId: 'test.tsx',
-        graph: { nodes: [], edges: [] },
-        meta: { missing: [], source: 'test' }
-      }]));
-
+      await writeFile(
+        invalidFile,
+        JSON.stringify([
+          {
+            type: 'LogicStampBundle',
+            schemaVersion: '0.2',
+            entryId: 'test.tsx',
+            graph: { nodes: [], edges: [] },
+            meta: { missing: [], source: 'test' },
+          },
+        ]),
+      );
 
       try {
         await execAsync(
-          `node dist/cli/stamp.js context validate ${invalidFile}`
+          `node dist/cli/stamp.js context validate ${invalidFile}`,
         );
         expect.fail('Should have failed validation');
       } catch (error: any) {
         expect(error.code).toBe(1);
-        const output = (error.stderr || error.stdout || error.message || '').toString();
+        const output = (
+          error.stderr ||
+          error.stdout ||
+          error.message ||
+          ''
+        ).toString();
         expect(output).toContain("Invalid schemaVersion (expected '0.1'");
       }
     }, 30000);
 
     it('should reject bundle with missing entryId', async () => {
       const invalidFile = join(outputPath, 'missing-entryid.json');
-      await writeFile(invalidFile, JSON.stringify([{
-        type: 'LogicStampBundle',
-        schemaVersion: '0.1',
-        graph: { nodes: [], edges: [] },
-        meta: { missing: [], source: 'test' }
-      }]));
-
+      await writeFile(
+        invalidFile,
+        JSON.stringify([
+          {
+            type: 'LogicStampBundle',
+            schemaVersion: '0.1',
+            graph: { nodes: [], edges: [] },
+            meta: { missing: [], source: 'test' },
+          },
+        ]),
+      );
 
       try {
         await execAsync(
-          `node dist/cli/stamp.js context validate ${invalidFile}`
+          `node dist/cli/stamp.js context validate ${invalidFile}`,
         );
         expect.fail('Should have failed validation');
       } catch (error: any) {
         expect(error.code).toBe(1);
-        const output = (error.stderr || error.stdout || error.message || '').toString();
+        const output = (
+          error.stderr ||
+          error.stdout ||
+          error.message ||
+          ''
+        ).toString();
         expect(output).toContain('Missing entryId');
       }
     }, 30000);
 
     it('should reject bundle with invalid graph structure', async () => {
       const invalidFile = join(outputPath, 'invalid-graph.json');
-      await writeFile(invalidFile, JSON.stringify([{
-        type: 'LogicStampBundle',
-        schemaVersion: '0.1',
-        entryId: 'test.tsx',
-        graph: { nodes: 'not-an-array', edges: [] },
-        meta: { missing: [], source: 'test' }
-      }]));
-
+      await writeFile(
+        invalidFile,
+        JSON.stringify([
+          {
+            type: 'LogicStampBundle',
+            schemaVersion: '0.1',
+            entryId: 'test.tsx',
+            graph: { nodes: 'not-an-array', edges: [] },
+            meta: { missing: [], source: 'test' },
+          },
+        ]),
+      );
 
       try {
         await execAsync(
-          `node dist/cli/stamp.js context validate ${invalidFile}`
+          `node dist/cli/stamp.js context validate ${invalidFile}`,
         );
         expect.fail('Should have failed validation');
       } catch (error: any) {
         expect(error.code).toBe(1);
-        const output = (error.stderr || error.stdout || error.message || '').toString();
+        const output = (
+          error.stderr ||
+          error.stdout ||
+          error.message ||
+          ''
+        ).toString();
         expect(output).toContain('Invalid graph structure');
       }
     }, 30000);
 
     it('should reject bundle with missing graph', async () => {
       const invalidFile = join(outputPath, 'missing-graph.json');
-      await writeFile(invalidFile, JSON.stringify([{
-        type: 'LogicStampBundle',
-        schemaVersion: '0.1',
-        entryId: 'test.tsx',
-        meta: { missing: [], source: 'test' }
-      }]));
-
+      await writeFile(
+        invalidFile,
+        JSON.stringify([
+          {
+            type: 'LogicStampBundle',
+            schemaVersion: '0.1',
+            entryId: 'test.tsx',
+            meta: { missing: [], source: 'test' },
+          },
+        ]),
+      );
 
       try {
         await execAsync(
-          `node dist/cli/stamp.js context validate ${invalidFile}`
+          `node dist/cli/stamp.js context validate ${invalidFile}`,
         );
         expect.fail('Should have failed validation');
       } catch (error: any) {
         expect(error.code).toBe(1);
-        const output = (error.stderr || error.stdout || error.message || '').toString();
+        const output = (
+          error.stderr ||
+          error.stdout ||
+          error.message ||
+          ''
+        ).toString();
         expect(output).toContain('Invalid graph structure');
       }
     }, 30000);
 
     it('should reject bundle with invalid meta structure', async () => {
       const invalidFile = join(outputPath, 'invalid-meta.json');
-      await writeFile(invalidFile, JSON.stringify([{
-        type: 'LogicStampBundle',
-        schemaVersion: '0.1',
-        entryId: 'test.tsx',
-        graph: { nodes: [], edges: [] },
-        meta: { missing: 'not-an-array' }
-      }]));
-
+      await writeFile(
+        invalidFile,
+        JSON.stringify([
+          {
+            type: 'LogicStampBundle',
+            schemaVersion: '0.1',
+            entryId: 'test.tsx',
+            graph: { nodes: [], edges: [] },
+            meta: { missing: 'not-an-array' },
+          },
+        ]),
+      );
 
       try {
         await execAsync(
-          `node dist/cli/stamp.js context validate ${invalidFile}`
+          `node dist/cli/stamp.js context validate ${invalidFile}`,
         );
         expect.fail('Should have failed validation');
       } catch (error: any) {
         expect(error.code).toBe(1);
-        const output = (error.stderr || error.stdout || error.message || '').toString();
+        const output = (
+          error.stderr ||
+          error.stdout ||
+          error.message ||
+          ''
+        ).toString();
         expect(output).toContain('Invalid meta structure');
       }
     }, 30000);
 
     it('should reject bundle with missing meta', async () => {
       const invalidFile = join(outputPath, 'missing-meta.json');
-      await writeFile(invalidFile, JSON.stringify([{
-        type: 'LogicStampBundle',
-        schemaVersion: '0.1',
-        entryId: 'test.tsx',
-        graph: { nodes: [], edges: [] }
-      }]));
-
+      await writeFile(
+        invalidFile,
+        JSON.stringify([
+          {
+            type: 'LogicStampBundle',
+            schemaVersion: '0.1',
+            entryId: 'test.tsx',
+            graph: { nodes: [], edges: [] },
+          },
+        ]),
+      );
 
       try {
         await execAsync(
-          `node dist/cli/stamp.js context validate ${invalidFile}`
+          `node dist/cli/stamp.js context validate ${invalidFile}`,
         );
         expect.fail('Should have failed validation');
       } catch (error: any) {
         expect(error.code).toBe(1);
-        const output = (error.stderr || error.stdout || error.message || '').toString();
+        const output = (
+          error.stderr ||
+          error.stdout ||
+          error.message ||
+          ''
+        ).toString();
         expect(output).toContain('Invalid meta structure');
       }
     }, 30000);
@@ -472,58 +564,75 @@ describe('CLI Validate Command Tests', () => {
   describe('Invalid contract types', () => {
     it('should reject node with invalid contract type', async () => {
       const invalidFile = join(outputPath, 'invalid-contract-type.json');
-      await writeFile(invalidFile, JSON.stringify([{
-        type: 'LogicStampBundle',
-        schemaVersion: '0.1',
-        entryId: 'test.tsx',
-        graph: {
-          nodes: [{
+      await writeFile(
+        invalidFile,
+        JSON.stringify([
+          {
+            type: 'LogicStampBundle',
+            schemaVersion: '0.1',
             entryId: 'test.tsx',
-            contract: {
-              type: 'WrongContractType',
-              schemaVersion: '0.4'
-            }
-          }],
-          edges: []
-        },
-        meta: { missing: [], source: 'test' }
-      }]));
-
+            graph: {
+              nodes: [
+                {
+                  entryId: 'test.tsx',
+                  contract: {
+                    type: 'WrongContractType',
+                    schemaVersion: '0.4',
+                  },
+                },
+              ],
+              edges: [],
+            },
+            meta: { missing: [], source: 'test' },
+          },
+        ]),
+      );
 
       try {
         await execAsync(
-          `node dist/cli/stamp.js context validate ${invalidFile}`
+          `node dist/cli/stamp.js context validate ${invalidFile}`,
         );
         expect.fail('Should have failed validation');
       } catch (error: any) {
         expect(error.code).toBe(1);
-        const output = (error.stderr || error.stdout || error.message || '').toString();
+        const output = (
+          error.stderr ||
+          error.stdout ||
+          error.message ||
+          ''
+        ).toString();
         expect(output).toContain('has invalid contract type');
       }
     }, 30000);
 
     it('should warn about unexpected contract schemaVersion', async () => {
       const warningFile = join(outputPath, 'contract-version-warning.json');
-      await writeFile(warningFile, JSON.stringify([{
-        type: 'LogicStampBundle',
-        schemaVersion: '0.1',
-        entryId: 'test.tsx',
-        graph: {
-          nodes: [{
+      await writeFile(
+        warningFile,
+        JSON.stringify([
+          {
+            type: 'LogicStampBundle',
+            schemaVersion: '0.1',
             entryId: 'test.tsx',
-            contract: {
-              type: 'UIFContract',
-              schemaVersion: '0.2'
-            }
-          }],
-          edges: []
-        },
-        meta: { missing: [], source: 'test' }
-      }]));
-
+            graph: {
+              nodes: [
+                {
+                  entryId: 'test.tsx',
+                  contract: {
+                    type: 'UIFContract',
+                    schemaVersion: '0.2',
+                  },
+                },
+              ],
+              edges: [],
+            },
+            meta: { missing: [], source: 'test' },
+          },
+        ]),
+      );
 
       const { stdout, stderr } = await execAsync(
-        `node dist/cli/stamp.js context validate ${warningFile}`
+        `node dist/cli/stamp.js context validate ${warningFile}`,
       );
 
       const output = (stdout + stderr).toString();
@@ -537,18 +646,22 @@ describe('CLI Validate Command Tests', () => {
   describe('Hash format validation', () => {
     it('should warn about invalid bundleHash format', async () => {
       const warningFile = join(outputPath, 'invalid-hash.json');
-      await writeFile(warningFile, JSON.stringify([{
-        type: 'LogicStampBundle',
-        schemaVersion: '0.1',
-        entryId: 'test.tsx',
-        bundleHash: 'invalid-hash-format',
-        graph: { nodes: [], edges: [] },
-        meta: { missing: [], source: 'test' }
-      }]));
-
+      await writeFile(
+        warningFile,
+        JSON.stringify([
+          {
+            type: 'LogicStampBundle',
+            schemaVersion: '0.1',
+            entryId: 'test.tsx',
+            bundleHash: 'invalid-hash-format',
+            graph: { nodes: [], edges: [] },
+            meta: { missing: [], source: 'test' },
+          },
+        ]),
+      );
 
       const { stdout, stderr } = await execAsync(
-        `node dist/cli/stamp.js context validate ${warningFile}`
+        `node dist/cli/stamp.js context validate ${warningFile}`,
       );
 
       const output = (stdout + stderr).toString();
@@ -560,17 +673,22 @@ describe('CLI Validate Command Tests', () => {
 
     it('should accept valid bundleHash format', async () => {
       const validFile = join(outputPath, 'valid-hash.json');
-      await writeFile(validFile, JSON.stringify([{
-        type: 'LogicStampBundle',
-        schemaVersion: '0.1',
-        entryId: 'test.tsx',
-        bundleHash: 'uifb:123456789012345678901234',
-        graph: { nodes: [], edges: [] },
-        meta: { missing: [], source: 'test' }
-      }]));
+      await writeFile(
+        validFile,
+        JSON.stringify([
+          {
+            type: 'LogicStampBundle',
+            schemaVersion: '0.1',
+            entryId: 'test.tsx',
+            bundleHash: 'uifb:123456789012345678901234',
+            graph: { nodes: [], edges: [] },
+            meta: { missing: [], source: 'test' },
+          },
+        ]),
+      );
 
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context validate ${validFile}`
+        `node dist/cli/stamp.js context validate ${validFile}`,
       );
 
       expect(stdout).toContain('✅ Valid context file');
@@ -580,15 +698,19 @@ describe('CLI Validate Command Tests', () => {
 
   describe('Error handling', () => {
     it('should handle file not found error', async () => {
-
       try {
         await execAsync(
-          'node dist/cli/stamp.js context validate /non/existent/path.json'
+          'node dist/cli/stamp.js context validate /non/existent/path.json',
         );
         expect.fail('Should have failed');
       } catch (error: any) {
         expect(error.code).toBe(1);
-        const output = (error.stderr || error.stdout || error.message || '').toString();
+        const output = (
+          error.stderr ||
+          error.stdout ||
+          error.message ||
+          ''
+        ).toString();
         expect(output).toContain('File not found');
       }
     }, 30000);
@@ -597,15 +719,19 @@ describe('CLI Validate Command Tests', () => {
       const invalidJsonFile = join(outputPath, 'invalid-json.json');
       await writeFile(invalidJsonFile, '{ invalid json }');
 
-
       try {
         await execAsync(
-          `node dist/cli/stamp.js context validate ${invalidJsonFile}`
+          `node dist/cli/stamp.js context validate ${invalidJsonFile}`,
         );
         expect.fail('Should have failed');
       } catch (error: any) {
         expect(error.code).toBe(1);
-        const output = (error.stderr || error.stdout || error.message || '').toString();
+        const output = (
+          error.stderr ||
+          error.stdout ||
+          error.message ||
+          ''
+        ).toString();
         expect(output).toContain('Invalid JSON');
       }
     }, 30000);
@@ -614,16 +740,20 @@ describe('CLI Validate Command Tests', () => {
       const testDir = join(outputPath, 'no-context');
       await mkdir(testDir, { recursive: true });
 
-
       try {
         await execAsync(
           `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context validate`,
-          { cwd: testDir }
+          { cwd: testDir },
         );
         expect.fail('Should have failed');
       } catch (error: any) {
         expect(error.code).toBe(1);
-        const output = (error.stderr || error.stdout || error.message || '').toString();
+        const output = (
+          error.stderr ||
+          error.stdout ||
+          error.message ||
+          ''
+        ).toString();
         expect(output).toContain('File not found');
         expect(output).toContain('Tip:');
       }
@@ -633,25 +763,28 @@ describe('CLI Validate Command Tests', () => {
   describe('Multiple bundles', () => {
     it('should validate multiple bundles correctly', async () => {
       const multiBundleFile = join(outputPath, 'multi-bundle.json');
-      await writeFile(multiBundleFile, JSON.stringify([
-        {
-          type: 'LogicStampBundle',
-          schemaVersion: '0.1',
-          entryId: 'test1.tsx',
-          graph: { nodes: [], edges: [] },
-          meta: { missing: [], source: 'test' }
-        },
-        {
-          type: 'LogicStampBundle',
-          schemaVersion: '0.1',
-          entryId: 'test2.tsx',
-          graph: { nodes: [], edges: [] },
-          meta: { missing: [], source: 'test' }
-        }
-      ]));
+      await writeFile(
+        multiBundleFile,
+        JSON.stringify([
+          {
+            type: 'LogicStampBundle',
+            schemaVersion: '0.1',
+            entryId: 'test1.tsx',
+            graph: { nodes: [], edges: [] },
+            meta: { missing: [], source: 'test' },
+          },
+          {
+            type: 'LogicStampBundle',
+            schemaVersion: '0.1',
+            entryId: 'test2.tsx',
+            graph: { nodes: [], edges: [] },
+            meta: { missing: [], source: 'test' },
+          },
+        ]),
+      );
 
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context validate ${multiBundleFile}`
+        `node dist/cli/stamp.js context validate ${multiBundleFile}`,
       );
 
       expect(stdout).toContain('✅ Valid context file');
@@ -660,32 +793,39 @@ describe('CLI Validate Command Tests', () => {
 
     it('should report errors for multiple invalid bundles', async () => {
       const multiInvalidFile = join(outputPath, 'multi-invalid.json');
-      await writeFile(multiInvalidFile, JSON.stringify([
-        {
-          type: 'WrongType',
-          schemaVersion: '0.1',
-          entryId: 'test1.tsx',
-          graph: { nodes: [], edges: [] },
-          meta: { missing: [], source: 'test' }
-        },
-        {
-          type: 'LogicStampBundle',
-          schemaVersion: '0.2',
-          entryId: 'test2.tsx',
-          graph: { nodes: [], edges: [] },
-          meta: { missing: [], source: 'test' }
-        }
-      ]));
-
+      await writeFile(
+        multiInvalidFile,
+        JSON.stringify([
+          {
+            type: 'WrongType',
+            schemaVersion: '0.1',
+            entryId: 'test1.tsx',
+            graph: { nodes: [], edges: [] },
+            meta: { missing: [], source: 'test' },
+          },
+          {
+            type: 'LogicStampBundle',
+            schemaVersion: '0.2',
+            entryId: 'test2.tsx',
+            graph: { nodes: [], edges: [] },
+            meta: { missing: [], source: 'test' },
+          },
+        ]),
+      );
 
       try {
         await execAsync(
-          `node dist/cli/stamp.js context validate ${multiInvalidFile}`
+          `node dist/cli/stamp.js context validate ${multiInvalidFile}`,
         );
         expect.fail('Should have failed validation');
       } catch (error: any) {
         expect(error.code).toBe(1);
-        const output = (error.stderr || error.stdout || error.message || '').toString();
+        const output = (
+          error.stderr ||
+          error.stdout ||
+          error.message ||
+          ''
+        ).toString();
         expect(output).toContain('Bundle 1');
         expect(output).toContain('Bundle 2');
         expect(output).toContain('error(s)');
@@ -696,24 +836,33 @@ describe('CLI Validate Command Tests', () => {
   describe('Statistics reporting', () => {
     it('should report correct node and edge counts', async () => {
       const statsFile = join(outputPath, 'stats-test.json');
-      await writeFile(statsFile, JSON.stringify([{
-        type: 'LogicStampBundle',
-        schemaVersion: '0.1',
-        entryId: 'test.tsx',
-        graph: {
-          nodes: [
-            { entryId: 'node1.tsx', contract: { type: 'UIFContract', schemaVersion: '0.4' } },
-            { entryId: 'node2.tsx', contract: { type: 'UIFContract', schemaVersion: '0.4' } }
-          ],
-          edges: [
-            ['node1.tsx', 'node2.tsx']
-          ]
-        },
-        meta: { missing: [], source: 'test' }
-      }]));
+      await writeFile(
+        statsFile,
+        JSON.stringify([
+          {
+            type: 'LogicStampBundle',
+            schemaVersion: '0.1',
+            entryId: 'test.tsx',
+            graph: {
+              nodes: [
+                {
+                  entryId: 'node1.tsx',
+                  contract: { type: 'UIFContract', schemaVersion: '0.4' },
+                },
+                {
+                  entryId: 'node2.tsx',
+                  contract: { type: 'UIFContract', schemaVersion: '0.4' },
+                },
+              ],
+              edges: [['node1.tsx', 'node2.tsx']],
+            },
+            meta: { missing: [], source: 'test' },
+          },
+        ]),
+      );
 
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context validate ${statsFile}`
+        `node dist/cli/stamp.js context validate ${statsFile}`,
       );
 
       expect(stdout).toContain('Total nodes: 2');
@@ -724,7 +873,7 @@ describe('CLI Validate Command Tests', () => {
   describe('Help command', () => {
     it('should display help for validate command', async () => {
       const { stdout } = await execAsync(
-        'node dist/cli/stamp.js context validate --help'
+        'node dist/cli/stamp.js context validate --help',
       );
 
       expect(stdout).toContain('Stamp Context Validate');
@@ -739,19 +888,20 @@ describe('CLI Validate Command Tests', () => {
       const outDir = join(outputPath, 'quiet-validate-single');
       await mkdir(outDir, { recursive: true });
 
-
       // Generate a valid context file
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`,
       );
 
       // Get the first context file
-      const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
+      );
       const contextFile = join(outDir, index.folders[0].contextFile);
 
       // Validate with --quiet flag
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context validate ${contextFile} --quiet`
+        `node dist/cli/stamp.js context validate ${contextFile} --quiet`,
       );
 
       // Should not contain verbose output messages
@@ -769,19 +919,20 @@ describe('CLI Validate Command Tests', () => {
       const outDir = join(outputPath, 'quiet-validate-single-short');
       await mkdir(outDir, { recursive: true });
 
-
       // Generate a valid context file
       await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`,
       );
 
       // Get the first context file
-      const index = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
+      );
       const contextFile = join(outDir, index.folders[0].contextFile);
 
       // Validate with -q flag
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context validate ${contextFile} -q`
+        `node dist/cli/stamp.js context validate ${contextFile} -q`,
       );
 
       // Should not contain verbose output messages
@@ -796,7 +947,6 @@ describe('CLI Validate Command Tests', () => {
       const testDir = join(outputPath, 'quiet-validate-multifile');
       await mkdir(testDir, { recursive: true });
 
-
       // Copy fixture files to test directory
       const { cpSync } = await import('node:fs');
       cpSync(fixturesPath, testDir, { recursive: true });
@@ -804,13 +954,13 @@ describe('CLI Validate Command Tests', () => {
       // Generate context in the test directory
       await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Validate with --quiet flag (multi-file mode)
       const { stdout } = await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context validate --quiet`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Should not contain verbose output messages
@@ -830,24 +980,33 @@ describe('CLI Validate Command Tests', () => {
 
     it('should still show errors in quiet mode for invalid files', async () => {
       const invalidFile = join(outputPath, 'quiet-invalid.json');
-      await writeFile(invalidFile, JSON.stringify([{
-        type: 'WrongType',
-        schemaVersion: '0.1',
-        entryId: 'test.tsx',
-        graph: { nodes: [], edges: [] },
-        meta: { missing: [], source: 'test' }
-      }]));
-
+      await writeFile(
+        invalidFile,
+        JSON.stringify([
+          {
+            type: 'WrongType',
+            schemaVersion: '0.1',
+            entryId: 'test.tsx',
+            graph: { nodes: [], edges: [] },
+            meta: { missing: [], source: 'test' },
+          },
+        ]),
+      );
 
       // Validate with --quiet flag
       try {
         await execAsync(
-          `node dist/cli/stamp.js context validate ${invalidFile} --quiet`
+          `node dist/cli/stamp.js context validate ${invalidFile} --quiet`,
         );
         expect.fail('Should have failed validation');
       } catch (error: any) {
         expect(error.code).toBe(1);
-        const output = (error.stderr || error.stdout || error.message || '').toString();
+        const output = (
+          error.stderr ||
+          error.stdout ||
+          error.message ||
+          ''
+        ).toString();
         // Should still show error messages even in quiet mode
         expect(output).toContain('❌');
         expect(output).toContain('Invalid type');
@@ -858,7 +1017,6 @@ describe('CLI Validate Command Tests', () => {
       const testDir = join(outputPath, 'quiet-validate-multifile-error');
       await mkdir(testDir, { recursive: true });
 
-
       // Copy fixture files to test directory
       const { cpSync } = await import('node:fs');
       cpSync(fixturesPath, testDir, { recursive: true });
@@ -866,30 +1024,42 @@ describe('CLI Validate Command Tests', () => {
       // Generate context in the test directory
       await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Corrupt one of the context files
-      const index = JSON.parse(await readFile(join(testDir, 'context_main.json'), 'utf-8'));
+      const index = JSON.parse(
+        await readFile(join(testDir, 'context_main.json'), 'utf-8'),
+      );
       const contextFile = join(testDir, index.folders[0].contextFile);
-      await writeFile(contextFile, JSON.stringify([{
-        type: 'WrongType',
-        schemaVersion: '0.1',
-        entryId: 'test.tsx',
-        graph: { nodes: [], edges: [] },
-        meta: { missing: [], source: 'test' }
-      }]));
+      await writeFile(
+        contextFile,
+        JSON.stringify([
+          {
+            type: 'WrongType',
+            schemaVersion: '0.1',
+            entryId: 'test.tsx',
+            graph: { nodes: [], edges: [] },
+            meta: { missing: [], source: 'test' },
+          },
+        ]),
+      );
 
       // Validate with --quiet flag (should still show errors)
       try {
         await execAsync(
           `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context validate --quiet`,
-          { cwd: testDir }
+          { cwd: testDir },
         );
         expect.fail('Should have failed validation');
       } catch (error: any) {
         expect(error.code).toBe(1);
-        const output = (error.stderr || error.stdout || error.message || '').toString();
+        const output = (
+          error.stderr ||
+          error.stdout ||
+          error.message ||
+          ''
+        ).toString();
         // Should still show error messages even in quiet mode
         expect(output).toContain('❌');
         expect(output).toContain('INVALID:');
@@ -903,7 +1073,6 @@ describe('CLI Validate Command Tests', () => {
       const testDir = join(outputPath, 'quiet-validate-multifile-valid');
       await mkdir(testDir, { recursive: true });
 
-
       // Copy fixture files to test directory
       const { cpSync } = await import('node:fs');
       cpSync(fixturesPath, testDir, { recursive: true });
@@ -911,13 +1080,13 @@ describe('CLI Validate Command Tests', () => {
       // Generate context in the test directory
       await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context .`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Validate with --quiet flag
       const { stdout } = await execAsync(
         `node "${join(process.cwd(), 'dist/cli/stamp.js')}" context validate --quiet`,
-        { cwd: testDir }
+        { cwd: testDir },
       );
 
       // Should not show valid folder details
@@ -932,4 +1101,3 @@ describe('CLI Validate Command Tests', () => {
     }, 30000);
   });
 });
-

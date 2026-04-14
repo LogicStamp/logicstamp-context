@@ -147,7 +147,9 @@ describe('handleCompare', () => {
     mockCleanupBaselinePaths.mockReset();
     mockFilterGitIgnoredFiles.mockReset();
     // Default implementation: pass through all files (not filtered)
-    mockFilterGitIgnoredFiles.mockImplementation(async (files: string[]) => files);
+    mockFilterGitIgnoredFiles.mockImplementation(
+      async (files: string[]) => files,
+    );
 
     // Set default mock implementations
     mockExistsSync.mockReturnValue(true);
@@ -158,7 +160,20 @@ describe('handleCompare', () => {
     mockWriteFile.mockResolvedValue(undefined);
     mockContextCommand.mockResolvedValue(undefined);
     mockCompareCommand.mockResolvedValue({ status: 'PASS' });
-    mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
+    mockMultiFileCompare.mockResolvedValue({
+      status: 'PASS',
+      folders: [],
+      summary: {
+        totalFolders: 0,
+        addedFolders: 0,
+        orphanedFolders: 0,
+        driftFolders: 0,
+        passFolders: 0,
+        totalComponentsAdded: 0,
+        totalComponentsRemoved: 0,
+        totalComponentsChanged: 0,
+      },
+    });
     mockDisplayMultiFileCompareResult.mockImplementation(() => {});
     mockCleanOrphanedFiles.mockResolvedValue(0);
 
@@ -167,8 +182,14 @@ describe('handleCompare', () => {
     vi.spyOn(console, 'log').mockImplementation(() => {});
 
     // Mock TTY to false for non-interactive tests
-    Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true });
-    Object.defineProperty(process.stdin, 'isTTY', { value: false, writable: true });
+    Object.defineProperty(process.stdout, 'isTTY', {
+      value: false,
+      writable: true,
+    });
+    Object.defineProperty(process.stdin, 'isTTY', {
+      value: false,
+      writable: true,
+    });
   });
 
   afterEach(() => {
@@ -176,18 +197,30 @@ describe('handleCompare', () => {
     process.exit = originalExit;
     console.error = originalConsoleError;
     console.log = originalConsoleLog;
-    Object.defineProperty(process.stdout, 'isTTY', { value: originalIsTTY, writable: true });
-    Object.defineProperty(process.stdin, 'isTTY', { value: originalStdinIsTTY, writable: true });
+    Object.defineProperty(process.stdout, 'isTTY', {
+      value: originalIsTTY,
+      writable: true,
+    });
+    Object.defineProperty(process.stdin, 'isTTY', {
+      value: originalStdinIsTTY,
+      writable: true,
+    });
   });
 
   it('should show help when --help flag is provided', async () => {
-    const printFoxSpy = vi.spyOn(initHandler, 'printFoxIcon').mockImplementation(() => {});
-    const getHelpSpy = vi.spyOn(parser, 'getCompareHelp').mockReturnValue('Compare help text');
+    const printFoxSpy = vi
+      .spyOn(initHandler, 'printFoxIcon')
+      .mockImplementation(() => {});
+    const getHelpSpy = vi
+      .spyOn(parser, 'getCompareHelp')
+      .mockReturnValue('Compare help text');
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`Exit called with code ${code}`);
     });
 
-    await expect(handleCompare(['--help'])).rejects.toThrow('Exit called with code 0');
+    await expect(handleCompare(['--help'])).rejects.toThrow(
+      'Exit called with code 0',
+    );
 
     expect(printFoxSpy).toHaveBeenCalled();
     expect(getHelpSpy).toHaveBeenCalled();
@@ -196,13 +229,19 @@ describe('handleCompare', () => {
   });
 
   it('should show help when -h flag is provided', async () => {
-    const printFoxSpy = vi.spyOn(initHandler, 'printFoxIcon').mockImplementation(() => {});
-    const getHelpSpy = vi.spyOn(parser, 'getCompareHelp').mockReturnValue('Compare help text');
+    const printFoxSpy = vi
+      .spyOn(initHandler, 'printFoxIcon')
+      .mockImplementation(() => {});
+    const getHelpSpy = vi
+      .spyOn(parser, 'getCompareHelp')
+      .mockReturnValue('Compare help text');
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`Exit called with code ${code}`);
     });
 
-    await expect(handleCompare(['-h'])).rejects.toThrow('Exit called with code 0');
+    await expect(handleCompare(['-h'])).rejects.toThrow(
+      'Exit called with code 0',
+    );
 
     expect(printFoxSpy).toHaveBeenCalled();
     expect(getHelpSpy).toHaveBeenCalled();
@@ -214,17 +253,23 @@ describe('handleCompare', () => {
       throw new Error(`Exit called with code ${code}`);
     });
 
-    await expect(handleCompare(['--compare-modes'])).rejects.toThrow('Exit called with code 1');
+    await expect(handleCompare(['--compare-modes'])).rejects.toThrow(
+      'Exit called with code 1',
+    );
 
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('--compare-modes is not available')
+      expect.stringContaining('--compare-modes is not available'),
     );
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
 
   it('should show help when less than 2 files provided', async () => {
-    const printFoxSpy = vi.spyOn(initHandler, 'printFoxIcon').mockImplementation(() => {});
-    const getHelpSpy = vi.spyOn(parser, 'getCompareHelp').mockReturnValue('Compare help text');
+    const printFoxSpy = vi
+      .spyOn(initHandler, 'printFoxIcon')
+      .mockImplementation(() => {});
+    const getHelpSpy = vi
+      .spyOn(parser, 'getCompareHelp')
+      .mockReturnValue('Compare help text');
     const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
       throw new Error(`Exit called with code ${code}`);
     });
@@ -237,7 +282,9 @@ describe('handleCompare', () => {
       positionalArgs: ['old.json'], // Only one file
     });
 
-    await expect(handleCompare(['old.json'])).rejects.toThrow('Exit called with code 1');
+    await expect(handleCompare(['old.json'])).rejects.toThrow(
+      'Exit called with code 1',
+    );
 
     expect(printFoxSpy).toHaveBeenCalled();
     expect(getHelpSpy).toHaveBeenCalled();
@@ -245,7 +292,12 @@ describe('handleCompare', () => {
   });
 
   it('should call compareCommand for single file comparison', async () => {
-    mockCompareCommand.mockResolvedValue({ status: 'PASS', added: [], removed: [], changed: [] });
+    mockCompareCommand.mockResolvedValue({
+      status: 'PASS',
+      added: [],
+      removed: [],
+      changed: [],
+    });
     vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
       stats: false,
       approve: false,
@@ -267,7 +319,20 @@ describe('handleCompare', () => {
   });
 
   it('should call multiFileCompare for context_main.json files', async () => {
-    mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
+    mockMultiFileCompare.mockResolvedValue({
+      status: 'PASS',
+      folders: [],
+      summary: {
+        totalFolders: 0,
+        addedFolders: 0,
+        orphanedFolders: 0,
+        driftFolders: 0,
+        passFolders: 0,
+        totalComponentsAdded: 0,
+        totalComponentsRemoved: 0,
+        totalComponentsChanged: 0,
+      },
+    });
     vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
       stats: false,
       approve: false,
@@ -297,7 +362,10 @@ describe('handleCompare', () => {
 
     await handleCompare(['old.json', 'new.json']);
 
-    expect(console.error).toHaveBeenCalledWith('❌ Compare failed:', 'Compare failed');
+    expect(console.error).toHaveBeenCalledWith(
+      '❌ Compare failed:',
+      'Compare failed',
+    );
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 
@@ -318,10 +386,12 @@ describe('handleCompare', () => {
         throw new Error(`Exit called with code ${code}`);
       });
 
-      await expect(handleCompare([])).rejects.toThrow('Exit called with code 1');
+      await expect(handleCompare([])).rejects.toThrow(
+        'Exit called with code 1',
+      );
 
       expect(console.error).toHaveBeenCalledWith(
-        '❌ context_main.json not found. Run "stamp context" first to compile context files.'
+        '❌ context_main.json not found. Run "stamp context" first to compile context files.',
       );
       expect(exitSpy).toHaveBeenCalledWith(1);
     });
@@ -332,7 +402,20 @@ describe('handleCompare', () => {
       mockRm.mockResolvedValue(undefined);
       mockReadFile.mockResolvedValue(JSON.stringify({ folders: [] }));
       mockContextCommand.mockResolvedValue(undefined);
-      mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
+      mockMultiFileCompare.mockResolvedValue({
+        status: 'PASS',
+        folders: [],
+        summary: {
+          totalFolders: 0,
+          addedFolders: 0,
+          orphanedFolders: 0,
+          driftFolders: 0,
+          passFolders: 0,
+          totalComponentsAdded: 0,
+          totalComponentsRemoved: 0,
+          totalComponentsChanged: 0,
+        },
+      });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -355,11 +438,16 @@ describe('handleCompare', () => {
       mockMkdir.mockResolvedValue(undefined);
       mockRm.mockResolvedValue(undefined);
       mockCopyFile.mockResolvedValue(undefined);
-      mockReadFile.mockResolvedValue(JSON.stringify({
-        folders: [{ contextFile: 'src/context.json' }]
-      }));
+      mockReadFile.mockResolvedValue(
+        JSON.stringify({
+          folders: [{ contextFile: 'src/context.json' }],
+        }),
+      );
       mockContextCommand.mockResolvedValue(undefined);
-      mockMultiFileCompare.mockResolvedValue({ status: 'DRIFT', folderResults: [] });
+      mockMultiFileCompare.mockResolvedValue({
+        status: 'DRIFT',
+        folderResults: [],
+      });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -373,7 +461,9 @@ describe('handleCompare', () => {
       await handleCompare(['--approve']);
 
       expect(mockCopyFile).toHaveBeenCalled();
-      expect(console.log).toHaveBeenCalledWith('🔄 --approve flag set, updating all context files...');
+      expect(console.log).toHaveBeenCalledWith(
+        '🔄 --approve flag set, updating all context files...',
+      );
       expect(process.exit).toHaveBeenCalledWith(0);
     });
 
@@ -383,7 +473,10 @@ describe('handleCompare', () => {
       mockRm.mockResolvedValue(undefined);
       mockReadFile.mockResolvedValue(JSON.stringify({ folders: [] }));
       mockContextCommand.mockResolvedValue(undefined);
-      mockMultiFileCompare.mockResolvedValue({ status: 'DRIFT', folderResults: [] });
+      mockMultiFileCompare.mockResolvedValue({
+        status: 'DRIFT',
+        folderResults: [],
+      });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -398,7 +491,9 @@ describe('handleCompare', () => {
         throw new Error(`Exit called with code ${code}`);
       });
 
-      await expect(handleCompare([])).rejects.toThrow('Exit called with code 1');
+      await expect(handleCompare([])).rejects.toThrow(
+        'Exit called with code 1',
+      );
 
       expect(exitSpy).toHaveBeenCalledWith(1);
     });
@@ -428,8 +523,14 @@ describe('handleCompare', () => {
 
       await handleCompare(['--approve', '--clean-orphaned']);
 
-      expect(mockCleanOrphanedFiles).toHaveBeenCalledWith(['old/context.json'], '.', false);
-      expect(console.log).toHaveBeenCalledWith('\n🗑️  Cleaning up orphaned files...');
+      expect(mockCleanOrphanedFiles).toHaveBeenCalledWith(
+        ['old/context.json'],
+        '.',
+        false,
+      );
+      expect(console.log).toHaveBeenCalledWith(
+        '\n🗑️  Cleaning up orphaned files...',
+      );
       expect(process.exit).toHaveBeenCalledWith(0);
     });
 
@@ -437,7 +538,9 @@ describe('handleCompare', () => {
       mockExistsSync.mockReturnValue(true);
       mockMkdir.mockResolvedValue(undefined);
       mockRm.mockResolvedValue(undefined);
-      mockContextCommand.mockRejectedValue(new Error('Context compilation failed'));
+      mockContextCommand.mockRejectedValue(
+        new Error('Context compilation failed'),
+      );
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -452,15 +555,22 @@ describe('handleCompare', () => {
         throw new Error(`Exit called with code ${code}`);
       });
 
-      await expect(handleCompare([])).rejects.toThrow('Exit called with code 1');
+      await expect(handleCompare([])).rejects.toThrow(
+        'Exit called with code 1',
+      );
 
-      expect(console.error).toHaveBeenCalledWith('❌ Compare failed:', 'Context compilation failed');
+      expect(console.error).toHaveBeenCalledWith(
+        '❌ Compare failed:',
+        'Context compilation failed',
+      );
       expect(exitSpy).toHaveBeenCalledWith(1);
     });
 
     it('should handle mkdir failure with proper error message', async () => {
       mockExistsSync.mockReturnValue(true);
-      const mkdirError = new Error('Permission denied') as NodeJS.ErrnoException;
+      const mkdirError = new Error(
+        'Permission denied',
+      ) as NodeJS.ErrnoException;
       mkdirError.code = 'EACCES';
       mockMkdir.mockRejectedValue(mkdirError);
       mockRm.mockResolvedValue(undefined);
@@ -484,7 +594,20 @@ describe('handleCompare', () => {
       mockRm.mockResolvedValue(undefined);
       mockReadFile.mockResolvedValue(JSON.stringify({ folders: [] }));
       mockContextCommand.mockResolvedValue(undefined);
-      mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
+      mockMultiFileCompare.mockResolvedValue({
+        status: 'PASS',
+        folders: [],
+        summary: {
+          totalFolders: 0,
+          addedFolders: 0,
+          orphanedFolders: 0,
+          driftFolders: 0,
+          passFolders: 0,
+          totalComponentsAdded: 0,
+          totalComponentsRemoved: 0,
+          totalComponentsChanged: 0,
+        },
+      });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -507,10 +630,15 @@ describe('handleCompare', () => {
     it('should handle drift with --approve flag', async () => {
       mockMkdir.mockResolvedValue(undefined);
       mockCopyFile.mockResolvedValue(undefined);
-      mockReadFile.mockResolvedValue(JSON.stringify({
-        folders: [{ contextFile: 'src/context.json' }]
-      }));
-      mockMultiFileCompare.mockResolvedValue({ status: 'DRIFT', folderResults: [] });
+      mockReadFile.mockResolvedValue(
+        JSON.stringify({
+          folders: [{ contextFile: 'src/context.json' }],
+        }),
+      );
+      mockMultiFileCompare.mockResolvedValue({
+        status: 'DRIFT',
+        folderResults: [],
+      });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -521,14 +649,21 @@ describe('handleCompare', () => {
         positionalArgs: ['old/context_main.json', 'new/context_main.json'],
       });
 
-      await handleCompare(['old/context_main.json', 'new/context_main.json', '--approve']);
+      await handleCompare([
+        'old/context_main.json',
+        'new/context_main.json',
+        '--approve',
+      ]);
 
       expect(mockCopyFile).toHaveBeenCalled();
       expect(process.exit).toHaveBeenCalledWith(0);
     });
 
     it('should exit 1 when drift not approved (non-TTY)', async () => {
-      mockMultiFileCompare.mockResolvedValue({ status: 'DRIFT', folderResults: [] });
+      mockMultiFileCompare.mockResolvedValue({
+        status: 'DRIFT',
+        folderResults: [],
+      });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -543,13 +678,28 @@ describe('handleCompare', () => {
         throw new Error(`Exit called with code ${code}`);
       });
 
-      await expect(handleCompare(['old/context_main.json', 'new/context_main.json'])).rejects.toThrow('Exit called with code 1');
+      await expect(
+        handleCompare(['old/context_main.json', 'new/context_main.json']),
+      ).rejects.toThrow('Exit called with code 1');
 
       expect(exitSpy).toHaveBeenCalledWith(1);
     });
 
     it('should pass stats option to multiFileCompare', async () => {
-      mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
+      mockMultiFileCompare.mockResolvedValue({
+        status: 'PASS',
+        folders: [],
+        summary: {
+          totalFolders: 0,
+          addedFolders: 0,
+          orphanedFolders: 0,
+          driftFolders: 0,
+          passFolders: 0,
+          totalComponentsAdded: 0,
+          totalComponentsRemoved: 0,
+          totalComponentsChanged: 0,
+        },
+      });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: true,
@@ -560,11 +710,17 @@ describe('handleCompare', () => {
         positionalArgs: ['old/context_main.json', 'new/context_main.json'],
       });
 
-      await handleCompare(['old/context_main.json', 'new/context_main.json', '--stats']);
+      await handleCompare([
+        'old/context_main.json',
+        'new/context_main.json',
+        '--stats',
+      ]);
 
-      expect(mockMultiFileCompare).toHaveBeenCalledWith(expect.objectContaining({
-        stats: true,
-      }));
+      expect(mockMultiFileCompare).toHaveBeenCalledWith(
+        expect.objectContaining({
+          stats: true,
+        }),
+      );
     });
 
     it('should clean orphaned files when requested', async () => {
@@ -587,14 +743,25 @@ describe('handleCompare', () => {
         positionalArgs: ['old/context_main.json', 'new/context_main.json'],
       });
 
-      await handleCompare(['old/context_main.json', 'new/context_main.json', '--approve', '--clean-orphaned']);
+      await handleCompare([
+        'old/context_main.json',
+        'new/context_main.json',
+        '--approve',
+        '--clean-orphaned',
+      ]);
 
-      expect(mockCleanOrphanedFiles).toHaveBeenCalledWith(['old/obsolete/context.json'], 'old', false);
+      expect(mockCleanOrphanedFiles).toHaveBeenCalledWith(
+        ['old/obsolete/context.json'],
+        'old',
+        false,
+      );
       expect(process.exit).toHaveBeenCalledWith(0);
     });
 
     it('should handle multiFileCompare errors', async () => {
-      mockMultiFileCompare.mockRejectedValue(new Error('Multi-file compare failed'));
+      mockMultiFileCompare.mockRejectedValue(
+        new Error('Multi-file compare failed'),
+      );
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -609,18 +776,28 @@ describe('handleCompare', () => {
         throw new Error(`Exit called with code ${code}`);
       });
 
-      await expect(handleCompare(['old/context_main.json', 'new/context_main.json'])).rejects.toThrow('Exit called with code 1');
+      await expect(
+        handleCompare(['old/context_main.json', 'new/context_main.json']),
+      ).rejects.toThrow('Exit called with code 1');
 
-      expect(console.error).toHaveBeenCalledWith('❌ Compare failed:', 'Multi-file compare failed');
+      expect(console.error).toHaveBeenCalledWith(
+        '❌ Compare failed:',
+        'Multi-file compare failed',
+      );
     });
 
     describe('error handling', () => {
       it('should handle readFile error with ENOENT code', async () => {
         mockMkdir.mockResolvedValue(undefined);
         mockCopyFile.mockResolvedValue(undefined);
-        mockMultiFileCompare.mockResolvedValue({ status: 'DRIFT', folderResults: [] });
-        
-        const readFileError = new Error('File not found') as NodeJS.ErrnoException;
+        mockMultiFileCompare.mockResolvedValue({
+          status: 'DRIFT',
+          folderResults: [],
+        });
+
+        const readFileError = new Error(
+          'File not found',
+        ) as NodeJS.ErrnoException;
         readFileError.code = 'ENOENT';
         mockReadFile.mockRejectedValue(readFileError);
 
@@ -637,11 +814,17 @@ describe('handleCompare', () => {
           throw new Error(`Exit called with code ${code}`);
         });
 
-        await expect(handleCompare(['old/context_main.json', 'new/context_main.json', '--approve'])).rejects.toThrow('Exit called with code 1');
+        await expect(
+          handleCompare([
+            'old/context_main.json',
+            'new/context_main.json',
+            '--approve',
+          ]),
+        ).rejects.toThrow('Exit called with code 1');
 
         expect(console.error).toHaveBeenCalledWith(
           '❌ Compare failed:',
-          expect.stringContaining('File not found')
+          expect.stringContaining('File not found'),
         );
         expect(mockDebugError).toHaveBeenCalled();
         expect(exitSpy).toHaveBeenCalledWith(1);
@@ -650,9 +833,14 @@ describe('handleCompare', () => {
       it('should handle readFile error with other error codes', async () => {
         mockMkdir.mockResolvedValue(undefined);
         mockCopyFile.mockResolvedValue(undefined);
-        mockMultiFileCompare.mockResolvedValue({ status: 'DRIFT', folderResults: [] });
-        
-        const readFileError = new Error('Permission denied') as NodeJS.ErrnoException;
+        mockMultiFileCompare.mockResolvedValue({
+          status: 'DRIFT',
+          folderResults: [],
+        });
+
+        const readFileError = new Error(
+          'Permission denied',
+        ) as NodeJS.ErrnoException;
         readFileError.code = 'EACCES';
         mockReadFile.mockRejectedValue(readFileError);
 
@@ -669,11 +857,17 @@ describe('handleCompare', () => {
           throw new Error(`Exit called with code ${code}`);
         });
 
-        await expect(handleCompare(['old/context_main.json', 'new/context_main.json', '--approve'])).rejects.toThrow('Exit called with code 1');
+        await expect(
+          handleCompare([
+            'old/context_main.json',
+            'new/context_main.json',
+            '--approve',
+          ]),
+        ).rejects.toThrow('Exit called with code 1');
 
         expect(console.error).toHaveBeenCalledWith(
           '❌ Compare failed:',
-          expect.stringContaining('Permission denied')
+          expect.stringContaining('Permission denied'),
         );
         expect(mockDebugError).toHaveBeenCalled();
         expect(exitSpy).toHaveBeenCalledWith(1);
@@ -682,7 +876,10 @@ describe('handleCompare', () => {
       it('should handle JSON.parse error', async () => {
         mockMkdir.mockResolvedValue(undefined);
         mockCopyFile.mockResolvedValue(undefined);
-        mockMultiFileCompare.mockResolvedValue({ status: 'DRIFT', folderResults: [] });
+        mockMultiFileCompare.mockResolvedValue({
+          status: 'DRIFT',
+          folderResults: [],
+        });
         mockReadFile.mockResolvedValue('invalid json {');
 
         vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
@@ -698,27 +895,42 @@ describe('handleCompare', () => {
           throw new Error(`Exit called with code ${code}`);
         });
 
-        await expect(handleCompare(['old/context_main.json', 'new/context_main.json', '--approve'])).rejects.toThrow('Exit called with code 1');
+        await expect(
+          handleCompare([
+            'old/context_main.json',
+            'new/context_main.json',
+            '--approve',
+          ]),
+        ).rejects.toThrow('Exit called with code 1');
 
         expect(console.error).toHaveBeenCalledWith(
           '❌ Compare failed:',
-          expect.stringContaining('Failed to parse index file')
+          expect.stringContaining('Failed to parse index file'),
         );
         expect(mockDebugError).toHaveBeenCalled();
         expect(exitSpy).toHaveBeenCalledWith(1);
       });
 
       it('should handle mkdir error with EACCES code', async () => {
-        mockMkdir.mockRejectedValue((() => {
-          const error = new Error('Permission denied') as NodeJS.ErrnoException;
-          error.code = 'EACCES';
-          return error;
-        })());
+        mockMkdir.mockRejectedValue(
+          (() => {
+            const error = new Error(
+              'Permission denied',
+            ) as NodeJS.ErrnoException;
+            error.code = 'EACCES';
+            return error;
+          })(),
+        );
         mockCopyFile.mockResolvedValue(undefined);
-        mockReadFile.mockResolvedValue(JSON.stringify({
-          folders: [{ contextFile: 'src/context.json' }]
-        }));
-        mockMultiFileCompare.mockResolvedValue({ status: 'DRIFT', folderResults: [] });
+        mockReadFile.mockResolvedValue(
+          JSON.stringify({
+            folders: [{ contextFile: 'src/context.json' }],
+          }),
+        );
+        mockMultiFileCompare.mockResolvedValue({
+          status: 'DRIFT',
+          folderResults: [],
+        });
 
         vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
           stats: false,
@@ -733,27 +945,42 @@ describe('handleCompare', () => {
           throw new Error(`Exit called with code ${code}`);
         });
 
-        await expect(handleCompare(['old/context_main.json', 'new/context_main.json', '--approve'])).rejects.toThrow('Exit called with code 1');
+        await expect(
+          handleCompare([
+            'old/context_main.json',
+            'new/context_main.json',
+            '--approve',
+          ]),
+        ).rejects.toThrow('Exit called with code 1');
 
         expect(console.error).toHaveBeenCalledWith(
           '❌ Compare failed:',
-          expect.stringContaining('Permission denied')
+          expect.stringContaining('Permission denied'),
         );
         expect(mockDebugError).toHaveBeenCalled();
         expect(exitSpy).toHaveBeenCalledWith(1);
       });
 
       it('should handle mkdir error with other error codes', async () => {
-        mockMkdir.mockRejectedValue((() => {
-          const error = new Error('Directory already exists') as NodeJS.ErrnoException;
-          error.code = 'EEXIST';
-          return error;
-        })());
+        mockMkdir.mockRejectedValue(
+          (() => {
+            const error = new Error(
+              'Directory already exists',
+            ) as NodeJS.ErrnoException;
+            error.code = 'EEXIST';
+            return error;
+          })(),
+        );
         mockCopyFile.mockResolvedValue(undefined);
-        mockReadFile.mockResolvedValue(JSON.stringify({
-          folders: [{ contextFile: 'src/context.json' }]
-        }));
-        mockMultiFileCompare.mockResolvedValue({ status: 'DRIFT', folderResults: [] });
+        mockReadFile.mockResolvedValue(
+          JSON.stringify({
+            folders: [{ contextFile: 'src/context.json' }],
+          }),
+        );
+        mockMultiFileCompare.mockResolvedValue({
+          status: 'DRIFT',
+          folderResults: [],
+        });
 
         vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
           stats: false,
@@ -768,11 +995,17 @@ describe('handleCompare', () => {
           throw new Error(`Exit called with code ${code}`);
         });
 
-        await expect(handleCompare(['old/context_main.json', 'new/context_main.json', '--approve'])).rejects.toThrow('Exit called with code 1');
+        await expect(
+          handleCompare([
+            'old/context_main.json',
+            'new/context_main.json',
+            '--approve',
+          ]),
+        ).rejects.toThrow('Exit called with code 1');
 
         expect(console.error).toHaveBeenCalledWith(
           '❌ Compare failed:',
-          expect.stringContaining('Directory already exists')
+          expect.stringContaining('Directory already exists'),
         );
         expect(mockDebugError).toHaveBeenCalled();
         expect(exitSpy).toHaveBeenCalledWith(1);
@@ -781,10 +1014,15 @@ describe('handleCompare', () => {
       it('should handle copyFile error', async () => {
         mockMkdir.mockResolvedValue(undefined);
         mockCopyFile.mockRejectedValue(new Error('Copy failed'));
-        mockReadFile.mockResolvedValue(JSON.stringify({
-          folders: [{ contextFile: 'src/context.json' }]
-        }));
-        mockMultiFileCompare.mockResolvedValue({ status: 'DRIFT', folderResults: [] });
+        mockReadFile.mockResolvedValue(
+          JSON.stringify({
+            folders: [{ contextFile: 'src/context.json' }],
+          }),
+        );
+        mockMultiFileCompare.mockResolvedValue({
+          status: 'DRIFT',
+          folderResults: [],
+        });
 
         vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
           stats: false,
@@ -799,11 +1037,17 @@ describe('handleCompare', () => {
           throw new Error(`Exit called with code ${code}`);
         });
 
-        await expect(handleCompare(['old/context_main.json', 'new/context_main.json', '--approve'])).rejects.toThrow('Exit called with code 1');
+        await expect(
+          handleCompare([
+            'old/context_main.json',
+            'new/context_main.json',
+            '--approve',
+          ]),
+        ).rejects.toThrow('Exit called with code 1');
 
         expect(console.error).toHaveBeenCalledWith(
           '❌ Compare failed:',
-          expect.stringContaining('Copy failed')
+          expect.stringContaining('Copy failed'),
         );
         expect(mockDebugError).toHaveBeenCalled();
         expect(exitSpy).toHaveBeenCalledWith(1);
@@ -830,7 +1074,11 @@ describe('handleCompare', () => {
           positionalArgs: ['old/context_main.json', 'new/context_main.json'],
         });
 
-        await handleCompare(['old/context_main.json', 'new/context_main.json', '--approve']);
+        await handleCompare([
+          'old/context_main.json',
+          'new/context_main.json',
+          '--approve',
+        ]);
 
         expect(mockCleanOrphanedFiles).not.toHaveBeenCalled();
         expect(process.exit).toHaveBeenCalledWith(0);
@@ -855,7 +1103,12 @@ describe('handleCompare', () => {
           positionalArgs: ['old/context_main.json', 'new/context_main.json'],
         });
 
-        await handleCompare(['old/context_main.json', 'new/context_main.json', '--approve', '--clean-orphaned']);
+        await handleCompare([
+          'old/context_main.json',
+          'new/context_main.json',
+          '--approve',
+          '--clean-orphaned',
+        ]);
 
         expect(mockCleanOrphanedFiles).not.toHaveBeenCalled();
         expect(process.exit).toHaveBeenCalledWith(0);
@@ -880,7 +1133,12 @@ describe('handleCompare', () => {
           positionalArgs: ['old/context_main.json', 'new/context_main.json'],
         });
 
-        await handleCompare(['old/context_main.json', 'new/context_main.json', '--approve', '--clean-orphaned']);
+        await handleCompare([
+          'old/context_main.json',
+          'new/context_main.json',
+          '--approve',
+          '--clean-orphaned',
+        ]);
 
         expect(mockCleanOrphanedFiles).not.toHaveBeenCalled();
         expect(process.exit).toHaveBeenCalledWith(0);
@@ -892,16 +1150,27 @@ describe('handleCompare', () => {
         mockMkdir.mockResolvedValue(undefined);
         mockCopyFile.mockResolvedValue(undefined);
         mockReadFile.mockResolvedValue(JSON.stringify({ folders: [] }));
-        mockMultiFileCompare.mockResolvedValue({ status: 'DRIFT', folderResults: [] });
+        mockMultiFileCompare.mockResolvedValue({
+          status: 'DRIFT',
+          folderResults: [],
+        });
 
         // Set TTY to true
-        Object.defineProperty(process.stdout, 'isTTY', { value: true, writable: true });
-        Object.defineProperty(process.stdin, 'isTTY', { value: true, writable: true });
+        Object.defineProperty(process.stdout, 'isTTY', {
+          value: true,
+          writable: true,
+        });
+        Object.defineProperty(process.stdin, 'isTTY', {
+          value: true,
+          writable: true,
+        });
 
         // Mock readline to return 'n' (decline)
-        mockReadlineInterface.question.mockImplementation((question, callback) => {
-          callback('n');
-        });
+        mockReadlineInterface.question.mockImplementation(
+          (question, callback) => {
+            callback('n');
+          },
+        );
 
         vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
           stats: false,
@@ -916,7 +1185,9 @@ describe('handleCompare', () => {
           throw new Error(`Exit called with code ${code}`);
         });
 
-        await expect(handleCompare(['old/context_main.json', 'new/context_main.json'])).rejects.toThrow('Exit called with code 1');
+        await expect(
+          handleCompare(['old/context_main.json', 'new/context_main.json']),
+        ).rejects.toThrow('Exit called with code 1');
 
         expect(console.log).toHaveBeenCalledWith('❌ Update declined\n');
         expect(exitSpy).toHaveBeenCalledWith(1);
@@ -926,11 +1197,20 @@ describe('handleCompare', () => {
         mockMkdir.mockResolvedValue(undefined);
         mockCopyFile.mockResolvedValue(undefined);
         mockReadFile.mockResolvedValue(JSON.stringify({ folders: [] }));
-        mockMultiFileCompare.mockResolvedValue({ status: 'DRIFT', folderResults: [] });
+        mockMultiFileCompare.mockResolvedValue({
+          status: 'DRIFT',
+          folderResults: [],
+        });
 
         // Set TTY to false (default)
-        Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true });
-        Object.defineProperty(process.stdin, 'isTTY', { value: false, writable: true });
+        Object.defineProperty(process.stdout, 'isTTY', {
+          value: false,
+          writable: true,
+        });
+        Object.defineProperty(process.stdin, 'isTTY', {
+          value: false,
+          writable: true,
+        });
 
         vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
           stats: false,
@@ -945,7 +1225,9 @@ describe('handleCompare', () => {
           throw new Error(`Exit called with code ${code}`);
         });
 
-        await expect(handleCompare(['old/context_main.json', 'new/context_main.json'])).rejects.toThrow('Exit called with code 1');
+        await expect(
+          handleCompare(['old/context_main.json', 'new/context_main.json']),
+        ).rejects.toThrow('Exit called with code 1');
 
         expect(console.log).not.toHaveBeenCalledWith('❌ Update declined\n');
         expect(exitSpy).toHaveBeenCalledWith(1);
@@ -970,7 +1252,9 @@ describe('handleCompare', () => {
       await handleCompare(['old.json', 'new.json', '--approve']);
 
       expect(mockCopyFile).toHaveBeenCalledWith('new.json', 'old.json');
-      expect(console.log).toHaveBeenCalledWith('🔄 --approve flag set, updating old.json...');
+      expect(console.log).toHaveBeenCalledWith(
+        '🔄 --approve flag set, updating old.json...',
+      );
       expect(process.exit).toHaveBeenCalledWith(0);
     });
 
@@ -990,13 +1274,20 @@ describe('handleCompare', () => {
         throw new Error(`Exit called with code ${code}`);
       });
 
-      await expect(handleCompare(['old.json', 'new.json'])).rejects.toThrow('Exit called with code 1');
+      await expect(handleCompare(['old.json', 'new.json'])).rejects.toThrow(
+        'Exit called with code 1',
+      );
 
       expect(exitSpy).toHaveBeenCalledWith(1);
     });
 
     it('should pass stats option to compareCommand', async () => {
-      mockCompareCommand.mockResolvedValue({ status: 'PASS', added: [], removed: [], changed: [] });
+      mockCompareCommand.mockResolvedValue({
+        status: 'PASS',
+        added: [],
+        removed: [],
+        changed: [],
+      });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: true,
@@ -1009,13 +1300,20 @@ describe('handleCompare', () => {
 
       await handleCompare(['old.json', 'new.json', '--stats']);
 
-      expect(mockCompareCommand).toHaveBeenCalledWith(expect.objectContaining({
-        stats: true,
-      }));
+      expect(mockCompareCommand).toHaveBeenCalledWith(
+        expect.objectContaining({
+          stats: true,
+        }),
+      );
     });
 
     it('should pass quiet option to compareCommand', async () => {
-      mockCompareCommand.mockResolvedValue({ status: 'PASS', added: [], removed: [], changed: [] });
+      mockCompareCommand.mockResolvedValue({
+        status: 'PASS',
+        added: [],
+        removed: [],
+        changed: [],
+      });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -1028,13 +1326,20 @@ describe('handleCompare', () => {
 
       await handleCompare(['old.json', 'new.json', '--quiet']);
 
-      expect(mockCompareCommand).toHaveBeenCalledWith(expect.objectContaining({
-        quiet: true,
-      }));
+      expect(mockCompareCommand).toHaveBeenCalledWith(
+        expect.objectContaining({
+          quiet: true,
+        }),
+      );
     });
 
     it('should exit 0 when files are identical', async () => {
-      mockCompareCommand.mockResolvedValue({ status: 'PASS', added: [], removed: [], changed: [] });
+      mockCompareCommand.mockResolvedValue({
+        status: 'PASS',
+        added: [],
+        removed: [],
+        changed: [],
+      });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -1055,13 +1360,21 @@ describe('handleCompare', () => {
         mockCompareCommand.mockResolvedValue({ status: 'DRIFT' });
 
         // Set TTY to true
-        Object.defineProperty(process.stdout, 'isTTY', { value: true, writable: true });
-        Object.defineProperty(process.stdin, 'isTTY', { value: true, writable: true });
+        Object.defineProperty(process.stdout, 'isTTY', {
+          value: true,
+          writable: true,
+        });
+        Object.defineProperty(process.stdin, 'isTTY', {
+          value: true,
+          writable: true,
+        });
 
         // Mock readline to return 'n' (decline)
-        mockReadlineInterface.question.mockImplementation((question, callback) => {
-          callback('n');
-        });
+        mockReadlineInterface.question.mockImplementation(
+          (question, callback) => {
+            callback('n');
+          },
+        );
 
         vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
           stats: false,
@@ -1076,7 +1389,9 @@ describe('handleCompare', () => {
           throw new Error(`Exit called with code ${code}`);
         });
 
-        await expect(handleCompare(['old.json', 'new.json'])).rejects.toThrow('Exit called with code 1');
+        await expect(handleCompare(['old.json', 'new.json'])).rejects.toThrow(
+          'Exit called with code 1',
+        );
 
         expect(console.log).toHaveBeenCalledWith('❌ Update declined\n');
         expect(exitSpy).toHaveBeenCalledWith(1);
@@ -1086,8 +1401,14 @@ describe('handleCompare', () => {
         mockCompareCommand.mockResolvedValue({ status: 'DRIFT' });
 
         // Set TTY to false (default)
-        Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true });
-        Object.defineProperty(process.stdin, 'isTTY', { value: false, writable: true });
+        Object.defineProperty(process.stdout, 'isTTY', {
+          value: false,
+          writable: true,
+        });
+        Object.defineProperty(process.stdin, 'isTTY', {
+          value: false,
+          writable: true,
+        });
 
         vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
           stats: false,
@@ -1102,7 +1423,9 @@ describe('handleCompare', () => {
           throw new Error(`Exit called with code ${code}`);
         });
 
-        await expect(handleCompare(['old.json', 'new.json'])).rejects.toThrow('Exit called with code 1');
+        await expect(handleCompare(['old.json', 'new.json'])).rejects.toThrow(
+          'Exit called with code 1',
+        );
 
         expect(console.log).not.toHaveBeenCalledWith('❌ Update declined\n');
         expect(exitSpy).toHaveBeenCalledWith(1);
@@ -1115,7 +1438,7 @@ describe('handleCompare', () => {
       // Reset all mocks
       mockFilterGitIgnoredFiles.mockReset();
       mockDisplayMultiFileCompareResult.mockReset();
-      
+
       // Set up default git mock implementations
       mockParseGitBaseline.mockReturnValue({ ref: 'main' });
       mockIsGitRepo.mockResolvedValue(true);
@@ -1134,9 +1457,24 @@ describe('handleCompare', () => {
       });
       mockCleanupBaselinePaths.mockResolvedValue(undefined);
       mockContextCommand.mockResolvedValue(undefined);
-      mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
+      mockMultiFileCompare.mockResolvedValue({
+        status: 'PASS',
+        folders: [],
+        summary: {
+          totalFolders: 0,
+          addedFolders: 0,
+          orphanedFolders: 0,
+          driftFolders: 0,
+          passFolders: 0,
+          totalComponentsAdded: 0,
+          totalComponentsRemoved: 0,
+          totalComponentsChanged: 0,
+        },
+      });
       // Default implementation: pass through all files (not filtered)
-      mockFilterGitIgnoredFiles.mockImplementation(async (files: string[]) => files);
+      mockFilterGitIgnoredFiles.mockImplementation(
+        async (files: string[]) => files,
+      );
       mockDisplayMultiFileCompareResult.mockImplementation(() => {});
     });
 
@@ -1157,10 +1495,12 @@ describe('handleCompare', () => {
         throw new Error(`Exit called with code ${code}`);
       });
 
-      await expect(handleCompare(['--baseline', 'invalid'])).rejects.toThrow('Exit called with code 1');
+      await expect(handleCompare(['--baseline', 'invalid'])).rejects.toThrow(
+        'Exit called with code 1',
+      );
 
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid baseline format')
+        expect.stringContaining('Invalid baseline format'),
       );
       expect(exitSpy).toHaveBeenCalledWith(1);
     });
@@ -1182,16 +1522,20 @@ describe('handleCompare', () => {
         throw new Error(`Exit called with code ${code}`);
       });
 
-      await expect(handleCompare(['--baseline', 'git:main'])).rejects.toThrow('Exit called with code 1');
+      await expect(handleCompare(['--baseline', 'git:main'])).rejects.toThrow(
+        'Exit called with code 1',
+      );
 
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Not a git repository')
+        expect.stringContaining('Not a git repository'),
       );
       expect(exitSpy).toHaveBeenCalledWith(1);
     });
 
     it('should error when git ref does not exist', async () => {
-      mockResolveGitRef.mockRejectedValue(new Error('Invalid git ref "nonexistent": ref does not exist'));
+      mockResolveGitRef.mockRejectedValue(
+        new Error('Invalid git ref "nonexistent": ref does not exist'),
+      );
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -1207,16 +1551,31 @@ describe('handleCompare', () => {
         throw new Error(`Exit called with code ${code}`);
       });
 
-      await expect(handleCompare(['--baseline', 'git:nonexistent'])).rejects.toThrow('Exit called with code 1');
+      await expect(
+        handleCompare(['--baseline', 'git:nonexistent']),
+      ).rejects.toThrow('Exit called with code 1');
 
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid git ref')
+        expect.stringContaining('Invalid git ref'),
       );
       expect(exitSpy).toHaveBeenCalledWith(1);
     });
 
     it('should run git baseline comparison and exit 0 when no drift', async () => {
-      mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
+      mockMultiFileCompare.mockResolvedValue({
+        status: 'PASS',
+        folders: [],
+        summary: {
+          totalFolders: 0,
+          addedFolders: 0,
+          orphanedFolders: 0,
+          driftFolders: 0,
+          passFolders: 0,
+          totalComponentsAdded: 0,
+          totalComponentsRemoved: 0,
+          totalComponentsChanged: 0,
+        },
+      });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -1254,14 +1613,29 @@ describe('handleCompare', () => {
         throw new Error(`Exit called with code ${code}`);
       });
 
-      await expect(handleCompare(['--baseline', 'git:main'])).rejects.toThrow('Exit called with code 1');
+      await expect(handleCompare(['--baseline', 'git:main'])).rejects.toThrow(
+        'Exit called with code 1',
+      );
 
       expect(mockCleanupBaselinePaths).toHaveBeenCalled();
       expect(exitSpy).toHaveBeenCalledWith(1);
     });
 
     it('should pass stats option through', async () => {
-      mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
+      mockMultiFileCompare.mockResolvedValue({
+        status: 'PASS',
+        folders: [],
+        summary: {
+          totalFolders: 0,
+          addedFolders: 0,
+          orphanedFolders: 0,
+          driftFolders: 0,
+          passFolders: 0,
+          totalComponentsAdded: 0,
+          totalComponentsRemoved: 0,
+          totalComponentsChanged: 0,
+        },
+      });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: true,
@@ -1276,12 +1650,25 @@ describe('handleCompare', () => {
       await handleCompare(['--baseline', 'git:main', '--stats']);
 
       expect(mockMultiFileCompare).toHaveBeenCalledWith(
-        expect.objectContaining({ stats: true })
+        expect.objectContaining({ stats: true }),
       );
     });
 
     it('should suppress output in quiet mode', async () => {
-      mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
+      mockMultiFileCompare.mockResolvedValue({
+        status: 'PASS',
+        folders: [],
+        summary: {
+          totalFolders: 0,
+          addedFolders: 0,
+          orphanedFolders: 0,
+          driftFolders: 0,
+          passFolders: 0,
+          totalComponentsAdded: 0,
+          totalComponentsRemoved: 0,
+          totalComponentsChanged: 0,
+        },
+      });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -1301,7 +1688,9 @@ describe('handleCompare', () => {
     });
 
     it('should cleanup on error', async () => {
-      mockContextCommand.mockRejectedValue(new Error('Context generation failed'));
+      mockContextCommand.mockRejectedValue(
+        new Error('Context generation failed'),
+      );
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -1317,17 +1706,21 @@ describe('handleCompare', () => {
         throw new Error(`Exit called with code ${code}`);
       });
 
-      await expect(handleCompare(['--baseline', 'git:main'])).rejects.toThrow('Exit called with code 1');
+      await expect(handleCompare(['--baseline', 'git:main'])).rejects.toThrow(
+        'Exit called with code 1',
+      );
 
       expect(mockCleanupBaselinePaths).toHaveBeenCalled();
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Git baseline comparison failed')
+        expect.stringContaining('Git baseline comparison failed'),
       );
       expect(exitSpy).toHaveBeenCalledWith(1);
     });
 
     it('should handle createBaselinePaths failure', async () => {
-      mockCreateBaselinePaths.mockRejectedValue(new Error('Failed to create directories'));
+      mockCreateBaselinePaths.mockRejectedValue(
+        new Error('Failed to create directories'),
+      );
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -1343,16 +1736,31 @@ describe('handleCompare', () => {
         throw new Error(`Exit called with code ${code}`);
       });
 
-      await expect(handleCompare(['--baseline', 'git:main'])).rejects.toThrow('Exit called with code 1');
+      await expect(handleCompare(['--baseline', 'git:main'])).rejects.toThrow(
+        'Exit called with code 1',
+      );
 
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to create comparison directories')
+        expect.stringContaining('Failed to create comparison directories'),
       );
       expect(exitSpy).toHaveBeenCalledWith(1);
     });
 
     it('should use skipGitignore: true for both baseline and current for symmetric comparison', async () => {
-      mockMultiFileCompare.mockResolvedValue({ status: 'PASS', folders: [], summary: { totalFolders: 0, addedFolders: 0, orphanedFolders: 0, driftFolders: 0, passFolders: 0, totalComponentsAdded: 0, totalComponentsRemoved: 0, totalComponentsChanged: 0 } });
+      mockMultiFileCompare.mockResolvedValue({
+        status: 'PASS',
+        folders: [],
+        summary: {
+          totalFolders: 0,
+          addedFolders: 0,
+          orphanedFolders: 0,
+          driftFolders: 0,
+          passFolders: 0,
+          totalComponentsAdded: 0,
+          totalComponentsRemoved: 0,
+          totalComponentsChanged: 0,
+        },
+      });
 
       vi.spyOn(parser, 'parseCompareArgs').mockReturnValue({
         stats: false,
@@ -1370,17 +1778,23 @@ describe('handleCompare', () => {
       expect(mockContextCommand).toHaveBeenCalledTimes(2);
 
       // First call: baseline context (from worktree)
-      expect(mockContextCommand).toHaveBeenNthCalledWith(1, expect.objectContaining({
-        skipGitignore: true,
-        entry: '/tmp/logicstamp-worktree-main-123',
-        stampignorePath: process.cwd(), // Should use working directory's .stampignore
-      }));
+      expect(mockContextCommand).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          skipGitignore: true,
+          entry: '/tmp/logicstamp-worktree-main-123',
+          stampignorePath: process.cwd(), // Should use working directory's .stampignore
+        }),
+      );
 
       // Second call: current context (from working tree)
-      expect(mockContextCommand).toHaveBeenNthCalledWith(2, expect.objectContaining({
-        skipGitignore: true, // Must be true for symmetric comparison, regardless of user flag
-        stampignorePath: process.cwd(), // Should use working directory's .stampignore
-      }));
+      expect(mockContextCommand).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          skipGitignore: true, // Must be true for symmetric comparison, regardless of user flag
+          stampignorePath: process.cwd(), // Should use working directory's .stampignore
+        }),
+      );
 
       expect(process.exit).toHaveBeenCalledWith(0);
     });
@@ -1415,10 +1829,10 @@ describe('handleCompare', () => {
       };
 
       mockMultiFileCompare.mockResolvedValue(mockResult);
-      
+
       // Mock filterGitIgnoredFiles to filter out next-env.d.ts but keep Button.tsx
       mockFilterGitIgnoredFiles.mockImplementation(async (files: string[]) => {
-        return files.filter(f => f !== 'next-env.d.ts');
+        return files.filter((f) => f !== 'next-env.d.ts');
       });
 
       // Ensure process.exit doesn't interrupt execution
@@ -1442,12 +1856,12 @@ describe('handleCompare', () => {
       // Verify filterGitIgnoredFiles was called for added components
       expect(mockFilterGitIgnoredFiles).toHaveBeenCalledWith(
         ['next-env.d.ts', 'src/components/Button.tsx'],
-        expect.any(String)
+        expect.any(String),
       );
       // Should also be called for removed (empty array)
       expect(mockFilterGitIgnoredFiles).toHaveBeenCalledWith(
         [],
-        expect.any(String)
+        expect.any(String),
       );
 
       // Verify the filtered result was passed to displayMultiFileCompareResult
@@ -1466,7 +1880,7 @@ describe('handleCompare', () => {
           }),
         }),
         false,
-        false
+        false,
       );
     });
 
@@ -1500,7 +1914,7 @@ describe('handleCompare', () => {
       };
 
       mockMultiFileCompare.mockResolvedValue(mockResult);
-      
+
       // Mock filterGitIgnoredFiles to filter out all files
       mockFilterGitIgnoredFiles.mockResolvedValue([]);
 
@@ -1522,7 +1936,7 @@ describe('handleCompare', () => {
       // Verify filterGitIgnoredFiles was called
       expect(mockFilterGitIgnoredFiles).toHaveBeenCalledWith(
         ['next-env.d.ts'],
-        expect.any(String)
+        expect.any(String),
       );
 
       // Verify the folder status was changed to PASS
@@ -1545,7 +1959,7 @@ describe('handleCompare', () => {
           }),
         }),
         false,
-        false
+        false,
       );
 
       expect(process.exit).toHaveBeenCalledWith(0);

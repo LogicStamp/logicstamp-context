@@ -1,6 +1,6 @@
 /**
  * Comprehensive schema validation test
- * 
+ *
  * This test ensures the JSON schema file matches the TypeScript implementation 100%.
  * It validates:
  * 1. Schema file is valid JSON Schema
@@ -14,11 +14,18 @@ import Ajv from 'ajv';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { LogicStampBundle, BundleNode, MissingDependency } from '../../../src/core/pack.js';
+import type {
+  LogicStampBundle,
+  BundleNode,
+  MissingDependency,
+} from '../../../src/core/pack.js';
 import type { UIFContract } from '../../../src/types/UIFContract.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const schemaPath = join(__dirname, '../../../schema/logicstamp.context.schema.json');
+const schemaPath = join(
+  __dirname,
+  '../../../schema/logicstamp.context.schema.json',
+);
 
 describe('Schema Completeness Validation', () => {
   let schema: any;
@@ -184,10 +191,11 @@ describe('Schema Completeness Validation', () => {
       const valid = bundleValidator([bundle]);
       expect(valid).toBe(false);
       // Check that error mentions entryId (AJV puts missing property in params.missingProperty)
-      const hasEntryIdError = bundleValidator.errors?.some((e: any) => 
-        e.params?.missingProperty === 'entryId' ||
-        e.instancePath?.includes('entryId') || 
-        e.message?.toLowerCase().includes('entryid')
+      const hasEntryIdError = bundleValidator.errors?.some(
+        (e: any) =>
+          e.params?.missingProperty === 'entryId' ||
+          e.instancePath?.includes('entryId') ||
+          e.message?.toLowerCase().includes('entryid'),
       );
       expect(hasEntryIdError).toBe(true);
     });
@@ -467,7 +475,11 @@ describe('Schema Completeness Validation', () => {
         interface: {
           props: {
             label: 'string',
-            disabled: { type: 'literal-union', literals: ['true', 'false'], optional: true },
+            disabled: {
+              type: 'literal-union',
+              literals: ['true', 'false'],
+              optional: true,
+            },
             onClick: { type: 'function', signature: '() => void' },
           },
           emits: {
@@ -590,7 +602,13 @@ describe('Schema Completeness Validation', () => {
           },
           summary: {
             mode: 'lean',
-            sources: ['tailwind', 'styled-jsx', 'styled-components', 'framer-motion', 'material-ui'],
+            sources: [
+              'tailwind',
+              'styled-jsx',
+              'styled-components',
+              'framer-motion',
+              'material-ui',
+            ],
             fullModeBytes: 5678,
           },
         },
@@ -600,7 +618,10 @@ describe('Schema Completeness Validation', () => {
 
       const valid = contractValidator(contract);
       if (!valid) {
-        console.error('Lean mode contract validation errors:', contractValidator.errors);
+        console.error(
+          'Lean mode contract validation errors:',
+          contractValidator.errors,
+        );
       }
       expect(valid).toBe(true);
     });
@@ -715,8 +736,17 @@ describe('Schema Completeness Validation', () => {
   describe('Field-by-field schema completeness', () => {
     it('should have all required LogicStampBundle fields in schema', () => {
       const bundleDef = schema.definitions.LogicStampBundle;
-      const requiredFields = ['type', 'schemaVersion', 'entryId', 'depth', 'createdAt', 'bundleHash', 'graph', 'meta'];
-      
+      const requiredFields = [
+        'type',
+        'schemaVersion',
+        'entryId',
+        'depth',
+        'createdAt',
+        'bundleHash',
+        'graph',
+        'meta',
+      ];
+
       expect(bundleDef.required).toBeDefined();
       for (const field of requiredFields) {
         expect(bundleDef.required).toContain(field);
@@ -726,7 +756,7 @@ describe('Schema Completeness Validation', () => {
     it('should have all optional LogicStampBundle fields in schema', () => {
       const bundleDef = schema.definitions.LogicStampBundle;
       const optionalFields = ['position', '$schema'];
-      
+
       // Check that these fields exist in properties but are not required
       for (const field of optionalFields) {
         if (field === '$schema') {
@@ -740,8 +770,18 @@ describe('Schema Completeness Validation', () => {
 
     it('should have all required UIFContract fields in schema', () => {
       const contractDef = schema.definitions.UIFContract;
-      const requiredFields = ['type', 'schemaVersion', 'kind', 'entryId', 'description', 'composition', 'interface', 'semanticHash', 'fileHash'];
-      
+      const requiredFields = [
+        'type',
+        'schemaVersion',
+        'kind',
+        'entryId',
+        'description',
+        'composition',
+        'interface',
+        'semanticHash',
+        'fileHash',
+      ];
+
       expect(contractDef.required).toBeDefined();
       for (const field of requiredFields) {
         expect(contractDef.required).toContain(field);
@@ -750,8 +790,16 @@ describe('Schema Completeness Validation', () => {
 
     it('should have all optional UIFContract fields in schema', () => {
       const contractDef = schema.definitions.UIFContract;
-      const optionalFields = ['usedIn', 'exports', 'prediction', 'metrics', 'links', 'style', 'nextjs'];
-      
+      const optionalFields = [
+        'usedIn',
+        'exports',
+        'prediction',
+        'metrics',
+        'links',
+        'style',
+        'nextjs',
+      ];
+
       // Check that these fields exist in properties but are not required
       for (const field of optionalFields) {
         expect(contractDef.properties[field]).toBeDefined();
@@ -763,7 +811,7 @@ describe('Schema Completeness Validation', () => {
       const contractDef = schema.definitions.UIFContract;
       // These deprecated fields should still be allowed for backward compatibility
       const deprecatedFields = ['entryPathAbs', 'entryPathRel', 'os'];
-      
+
       // Note: These might not be in the schema if they were removed, but if they exist in TypeScript, they should be allowed
       // We check that if they're in TypeScript interface, they should be in schema properties or not cause validation errors
       // Since schema has additionalProperties: false, we need to explicitly allow them
@@ -779,7 +827,7 @@ describe('Schema Completeness Validation', () => {
     it('should reject additional properties not in TypeScript types', () => {
       const bundleDef = schema.definitions.LogicStampBundle;
       expect(bundleDef.additionalProperties).toBe(false);
-      
+
       const contractDef = schema.definitions.UIFContract;
       expect(contractDef.additionalProperties).toBe(false);
     });
@@ -787,7 +835,7 @@ describe('Schema Completeness Validation', () => {
     it('should have correct schemaVersion constants', () => {
       const bundleDef = schema.definitions.LogicStampBundle;
       expect(bundleDef.properties.schemaVersion.const).toBe('0.1');
-      
+
       const contractDef = schema.definitions.UIFContract;
       expect(contractDef.properties.schemaVersion.const).toBe('0.4');
     });
@@ -795,15 +843,21 @@ describe('Schema Completeness Validation', () => {
     it('should have correct type constants', () => {
       const bundleDef = schema.definitions.LogicStampBundle;
       expect(bundleDef.properties.type.const).toBe('LogicStampBundle');
-      
+
       const contractDef = schema.definitions.UIFContract;
       expect(contractDef.properties.type.const).toBe('UIFContract');
     });
 
     it('should have MissingDependency reason enum matching TypeScript', () => {
       const missingDef = schema.definitions.MissingDependency;
-      const expectedReasons = ['file not found', 'external package', 'outside scan path', 'max depth exceeded', 'circular dependency'];
-      
+      const expectedReasons = [
+        'file not found',
+        'external package',
+        'outside scan path',
+        'max depth exceeded',
+        'circular dependency',
+      ];
+
       expect(missingDef.properties.reason.enum).toBeDefined();
       for (const reason of expectedReasons) {
         expect(missingDef.properties.reason.enum).toContain(reason);
@@ -812,11 +866,17 @@ describe('Schema Completeness Validation', () => {
 
     it('should validate hash patterns match TypeScript expectations', () => {
       const bundleDef = schema.definitions.LogicStampBundle;
-      expect(bundleDef.properties.bundleHash.pattern).toBe('^uifb:[a-f0-9]{24}$');
-      
+      expect(bundleDef.properties.bundleHash.pattern).toBe(
+        '^uifb:[a-f0-9]{24}$',
+      );
+
       const contractDef = schema.definitions.UIFContract;
-      expect(contractDef.properties.semanticHash.pattern).toBe('^uif:[a-f0-9]{24}$');
-      expect(contractDef.properties.fileHash.pattern).toBe('^uif:[a-f0-9]{24}$');
+      expect(contractDef.properties.semanticHash.pattern).toBe(
+        '^uif:[a-f0-9]{24}$',
+      );
+      expect(contractDef.properties.fileHash.pattern).toBe(
+        '^uif:[a-f0-9]{24}$',
+      );
     });
   });
 
@@ -876,9 +936,7 @@ describe('Schema Completeness Validation', () => {
               },
             },
           ],
-          edges: [
-            ['src/App.tsx', 'src/components/Button.tsx'],
-          ],
+          edges: [['src/App.tsx', 'src/components/Button.tsx']],
         },
         meta: {
           missing: [],

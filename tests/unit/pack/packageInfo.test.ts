@@ -65,11 +65,15 @@ describe('Package Info Utilities', () => {
     it('should extract package name from subpath imports', () => {
       expect(extractPackageName('@mui/material/Button')).toBe('@mui/material');
       expect(extractPackageName('lodash/debounce')).toBe('lodash');
-      expect(extractPackageName('@types/node/package.json')).toBe('@types/node');
+      expect(extractPackageName('@types/node/package.json')).toBe(
+        '@types/node',
+      );
     });
 
     it('should handle nested subpaths', () => {
-      expect(extractPackageName('@mui/material/styles/createTheme')).toBe('@mui/material');
+      expect(extractPackageName('@mui/material/styles/createTheme')).toBe(
+        '@mui/material',
+      );
       expect(extractPackageName('package/sub/path/deep')).toBe('package');
     });
 
@@ -92,13 +96,13 @@ describe('Package Info Utilities', () => {
     it('should get version from dependencies', async () => {
       const packageJson = {
         dependencies: {
-          'react': '^18.2.0',
+          react: '^18.2.0',
           '@mui/material': '^5.15.0',
         },
       };
       await writeFile(
         join(testProjectRoot, 'package.json'),
-        JSON.stringify(packageJson, null, 2)
+        JSON.stringify(packageJson, null, 2),
       );
 
       const version = await getPackageVersion('react', testProjectRoot);
@@ -108,13 +112,13 @@ describe('Package Info Utilities', () => {
     it('should get version from devDependencies', async () => {
       const packageJson = {
         devDependencies: {
-          'typescript': '^5.3.0',
+          typescript: '^5.3.0',
           '@types/react': '^18.0.0',
         },
       };
       await writeFile(
         join(testProjectRoot, 'package.json'),
-        JSON.stringify(packageJson, null, 2)
+        JSON.stringify(packageJson, null, 2),
       );
 
       const version = await getPackageVersion('typescript', testProjectRoot);
@@ -124,12 +128,12 @@ describe('Package Info Utilities', () => {
     it('should get version from peerDependencies', async () => {
       const packageJson = {
         peerDependencies: {
-          'react': '^18.0.0',
+          react: '^18.0.0',
         },
       };
       await writeFile(
         join(testProjectRoot, 'package.json'),
-        JSON.stringify(packageJson, null, 2)
+        JSON.stringify(packageJson, null, 2),
       );
 
       const version = await getPackageVersion('react', testProjectRoot);
@@ -139,15 +143,15 @@ describe('Package Info Utilities', () => {
     it('should prioritize dependencies over devDependencies', async () => {
       const packageJson = {
         dependencies: {
-          'react': '^18.2.0',
+          react: '^18.2.0',
         },
         devDependencies: {
-          'react': '^17.0.0',
+          react: '^17.0.0',
         },
       };
       await writeFile(
         join(testProjectRoot, 'package.json'),
-        JSON.stringify(packageJson, null, 2)
+        JSON.stringify(packageJson, null, 2),
       );
 
       const version = await getPackageVersion('react', testProjectRoot);
@@ -157,12 +161,12 @@ describe('Package Info Utilities', () => {
     it('should return undefined for missing package', async () => {
       const packageJson = {
         dependencies: {
-          'react': '^18.2.0',
+          react: '^18.2.0',
         },
       };
       await writeFile(
         join(testProjectRoot, 'package.json'),
-        JSON.stringify(packageJson, null, 2)
+        JSON.stringify(packageJson, null, 2),
       );
 
       const version = await getPackageVersion('nonexistent', testProjectRoot);
@@ -177,7 +181,7 @@ describe('Package Info Utilities', () => {
     it('should handle invalid package.json gracefully', async () => {
       await writeFile(
         join(testProjectRoot, 'package.json'),
-        'invalid json content'
+        'invalid json content',
       );
 
       // Should not throw, but return undefined
@@ -188,12 +192,12 @@ describe('Package Info Utilities', () => {
     it('should cache package.json reads', async () => {
       const packageJson = {
         dependencies: {
-          'react': '^18.2.0',
+          react: '^18.2.0',
         },
       };
       await writeFile(
         join(testProjectRoot, 'package.json'),
-        JSON.stringify(packageJson, null, 2)
+        JSON.stringify(packageJson, null, 2),
       );
 
       // First call
@@ -204,7 +208,7 @@ describe('Package Info Utilities', () => {
       packageJson.dependencies.react = '^19.0.0';
       await writeFile(
         join(testProjectRoot, 'package.json'),
-        JSON.stringify(packageJson, null, 2)
+        JSON.stringify(packageJson, null, 2),
       );
 
       // Second call should use cache (same projectRoot)
@@ -223,7 +227,7 @@ describe('Package Info Utilities', () => {
       };
       await writeFile(
         join(testProjectRoot, 'package.json'),
-        JSON.stringify(packageJson, null, 2)
+        JSON.stringify(packageJson, null, 2),
       );
 
       expect(await getPackageVersion('react', testProjectRoot)).toBe('^18.2.0');
@@ -231,11 +235,13 @@ describe('Package Info Utilities', () => {
       packageJson.dependencies.react = '^19.0.0';
       await writeFile(
         join(testProjectRoot, 'package.json'),
-        JSON.stringify(packageJson, null, 2)
+        JSON.stringify(packageJson, null, 2),
       );
 
       const isolated = createPackageJsonLoader();
-      expect(await isolated.getPackageVersion('react', testProjectRoot)).toBe('^19.0.0');
+      expect(await isolated.getPackageVersion('react', testProjectRoot)).toBe(
+        '^19.0.0',
+      );
       expect(await getPackageVersion('react', testProjectRoot)).toBe('^18.2.0');
     });
 
@@ -248,10 +254,13 @@ describe('Package Info Utilities', () => {
       };
       await writeFile(
         join(testProjectRoot, 'package.json'),
-        JSON.stringify(packageJson, null, 2)
+        JSON.stringify(packageJson, null, 2),
       );
 
-      const version1 = await getPackageVersion('@mui/material', testProjectRoot);
+      const version1 = await getPackageVersion(
+        '@mui/material',
+        testProjectRoot,
+      );
       expect(version1).toBe('^5.15.0');
 
       const version2 = await getPackageVersion('@types/node', testProjectRoot);

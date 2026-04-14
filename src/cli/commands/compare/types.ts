@@ -24,11 +24,22 @@ export interface CompareResult {
   removed: string[];
   changed: Array<{
     id: string;
-      deltas: Array<{
-        type: 'hash' | 'imports' | 'hooks' | 'exports' | 'functions' | 'components' | 'props' | 'emits' | 'variables' | 'state' | 'apiSignature';
-        old: any;
-        new: any;
-      }>;
+    deltas: Array<{
+      type:
+        | 'hash'
+        | 'imports'
+        | 'hooks'
+        | 'exports'
+        | 'functions'
+        | 'components'
+        | 'props'
+        | 'emits'
+        | 'variables'
+        | 'state'
+        | 'apiSignature';
+      old: any;
+      new: any;
+    }>;
   }>;
 }
 
@@ -73,8 +84,8 @@ export interface CompareOptions {
 }
 
 export interface MultiFileCompareOptions {
-  oldIndexFile: string;  // Path to old context_main.json
-  newIndexFile: string;  // Path to new context_main.json
+  oldIndexFile: string; // Path to old context_main.json
+  newIndexFile: string; // Path to new context_main.json
   stats?: boolean;
   approve?: boolean;
   autoCleanOrphaned?: boolean; // Auto-delete orphaned files with --approve

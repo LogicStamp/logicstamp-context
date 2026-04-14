@@ -105,7 +105,11 @@ describe('Chakra UI Extractor', () => {
       const result = extractChakraUI(sourceFile);
 
       expectComponents(result, ['Button', 'FormControl', 'Modal']);
-      expectPackages(result, ['@chakra-ui/react', '@chakra-ui/form-control', '@chakra-ui/modal']);
+      expectPackages(result, [
+        '@chakra-ui/react',
+        '@chakra-ui/form-control',
+        '@chakra-ui/modal',
+      ]);
     });
   });
 
@@ -137,7 +141,9 @@ describe('Chakra UI Extractor', () => {
   });
 
   describe('Theme Detection', () => {
-    const themeTestCases: StyleExtractorTestCase<ReturnType<typeof extractChakraUI>>[] = [
+    const themeTestCases: StyleExtractorTestCase<
+      ReturnType<typeof extractChakraUI>
+    >[] = [
       {
         description: 'should detect theme usage via useTheme hook',
         sourceCode: `
@@ -148,7 +154,7 @@ describe('Chakra UI Extractor', () => {
             return <div>Hello</div>;
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesTheme).toBe(true);
         },
       },
@@ -161,7 +167,7 @@ describe('Chakra UI Extractor', () => {
             colors: { brand: { 500: '#1a202c' } }
           });
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesTheme).toBe(true);
         },
       },
@@ -174,7 +180,7 @@ describe('Chakra UI Extractor', () => {
             colors: { brand: { 500: '#1a202c' } }
           });
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesTheme).toBe(true);
         },
       },
@@ -187,7 +193,7 @@ describe('Chakra UI Extractor', () => {
             return <ChakraProvider theme={theme}>Hello</ChakraProvider>;
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesTheme).toBe(true);
         },
       },
@@ -200,7 +206,7 @@ describe('Chakra UI Extractor', () => {
             return <ThemeProvider theme={theme}>Hello</ThemeProvider>;
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesTheme).toBe(true);
         },
       },
@@ -215,7 +221,7 @@ describe('Chakra UI Extractor', () => {
             return <div style={{ color }}>Hello</div>;
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesTheme).toBe(true);
         },
       },
@@ -225,7 +231,9 @@ describe('Chakra UI Extractor', () => {
   });
 
   describe('Color Mode Detection', () => {
-    const colorModeTestCases: StyleExtractorTestCase<ReturnType<typeof extractChakraUI>>[] = [
+    const colorModeTestCases: StyleExtractorTestCase<
+      ReturnType<typeof extractChakraUI>
+    >[] = [
       {
         description: 'should detect color mode usage via useColorMode hook',
         sourceCode: `
@@ -236,7 +244,7 @@ describe('Chakra UI Extractor', () => {
             return <div>Current mode: {colorMode}</div>;
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesColorMode).toBe(true);
         },
       },
@@ -250,12 +258,13 @@ describe('Chakra UI Extractor', () => {
             return <div style={{ background: bg }}>Hello</div>;
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesColorMode).toBe(true);
         },
       },
       {
-        description: 'should detect color mode usage via ColorModeScript import',
+        description:
+          'should detect color mode usage via ColorModeScript import',
         sourceCode: `
           import { ColorModeScript } from '@chakra-ui/react';
           
@@ -263,7 +272,7 @@ describe('Chakra UI Extractor', () => {
             return <ColorModeScript />;
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesColorMode).toBe(true);
         },
       },
@@ -278,7 +287,7 @@ describe('Chakra UI Extractor', () => {
             return <div>{isDark ? 'Dark' : 'Light'}</div>;
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesColorMode).toBe(true);
         },
       },
@@ -336,7 +345,9 @@ describe('Chakra UI Extractor', () => {
   });
 
   describe('System Props Detection', () => {
-    const systemPropsTestCases: StyleExtractorTestCase<ReturnType<typeof extractChakraUI>>[] = [
+    const systemPropsTestCases: StyleExtractorTestCase<
+      ReturnType<typeof extractChakraUI>
+    >[] = [
       {
         description: 'should detect system props on Box component',
         sourceCode: `
@@ -350,7 +361,7 @@ describe('Chakra UI Extractor', () => {
             );
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesSystemProps).toBe(true);
         },
       },
@@ -368,7 +379,7 @@ describe('Chakra UI Extractor', () => {
             );
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesSystemProps).toBe(true);
         },
       },
@@ -385,7 +396,7 @@ describe('Chakra UI Extractor', () => {
             );
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesSystemProps).toBe(true);
         },
       },
@@ -403,7 +414,7 @@ describe('Chakra UI Extractor', () => {
             );
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesSystemProps).toBe(true);
         },
       },
@@ -421,7 +432,7 @@ describe('Chakra UI Extractor', () => {
             );
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesSystemProps).toBe(true);
         },
       },
@@ -438,7 +449,7 @@ describe('Chakra UI Extractor', () => {
             );
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesSystemProps).toBe(true);
         },
       },
@@ -455,7 +466,7 @@ describe('Chakra UI Extractor', () => {
             );
           }
         `,
-        assertions: result => {
+        assertions: (result) => {
           expect(result.features.usesSystemProps).toBe(true);
         },
       },

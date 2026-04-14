@@ -18,7 +18,7 @@ describe('Tailwind Extractor', () => {
             </div>
           );
         }
-        `
+        `,
       );
 
       const classes = extractTailwindClasses(sourceFile);
@@ -39,7 +39,7 @@ describe('Tailwind Extractor', () => {
             </div>
           );
         }
-        `
+        `,
       );
 
       const classes = extractTailwindClasses(sourceFile);
@@ -60,7 +60,7 @@ describe('Tailwind Extractor', () => {
             </div>
           );
         }
-        `
+        `,
       );
 
       const classes = extractTailwindClasses(sourceFile);
@@ -85,7 +85,7 @@ describe('Tailwind Extractor', () => {
             </div>
           );
         }
-        `
+        `,
       );
 
       const classes = extractTailwindClasses(sourceFile);
@@ -106,7 +106,7 @@ describe('Tailwind Extractor', () => {
             </div>
           );
         }
-        `
+        `,
       );
 
       const classes = extractTailwindClasses(sourceFile);
@@ -126,7 +126,7 @@ describe('Tailwind Extractor', () => {
             </div>
           );
         }
-        `
+        `,
       );
 
       const classes = extractTailwindClasses(sourceFile);
@@ -149,7 +149,7 @@ describe('Tailwind Extractor', () => {
             </div>
           );
         }
-        `
+        `,
       );
 
       const classes = extractTailwindClasses(sourceFile);
@@ -172,7 +172,7 @@ describe('Tailwind Extractor', () => {
             </div>
           );
         }
-        `
+        `,
       );
 
       const classes = extractTailwindClasses(sourceFile);
@@ -194,7 +194,7 @@ describe('Tailwind Extractor', () => {
             </div>
           );
         }
-        `
+        `,
       );
 
       const classes = extractTailwindClasses(sourceFile);
@@ -215,7 +215,7 @@ describe('Tailwind Extractor', () => {
             </div>
           );
         }
-        `
+        `,
       );
 
       const classes = extractTailwindClasses(sourceFile);
@@ -235,7 +235,7 @@ describe('Tailwind Extractor', () => {
             </>
           );
         }
-        `
+        `,
       );
 
       const classes = extractTailwindClasses(sourceFile);
@@ -258,14 +258,14 @@ describe('Tailwind Extractor', () => {
             </>
           );
         }
-        `
+        `,
       );
 
       const classes = extractTailwindClasses(sourceFile);
 
       // Should only appear once each
-      expect(classes.filter(c => c === 'flex').length).toBe(1);
-      expect(classes.filter(c => c === 'p-4').length).toBe(1);
+      expect(classes.filter((c) => c === 'flex').length).toBe(1);
+      expect(classes.filter((c) => c === 'p-4').length).toBe(1);
       expect(classes).toContain('flex');
       expect(classes).toContain('p-4');
     });
@@ -281,7 +281,7 @@ describe('Tailwind Extractor', () => {
             </div>
           );
         }
-        `
+        `,
       );
 
       const classes = extractTailwindClasses(sourceFile);
@@ -293,9 +293,7 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should handle empty className', () => {
-      const sourceFile = createTestSourceFile(
-        '<div className=""></div>'
-      );
+      const sourceFile = createTestSourceFile('<div className=""></div>');
 
       const classes = extractTailwindClasses(sourceFile);
 
@@ -303,9 +301,7 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should handle no className attributes', () => {
-      const sourceFile = createTestSourceFile(
-        '<div>No classes</div>'
-      );
+      const sourceFile = createTestSourceFile('<div>No classes</div>');
 
       const classes = extractTailwindClasses(sourceFile);
 
@@ -318,7 +314,7 @@ describe('Tailwind Extractor', () => {
         export function Component() {
           return <img className="w-full h-auto" src="/image.jpg" />;
         }
-        `
+        `,
       );
 
       const classes = extractTailwindClasses(sourceFile);
@@ -413,7 +409,8 @@ describe('Tailwind Extractor', () => {
       expect(categorized.colors).toContain('bg-blue-500');
       // text-white matches the typography pattern first, so it goes there
       expect(
-        categorized.typography?.includes('text-white') || categorized.colors?.includes('text-white')
+        categorized.typography?.includes('text-white') ||
+          categorized.colors?.includes('text-white'),
       ).toBe(true);
       // border-* is categorized in borders (which comes before colors)
       expect(categorized.borders).toBeDefined();
@@ -432,7 +429,11 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should handle complex variant chains', () => {
-      const classes = ['group-hover:dark:sm:bg-red-500', 'md:hover:bg-blue-500', 'dark:focus:ring-2'];
+      const classes = [
+        'group-hover:dark:sm:bg-red-500',
+        'md:hover:bg-blue-500',
+        'dark:focus:ring-2',
+      ];
       const categorized = categorizeTailwindClasses(classes);
 
       // Should strip all variants and categorize by base class
@@ -444,19 +445,28 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should handle ARIA and data variants', () => {
-      const classes = ['aria-[checked=true]:peer-focus:ring-2', 'data-[state=active]:bg-red-500'];
+      const classes = [
+        'aria-[checked=true]:peer-focus:ring-2',
+        'data-[state=active]:bg-red-500',
+      ];
       const categorized = categorizeTailwindClasses(classes);
 
       // Should strip ARIA/data variants and categorize correctly
       expect(categorized.borders).toBeDefined();
-      expect(categorized.borders).toContain('aria-[checked=true]:peer-focus:ring-2');
+      expect(categorized.borders).toContain(
+        'aria-[checked=true]:peer-focus:ring-2',
+      );
       // Note: text-* goes to typography first, so using bg-* for colors test
       expect(categorized.colors).toBeDefined();
       expect(categorized.colors).toContain('data-[state=active]:bg-red-500');
     });
 
     it('should handle light and dark variants', () => {
-      const classes = ['light:bg-white', 'dark:bg-gray-900', 'md:light:bg-black'];
+      const classes = [
+        'light:bg-white',
+        'dark:bg-gray-900',
+        'md:light:bg-black',
+      ];
       const categorized = categorizeTailwindClasses(classes);
 
       expect(categorized.colors).toBeDefined();
@@ -482,7 +492,12 @@ describe('Tailwind Extractor', () => {
     });
 
     it('should categorize ring- in borders, not colors', () => {
-      const classes = ['ring-2', 'ring-blue-500', 'ring-offset-4', 'bg-red-500'];
+      const classes = [
+        'ring-2',
+        'ring-blue-500',
+        'ring-offset-4',
+        'bg-red-500',
+      ];
       const categorized = categorizeTailwindClasses(classes);
 
       expect(categorized.borders).toBeDefined();
@@ -547,8 +562,8 @@ describe('Tailwind Extractor', () => {
       const classes = ['sm:text-sm', 'sm:flex', 'md:grid', 'md:block'];
       const breakpoints = extractBreakpoints(classes);
 
-      expect(breakpoints.filter(b => b === 'sm').length).toBe(1);
-      expect(breakpoints.filter(b => b === 'md').length).toBe(1);
+      expect(breakpoints.filter((b) => b === 'sm').length).toBe(1);
+      expect(breakpoints.filter((b) => b === 'md').length).toBe(1);
     });
 
     it('should extract breakpoints from complex variant chains', () => {
@@ -613,7 +628,7 @@ describe('Tailwind Extractor', () => {
           );
         }
         `,
-        'test.tsx'
+        'test.tsx',
       );
 
       // Should not throw, should return empty array or fallback gracefully
@@ -631,7 +646,7 @@ describe('Tailwind Extractor', () => {
     it('should handle string input with invalid syntax gracefully', () => {
       const invalidCode = '<div className="flex p-4"';
       const classes = extractTailwindClasses(invalidCode);
-      
+
       // Should return array (may be empty or partial)
       expect(Array.isArray(classes)).toBe(true);
     });
@@ -658,7 +673,7 @@ describe('Tailwind Extractor', () => {
               </button>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -682,7 +697,7 @@ describe('Tailwind Extractor', () => {
               </div>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -707,7 +722,7 @@ describe('Tailwind Extractor', () => {
               </button>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -730,7 +745,7 @@ describe('Tailwind Extractor', () => {
               </button>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -756,7 +771,7 @@ describe('Tailwind Extractor', () => {
               </button>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -783,7 +798,7 @@ describe('Tailwind Extractor', () => {
               </button>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -810,7 +825,7 @@ describe('Tailwind Extractor', () => {
               </button>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -835,7 +850,7 @@ describe('Tailwind Extractor', () => {
               </button>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -861,7 +876,7 @@ describe('Tailwind Extractor', () => {
               </button>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -885,7 +900,7 @@ describe('Tailwind Extractor', () => {
               </button>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -905,7 +920,7 @@ describe('Tailwind Extractor', () => {
               </button>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -925,7 +940,7 @@ describe('Tailwind Extractor', () => {
               </button>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -947,7 +962,7 @@ describe('Tailwind Extractor', () => {
               </div>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -974,7 +989,7 @@ describe('Tailwind Extractor', () => {
               </div>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -994,7 +1009,7 @@ describe('Tailwind Extractor', () => {
               </div>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -1004,14 +1019,14 @@ describe('Tailwind Extractor', () => {
         expect(classes).toContain('!p-4');
         expect(classes).toContain('sm:!p-6');
         expect(classes).toContain('!text-white');
-        
+
         // Should categorize correctly (strip ! for categorization)
         expect(categorized.spacing).toBeDefined();
         expect(categorized.spacing).toContain('!p-4');
         expect(categorized.spacing).toContain('sm:!p-6');
         expect(categorized.colors).toBeDefined();
         expect(categorized.colors).toContain('!text-white');
-        
+
         // Should extract breakpoint
         expect(breakpoints).toContain('sm');
       });
@@ -1026,7 +1041,7 @@ describe('Tailwind Extractor', () => {
               </div>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -1035,7 +1050,7 @@ describe('Tailwind Extractor', () => {
         expect(classes).toContain('[&>p]:mt-4');
         expect(classes).toContain('[&_span]:text-blue');
         expect(classes).toContain('supports-[display:grid]:grid');
-        
+
         // Should categorize correctly after stripping variants
         expect(categorized.spacing).toBeDefined();
         expect(categorized.spacing).toContain('[&>p]:mt-4');
@@ -1055,7 +1070,7 @@ describe('Tailwind Extractor', () => {
               </div>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -1078,7 +1093,7 @@ describe('Tailwind Extractor', () => {
               </div>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -1101,7 +1116,7 @@ describe('Tailwind Extractor', () => {
               </div>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -1111,7 +1126,6 @@ describe('Tailwind Extractor', () => {
         expect(categorized.borders).toContain('rounded');
         expect(categorized.borders).toContain('rounded-lg');
       });
-
     });
 
     describe('Smoke tests - critical scenarios', () => {
@@ -1125,7 +1139,7 @@ describe('Tailwind Extractor', () => {
               </div>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -1157,7 +1171,7 @@ describe('Tailwind Extractor', () => {
               </div>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -1175,7 +1189,7 @@ describe('Tailwind Extractor', () => {
               </div>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -1183,7 +1197,7 @@ describe('Tailwind Extractor', () => {
         expect(classes).toContain('bg-gray-500');
       });
 
-      it('should handle className={`p-4 ${base} text-sm`} with const base = \'px-2\'', () => {
+      it("should handle className={`p-4 ${base} text-sm`} with const base = 'px-2'", () => {
         const sourceFile = createTestSourceFile(
           `
           export function Component() {
@@ -1194,7 +1208,7 @@ describe('Tailwind Extractor', () => {
               </div>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);
@@ -1215,7 +1229,7 @@ describe('Tailwind Extractor', () => {
               </div>
             );
           }
-          `
+          `,
         );
 
         const classes = extractTailwindClasses(sourceFile);

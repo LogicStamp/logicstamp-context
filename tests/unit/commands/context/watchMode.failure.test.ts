@@ -3,8 +3,14 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { BundleChanges, ContractDiff } from '../../../../src/cli/commands/context/watchMode/watchDiff.js';
-import type { Violation, StrictWatchStatus } from '../../../../src/utils/config.js';
+import type {
+  BundleChanges,
+  ContractDiff,
+} from '../../../../src/cli/commands/context/watchMode/watchDiff.js';
+import type {
+  Violation,
+  StrictWatchStatus,
+} from '../../../../src/utils/config.js';
 import type { LogicStampBundle } from '../../../../src/core/pack.js';
 import type { WatchCache } from '../../../../src/cli/commands/context/watchMode/incrementalWatch.js';
 import type { ContextOptions } from '../../../../src/cli/commands/context.js';
@@ -56,7 +62,10 @@ vi.mock('../../../../src/utils/config.js', () => ({
   appendWatchLog: vi.fn().mockResolvedValue(undefined),
   writeStrictWatchStatus: vi.fn().mockResolvedValue(undefined),
   deleteStrictWatchStatus: vi.fn().mockResolvedValue(undefined),
-  getWatchStatusPath: vi.fn((projectRoot: string) => `${projectRoot}/.logicstamp/context_watch-status.json`),
+  getWatchStatusPath: vi.fn(
+    (projectRoot: string) =>
+      `${projectRoot}/.logicstamp/context_watch-status.json`,
+  ),
 }));
 
 vi.mock('../../../../src/utils/cleanup.js', () => ({
@@ -78,7 +87,11 @@ vi.mock('../../../../src/cli/commands/context/watchMode/index.js', () => ({
 
 vi.mock('../../../../src/cli/commands/context/index.js', () => ({
   buildContractsFromFiles: vi.fn(),
-  writeContextFiles: vi.fn().mockResolvedValue({ filesWritten: 1, folderInfos: [], totalTokenEstimate: 500 }),
+  writeContextFiles: vi.fn().mockResolvedValue({
+    filesWritten: 1,
+    folderInfos: [],
+    totalTokenEstimate: 500,
+  }),
   writeMainIndex: vi.fn().mockResolvedValue(undefined),
   groupBundlesByFolder: vi.fn(() => new Map()),
   displayPath: vi.fn((p: string) => p),
@@ -103,7 +116,9 @@ import { globFiles } from '../../../../src/utils/fsx.js';
 import { contextCommand } from '../../../../src/cli/commands/context.js';
 
 // Helper to create mock bundle changes
-function createMockBundleChanges(overrides?: Partial<BundleChanges>): BundleChanges {
+function createMockBundleChanges(
+  overrides?: Partial<BundleChanges>,
+): BundleChanges {
   return {
     added: [],
     removed: [],
@@ -114,7 +129,9 @@ function createMockBundleChanges(overrides?: Partial<BundleChanges>): BundleChan
 }
 
 // Helper to create mock contract diff
-function createMockContractDiff(overrides?: Partial<ContractDiff>): ContractDiff {
+function createMockContractDiff(
+  overrides?: Partial<ContractDiff>,
+): ContractDiff {
   return {
     props: { added: [], removed: [], changed: [] },
     emits: { added: [], removed: [], changed: [] },
@@ -158,7 +175,9 @@ describe('Watch Mode Failure Modes', () => {
         }),
         close: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
       const options: ContextOptions = {
         out: '.logicstamp',
@@ -180,15 +199,17 @@ describe('Watch Mode Failure Modes', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Trigger watcher error
       if (errorHandler) {
         errorHandler(new Error('ENOSPC: no space left on device'));
       }
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Watch error'));
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Watch error'),
+      );
       expect(cleanupModule.gracefulShutdown).toHaveBeenCalledWith(1);
     });
 
@@ -203,7 +224,9 @@ describe('Watch Mode Failure Modes', () => {
         }),
         close: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
       const options: ContextOptions = {
         out: '.logicstamp',
@@ -225,13 +248,13 @@ describe('Watch Mode Failure Modes', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Trigger with string error
       if (errorHandler) {
         errorHandler('string error message');
       }
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(consoleErrorSpy).toHaveBeenCalled();
     });
@@ -249,15 +272,19 @@ describe('Watch Mode Failure Modes', () => {
         }),
         close: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
       // Make incrementalRebuild slow
       let rebuildCallCount = 0;
-      vi.mocked(watchModeModule.incrementalRebuild).mockImplementation(async () => {
-        rebuildCallCount++;
-        await new Promise(resolve => setTimeout(resolve, 100));
-        return { bundles: [], updatedBundles: new Set() };
-      });
+      vi.mocked(watchModeModule.incrementalRebuild).mockImplementation(
+        async () => {
+          rebuildCallCount++;
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          return { bundles: [], updatedBundles: new Set() };
+        },
+      );
 
       const mockCache: WatchCache = {
         contracts: new Map(),
@@ -295,7 +322,7 @@ describe('Watch Mode Failure Modes', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', mockCache);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Trigger first change
       if (changeHandler) {
@@ -303,7 +330,7 @@ describe('Watch Mode Failure Modes', () => {
       }
 
       // Wait for debounce but not for rebuild to complete
-      await new Promise(resolve => setTimeout(resolve, 550));
+      await new Promise((resolve) => setTimeout(resolve, 550));
 
       // Trigger second change while first is still in progress
       if (changeHandler) {
@@ -311,7 +338,7 @@ describe('Watch Mode Failure Modes', () => {
       }
 
       // Wait for both to complete
-      await new Promise(resolve => setTimeout(resolve, 700));
+      await new Promise((resolve) => setTimeout(resolve, 700));
 
       // The recompilation should handle concurrent changes without crashing
       // (exact behavior depends on implementation - may batch or queue)
@@ -330,7 +357,9 @@ describe('Watch Mode Failure Modes', () => {
         }),
         close: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
       const options: ContextOptions = {
         out: '.logicstamp',
@@ -352,13 +381,13 @@ describe('Watch Mode Failure Modes', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Trigger change with special characters in path
       if (changeHandler) {
         changeHandler('/project/src/components/[id]/Component.tsx');
       }
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Should handle without crashing
       const calls = consoleSpy.mock.calls.flat().join('\n');
@@ -376,7 +405,9 @@ describe('Watch Mode Failure Modes', () => {
         }),
         close: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
       const options: ContextOptions = {
         out: '.logicstamp',
@@ -398,13 +429,13 @@ describe('Watch Mode Failure Modes', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Trigger change with Windows-style path
       if (changeHandler) {
         changeHandler('C:\\project\\src\\Component.tsx');
       }
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Should normalize path
     });
@@ -420,7 +451,9 @@ describe('Watch Mode Failure Modes', () => {
         }),
         close: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
       const options: ContextOptions = {
         out: '.logicstamp',
@@ -442,13 +475,13 @@ describe('Watch Mode Failure Modes', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Trigger change with unicode filename
       if (changeHandler) {
         changeHandler('/project/src/コンポーネント.tsx');
       }
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Should handle unicode
       const calls = consoleSpy.mock.calls.flat().join('\n');
@@ -459,19 +492,25 @@ describe('Watch Mode Failure Modes', () => {
   describe('cleanup edge cases', () => {
     it('should handle cleanup errors gracefully', async () => {
       let cleanupHandler: (() => Promise<void>) | undefined;
-      vi.mocked(cleanupModule.registerCleanup).mockImplementation((name, handler) => {
-        cleanupHandler = handler as () => Promise<void>;
-        return () => {};
-      });
+      vi.mocked(cleanupModule.registerCleanup).mockImplementation(
+        (name, handler) => {
+          cleanupHandler = handler as () => Promise<void>;
+          return () => {};
+        },
+      );
 
       // Make deleteWatchStatus throw
-      vi.mocked(configModule.deleteWatchStatus).mockRejectedValueOnce(new Error('Permission denied'));
+      vi.mocked(configModule.deleteWatchStatus).mockRejectedValueOnce(
+        new Error('Permission denied'),
+      );
 
       const mockWatcher = {
         on: vi.fn().mockReturnThis(),
         close: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
       const options: ContextOptions = {
         out: '.logicstamp',
@@ -493,7 +532,7 @@ describe('Watch Mode Failure Modes', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Execute cleanup - should not throw even if deleteWatchStatus fails
       if (cleanupHandler) {
@@ -503,16 +542,20 @@ describe('Watch Mode Failure Modes', () => {
 
     it('should handle watcher.close() failure', async () => {
       let cleanupHandler: (() => Promise<void>) | undefined;
-      vi.mocked(cleanupModule.registerCleanup).mockImplementation((name, handler) => {
-        cleanupHandler = handler as () => Promise<void>;
-        return () => {};
-      });
+      vi.mocked(cleanupModule.registerCleanup).mockImplementation(
+        (name, handler) => {
+          cleanupHandler = handler as () => Promise<void>;
+          return () => {};
+        },
+      );
 
       const mockWatcher = {
         on: vi.fn().mockReturnThis(),
         close: vi.fn().mockRejectedValue(new Error('Close failed')),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
       const options: ContextOptions = {
         out: '.logicstamp',
@@ -534,7 +577,7 @@ describe('Watch Mode Failure Modes', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Cleanup should handle watcher.close() failure
       if (cleanupHandler) {
@@ -618,7 +661,9 @@ describe('Watch Mode Failure Modes', () => {
         }),
         close: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
       // Create baseline bundles
       const baselineBundle: LogicStampBundle = {
@@ -679,8 +724,14 @@ describe('Watch Mode Failure Modes', () => {
       // Mock getChanges to return only bundleChanged (no other changes)
       vi.mocked(watchDiffModule.getChanges).mockReturnValue(
         createMockBundleChanges({
-          bundleChanged: [{ entryId: 'src/App.tsx', oldHash: 'old-hash', newHash: 'new-hash' }],
-        })
+          bundleChanged: [
+            {
+              entryId: 'src/App.tsx',
+              oldHash: 'old-hash',
+              newHash: 'new-hash',
+            },
+          ],
+        }),
       );
 
       const options: ContextOptions = {
@@ -717,22 +768,26 @@ describe('Watch Mode Failure Modes', () => {
       });
 
       const watchPromise = startWatchMode(options, '/project', mockCache);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Mock strict watch status reading
-      vi.mocked(configModule.getWatchStatusPath).mockReturnValue('/project/.logicstamp/context_strict-watch-status.json');
-      vi.mocked(configModule.writeStrictWatchStatus).mockResolvedValue(undefined);
+      vi.mocked(configModule.getWatchStatusPath).mockReturnValue(
+        '/project/.logicstamp/context_strict-watch-status.json',
+      );
+      vi.mocked(configModule.writeStrictWatchStatus).mockResolvedValue(
+        undefined,
+      );
 
       if (changeHandler) {
         changeHandler('/project/src/App.tsx');
       }
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       // Should detect changes even though only bundleChanged exists
       // getChanges is called with baselineBundles and newBundles
       expect(watchDiffModule.getChanges).toHaveBeenCalledWith(
         expect.arrayContaining([baselineBundle]),
-        expect.arrayContaining([newBundle])
+        expect.arrayContaining([newBundle]),
       );
     });
 
@@ -747,7 +802,9 @@ describe('Watch Mode Failure Modes', () => {
         }),
         close: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
       const mockCache: WatchCache = {
         contracts: new Map(),
@@ -807,15 +864,17 @@ describe('Watch Mode Failure Modes', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', mockCache);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       if (changeHandler) {
         changeHandler('/project/src/App.tsx');
       }
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       // Should call deleteStrictWatchStatus when no changes
-      expect(configModule.deleteStrictWatchStatus).toHaveBeenCalledWith('/project');
+      expect(configModule.deleteStrictWatchStatus).toHaveBeenCalledWith(
+        '/project',
+      );
     });
 
     it('should handle changes with no violations (violations.length === 0)', async () => {
@@ -829,7 +888,9 @@ describe('Watch Mode Failure Modes', () => {
         }),
         close: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
       const baselineBundle: LogicStampBundle = {
         type: 'LogicStampBundle',
@@ -893,7 +954,7 @@ describe('Watch Mode Failure Modes', () => {
               contractDiff: createMockContractDiff(), // Empty diff = no violations
             },
           ],
-        })
+        }),
       );
 
       const options: ContextOptions = {
@@ -917,15 +978,17 @@ describe('Watch Mode Failure Modes', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', mockCache);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       if (changeHandler) {
         changeHandler('/project/src/App.tsx');
       }
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       // Should delete strict watch status when changes exist but no violations
-      expect(configModule.deleteStrictWatchStatus).toHaveBeenCalledWith('/project');
+      expect(configModule.deleteStrictWatchStatus).toHaveBeenCalledWith(
+        '/project',
+      );
     });
 
     it('should respect quiet mode in strict watch', async () => {
@@ -940,7 +1003,9 @@ describe('Watch Mode Failure Modes', () => {
         }),
         close: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
       const mockCache: WatchCache = {
         contracts: new Map(),
@@ -967,7 +1032,7 @@ describe('Watch Mode Failure Modes', () => {
       vi.mocked(watchDiffModule.getChanges).mockReturnValue(
         createMockBundleChanges({
           removed: ['src/Deleted.tsx'], // This will create a violation
-        })
+        }),
       );
 
       const options: ContextOptions = {
@@ -991,12 +1056,12 @@ describe('Watch Mode Failure Modes', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', mockCache);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       if (changeHandler) {
         changeHandler('/project/src/App.tsx');
       }
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       // In quiet mode, violations should not be displayed
       const calls = consoleSpy.mock.calls.flat().join('\n');
@@ -1017,11 +1082,17 @@ describe('Watch Mode Failure Modes', () => {
         }),
         close: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
-      vi.mocked(watchModeModule.incrementalRebuild).mockRejectedValueOnce(new Error('Build failed'));
+      vi.mocked(watchModeModule.incrementalRebuild).mockRejectedValueOnce(
+        new Error('Build failed'),
+      );
 
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       const mockCache: WatchCache = {
         contracts: new Map(),
@@ -1059,14 +1130,16 @@ describe('Watch Mode Failure Modes', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', mockCache);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       if (changeHandler) {
         changeHandler('/project/src/App.tsx');
       }
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Error'));
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Error'),
+      );
       consoleErrorSpy.mockRestore();
     });
 
@@ -1081,9 +1154,13 @@ describe('Watch Mode Failure Modes', () => {
         }),
         close: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
-      vi.mocked(watchModeModule.incrementalRebuild).mockRejectedValueOnce(new Error('Incremental failed'));
+      vi.mocked(watchModeModule.incrementalRebuild).mockRejectedValueOnce(
+        new Error('Incremental failed'),
+      );
 
       const recoveredCache: WatchCache = {
         contracts: new Map(),
@@ -1100,7 +1177,9 @@ describe('Watch Mode Failure Modes', () => {
         },
         allBundles: [],
       };
-      vi.mocked(watchModeModule.initializeWatchCache).mockResolvedValue(recoveredCache);
+      vi.mocked(watchModeModule.initializeWatchCache).mockResolvedValue(
+        recoveredCache,
+      );
 
       const recoveredBundle: LogicStampBundle = {
         type: 'LogicStampBundle',
@@ -1127,7 +1206,9 @@ describe('Watch Mode Failure Modes', () => {
       });
 
       vi.mocked(globFiles).mockResolvedValue(['src/App.tsx']);
-      vi.mocked(contextHelpersModule.buildContractsFromFiles).mockResolvedValue({ contracts: [] } as never);
+      vi.mocked(contextHelpersModule.buildContractsFromFiles).mockResolvedValue(
+        { contracts: [] } as never,
+      );
 
       vi.mocked(contextCommand).mockClear();
 
@@ -1175,7 +1256,9 @@ describe('Watch Mode Failure Modes', () => {
       await new Promise((resolve) => setTimeout(resolve, 600));
 
       expect(vi.mocked(contextCommand)).toHaveBeenCalled();
-      expect(vi.mocked(watchModeModule.initializeWatchCache)).toHaveBeenCalled();
+      expect(
+        vi.mocked(watchModeModule.initializeWatchCache),
+      ).toHaveBeenCalled();
     });
 
     it('should log errors when logFile is enabled', async () => {
@@ -1189,11 +1272,17 @@ describe('Watch Mode Failure Modes', () => {
         }),
         close: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
-      vi.mocked(watchModeModule.incrementalRebuild).mockRejectedValueOnce(new Error('Parse error'));
+      vi.mocked(watchModeModule.incrementalRebuild).mockRejectedValueOnce(
+        new Error('Parse error'),
+      );
 
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       const mockCache: WatchCache = {
         contracts: new Map(),
@@ -1232,18 +1321,18 @@ describe('Watch Mode Failure Modes', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', mockCache);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       if (changeHandler) {
         changeHandler('/project/src/App.tsx');
       }
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       expect(configModule.appendWatchLog).toHaveBeenCalledWith(
         '/project',
         expect.objectContaining({
           error: 'Parse error',
-        })
+        }),
       );
       consoleErrorSpy.mockRestore();
     });
@@ -1264,7 +1353,9 @@ describe('Watch Mode Failure Modes', () => {
         }),
         close: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
       const options: ContextOptions = {
         out: '.logicstamp',
@@ -1286,12 +1377,12 @@ describe('Watch Mode Failure Modes', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', null);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       if (changeHandler) {
         changeHandler('/project/src/App.tsx');
       }
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Debug logging should be enabled
       const calls = consoleSpy.mock.calls.flat().join('\n');
@@ -1318,7 +1409,9 @@ describe('Watch Mode Failure Modes', () => {
         }),
         close: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
       const mockCache: WatchCache = {
         contracts: new Map(),
@@ -1350,7 +1443,7 @@ describe('Watch Mode Failure Modes', () => {
               fileHash: { old: 'file1', new: 'file2' },
             },
           ],
-        })
+        }),
       );
 
       const options: ContextOptions = {
@@ -1374,12 +1467,12 @@ describe('Watch Mode Failure Modes', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', mockCache);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       if (changeHandler) {
         changeHandler('/project/src/App.tsx');
       }
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       // Should not append to log file when logFile is false
       expect(configModule.appendWatchLog).not.toHaveBeenCalled();
@@ -1396,7 +1489,9 @@ describe('Watch Mode Failure Modes', () => {
         }),
         close: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
       const mockCache: WatchCache = {
         contracts: new Map(),
@@ -1443,12 +1538,12 @@ describe('Watch Mode Failure Modes', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', mockCache);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       if (changeHandler) {
         changeHandler('/project/src/App.tsx');
       }
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       // Should log even when changes is null but files changed
       expect(configModule.appendWatchLog).toHaveBeenCalledWith(
@@ -1456,7 +1551,7 @@ describe('Watch Mode Failure Modes', () => {
         expect.objectContaining({
           changedFiles: expect.arrayContaining(['src/App.tsx']),
           fileCount: expect.any(Number),
-        })
+        }),
       );
     });
 
@@ -1471,7 +1566,9 @@ describe('Watch Mode Failure Modes', () => {
         }),
         close: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
       const baselineBundle: LogicStampBundle = {
         type: 'LogicStampBundle',
@@ -1540,7 +1637,7 @@ describe('Watch Mode Failure Modes', () => {
               fileHash: { old: 'file1', new: 'file2' },
             },
           ],
-        })
+        }),
       );
 
       // Mock readFile to return baseline bundles BEFORE starting watch mode
@@ -1577,7 +1674,7 @@ describe('Watch Mode Failure Modes', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', mockCache);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       vi.clearAllMocks(); // Clear previous calls but keep readFile mock
       // Re-setup mocks after clearAllMocks
@@ -1609,17 +1706,17 @@ describe('Watch Mode Failure Modes', () => {
               fileHash: { old: 'file1', new: 'file2' },
             },
           ],
-        })
+        }),
       );
 
       if (changeHandler) {
         changeHandler('/project/src/App.tsx');
       }
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       // Verify log entry structure - empty arrays should be undefined
       const logCalls = vi.mocked(configModule.appendWatchLog).mock.calls;
-      const logCallWithChanges = logCalls.find(call => {
+      const logCallWithChanges = logCalls.find((call) => {
         const entry = call[1] as any;
         return entry && entry.modifiedContracts !== undefined;
       });
@@ -1653,17 +1750,18 @@ describe('Watch Mode Failure Modes', () => {
           added: ['src/New.tsx'],
           removed: ['src/Old.tsx'],
           changed: [],
-        })
+        }),
       );
 
       if (changeHandler) {
         changeHandler('/project/src/New.tsx');
       }
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       // Populated arrays should be included
-      const logCallsWithPopulated = vi.mocked(configModule.appendWatchLog).mock.calls;
-      const logCallWithPopulated = logCallsWithPopulated.find(call => {
+      const logCallsWithPopulated = vi.mocked(configModule.appendWatchLog).mock
+        .calls;
+      const logCallWithPopulated = logCallsWithPopulated.find((call) => {
         const entry = call[1] as any;
         return entry && entry.addedContracts !== undefined;
       });
@@ -1688,7 +1786,9 @@ describe('Watch Mode Failure Modes', () => {
         }),
         close: vi.fn().mockResolvedValue(undefined),
       };
-      vi.mocked(chokidar.watch).mockReturnValue(mockWatcher as unknown as ReturnType<typeof chokidar.watch>);
+      vi.mocked(chokidar.watch).mockReturnValue(
+        mockWatcher as unknown as ReturnType<typeof chokidar.watch>,
+      );
 
       vi.mocked(watchModeModule.incrementalRebuild).mockResolvedValue({
         bundles: [],
@@ -1731,7 +1831,7 @@ describe('Watch Mode Failure Modes', () => {
       };
 
       const watchPromise = startWatchMode(options, '/project', mockCache);
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Trigger many rapid changes
       if (changeHandler) {
@@ -1741,7 +1841,7 @@ describe('Watch Mode Failure Modes', () => {
       }
 
       // Wait for debounce + recompilation
-      await new Promise(resolve => setTimeout(resolve, 700));
+      await new Promise((resolve) => setTimeout(resolve, 700));
 
       // The console should show batched message
       const calls = consoleSpy.mock.calls.flat().join('\n');

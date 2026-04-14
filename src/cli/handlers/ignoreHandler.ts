@@ -19,8 +19,10 @@ export async function handleIgnore(args: string[]): Promise<void> {
   try {
     await ignoreCommand(options);
   } catch (error) {
-    console.error('❌ Failed to add paths to .stampignore:', (error as Error).message);
+    console.error(
+      '❌ Failed to add paths to .stampignore:',
+      (error as Error).message,
+    );
     process.exit(1);
   }
 }
-

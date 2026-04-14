@@ -28,14 +28,35 @@
  * Uses ts-morph for robust AST traversal
  */
 
-import { Project, SyntaxKind, SourceFile, Node, FunctionDeclaration, ClassDeclaration, VariableStatement, ExportDeclaration, type ModifierableNode } from 'ts-morph';
-import type { LogicSignature, ContractKind, PropType, EventType, NextJSMetadata, ExportMetadata } from '../types/UIFContract.js';
+import {
+  Project,
+  SyntaxKind,
+  type SourceFile,
+  Node,
+  type FunctionDeclaration,
+  type ClassDeclaration,
+  type VariableStatement,
+  type ExportDeclaration,
+  type ModifierableNode,
+} from 'ts-morph';
+import type {
+  LogicSignature,
+  ContractKind,
+  PropType,
+  EventType,
+  NextJSMetadata,
+  ExportMetadata,
+} from '../types/UIFContract.js';
 import { debugError } from '../utils/debug.js';
 import { extractComponents, extractHooks } from '../extractors/react/index.js';
 import { extractProps } from '../extractors/react/index.js';
 import { extractState, extractVariables } from '../extractors/react/index.js';
 import { extractEvents, extractJsxRoutes } from '../extractors/react/index.js';
-import { detectKind, extractNextJsMetadata, detectBackendFramework } from './astParser/detectors.js';
+import {
+  detectKind,
+  extractNextJsMetadata,
+  detectBackendFramework,
+} from './astParser/detectors.js';
 import {
   extractVueComposables,
   extractVueComponents,
@@ -43,9 +64,12 @@ import {
   extractVuePropsCall,
   extractVueEmitsCall,
   extractVueProps,
-  extractVueEmits
+  extractVueEmits,
 } from '../extractors/vue/index.js';
-import { extractBackendMetadata, type BackendMetadata } from '../extractors/shared/backendExtractor.js';
+import {
+  extractBackendMetadata,
+  type BackendMetadata,
+} from '../extractors/shared/backendExtractor.js';
 
 export interface AstExtract {
   kind: ContractKind;
@@ -71,7 +95,7 @@ function safeExtract<T>(
   label: string,
   filePath: string,
   extractor: () => T,
-  fallback: T
+  fallback: T,
 ): T {
   try {
     return extractor();
@@ -103,11 +127,23 @@ export async function extractFromFile(filePath: string): Promise<AstExtract> {
     const resolvedPath = source.getFilePath?.() ?? filePath;
 
     // Extract basic data first - wrap each extraction in try-catch for resilience
-    const imports = safeExtract('imports', resolvedPath, () => extractImports(source), []);
+    const imports = safeExtract(
+      'imports',
+      resolvedPath,
+      () => extractImports(source),
+      [],
+    );
 
     // Detect framework type EARLY
-    const hasVueImport = imports.some(imp => imp === 'vue' || imp.startsWith('vue/'));
-    const backendFramework = safeExtract('backend-framework', resolvedPath, () => detectBackendFramework(imports, source), undefined);
+    const hasVueImport = imports.some(
+      (imp) => imp === 'vue' || imp.startsWith('vue/'),
+    );
+    const backendFramework = safeExtract(
+      'backend-framework',
+      resolvedPath,
+      () => detectBackendFramework(imports, source),
+      undefined,
+    );
 
     // CONDITIONAL extraction based on framework
     // Priority: Backend > Vue > React > TypeScript module
@@ -120,31 +156,125 @@ export async function extractFromFile(filePath: string): Promise<AstExtract> {
 
     if (backendFramework) {
       // Backend extraction - SKIP React/Vue extraction (highest priority)
-      backend = safeExtract('backend', resolvedPath, () => extractBackendMetadata(source, filePath, imports, backendFramework), undefined);
+      backend = safeExtract(
+        'backend',
+        resolvedPath,
+        () =>
+          extractBackendMetadata(source, filePath, imports, backendFramework),
+        undefined,
+      );
       // hooks/components/props/state/emits remain empty arrays/objects
     } else if (hasVueImport) {
       // Vue extraction
-      hooks = safeExtract('vue-composables', resolvedPath, () => extractVueComposables(source), []);
-      components = safeExtract('vue-components', resolvedPath, () => extractVueComponents(source), []);
-      state = safeExtract('vue-state', resolvedPath, () => extractVueState(source), {});
-      props = safeExtract('vue-props', resolvedPath, () => extractVueProps(source), {});
-      emits = safeExtract('vue-emits', resolvedPath, () => extractVueEmits(source), {});
+      hooks = safeExtract(
+        'vue-composables',
+        resolvedPath,
+        () => extractVueComposables(source),
+        [],
+      );
+      components = safeExtract(
+        'vue-components',
+        resolvedPath,
+        () => extractVueComponents(source),
+        [],
+      );
+      state = safeExtract(
+        'vue-state',
+        resolvedPath,
+        () => extractVueState(source),
+        {},
+      );
+      props = safeExtract(
+        'vue-props',
+        resolvedPath,
+        () => extractVueProps(source),
+        {},
+      );
+      emits = safeExtract(
+        'vue-emits',
+        resolvedPath,
+        () => extractVueEmits(source),
+        {},
+      );
     } else {
       // React extraction (default for frontend files)
-      hooks = safeExtract('hooks', resolvedPath, () => extractHooks(source), []);
-      components = safeExtract('components', resolvedPath, () => extractComponents(source), []);
-      state = safeExtract('state', resolvedPath, () => extractState(source), {});
-      props = safeExtract('props', resolvedPath, () => extractProps(source), {});
+      hooks = safeExtract(
+        'hooks',
+        resolvedPath,
+        () => extractHooks(source),
+        [],
+      );
+      components = safeExtract(
+        'components',
+        resolvedPath,
+        () => extractComponents(source),
+        [],
+      );
+      state = safeExtract(
+        'state',
+        resolvedPath,
+        () => extractState(source),
+        {},
+      );
+      props = safeExtract(
+        'props',
+        resolvedPath,
+        () => extractProps(source),
+        {},
+      );
       // Pass props to extractEvents to filter out internal handlers
-      emits = safeExtract('events', resolvedPath, () => extractEvents(source, props), {});
+      emits = safeExtract(
+        'events',
+        resolvedPath,
+        () => extractEvents(source, props),
+        {},
+      );
     }
 
-    const nextjs = safeExtract('nextjs', resolvedPath, () => extractNextJsMetadata(source, filePath), undefined);
-    const variables = safeExtract('variables', resolvedPath, () => extractVariables(source), []);
-    const functions = safeExtract('functions', resolvedPath, () => extractFunctions(source), []);
-    const jsxRoutes = safeExtract('jsxRoutes', resolvedPath, () => extractJsxRoutes(source), []);
-    const kind = safeExtract('kind', resolvedPath, () => detectKind(hooks, components, imports, source, filePath, backendFramework), 'ts:module' as ContractKind);
-    const { exports: exportMetadata, exportedFunctions } = safeExtract('exports', resolvedPath, () => extractExports(source), { exports: undefined, exportedFunctions: [] });
+    const nextjs = safeExtract(
+      'nextjs',
+      resolvedPath,
+      () => extractNextJsMetadata(source, filePath),
+      undefined,
+    );
+    const variables = safeExtract(
+      'variables',
+      resolvedPath,
+      () => extractVariables(source),
+      [],
+    );
+    const functions = safeExtract(
+      'functions',
+      resolvedPath,
+      () => extractFunctions(source),
+      [],
+    );
+    const jsxRoutes = safeExtract(
+      'jsxRoutes',
+      resolvedPath,
+      () => extractJsxRoutes(source),
+      [],
+    );
+    const kind = safeExtract(
+      'kind',
+      resolvedPath,
+      () =>
+        detectKind(
+          hooks,
+          components,
+          imports,
+          source,
+          filePath,
+          backendFramework,
+        ),
+      'ts:module' as ContractKind,
+    );
+    const { exports: exportMetadata, exportedFunctions } = safeExtract(
+      'exports',
+      resolvedPath,
+      () => extractExports(source),
+      { exports: undefined, exportedFunctions: [] },
+    );
 
     return {
       kind,
@@ -187,7 +317,6 @@ export async function extractFromFile(filePath: string): Promise<AstExtract> {
   }
 }
 
-
 /**
  * Extract all function declarations and arrow functions
  */
@@ -211,12 +340,14 @@ function extractFunctions(source: SourceFile): string[] {
   });
 
   // Method declarations in classes/objects
-  source.getDescendantsOfKind(SyntaxKind.MethodDeclaration).forEach((method) => {
-    const name = method.getName();
-    if (name) {
-      functions.add(name);
-    }
-  });
+  source
+    .getDescendantsOfKind(SyntaxKind.MethodDeclaration)
+    .forEach((method) => {
+      const name = method.getName();
+      if (name) {
+        functions.add(name);
+      }
+    });
 
   return Array.from(functions).sort();
 }
@@ -225,7 +356,10 @@ function extractFunctions(source: SourceFile): string[] {
  * Extract export metadata and exported functions from source file
  * Uses fast AST traversal - optimized single pass through statements
  */
-function extractExports(source: SourceFile): { exports: ExportMetadata | undefined; exportedFunctions: string[] } {
+function extractExports(source: SourceFile): {
+  exports: ExportMetadata | undefined;
+  exportedFunctions: string[];
+} {
   const exportedFunctions = new Set<string>();
   let hasDefaultExport = false;
   const namedExports = new Set<string>();
@@ -257,15 +391,20 @@ function extractExports(source: SourceFile): { exports: ExportMetadata | undefin
     }
 
     // Skip statements that can't be exports
-    if (kind !== SyntaxKind.FunctionDeclaration &&
-        kind !== SyntaxKind.ClassDeclaration &&
-        kind !== SyntaxKind.VariableStatement) {
+    if (
+      kind !== SyntaxKind.FunctionDeclaration &&
+      kind !== SyntaxKind.ClassDeclaration &&
+      kind !== SyntaxKind.VariableStatement
+    ) {
       continue;
     }
 
     // Check modifiers once for declarations that can be exported
     // All three types (FunctionDeclaration, ClassDeclaration, VariableStatement) implement ModifierableNode
-    const modifierableStmt = stmt as FunctionDeclaration | ClassDeclaration | VariableStatement;
+    const modifierableStmt = stmt as
+      | FunctionDeclaration
+      | ClassDeclaration
+      | VariableStatement;
     const modifiers = modifierableStmt.getModifiers();
     let hasExport = false;
     let isDefault = false;
@@ -279,7 +418,10 @@ function extractExports(source: SourceFile): { exports: ExportMetadata | undefin
     if (!hasExport) continue; // Skip non-exported statements
 
     // Process exported declarations
-    if (kind === SyntaxKind.FunctionDeclaration || kind === SyntaxKind.ClassDeclaration) {
+    if (
+      kind === SyntaxKind.FunctionDeclaration ||
+      kind === SyntaxKind.ClassDeclaration
+    ) {
       const decl = stmt as FunctionDeclaration | ClassDeclaration;
       const name = decl.getName();
 
@@ -331,9 +473,6 @@ function extractExports(source: SourceFile): { exports: ExportMetadata | undefin
   };
 }
 
-
-
-
 /**
  * Extract import module specifiers
  */
@@ -347,7 +486,6 @@ function extractImports(source: SourceFile): string[] {
 
   return Array.from(imports).sort();
 }
-
 
 /**
  * Build the logic signature from extracted AST data

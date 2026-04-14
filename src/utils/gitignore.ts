@@ -51,7 +51,7 @@ export async function readGitignore(targetDir: string): Promise<string> {
  * Check if a pattern exists in .gitignore content
  */
 export function hasPattern(content: string, pattern: string): boolean {
-  const lines = content.split(/\r?\n/).map(line => line.trim());
+  const lines = content.split(/\r?\n/).map((line) => line.trim());
   return lines.includes(pattern);
 }
 
@@ -68,19 +68,24 @@ export function hasLogicStampBlock(content: string): boolean {
  */
 export function hasLogicStampPatterns(content: string): boolean {
   // Check for the key patterns (ignore the comment line)
-  const patterns = LOGICSTAMP_GITIGNORE_PATTERNS.filter(p => !p.startsWith('#'));
+  const patterns = LOGICSTAMP_GITIGNORE_PATTERNS.filter(
+    (p) => !p.startsWith('#'),
+  );
 
   // Check if at least the main patterns exist
   // We consider it "has patterns" if context.json and context_*.json are present
-  return hasPattern(content, 'context.json') &&
-         (hasPattern(content, 'context_*.json') || hasPattern(content, 'context_main.json'));
+  return (
+    hasPattern(content, 'context.json') &&
+    (hasPattern(content, 'context_*.json') ||
+      hasPattern(content, 'context_main.json'))
+  );
 }
 
 /**
  * Get which LogicStamp patterns are missing from .gitignore content
  */
 export function getMissingPatterns(content: string): string[] {
-  return LOGICSTAMP_GITIGNORE_PATTERNS.filter(pattern => {
+  return LOGICSTAMP_GITIGNORE_PATTERNS.filter((pattern) => {
     return !hasPattern(content, pattern);
   });
 }
@@ -90,7 +95,9 @@ export function getMissingPatterns(content: string): string[] {
  * Returns the index where the LogicStamp block starts, or -1 if not found
  */
 function findLogicStampBlockIndex(lines: string[]): number {
-  const headerIndex = lines.findIndex(line => line.trim() === '# LogicStamp context & security files');
+  const headerIndex = lines.findIndex(
+    (line) => line.trim() === '# LogicStamp context & security files',
+  );
   return headerIndex;
 }
 
@@ -98,41 +105,46 @@ function findLogicStampBlockIndex(lines: string[]): number {
  * Find the insertion point for missing LogicStamp patterns
  * Returns the index after the last existing LogicStamp pattern in the block
  */
-function findLogicStampInsertionPoint(lines: string[], startIndex: number): number {
+function findLogicStampInsertionPoint(
+  lines: string[],
+  startIndex: number,
+): number {
   // Known LogicStamp patterns (excluding the header comment)
   const knownPatterns = new Set(
-    LOGICSTAMP_GITIGNORE_PATTERNS.filter(p => !p.startsWith('#')).map(p => p.trim())
+    LOGICSTAMP_GITIGNORE_PATTERNS.filter((p) => !p.startsWith('#')).map((p) =>
+      p.trim(),
+    ),
   );
 
   let lastPatternIndex = startIndex; // Start after the header comment
-  
+
   // Find the last LogicStamp pattern in the block
   for (let i = startIndex + 1; i < lines.length; i++) {
     const trimmed = lines[i].trim();
-    
+
     // If we hit a blank line, stop here (insert before the blank line)
     if (trimmed === '') {
       return i;
     }
-    
+
     // If we hit a non-LogicStamp pattern (not a comment, not a known pattern), stop here
     if (!trimmed.startsWith('#') && !knownPatterns.has(trimmed)) {
       return i;
     }
-    
+
     // If this is a LogicStamp pattern (comment or known pattern), update lastPatternIndex
     if (trimmed.startsWith('#') || knownPatterns.has(trimmed)) {
       lastPatternIndex = i + 1; // Insert after this line
     }
   }
-  
+
   // Block extends to end of file - insert at the end
   return lastPatternIndex;
 }
 
 /**
  * Add LogicStamp patterns to .gitignore content (idempotent patch mode)
- * 
+ *
  * Behavior:
  * - If LogicStamp block exists: append only missing patterns to the block
  * - If LogicStamp block doesn't exist: add full block at the end
@@ -153,22 +165,25 @@ export function addLogicStampPatterns(content: string): string {
   if (hasBlock && missingPatterns.length > 0) {
     const blockStartIndex = findLogicStampBlockIndex(lines);
     const insertIndex = findLogicStampInsertionPoint(lines, blockStartIndex);
-    
+
     // Insert missing patterns right after the last existing LogicStamp pattern
     const newLines = [...lines];
-    const patternsToAdd = missingPatterns.map(p => p.trim());
-    
+    const patternsToAdd = missingPatterns.map((p) => p.trim());
+
     // Insert patterns at the insertion point
     newLines.splice(insertIndex, 0, ...patternsToAdd);
-    
+
     // Preserve original line ending style
     const lineEnding = content.includes('\r\n') ? '\r\n' : '\n';
-    return newLines.join(lineEnding) + (content.endsWith(lineEnding) ? '' : lineEnding);
+    return (
+      newLines.join(lineEnding) +
+      (content.endsWith(lineEnding) ? '' : lineEnding)
+    );
   }
 
   // Block doesn't exist - add full block at the end
   let newContent = content;
-  
+
   // Add blank lines before the section if content exists
   if (newContent.length > 0) {
     // Normalize line endings and ensure we end with at least one newline
@@ -178,7 +193,7 @@ export function addLogicStampPatterns(content: string): string {
     } else {
       newContent = normalized;
     }
-    
+
     // Add one more blank line if content doesn't already end with one
     if (!newContent.endsWith('\n\n')) {
       newContent += '\n';
@@ -194,9 +209,12 @@ export function addLogicStampPatterns(content: string): string {
 /**
  * Write content to .gitignore
  */
-export async function writeGitignore(targetDir: string, content: string): Promise<void> {
+export async function writeGitignore(
+  targetDir: string,
+  content: string,
+): Promise<void> {
   const gitignorePath = join(targetDir, '.gitignore');
-  
+
   try {
     await writeFile(gitignorePath, content, 'utf-8');
   } catch (error) {
@@ -207,7 +225,7 @@ export async function writeGitignore(targetDir: string, content: string): Promis
       message: err.message,
       code: err.code,
     });
-    
+
     let userMessage: string;
     switch (err.code) {
       case 'ENOENT':
@@ -231,16 +249,18 @@ export async function writeGitignore(targetDir: string, content: string): Promis
  * Creates .gitignore if it doesn't exist
  * Uses idempotent patch mode - only adds missing patterns if block exists
  */
-export async function ensureGitignorePatterns(targetDir: string): Promise<{ added: boolean; created: boolean }> {
+export async function ensureGitignorePatterns(
+  targetDir: string,
+): Promise<{ added: boolean; created: boolean }> {
   const exists = await gitignoreExists(targetDir);
   const content = await readGitignore(targetDir);
 
   // Use smart patch mode - will append only missing patterns if block exists
   const newContent = addLogicStampPatterns(content);
-  
+
   // Check if content actually changed
   const contentChanged = content !== newContent;
-  
+
   if (!contentChanged) {
     return { added: false, created: false };
   }
@@ -253,44 +273,44 @@ export async function ensureGitignorePatterns(targetDir: string): Promise<{ adde
 /**
  * Ensure a specific pattern is in .gitignore
  * Adds the pattern if it doesn't exist, preserves existing content
- * 
+ *
  * @param targetDir - Project root directory
  * @param pattern - Pattern to ensure (relative to project root, e.g., "reports/security.json")
  * @returns Result indicating if pattern was added and if .gitignore was created
  */
 export async function ensurePatternInGitignore(
   targetDir: string,
-  pattern: string
+  pattern: string,
 ): Promise<{ added: boolean; created: boolean }> {
   const exists = await gitignoreExists(targetDir);
   const content = await readGitignore(targetDir);
-  
+
   // Normalize pattern (forward slashes, no leading slash)
   const normalizedPattern = toForwardSlashes(pattern).replace(/^\//, '').trim();
-  
+
   // Check if pattern already exists
   if (hasPattern(content, normalizedPattern)) {
     return { added: false, created: false };
   }
-  
+
   // Add pattern to .gitignore
   let newContent = content;
-  
+
   // Ensure content ends with newline
   if (newContent.length > 0 && !newContent.endsWith('\n')) {
     newContent += '\n';
   }
-  
+
   // Add blank line before pattern if content exists
   if (newContent.length > 0 && !newContent.endsWith('\n\n')) {
     newContent += '\n';
   }
-  
+
   // Add pattern
   newContent += normalizedPattern + '\n';
-  
+
   await writeGitignore(targetDir, newContent);
-  
+
   return { added: true, created: !exists };
 }
 
@@ -311,8 +331,13 @@ export async function ensurePatternInGitignore(
  */
 export async function smartGitignoreSetup(
   targetDir: string,
-  options: { skipGitignore?: boolean } = {}
-): Promise<{ added: boolean; created: boolean; prompted: boolean; skipped: boolean }> {
+  options: { skipGitignore?: boolean } = {},
+): Promise<{
+  added: boolean;
+  created: boolean;
+  prompted: boolean;
+  skipped: boolean;
+}> {
   // If --skip-gitignore flag is set, do nothing
   if (options.skipGitignore) {
     return { added: false, created: false, prompted: false, skipped: true };

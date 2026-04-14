@@ -37,10 +37,10 @@ let exitHandlerRegistered = false;
 export function registerCleanup(
   id: string,
   handler: CleanupHandler,
-  priority = 10
+  priority = 10,
 ): () => void {
   // Remove any existing handler with the same id
-  const existingIndex = cleanupHandlers.findIndex(h => h.id === id);
+  const existingIndex = cleanupHandlers.findIndex((h) => h.id === id);
   if (existingIndex !== -1) {
     cleanupHandlers.splice(existingIndex, 1);
   }
@@ -58,7 +58,7 @@ export function registerCleanup(
  * Unregister a cleanup handler by id
  */
 export function unregisterCleanup(id: string): boolean {
-  const index = cleanupHandlers.findIndex(h => h.id === id);
+  const index = cleanupHandlers.findIndex((h) => h.id === id);
   if (index !== -1) {
     cleanupHandlers.splice(index, 1);
     return true;
@@ -73,7 +73,7 @@ export function unregisterCleanup(id: string): boolean {
  */
 export async function gracefulShutdown(
   exitCode = 1,
-  message?: string
+  message?: string,
 ): Promise<never> {
   // Prevent re-entry
   if (isShuttingDown) {

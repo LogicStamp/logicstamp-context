@@ -310,4 +310,3 @@ describe('Motion Extractor', () => {
     });
   });
 });
-

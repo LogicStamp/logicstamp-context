@@ -34,7 +34,9 @@ describe('bundleFormatter', () => {
 
       expect(Array.isArray(parsed)).toBe(true);
       expect(parsed.length).toBe(2);
-      expect(parsed[0].$schema).toBe('https://logicstamp.dev/schemas/context/v0.1.json');
+      expect(parsed[0].$schema).toBe(
+        'https://logicstamp.dev/schemas/context/v0.1.json',
+      );
       expect(parsed[0].position).toBe('1/2');
       expect(parsed[1].position).toBe('2/2');
     });
@@ -51,7 +53,9 @@ describe('bundleFormatter', () => {
       expect(lines.length).toBe(2);
 
       const first = JSON.parse(lines[0]);
-      expect(first.$schema).toBe('https://logicstamp.dev/schemas/context/v0.1.json');
+      expect(first.$schema).toBe(
+        'https://logicstamp.dev/schemas/context/v0.1.json',
+      );
       expect(first.position).toBe('1/2');
 
       const second = JSON.parse(lines[1]);
@@ -118,7 +122,9 @@ describe('bundleFormatter', () => {
 
       const result = createBundleWithSchema(bundle, 0, 3);
 
-      expect(result.$schema).toBe('https://logicstamp.dev/schemas/context/v0.1.json');
+      expect(result.$schema).toBe(
+        'https://logicstamp.dev/schemas/context/v0.1.json',
+      );
       expect(result.position).toBe('1/3');
       expect(result.entryId).toBe('src/App.tsx');
     });

@@ -1,6 +1,6 @@
 /**
  * Watch Mode Module - Exports for incremental rebuild, diffing, and file watching
- * 
+ *
  * This module provides:
  * - incrementalWatch: Fast incremental rebuilds with caching
  * - watchDiff: Contract and bundle comparison utilities

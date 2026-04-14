@@ -2,7 +2,14 @@
  * NestJS Extractor - Extracts NestJS controllers and API metadata
  */
 
-import { SourceFile, SyntaxKind, Node, Decorator, ClassDeclaration, MethodDeclaration } from 'ts-morph';
+import {
+  type SourceFile,
+  SyntaxKind,
+  Node,
+  Decorator,
+  type ClassDeclaration,
+  MethodDeclaration,
+} from 'ts-morph';
 import type { ApiSignature } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
 
@@ -22,7 +29,9 @@ export interface NestJSController {
 /**
  * Extract NestJS controller metadata from source file
  */
-export function extractNestJSController(source: SourceFile): NestJSController | undefined {
+export function extractNestJSController(
+  source: SourceFile,
+): NestJSController | undefined {
   const filePath = source.getFilePath?.() ?? 'unknown';
 
   try {
@@ -50,7 +59,9 @@ export function extractNestJSController(source: SourceFile): NestJSController | 
 
     // Extract base path from @Controller decorator
     let basePath: string | undefined;
-    const controllerDecorator = controllerClass.getDecorators().find(d => d.getName() === 'Controller');
+    const controllerDecorator = controllerClass
+      .getDecorators()
+      .find((d) => d.getName() === 'Controller');
     if (controllerDecorator) {
       const args = controllerDecorator.getArguments();
       if (args.length > 0) {
@@ -125,13 +136,13 @@ export function extractNestJSController(source: SourceFile): NestJSController | 
 export function extractNestJSApiSignature(
   source: SourceFile,
   className: string,
-  methodName: string
+  methodName: string,
 ): ApiSignature | undefined {
   const filePath = source.getFilePath?.() ?? 'unknown';
 
   try {
     const classes = source.getClasses();
-    const controllerClass = classes.find(c => c.getName() === className);
+    const controllerClass = classes.find((c) => c.getName() === className);
 
     if (!controllerClass) {
       return undefined;

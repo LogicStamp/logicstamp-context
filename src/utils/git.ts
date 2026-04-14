@@ -62,7 +62,7 @@ export const GIT_WORKTREE_TIMEOUT = 60000;
  */
 async function execGit(
   args: string[],
-  options: GitOptions = {}
+  options: GitOptions = {},
 ): Promise<string> {
   const cwd = options.cwd ?? process.cwd();
   const timeout = options.timeout ?? DEFAULT_GIT_TIMEOUT;
@@ -116,7 +116,8 @@ async function execGit(
           code,
           stderr: stderr.trim(),
         });
-        const errorMessage = stderr.trim() || `Command failed with exit code ${code}`;
+        const errorMessage =
+          stderr.trim() || `Command failed with exit code ${code}`;
         reject(new Error(`Git command failed: ${errorMessage}`));
       }
     });
@@ -146,7 +147,9 @@ export async function getGitRoot(options: GitOptions = {}): Promise<string> {
 /**
  * Check if git worktrees are supported (git >= 2.5)
  */
-export async function supportsWorktrees(options: GitOptions = {}): Promise<boolean> {
+export async function supportsWorktrees(
+  options: GitOptions = {},
+): Promise<boolean> {
   try {
     // Try to list worktrees - will fail if not supported
     await execGit(['worktree', 'list'], options);
@@ -172,10 +175,14 @@ const MAX_REF_LENGTH = 256;
 function validateGitRef(ref: string): void {
   const trimmed = ref.trim();
   if (trimmed.length === 0) {
-    throw new Error('Invalid baseline ref: ref is empty or exceeds 256 characters');
+    throw new Error(
+      'Invalid baseline ref: ref is empty or exceeds 256 characters',
+    );
   }
   if (trimmed.length > MAX_REF_LENGTH) {
-    throw new Error('Invalid baseline ref: ref is empty or exceeds 256 characters');
+    throw new Error(
+      'Invalid baseline ref: ref is empty or exceeds 256 characters',
+    );
   }
 }
 
@@ -189,14 +196,14 @@ function validateGitRef(ref: string): void {
  */
 export async function resolveGitRef(
   ref: string,
-  options: GitOptions = {}
+  options: GitOptions = {},
 ): Promise<string> {
   // Lightweight validation: trim whitespace and check length
   // Let Git be the source of truth for semantic validity
   validateGitRef(ref);
-  
+
   const trimmedRef = ref.trim();
-  
+
   try {
     const hash = await execGit(['rev-parse', '--verify', trimmedRef], options);
     return hash;
@@ -211,7 +218,7 @@ export async function resolveGitRef(
  */
 export async function describeGitRef(
   ref: string,
-  options: GitOptions = {}
+  options: GitOptions = {},
 ): Promise<string> {
   // Use trimmed ref for consistency with resolveGitRef
   const trimmedRef = ref.trim();
@@ -219,7 +226,7 @@ export async function describeGitRef(
     // Try to get a symbolic name first
     const symbolic = await execGit(
       ['rev-parse', '--abbrev-ref', trimmedRef],
-      options
+      options,
     );
     if (symbolic && symbolic !== 'HEAD') {
       return symbolic;
@@ -230,7 +237,10 @@ export async function describeGitRef(
 
   try {
     // Fall back to short commit hash
-    const shortHash = await execGit(['rev-parse', '--short', trimmedRef], options);
+    const shortHash = await execGit(
+      ['rev-parse', '--short', trimmedRef],
+      options,
+    );
     return shortHash;
   } catch {
     return trimmedRef; // Return trimmed ref if all else fails
@@ -248,11 +258,11 @@ export async function describeGitRef(
 export async function createWorktree(
   ref: string,
   targetDir?: string,
-  options: GitOptions = {}
+  options: GitOptions = {},
 ): Promise<GitWorktreeResult> {
   // Use trimmed ref for consistency
   const trimmedRef = ref.trim();
-  
+
   // Validate we're in a git repo
   if (!(await isGitRepo(options))) {
     throw new Error('Not a git repository');
@@ -267,14 +277,20 @@ export async function createWorktree(
   const commitHash = await resolveGitRef(trimmedRef, options);
 
   // Generate worktree path if not provided
-  const worktreePath = targetDir ?? join(
-    tmpdir(),
-    `logicstamp-worktree-${Date.now()}-${commitHash.substring(0, 8)}`
-  );
+  const worktreePath =
+    targetDir ??
+    join(
+      tmpdir(),
+      `logicstamp-worktree-${Date.now()}-${commitHash.substring(0, 8)}`,
+    );
 
-  debugLog('git', `Creating worktree at ${worktreePath} for ref ${trimmedRef}`, {
-    commitHash,
-  });
+  debugLog(
+    'git',
+    `Creating worktree at ${worktreePath} for ref ${trimmedRef}`,
+    {
+      commitHash,
+    },
+  );
 
   try {
     // Create parent directory if needed
@@ -286,7 +302,7 @@ export async function createWorktree(
     // Create the worktree in detached HEAD mode
     await execGit(
       ['worktree', 'add', '--detach', worktreePath, commitHash],
-      options
+      options,
     );
 
     debugLog('git', `Worktree created successfully at ${worktreePath}`);
@@ -311,7 +327,9 @@ export async function createWorktree(
       message: err.message,
     });
 
-    throw new Error(`Failed to create worktree for "${trimmedRef}": ${err.message}`);
+    throw new Error(
+      `Failed to create worktree for "${trimmedRef}": ${err.message}`,
+    );
   }
 }
 
@@ -322,7 +340,7 @@ export async function createWorktree(
  */
 export async function removeWorktree(
   worktreePath: string,
-  options: GitOptions = {}
+  options: GitOptions = {},
 ): Promise<void> {
   debugLog('git', `Removing worktree at ${worktreePath}`);
 
@@ -354,7 +372,9 @@ export async function removeWorktree(
 /**
  * Check if there are uncommitted changes in the working directory
  */
-export async function hasUncommittedChanges(options: GitOptions = {}): Promise<boolean> {
+export async function hasUncommittedChanges(
+  options: GitOptions = {},
+): Promise<boolean> {
   try {
     const status = await execGit(['status', '--porcelain'], options);
     return status.length > 0;
@@ -366,9 +386,14 @@ export async function hasUncommittedChanges(options: GitOptions = {}): Promise<b
 /**
  * Get the current branch name (or "HEAD" if detached)
  */
-export async function getCurrentBranch(options: GitOptions = {}): Promise<string> {
+export async function getCurrentBranch(
+  options: GitOptions = {},
+): Promise<string> {
   try {
-    const branch = await execGit(['rev-parse', '--abbrev-ref', 'HEAD'], options);
+    const branch = await execGit(
+      ['rev-parse', '--abbrev-ref', 'HEAD'],
+      options,
+    );
     return branch;
   } catch {
     return 'HEAD';
@@ -414,7 +439,7 @@ export interface GitBaselinePaths {
  */
 export async function createBaselinePaths(
   projectRoot: string,
-  ref: string
+  ref: string,
 ): Promise<GitBaselinePaths> {
   const timestamp = Date.now();
   const safeRef = ref.replace(/[^a-zA-Z0-9_-]/g, '_').substring(0, 20);
@@ -427,7 +452,7 @@ export async function createBaselinePaths(
   // Worktree goes in system temp (it's large)
   const worktreeDir = join(
     tmpdir(),
-    `logicstamp-worktree-${safeRef}-${timestamp}`
+    `logicstamp-worktree-${safeRef}-${timestamp}`,
   );
 
   // Create directories
@@ -450,7 +475,7 @@ export async function createBaselinePaths(
  */
 export async function isGitIgnored(
   filePath: string,
-  options: GitOptions = {}
+  options: GitOptions = {},
 ): Promise<boolean> {
   try {
     // git check-ignore --quiet returns exit code 0 if file is ignored, 1 if not ignored
@@ -473,15 +498,15 @@ export async function isGitIgnored(
 export async function filterGitIgnoredFiles(
   filePaths: string[],
   projectRoot: string,
-  options: GitOptions = {}
+  options: GitOptions = {},
 ): Promise<string[]> {
   const { relative } = await import('node:path');
-  
+
   const filtered: string[] = [];
-  
+
   for (const filePath of filePaths) {
     let isIgnored = false;
-    
+
     // If the path contains a slash, it's a full relative path
     if (filePath.includes('/')) {
       // Convert to relative path from project root if needed
@@ -492,22 +517,25 @@ export async function filterGitIgnoredFiles(
       } else {
         relativePath = filePath;
       }
-      
+
       // Check if file is git-ignored
-      isIgnored = await isGitIgnored(relativePath, { ...options, cwd: projectRoot });
+      isIgnored = await isGitIgnored(relativePath, {
+        ...options,
+        cwd: projectRoot,
+      });
     } else {
       // It's just a basename (normalized in git baseline mode)
       // Check if the basename itself is git-ignored (works for root-level files like next-env.d.ts)
-      isIgnored = await isGitIgnored(filePath, { ...options, cwd: projectRoot });
-      
+      isIgnored = await isGitIgnored(filePath, {
+        ...options,
+        cwd: projectRoot,
+      });
+
       // Also check common patterns that might match this basename
       if (!isIgnored) {
         // Check common git-ignore patterns that might match
-        const patternsToCheck = [
-          `**/${filePath}`,
-          `*/${filePath}`,
-        ];
-        
+        const patternsToCheck = [`**/${filePath}`, `*/${filePath}`];
+
         for (const pattern of patternsToCheck) {
           if (await isGitIgnored(pattern, { ...options, cwd: projectRoot })) {
             isIgnored = true;
@@ -516,12 +544,12 @@ export async function filterGitIgnoredFiles(
         }
       }
     }
-    
+
     if (!isIgnored) {
       filtered.push(filePath);
     }
   }
-  
+
   return filtered;
 }
 
@@ -530,7 +558,7 @@ export async function filterGitIgnoredFiles(
  */
 export async function cleanupBaselinePaths(
   paths: GitBaselinePaths,
-  options: GitOptions = {}
+  options: GitOptions = {},
 ): Promise<void> {
   debugLog('git', 'Cleaning up baseline paths', { ...paths });
 

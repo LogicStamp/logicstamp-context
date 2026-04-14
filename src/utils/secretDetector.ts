@@ -30,7 +30,8 @@ const SECRET_PATTERNS: Array<{
   // API Keys
   {
     name: 'API Key',
-    pattern: /['"`]?api[_-]?key['"`]?\s*[=:]\s*['"`]?([a-zA-Z0-9_\-]{20,})['"`]?/i,
+    pattern:
+      /['"`]?api[_-]?key['"`]?\s*[=:]\s*['"`]?([a-zA-Z0-9_-]{20,})['"`]?/i,
     severity: 'high',
   },
   // AWS Access Keys
@@ -58,7 +59,10 @@ const SECRET_PATTERNS: Array<{
         'g'.concat('h').concat('s_'),
         'g'.concat('h').concat('r_'),
       ];
-      return new RegExp(prefixes.map(prefix => `${prefix}[a-zA-Z0-9]{36}`).join('|'), 'i');
+      return new RegExp(
+        prefixes.map((prefix) => `${prefix}[a-zA-Z0-9]{36}`).join('|'),
+        'i',
+      );
     })(),
     severity: 'high',
   },
@@ -71,19 +75,22 @@ const SECRET_PATTERNS: Array<{
   // Passwords
   {
     name: 'Password',
-    pattern: /['"`]?(?:password|passwd|pwd)['"`]?\s*[=:]\s*['"`]?([^\s'"`]{8,})['"`]?/i,
+    pattern:
+      /['"`]?(?:password|passwd|pwd)['"`]?\s*[=:]\s*['"`]?([^\s'"`]{8,})['"`]?/i,
     severity: 'high',
   },
   // Tokens
   {
     name: 'Token',
-    pattern: /['"`]?(?:token|bearer)['"`]?\s*[=:]\s*['"`]?([a-zA-Z0-9_\-]{20,})['"`]?/i,
+    pattern:
+      /['"`]?(?:token|bearer)['"`]?\s*[=:]\s*['"`]?([a-zA-Z0-9_-]{20,})['"`]?/i,
     severity: 'high',
   },
   // OAuth Secrets
   {
     name: 'OAuth Secret',
-    pattern: /['"`]?(?:oauth[_-]?secret|client[_-]?secret)['"`]?\s*[=:]\s*['"`]?([a-zA-Z0-9_\-]{16,})['"`]?/i,
+    pattern:
+      /['"`]?(?:oauth[_-]?secret|client[_-]?secret)['"`]?\s*[=:]\s*['"`]?([a-zA-Z0-9_-]{16,})['"`]?/i,
     severity: 'high',
   },
   // Database URLs with credentials
@@ -95,13 +102,15 @@ const SECRET_PATTERNS: Array<{
   // JWT Secrets
   {
     name: 'JWT Secret',
-    pattern: /['"`]?jwt[_-]?(?:secret|key)['"`]?\s*[=:]\s*['"`]?([a-zA-Z0-9_\-]{16,})['"`]?/i,
+    pattern:
+      /['"`]?jwt[_-]?(?:secret|key)['"`]?\s*[=:]\s*['"`]?([a-zA-Z0-9_-]{16,})['"`]?/i,
     severity: 'high',
   },
   // Generic secrets
   {
     name: 'Secret',
-    pattern: /['"`]?secret(?:[_-]?key)?['"`]?\s*[=:]\s*['"`]?([a-zA-Z0-9_\-]{16,})['"`]?/i,
+    pattern:
+      /['"`]?secret(?:[_-]?key)?['"`]?\s*[=:]\s*['"`]?([a-zA-Z0-9_-]{16,})['"`]?/i,
     severity: 'medium',
   },
 ];
@@ -111,7 +120,7 @@ const SECRET_PATTERNS: Array<{
  */
 export function scanFileForSecrets(
   filePath: string,
-  content: string
+  content: string,
 ): SecretMatch[] {
   const matches: SecretMatch[] = [];
   const lines = content.split('\n');
@@ -138,7 +147,10 @@ export function scanFileForSecrets(
 
         // Extract snippet (first 100 chars around match)
         const matchStart = Math.max(0, matchIndex - 20);
-        const matchEnd = Math.min(line.length, matchIndex + matchedText.length + 20);
+        const matchEnd = Math.min(
+          line.length,
+          matchIndex + matchedText.length + 20,
+        );
         const snippet = line.slice(matchStart, matchEnd).trim();
 
         matches.push({
@@ -160,29 +172,36 @@ export function scanFileForSecrets(
  * Filter out false positives (common patterns that look like secrets but aren't)
  */
 export function filterFalsePositives(matches: SecretMatch[]): SecretMatch[] {
-  return matches.filter(match => {
+  return matches.filter((match) => {
     // Skip if snippet contains common false positive patterns
     const snippet = match.snippet.toLowerCase();
-    
+
     // Skip example/test patterns
-    if (snippet.includes('example') || snippet.includes('test') || snippet.includes('sample')) {
+    if (
+      snippet.includes('example') ||
+      snippet.includes('test') ||
+      snippet.includes('sample')
+    ) {
       return false;
     }
-    
+
     // Skip if it's clearly a comment or documentation
-    if (snippet.includes('//') || snippet.includes('/*') || snippet.includes('*')) {
+    if (
+      snippet.includes('//') ||
+      snippet.includes('/*') ||
+      snippet.includes('*')
+    ) {
       // But keep if it's an actual assignment
       if (!snippet.includes('=') && !snippet.includes(':')) {
         return false;
       }
     }
-    
+
     // Skip very short matches (likely false positives)
     if (match.type === 'Secret' && match.snippet.length < 20) {
       return false;
     }
-    
+
     return true;
   });
 }
-

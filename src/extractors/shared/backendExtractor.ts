@@ -2,11 +2,20 @@
  * Backend Extractor - Orchestrates backend metadata extraction
  */
 
-import { SourceFile } from 'ts-morph';
-import type { ApiSignature, LanguageSpecificVersion } from '../../types/UIFContract.js';
+import type { SourceFile } from 'ts-morph';
+import type {
+  ApiSignature,
+  LanguageSpecificVersion,
+} from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
-import { extractExpressRoutes, extractExpressApiSignature } from '../express/expressExtractor.js';
-import { extractNestJSController, extractNestJSApiSignature } from '../nest/nestjsExtractor.js';
+import {
+  extractExpressRoutes,
+  extractExpressApiSignature,
+} from '../express/expressExtractor.js';
+import {
+  extractNestJSController,
+  extractNestJSApiSignature,
+} from '../nest/nestjsExtractor.js';
 
 export interface BackendMetadata {
   framework: 'express' | 'nestjs';
@@ -31,7 +40,7 @@ export function extractBackendMetadata(
   source: SourceFile,
   filePath: string,
   imports: string[],
-  framework: 'express' | 'nestjs'
+  framework: 'express' | 'nestjs',
 ): BackendMetadata | undefined {
   const resolvedPath = source.getFilePath?.() ?? filePath;
 
@@ -40,10 +49,13 @@ export function extractBackendMetadata(
       const routes = extractExpressRoutes(source);
 
       // Extract API signatures for each route
-      const routesWithSignatures = routes.map(route => {
+      const routesWithSignatures = routes.map((route) => {
         // Only extract API signature for named handlers (skip anonymous handlers)
         if (route.handler !== 'anonymous') {
-          const apiSignature = extractExpressApiSignature(source, route.handler);
+          const apiSignature = extractExpressApiSignature(
+            source,
+            route.handler,
+          );
           return {
             ...route,
             ...(apiSignature && { apiSignature }),
@@ -60,14 +72,18 @@ export function extractBackendMetadata(
       // For Express, we might extract middleware usage or other patterns
       const decorators: string[] = [];
       // Express doesn't typically use decorators, but we can extract route patterns
-      const routePatterns = Array.from(sourceText.matchAll(/(app|router)\.(get|post|put|delete|patch|all)\(/g));
+      const routePatterns = Array.from(
+        sourceText.matchAll(/(app|router)\.(get|post|put|delete|patch|all)\(/g),
+      );
       for (const match of routePatterns) {
         decorators.push(`@${match[1]}.${match[2]}`);
       }
 
       return {
         framework: 'express',
-        ...(routesWithSignatures.length > 0 && { routes: routesWithSignatures }),
+        ...(routesWithSignatures.length > 0 && {
+          routes: routesWithSignatures,
+        }),
         ...(decorators.length > 0 && { languageSpecific: { decorators } }),
       };
     } else if (framework === 'nestjs') {
@@ -78,8 +94,12 @@ export function extractBackendMetadata(
       }
 
       // Extract API signatures for each route
-      const routesWithSignatures = controller.routes.map(route => {
-        const apiSignature = extractNestJSApiSignature(source, controller.name, route.handler);
+      const routesWithSignatures = controller.routes.map((route) => {
+        const apiSignature = extractNestJSApiSignature(
+          source,
+          controller.name,
+          route.handler,
+        );
         return {
           ...route,
           ...(apiSignature && { apiSignature }),
@@ -134,7 +154,7 @@ export function extractBackendApiSignature(
   source: SourceFile,
   framework: 'express' | 'nestjs',
   handlerName: string,
-  className?: string
+  className?: string,
 ): ApiSignature | undefined {
   try {
     if (framework === 'express') {

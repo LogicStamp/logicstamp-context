@@ -130,8 +130,9 @@ describe('Styled Components Extractor', () => {
       const sourceCode = `
         import styled from 'styled-components';
         
-        ${Array.from({ length: 15 }, (_, i) => 
-          `const Styled${i} = styled.div\`padding: 1rem;\`;`
+        ${Array.from(
+          { length: 15 },
+          (_, i) => `const Styled${i} = styled.div\`padding: 1rem;\`;`,
         ).join('\n')}
       `;
 
@@ -169,4 +170,3 @@ describe('Styled Components Extractor', () => {
     });
   });
 });
-

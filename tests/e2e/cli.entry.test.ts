@@ -57,7 +57,9 @@ describe('CLI Entry Points', () => {
   describe('standalone index.ts', () => {
     it('should show help for compare command', async () => {
       try {
-        const { stdout } = await execAsync(`node "${standaloneCliPath}" compare`);
+        const { stdout } = await execAsync(
+          `node "${standaloneCliPath}" compare`,
+        );
         // Should show help or error message
         expect(stdout).toBeDefined();
       } catch (error: any) {
@@ -69,7 +71,7 @@ describe('CLI Entry Points', () => {
     it('should handle compare command with files', async () => {
       try {
         await execAsync(
-          `node "${standaloneCliPath}" compare nonexistent1.json nonexistent2.json`
+          `node "${standaloneCliPath}" compare nonexistent1.json nonexistent2.json`,
         );
         expect.fail('Should have thrown an error');
       } catch (error: any) {
@@ -83,7 +85,9 @@ describe('CLI Entry Points', () => {
     it('should exit with code 1 on error', async () => {
       try {
         // Use a non-existent directory and --skip-gitignore to avoid modifying project root
-        await execAsync(`node "${stampCliPath}" context /nonexistent/path --invalid-flag --skip-gitignore`);
+        await execAsync(
+          `node "${stampCliPath}" context /nonexistent/path --invalid-flag --skip-gitignore`,
+        );
         expect.fail('Should have thrown an error');
       } catch (error: any) {
         // Should exit with non-zero code

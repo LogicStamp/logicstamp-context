@@ -20,7 +20,7 @@ describe('ShadCN/UI Extractor', () => {
             </Card>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -43,7 +43,7 @@ describe('ShadCN/UI Extractor', () => {
             </Dialog>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -64,7 +64,7 @@ describe('ShadCN/UI Extractor', () => {
             </Sheet>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -89,7 +89,7 @@ describe('ShadCN/UI Extractor', () => {
             </>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -106,7 +106,7 @@ describe('ShadCN/UI Extractor', () => {
         export function App() {
           return <div>No ShadCN components</div>;
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -131,7 +131,7 @@ describe('ShadCN/UI Extractor', () => {
             </>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -157,7 +157,7 @@ describe('ShadCN/UI Extractor', () => {
             </>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -174,7 +174,7 @@ describe('ShadCN/UI Extractor', () => {
         export function App() {
           return <Button>No variant</Button>;
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -199,7 +199,7 @@ describe('ShadCN/UI Extractor', () => {
             </>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -223,7 +223,7 @@ describe('ShadCN/UI Extractor', () => {
             </>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -240,7 +240,7 @@ describe('ShadCN/UI Extractor', () => {
         export function App() {
           return <Button>No size</Button>;
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -264,7 +264,7 @@ describe('ShadCN/UI Extractor', () => {
             </Form>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -282,7 +282,7 @@ describe('ShadCN/UI Extractor', () => {
           const { theme } = useTheme();
           return <Button className="dark:bg-gray-900">Toggle</Button>;
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -304,7 +304,7 @@ describe('ShadCN/UI Extractor', () => {
             </Button>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -320,7 +320,7 @@ describe('ShadCN/UI Extractor', () => {
         export function App() {
           return <Button>Click</Button>;
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -346,7 +346,7 @@ describe('ShadCN/UI Extractor', () => {
             </Card>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -384,7 +384,7 @@ describe('ShadCN/UI Extractor', () => {
             </Card>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -427,7 +427,7 @@ describe('ShadCN/UI Extractor', () => {
             </Card>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -470,7 +470,7 @@ describe('ShadCN/UI Extractor', () => {
             </ContainerCard>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -490,7 +490,7 @@ describe('ShadCN/UI Extractor', () => {
             <PrimaryButton variant="destructive">Delete</PrimaryButton>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -520,7 +520,7 @@ describe('ShadCN/UI Extractor', () => {
             </>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -551,7 +551,7 @@ describe('ShadCN/UI Extractor', () => {
             </>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -574,7 +574,7 @@ describe('ShadCN/UI Extractor', () => {
             </>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -599,7 +599,7 @@ describe('ShadCN/UI Extractor', () => {
             </ThemeProvider>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -620,7 +620,7 @@ describe('ShadCN/UI Extractor', () => {
             </ThemeProvider>
           );
         }
-        `
+        `,
       );
 
       const result = extractShadcnUI(sourceFile);
@@ -642,7 +642,7 @@ describe('ShadCN/UI Extractor', () => {
           );
         }
         `,
-        'test.tsx'
+        'test.tsx',
       );
 
       // Should not throw, should return empty object or partial results
@@ -661,7 +661,7 @@ describe('ShadCN/UI Extractor', () => {
           return <Button
         // Missing closing
         `,
-        'test.tsx'
+        'test.tsx',
       );
 
       // Should not throw, should return empty object or partial results
@@ -690,7 +690,7 @@ describe('ShadCN/UI Extractor', () => {
         function Component() {
           return <Button>Hello</Button>;
         }
-        `
+        `,
       );
 
       // Should handle gracefully even if AST traversal has issues
@@ -709,7 +709,7 @@ describe('ShadCN/UI Extractor', () => {
           return <Button className={invalid}>Content</Button>;
         }
         `,
-        'test.tsx'
+        'test.tsx',
       );
 
       // Should not throw, should handle gracefully
@@ -731,7 +731,7 @@ describe('ShadCN/UI Extractor', () => {
             </div>
           );
         }
-        `
+        `,
       );
 
       // Should not throw, should return partial results

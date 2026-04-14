@@ -42,7 +42,10 @@ describe('signature', () => {
 
         const result = buildLogicSignature(ast, 'none');
 
-        expect(result.signature.props).toEqual({ title: 'string', count: 'number' });
+        expect(result.signature.props).toEqual({
+          title: 'string',
+          count: 'number',
+        });
         expect(result.signature.emits).toEqual({ onClick: 'function' });
         expect(result.signature.state).toEqual({ isOpen: 'boolean' });
       });
@@ -88,12 +91,18 @@ describe('signature', () => {
         const result = buildLogicSignature(ast, 'submit-only');
 
         expect(result.violations).toHaveLength(0);
-        expect(result.prediction).toContain('onSubmit is the only permitted action handler');
+        expect(result.prediction).toContain(
+          'onSubmit is the only permitted action handler',
+        );
       });
 
       it('should violate when non-submit events are present', () => {
         const ast = createMockAst({
-          emits: { onSubmit: 'function', onClick: 'function', onChange: 'function' },
+          emits: {
+            onSubmit: 'function',
+            onClick: 'function',
+            onChange: 'function',
+          },
         });
 
         const result = buildLogicSignature(ast, 'submit-only');
@@ -112,7 +121,9 @@ describe('signature', () => {
 
         const result = buildLogicSignature(ast, 'submit-only');
 
-        expect(result.prediction).toContain('Loading state controls button disabled state');
+        expect(result.prediction).toContain(
+          'Loading state controls button disabled state',
+        );
       });
 
       it('should add loading state prediction for busy state', () => {
@@ -123,7 +134,9 @@ describe('signature', () => {
 
         const result = buildLogicSignature(ast, 'submit-only');
 
-        expect(result.prediction).toContain('Loading state controls button disabled state');
+        expect(result.prediction).toContain(
+          'Loading state controls button disabled state',
+        );
       });
 
       it('should add loading state prediction for isLoading state', () => {
@@ -134,7 +147,9 @@ describe('signature', () => {
 
         const result = buildLogicSignature(ast, 'submit-only');
 
-        expect(result.prediction).toContain('Loading state controls button disabled state');
+        expect(result.prediction).toContain(
+          'Loading state controls button disabled state',
+        );
       });
 
       it('should add disabled button prediction when onSubmit exists', () => {
@@ -144,7 +159,9 @@ describe('signature', () => {
 
         const result = buildLogicSignature(ast, 'submit-only');
 
-        expect(result.prediction).toContain('When loading=true, submit button should be disabled');
+        expect(result.prediction).toContain(
+          'When loading=true, submit button should be disabled',
+        );
       });
     });
 
@@ -176,7 +193,9 @@ describe('signature', () => {
 
         const result = buildLogicSignature(ast, 'nav-only');
 
-        expect(result.violations).toContain('Nav-only contract expects an onClick navigation handler');
+        expect(result.violations).toContain(
+          'Nav-only contract expects an onClick navigation handler',
+        );
       });
 
       it('should violate when non-onClick events are present', () => {
@@ -198,7 +217,9 @@ describe('signature', () => {
 
         const result = buildLogicSignature(ast, 'nav-only');
 
-        expect(result.prediction).toContain('Component handles navigation only, no form submission or data mutation');
+        expect(result.prediction).toContain(
+          'Component handles navigation only, no form submission or data mutation',
+        );
       });
 
       it('should add href prediction when href prop exists', () => {
@@ -209,7 +230,9 @@ describe('signature', () => {
 
         const result = buildLogicSignature(ast, 'nav-only');
 
-        expect(result.prediction).toContain('Navigation target specified via href/to prop');
+        expect(result.prediction).toContain(
+          'Navigation target specified via href/to prop',
+        );
       });
 
       it('should add href prediction when to prop exists', () => {
@@ -220,7 +243,9 @@ describe('signature', () => {
 
         const result = buildLogicSignature(ast, 'nav-only');
 
-        expect(result.prediction).toContain('Navigation target specified via href/to prop');
+        expect(result.prediction).toContain(
+          'Navigation target specified via href/to prop',
+        );
       });
     });
 
@@ -241,7 +266,9 @@ describe('signature', () => {
 
         const result = buildLogicSignature(ast, 'display-only');
 
-        expect(result.violations.filter(v => v.includes('no events'))).toHaveLength(0);
+        expect(
+          result.violations.filter((v) => v.includes('no events')),
+        ).toHaveLength(0);
       });
 
       it('should violate when any events are present', () => {
@@ -251,8 +278,10 @@ describe('signature', () => {
 
         const result = buildLogicSignature(ast, 'display-only');
 
-        expect(result.violations.some(v => v.includes('no events permitted'))).toBe(true);
-        expect(result.violations.some(v => v.includes('onClick'))).toBe(true);
+        expect(
+          result.violations.some((v) => v.includes('no events permitted')),
+        ).toBe(true);
+        expect(result.violations.some((v) => v.includes('onClick'))).toBe(true);
       });
 
       it('should add presentational prediction', () => {
@@ -260,8 +289,12 @@ describe('signature', () => {
 
         const result = buildLogicSignature(ast, 'display-only');
 
-        expect(result.prediction).toContain('Component is purely presentational with no event handlers');
-        expect(result.prediction).toContain('All behavior driven by props only');
+        expect(result.prediction).toContain(
+          'Component is purely presentational with no event handlers',
+        );
+        expect(result.prediction).toContain(
+          'All behavior driven by props only',
+        );
       });
 
       it('should violate when state exists', () => {
@@ -271,8 +304,10 @@ describe('signature', () => {
 
         const result = buildLogicSignature(ast, 'display-only');
 
-        expect(result.violations.some(v => v.includes('minimize internal state'))).toBe(true);
-        expect(result.violations.some(v => v.includes('count'))).toBe(true);
+        expect(
+          result.violations.some((v) => v.includes('minimize internal state')),
+        ).toBe(true);
+        expect(result.violations.some((v) => v.includes('count'))).toBe(true);
       });
     });
 
@@ -301,9 +336,13 @@ describe('signature', () => {
         const result = buildLogicSignature(ast, 'none');
 
         expect(result.signature.apiSignature).toBeDefined();
-        expect(result.signature.apiSignature?.parameters).toEqual({ id: 'string' });
+        expect(result.signature.apiSignature?.parameters).toEqual({
+          id: 'string',
+        });
         expect(result.signature.apiSignature?.returnType).toBe('User');
-        expect(result.signature.apiSignature?.responseType).toBe('UserResponse');
+        expect(result.signature.apiSignature?.responseType).toBe(
+          'UserResponse',
+        );
       });
 
       it('should aggregate parameters from multiple routes', () => {
@@ -337,7 +376,9 @@ describe('signature', () => {
         const result = buildLogicSignature(ast, 'none');
 
         expect(result.signature.apiSignature?.parameters).toHaveProperty('id');
-        expect(result.signature.apiSignature?.parameters).toHaveProperty('postId');
+        expect(result.signature.apiSignature?.parameters).toHaveProperty(
+          'postId',
+        );
       });
 
       it('should include requestType for POST/PUT/PATCH routes', () => {
@@ -361,7 +402,9 @@ describe('signature', () => {
 
         const result = buildLogicSignature(ast, 'none');
 
-        expect(result.signature.apiSignature?.requestType).toBe('CreateUserRequest');
+        expect(result.signature.apiSignature?.requestType).toBe(
+          'CreateUserRequest',
+        );
       });
 
       it('should default path parameters to string type', () => {
@@ -468,7 +511,9 @@ describe('signature', () => {
 
       const predictions = generateBehavioralPredictions(ast);
 
-      expect(predictions).toContain('Uses memoization for performance optimization');
+      expect(predictions).toContain(
+        'Uses memoization for performance optimization',
+      );
     });
 
     it('should detect memoization with useCallback', () => {
@@ -478,7 +523,9 @@ describe('signature', () => {
 
       const predictions = generateBehavioralPredictions(ast);
 
-      expect(predictions).toContain('Uses memoization for performance optimization');
+      expect(predictions).toContain(
+        'Uses memoization for performance optimization',
+      );
     });
 
     it('should detect context usage', () => {
@@ -498,7 +545,9 @@ describe('signature', () => {
 
       const predictions = generateBehavioralPredictions(ast);
 
-      expect(predictions).toContain('Uses refs for DOM access or mutable values');
+      expect(predictions).toContain(
+        'Uses refs for DOM access or mutable values',
+      );
     });
 
     it('should detect loading states', () => {
@@ -531,7 +580,9 @@ describe('signature', () => {
       const predictions = generateBehavioralPredictions(ast);
 
       expect(predictions).toContain('Has side effects managed by useEffect');
-      expect(predictions).toContain('Uses memoization for performance optimization');
+      expect(predictions).toContain(
+        'Uses memoization for performance optimization',
+      );
       expect(predictions).toContain('Consumes React Context for shared state');
       expect(predictions).toContain('Manages loading/pending UI states');
       expect(predictions).toContain('Handles and displays error states');
@@ -610,7 +661,10 @@ describe('signature', () => {
       it('should describe form component', () => {
         const ast = createMockAst({ kind: 'react:component' });
 
-        const description = inferDescription('src/components/LoginForm.tsx', ast);
+        const description = inferDescription(
+          'src/components/LoginForm.tsx',
+          ast,
+        );
 
         expect(description).toBe('LoginForm - Form component with validation');
       });
@@ -626,7 +680,10 @@ describe('signature', () => {
       it('should describe dialog component', () => {
         const ast = createMockAst({ kind: 'react:component' });
 
-        const description = inferDescription('src/components/ConfirmDialog.tsx', ast);
+        const description = inferDescription(
+          'src/components/ConfirmDialog.tsx',
+          ast,
+        );
 
         expect(description).toBe('ConfirmDialog - Modal/dialog component');
       });
@@ -634,7 +691,10 @@ describe('signature', () => {
       it('should describe input component', () => {
         const ast = createMockAst({ kind: 'react:component' });
 
-        const description = inferDescription('src/components/TextInput.tsx', ast);
+        const description = inferDescription(
+          'src/components/TextInput.tsx',
+          ast,
+        );
 
         expect(description).toBe('TextInput - Form input field');
       });
@@ -644,7 +704,10 @@ describe('signature', () => {
 
         // Note: 'FormField' contains 'form' so it matches form pattern first
         // Use a filename without 'form' to test field pattern
-        const description = inferDescription('src/components/TextField.tsx', ast);
+        const description = inferDescription(
+          'src/components/TextField.tsx',
+          ast,
+        );
 
         expect(description).toBe('TextField - Form input field');
       });
@@ -652,7 +715,10 @@ describe('signature', () => {
       it('should describe card component', () => {
         const ast = createMockAst({ kind: 'react:component' });
 
-        const description = inferDescription('src/components/UserCard.tsx', ast);
+        const description = inferDescription(
+          'src/components/UserCard.tsx',
+          ast,
+        );
 
         expect(description).toBe('UserCard - Card display component');
       });
@@ -668,7 +734,10 @@ describe('signature', () => {
       it('should describe menu component', () => {
         const ast = createMockAst({ kind: 'react:component' });
 
-        const description = inferDescription('src/components/DropdownMenu.tsx', ast);
+        const description = inferDescription(
+          'src/components/DropdownMenu.tsx',
+          ast,
+        );
 
         expect(description).toBe('DropdownMenu - Navigation component');
       });
@@ -684,7 +753,9 @@ describe('signature', () => {
 
         const description = inferDescription('src/components/Counter.tsx', ast);
 
-        expect(description).toBe('Counter - Interactive component with internal state');
+        expect(description).toBe(
+          'Counter - Interactive component with internal state',
+        );
       });
 
       it('should describe stateful component', () => {
@@ -694,7 +765,10 @@ describe('signature', () => {
           emits: {},
         });
 
-        const description = inferDescription('src/components/Accordion.tsx', ast);
+        const description = inferDescription(
+          'src/components/Accordion.tsx',
+          ast,
+        );
 
         expect(description).toBe('Accordion - Stateful component');
       });
@@ -736,7 +810,10 @@ describe('signature', () => {
       it('should handle backslashes (Windows)', () => {
         const ast = createMockAst({ kind: 'react:component' });
 
-        const description = inferDescription('src\\components\\Button.tsx', ast);
+        const description = inferDescription(
+          'src\\components\\Button.tsx',
+          ast,
+        );
 
         expect(description).toContain('Button');
       });

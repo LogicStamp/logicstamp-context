@@ -6,10 +6,22 @@ import { resolve, dirname, join, relative } from 'node:path';
 import { readFile, writeFile, mkdir, unlink, stat } from 'node:fs/promises';
 import { createInterface } from 'node:readline';
 import { stdin, stdout } from 'node:process';
-import { globFiles, readFileWithText, getRelativePath, toForwardSlashes } from '../../utils/fsx.js';
-import { scanFileForSecrets, filterFalsePositives, type SecretMatch } from '../../utils/secretDetector.js';
+import {
+  globFiles,
+  readFileWithText,
+  getRelativePath,
+  toForwardSlashes,
+} from '../../utils/fsx.js';
+import {
+  scanFileForSecrets,
+  filterFalsePositives,
+  type SecretMatch,
+} from '../../utils/secretDetector.js';
 import { STAMPIGNORE_FILENAME } from '../../utils/stampignore.js';
-import { ensureGitignorePatterns, ensurePatternInGitignore } from '../../utils/gitignore.js';
+import {
+  ensureGitignorePatterns,
+  ensurePatternInGitignore,
+} from '../../utils/gitignore.js';
 import { debugError } from '../../utils/debug.js';
 import { displayPath } from './context/index.js';
 
@@ -62,21 +74,25 @@ export interface SecurityHardResetOptions {
 /**
  * Hard reset command - deletes security report file
  */
-export async function securityHardResetCommand(options: SecurityHardResetOptions): Promise<void> {
+export async function securityHardResetCommand(
+  options: SecurityHardResetOptions,
+): Promise<void> {
   const projectRoot = resolve(options.entry || '.');
   const outputPath = options.out || 'stamp_security_report.json';
-  const outputFile = outputPath.endsWith('.json') ? outputPath : join(outputPath, 'stamp_security_report.json');
+  const outputFile = outputPath.endsWith('.json')
+    ? outputPath
+    : join(outputPath, 'stamp_security_report.json');
   const reportPath = outputFile;
-  
+
   let shouldReset = options.force;
-  
+
   if (!shouldReset) {
     // Prompt for confirmation
     shouldReset = await promptYesNo(
-      `⚠️  This will delete ${displayPath(reportPath)}. Continue?`
+      `⚠️  This will delete ${displayPath(reportPath)}. Continue?`,
     );
   }
-  
+
   if (shouldReset) {
     // Delete report file
     let reportDeleted = false;
@@ -90,7 +106,7 @@ export async function securityHardResetCommand(options: SecurityHardResetOptions
         throw new Error(`Failed to delete report file: ${err.message}`);
       }
     }
-    
+
     if (!options.quiet) {
       if (reportDeleted) {
         console.log(`\n✅ Reset complete:`);
@@ -112,20 +128,27 @@ export interface SecurityScanResult {
   report: SecurityReport;
 }
 
-export async function securityScanCommand(options: SecurityScanOptions): Promise<void | SecurityScanResult> {
+export async function securityScanCommand(
+  options: SecurityScanOptions,
+): Promise<void | SecurityScanResult> {
   const projectRoot = resolve(options.entry || '.');
   const outputPath = options.out || 'stamp_security_report.json';
-  const outputDir = outputPath.endsWith('.json') ? dirname(outputPath) : outputPath;
-  const outputFile = outputPath.endsWith('.json') ? outputPath : join(outputPath, 'stamp_security_report.json');
+  const outputDir = outputPath.endsWith('.json')
+    ? dirname(outputPath)
+    : outputPath;
+  const outputFile = outputPath.endsWith('.json')
+    ? outputPath
+    : join(outputPath, 'stamp_security_report.json');
 
   if (!options.quiet) {
     console.log(`🔒 Scanning for secrets in ${displayPath(projectRoot)}...`);
   }
 
   // Resolve output file relative to project root if it's a relative path
-  const resolvedOutputFile = outputFile.startsWith('/') || outputFile.match(/^[A-Z]:/) 
-    ? outputFile 
-    : join(projectRoot, outputFile);
+  const resolvedOutputFile =
+    outputFile.startsWith('/') || outputFile.match(/^[A-Z]:/)
+      ? outputFile
+      : join(projectRoot, outputFile);
 
   // Find all files to scan (TypeScript, JavaScript, and JSON files)
   let files = await globFiles(projectRoot, '.ts,.tsx,.js,.jsx,.json');
@@ -134,8 +157,8 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
   // Use absolute path comparison to be safe
   const reportFileAbs = resolve(resolvedOutputFile);
   const stampignoreFileAbs = join(projectRoot, STAMPIGNORE_FILENAME);
-  
-  files = files.filter(file => {
+
+  files = files.filter((file) => {
     // file is now relative, resolve it relative to projectRoot
     const fileAbs = join(projectRoot, file);
     return fileAbs !== reportFileAbs && fileAbs !== stampignoreFileAbs;
@@ -145,7 +168,7 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
     if (!options.quiet) {
       console.log('   No files found to scan');
     }
-    
+
     // Still create an empty report if noExit is true (called from init)
     if (options.noExit) {
       const emptyReport: SecurityReport = {
@@ -158,16 +181,21 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
         matches: [], // Already empty, no paths to convert
         filesWithSecrets: [], // Already empty, no paths to convert
       };
-      
+
       // Resolve output file relative to project root if it's a relative path
-      const resolvedOutputFile = outputFile.startsWith('/') || outputFile.match(/^[A-Z]:/) 
-        ? outputFile 
-        : join(projectRoot, outputFile);
+      const resolvedOutputFile =
+        outputFile.startsWith('/') || outputFile.match(/^[A-Z]:/)
+          ? outputFile
+          : join(projectRoot, outputFile);
       const resolvedOutputDir = dirname(resolvedOutputFile);
-      
+
       try {
         await mkdir(resolvedOutputDir, { recursive: true });
-        await writeFile(resolvedOutputFile, JSON.stringify(emptyReport, null, 2), 'utf8');
+        await writeFile(
+          resolvedOutputFile,
+          JSON.stringify(emptyReport, null, 2),
+          'utf8',
+        );
       } catch (error) {
         const err = error as NodeJS.ErrnoException;
         debugError('security', 'securityScanCommand', {
@@ -180,10 +208,14 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
 
       // Automatically ensure report file is in .gitignore to prevent accidental commits
       try {
-        const reportPathRelative = toForwardSlashes(relative(projectRoot, resolvedOutputFile));
-        const isDefaultPath = outputPath === 'stamp_security_report.json' || 
-                              (outputPath.endsWith('.json') && resolvedOutputFile.endsWith('stamp_security_report.json'));
-        
+        const reportPathRelative = toForwardSlashes(
+          relative(projectRoot, resolvedOutputFile),
+        );
+        const isDefaultPath =
+          outputPath === 'stamp_security_report.json' ||
+          (outputPath.endsWith('.json') &&
+            resolvedOutputFile.endsWith('stamp_security_report.json'));
+
         if (isDefaultPath) {
           // Default path - ensure all LogicStamp patterns are in .gitignore
           await ensureGitignorePatterns(projectRoot);
@@ -195,19 +227,23 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
         // Non-fatal: log warning but don't fail the scan
         if (!options.quiet) {
           const err = error as Error;
-          console.warn(`\n⚠️  Warning: Could not update .gitignore: ${err.message}`);
-          console.warn(`   Please manually add the report file to .gitignore to prevent accidental commits.`);
+          console.warn(
+            `\n⚠️  Warning: Could not update .gitignore: ${err.message}`,
+          );
+          console.warn(
+            `   Please manually add the report file to .gitignore to prevent accidental commits.`,
+          );
         }
       }
-      
+
       if (!options.quiet) {
         console.log(`\n✅ No secrets detected`);
         console.log(`📝 Report written to: ${displayPath(resolvedOutputFile)}`);
       }
-      
+
       return { secretsFound: false, report: emptyReport };
     }
-    
+
     return;
   }
 
@@ -226,12 +262,14 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
     try {
       // file is now relative, resolve it for file operations
       const absoluteFilePath = join(projectRoot, file);
-      
+
       // Check file size before reading
       const fileStats = await stat(absoluteFilePath);
       if (fileStats.size > MAX_FILE_SIZE) {
         if (!options.quiet) {
-          console.warn(`   ⚠️  Skipped ${file}: file too large (${Math.round(fileStats.size / 1024 / 1024)}MB > 10MB)`);
+          console.warn(
+            `   ⚠️  Skipped ${file}: file too large (${Math.round(fileStats.size / 1024 / 1024)}MB > 10MB)`,
+          );
         }
         continue;
       }
@@ -267,10 +305,14 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
 
   // Write report
   const resolvedOutputDir = dirname(resolvedOutputFile);
-  
+
   try {
     await mkdir(resolvedOutputDir, { recursive: true });
-    await writeFile(resolvedOutputFile, JSON.stringify(report, null, 2), 'utf8');
+    await writeFile(
+      resolvedOutputFile,
+      JSON.stringify(report, null, 2),
+      'utf8',
+    );
   } catch (error) {
     const err = error as NodeJS.ErrnoException;
     debugError('security', 'securityScanCommand', {
@@ -284,10 +326,14 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
   // Automatically ensure report file is in .gitignore to prevent accidental commits
   // The report contains sensitive information (locations of secrets)
   try {
-    const reportPathRelative = toForwardSlashes(relative(projectRoot, resolvedOutputFile));
-    const isDefaultPath = outputPath === 'stamp_security_report.json' || 
-                          (outputPath.endsWith('.json') && resolvedOutputFile.endsWith('stamp_security_report.json'));
-    
+    const reportPathRelative = toForwardSlashes(
+      relative(projectRoot, resolvedOutputFile),
+    );
+    const isDefaultPath =
+      outputPath === 'stamp_security_report.json' ||
+      (outputPath.endsWith('.json') &&
+        resolvedOutputFile.endsWith('stamp_security_report.json'));
+
     if (isDefaultPath) {
       // Default path - ensure all LogicStamp patterns are in .gitignore
       await ensureGitignorePatterns(projectRoot);
@@ -300,7 +346,9 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
     if (!options.quiet) {
       const err = error as Error;
       console.warn(`\n⚠️  Warning: Could not update .gitignore: ${err.message}`);
-      console.warn(`   Please manually add the report file to .gitignore to prevent accidental commits.`);
+      console.warn(
+        `   Please manually add the report file to .gitignore to prevent accidental commits.`,
+      );
     }
   }
 
@@ -310,10 +358,10 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
     console.log(`   Files scanned: ${files.length}`);
     console.log(`   Secrets found: ${allMatches.length}`);
     console.log(`   Files with secrets: ${filesWithSecrets.size}`);
-    
+
     if (allMatches.length > 0) {
       console.log(`\n⚠️  Secrets detected in the following files:`);
-      
+
       // Group by file
       const matchesByFile = new Map<string, SecretMatch[]>();
       for (const match of allMatches) {
@@ -322,18 +370,21 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
         }
         matchesByFile.get(match.file)!.push(match);
       }
-      
+
       for (const [file, matches] of matchesByFile.entries()) {
         console.log(`\n   ${displayPath(file)}`);
-        for (const match of matches.slice(0, 5)) { // Show first 5 matches per file
-          console.log(`      Line ${match.line}: ${match.type} (${match.severity})`);
+        for (const match of matches.slice(0, 5)) {
+          // Show first 5 matches per file
+          console.log(
+            `      Line ${match.line}: ${match.type} (${match.severity})`,
+          );
           console.log(`      ${match.snippet}`);
         }
         if (matches.length > 5) {
           console.log(`      ... and ${matches.length - 5} more`);
         }
       }
-      
+
       console.log(`\n📝 Report written to: ${displayPath(resolvedOutputFile)}`);
     } else {
       console.log(`\n✅ No secrets detected`);
@@ -341,12 +392,14 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
     }
   } else {
     // Quiet mode: just output JSON stats
-    console.log(JSON.stringify({
-      filesScanned: files.length,
-      secretsFound: allMatches.length,
-      filesWithSecrets: filesWithSecrets.size,
-      reportPath: resolvedOutputFile,
-    }));
+    console.log(
+      JSON.stringify({
+        filesScanned: files.length,
+        secretsFound: allMatches.length,
+        filesWithSecrets: filesWithSecrets.size,
+        reportPath: resolvedOutputFile,
+      }),
+    );
   }
 
   // Exit with error code if secrets found (unless noExit is true)
@@ -357,9 +410,8 @@ export async function securityScanCommand(options: SecurityScanOptions): Promise
       process.exit(1);
     }
   }
-  
+
   if (options.noExit) {
     return { secretsFound: false, report };
   }
 }
-

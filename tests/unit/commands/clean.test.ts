@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { cleanCommand, type CleanOptions } from '../../../src/cli/commands/clean.js';
+import {
+  cleanCommand,
+  type CleanOptions,
+} from '../../../src/cli/commands/clean.js';
 import * as fsx from '../../../src/utils/fsx.js';
 import { unlink, rm, stat } from 'node:fs/promises';
 import { glob, type GlobOptions } from 'glob';
@@ -12,7 +15,7 @@ vi.mock('../../../src/utils/fsx.js', () => ({
     if (!path) return '';
     return String(path).replace(/\\/g, '/');
   }),
-  toForwardSlashes: (path: string) => path ? path.replace(/\\/g, '/') : '',
+  toForwardSlashes: (path: string) => (path ? path.replace(/\\/g, '/') : ''),
 }));
 vi.mock('node:fs/promises');
 vi.mock('glob');
@@ -21,16 +24,17 @@ vi.mock('glob');
 function mockGlob(
   contextJson: string[] = [],
   contextToon: string[] = [],
-  contextToonVariants: string[] = []
+  contextToonVariants: string[] = [],
 ) {
   vi.mocked(glob).mockImplementation(
     (pattern: string | string[], _options?: GlobOptions) => {
       const pat = Array.isArray(pattern) ? (pattern[0] ?? '') : pattern;
       if (pat === '**/context.json') return Promise.resolve(contextJson);
       if (pat === '**/context.toon') return Promise.resolve(contextToon);
-      if (pat === '**/context_*.toon') return Promise.resolve(contextToonVariants);
+      if (pat === '**/context_*.toon')
+        return Promise.resolve(contextToonVariants);
       return Promise.resolve([]);
-    }
+    },
   );
 }
 
@@ -88,10 +92,10 @@ describe('cleanCommand', () => {
       });
 
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to remove')
+        expect.stringContaining('Failed to remove'),
       );
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Permission denied')
+        expect.stringContaining('Permission denied'),
       );
     });
 
@@ -113,10 +117,10 @@ describe('cleanCommand', () => {
       });
 
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to remove')
+        expect.stringContaining('Failed to remove'),
       );
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Directory locked')
+        expect.stringContaining('Directory locked'),
       );
     });
 
@@ -127,7 +131,7 @@ describe('cleanCommand', () => {
       mockGlob(['src/context.json']);
       vi.mocked(fsx.fileExists).mockResolvedValue(true);
       vi.mocked(stat).mockRejectedValue(new Error('Directory not found'));
-      
+
       // First unlink succeeds, second fails
       vi.mocked(unlink)
         .mockResolvedValueOnce(undefined)
@@ -141,7 +145,7 @@ describe('cleanCommand', () => {
 
       expect(unlink).toHaveBeenCalledTimes(2);
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to remove')
+        expect.stringContaining('Failed to remove'),
       );
     });
   });
@@ -166,7 +170,7 @@ describe('cleanCommand', () => {
       // Should not try to delete .logicstamp since it's not a directory
       expect(rm).not.toHaveBeenCalled();
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('No context artifacts found')
+        expect.stringContaining('No context artifacts found'),
       );
     });
 
@@ -185,10 +189,10 @@ describe('cleanCommand', () => {
 
       // Should show .logicstamp/ in the list
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('🧹 This will remove:')
+        expect.stringContaining('🧹 This will remove:'),
       );
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('.logicstamp/')
+        expect.stringContaining('.logicstamp/'),
       );
     });
 
@@ -204,17 +208,17 @@ describe('cleanCommand', () => {
       });
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('🧹 This will remove:')
+        expect.stringContaining('🧹 This will remove:'),
       );
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('context_main.json')
+        expect.stringContaining('context_main.json'),
       );
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('src/context.json')
+        expect.stringContaining('src/context.json'),
       );
       // Should not show .logicstamp/
       expect(console.log).not.toHaveBeenCalledWith(
-        expect.stringContaining('.logicstamp/')
+        expect.stringContaining('.logicstamp/'),
       );
     });
 
@@ -231,11 +235,11 @@ describe('cleanCommand', () => {
 
       // Should not show context_main.json in the list
       expect(console.log).not.toHaveBeenCalledWith(
-        expect.stringContaining('context_main.json')
+        expect.stringContaining('context_main.json'),
       );
       // Should still show context.json files
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('src/context.json')
+        expect.stringContaining('src/context.json'),
       );
     });
 
@@ -252,7 +256,7 @@ describe('cleanCommand', () => {
 
       // Should not show .logicstamp/ in the list
       expect(console.log).not.toHaveBeenCalledWith(
-        expect.stringContaining('.logicstamp/')
+        expect.stringContaining('.logicstamp/'),
       );
     });
   });
@@ -275,18 +279,18 @@ describe('cleanCommand', () => {
 
       // Should not show verbose messages
       expect(console.log).not.toHaveBeenCalledWith(
-        expect.stringContaining('🧹 This will remove:')
+        expect.stringContaining('🧹 This will remove:'),
       );
       expect(console.log).not.toHaveBeenCalledWith(
-        expect.stringContaining('🗑️  Removing files')
+        expect.stringContaining('🗑️  Removing files'),
       );
       expect(console.log).not.toHaveBeenCalledWith(
-        expect.stringContaining('Removed')
+        expect.stringContaining('Removed'),
       );
       expect(console.log).not.toHaveBeenCalledWith(
-        expect.stringContaining('Cleaned')
+        expect.stringContaining('Cleaned'),
       );
-      
+
       // Should output just ✓
       expect(mockStdoutWrite).toHaveBeenCalledWith('✓\n');
     });
@@ -324,7 +328,7 @@ describe('cleanCommand', () => {
 
       // Errors should still be shown even in quiet mode
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to remove')
+        expect.stringContaining('Failed to remove'),
       );
     });
   });
@@ -348,7 +352,7 @@ describe('cleanCommand', () => {
       });
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Cleaned 2 file(s) and 1 directory')
+        expect.stringContaining('Cleaned 2 file(s) and 1 directory'),
       );
     });
 
@@ -367,10 +371,10 @@ describe('cleanCommand', () => {
       });
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Cleaned 2 file(s)')
+        expect.stringContaining('Cleaned 2 file(s)'),
       );
       expect(console.log).not.toHaveBeenCalledWith(
-        expect.stringContaining('and 1 directory')
+        expect.stringContaining('and 1 directory'),
       );
     });
   });
@@ -390,7 +394,7 @@ describe('cleanCommand', () => {
 
       expect(unlink).not.toHaveBeenCalled();
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Run with --all --yes')
+        expect.stringContaining('Run with --all --yes'),
       );
     });
 
@@ -409,7 +413,7 @@ describe('cleanCommand', () => {
 
       expect(unlink).not.toHaveBeenCalled();
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Run with --all --yes')
+        expect.stringContaining('Run with --all --yes'),
       );
     });
 
@@ -428,7 +432,7 @@ describe('cleanCommand', () => {
 
       expect(unlink).not.toHaveBeenCalled();
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Run with --all --yes')
+        expect.stringContaining('Run with --all --yes'),
       );
     });
 
@@ -445,7 +449,7 @@ describe('cleanCommand', () => {
       });
 
       expect(console.log).not.toHaveBeenCalledWith(
-        expect.stringContaining('Run with --all --yes')
+        expect.stringContaining('Run with --all --yes'),
       );
     });
   });
@@ -464,10 +468,10 @@ describe('cleanCommand', () => {
 
       // Should display paths with forward slashes
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('src/components/context.json')
+        expect.stringContaining('src/components/context.json'),
       );
       expect(console.log).not.toHaveBeenCalledWith(
-        expect.stringContaining('src\\components\\context.json')
+        expect.stringContaining('src\\components\\context.json'),
       );
     });
   });
@@ -485,13 +489,13 @@ describe('cleanCommand', () => {
       });
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('🧹 This will remove:')
+        expect.stringContaining('🧹 This will remove:'),
       );
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('src/context.toon')
+        expect.stringContaining('src/context.toon'),
       );
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('context_main.toon')
+        expect.stringContaining('context_main.toon'),
       );
     });
 
@@ -510,10 +514,10 @@ describe('cleanCommand', () => {
       });
 
       expect(unlink).toHaveBeenCalledWith(
-        expect.stringContaining('context.toon')
+        expect.stringContaining('context.toon'),
       );
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('Cleaned 1 file(s)')
+        expect.stringContaining('Cleaned 1 file(s)'),
       );
     });
   });
@@ -531,7 +535,7 @@ describe('cleanCommand', () => {
       });
 
       expect(console.log).toHaveBeenCalledWith(
-        expect.stringContaining('No context artifacts found')
+        expect.stringContaining('No context artifacts found'),
       );
       expect(unlink).not.toHaveBeenCalled();
       expect(rm).not.toHaveBeenCalled();

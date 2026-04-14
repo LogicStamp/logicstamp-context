@@ -6,7 +6,10 @@
  */
 
 import type { Violation, ViolationsSummary } from '../utils/config.js';
-import type { BundleChanges, ContractDiff } from '../cli/commands/context/watchMode/watchDiff.js';
+import type {
+  BundleChanges,
+  ContractDiff,
+} from '../cli/commands/context/watchMode/watchDiff.js';
 import type { CompareResult } from '../cli/commands/compare/types.js';
 
 // Re-export types for convenience
@@ -27,9 +30,21 @@ interface NormalizedChange {
   entryId: string;
   removed?: boolean;
   gitBaseline?: boolean; // Flag to skip type changes in git baseline mode
-  props?: { added: string[]; removed: string[]; changed: Array<{ name: string; old: unknown; new: unknown }> };
-  emits?: { added: string[]; removed: string[]; changed: Array<{ name: string; old: unknown; new: unknown }> };
-  state?: { added: string[]; removed: string[]; changed: Array<{ name: string; old: unknown; new: unknown }> };
+  props?: {
+    added: string[];
+    removed: string[];
+    changed: Array<{ name: string; old: unknown; new: unknown }>;
+  };
+  emits?: {
+    added: string[];
+    removed: string[];
+    changed: Array<{ name: string; old: unknown; new: unknown }>;
+  };
+  state?: {
+    added: string[];
+    removed: string[];
+    changed: Array<{ name: string; old: unknown; new: unknown }>;
+  };
   functions?: { added: string[]; removed: string[] };
   variables?: { added: string[]; removed: string[] };
 }
@@ -69,7 +84,10 @@ function normalizeFromWatch(changes: BundleChanges): NormalizedChange[] {
 /**
  * Helper to compute diff between two objects (used for props, emits, state)
  */
-function diffObjects(oldObj: Record<string, unknown>, newObj: Record<string, unknown>): {
+function diffObjects(
+  oldObj: Record<string, unknown>,
+  newObj: Record<string, unknown>,
+): {
   added: string[];
   removed: string[];
   changed: Array<{ name: string; old: unknown; new: unknown }>;
@@ -99,7 +117,10 @@ function diffObjects(oldObj: Record<string, unknown>, newObj: Record<string, unk
 /**
  * Helper to compute diff between two arrays
  */
-function diffArrays(oldArr: string[], newArr: string[]): { added: string[]; removed: string[] } {
+function diffArrays(
+  oldArr: string[],
+  newArr: string[],
+): { added: string[]; removed: string[] } {
   const oldSet = new Set(oldArr);
   const newSet = new Set(newArr);
   const added: string[] = [];
@@ -125,7 +146,10 @@ function diffArrays(oldArr: string[], newArr: string[]): { added: string[]; remo
  * - variables: { old: string[], new: string[] }
  * - state: { old: Record<string, any>, new: Record<string, any> }
  */
-function normalizeFromCompare(result: CompareResult, gitBaseline?: boolean): NormalizedChange[] {
+function normalizeFromCompare(
+  result: CompareResult,
+  gitBaseline?: boolean,
+): NormalizedChange[] {
   const normalized: NormalizedChange[] = [];
 
   // Handle removed components
@@ -145,18 +169,34 @@ function normalizeFromCompare(result: CompareResult, gitBaseline?: boolean): Nor
     for (const delta of deltas) {
       switch (delta.type) {
         case 'props': {
-          const oldObj = (delta.old && typeof delta.old === 'object' && !Array.isArray(delta.old))
-            ? delta.old as Record<string, unknown> : {};
-          const newObj = (delta.new && typeof delta.new === 'object' && !Array.isArray(delta.new))
-            ? delta.new as Record<string, unknown> : {};
+          const oldObj =
+            delta.old &&
+            typeof delta.old === 'object' &&
+            !Array.isArray(delta.old)
+              ? (delta.old as Record<string, unknown>)
+              : {};
+          const newObj =
+            delta.new &&
+            typeof delta.new === 'object' &&
+            !Array.isArray(delta.new)
+              ? (delta.new as Record<string, unknown>)
+              : {};
           normalizedChange.props = diffObjects(oldObj, newObj);
           break;
         }
         case 'emits': {
-          const oldObj = (delta.old && typeof delta.old === 'object' && !Array.isArray(delta.old))
-            ? delta.old as Record<string, unknown> : {};
-          const newObj = (delta.new && typeof delta.new === 'object' && !Array.isArray(delta.new))
-            ? delta.new as Record<string, unknown> : {};
+          const oldObj =
+            delta.old &&
+            typeof delta.old === 'object' &&
+            !Array.isArray(delta.old)
+              ? (delta.old as Record<string, unknown>)
+              : {};
+          const newObj =
+            delta.new &&
+            typeof delta.new === 'object' &&
+            !Array.isArray(delta.new)
+              ? (delta.new as Record<string, unknown>)
+              : {};
           normalizedChange.emits = diffObjects(oldObj, newObj);
           break;
         }
@@ -173,10 +213,18 @@ function normalizeFromCompare(result: CompareResult, gitBaseline?: boolean): Nor
           break;
         }
         case 'state': {
-          const oldObj = (delta.old && typeof delta.old === 'object' && !Array.isArray(delta.old))
-            ? delta.old as Record<string, unknown> : {};
-          const newObj = (delta.new && typeof delta.new === 'object' && !Array.isArray(delta.new))
-            ? delta.new as Record<string, unknown> : {};
+          const oldObj =
+            delta.old &&
+            typeof delta.old === 'object' &&
+            !Array.isArray(delta.old)
+              ? (delta.old as Record<string, unknown>)
+              : {};
+          const newObj =
+            delta.new &&
+            typeof delta.new === 'object' &&
+            !Array.isArray(delta.new)
+              ? (delta.new as Record<string, unknown>)
+              : {};
           normalizedChange.state = diffObjects(oldObj, newObj);
           break;
         }
@@ -186,8 +234,13 @@ function normalizeFromCompare(result: CompareResult, gitBaseline?: boolean): Nor
     }
 
     // Only add if there are actual changes to detect
-    if (normalizedChange.props || normalizedChange.emits || normalizedChange.state ||
-        normalizedChange.functions || normalizedChange.variables) {
+    if (
+      normalizedChange.props ||
+      normalizedChange.emits ||
+      normalizedChange.state ||
+      normalizedChange.functions ||
+      normalizedChange.variables
+    ) {
       normalized.push(normalizedChange);
     }
   }
@@ -304,9 +357,10 @@ function detectFromNormalized(changes: NormalizedChange[]): Violation[] {
  * Detect violations from either watch mode or compare mode input
  */
 export function detectViolations(input: ViolationDetectionInput): Violation[] {
-  const normalized = input.type === 'watch'
-    ? normalizeFromWatch(input.changes)
-    : normalizeFromCompare(input.result, input.gitBaseline);
+  const normalized =
+    input.type === 'watch'
+      ? normalizeFromWatch(input.changes)
+      : normalizeFromCompare(input.result, input.gitBaseline);
 
   return detectFromNormalized(normalized);
 }
@@ -314,9 +368,11 @@ export function detectViolations(input: ViolationDetectionInput): Violation[] {
 /**
  * Create a summary of violations
  */
-export function summarizeViolations(violations: Violation[]): ViolationsSummary {
-  const errors = violations.filter(v => v.severity === 'error');
-  const warnings = violations.filter(v => v.severity === 'warning');
+export function summarizeViolations(
+  violations: Violation[],
+): ViolationsSummary {
+  const errors = violations.filter((v) => v.severity === 'error');
+  const warnings = violations.filter((v) => v.severity === 'warning');
 
   return {
     timestamp: new Date().toISOString(),
@@ -331,24 +387,29 @@ export function summarizeViolations(violations: Violation[]): ViolationsSummary 
 /**
  * Display violations to console
  */
-export function displayViolations(violations: Violation[], options: { quiet?: boolean } = {}): void {
+export function displayViolations(
+  violations: Violation[],
+  options: { quiet?: boolean } = {},
+): void {
   if (violations.length === 0) return;
 
-  const errors = violations.filter(v => v.severity === 'error');
-  const warnings = violations.filter(v => v.severity === 'warning');
+  const errors = violations.filter((v) => v.severity === 'error');
+  const warnings = violations.filter((v) => v.severity === 'warning');
 
-  console.log(`\n   ⚠️  Strict Mode: ${violations.length} violation(s) detected`);
+  console.log(
+    `\n   ⚠️  Strict Mode: ${violations.length} violation(s) detected`,
+  );
 
   if (errors.length > 0) {
     console.log(`\n   ❌ Errors (${errors.length}):`);
-    errors.forEach(v => {
+    errors.forEach((v) => {
       console.log(`      ${v.message}`);
     });
   }
 
   if (warnings.length > 0) {
     console.log(`\n   ⚠️  Warnings (${warnings.length}):`);
-    warnings.forEach(v => {
+    warnings.forEach((v) => {
       console.log(`      ${v.message}`);
     });
   }

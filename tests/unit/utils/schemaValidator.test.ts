@@ -13,7 +13,9 @@ describe('schemaValidator', () => {
   });
 
   // Helper to create a minimal valid contract
-  function createValidContract(overrides: Partial<UIFContract> = {}): UIFContract {
+  function createValidContract(
+    overrides: Partial<UIFContract> = {},
+  ): UIFContract {
     return {
       type: 'UIFContract',
       schemaVersion: '0.4',
@@ -169,16 +171,26 @@ describe('schemaValidator', () => {
       const result = validateUIFContract(contract);
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some((e) => e.includes('schemaVersion') || e.includes('0.4'))).toBe(true);
+      expect(
+        result.errors.some(
+          (e) => e.includes('schemaVersion') || e.includes('0.4'),
+        ),
+      ).toBe(true);
     });
 
     it('should reject contract with wrong type value', () => {
-      const contract = createValidContract({ type: 'WrongType' as 'UIFContract' });
+      const contract = createValidContract({
+        type: 'WrongType' as 'UIFContract',
+      });
 
       const result = validateUIFContract(contract);
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some((e) => e.includes('type') || e.includes('UIFContract'))).toBe(true);
+      expect(
+        result.errors.some(
+          (e) => e.includes('type') || e.includes('UIFContract'),
+        ),
+      ).toBe(true);
     });
 
     it('should reject contract with missing composition', () => {
@@ -221,12 +233,15 @@ describe('schemaValidator', () => {
 
     it('should reject contract with additional unknown properties', () => {
       const contract = createValidContract();
-      (contract as unknown as Record<string, unknown>).unknownProperty = 'should not be here';
+      (contract as unknown as Record<string, unknown>).unknownProperty =
+        'should not be here';
 
       const result = validateUIFContract(contract);
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some((e) => e.includes('unknownProperty'))).toBe(true);
+      expect(result.errors.some((e) => e.includes('unknownProperty'))).toBe(
+        true,
+      );
     });
 
     it('should reject non-object input', () => {
@@ -251,10 +266,20 @@ describe('schemaValidator', () => {
     });
 
     it('should validate all ContractKind values', () => {
-      const kinds = ['react:component', 'react:hook', 'vue:component', 'vue:composable', 'ts:module', 'node:cli', 'node:api'];
+      const kinds = [
+        'react:component',
+        'react:hook',
+        'vue:component',
+        'vue:composable',
+        'ts:module',
+        'node:cli',
+        'node:api',
+      ];
 
       for (const kind of kinds) {
-        const contract = createValidContract({ kind: kind as UIFContract['kind'] });
+        const contract = createValidContract({
+          kind: kind as UIFContract['kind'],
+        });
         const result = validateUIFContract(contract);
         expect(result.valid).toBe(true);
       }
@@ -273,7 +298,9 @@ describe('schemaValidator', () => {
     });
 
     it('should validate exports as object with named array', () => {
-      const contract = createValidContract({ exports: { named: ['Button', 'ButtonProps'] } });
+      const contract = createValidContract({
+        exports: { named: ['Button', 'ButtonProps'] },
+      });
       const result = validateUIFContract(contract);
       expect(result.valid).toBe(true);
     });
@@ -342,7 +369,11 @@ describe('schemaValidator', () => {
       const result = validateUIFContract(contract);
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some((e) => e.includes('entryId') || e.includes('string'))).toBe(true);
+      expect(
+        result.errors.some(
+          (e) => e.includes('entryId') || e.includes('string'),
+        ),
+      ).toBe(true);
     });
 
     it('should provide readable error for invalid enum value', () => {
@@ -355,9 +386,14 @@ describe('schemaValidator', () => {
       const result = validateUIFContract(contract);
 
       expect(result.valid).toBe(false);
-      expect(result.errors.some((e) => e.includes('directive') || e.includes('client') || e.includes('server'))).toBe(
-        true
-      );
+      expect(
+        result.errors.some(
+          (e) =>
+            e.includes('directive') ||
+            e.includes('client') ||
+            e.includes('server'),
+        ),
+      ).toBe(true);
     });
   });
 });

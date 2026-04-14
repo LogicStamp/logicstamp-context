@@ -30,7 +30,9 @@ describe('fileLock utils', () => {
 
       // Lock file should exist
       const lockPath = `${filePath}.lock`;
-      const lockExists = await access(lockPath).then(() => true).catch(() => false);
+      const lockExists = await access(lockPath)
+        .then(() => true)
+        .catch(() => false);
       expect(lockExists).toBe(true);
 
       // Lock file should contain PID
@@ -49,7 +51,9 @@ describe('fileLock utils', () => {
       await lock!.release();
 
       const lockPath = `${filePath}.lock`;
-      const lockExists = await access(lockPath).then(() => true).catch(() => false);
+      const lockExists = await access(lockPath)
+        .then(() => true)
+        .catch(() => false);
       expect(lockExists).toBe(false);
     });
 
@@ -70,14 +74,20 @@ describe('fileLock utils', () => {
       // Use a PID that's valid but very unlikely to exist (high but within 32-bit range)
       // This should fail consistently on both Windows and Unix
       const lockPath = `${filePath}.lock`;
-      await writeFile(lockPath, JSON.stringify({
-        pid: 4000000, // High but valid PID, very unlikely to exist
-        timestamp: Date.now(),
-      }));
+      await writeFile(
+        lockPath,
+        JSON.stringify({
+          pid: 4000000, // High but valid PID, very unlikely to exist
+          timestamp: Date.now(),
+        }),
+      );
 
       // Should be able to acquire lock (stale lock is removed)
       // Use longer timeout to allow for stale detection, removal, and retry (especially on Windows)
-      const lock = await acquireLock(filePath, { timeout: 2000, retryInterval: 50 });
+      const lock = await acquireLock(filePath, {
+        timeout: 2000,
+        retryInterval: 50,
+      });
       expect(lock).not.toBeNull();
 
       await lock!.release();
@@ -91,10 +101,13 @@ describe('fileLock utils', () => {
       // On Windows, process.kill(pid, 0) may return EPERM for the current process,
       // which triggers the 5x stale threshold. Use 180 seconds to exceed 5x30s=150s.
       const lockPath = `${filePath}.lock`;
-      await writeFile(lockPath, JSON.stringify({
-        pid: process.pid, // Current PID (process is alive)
-        timestamp: Date.now() - 180000, // 180 seconds ago (exceeds 5x threshold on Windows)
-      }));
+      await writeFile(
+        lockPath,
+        JSON.stringify({
+          pid: process.pid, // Current PID (process is alive)
+          timestamp: Date.now() - 180000, // 180 seconds ago (exceeds 5x threshold on Windows)
+        }),
+      );
 
       // Should be able to acquire lock (lock is too old)
       // Use longer timeout to allow for stale detection, removal, and retry (especially on Windows)
@@ -119,21 +132,24 @@ describe('fileLock utils', () => {
       // Start acquiring second lock (will wait for lock1 to be released)
       // Use generous timeout to avoid flakiness on slow systems and when running in parallel
       const startTime = Date.now();
-      const lock2Promise = acquireLock(filePath, { timeout: 5000, retryInterval: 50 });
+      const lock2Promise = acquireLock(filePath, {
+        timeout: 5000,
+        retryInterval: 50,
+      });
 
       // Give lock2Promise a moment to start and enter the retry loop
       // This ensures it's actively checking before we release lock1
-      await new Promise(resolve => setTimeout(resolve, 20));
+      await new Promise((resolve) => setTimeout(resolve, 20));
 
       // Release first lock after 100ms total, ensuring release completes
       // Use a Promise to properly handle the async release and filesystem delay
       const releasePromise = (async () => {
-        await new Promise(resolve => setTimeout(resolve, 80)); // Wait until ~100ms total
+        await new Promise((resolve) => setTimeout(resolve, 80)); // Wait until ~100ms total
         await lock1!.release();
         // Additional delay to let filesystem catch up (especially important on Windows)
         // Windows file deletion can be asynchronous, so we need to ensure
         // the deletion is fully visible before lock2's next check
-        await new Promise(r => setTimeout(r, 30));
+        await new Promise((r) => setTimeout(r, 30));
       })();
 
       // Don't await releasePromise - let it run in parallel with lock2Promise
@@ -176,7 +192,9 @@ describe('fileLock utils', () => {
       await withLock(filePath, async () => {
         // Lock file should exist while function runs
         const lockPath = `${filePath}.lock`;
-        const lockExists = await access(lockPath).then(() => true).catch(() => false);
+        const lockExists = await access(lockPath)
+          .then(() => true)
+          .catch(() => false);
         expect(lockExists).toBe(true);
 
         executed = true;
@@ -186,7 +204,9 @@ describe('fileLock utils', () => {
 
       // Lock should be released after function completes
       const lockPath = `${filePath}.lock`;
-      const lockExists = await access(lockPath).then(() => true).catch(() => false);
+      const lockExists = await access(lockPath)
+        .then(() => true)
+        .catch(() => false);
       expect(lockExists).toBe(false);
     });
 
@@ -208,12 +228,14 @@ describe('fileLock utils', () => {
       await expect(
         withLock(filePath, async () => {
           throw new Error('Test error');
-        })
+        }),
       ).rejects.toThrow('Test error');
 
       // Lock should be released
       const lockPath = `${filePath}.lock`;
-      const lockExists = await access(lockPath).then(() => true).catch(() => false);
+      const lockExists = await access(lockPath)
+        .then(() => true)
+        .catch(() => false);
       expect(lockExists).toBe(false);
     });
 
@@ -225,7 +247,7 @@ describe('fileLock utils', () => {
       const lock1 = await acquireLock(filePath);
 
       await expect(
-        withLock(filePath, async () => {}, { timeout: 100 })
+        withLock(filePath, async () => {}, { timeout: 100 }),
       ).rejects.toThrow('Could not acquire lock');
 
       await lock1!.release();
@@ -238,11 +260,15 @@ describe('fileLock utils', () => {
       // Run 5 concurrent increments (reduced from 10 for reliability on slow filesystems)
       // Use generous timeout since all must run sequentially (each waits for previous)
       const increments = Array.from({ length: 5 }, () =>
-        withLock(filePath, async () => {
-          const content = JSON.parse(await readFile(filePath, 'utf-8'));
-          content.count += 1;
-          await writeFile(filePath, JSON.stringify(content));
-        }, { timeout: 60000, retryInterval: 100 })
+        withLock(
+          filePath,
+          async () => {
+            const content = JSON.parse(await readFile(filePath, 'utf-8'));
+            content.count += 1;
+            await writeFile(filePath, JSON.stringify(content));
+          },
+          { timeout: 60000, retryInterval: 100 },
+        ),
       );
 
       await Promise.all(increments);

@@ -12,7 +12,10 @@ import { debugError } from './debug.js';
 
 // Resolve schema path relative to this module
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const schemaPath = join(__dirname, '../../schema/logicstamp.context.schema.json');
+const schemaPath = join(
+  __dirname,
+  '../../schema/logicstamp.context.schema.json',
+);
 
 // Lazy-load schema and validator to avoid startup cost if validation isn't used
 let ajv: Ajv | null = null;
@@ -79,7 +82,10 @@ export function validateUIFContract(data: unknown): {
   if (!validator) {
     return {
       valid: false,
-      errors: ['Schema validation unavailable: ' + (schemaLoadError?.message || 'failed to load schema')],
+      errors: [
+        'Schema validation unavailable: ' +
+          (schemaLoadError?.message || 'failed to load schema'),
+      ],
       data: null,
     };
   }
@@ -115,7 +121,9 @@ export function isValidUIFContract(data: unknown): data is UIFContract {
 /**
  * Format AJV errors into human-readable strings
  */
-function formatValidationErrors(errors: ErrorObject[] | null | undefined): string[] {
+function formatValidationErrors(
+  errors: ErrorObject[] | null | undefined,
+): string[] {
   if (!errors || errors.length === 0) return [];
 
   return errors.map((err) => {
@@ -128,7 +136,12 @@ function formatValidationErrors(errors: ErrorObject[] | null | undefined): strin
         return `${path}: missing required property '${err.params.missingProperty}'`;
       case 'type': {
         // typeof null === 'object' and typeof [] === 'object', so handle explicitly
-        const got = err.data === null ? 'null' : Array.isArray(err.data) ? 'array' : typeof err.data;
+        const got =
+          err.data === null
+            ? 'null'
+            : Array.isArray(err.data)
+              ? 'array'
+              : typeof err.data;
         return `${path}: ${message} (got ${got})`;
       }
       case 'enum':

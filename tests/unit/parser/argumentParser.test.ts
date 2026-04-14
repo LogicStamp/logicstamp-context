@@ -50,7 +50,7 @@ describe('parseContextArgs', () => {
     parseContextArgs(['--depth', 'abc']);
     expect(process.exit).toHaveBeenCalledWith(1);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid depth value')
+      expect.stringContaining('Invalid depth value'),
     );
   });
 
@@ -58,7 +58,7 @@ describe('parseContextArgs', () => {
     parseContextArgs(['--depth', '-5']);
     expect(process.exit).toHaveBeenCalledWith(1);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid depth value')
+      expect.stringContaining('Invalid depth value'),
     );
   });
 
@@ -66,7 +66,7 @@ describe('parseContextArgs', () => {
     parseContextArgs(['--depth']);
     expect(process.exit).toHaveBeenCalledWith(1);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid depth value')
+      expect.stringContaining('Invalid depth value'),
     );
   });
 
@@ -74,7 +74,7 @@ describe('parseContextArgs', () => {
     parseContextArgs(['-d', 'abc']);
     expect(process.exit).toHaveBeenCalledWith(1);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid depth value')
+      expect.stringContaining('Invalid depth value'),
     );
   });
 
@@ -122,7 +122,7 @@ describe('parseContextArgs', () => {
     parseContextArgs(['--max-nodes', 'xyz']);
     expect(process.exit).toHaveBeenCalledWith(1);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid max-nodes value')
+      expect.stringContaining('Invalid max-nodes value'),
     );
   });
 
@@ -130,7 +130,7 @@ describe('parseContextArgs', () => {
     parseContextArgs(['--max-nodes', '0']);
     expect(process.exit).toHaveBeenCalledWith(1);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid max-nodes value')
+      expect.stringContaining('Invalid max-nodes value'),
     );
   });
 
@@ -138,7 +138,7 @@ describe('parseContextArgs', () => {
     parseContextArgs(['--max-nodes', '-10']);
     expect(process.exit).toHaveBeenCalledWith(1);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid max-nodes value')
+      expect.stringContaining('Invalid max-nodes value'),
     );
   });
 
@@ -146,7 +146,7 @@ describe('parseContextArgs', () => {
     parseContextArgs(['--max-nodes']);
     expect(process.exit).toHaveBeenCalledWith(1);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid max-nodes value')
+      expect.stringContaining('Invalid max-nodes value'),
     );
   });
 
@@ -154,7 +154,7 @@ describe('parseContextArgs', () => {
     parseContextArgs(['-m', '0']);
     expect(process.exit).toHaveBeenCalledWith(1);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid max-nodes value')
+      expect.stringContaining('Invalid max-nodes value'),
     );
   });
 
@@ -174,7 +174,11 @@ describe('parseContextArgs', () => {
   });
 
   it('should parse boolean flags', () => {
-    const options = parseContextArgs(['--strict', '--watch', '--include-style']);
+    const options = parseContextArgs([
+      '--strict',
+      '--watch',
+      '--include-style',
+    ]);
     expect(options.strict).toBe(true);
     expect(options.watch).toBe(true);
     expect(options.includeStyle).toBe(true);
@@ -246,7 +250,7 @@ describe('parseContextArgs', () => {
     parseContextArgs(['--unknown-flag']);
     expect(process.exit).toHaveBeenCalledWith(1);
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Unknown option')
+      expect.stringContaining('Unknown option'),
     );
   });
 });
@@ -402,7 +406,12 @@ describe('parseCleanArgs', () => {
   });
 
   it('should handle multiple flags', () => {
-    const options = parseCleanArgs(['--all', '--yes', '--quiet', './my-project']);
+    const options = parseCleanArgs([
+      '--all',
+      '--yes',
+      '--quiet',
+      './my-project',
+    ]);
     expect(options.all).toBe(true);
     expect(options.yes).toBe(true);
     expect(options.quiet).toBe(true);

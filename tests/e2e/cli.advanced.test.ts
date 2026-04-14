@@ -14,7 +14,11 @@ describe('CLI Advanced Features Tests', () => {
   beforeEach(async () => {
     // Create a unique output directory for this test run
     const uniqueId = randomUUID().substring(0, 8);
-    outputPath = join(process.cwd(), 'tests/e2e/output', `advanced-${uniqueId}`);
+    outputPath = join(
+      process.cwd(),
+      'tests/e2e/output',
+      `advanced-${uniqueId}`,
+    );
     await mkdir(outputPath, { recursive: true });
   });
 
@@ -34,7 +38,7 @@ describe('CLI Advanced Features Tests', () => {
       const outFile = join(outputPath, 'context.json');
 
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --out ${outFile}`
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outFile}`,
       );
 
       // Verify token count section (simplified output)
@@ -49,7 +53,7 @@ describe('CLI Advanced Features Tests', () => {
 
     it('should include token estimates in --stats JSON output', async () => {
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --stats`
+        `node dist/cli/stamp.js context ${fixturesPath} --stats`,
       );
 
       // Parse the JSON output (extract last line which is the JSON)
@@ -82,19 +86,27 @@ describe('CLI Advanced Features Tests', () => {
       expect(stats).toHaveProperty('savingsClaude');
 
       // Verify logical ordering: none < header < full
-      expect(stats.modeEstimates.none.gpt4).toBeLessThan(stats.modeEstimates.header.gpt4);
-      expect(stats.modeEstimates.header.gpt4).toBeLessThan(stats.modeEstimates.full.gpt4);
+      expect(stats.modeEstimates.none.gpt4).toBeLessThan(
+        stats.modeEstimates.header.gpt4,
+      );
+      expect(stats.modeEstimates.header.gpt4).toBeLessThan(
+        stats.modeEstimates.full.gpt4,
+      );
     }, 30000);
 
     it('should show detailed comparison with --compare-modes flag', async () => {
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --compare-modes`
+        `node dist/cli/stamp.js context ${fixturesPath} --compare-modes`,
       );
 
       // Verify table output
       expect(stdout).toContain('📊 Mode Comparison');
-      expect(stdout).toContain('Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Full Context');
-      expect(stdout).toContain('-------------|---------------|---------------|--------------------------');
+      expect(stdout).toContain(
+        'Mode         | Tokens GPT-4o | Tokens Claude | Savings vs Full Context',
+      );
+      expect(stdout).toContain(
+        '-------------|---------------|---------------|--------------------------',
+      );
 
       // Verify all four modes are present
       expect(stdout).toContain('none');
@@ -112,9 +124,8 @@ describe('CLI Advanced Features Tests', () => {
     }, 30000);
 
     it('should calculate savings correctly', async () => {
-
       const { stdout: statsOutput } = await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --stats`
+        `node dist/cli/stamp.js context ${fixturesPath} --stats`,
       );
 
       // Extract JSON from last line
@@ -124,12 +135,16 @@ describe('CLI Advanced Features Tests', () => {
 
       // Calculate expected savings
       const expectedSavingsGPT4 = Math.round(
-        ((stats.modeEstimates.full.gpt4 - stats.tokensGPT4) / stats.modeEstimates.full.gpt4) * 100
+        ((stats.modeEstimates.full.gpt4 - stats.tokensGPT4) /
+          stats.modeEstimates.full.gpt4) *
+          100,
       );
 
       // Verify savings calculation (allow for rounding)
       const actualSavings = parseInt(stats.savingsGPT4);
-      expect(Math.abs(actualSavings - expectedSavingsGPT4)).toBeLessThanOrEqual(1);
+      expect(Math.abs(actualSavings - expectedSavingsGPT4)).toBeLessThanOrEqual(
+        1,
+      );
     }, 30000);
   });
 
@@ -138,20 +153,27 @@ describe('CLI Advanced Features Tests', () => {
       const outDir1 = join(outputPath, 'context1');
       const outDir2 = join(outputPath, 'context2');
 
-
       // Generate same context twice
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`);
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2}`);
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir1}`,
+      );
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir2}`,
+      );
 
       // Get first context file from each directory
-      const index1 = JSON.parse(await readFile(join(outDir1, 'context_main.json'), 'utf-8'));
-      const index2 = JSON.parse(await readFile(join(outDir2, 'context_main.json'), 'utf-8'));
+      const index1 = JSON.parse(
+        await readFile(join(outDir1, 'context_main.json'), 'utf-8'),
+      );
+      const index2 = JSON.parse(
+        await readFile(join(outDir2, 'context_main.json'), 'utf-8'),
+      );
       const file1 = join(outDir1, index1.folders[0].contextFile);
       const file2 = join(outDir2, index2.folders[0].contextFile);
 
       // Compare
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context compare ${file1} ${file2}`
+        `node dist/cli/stamp.js context compare ${file1} ${file2}`,
       );
 
       expect(stdout).toContain('PASS');
@@ -167,49 +189,64 @@ describe('CLI Advanced Features Tests', () => {
       await mkdir(oldDir, { recursive: true });
       await mkdir(join(oldDir, 'src'), { recursive: true });
 
-
       // Create old context (minimal - single file)
       const oldContextFile = join(oldDir, 'src', 'context.json');
-      await writeFile(oldContextFile, JSON.stringify([
-        {
-          "$schema": "https://logicstamp.dev/schemas/context/v0.1.json",
-          "position": "1/1",
-          "type": "LogicStampBundle",
-          "schemaVersion": "0.1",
-          "entryId": "src/test.tsx",
-          "depth": 1,
-          "createdAt": new Date().toISOString(),
-          "bundleHash": "uifb:000000000000000000000000",
-          "graph": {
-            "nodes": [{
-              "entryId": "src/test.tsx",
-              "contract": {
-                "type": "UIFContract",
-                "schemaVersion": "0.4",
-                "kind": "react:component",
-                "entryId": "src/test.tsx",
-                "semanticHash": "uif:test",
-                "composition": { imports: [], hooks: [], components: [], functions: [] },
-                "interface": { props: {}, emits: {} },
-                "exports": "default"
-              }
-            }],
-            "edges": []
+      await writeFile(
+        oldContextFile,
+        JSON.stringify([
+          {
+            $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
+            position: '1/1',
+            type: 'LogicStampBundle',
+            schemaVersion: '0.1',
+            entryId: 'src/test.tsx',
+            depth: 1,
+            createdAt: new Date().toISOString(),
+            bundleHash: 'uifb:000000000000000000000000',
+            graph: {
+              nodes: [
+                {
+                  entryId: 'src/test.tsx',
+                  contract: {
+                    type: 'UIFContract',
+                    schemaVersion: '0.4',
+                    kind: 'react:component',
+                    entryId: 'src/test.tsx',
+                    semanticHash: 'uif:test',
+                    composition: {
+                      imports: [],
+                      hooks: [],
+                      components: [],
+                      functions: [],
+                    },
+                    interface: { props: {}, emits: {} },
+                    exports: 'default',
+                  },
+                },
+              ],
+              edges: [],
+            },
+            meta: { missing: [], source: 'test' },
           },
-          "meta": { missing: [], source: "test" }
-        }
-      ]));
+        ]),
+      );
 
       // Generate new context (has more files)
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${newDir}`);
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${newDir}`,
+      );
 
       // Get new context file
-      const newIndex = JSON.parse(await readFile(join(newDir, 'context_main.json'), 'utf-8'));
+      const newIndex = JSON.parse(
+        await readFile(join(newDir, 'context_main.json'), 'utf-8'),
+      );
       const newContextFile = join(newDir, newIndex.folders[0].contextFile);
 
       // Compare
       try {
-        await execAsync(`node dist/cli/stamp.js context compare ${oldContextFile} ${newContextFile}`);
+        await execAsync(
+          `node dist/cli/stamp.js context compare ${oldContextFile} ${newContextFile}`,
+        );
         expect.fail('Should have exited with code 1');
       } catch (error: any) {
         // Exit code 1 indicates drift detected
@@ -226,49 +263,64 @@ describe('CLI Advanced Features Tests', () => {
       await mkdir(newDir, { recursive: true });
       await mkdir(join(newDir, 'src'), { recursive: true });
 
-
       // Generate full context
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${oldDir}`);
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${oldDir}`,
+      );
 
       // Get old context file
-      const oldIndex = JSON.parse(await readFile(join(oldDir, 'context_main.json'), 'utf-8'));
+      const oldIndex = JSON.parse(
+        await readFile(join(oldDir, 'context_main.json'), 'utf-8'),
+      );
       const oldContextFile = join(oldDir, oldIndex.folders[0].contextFile);
 
       // Create minimal new context
       const newContextFile = join(newDir, 'src', 'context.json');
-      await writeFile(newContextFile, JSON.stringify([
-        {
-          "$schema": "https://logicstamp.dev/schemas/context/v0.1.json",
-          "position": "1/1",
-          "type": "LogicStampBundle",
-          "schemaVersion": "0.1",
-          "entryId": "src/test.tsx",
-          "depth": 1,
-          "createdAt": new Date().toISOString(),
-          "bundleHash": "uifb:000000000000000000000000",
-          "graph": {
-            "nodes": [{
-              "entryId": "src/test.tsx",
-              "contract": {
-                "type": "UIFContract",
-                "schemaVersion": "0.4",
-                "kind": "react:component",
-                "entryId": "src/test.tsx",
-                "semanticHash": "uif:test",
-                "composition": { imports: [], hooks: [], components: [], functions: [] },
-                "interface": { props: {}, emits: {} },
-                "exports": "default"
-              }
-            }],
-            "edges": []
+      await writeFile(
+        newContextFile,
+        JSON.stringify([
+          {
+            $schema: 'https://logicstamp.dev/schemas/context/v0.1.json',
+            position: '1/1',
+            type: 'LogicStampBundle',
+            schemaVersion: '0.1',
+            entryId: 'src/test.tsx',
+            depth: 1,
+            createdAt: new Date().toISOString(),
+            bundleHash: 'uifb:000000000000000000000000',
+            graph: {
+              nodes: [
+                {
+                  entryId: 'src/test.tsx',
+                  contract: {
+                    type: 'UIFContract',
+                    schemaVersion: '0.4',
+                    kind: 'react:component',
+                    entryId: 'src/test.tsx',
+                    semanticHash: 'uif:test',
+                    composition: {
+                      imports: [],
+                      hooks: [],
+                      components: [],
+                      functions: [],
+                    },
+                    interface: { props: {}, emits: {} },
+                    exports: 'default',
+                  },
+                },
+              ],
+              edges: [],
+            },
+            meta: { missing: [], source: 'test' },
           },
-          "meta": { missing: [], source: "test" }
-        }
-      ]));
+        ]),
+      );
 
       // Compare
       try {
-        await execAsync(`node dist/cli/stamp.js context compare ${oldContextFile} ${newContextFile}`);
+        await execAsync(
+          `node dist/cli/stamp.js context compare ${oldContextFile} ${newContextFile}`,
+        );
         expect.fail('Should have exited with code 1');
       } catch (error: any) {
         // Exit code 1 indicates drift detected
@@ -283,17 +335,25 @@ describe('CLI Advanced Features Tests', () => {
       const dir1 = join(outputPath, 'stats-context1');
       const dir2 = join(outputPath, 'stats-context2');
 
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${dir1}`);
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${dir2}`);
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${dir1}`,
+      );
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${dir2}`,
+      );
 
       // Get context files
-      const index1 = JSON.parse(await readFile(join(dir1, 'context_main.json'), 'utf-8'));
-      const index2 = JSON.parse(await readFile(join(dir2, 'context_main.json'), 'utf-8'));
+      const index1 = JSON.parse(
+        await readFile(join(dir1, 'context_main.json'), 'utf-8'),
+      );
+      const index2 = JSON.parse(
+        await readFile(join(dir2, 'context_main.json'), 'utf-8'),
+      );
       const file1 = join(dir1, index1.folders[0].contextFile);
       const file2 = join(dir2, index2.folders[0].contextFile);
 
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context compare ${file1} ${file2} --stats`
+        `node dist/cli/stamp.js context compare ${file1} ${file2} --stats`,
       );
 
       expect(stdout).toContain('Token Stats:');
@@ -307,20 +367,27 @@ describe('CLI Advanced Features Tests', () => {
       const dir1 = join(outputPath, 'pass1');
       const dir2 = join(outputPath, 'pass2');
 
-
       // Generate identical contexts
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${dir1}`);
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${dir2}`);
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${dir1}`,
+      );
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${dir2}`,
+      );
 
       // Get context files
-      const index1 = JSON.parse(await readFile(join(dir1, 'context_main.json'), 'utf-8'));
-      const index2 = JSON.parse(await readFile(join(dir2, 'context_main.json'), 'utf-8'));
+      const index1 = JSON.parse(
+        await readFile(join(dir1, 'context_main.json'), 'utf-8'),
+      );
+      const index2 = JSON.parse(
+        await readFile(join(dir2, 'context_main.json'), 'utf-8'),
+      );
       const file1 = join(dir1, index1.folders[0].contextFile);
       const file2 = join(dir2, index2.folders[0].contextFile);
 
       // Should not throw (exit code 0)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context compare ${file1} ${file2}`
+        `node dist/cli/stamp.js context compare ${file1} ${file2}`,
       );
       expect(stdout).toContain('PASS');
     }, 60000);
@@ -330,10 +397,9 @@ describe('CLI Advanced Features Tests', () => {
     it('should pass when no missing dependencies', async () => {
       const outDir = join(outputPath, 'strict-pass');
 
-
       // Should not throw (fixtures have no missing deps)
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --strict-missing --out ${outDir}`
+        `node dist/cli/stamp.js context ${fixturesPath} --strict-missing --out ${outDir}`,
       );
 
       expect(stdout).toContain('Missing dependencies: 0');
@@ -350,7 +416,9 @@ describe('CLI Advanced Features Tests', () => {
       // Create ComponentA that uses ComponentB in JSX
       // ComponentB doesn't exist, so it should be detected as missing
       const componentA = join(srcDir, 'ComponentA.tsx');
-      await writeFile(componentA, `import React from 'react';
+      await writeFile(
+        componentA,
+        `import React from 'react';
 
 export function ComponentA() {
   return (
@@ -360,7 +428,8 @@ export function ComponentA() {
     </div>
   );
 }
-`);
+`,
+      );
 
       const outDir = join(outputPath, 'strict-fail');
 
@@ -368,10 +437,10 @@ export function ComponentA() {
       // Missing dependencies are detected when JSX components are used but don't exist as files
       let exitCode: number | undefined;
       let output = '';
-      
+
       try {
         const result = await execAsync(
-          `node dist/cli/stamp.js context ${testDir} --strict-missing --out ${outDir}`
+          `node dist/cli/stamp.js context ${testDir} --strict-missing --out ${outDir}`,
         );
         // Command succeeded (exit code 0)
         exitCode = 0;
@@ -379,9 +448,14 @@ export function ComponentA() {
       } catch (error: any) {
         // Command failed
         exitCode = error.code;
-        output = (error.stdout || error.stderr || error.message || '').toString();
+        output = (
+          error.stdout ||
+          error.stderr ||
+          error.message ||
+          ''
+        ).toString();
       }
-      
+
       // Verify missing dependencies were detected by checking the output bundle
       const mainContextPath = join(outDir, 'context_main.json');
       let totalMissing = 0;
@@ -392,7 +466,10 @@ export function ComponentA() {
           const contextFile = join(outDir, folder.contextFile);
           const content = await readFile(contextFile, 'utf-8');
           const bundles = JSON.parse(content);
-          totalMissing += bundles.reduce((sum: number, b: any) => sum + (b.meta?.missing?.length || 0), 0);
+          totalMissing += bundles.reduce(
+            (sum: number, b: any) => sum + (b.meta?.missing?.length || 0),
+            0,
+          );
         }
       } catch (e) {
         // If output file doesn't exist and exit code is 1, that's fine - command failed as expected
@@ -402,7 +479,7 @@ export function ComponentA() {
           return; // Test passes
         }
       }
-      
+
       // Assert the contract: if missing dependencies are found, must exit with code 1
       if (totalMissing > 0) {
         expect(exitCode).toBe(1);
@@ -413,8 +490,8 @@ export function ComponentA() {
         // This indicates a potential issue with missing dependency detection
         expect.fail(
           `Expected missing dependencies to be detected (ComponentB, ComponentC used in JSX but files don't exist), ` +
-          `but none were found. This suggests missing dependency detection may not be working for JSX component usage. ` +
-          `Exit code: ${exitCode}, Output: ${output.substring(0, 300)}`
+            `but none were found. This suggests missing dependency detection may not be working for JSX component usage. ` +
+            `Exit code: ${exitCode}, Output: ${output.substring(0, 300)}`,
         );
       }
     }, 30000);
@@ -424,10 +501,14 @@ export function ComponentA() {
     it('should detect Button.tsx as react:component (HTML JSX)', async () => {
       const outDir = join(outputPath, 'button-test');
 
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`);
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`,
+      );
 
       // Read all bundles from all folders
-      const mainIndex = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const mainIndex = JSON.parse(
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
+      );
       const bundles: any[] = [];
       for (const folder of mainIndex.folders) {
         const contextPath = join(outDir, folder.contextFile);
@@ -440,34 +521,42 @@ export function ComponentA() {
       let buttonNode: any = null;
       for (const bundle of bundles) {
         // Check if bundle entryId matches
-        const normalizedEntryId = bundle.entryId.replace(/\\/g, '/').toLowerCase();
+        const normalizedEntryId = bundle.entryId
+          .replace(/\\/g, '/')
+          .toLowerCase();
         if (normalizedEntryId.includes('button.tsx')) {
           // Button is the entry point
           buttonNode = bundle.graph.nodes.find((n: any) =>
-            n.entryId.replace(/\\/g, '/').toLowerCase().includes('button.tsx')
+            n.entryId.replace(/\\/g, '/').toLowerCase().includes('button.tsx'),
           );
           if (buttonNode) break;
         }
         // Check all nodes in the bundle
         buttonNode = bundle.graph.nodes.find((n: any) => {
           const normalized = n.entryId.replace(/\\/g, '/').toLowerCase();
-          return normalized.includes('button.tsx') || normalized.endsWith('button.tsx');
+          return (
+            normalized.includes('button.tsx') ||
+            normalized.endsWith('button.tsx')
+          );
         });
         if (buttonNode) break;
       }
 
       // If Button not found, check if any .tsx files exist at all (for debugging)
       if (!buttonNode) {
-        const allTsxNodes = bundles.flatMap((b: any) => 
-          b.graph.nodes.filter((n: any) => n.entryId.toLowerCase().includes('.tsx'))
+        const allTsxNodes = bundles.flatMap((b: any) =>
+          b.graph.nodes.filter((n: any) =>
+            n.entryId.toLowerCase().includes('.tsx'),
+          ),
         );
         // If we have .tsx files but not Button, the test assumption might be wrong
         // But we still want to verify component detection works
         if (allTsxNodes.length > 0) {
           // Test with the first .tsx component we find
-          buttonNode = allTsxNodes.find((n: any) => 
-            n.contract?.kind === 'react:component'
-          ) || allTsxNodes[0];
+          buttonNode =
+            allTsxNodes.find(
+              (n: any) => n.contract?.kind === 'react:component',
+            ) || allTsxNodes[0];
         }
       }
 
@@ -481,10 +570,14 @@ export function ComponentA() {
     it('should detect all React components correctly', async () => {
       const outDir = join(outputPath, 'all-components');
 
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`);
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`,
+      );
 
       // Read all bundles from all folders
-      const mainIndex = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const mainIndex = JSON.parse(
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
+      );
       const bundles: any[] = [];
       for (const folder of mainIndex.folders) {
         const contextPath = join(outDir, folder.contextFile);
@@ -498,7 +591,7 @@ export function ComponentA() {
           if (node.entryId.endsWith('.tsx')) {
             // Only check if it has React imports
             const hasReactImport = node.contract.composition?.imports?.some(
-              (imp: string) => imp === 'react' || imp.startsWith('react/')
+              (imp: string) => imp === 'react' || imp.startsWith('react/'),
             );
 
             if (hasReactImport) {
@@ -514,10 +607,14 @@ export function ComponentA() {
     it('should resolve dependencies within same directory first', async () => {
       const outDir = join(outputPath, 'deps');
 
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`);
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`,
+      );
 
       // Read all bundles from all folders
-      const mainIndex = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const mainIndex = JSON.parse(
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
+      );
       const bundles: any[] = [];
       for (const folder of mainIndex.folders) {
         const contextPath = join(outDir, folder.contextFile);
@@ -533,10 +630,12 @@ export function ComponentA() {
 
       // First, try to find Card specifically
       for (const bundle of bundles) {
-        const normalizedEntryId = bundle.entryId.replace(/\\/g, '/').toLowerCase();
+        const normalizedEntryId = bundle.entryId
+          .replace(/\\/g, '/')
+          .toLowerCase();
         if (normalizedEntryId.includes('card.tsx')) {
           cardNode = bundle.graph.nodes.find((n: any) =>
-            n.entryId.replace(/\\/g, '/').toLowerCase().includes('card.tsx')
+            n.entryId.replace(/\\/g, '/').toLowerCase().includes('card.tsx'),
           );
           if (cardNode) {
             cardBundle = bundle;
@@ -545,7 +644,9 @@ export function ComponentA() {
         }
         cardNode = bundle.graph.nodes.find((n: any) => {
           const normalized = n.entryId.replace(/\\/g, '/').toLowerCase();
-          return normalized.includes('card.tsx') || normalized.endsWith('card.tsx');
+          return (
+            normalized.includes('card.tsx') || normalized.endsWith('card.tsx')
+          );
         });
         if (cardNode) {
           cardBundle = bundle;
@@ -554,27 +655,50 @@ export function ComponentA() {
       }
 
       // If Card not found, find any bundle with dependencies (edges)
-      if (!cardBundle || (cardBundle.graph && cardBundle.graph.edges && cardBundle.graph.edges.length === 0)) {
-        cardBundle = bundles.find((b: any) => b.graph && b.graph.edges && b.graph.edges.length > 0);
-        if (cardBundle && cardBundle.graph.nodes && cardBundle.graph.nodes.length > 1) {
+      if (
+        !cardBundle ||
+        (cardBundle.graph &&
+          cardBundle.graph.edges &&
+          cardBundle.graph.edges.length === 0)
+      ) {
+        cardBundle = bundles.find(
+          (b: any) => b.graph && b.graph.edges && b.graph.edges.length > 0,
+        );
+        if (
+          cardBundle &&
+          cardBundle.graph.nodes &&
+          cardBundle.graph.nodes.length > 1
+        ) {
           // Use the entry node and a dependency node
           cardNode = cardBundle.graph.nodes[0];
-          buttonDep = cardBundle.graph.nodes.find((n: any, idx: number) => 
-            idx > 0 && n.entryId !== cardNode.entryId
-          ) || cardBundle.graph.nodes[1];
+          buttonDep =
+            cardBundle.graph.nodes.find(
+              (n: any, idx: number) =>
+                idx > 0 && n.entryId !== cardNode.entryId,
+            ) || cardBundle.graph.nodes[1];
         }
       } else {
         // Card found, now find Button in the same bundle
         buttonDep = cardBundle.graph.nodes.find((n: any) => {
           const normalized = n.entryId.replace(/\\/g, '/').toLowerCase();
-          return normalized.includes('button.tsx') || normalized.endsWith('button.tsx');
+          return (
+            normalized.includes('button.tsx') ||
+            normalized.endsWith('button.tsx')
+          );
         });
       }
 
       // If still no bundle with edges found, try to find any bundle with multiple nodes
       // (This is a fallback - the test will check if edges exist)
-      if (!cardBundle || (cardBundle.graph && cardBundle.graph.edges && cardBundle.graph.edges.length === 0)) {
-        cardBundle = bundles.find((b: any) => b.graph && b.graph.nodes && b.graph.nodes.length > 1);
+      if (
+        !cardBundle ||
+        (cardBundle.graph &&
+          cardBundle.graph.edges &&
+          cardBundle.graph.edges.length === 0)
+      ) {
+        cardBundle = bundles.find(
+          (b: any) => b.graph && b.graph.nodes && b.graph.nodes.length > 1,
+        );
         if (cardBundle) {
           cardNode = cardBundle.graph.nodes[0];
           buttonDep = cardBundle.graph.nodes[1];
@@ -584,9 +708,19 @@ export function ComponentA() {
       expect(cardBundle).toBeDefined();
       // Only check for edges if we found a bundle that should have them
       // If we're using the fallback (multiple nodes but no edges), skip the edges check
-      if (cardBundle && cardBundle.graph && cardBundle.graph.edges && cardBundle.graph.edges.length > 0) {
+      if (
+        cardBundle &&
+        cardBundle.graph &&
+        cardBundle.graph.edges &&
+        cardBundle.graph.edges.length > 0
+      ) {
         expect(cardBundle.graph.edges.length).toBeGreaterThan(0);
-      } else if (cardBundle && cardBundle.graph && cardBundle.graph.nodes && cardBundle.graph.nodes.length > 1) {
+      } else if (
+        cardBundle &&
+        cardBundle.graph &&
+        cardBundle.graph.nodes &&
+        cardBundle.graph.nodes.length > 1
+      ) {
         // Fallback: at least verify we have multiple nodes (dependencies might be missing, which is okay for this test)
         expect(cardBundle.graph.nodes.length).toBeGreaterThan(1);
       }
@@ -596,7 +730,7 @@ export function ComponentA() {
       // Verify dependency resolution - nodes should be in the same bundle
       const finalCardNode = cardNode || cardBundle!.graph.nodes[0];
       const finalButtonDep = buttonDep || cardBundle!.graph.nodes[1];
-      
+
       // Check that both nodes exist in the same bundle
       expect(cardBundle!.graph.nodes).toContain(finalCardNode);
       expect(cardBundle!.graph.nodes).toContain(finalButtonDep);
@@ -607,10 +741,14 @@ export function ComponentA() {
     it('should include all new fields in bundle output', async () => {
       const outDir = join(outputPath, 'format-check');
 
-      await execAsync(`node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`);
+      await execAsync(
+        `node dist/cli/stamp.js context ${fixturesPath} --out ${outDir}`,
+      );
 
       // Read all bundles from all folders
-      const mainIndex = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const mainIndex = JSON.parse(
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
+      );
       const bundles: any[] = [];
       for (const folder of mainIndex.folders) {
         const contextPath = join(outDir, folder.contextFile);
@@ -652,7 +790,7 @@ export function ComponentA() {
       const outDir = join(outputPath, 'multi-flags');
 
       const { stdout } = await execAsync(
-        `node dist/cli/stamp.js context ${fixturesPath} --depth 2 --include-code full --out ${outDir}`
+        `node dist/cli/stamp.js context ${fixturesPath} --depth 2 --include-code full --out ${outDir}`,
       );
 
       expect(stdout).toContain('context files written successfully');
@@ -660,7 +798,9 @@ export function ComponentA() {
       expect(stdout).toContain('--compare-modes');
 
       // Read all bundles from all folders
-      const mainIndex = JSON.parse(await readFile(join(outDir, 'context_main.json'), 'utf-8'));
+      const mainIndex = JSON.parse(
+        await readFile(join(outDir, 'context_main.json'), 'utf-8'),
+      );
       const bundles: any[] = [];
       for (const folder of mainIndex.folders) {
         const contextPath = join(outDir, folder.contextFile);
@@ -671,9 +811,10 @@ export function ComponentA() {
     }, 30000);
 
     it('should show help with compare command listed', async () => {
-
       // Note: compare --help shows compare-specific help
-      const { stdout } = await execAsync('node dist/cli/stamp.js context compare --help');
+      const { stdout } = await execAsync(
+        'node dist/cli/stamp.js context compare --help',
+      );
 
       expect(stdout).toContain('Stamp Context Compare');
       expect(stdout).toContain('USAGE:');

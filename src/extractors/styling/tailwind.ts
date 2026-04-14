@@ -2,7 +2,17 @@
  * Tailwind CSS extractor - Extracts and categorizes Tailwind utility classes
  */
 
-import { SourceFile, SyntaxKind, Node, JsxAttribute, JsxExpression, StringLiteral, NoSubstitutionTemplateLiteral, VariableDeclaration, ArrowFunction } from 'ts-morph';
+import {
+  type SourceFile,
+  SyntaxKind,
+  type Node,
+  type JsxAttribute,
+  type JsxExpression,
+  type StringLiteral,
+  type NoSubstitutionTemplateLiteral,
+  type VariableDeclaration,
+  type ArrowFunction,
+} from 'ts-morph';
 import { debugError } from '../../utils/debug.js';
 
 /**
@@ -13,20 +23,27 @@ import { debugError } from '../../utils/debug.js';
  * - border- and outline- are in borders (checked before colors)
  */
 const TAILWIND_CATEGORIES = {
-  layout: /^(flex|flex-|grid|grid-cols-|grid-rows-|col-|col-span-|row-|row-span-|block|inline|hidden|container|box-|aspect-|columns-|break-|table|inline-table|table-caption|table-cell|table-column|table-column-group|table-footer-group|table-header-group|table-row-group|table-row|flow-root|contents|list-item|items-|justify-|content-|self-|place-|order-|grow|shrink|basis-)/,
-  spacing: /^(p-|m-|px-|py-|mx-|my-|pt-|pb-|pl-|pr-|mt-|mb-|ml-|mr-|space-|gap-)/,
+  layout:
+    /^(flex|flex-|grid|grid-cols-|grid-rows-|col-|col-span-|row-|row-span-|block|inline|hidden|container|box-|aspect-|columns-|break-|table|inline-table|table-caption|table-cell|table-column|table-column-group|table-footer-group|table-header-group|table-row-group|table-row|flow-root|contents|list-item|items-|justify-|content-|self-|place-|order-|grow|shrink|basis-)/,
+  spacing:
+    /^(p-|m-|px-|py-|mx-|my-|pt-|pb-|pl-|pr-|mt-|mb-|ml-|mr-|space-|gap-)/,
   sizing: /^(w-|h-|min-w-|min-h-|max-w-|max-h-|size-)/,
-  positioning: /^(static|fixed|absolute|relative|sticky|inset-|top-|right-|bottom-|left-|z-)/,
+  positioning:
+    /^(static|fixed|absolute|relative|sticky|inset-|top-|right-|bottom-|left-|z-)/,
   borders: /^(border-|rounded|rounded-|ring-|ring-offset-|divide-|outline-)/,
   // Colors must come before typography so text-red-500 matches colors, not typography
   // Match text- with color names or arbitrary values: text-red-500, text-[#fff], etc.
-  colors: /^(bg-|text-(?:black|white|slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)(?:-|$)|text-\[[^\]]+\]|from-|via-|to-|decoration-|accent-|caret-)/,
+  colors:
+    /^(bg-|text-(?:black|white|slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)(?:-|$)|text-\[[^\]]+\]|from-|via-|to-|decoration-|accent-|caret-)/,
   // Typography matches text- patterns that aren't colors (text-sm, text-xl, text-left, etc.)
-  typography: /^(font-|leading-|tracking-|antialiased|subpixel|italic|not-italic|uppercase|lowercase|capitalize|normal-case|truncate|whitespace-|line-clamp-|indent-|align-|vertical-align-|text-)/,
-  effects: /^(shadow-|opacity-|mix-|backdrop-|blur-|brightness-|contrast-|grayscale|hue-|invert|saturate|sepia)/,
+  typography:
+    /^(font-|leading-|tracking-|antialiased|subpixel|italic|not-italic|uppercase|lowercase|capitalize|normal-case|truncate|whitespace-|line-clamp-|indent-|align-|vertical-align-|text-)/,
+  effects:
+    /^(shadow-|opacity-|mix-|backdrop-|blur-|brightness-|contrast-|grayscale|hue-|invert|saturate|sepia)/,
   transitions: /^(transition-|duration-|ease-|delay-|animate-)/,
   transforms: /^(scale-|rotate-|translate-|skew-|origin-)/,
-  interactivity: /^(cursor-|select-|pointer-events-|resize-|scroll-|touch-|will-)/,
+  interactivity:
+    /^(cursor-|select-|pointer-events-|resize-|scroll-|touch-|will-)/,
   overflow: /^(overflow-|overscroll-)/,
   display: /^(object-|float-|clear-|isolate)/,
   svg: /^(fill-|stroke-)/,
@@ -35,7 +52,7 @@ const TAILWIND_CATEGORIES = {
 /**
  * Pattern to match chains of variant prefixes (breakpoints, pseudo-classes, etc.)
  * Matches one or more variant prefixes at the start of a class name
- * 
+ *
  * Handles:
  * - Responsive breakpoints: sm:, md:, lg:, xl:, 2xl:, max-*
  * - Pseudo-classes: hover:, focus:, focus-visible:, focus-within:, active:, disabled:, etc.
@@ -48,7 +65,7 @@ const TAILWIND_CATEGORIES = {
  * - Arbitrary selector variants: [&>p]:, [&_span]:, supports-[...]:, has-[...]:
  * - Container query variants: @sm:, @md:, @lg:, @custom:, etc. (Tailwind v4+)
  *   Uses @[^:]+ pattern to match any container query variant
- * 
+ *
  * Note: Container query variants and other newer Tailwind variants are captured via
  * generic patterns. Categorization should strip all variants correctly.
  */
@@ -60,24 +77,25 @@ const VARIANT_PREFIX_CHAIN =
  * Includes responsive breakpoints (sm:, md:, etc.) and container query variants (@sm:, @md:, @custom:, etc.)
  * Uses @[a-zA-Z0-9_-]+ to match Tailwind-like container query variants (avoids matching weird punctuation)
  */
-const BREAKPOINT_PATTERN = /\b(@?sm|@?md|@?lg|@?xl|@?2xl|@?max-sm|@?max-md|@?max-lg|@?max-xl|@?max-2xl|@[a-zA-Z0-9_-]+):/g;
+const BREAKPOINT_PATTERN =
+  /\b(@?sm|@?md|@?lg|@?xl|@?2xl|@?max-sm|@?max-md|@?max-lg|@?max-xl|@?max-2xl|@[a-zA-Z0-9_-]+):/g;
 
 /**
  * Extract Tailwind classes from className attributes in JSX (AST-based)
- * 
+ *
  * Uses AST traversal to extract classes from:
  * - Literal strings: className="flex p-4"
  * - Template literals: className={`flex ${variable}`} (Phase 1: resolves variables, object properties, conditionals)
  * - Function calls: className={cn('flex', isActive && 'bg-blue')}
  * - Conditional expressions: className={isActive && 'bg-blue'} or className={isActive ? 'bg-blue' : 'bg-gray'}
- * 
+ *
  * Phase 1 (v0.3.9): Resolves dynamic expressions within template literals:
  * - Const/let variable declarations: `const base = 'px-4'` → extracts classes from variable
  * - Object property access: `variants.primary` → extracts classes from property value
  * - Conditional expressions: `${isActive ? 'bg-blue' : 'bg-gray'}` → extracts both branches
- * 
+ *
  * Phase 2 (Future): Will handle object lookups with variables (`variants[variant]`), cross-file references, and function calls.
- * 
+ *
  * Falls back to regex extraction for source text if AST is not available.
  */
 export function extractTailwindClasses(source: SourceFile | string): string[] {
@@ -102,15 +120,14 @@ export function extractTailwindClasses(source: SourceFile | string): string[] {
     }
 
     for (const element of jsxElements) {
-      const openingElement = 'getOpeningElement' in element 
-        ? element.getOpeningElement() 
-        : element;
+      const openingElement =
+        'getOpeningElement' in element ? element.getOpeningElement() : element;
 
       // Get all attributes and find className or class
       const attributes = openingElement.getAttributes();
       for (const attr of attributes) {
         if (attr.getKind() !== SyntaxKind.JsxAttribute) continue;
-        
+
         const jsxAttr = attr as JsxAttribute;
         const attrName = jsxAttr.getNameNode().getText();
         // Support both className (React/Preact) and class (Vue, Svelte, etc.)
@@ -132,7 +149,7 @@ export function extractTailwindClasses(source: SourceFile | string): string[] {
         // Extract classes based on the expression type
         // Pass sourceFile for variable resolution (Phase 1)
         const extracted = extractClassesFromExpression(expressionNode!, source);
-        extracted.forEach(cls => classNames.add(cls));
+        extracted.forEach((cls) => classNames.add(cls));
       }
     }
 
@@ -147,26 +164,33 @@ export function extractTailwindClasses(source: SourceFile | string): string[] {
 
 /**
  * Extract classes from a className expression (AST node)
- * 
+ *
  * Phase 1 (v0.3.9): Resolves const/let variables, object properties, and conditional expressions
- * 
+ *
  * @param node - The AST node to extract classes from
  * @param sourceFile - The source file (required for variable resolution in Phase 1)
  */
-function extractClassesFromExpression(node: Node, sourceFile?: SourceFile): string[] {
+function extractClassesFromExpression(
+  node: Node,
+  sourceFile?: SourceFile,
+): string[] {
   try {
     const classes: string[] = [];
 
     // String literal: className="flex p-4"
     if (node.getKind() === SyntaxKind.StringLiteral) {
       const text = (node as StringLiteral).getLiteralText();
-      const cleanClasses = text.split(/\s+/).filter((cls: string) => cls && cls !== '${' && cls !== '}');
+      const cleanClasses = text
+        .split(/\s+/)
+        .filter((cls: string) => cls && cls !== '${' && cls !== '}');
       classes.push(...cleanClasses);
     }
     // Backtick literal with no interpolations: `flex p-4`
     else if (node.getKind() === SyntaxKind.NoSubstitutionTemplateLiteral) {
       const text = (node as NoSubstitutionTemplateLiteral).getLiteralText();
-      const cleanClasses = text.split(/\s+/).filter((cls: string) => cls && cls !== '${' && cls !== '}');
+      const cleanClasses = text
+        .split(/\s+/)
+        .filter((cls: string) => cls && cls !== '${' && cls !== '}');
       classes.push(...cleanClasses);
     }
     // Template with interpolations: `flex ${...} text-white`
@@ -186,26 +210,34 @@ function extractClassesFromExpression(node: Node, sourceFile?: SourceFile): stri
         const expression = span.getExpression();
         // Recursively extract from expression (handles variables, object properties, conditionals)
         if (sourceFile) {
-          const exprClasses = extractClassesFromExpression(expression, sourceFile);
+          const exprClasses = extractClassesFromExpression(
+            expression,
+            sourceFile,
+          );
           classes.push(...exprClasses);
         }
-        
+
         // Extract literal part (static text after each ${})
         const literal = span.getLiteral();
         // getLiteralText() returns the raw text content without quotes/backticks
         // Both TemplateMiddle and TemplateTail have this method
         const litText = literal.getLiteralText();
-        
+
         if (litText && litText.trim()) {
           // Split and filter out template syntax artifacts and empty strings
-          const cleanText = litText.trim().split(/\s+/).filter((cls: string) => {
-            return cls && 
-                   cls !== '${' && 
-                   cls !== '}' && 
-                   !cls.includes('${') && 
-                   !cls.includes('}') &&
-                   cls.length > 0;
-          });
+          const cleanText = litText
+            .trim()
+            .split(/\s+/)
+            .filter((cls: string) => {
+              return (
+                cls &&
+                cls !== '${' &&
+                cls !== '}' &&
+                !cls.includes('${') &&
+                !cls.includes('}') &&
+                cls.length > 0
+              );
+            });
           classes.push(...cleanText);
         }
       }
@@ -216,7 +248,7 @@ function extractClassesFromExpression(node: Node, sourceFile?: SourceFile): stri
       const conditional = node.asKindOrThrow(SyntaxKind.ConditionalExpression);
       const whenTrue = conditional.getWhenTrue();
       const whenFalse = conditional.getWhenFalse();
-      
+
       // Extract from both branches
       if (sourceFile) {
         classes.push(...extractClassesFromExpression(whenTrue, sourceFile));
@@ -229,14 +261,16 @@ function extractClassesFromExpression(node: Node, sourceFile?: SourceFile): stri
       const binary = node.asKindOrThrow(SyntaxKind.BinaryExpression);
       const operatorToken = binary.getOperatorToken();
       const operatorKind = operatorToken.getKind();
-      
+
       // Only process logical operators used for class toggling: &&, ||, ??
-      if (operatorKind === SyntaxKind.AmpersandAmpersandToken ||
-          operatorKind === SyntaxKind.BarBarToken ||
-          operatorKind === SyntaxKind.QuestionQuestionToken) {
+      if (
+        operatorKind === SyntaxKind.AmpersandAmpersandToken ||
+        operatorKind === SyntaxKind.BarBarToken ||
+        operatorKind === SyntaxKind.QuestionQuestionToken
+      ) {
         const left = binary.getLeft();
         const right = binary.getRight();
-        
+
         // Extract from both sides (strings can be on either side)
         if (sourceFile) {
           if (left) {
@@ -278,26 +312,44 @@ function extractClassesFromExpression(node: Node, sourceFile?: SourceFile): stri
       if (!sourceFile) {
         return classes;
       }
-      
-      const propAccess = node.asKindOrThrow(SyntaxKind.PropertyAccessExpression);
+
+      const propAccess = node.asKindOrThrow(
+        SyntaxKind.PropertyAccessExpression,
+      );
       const objectExpr = propAccess.getExpression();
       const propertyName = propAccess.getName();
-      
+
       // Try to resolve the object expression to a variable declaration
       if (objectExpr.getKind() === SyntaxKind.Identifier) {
-        const varDecl = resolveVariableDeclaration(sourceFile, objectExpr, objectExpr.getText());
+        const varDecl = resolveVariableDeclaration(
+          sourceFile,
+          objectExpr,
+          objectExpr.getText(),
+        );
         if (varDecl) {
           const initializer = varDecl.getInitializer();
-          if (initializer && initializer.getKind() === SyntaxKind.ObjectLiteralExpression) {
+          if (
+            initializer &&
+            initializer.getKind() === SyntaxKind.ObjectLiteralExpression
+          ) {
             // Find the property in the object literal
-            const objLiteral = initializer.asKindOrThrow(SyntaxKind.ObjectLiteralExpression);
+            const objLiteral = initializer.asKindOrThrow(
+              SyntaxKind.ObjectLiteralExpression,
+            );
             const property = objLiteral.getProperty(propertyName);
-            if (property && property.getKind() === SyntaxKind.PropertyAssignment) {
-              const propAssignment = property.asKindOrThrow(SyntaxKind.PropertyAssignment);
+            if (
+              property &&
+              property.getKind() === SyntaxKind.PropertyAssignment
+            ) {
+              const propAssignment = property.asKindOrThrow(
+                SyntaxKind.PropertyAssignment,
+              );
               const propInitializer = propAssignment.getInitializer();
               if (propInitializer) {
                 // Recursively extract from property value
-                classes.push(...extractClassesFromExpression(propInitializer, sourceFile));
+                classes.push(
+                  ...extractClassesFromExpression(propInitializer, sourceFile),
+                );
               }
             }
           }
@@ -310,15 +362,21 @@ function extractClassesFromExpression(node: Node, sourceFile?: SourceFile): stri
       if (!sourceFile) {
         return classes;
       }
-      
+
       const identifier = node.asKindOrThrow(SyntaxKind.Identifier);
-      const varDecl = resolveVariableDeclaration(sourceFile, identifier, identifier.getText());
-      
+      const varDecl = resolveVariableDeclaration(
+        sourceFile,
+        identifier,
+        identifier.getText(),
+      );
+
       if (varDecl) {
         const initializer = varDecl.getInitializer();
         if (initializer) {
           // Recursively extract from variable initializer
-          classes.push(...extractClassesFromExpression(initializer, sourceFile));
+          classes.push(
+            ...extractClassesFromExpression(initializer, sourceFile),
+          );
         }
       }
     }
@@ -331,50 +389,65 @@ function extractClassesFromExpression(node: Node, sourceFile?: SourceFile): stri
 }
 
 // Cache variable declarations per file to avoid repeated getDescendantsOfKind calls
-const variableDeclarationCache = new WeakMap<SourceFile, VariableDeclaration[]>();
+const variableDeclarationCache = new WeakMap<
+  SourceFile,
+  VariableDeclaration[]
+>();
 
 /**
  * Resolve a variable declaration by name, respecting scope/shadowing
  * Phase 1: Only resolves variables in the same file
- * 
+ *
  * Searches from the identifier's scope upward to handle shadowing correctly.
  * Uses a scope chain approach: Block (closest) → Function → SourceFile
- * 
+ *
  * @param sourceFile - The source file to search in
  * @param identifierNode - The identifier node to resolve (used for scope detection)
  * @param variableName - The name of the variable to resolve
  * @returns The variable declaration if found, undefined otherwise
  */
-function resolveVariableDeclaration(sourceFile: SourceFile, identifierNode: Node, variableName: string): VariableDeclaration | undefined {
+function resolveVariableDeclaration(
+  sourceFile: SourceFile,
+  identifierNode: Node,
+  variableName: string,
+): VariableDeclaration | undefined {
   try {
     const identifierPos = identifierNode.getStart();
-    
+
     // Use cached variable declarations to avoid expensive getDescendantsOfKind calls
     let allDeclarations = variableDeclarationCache.get(sourceFile);
     if (!allDeclarations) {
-      allDeclarations = sourceFile.getDescendantsOfKind(SyntaxKind.VariableDeclaration);
+      allDeclarations = sourceFile.getDescendantsOfKind(
+        SyntaxKind.VariableDeclaration,
+      );
       variableDeclarationCache.set(sourceFile, allDeclarations);
     }
-    
-    const matchingDeclarations: Array<{ decl: VariableDeclaration; scope: Node | null; pos: number }> = [];
-    
+
+    const matchingDeclarations: Array<{
+      decl: VariableDeclaration;
+      scope: Node | null;
+      pos: number;
+    }> = [];
+
     /**
      * Get the scope node for a declaration or identifier.
      * Returns Block (closest), then Function/Method/Constructor, then SourceFile, or null if none found.
      */
     const getScope = (node: Node): Node | null => {
       let current: Node | undefined = node;
-      
+
       // Prefer Block first (closest), then function/method/constructor, then sourceFile
       while (current && current !== sourceFile) {
         const kind = current.getKind();
         if (kind === SyntaxKind.Block) {
           return current;
         }
-        if (kind === SyntaxKind.FunctionDeclaration ||
-            kind === SyntaxKind.FunctionExpression ||
-            kind === SyntaxKind.MethodDeclaration ||
-            kind === SyntaxKind.Constructor) {
+        if (
+          kind === SyntaxKind.FunctionDeclaration ||
+          kind === SyntaxKind.FunctionExpression ||
+          kind === SyntaxKind.MethodDeclaration ||
+          kind === SyntaxKind.Constructor
+        ) {
           return current;
         }
         // For ArrowFunction, check if it has a block body
@@ -392,44 +465,44 @@ function resolveVariableDeclaration(sourceFile: SourceFile, identifierNode: Node
         }
         current = current.getParent();
       }
-      
+
       // Reached sourceFile - file-level scope
       return sourceFile;
     };
-    
+
     // Collect all matching declarations with their scope information
     for (const varDecl of allDeclarations) {
       try {
         if (varDecl.getName() === variableName) {
           const scope = getScope(varDecl);
-          
+
           matchingDeclarations.push({
             decl: varDecl,
             scope,
-            pos: varDecl.getStart()
+            pos: varDecl.getStart(),
           });
         }
-      } catch {
-        continue;
-      }
+      } catch {}
     }
-    
+
     if (matchingDeclarations.length === 0) {
       return undefined;
     }
-    
+
     // Build scope chain for identifier: [nearestBlock, enclosingFunction/Method/Constructor, sourceFile]
     const identifierScopeChain: Node[] = [];
     let current: Node | undefined = identifierNode;
-    
+
     while (current && current !== sourceFile) {
       const kind = current.getKind();
       if (kind === SyntaxKind.Block) {
         identifierScopeChain.push(current);
-      } else if (kind === SyntaxKind.FunctionDeclaration ||
-                 kind === SyntaxKind.FunctionExpression ||
-                 kind === SyntaxKind.MethodDeclaration ||
-                 kind === SyntaxKind.Constructor) {
+      } else if (
+        kind === SyntaxKind.FunctionDeclaration ||
+        kind === SyntaxKind.FunctionExpression ||
+        kind === SyntaxKind.MethodDeclaration ||
+        kind === SyntaxKind.Constructor
+      ) {
         identifierScopeChain.push(current);
       } else if (kind === SyntaxKind.ArrowFunction) {
         const arrow = current as ArrowFunction;
@@ -442,32 +515,34 @@ function resolveVariableDeclaration(sourceFile: SourceFile, identifierNode: Node
       }
       current = current.getParent();
     }
-    
+
     // Always include sourceFile as the outermost scope
     identifierScopeChain.push(sourceFile);
-    
+
     // Filter declarations that are in scope and come before the identifier
-    const inScopeDeclarations = matchingDeclarations.filter(({ decl, scope, pos }) => {
-      // Declaration must come before identifier
-      if (pos >= identifierPos) {
+    const inScopeDeclarations = matchingDeclarations.filter(
+      ({ decl, scope, pos }) => {
+        // Declaration must come before identifier
+        if (pos >= identifierPos) {
+          return false;
+        }
+
+        // Find the nearest declaration whose scope is in the identifier's scope chain
+        if (!scope) {
+          // This shouldn't happen with our getScope function, but handle it
+          return false;
+        }
+
+        // Check if declaration scope is in the identifier's scope chain
+        const scopeIndex = identifierScopeChain.indexOf(scope);
+        if (scopeIndex !== -1) {
+          return true; // Declaration is in a scope that contains the identifier
+        }
+
         return false;
-      }
-      
-      // Find the nearest declaration whose scope is in the identifier's scope chain
-      if (!scope) {
-        // This shouldn't happen with our getScope function, but handle it
-        return false;
-      }
-      
-      // Check if declaration scope is in the identifier's scope chain
-      const scopeIndex = identifierScopeChain.indexOf(scope);
-      if (scopeIndex !== -1) {
-        return true; // Declaration is in a scope that contains the identifier
-      }
-      
-      return false;
-    });
-    
+      },
+    );
+
     // Return the closest declaration (latest position = most recent in scope)
     if (inScopeDeclarations.length > 0) {
       // Prefer declarations in closer scopes (earlier in chain)
@@ -475,7 +550,7 @@ function resolveVariableDeclaration(sourceFile: SourceFile, identifierNode: Node
       identifierScopeChain.forEach((scope, index) => {
         scopePriorities.set(scope, index);
       });
-      
+
       // Sort by scope priority (closer scopes first), then by position (most recent first)
       inScopeDeclarations.sort((a, b) => {
         const aPriority = scopePriorities.get(a.scope!) ?? Infinity;
@@ -485,10 +560,10 @@ function resolveVariableDeclaration(sourceFile: SourceFile, identifierNode: Node
         }
         return b.pos - a.pos; // Most recent in same scope
       });
-      
+
       return inScopeDeclarations[0].decl;
     }
-    
+
     return undefined;
   } catch {
     return undefined;
@@ -498,7 +573,7 @@ function resolveVariableDeclaration(sourceFile: SourceFile, identifierNode: Node
 /**
  * Fallback: Extract Tailwind classes from source text using regex
  * Used for backward compatibility when only source text is available.
- * 
+ *
  * Note: This fallback only handles literal className/class strings (className="..."),
  * not dynamic expressions. Use AST-based extraction for full support.
  */
@@ -522,7 +597,7 @@ function extractTailwindClassesFromText(sourceText: string): string[] {
         if (match[1]) {
           // Split by whitespace and filter empty strings
           const classes = match[1].split(/\s+/).filter(Boolean);
-          classes.forEach(cls => classNames.add(cls));
+          classes.forEach((cls) => classNames.add(cls));
         }
       }
     }
@@ -539,7 +614,7 @@ function extractTailwindClassesFromText(sourceText: string): string[] {
 /**
  * Strip all variant prefixes from a class name to get the base utility
  * Also strips the ! important prefix
- * 
+ *
  * Examples:
  * - sm:bg-red-500 → bg-red-500
  * - md:hover:bg-red-500 → bg-red-500
@@ -561,12 +636,12 @@ function stripVariantPrefixes(className: string): string {
 
 /**
  * Categorize Tailwind utility classes
- * 
+ *
  * Returns a record mapping category names to arrays of class names (JSON-ready).
  * Each class is categorized based on its base utility (after stripping variant prefixes).
  */
 export function categorizeTailwindClasses(
-  classes: string[]
+  classes: string[],
 ): Record<string, string[]> {
   try {
     if (!Array.isArray(classes)) return {};
@@ -601,7 +676,7 @@ export function categorizeTailwindClasses(
     // Convert Sets to arrays for JSON serialization
     // Let outer try/catch handle any conversion errors to preserve partial results
     const result = Object.fromEntries(
-      Object.entries(categorized).map(([k, v]) => [k, Array.from(v).sort()])
+      Object.entries(categorized).map(([k, v]) => [k, Array.from(v).sort()]),
     );
     return result;
   } catch (error) {
@@ -614,7 +689,7 @@ export function categorizeTailwindClasses(
 
 /**
  * Extract responsive breakpoints used in the component
- * 
+ *
  * Finds breakpoints anywhere in class names, not just at the start.
  * Handles cases like hover:sm:bg-red-500 (though uncommon in practice).
  */
@@ -641,4 +716,3 @@ export function extractBreakpoints(classes: string[]): string[] {
     return [];
   }
 }
-

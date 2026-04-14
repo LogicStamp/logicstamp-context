@@ -43,12 +43,16 @@ describe('CLI Version Command Tests', () => {
 
   it('should exit with code 0', async () => {
     // Run stamp --version and verify it doesn't throw
-    await expect(execAsync('node dist/cli/stamp.js --version')).resolves.toBeDefined();
+    await expect(
+      execAsync('node dist/cli/stamp.js --version'),
+    ).resolves.toBeDefined();
   }, 30000);
 
   it('should not output anything other than version info', async () => {
     // Run stamp --version
-    const { stdout, stderr } = await execAsync('node dist/cli/stamp.js --version');
+    const { stdout, stderr } = await execAsync(
+      'node dist/cli/stamp.js --version',
+    );
 
     // Should not contain error messages or other CLI output
     expect(stderr).toBe('');
@@ -56,4 +60,3 @@ describe('CLI Version Command Tests', () => {
     expect(stdout).not.toContain('Context compilation');
   }, 30000);
 });
-
