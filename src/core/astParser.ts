@@ -29,47 +29,49 @@
  */
 
 import {
-  Project,
-  SyntaxKind,
-  type SourceFile,
-  Node,
-  type FunctionDeclaration,
   type ClassDeclaration,
-  type VariableStatement,
   type ExportDeclaration,
-  type ModifierableNode,
+  type FunctionDeclaration,
+  Node,
+  Project,
+  type SourceFile,
+  SyntaxKind,
+  type VariableStatement,
 } from 'ts-morph';
+import {
+  extractComponents,
+  extractEvents,
+  extractHooks,
+  extractJsxRoutes,
+  extractProps,
+  extractState,
+  extractVariables,
+} from '../extractors/react/index.js';
+import {
+  type BackendMetadata,
+  extractBackendMetadata,
+} from '../extractors/shared/backendExtractor.js';
+import {
+  extractVueComponents,
+  extractVueComposables,
+  extractVueEmits,
+  extractVueProps,
+  extractVueState,
+} from '../extractors/vue/index.js';
 import type {
-  LogicSignature,
   ContractKind,
-  PropType,
   EventType,
-  NextJSMetadata,
   ExportMetadata,
+  LogicSignature,
+  NextJSMetadata,
+  PropType,
 } from '../types/UIFContract.js';
 import { debugError } from '../utils/debug.js';
-import { extractComponents, extractHooks } from '../extractors/react/index.js';
-import { extractProps } from '../extractors/react/index.js';
-import { extractState, extractVariables } from '../extractors/react/index.js';
-import { extractEvents, extractJsxRoutes } from '../extractors/react/index.js';
 import {
+  detectBackendFramework,
   detectKind,
   extractNextJsMetadata,
-  detectBackendFramework,
 } from './astParser/detectors.js';
-import {
-  extractVueComposables,
-  extractVueComponents,
-  extractVueState,
-  extractVuePropsCall,
-  extractVueEmitsCall,
-  extractVueProps,
-  extractVueEmits,
-} from '../extractors/vue/index.js';
-import {
-  extractBackendMetadata,
-  type BackendMetadata,
-} from '../extractors/shared/backendExtractor.js';
 
 export interface AstExtract {
   kind: ContractKind;

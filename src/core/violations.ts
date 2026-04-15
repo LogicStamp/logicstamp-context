@@ -5,12 +5,9 @@
  * Uses adapters to normalize different input formats to a common internal representation.
  */
 
-import type { Violation, ViolationsSummary } from '../utils/config.js';
-import type {
-  BundleChanges,
-  ContractDiff,
-} from '../cli/commands/context/watchMode/watchDiff.js';
 import type { CompareResult } from '../cli/commands/compare/types.js';
+import type { BundleChanges } from '../cli/commands/context/watchMode/watchDiff.js';
+import type { Violation, ViolationsSummary } from '../utils/config.js';
 
 // Re-export types for convenience
 export type { Violation, ViolationsSummary } from '../utils/config.js';
@@ -389,7 +386,7 @@ export function summarizeViolations(
  */
 export function displayViolations(
   violations: Violation[],
-  options: { quiet?: boolean } = {},
+  _options: { quiet?: boolean } = {},
 ): void {
   if (violations.length === 0) return;
 

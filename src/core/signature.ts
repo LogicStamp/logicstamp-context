@@ -27,8 +27,8 @@
  * Logic Signature Builder - Applies contract presets and generates predictions
  */
 
-import type { AstExtract } from './astParser.js';
 import type { ContractPreset, LogicSignature } from '../types/UIFContract.js';
+import type { AstExtract } from './astParser.js';
 
 export interface SignatureResult {
   signature: LogicSignature;
@@ -43,14 +43,14 @@ export function buildLogicSignature(
   ast: AstExtract,
   preset: ContractPreset,
 ): SignatureResult {
+  const backendRoutes = ast.backend?.routes;
   const signature: LogicSignature = {
     props: ast.props,
     emits: ast.emits,
     state: Object.keys(ast.state).length > 0 ? ast.state : undefined,
     // For backend files, aggregate API signatures from all routes
-    ...(ast.backend &&
-      ast.backend.routes &&
-      ast.backend.routes.length > 0 && {
+    ...(backendRoutes &&
+      backendRoutes.length > 0 && {
         apiSignature: (() => {
           // Aggregate parameters from all routes
           const allParameters: Record<string, string> = {};
@@ -58,7 +58,7 @@ export function buildLogicSignature(
           const requestTypes = new Set<string>();
           const responseTypes = new Set<string>();
 
-          for (const route of ast.backend.routes) {
+          for (const route of backendRoutes) {
             // Collect route path parameters (e.g., :id -> id)
             if (route.params) {
               for (const param of route.params) {

@@ -9,12 +9,12 @@ import type {
 } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
 import {
-  extractExpressRoutes,
   extractExpressApiSignature,
+  extractExpressRoutes,
 } from '../express/expressExtractor.js';
 import {
-  extractNestJSController,
   extractNestJSApiSignature,
+  extractNestJSController,
 } from '../nest/nestjsExtractor.js';
 
 export interface BackendMetadata {
@@ -39,7 +39,7 @@ export interface BackendMetadata {
 export function extractBackendMetadata(
   source: SourceFile,
   filePath: string,
-  imports: string[],
+  _imports: string[],
   framework: 'express' | 'nestjs',
 ): BackendMetadata | undefined {
   const resolvedPath = source.getFilePath?.() ?? filePath;
@@ -64,8 +64,6 @@ export function extractBackendMetadata(
         return route;
       });
 
-      // Extract decorators/annotations for language-specific metadata
-      const languageSpecific: LanguageSpecificVersion = {};
       const sourceText = source.getFullText();
 
       // Extract decorators (Express doesn't use decorators, but check for patterns)

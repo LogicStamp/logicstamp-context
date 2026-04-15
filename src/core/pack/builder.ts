@@ -3,12 +3,12 @@
  */
 
 import { readFile } from 'node:fs/promises';
-import { resolve, isAbsolute } from 'node:path';
+import { isAbsolute, resolve } from 'node:path';
 import type { UIFContract } from '../../types/UIFContract.js';
-import type { ProjectManifest } from '../manifest.js';
+import { isPathWithinRoot, normalizeEntryId } from '../../utils/fsx.js';
 import { bundleHash as computeBundleHashStable } from '../../utils/hash.js';
+import type { ProjectManifest } from '../manifest.js';
 import { resolveDependency } from './resolver.js';
-import { normalizeEntryId, isPathWithinRoot } from '../../utils/fsx.js';
 
 /**
  * A node in the bundle graph
@@ -125,7 +125,7 @@ export async function validateHashLock(
     // Semantic hash should match (derived from structure + signature)
     // If fileHash matches, semantic hash should also match since it's derived from the AST
     return true;
-  } catch (error) {
+  } catch (_error) {
     // If we can't read/parse the file, fail validation
     return false;
   }

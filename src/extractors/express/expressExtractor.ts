@@ -3,13 +3,12 @@
  */
 
 import {
+  type ArrowFunction,
+  type FunctionDeclaration,
+  type FunctionExpression,
+  Node,
   type SourceFile,
   SyntaxKind,
-  Node,
-  CallExpression,
-  type FunctionDeclaration,
-  type ArrowFunction,
-  type FunctionExpression,
 } from 'ts-morph';
 import type { ApiSignature } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
