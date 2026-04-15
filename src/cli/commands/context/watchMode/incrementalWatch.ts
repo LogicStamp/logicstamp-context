@@ -3,8 +3,7 @@
  * Only rebuilds affected bundles instead of full recompilation
  */
 
-import { resolve, dirname, join, relative, isAbsolute } from 'node:path';
-import { readFile } from 'node:fs/promises';
+import { join, isAbsolute } from 'node:path';
 import type { UIFContract } from '../../../../types/UIFContract.js';
 import type { LogicStampBundle } from '../../../../core/pack.js';
 import type { ProjectManifest } from '../../../../core/manifest.js';
@@ -17,16 +16,6 @@ import { readFileWithText, normalizeEntryId } from '../../../../utils/fsx.js';
 import { fileHash } from '../../../../utils/hash.js';
 import { debugError } from '../../../../utils/debug.js';
 import { Project } from 'ts-morph';
-import { buildContractsFromFiles } from '../contractBuilder.js';
-import {
-  writeContextFiles,
-  writeMainIndex,
-  groupBundlesByFolder,
-  displayPath,
-} from '../fileWriter.js';
-import { formatBundles } from '../bundleFormatter.js';
-import { calculateStats } from '../statsCalculator.js';
-import { validateBundles } from '../../validate.js';
 import type { ContextOptions } from '../../context.js';
 
 /**
@@ -57,7 +46,7 @@ export async function initializeWatchCache(
   contracts: UIFContract[],
   manifest: ProjectManifest,
   bundles: LogicStampBundle[],
-  projectRoot: string,
+  _projectRoot: string,
 ): Promise<WatchCache> {
   const cache: WatchCache = {
     contracts: new Map(),
@@ -73,10 +62,13 @@ export async function initializeWatchCache(
   for (const bundle of bundles) {
     for (const node of bundle.graph.nodes) {
       const entryId = normalizeEntryId(node.contract.entryId);
-      if (!cache.componentToBundles.has(entryId)) {
-        cache.componentToBundles.set(entryId, new Set());
+      const bundleIds = cache.componentToBundles.get(entryId);
+      if (bundleIds) {
+        bundleIds.add(bundle.entryId);
+        continue;
       }
-      cache.componentToBundles.get(entryId)!.add(bundle.entryId);
+
+      cache.componentToBundles.set(entryId, new Set([bundle.entryId]));
     }
   }
 
@@ -281,7 +273,7 @@ export async function incrementalRebuild(
           updatedBundles.add(existingBundle.entryId);
         }
       }
-    } catch (error) {}
+    } catch {}
   }
 
   // Step 2: Update manifest with new contracts
@@ -366,19 +358,22 @@ export async function incrementalRebuild(
       rebuiltBundles.push(bundle);
 
       // Update reverse index - remove old entries first
-      for (const [entryId, bundles] of cache.componentToBundles.entries()) {
+      for (const bundles of cache.componentToBundles.values()) {
         bundles.delete(bundleId);
       }
 
       // Add new entries
       for (const node of bundle.graph.nodes) {
         const entryId = normalizeEntryId(node.contract.entryId);
-        if (!cache.componentToBundles.has(entryId)) {
-          cache.componentToBundles.set(entryId, new Set());
+        const bundleIds = cache.componentToBundles.get(entryId);
+        if (bundleIds) {
+          bundleIds.add(bundleId);
+          continue;
         }
-        cache.componentToBundles.get(entryId)!.add(bundleId);
+
+        cache.componentToBundles.set(entryId, new Set([bundleId]));
       }
-    } catch (error) {
+    } catch {
       // If bundle rebuild fails, keep the old one and restore its contracts
       const oldBundle = cache.allBundles.find((b) => b.entryId === bundleId);
       if (oldBundle) {
@@ -390,10 +385,13 @@ export async function incrementalRebuild(
         // Restore reverse index entries for the old bundle
         for (const node of oldBundle.graph.nodes) {
           const entryId = normalizeEntryId(node.contract.entryId);
-          if (!cache.componentToBundles.has(entryId)) {
-            cache.componentToBundles.set(entryId, new Set());
+          const bundleIds = cache.componentToBundles.get(entryId);
+          if (bundleIds) {
+            bundleIds.add(bundleId);
+            continue;
           }
-          cache.componentToBundles.get(entryId)!.add(bundleId);
+
+          cache.componentToBundles.set(entryId, new Set([bundleId]));
         }
       }
     }
