@@ -3,9 +3,9 @@
  */
 
 import { writeFile, mkdir } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { dirname, join, resolve, relative, basename } from 'node:path';
 import { cwd } from 'node:process';
-import { createRequire } from 'module';
 import type {
   LogicStampBundle,
   LogicStampIndex,
@@ -26,7 +26,7 @@ let PACKAGE_VERSION: string;
 try {
   const pkg = require('../../../../package.json');
   PACKAGE_VERSION = `${pkg.name}@${pkg.version}`;
-} catch (error) {
+} catch {
   // Fallback if package.json is missing (e.g., in bundled scenarios)
   PACKAGE_VERSION = 'logicstamp-context@unknown';
 }
@@ -149,12 +149,13 @@ export function groupBundlesByFolder(
 
   for (const bundle of bundles) {
     const folderPath = getFolderPath(bundle.entryId);
-
-    if (!bundlesByFolder.has(folderPath)) {
-      bundlesByFolder.set(folderPath, []);
+    const folderBundles = bundlesByFolder.get(folderPath);
+    if (folderBundles) {
+      folderBundles.push(bundle);
+      continue;
     }
 
-    bundlesByFolder.get(folderPath)!.push(bundle);
+    bundlesByFolder.set(folderPath, [bundle]);
   }
 
   return bundlesByFolder;
@@ -197,7 +198,7 @@ export async function writeContextFiles(
     let relativePath: string;
     if (folderPath === normalizedRoot) {
       relativePath = '.';
-    } else if (folderPath.startsWith(normalizedRoot + '/')) {
+    } else if (folderPath.startsWith(`${normalizedRoot}/`)) {
       relativePath = folderPath.substring(normalizedRoot.length + 1);
     } else {
       relativePath = folderPath;
@@ -296,14 +297,13 @@ export async function writeMainIndex(
   bundles: LogicStampBundle[],
   bundlesByFolderSize: number,
   totalTokenEstimate: number,
-  projectRoot: string,
+  _projectRoot: string,
   options: {
     quiet?: boolean;
     suppressSuccessIndicator?: boolean;
   },
 ): Promise<void> {
   const mainContextPath = join(outputDir, 'context_main.json');
-  const normalizedRoot = normalizeEntryId(projectRoot);
 
   if (!options.quiet) {
     console.log(`📝 Writing main context index...`);

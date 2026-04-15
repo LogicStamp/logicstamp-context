@@ -35,12 +35,7 @@ import {
   detectViolations,
   displayViolations,
 } from '../../../../core/violations.js';
-import {
-  getChanges,
-  showChanges,
-  type BundleChanges,
-  type ContractDiff,
-} from './watchDiff.js';
+import { getChanges, showChanges } from './watchDiff.js';
 import {
   initializeWatchCache,
   incrementalRebuild,
@@ -51,7 +46,6 @@ import {
   writeContextFiles,
   writeMainIndex,
   groupBundlesByFolder,
-  displayPath,
   displayProjectRoot,
 } from '../index.js';
 import { contextCommand, type ContextOptions } from '../../context.js';
@@ -131,7 +125,6 @@ export async function startWatchMode(
   const changedFiles: Set<string> = new Set();
   /** Snapshot for `getChanges` / strict-watch: set on first load; reset when watch cache is recovered after an error (new stable tree). */
   let baselineBundles: LogicStampBundle[] | null = null;
-  let previousBundles: LogicStampBundle[] | null = null; // Last state - for incremental tracking
   let watchCache: WatchCache | null = initialCache;
 
   // Strict watch mode state
@@ -301,7 +294,6 @@ export async function startWatchMode(
           // Set on first successful load; also updated after error recovery (full rebuild) so diffs stay meaningful.
           if (!baselineBundles) {
             baselineBundles = await loadAllBundles(outputDir);
-            previousBundles = baselineBundles;
           }
 
           if (!options.quiet) {
@@ -312,6 +304,7 @@ export async function startWatchMode(
             console.log(
               `\n🔄 Recompiling (${changedFileList.length} file${changedFileList.length > 1 ? 's' : ''} changed)...`,
             );
+            console.log(`   Files: ${fileList}`);
           }
 
           let newBundles: LogicStampBundle[];
@@ -425,6 +418,7 @@ export async function startWatchMode(
 
           if (!options.quiet) {
             if (
+              baselineBundles &&
               changes &&
               (changes.changed.length > 0 ||
                 changes.added.length > 0 ||
@@ -432,7 +426,7 @@ export async function startWatchMode(
                 changes.bundleChanged.length > 0)
             ) {
               showChanges(
-                baselineBundles!,
+                baselineBundles,
                 newBundles,
                 changedFileList[0] || 'unknown',
                 { debug: options.debug },
@@ -440,10 +434,6 @@ export async function startWatchMode(
             }
             console.log(`\n✅ Recompiled\n`);
           }
-
-          // Update previousBundles for incremental tracking (still useful for other operations)
-          previousBundles = newBundles;
-
           // Strict watch mode: detect and report violations (state-based, like git diff)
           // Violations are calculated from current state vs baseline, not accumulated
           if (options.strictWatch && strictWatchStatus) {
@@ -655,7 +645,6 @@ export async function startWatchMode(
           if (recovery != null) {
             watchCache = recovery.cache;
             baselineBundles = recovery.bundles;
-            previousBundles = recovery.bundles;
             if (!options.quiet) {
               console.log(`   ✅ Watch cache restored after full rebuild.\n`);
             }

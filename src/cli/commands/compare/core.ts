@@ -55,19 +55,6 @@ function normalizeObject(obj: Record<string, any>): Record<string, any> {
 }
 
 /**
- * Compare two values (primitives or objects) for equality with normalized key order
- */
-function valuesEqual(a: any, b: any): boolean {
-  if (a === b) return true;
-  if (a === null || b === null) return a === b;
-  if (typeof a !== typeof b) return false;
-  if (typeof a !== 'object') return a === b;
-  return (
-    JSON.stringify(normalizeObject(a)) === JSON.stringify(normalizeObject(b))
-  );
-}
-
-/**
  * Compare two objects with normalized key order
  * Ensures objects with same content but different key order compare as equal
  */
@@ -209,9 +196,9 @@ export function diff(
 
   // Find changed components with detailed deltas
   for (const id of newIdx.keys()) {
-    if (oldIdx.has(id)) {
-      const a = oldIdx.get(id)!;
-      const b = newIdx.get(id)!;
+    const a = oldIdx.get(id);
+    const b = newIdx.get(id);
+    if (a && b) {
       const deltas: CompareResult['changed'][number]['deltas'] = [];
 
       // Props and emits are now Record<string, any> objects
