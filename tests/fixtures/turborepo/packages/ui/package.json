@@ -1,0 +1,11 @@
+{
+  "name": "@repo/ui",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "react": "^18.0.0"
+  }
+}

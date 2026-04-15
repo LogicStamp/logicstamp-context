@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@repo/ui": [
+        "packages/ui/src/index.ts"
+      ],
+      "@repo/shared/*": [
+        "packages/shared/src/*"
+      ]
+    }
+  }
+}

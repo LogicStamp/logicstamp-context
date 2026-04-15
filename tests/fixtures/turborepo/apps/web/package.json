@@ -1,0 +1,10 @@
+{
+  "name": "web",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@repo/shared": "workspace:*",
+    "@repo/ui": "workspace:*",
+    "react": "^18.0.0"
+  }
+}
