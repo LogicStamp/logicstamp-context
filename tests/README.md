@@ -166,6 +166,7 @@ Sample projects used for testing:
 - **`vue-app/`** - Vue 3 project for Vue.js framework tests
 - **`express-app/`** - Express.js backend for backend framework tests
 - **`nest-app/`** - NestJS backend for decorator-based backend tests
+- **`turborepo/`** - Turborepo-style workspace with `apps/` and `packages/`
 
 ## Writing Tests
 
