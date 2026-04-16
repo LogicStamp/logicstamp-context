@@ -20,6 +20,31 @@ See [docs/reference/limitations.md](docs/reference/limitations.md).
 
 ---
 
+## [0.8.8] - 2026-04-15
+
+### Changed
+
+- **Apply Biome lint cleanup across codebase** ([#197](https://github.com/LogicStamp/logicstamp-context/pull/197), [#200](https://github.com/LogicStamp/logicstamp-context/pull/200), [#201](https://github.com/LogicStamp/logicstamp-context/pull/201), [#202](https://github.com/LogicStamp/logicstamp-context/pull/202), [#204](https://github.com/LogicStamp/logicstamp-context/pull/204), [#205](https://github.com/LogicStamp/logicstamp-context/pull/205), [#206](https://github.com/LogicStamp/logicstamp-context/pull/206))
+  - Remove unused imports, variables, and catch parameters
+  - Replace non-null assertions with guarded access
+  - Prefix unused parameters with underscore
+  - Apply style and consistency improvements (imports, template literals, optional chaining)
+  - Mechanical changes only (no runtime or behavioral impact)
+
+- **Security: Simplify imports and normalize report path resolution** [#207](https://github.com/LogicStamp/logicstamp-context/pull/207)
+
+### Tests
+
+- **Add Turborepo-style workspace fixture coverage** ([#199](https://github.com/LogicStamp/logicstamp-context/pull/199))
+  - Add a Turborepo-style test fixture with `apps/` and `packages/` workspaces
+  - Verify context generation across app, API, UI, and shared-package folders in a focused e2e test
+
+- **Align watch helper tests with Biome rules** ([#203](https://github.com/LogicStamp/logicstamp-context/pull/203))
+  - Replace non-null assertions with guarded optional access
+  - Preserve existing test intent and coverage
+
+---
+
 ## [0.8.7] - 2026-04-15
 
 ### Chore
@@ -760,7 +785,9 @@ No runtime or behavioral changes are intended.
 
 
 
-[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.8.7...HEAD
+[Unreleased]: https://github.com/LogicStamp/logicstamp-context/compare/v0.8.8...HEAD
+
+[0.8.8]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.8
 
 [0.8.7]: https://github.com/LogicStamp/logicstamp-context/releases/tag/v0.8.7
 
