@@ -14,7 +14,7 @@ vi.mock('node:path', async () => {
     resolve: vi.fn((p: string) => p),
     dirname: vi.fn((p: string) => p.replace(/\/[^/]+$/, '') || '.'),
     join: vi.fn((...parts: string[]) => parts.join('/')),
-    relative: vi.fn((from: string, to: string) => to.replace(from + '/', '')),
+    relative: vi.fn((from: string, to: string) => to.replace(`${from}/`, '')),
   };
 });
 
@@ -97,7 +97,6 @@ vi.mock('../../../../src/cli/commands/context.js', () => ({
 // Import the module after mocks
 import { startWatchMode } from '../../../../src/cli/commands/context/watchMode/watchMode.js';
 import * as watchModeModule from '../../../../src/cli/commands/context/watchMode/index.js';
-import * as contextHelpersModule from '../../../../src/cli/commands/context/index.js';
 import * as cleanupModule from '../../../../src/utils/cleanup.js';
 import * as configModule from '../../../../src/utils/config.js';
 import chokidar from 'chokidar';
@@ -106,7 +105,7 @@ describe('cleanup handler', () => {
   it('should clean up watch status file and close watcher', async () => {
     let cleanupHandler: (() => Promise<void>) | undefined;
     vi.mocked(cleanupModule.registerCleanup).mockImplementation(
-      (name, handler) => {
+      (_name, handler) => {
         cleanupHandler = handler as () => Promise<void>;
         return () => {}; // Return unregister function
       },
@@ -139,7 +138,7 @@ describe('cleanup handler', () => {
       quiet: true,
     };
 
-    const watchPromise = startWatchMode(options, '/project', null);
+    const _watchPromise = startWatchMode(options, '/project', null);
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     // Execute cleanup handler
@@ -154,7 +153,7 @@ describe('cleanup handler', () => {
   it('should show session summary when strict watch has violations', async () => {
     let cleanupHandler: (() => Promise<void>) | undefined;
     vi.mocked(cleanupModule.registerCleanup).mockImplementation(
-      (name, handler) => {
+      (_name, handler) => {
         cleanupHandler = handler as () => Promise<void>;
         return () => {}; // Return unregister function
       },
@@ -190,7 +189,7 @@ describe('cleanup handler', () => {
       strictWatch: true,
     };
 
-    const watchPromise = startWatchMode(options, '/project', null);
+    const _watchPromise = startWatchMode(options, '/project', null);
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     // Execute cleanup handler
@@ -270,7 +269,7 @@ describe('debouncing', () => {
       allBundles: [],
     };
 
-    const watchPromise = startWatchMode(options, '/project', mockCache);
+    const _watchPromise = startWatchMode(options, '/project', mockCache);
 
     // Need real timer for initial setup
     vi.useRealTimers();
@@ -335,7 +334,7 @@ describe('incremental vs full rebuild', () => {
     };
 
     // Start watch mode with cache
-    const watchPromise = startWatchMode(options, '/project', mockCache);
+    const _watchPromise = startWatchMode(options, '/project', mockCache);
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     // The cache should be used for incremental rebuilds

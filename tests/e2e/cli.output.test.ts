@@ -23,7 +23,7 @@ describe('CLI Output and Formatting Tests', () => {
     if (outputPath) {
       try {
         await rm(outputPath, { recursive: true, force: true });
-      } catch (error) {
+      } catch {
         // Ignore cleanup errors
       }
     }
@@ -97,7 +97,7 @@ describe('CLI Output and Formatting Tests', () => {
       expect(Array.isArray(bundles)).toBe(true);
       expect(bundles.length).toBeGreaterThan(0);
 
-      bundles.forEach((bundle, idx) => {
+      bundles.forEach((bundle) => {
         // Required bundle fields
         expect(bundle).toHaveProperty('$schema');
         expect(bundle.$schema).toContain('logicstamp.dev/schemas/context');

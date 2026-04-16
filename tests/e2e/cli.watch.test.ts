@@ -242,7 +242,7 @@ describe('CLI Watch Mode Tests', () => {
               clearTimeout(timeout);
               watchProcess?.kill('SIGTERM');
               resolve();
-            } catch (err) {
+            } catch (_err) {
               // Status file might not exist on all platforms
               clearTimeout(timeout);
               watchProcess?.kill('SIGTERM');
@@ -352,7 +352,7 @@ describe('CLI Watch Mode Tests', () => {
             // Modify a tsx file
             const appPath = join(testDir, 'src', 'App.tsx');
             const content = await readFile(appPath, 'utf-8');
-            await writeFile(appPath, content + '\n// Test comment');
+            await writeFile(appPath, `${content}\n// Test comment`);
           }
 
           // Check for recompilation
@@ -463,7 +463,7 @@ describe('CLI Watch Mode Tests', () => {
             // Modify a file to trigger recompilation and create a log entry
             const appPath = join(testDir, 'src', 'App.tsx');
             const content = await readFile(appPath, 'utf-8');
-            await writeFile(appPath, content + '\n// Log test');
+            await writeFile(appPath, `${content}\n// Log test`);
           }
 
           // Wait for recompilation to complete
@@ -580,7 +580,7 @@ describe('CLI Watch Mode Tests', () => {
             // Modify a file to trigger recompilation
             const appPath = join(testDir, 'src', 'App.tsx');
             const content = await readFile(appPath, 'utf-8');
-            await writeFile(appPath, content + '\n// No log test');
+            await writeFile(appPath, `${content}\n// No log test`);
           }
 
           // Wait for recompilation to complete
@@ -932,7 +932,7 @@ describe('CLI Watch Mode Tests', () => {
             // Modify App.tsx
             const appPath = join(testDir, 'src', 'App.tsx');
             const content = await readFile(appPath, 'utf-8');
-            await writeFile(appPath, content + '\n// Changed');
+            await writeFile(appPath, `${content}\n// Changed`);
           }
 
           // Check for file name in output
@@ -1001,7 +1001,7 @@ describe('CLI Watch Mode Tests', () => {
       // Modify a file to trigger recompilation
       const appPath = join(testDir, 'src', 'App.tsx');
       const content = await readFile(appPath, 'utf-8');
-      await writeFile(appPath, content + '\n// Test change');
+      await writeFile(appPath, `${content}\n// Test change`);
 
       // Wait for recompilation success
       await waitFor(

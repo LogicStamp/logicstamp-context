@@ -14,11 +14,7 @@ import Ajv from 'ajv';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type {
-  LogicStampBundle,
-  BundleNode,
-  MissingDependency,
-} from '../../../src/core/pack.js';
+import type { LogicStampBundle } from '../../../src/core/pack.js';
 import type { UIFContract } from '../../../src/types/UIFContract.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -808,7 +804,7 @@ describe('Schema Completeness Validation', () => {
     });
 
     it('should have deprecated UIFContract fields still allowed in schema (backward compatibility)', () => {
-      const contractDef = schema.definitions.UIFContract;
+      const _contractDef = schema.definitions.UIFContract;
       // These deprecated fields should still be allowed for backward compatibility
       const deprecatedFields = ['entryPathAbs', 'entryPathRel', 'os'];
 
@@ -816,7 +812,7 @@ describe('Schema Completeness Validation', () => {
       // We check that if they're in TypeScript interface, they should be in schema properties or not cause validation errors
       // Since schema has additionalProperties: false, we need to explicitly allow them
       // Actually, let's check if they exist - if TypeScript has them as optional, schema should allow them
-      for (const field of deprecatedFields) {
+      for (const _field of deprecatedFields) {
         // If field exists in properties, it's explicitly allowed (good)
         // If not, additionalProperties: false would reject it, which is fine for deprecated fields
         // But we want to ensure backward compatibility, so we'll just note this

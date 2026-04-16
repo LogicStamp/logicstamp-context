@@ -5,10 +5,10 @@ import {
   writeLLMContext,
   smartLLMContextSetup,
 } from '../../../src/utils/llmContext.js';
-import { readFile, writeFile, access } from 'fs/promises';
-import { join } from 'path';
-import { mkdtemp } from 'fs/promises';
-import { tmpdir } from 'os';
+import { readFile, writeFile, access } from 'node:fs/promises';
+import { join } from 'node:path';
+import { mkdtemp } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import * as config from '../../../src/utils/config.js';
 
 // Mock fs/promises

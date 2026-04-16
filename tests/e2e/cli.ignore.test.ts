@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
-import { readFile, rm, access, mkdir, writeFile } from 'node:fs/promises';
+import { readFile, rm, mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
@@ -25,7 +25,7 @@ describe('CLI Ignore Command Tests', () => {
     if (outputPath) {
       try {
         await rm(outputPath, { recursive: true, force: true });
-      } catch (error) {
+      } catch (_error) {
         // Ignore cleanup errors
       }
     }
@@ -238,7 +238,7 @@ describe('CLI Ignore Command Tests', () => {
       await mkdir(testDir, { recursive: true });
 
       // Run stamp ignore with paths that need normalization
-      const { stdout } = await execAsync(
+      await execAsync(
         `node "${stampCliPath}" ignore "./src/secrets.ts" "src\\config\\keys.json"`,
         { cwd: testDir },
       );

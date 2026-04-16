@@ -8,7 +8,6 @@ import { randomUUID } from 'node:crypto';
 const execAsync = promisify(exec);
 
 describe('CLI Init Command Tests', () => {
-  const fixturesPath = join(process.cwd(), 'tests/fixtures/simple-app');
   let outputPath: string;
 
   beforeEach(async () => {
@@ -23,7 +22,7 @@ describe('CLI Init Command Tests', () => {
     if (outputPath) {
       try {
         await rm(outputPath, { recursive: true, force: true });
-      } catch (error) {
+      } catch {
         // Ignore cleanup errors
       }
     }

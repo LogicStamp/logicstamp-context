@@ -1,12 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import {
-  cleanCommand,
-  type CleanOptions,
-} from '../../../src/cli/commands/clean.js';
+import { cleanCommand } from '../../../src/cli/commands/clean.js';
 import * as fsx from '../../../src/utils/fsx.js';
 import { unlink, rm, stat } from 'node:fs/promises';
 import { glob, type GlobOptions } from 'glob';
-import { relative } from 'node:path';
 
 // Mock dependencies
 vi.mock('../../../src/utils/fsx.js', () => ({
@@ -78,7 +74,7 @@ describe('cleanCommand', () => {
   describe('Error handling', () => {
     it('should handle unlink errors gracefully and show error message', async () => {
       const projectRoot = '/test/project';
-      const testFile = 'context_main.json';
+      const _testFile = 'context_main.json';
 
       mockGlob();
       vi.mocked(fsx.fileExists).mockResolvedValue(true);
@@ -101,7 +97,7 @@ describe('cleanCommand', () => {
 
     it('should handle rm errors gracefully and show error message', async () => {
       const projectRoot = '/test/project';
-      const logicStampPath = '/test/project/.logicstamp';
+      const _logicStampPath = '/test/project/.logicstamp';
 
       mockGlob();
       vi.mocked(fsx.fileExists).mockResolvedValue(false);
@@ -126,7 +122,7 @@ describe('cleanCommand', () => {
 
     it('should continue deleting other files even if one fails', async () => {
       const projectRoot = '/test/project';
-      const files = ['context_main.json', 'src/context.json'];
+      const _files = ['context_main.json', 'src/context.json'];
 
       mockGlob(['src/context.json']);
       vi.mocked(fsx.fileExists).mockResolvedValue(true);

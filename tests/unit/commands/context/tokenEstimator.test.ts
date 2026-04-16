@@ -66,7 +66,6 @@ import {
 import { extractStyleMetadata } from '../../../../src/extractors/styling/index.js';
 import { pack } from '../../../../src/core/pack.js';
 import { formatBundles } from '../../../../src/cli/commands/context/bundleFormatter.js';
-import { Project } from 'ts-morph';
 import { createMockBundle } from './helpers.js';
 
 describe('tokenEstimator', () => {

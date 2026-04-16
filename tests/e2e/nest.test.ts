@@ -40,7 +40,10 @@ describe('NestJS End-to-End Tests', () => {
       const ast = await extractFromFile(controllerPath);
 
       expect(ast.backend?.routes).toBeDefined();
-      const routes = ast.backend!.routes!;
+      const routes = ast.backend?.routes;
+      if (!routes) {
+        throw new Error('Expected routes to be defined');
+      }
 
       expect(routes.some((r) => r.method === 'GET' && r.path === '')).toBe(
         true,
@@ -58,7 +61,10 @@ describe('NestJS End-to-End Tests', () => {
       const ast = await extractFromFile(controllerPath);
 
       expect(ast.backend?.routes).toBeDefined();
-      const routes = ast.backend!.routes!;
+      const routes = ast.backend?.routes;
+      if (!routes) {
+        throw new Error('Expected routes to be defined');
+      }
 
       // Check that routes have handlers
       expect(routes.length).toBeGreaterThan(0);

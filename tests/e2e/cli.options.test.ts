@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
-import { readFile, rm, mkdir, access } from 'node:fs/promises';
+import { readFile, mkdir, access } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { cleanupTestOutput, cleanupAllContextFiles } from '../test-helpers';
@@ -209,7 +209,7 @@ describe('CLI Command Options Tests', () => {
       // Verify command ran successfully and bundles were created
       expect(bundles.length).toBeGreaterThan(0);
       // Some nodes may have code, but not all will (depends on component structure)
-      const nodesWithCode = bundles.some((bundle: any) =>
+      const _nodesWithCode = bundles.some((bundle: any) =>
         bundle.graph.nodes.some((node: any) => node.code),
       );
       // Just verify the command completed successfully
@@ -264,7 +264,7 @@ describe('CLI Command Options Tests', () => {
       );
 
       // At least one node should have style metadata
-      const hasStyle = bundles.some((bundle: any) =>
+      const _hasStyle = bundles.some((bundle: any) =>
         bundle.graph.nodes.some((node: any) => node.style),
       );
       // Note: may not have style if components don't use styling
