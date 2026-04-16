@@ -3,11 +3,11 @@
  */
 
 import {
-  type SourceFile,
-  Node,
-  SyntaxKind,
   type ArrowFunction,
   type FunctionExpression,
+  Node,
+  type SourceFile,
+  SyntaxKind,
 } from 'ts-morph';
 import type { PropType } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
@@ -188,7 +188,7 @@ function inferParamType(param: any): string {
     } catch {
       return 'unknown';
     }
-  } catch (error) {
+  } catch (_error) {
     // Fallback: try to get type from TypeScript's type checker
     try {
       return param.getType().getText();

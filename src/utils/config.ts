@@ -2,16 +2,16 @@
  * Utilities for managing LogicStamp configuration
  */
 
+import { randomUUID } from 'node:crypto';
 import {
-  readFile,
-  writeFile,
-  mkdir,
   access,
+  mkdir,
+  readFile,
   rename,
   unlink,
+  writeFile,
 } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
-import { randomUUID } from 'node:crypto';
+import { join } from 'node:path';
 import { debugError } from './debug.js';
 import { withLock } from './fileLock.js';
 

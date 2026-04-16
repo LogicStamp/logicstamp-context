@@ -5,12 +5,12 @@
  */
 
 import {
-  type SourceFile,
-  SyntaxKind,
-  type JsxElement,
-  type JsxSelfClosingElement,
   type ImportDeclaration,
   type JsxAttribute,
+  type JsxElement,
+  type JsxSelfClosingElement,
+  type SourceFile,
+  SyntaxKind,
 } from 'ts-morph';
 import { debugError } from '../../utils/debug.js';
 
@@ -268,21 +268,25 @@ export function extractRadixUI(source: SourceFile): {
           namedImports.forEach((namedImport: any) => {
             const importName = namedImport.getName();
             if (expectedComponents.includes(importName)) {
-              if (!primitives.has(packageName)) {
-                primitives.set(packageName, new Set());
+              let packagePrimitives = primitives.get(packageName);
+              if (!packagePrimitives) {
+                packagePrimitives = new Set();
+                primitives.set(packageName, packagePrimitives);
               }
-              primitives.get(packageName)!.add(importName);
+              packagePrimitives.add(importName);
             }
           });
 
           // Check for namespace imports like `import * as Dialog from '@radix-ui/react-dialog'`
           const namespaceImport = imp.getNamespaceImport();
           if (namespaceImport) {
-            if (!primitives.has(packageName)) {
-              primitives.set(packageName, new Set());
+            let packagePrimitives = primitives.get(packageName);
+            if (!packagePrimitives) {
+              packagePrimitives = new Set();
+              primitives.set(packageName, packagePrimitives);
             }
             // Add a marker that this package is imported as namespace
-            primitives.get(packageName)!.add(`${namespaceImport.getText()}.*`);
+            packagePrimitives.add(`${namespaceImport.getText()}.*`);
           }
         }
       }

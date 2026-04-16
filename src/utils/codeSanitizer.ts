@@ -3,11 +3,11 @@
  * Replaces secret values in code with "PRIVATE_DATA" based on security report
  */
 
-import { resolve, isAbsolute, normalize } from 'node:path';
 import { readFile } from 'node:fs/promises';
-import type { SecretMatch } from './secretDetector.js';
+import { isAbsolute, normalize, resolve } from 'node:path';
 import type { SecurityReport } from '../cli/commands/security.js';
 import { toForwardSlashes } from './fsx.js';
+import type { SecretMatch } from './secretDetector.js';
 
 /**
  * Load security report from file
@@ -19,7 +19,7 @@ export async function loadSecurityReport(
     const reportPath = resolve(projectRoot, 'stamp_security_report.json');
     const content = await readFile(reportPath, 'utf8');
     return JSON.parse(content) as SecurityReport;
-  } catch (error) {
+  } catch (_error) {
     // Report doesn't exist or can't be read - that's okay
     return null;
   }
@@ -143,7 +143,6 @@ function sanitizeLine(line: string, matches: SecretMatch[]): string {
         if (fullUrlMatch) {
           const quote = fullUrlMatch[1];
           const prefix = fullUrlMatch[2];
-          const passwordPart = fullUrlMatch[3];
           const suffix = fullUrlMatch[4];
           // Replace the URL with password sanitized
           sanitized = sanitized.replace(
@@ -283,10 +282,12 @@ export function sanitizeCode(
   // Group matches by line number
   const matchesByLine = new Map<number, SecretMatch[]>();
   for (const match of fileMatches) {
-    if (!matchesByLine.has(match.line)) {
-      matchesByLine.set(match.line, []);
+    let lineMatches = matchesByLine.get(match.line);
+    if (!lineMatches) {
+      lineMatches = [];
+      matchesByLine.set(match.line, lineMatches);
     }
-    matchesByLine.get(match.line)!.push(match);
+    lineMatches.push(match);
   }
 
   // Sanitize each line that has secrets

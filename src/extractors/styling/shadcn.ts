@@ -4,14 +4,14 @@
  */
 
 import {
-  type SourceFile,
-  SyntaxKind,
+  type CallExpression,
+  type ImportDeclaration,
   type JsxAttribute,
   type JsxElement,
   type JsxSelfClosingElement,
-  type CallExpression,
-  type ImportDeclaration,
+  type SourceFile,
   type StringLiteral,
+  SyntaxKind,
 } from 'ts-morph';
 import { debugError } from '../../utils/debug.js';
 
@@ -358,6 +358,7 @@ export function extractShadcnUI(source: SourceFile): {
                 if (!variants.has(componentType)) {
                   variants.set(componentType, new Set());
                 }
+                const componentVariants = variants.get(componentType);
 
                 // For Card, don't filter strictly (custom variants are common)
                 // For other components, only record known variants
@@ -370,7 +371,7 @@ export function extractShadcnUI(source: SourceFile): {
                   !allowed ||
                   allowed.includes(variantValue)
                 ) {
-                  variants.get(componentType)!.add(variantValue);
+                  componentVariants?.add(variantValue);
                 }
               }
             }
