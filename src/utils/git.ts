@@ -4,10 +4,10 @@
  */
 
 import { spawn } from 'node:child_process';
-import { join } from 'node:path';
-import { access, rm, mkdir } from 'node:fs/promises';
+import { mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { debugLog, debugError } from './debug.js';
+import { join } from 'node:path';
+import { debugError, debugLog } from './debug.js';
 import { toForwardSlashes } from './fsx.js';
 
 /**
@@ -207,7 +207,7 @@ export async function resolveGitRef(
   try {
     const hash = await execGit(['rev-parse', '--verify', trimmedRef], options);
     return hash;
-  } catch (error) {
+  } catch (_error) {
     throw new Error(`Invalid git ref "${trimmedRef}": ref does not exist`);
   }
 }
@@ -347,7 +347,7 @@ export async function removeWorktree(
   try {
     // First, try to remove via git worktree command
     await execGit(['worktree', 'remove', '--force', worktreePath], options);
-  } catch (error) {
+  } catch (_error) {
     // If git worktree remove fails, try manual cleanup
     debugLog('git', `git worktree remove failed, trying manual cleanup`);
 

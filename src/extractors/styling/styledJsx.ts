@@ -2,14 +2,14 @@
  * Styled JSX extractor - Extracts CSS content from <style jsx> blocks
  */
 
+import * as csstree from 'css-tree';
 import {
-  type SourceFile,
-  SyntaxKind,
+  type JsxAttributeLike,
   type JsxElement,
   Node,
-  type JsxAttributeLike,
+  type SourceFile,
+  SyntaxKind,
 } from 'ts-morph';
-import * as csstree from 'css-tree';
 import { debugError } from '../../utils/debug.js';
 
 /**
@@ -40,7 +40,7 @@ function extractCssFromExpr(expr: Node): string | null {
     const parts: string[] = [];
     parts.push(expr.getHead().getLiteralText());
     for (const span of expr.getTemplateSpans()) {
-      parts.push('${expr}');
+      parts.push('$' + '{expr}');
       parts.push(span.getLiteral().getLiteralText());
     }
     return parts.join('');

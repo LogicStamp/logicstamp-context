@@ -42,7 +42,7 @@ const SECRET_PATTERNS: Array<{
     pattern: (() => {
       const part1 = 'A'.concat('K');
       const part2 = 'I'.concat('A');
-      return new RegExp(part1 + part2 + '[0-9A-Za-z]{16}', 'i');
+      return new RegExp(`${part1}${part2}[0-9A-Za-z]{16}`, 'i');
     })(),
     severity: 'high',
   },

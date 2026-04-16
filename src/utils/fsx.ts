@@ -27,9 +27,9 @@
  * File system utilities for glob patterns and path operations
  */
 
+import { readFile, stat, unlink } from 'node:fs/promises';
+import { isAbsolute, join, normalize, relative, resolve } from 'node:path';
 import { glob } from 'glob';
-import { readFile, unlink, stat } from 'node:fs/promises';
-import { resolve, relative, join, normalize, isAbsolute } from 'node:path';
 import { debugError } from './debug.js';
 
 export interface FileWithText {
@@ -316,11 +316,13 @@ export function groupFilesByFolder(files: string[]): Map<string, string[]> {
   for (const file of files) {
     const folderPath = getFolderPath(file);
 
-    if (!folderMap.has(folderPath)) {
-      folderMap.set(folderPath, []);
+    let filesInFolder = folderMap.get(folderPath);
+    if (!filesInFolder) {
+      filesInFolder = [];
+      folderMap.set(folderPath, filesInFolder);
     }
 
-    folderMap.get(folderPath)!.push(file);
+    filesInFolder.push(file);
   }
 
   return folderMap;
