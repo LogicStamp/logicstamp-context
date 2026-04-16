@@ -772,7 +772,7 @@ describe('handleCompare', () => {
         positionalArgs: ['old/context_main.json', 'new/context_main.json'],
       });
 
-      const exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
+      const _exitSpy = vi.spyOn(process, 'exit').mockImplementation((code) => {
         throw new Error(`Exit called with code ${code}`);
       });
 
@@ -1167,7 +1167,7 @@ describe('handleCompare', () => {
 
         // Mock readline to return 'n' (decline)
         mockReadlineInterface.question.mockImplementation(
-          (question, callback) => {
+          (_question, callback) => {
             callback('n');
           },
         );
@@ -1371,7 +1371,7 @@ describe('handleCompare', () => {
 
         // Mock readline to return 'n' (decline)
         mockReadlineInterface.question.mockImplementation(
-          (question, callback) => {
+          (_question, callback) => {
             callback('n');
           },
         );

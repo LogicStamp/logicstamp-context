@@ -36,7 +36,7 @@ describe('initHandler', () => {
 
   describe('handleInit', () => {
     it('should always print fox icon', async () => {
-      const initSpy = vi
+      const _initSpy = vi
         .spyOn(initCommand, 'init')
         .mockResolvedValue(undefined);
       vi.spyOn(parser, 'parseInitArgs').mockReturnValue({} as any);

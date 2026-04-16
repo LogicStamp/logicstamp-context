@@ -383,12 +383,12 @@ describe('Manifest - Internal Component Filtering', () => {
       });
 
       expect(manifest.hashIndex).toBeDefined();
-      expect(manifest.hashIndex!.structureHash).toBeDefined();
-      expect(manifest.hashIndex!.signatureHash).toBeDefined();
+      expect(manifest.hashIndex?.structureHash).toBeDefined();
+      expect(manifest.hashIndex?.signatureHash).toBeDefined();
 
       // Both components have same structure, so they should be grouped
-      const structureHashes = Object.values(manifest.hashIndex!.structureHash);
-      const signatureHashes = Object.values(manifest.hashIndex!.signatureHash);
+      const structureHashes = Object.values(manifest.hashIndex?.structureHash);
+      const signatureHashes = Object.values(manifest.hashIndex?.signatureHash);
 
       // At least one hash group should have entries
       expect(structureHashes.some((arr) => arr.length > 0)).toBe(true);

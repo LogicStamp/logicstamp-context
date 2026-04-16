@@ -64,6 +64,18 @@ function createBundle(
   };
 }
 
+function getIndexedSignature<T>(
+  idx: Map<string, T>,
+  entryId: string,
+): NonNullable<T> {
+  const sig = idx.get(entryId);
+  expect(sig).toBeDefined();
+  if (!sig) {
+    throw new Error(`Missing indexed signature for ${entryId}`);
+  }
+  return sig as NonNullable<T>;
+}
+
 describe('normalizeName', () => {
   it('should strip relative path prefixes', () => {
     expect(normalizeName('./Component')).toBe('component');
@@ -146,7 +158,7 @@ describe('index', () => {
   it('should extract semantic hash', () => {
     const bundles = [createBundle('src/App.tsx', 'uif:hash123')];
     const idx = index(bundles);
-    const sig = idx.get('src/app.tsx')!;
+    const sig = getIndexedSignature(idx, 'src/app.tsx');
     expect(sig.semanticHash).toBe('uif:hash123');
   });
 
@@ -183,7 +195,7 @@ describe('index', () => {
     ];
 
     const idx = index(bundles);
-    const sig = idx.get('src/app.tsx')!;
+    const sig = getIndexedSignature(idx, 'src/app.tsx');
     expect(sig.imports).toEqual(['react', 'react-dom']);
   });
 
@@ -227,7 +239,7 @@ describe('index', () => {
     ];
 
     const idx = index(bundles);
-    const sig = idx.get('src/app.tsx')!;
+    const sig = getIndexedSignature(idx, 'src/app.tsx');
     expect(sig.imports).toEqual([]);
     expect(sig.hooks).toEqual([]);
     expect(sig.functions).toEqual([]);
@@ -267,7 +279,7 @@ describe('index', () => {
     ];
 
     const idx = index(bundles, true);
-    const sig = idx.get('src/app.tsx')!;
+    const sig = getIndexedSignature(idx, 'src/app.tsx');
     expect(sig.imports).toEqual(['button', 'react']);
   });
 
@@ -317,7 +329,7 @@ describe('index', () => {
     ];
 
     const idx = index(bundles);
-    const sig = idx.get('src/button.tsx')!;
+    const sig = getIndexedSignature(idx, 'src/button.tsx');
 
     // Props should be full object with types, not array of keys
     expect(sig.props).toEqual({
@@ -384,7 +396,7 @@ describe('index', () => {
     ];
 
     const idx = index(bundles);
-    const sig = idx.get('src/test.tsx')!;
+    const sig = getIndexedSignature(idx, 'src/test.tsx');
 
     // Should only include valid keys with their types
     expect(sig.props).toEqual({
@@ -455,9 +467,9 @@ describe('index', () => {
     });
 
     const idx = index([defaultBundle, namedBundle, noneBundle]);
-    expect(idx.get('src/app.tsx')!.exportKind).toBe('default');
-    expect(idx.get('src/utils.ts')!.exportKind).toBe('named');
-    expect(idx.get('src/config.ts')!.exportKind).toBe('none');
+    expect(idx.get('src/app.tsx')?.exportKind).toBe('default');
+    expect(idx.get('src/utils.ts')?.exportKind).toBe('named');
+    expect(idx.get('src/config.ts')?.exportKind).toBe('none');
   });
 
   it('should treat non-array exports.named as exportKind none', () => {
@@ -518,8 +530,8 @@ describe('index', () => {
       },
     });
     const idx = index([malformed, emptyNamed]);
-    expect(idx.get('src/bad.ts')!.exportKind).toBe('none');
-    expect(idx.get('src/empty-named.ts')!.exportKind).toBe('none');
+    expect(idx.get('src/bad.ts')?.exportKind).toBe('none');
+    expect(idx.get('src/empty-named.ts')?.exportKind).toBe('none');
   });
 });
 
@@ -1483,8 +1495,8 @@ describe('diff', () => {
       );
       expect(propsDelta).toBeDefined();
       // Now stores full objects - old has onClick, new has onClick + disabled
-      expect(propsDelta!.old).toEqual({ onClick: 'function' });
-      expect(propsDelta!.new).toEqual({
+      expect(propsDelta?.old).toEqual({ onClick: 'function' });
+      expect(propsDelta?.new).toEqual({
         onClick: 'function',
         disabled: 'boolean',
       });
@@ -1570,11 +1582,11 @@ describe('diff', () => {
       );
       expect(propsDelta).toBeDefined();
       // Now stores full objects - old has onClick + disabled, new has only onClick
-      expect(propsDelta!.old).toEqual({
+      expect(propsDelta?.old).toEqual({
         onClick: 'function',
         disabled: 'boolean',
       });
-      expect(propsDelta!.new).toEqual({ onClick: 'function' });
+      expect(propsDelta?.new).toEqual({ onClick: 'function' });
     });
 
     it('should detect prop type changes in props delta', () => {
@@ -1657,8 +1669,8 @@ describe('diff', () => {
         (d) => d.type === 'props',
       );
       expect(propsDelta).toBeDefined();
-      expect(propsDelta!.old).toEqual({ value: 'string', count: 'number' });
-      expect(propsDelta!.new).toEqual({ value: 'number', count: 'number' });
+      expect(propsDelta?.old).toEqual({ value: 'string', count: 'number' });
+      expect(propsDelta?.new).toEqual({ value: 'number', count: 'number' });
     });
 
     it('should detect emit type changes in emits delta', () => {
@@ -1741,8 +1753,8 @@ describe('diff', () => {
         (d) => d.type === 'emits',
       );
       expect(emitsDelta).toBeDefined();
-      expect(emitsDelta!.old).toEqual({ onChange: '(value: string) => void' });
-      expect(emitsDelta!.new).toEqual({ onChange: '(value: number) => void' });
+      expect(emitsDelta?.old).toEqual({ onChange: '(value: string) => void' });
+      expect(emitsDelta?.new).toEqual({ onChange: '(value: number) => void' });
     });
 
     it('should detect both added/removed props AND type changes together', () => {
@@ -1834,12 +1846,12 @@ describe('diff', () => {
         (d) => d.type === 'props',
       );
       expect(propsDelta).toBeDefined();
-      expect(propsDelta!.old).toEqual({
+      expect(propsDelta?.old).toEqual({
         onClick: 'function',
         size: 'string',
         deprecated: 'boolean',
       });
-      expect(propsDelta!.new).toEqual({
+      expect(propsDelta?.new).toEqual({
         onClick: 'function',
         size: 'number',
         variant: 'string',
@@ -1936,10 +1948,10 @@ describe('diff', () => {
         (d) => d.type === 'props',
       );
       expect(propsDelta).toBeDefined();
-      expect(propsDelta!.old).toEqual({
+      expect(propsDelta?.old).toEqual({
         config: { type: 'object', properties: { enabled: 'boolean' } },
       });
-      expect(propsDelta!.new).toEqual({
+      expect(propsDelta?.new).toEqual({
         config: {
           type: 'object',
           properties: { enabled: 'boolean', mode: 'string' },

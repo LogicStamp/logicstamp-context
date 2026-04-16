@@ -13,7 +13,7 @@ vi.mock('node:path', async () => {
     resolve: vi.fn((p: string) => p),
     dirname: vi.fn((p: string) => p.replace(/\/[^/]+$/, '') || '.'),
     join: vi.fn((...parts: string[]) => parts.join('/')),
-    relative: vi.fn((from: string, to: string) => to.replace(from + '/', '')),
+    relative: vi.fn((from: string, to: string) => to.replace(`${from}/`, '')),
   };
 });
 
@@ -150,7 +150,7 @@ describe('watchMode', () => {
       };
 
       // Start watch mode (it runs indefinitely, so we check setup)
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
 
       // Let microtasks run
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -184,7 +184,7 @@ describe('watchMode', () => {
         strictWatch: true,
       };
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(consoleSpy).toHaveBeenCalledWith(
@@ -212,7 +212,7 @@ describe('watchMode', () => {
         quiet: true,
       };
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Console should not be called with startup messages
@@ -240,7 +240,7 @@ describe('watchMode', () => {
         quiet: true,
       };
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(configModule.writeWatchStatus).toHaveBeenCalledWith(
@@ -277,7 +277,7 @@ describe('watchMode', () => {
         quiet: false,
       };
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(consoleWarnSpy).toHaveBeenCalledWith(
@@ -305,7 +305,7 @@ describe('watchMode', () => {
         quiet: true,
       };
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(cleanupModule.registerCleanup).toHaveBeenCalledWith(
@@ -337,7 +337,7 @@ describe('watchMode', () => {
         quiet: true,
       };
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(chokidar.watch).toHaveBeenCalledWith(
@@ -371,7 +371,7 @@ describe('watchMode', () => {
         includeStyle: true,
       };
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Check that console logged the watched extensions including style files
@@ -399,7 +399,7 @@ describe('watchMode', () => {
         quiet: true,
       };
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       const onCalls = mockWatcher.on.mock.calls;
@@ -445,7 +445,7 @@ describe('watchMode', () => {
         },
       );
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Simulate file change for non-TS file
@@ -489,7 +489,7 @@ describe('watchMode', () => {
         },
       );
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Simulate change to .stampignore
@@ -525,7 +525,7 @@ describe('watchMode', () => {
         quiet: true,
       };
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Should extract directory from .json path
@@ -557,7 +557,7 @@ describe('watchMode', () => {
         quiet: true,
       };
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(configModule.writeWatchStatus).toHaveBeenCalledWith(

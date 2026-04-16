@@ -3,7 +3,6 @@ import {
   validateBundles,
   validateCommand,
   multiFileValidate,
-  type ValidationResult,
 } from '../../../src/cli/commands/validate.js';
 import type { LogicStampBundle } from '../../../src/core/pack.js';
 import * as fs from 'node:fs/promises';

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   getConfigDir,
   getConfigPath,
@@ -23,11 +23,17 @@ import {
   type WatchLogEntry,
   type LogicStampConfig,
 } from '../../../src/utils/config.js';
-import { readFile, writeFile, mkdir, access, unlink, rm } from 'fs/promises';
-import { join } from 'path';
-import { mkdtemp } from 'fs/promises';
-import { tmpdir } from 'os';
-import * as fs from 'fs/promises';
+import {
+  readFile,
+  writeFile,
+  mkdir,
+  access,
+  unlink,
+  rm,
+} from 'node:fs/promises';
+import { join } from 'node:path';
+import { mkdtemp } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 
 describe('config utils', () => {
   let testDir: string;
@@ -1108,7 +1114,7 @@ describe('config utils', () => {
     });
 
     it('should return correct paths regardless of trailing slashes', () => {
-      const withSlash = getConfigDir(testDir + '/');
+      const withSlash = getConfigDir(`${testDir}/`);
       const withoutSlash = getConfigDir(testDir);
 
       // Both should produce valid paths (may differ by trailing slash handling)

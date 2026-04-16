@@ -8,11 +8,11 @@ vi.mock('../../../src/utils/stampignore.js');
 vi.mock('../../../src/utils/fsx.js');
 
 describe('ignoreCommand', () => {
-  let originalCwd: string;
+  let _originalCwd: string;
   let originalConsoleLog: typeof console.log;
 
   beforeEach(() => {
-    originalCwd = process.cwd();
+    _originalCwd = process.cwd();
     originalConsoleLog = console.log;
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.clearAllMocks();

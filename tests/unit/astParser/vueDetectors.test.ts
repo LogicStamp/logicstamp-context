@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SyntaxKind, Node } from 'ts-morph';
+import { SyntaxKind } from 'ts-morph';
 import { detectKind } from '../../../src/core/astParser/detectors.js';
 import {
   extractVueComposables,
@@ -1457,7 +1457,7 @@ const emit = defineEmits<{
       it('should continue when opening element iteration throws', () => {
         let callCount = 0;
         const mockSource = createMockSourceFile({
-          getDescendantsOfKind: (kind: number) => {
+          getDescendantsOfKind: (_kind: number) => {
             callCount++;
             if (callCount === 1) {
               // First call for JsxOpeningElement
@@ -1487,7 +1487,7 @@ const emit = defineEmits<{
       it('should continue when self-closing element iteration throws', () => {
         let callCount = 0;
         const mockSource = createMockSourceFile({
-          getDescendantsOfKind: (kind: number) => {
+          getDescendantsOfKind: (_kind: number) => {
             callCount++;
             if (callCount === 1) {
               // First call for JsxOpeningElement
@@ -1517,7 +1517,7 @@ const emit = defineEmits<{
       it('should handle batch error in opening elements', () => {
         let callCount = 0;
         const mockSource = createMockSourceFile({
-          getDescendantsOfKind: (kind: number) => {
+          getDescendantsOfKind: (_kind: number) => {
             callCount++;
             if (callCount === 1) {
               // Throw on the forEach level for opening elements

@@ -137,7 +137,7 @@ describe('Pack - Internal Component Filtering', () => {
         },
       });
 
-      const missing: MissingDependency[] = [
+      const _missing: MissingDependency[] = [
         {
           name: 'Button',
           reason: 'No contract found',
@@ -155,7 +155,7 @@ describe('Pack - Internal Component Filtering', () => {
         },
       ];
 
-      const nodes: BundleNode[] = [
+      const _nodes: BundleNode[] = [
         createMockBundleNode('src/components/Card.tsx', contract),
       ];
 
@@ -234,7 +234,7 @@ describe('Pack - Internal Component Filtering', () => {
     it('should keep missing dependencies when contract is not available', () => {
       // If contract is not loaded, we can't check if it's internal
       // So we should keep the missing dependency
-      const missing: MissingDependency[] = [
+      const _missing: MissingDependency[] = [
         {
           name: 'SomeComponent',
           reason: 'No contract found',
@@ -271,7 +271,7 @@ describe('Pack - Internal Component Filtering', () => {
         },
       });
 
-      const missing: MissingDependency[] = [
+      const _missing: MissingDependency[] = [
         {
           name: 'InternalHelper',
           reason: 'No contract found',
@@ -309,7 +309,7 @@ describe('Pack - Internal Component Filtering', () => {
         },
       });
 
-      const missing: MissingDependency[] = [
+      const _missing: MissingDependency[] = [
         {
           name: 'Button',
           reason: 'No contract found',
@@ -327,7 +327,7 @@ describe('Pack - Internal Component Filtering', () => {
         },
       ];
 
-      const nodes: BundleNode[] = [
+      const _nodes: BundleNode[] = [
         createMockBundleNode('src/components/Card.tsx', contract),
       ];
 
@@ -372,7 +372,7 @@ describe('Pack - Internal Component Filtering', () => {
         },
       });
 
-      const nodes: BundleNode[] = [
+      const _nodes: BundleNode[] = [
         createMockBundleNode('src/components/Card.tsx', cardContract),
         createMockBundleNode('src/components/Button.tsx', buttonContract),
       ];

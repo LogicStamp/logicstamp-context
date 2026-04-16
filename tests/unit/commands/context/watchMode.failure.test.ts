@@ -23,7 +23,7 @@ vi.mock('node:path', async () => {
     resolve: vi.fn((p: string) => p),
     dirname: vi.fn((p: string) => p.replace(/\/[^/]+$/, '') || '.'),
     join: vi.fn((...parts: string[]) => parts.join('/')),
-    relative: vi.fn((from: string, to: string) => to.replace(from + '/', '')),
+    relative: vi.fn((from: string, to: string) => to.replace(`${from}/`, '')),
   };
 });
 
@@ -198,7 +198,7 @@ describe('Watch Mode Failure Modes', () => {
         quiet: false,
       };
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Trigger watcher error
@@ -247,7 +247,7 @@ describe('Watch Mode Failure Modes', () => {
         quiet: false,
       };
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Trigger with string error
@@ -277,10 +277,10 @@ describe('Watch Mode Failure Modes', () => {
       );
 
       // Make incrementalRebuild slow
-      let rebuildCallCount = 0;
+      let _rebuildCallCount = 0;
       vi.mocked(watchModeModule.incrementalRebuild).mockImplementation(
         async () => {
-          rebuildCallCount++;
+          _rebuildCallCount++;
           await new Promise((resolve) => setTimeout(resolve, 100));
           return { bundles: [], updatedBundles: new Set() };
         },
@@ -321,7 +321,7 @@ describe('Watch Mode Failure Modes', () => {
         quiet: true,
       };
 
-      const watchPromise = startWatchMode(options, '/project', mockCache);
+      const _watchPromise = startWatchMode(options, '/project', mockCache);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Trigger first change
@@ -380,7 +380,7 @@ describe('Watch Mode Failure Modes', () => {
         quiet: false,
       };
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Trigger change with special characters in path
@@ -428,7 +428,7 @@ describe('Watch Mode Failure Modes', () => {
         quiet: false,
       };
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Trigger change with Windows-style path
@@ -474,7 +474,7 @@ describe('Watch Mode Failure Modes', () => {
         quiet: false,
       };
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Trigger change with unicode filename
@@ -493,7 +493,7 @@ describe('Watch Mode Failure Modes', () => {
     it('should handle cleanup errors gracefully', async () => {
       let cleanupHandler: (() => Promise<void>) | undefined;
       vi.mocked(cleanupModule.registerCleanup).mockImplementation(
-        (name, handler) => {
+        (_name, handler) => {
           cleanupHandler = handler as () => Promise<void>;
           return () => {};
         },
@@ -531,7 +531,7 @@ describe('Watch Mode Failure Modes', () => {
         quiet: true,
       };
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Execute cleanup - should not throw even if deleteWatchStatus fails
@@ -543,7 +543,7 @@ describe('Watch Mode Failure Modes', () => {
     it('should handle watcher.close() failure', async () => {
       let cleanupHandler: (() => Promise<void>) | undefined;
       vi.mocked(cleanupModule.registerCleanup).mockImplementation(
-        (name, handler) => {
+        (_name, handler) => {
           cleanupHandler = handler as () => Promise<void>;
           return () => {};
         },
@@ -576,7 +576,7 @@ describe('Watch Mode Failure Modes', () => {
         quiet: true,
       };
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Cleanup should handle watcher.close() failure
@@ -767,7 +767,7 @@ describe('Watch Mode Failure Modes', () => {
         return '';
       });
 
-      const watchPromise = startWatchMode(options, '/project', mockCache);
+      const _watchPromise = startWatchMode(options, '/project', mockCache);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Mock strict watch status reading
@@ -863,7 +863,7 @@ describe('Watch Mode Failure Modes', () => {
         strictWatch: true,
       };
 
-      const watchPromise = startWatchMode(options, '/project', mockCache);
+      const _watchPromise = startWatchMode(options, '/project', mockCache);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       if (changeHandler) {
@@ -977,7 +977,7 @@ describe('Watch Mode Failure Modes', () => {
         strictWatch: true,
       };
 
-      const watchPromise = startWatchMode(options, '/project', mockCache);
+      const _watchPromise = startWatchMode(options, '/project', mockCache);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       if (changeHandler) {
@@ -1055,7 +1055,7 @@ describe('Watch Mode Failure Modes', () => {
         strictWatch: true,
       };
 
-      const watchPromise = startWatchMode(options, '/project', mockCache);
+      const _watchPromise = startWatchMode(options, '/project', mockCache);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       if (changeHandler) {
@@ -1129,7 +1129,7 @@ describe('Watch Mode Failure Modes', () => {
         quiet: false,
       };
 
-      const watchPromise = startWatchMode(options, '/project', mockCache);
+      const _watchPromise = startWatchMode(options, '/project', mockCache);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       if (changeHandler) {
@@ -1320,7 +1320,7 @@ describe('Watch Mode Failure Modes', () => {
         logFile: true,
       };
 
-      const watchPromise = startWatchMode(options, '/project', mockCache);
+      const _watchPromise = startWatchMode(options, '/project', mockCache);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       if (changeHandler) {
@@ -1376,7 +1376,7 @@ describe('Watch Mode Failure Modes', () => {
         quiet: false,
       };
 
-      const watchPromise = startWatchMode(options, '/project', null);
+      const _watchPromise = startWatchMode(options, '/project', null);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       if (changeHandler) {
@@ -1385,7 +1385,7 @@ describe('Watch Mode Failure Modes', () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Debug logging should be enabled
-      const calls = consoleSpy.mock.calls.flat().join('\n');
+      const _calls = consoleSpy.mock.calls.flat().join('\n');
       // May or may not contain [DEBUG] depending on implementation
 
       // Restore env
@@ -1466,7 +1466,7 @@ describe('Watch Mode Failure Modes', () => {
         logFile: false, // Log file disabled
       };
 
-      const watchPromise = startWatchMode(options, '/project', mockCache);
+      const _watchPromise = startWatchMode(options, '/project', mockCache);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       if (changeHandler) {
@@ -1537,7 +1537,7 @@ describe('Watch Mode Failure Modes', () => {
         logFile: true, // Log file enabled
       };
 
-      const watchPromise = startWatchMode(options, '/project', mockCache);
+      const _watchPromise = startWatchMode(options, '/project', mockCache);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       if (changeHandler) {
@@ -1673,7 +1673,7 @@ describe('Watch Mode Failure Modes', () => {
         logFile: true,
       };
 
-      const watchPromise = startWatchMode(options, '/project', mockCache);
+      const _watchPromise = startWatchMode(options, '/project', mockCache);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       vi.clearAllMocks(); // Clear previous calls but keep readFile mock
@@ -1722,7 +1722,7 @@ describe('Watch Mode Failure Modes', () => {
       });
 
       expect(logCallWithChanges).toBeDefined();
-      expect(logCallWithChanges![1]).toMatchObject({
+      expect(logCallWithChanges?.[1]).toMatchObject({
         addedContracts: undefined, // Empty array becomes undefined
         removedContracts: undefined, // Empty array becomes undefined
       });
@@ -1767,7 +1767,7 @@ describe('Watch Mode Failure Modes', () => {
       });
 
       expect(logCallWithPopulated).toBeDefined();
-      expect(logCallWithPopulated![1]).toMatchObject({
+      expect(logCallWithPopulated?.[1]).toMatchObject({
         addedContracts: ['src/New.tsx'],
         removedContracts: ['src/Old.tsx'],
       });
@@ -1830,7 +1830,7 @@ describe('Watch Mode Failure Modes', () => {
         quiet: false,
       };
 
-      const watchPromise = startWatchMode(options, '/project', mockCache);
+      const _watchPromise = startWatchMode(options, '/project', mockCache);
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Trigger many rapid changes
@@ -1844,7 +1844,7 @@ describe('Watch Mode Failure Modes', () => {
       await new Promise((resolve) => setTimeout(resolve, 700));
 
       // The console should show batched message
-      const calls = consoleSpy.mock.calls.flat().join('\n');
+      const _calls = consoleSpy.mock.calls.flat().join('\n');
       // Should mention multiple files or batching
     });
   });
