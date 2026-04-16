@@ -4,9 +4,10 @@ Planned features, improvements, and known limitations. See [CHANGELOG.md](CHANGE
 
 ## Current Status
 
-**Version:** v0.8.7 (Beta)
+**Version:** v0.8.8 (Beta)
 
 Recent milestones:
+- **Biome cleanup, security path normalization, turborepo test coverage (v0.8.8)** - Applied broad Biome lint cleanup across the codebase (imports, optional chaining, unused params), simplified and normalized security report path resolution, and added a Turborepo-style workspace fixture (`apps/` + `packages/`) to validate context generation across multi-package setups. No runtime or behavioral changes intended
 - **Biome baseline and CI linting (v0.8.7)** - Added `biome.json`, Biome lint/format scripts and dependency setup, updated contributing docs for lint/format workflows, applied a one-time formatting baseline across the codebase, and added a Biome lint step to CI. No runtime or behavioral changes intended
 - **Runtime caches, NodeNext/ESM alignment, dependency refresh (v0.8.6)** - Encapsulated tokenizer and package.json caches behind runtime/loader helpers. Switched TypeScript `module` and `moduleResolution` to `NodeNext`, added conditional `exports` (`types` + `import`), normalized `bin` paths, and updated dependencies to current compatible versions
 - **Watch lock, file lock, secrets, compare fixes (v0.8.5)** - Watch: synchronous `isRegenerating` flag and queued change processing instead of a promise-based lock race. File lock: exclusive write helper with cleanup on failed write/close; Windows PID liveness via `tasklist` (with safe fallbacks) instead of `process.kill(pid, 0)`. Secret scanner: case-insensitive AWS/GitHub/PEM patterns. skip invalid match indices before snippets. Compare: `exportKind` treats `exports.named` as named only when it is a non-empty array
