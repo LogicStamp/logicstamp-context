@@ -2,14 +2,7 @@
  * NestJS Extractor - Extracts NestJS controllers and API metadata
  */
 
-import {
-  type SourceFile,
-  SyntaxKind,
-  Node,
-  Decorator,
-  type ClassDeclaration,
-  MethodDeclaration,
-} from 'ts-morph';
+import { type ClassDeclaration, Node, type SourceFile } from 'ts-morph';
 import type { ApiSignature } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
 

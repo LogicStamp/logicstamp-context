@@ -2,21 +2,19 @@
  * Detectors - Detect component kind and Next.js metadata
  */
 
+import { basename, dirname } from 'node:path';
 import {
-  type SourceFile,
-  SyntaxKind,
-  type FunctionDeclaration,
-  type VariableStatement,
-  ArrowFunction,
-  ObjectLiteralExpression,
-  type PropertyAssignment,
-  type StringLiteral,
   type ClassDeclaration,
+  type FunctionDeclaration,
+  type PropertyAssignment,
+  type SourceFile,
+  type StringLiteral,
+  SyntaxKind,
+  type VariableStatement,
 } from 'ts-morph';
 import type { ContractKind, NextJSMetadata } from '../../types/UIFContract.js';
 import { debugError } from '../../utils/debug.js';
 import { toForwardSlashes } from '../../utils/fsx.js';
-import { basename, dirname } from 'node:path';
 
 /**
  * Detect Next.js 'use client' or 'use server' directives
@@ -253,7 +251,7 @@ export function extractNextJsMetadataExports(
                     // Even if empty, mark as having metadata
                     staticMetadata = { _hasMetadata: true };
                   }
-                } catch (error) {
+                } catch (_error) {
                   // If we can't parse, still mark as having metadata
                   staticMetadata = { _hasMetadata: true };
                 }
@@ -434,7 +432,7 @@ function isMainExportAVueComposable(
     }
 
     return false;
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 }
@@ -460,7 +458,7 @@ function hasVueComposables(source: SourceFile): boolean {
     ];
 
     return vueComposablePatterns.some((pattern) => pattern.test(sourceText));
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 }
@@ -478,7 +476,7 @@ function hasVueComponentRegistration(source: SourceFile): boolean {
       /components\s*:\s*\{/.test(sourceText) ||
       /<script\s+setup/.test(sourceText)
     );
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 }
@@ -573,7 +571,7 @@ function isMainExportAHook(source: SourceFile): boolean {
     }
 
     return false;
-  } catch (error) {
+  } catch (_error) {
     // If we can't determine, return false (fall back to other checks)
     return false;
   }
@@ -621,7 +619,7 @@ export function detectKind(
           if (!hasJsxElements) {
             return 'vue:composable';
           }
-        } catch (error) {
+        } catch (_error) {
           // If JSX check fails, still classify as composable if main export is composable
           return 'vue:composable';
         }
@@ -653,7 +651,7 @@ export function detectKind(
         if (!hasJsxElements) {
           return 'react:hook';
         }
-      } catch (error) {
+      } catch (_error) {
         // If JSX check fails, still classify as hook if main export is hook
         return 'react:hook';
       }

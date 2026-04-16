@@ -3,18 +3,14 @@
  */
 
 import { readFile } from 'node:fs/promises';
-import { join, resolve, isAbsolute } from 'node:path';
+import { isAbsolute, join, resolve } from 'node:path';
+import type { SecurityReport } from '../../cli/commands/security.js';
 import type { UIFContract } from '../../types/UIFContract.js';
-import type { ProjectManifest } from '../manifest.js';
+import { loadSecurityReport, sanitizeCode } from '../../utils/codeSanitizer.js';
 import { debugError } from '../../utils/debug.js';
 import { isPathWithinRoot, toForwardSlashes } from '../../utils/fsx.js';
 import { validateUIFContract } from '../../utils/schemaValidator.js';
-import {
-  loadSecurityReport,
-  sanitizeCode,
-  type SanitizeResult,
-} from '../../utils/codeSanitizer.js';
-import type { SecurityReport } from '../../cli/commands/security.js';
+import type { ProjectManifest } from '../manifest.js';
 
 // Cache for security report with expiration
 interface SecurityReportCache {
@@ -279,13 +275,17 @@ function normalizeProjectRoot(path: string): string {
 async function getSecurityReport(
   projectRoot: string,
 ): Promise<SecurityReport | null> {
+  const cachedReport = isCacheValid(securityReportCache, projectRoot)
+    ? securityReportCache
+    : null;
+
   // Check if we have a valid cached report
-  if (isCacheValid(securityReportCache, projectRoot)) {
+  if (cachedReport) {
     // Track that we have a security report available
-    if (securityReportCache!.report !== null) {
+    if (cachedReport.report !== null) {
       securityReportWasLoaded = true;
     }
-    return securityReportCache!.report;
+    return cachedReport.report;
   }
 
   // Load and cache the report with timestamp
@@ -365,7 +365,7 @@ export async function extractCodeHeader(
     }
 
     return { header: null, sanitizeInfo };
-  } catch (error) {
+  } catch (_error) {
     return { header: null };
   }
 }
@@ -425,7 +425,7 @@ export async function readSourceCode(
     }
 
     return { code: content, sanitizeInfo };
-  } catch (error) {
+  } catch (_error) {
     return { code: null };
   }
 }

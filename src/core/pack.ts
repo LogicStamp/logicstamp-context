@@ -28,34 +28,30 @@
  * Creates compact, hash-locked bundles with dependency graphs
  */
 
-import { resolve, isAbsolute } from 'node:path';
-import { getRelativePath } from '../utils/fsx.js';
-import { normalizeEntryId } from '../utils/fsx.js';
-import type { UIFContract } from '../types/UIFContract.js';
-import type { ProjectManifest, ComponentNode } from './manifest.js';
 import { createRequire } from 'node:module';
+import { isAbsolute, resolve } from 'node:path';
+import type { UIFContract } from '../types/UIFContract.js';
+import { getRelativePath, normalizeEntryId } from '../utils/fsx.js';
+import type { ProjectManifest } from './manifest.js';
 
 // Import from extracted modules
 import {
-  resolveKey,
-  resolveDependency,
-  findComponentByName,
-  collectDependencies,
-  type MissingDependency,
-  loadManifest,
-  loadContract,
-  readSourceCode,
-  extractCodeHeader,
-  buildEdges,
-  computeBundleHash,
-  stableSort,
-  validateHashLock,
   type BundleNode,
-  isThirdPartyPackage,
+  buildEdges,
+  collectDependencies,
+  computeBundleHash,
+  extractCodeHeader,
   extractPackageName,
   getPackageVersion,
+  isThirdPartyPackage,
+  loadContract,
+  type MissingDependency,
+  readSourceCode,
   recordSanitizationBatch,
+  resolveKey,
   type SanitizeInfo,
+  stableSort,
+  validateHashLock,
 } from './pack/index.js';
 
 // Load package.json to get version
@@ -160,12 +156,10 @@ export interface PackOptions {
 /**
  * A node in the bundle graph
  */
-export type { BundleNode } from './pack/index.js';
-
 /**
  * Missing dependency information
  */
-export type { MissingDependency } from './pack/index.js';
+export type { BundleNode, MissingDependency } from './pack/index.js';
 
 /**
  * Complete bundle structure
@@ -222,72 +216,49 @@ export interface LogicStampIndex {
 }
 
 /**
- * Load manifest from file
- */
-export { loadManifest } from './pack/index.js';
-
-/**
- * Load a sidecar contract file
- * Sidecar path is computed from the manifest key (project-relative): resolved from projectRoot + key + '.uif.json'
- */
-export { loadContract } from './pack/index.js';
-
-/**
  * Normalize a file path for cross-platform consistency
  * Re-exports the canonical normalizeEntryId from utils/fsx
  * This ensures all path normalization uses the same function
  */
 export { normalizeEntryId } from '../utils/fsx.js';
-
+/**
+ * Load manifest from file
+ */
+/**
+ * Load a sidecar contract file
+ * Sidecar path is computed from the manifest key (project-relative): resolved from projectRoot + key + '.uif.json'
+ */
 /**
  * Resolve input (path or name) to a manifest key
  * This is the canonical resolution used by both pack and similar commands
  */
-export { resolveKey } from './pack/index.js';
-
 /**
  * Find a component node by name or path
  * Returns the component node and the manifest key it was found under
  */
-export { findComponentByName } from './pack/index.js';
-
 /**
  * Resolve a dependency name to a manifest key
  * Uses the canonical resolveKey() function for consistent resolution
  * Prioritizes relative paths to avoid cross-directory conflicts
  */
-export { resolveDependency } from './pack/index.js';
-
 /**
  * Perform BFS traversal to collect dependencies
  */
-export { collectDependencies } from './pack/index.js';
-
 /**
  * Extract code header (JSDoc @uif block) from source file
  */
-export { extractCodeHeader } from './pack/index.js';
-
 /**
  * Read full source code
  */
-export { readSourceCode } from './pack/index.js';
-
 /**
  * Build edges from nodes based on dependencies
  */
-export { buildEdges } from './pack/index.js';
-
 /**
  * Sort nodes deterministically for stable bundle hashes
  */
-export { stableSort } from './pack/index.js';
-
 /**
  * Compute bundle hash from nodes using stable hashing
  */
-export { computeBundleHash } from './pack/index.js';
-
 /**
  * Validate hash-lock: ensure contract hashes match current state
  *
@@ -295,7 +266,20 @@ export { computeBundleHash } from './pack/index.js';
  * (authoritative, not from header). fileHash() automatically strips @uif header block
  * before hashing, so header updates won't cause hash churn.
  */
-export { validateHashLock } from './pack/index.js';
+export {
+  buildEdges,
+  collectDependencies,
+  computeBundleHash,
+  extractCodeHeader,
+  findComponentByName,
+  loadContract,
+  loadManifest,
+  readSourceCode,
+  resolveDependency,
+  resolveKey,
+  stableSort,
+  validateHashLock,
+} from './pack/index.js';
 
 /**
  * Main pack function - generates a bundle for a component
