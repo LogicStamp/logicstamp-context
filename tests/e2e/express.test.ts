@@ -34,14 +34,14 @@ describe('Express.js End-to-End Tests', () => {
       expect(ast.backend?.routes).toBeDefined();
       expect(ast.backend?.routes?.length).toBeGreaterThan(0);
 
-      const routes = ast.backend!.routes!;
-      expect(routes.some((r) => r.method === 'GET' && r.path === '/')).toBe(
+      const routes = ast.backend?.routes;
+      expect(routes?.some((r) => r.method === 'GET' && r.path === '/')).toBe(
         true,
       );
-      expect(routes.some((r) => r.method === 'GET' && r.path === '/:id')).toBe(
+      expect(routes?.some((r) => r.method === 'GET' && r.path === '/:id')).toBe(
         true,
       );
-      expect(routes.some((r) => r.method === 'POST' && r.path === '/')).toBe(
+      expect(routes?.some((r) => r.method === 'POST' && r.path === '/')).toBe(
         true,
       );
     });

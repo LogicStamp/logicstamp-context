@@ -1,9 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import { readFile } from 'fs/promises';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { describe, it, expect } from 'vitest';
+import { exec } from 'node:child_process';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 
 const execAsync = promisify(exec);
 const __filename = fileURLToPath(import.meta.url);

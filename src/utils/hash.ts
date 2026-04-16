@@ -195,7 +195,7 @@ export function bundleHash(
  * Ensures deterministic JSON output for hashing
  */
 export function stableStringify(obj: unknown): string {
-  return JSON.stringify(obj, (k, v) => {
+  return JSON.stringify(obj, (_key, v) => {
     // Explicitly check for null (typeof null === 'object' in JavaScript)
     if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
       // Sort object keys recursively

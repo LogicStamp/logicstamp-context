@@ -220,8 +220,8 @@ describe('Backend Extractor', () => {
 
       expect(signature).toBeDefined();
       expect(signature?.parameters).toBeDefined();
-      expect(signature?.parameters?.['req']).toBe('express.Request');
-      expect(signature?.parameters?.['res']).toBe('express.Response');
+      expect(signature?.parameters?.req).toBe('express.Request');
+      expect(signature?.parameters?.res).toBe('express.Response');
     });
 
     it('should return undefined for non-existent handler', () => {
@@ -273,8 +273,8 @@ describe('Backend Extractor', () => {
 
       expect(signature).toBeDefined();
       expect(signature?.parameters).toBeDefined();
-      expect(signature?.parameters?.['id']).toBe('string');
-      expect(signature?.parameters?.['req']).toBe('Request');
+      expect(signature?.parameters?.id).toBe('string');
+      expect(signature?.parameters?.req).toBe('Request');
       expect(signature?.returnType).toBe('User');
     });
 
@@ -341,7 +341,7 @@ describe('Backend Extractor', () => {
       const sourceFile = createTestSourceFile(sourceCode, 'invalid.ts');
 
       // Should not throw, but might return undefined or empty result
-      const metadata = extractBackendMetadata(
+      const _metadata = extractBackendMetadata(
         sourceFile,
         'invalid.ts',
         ['express'],

@@ -423,8 +423,8 @@ describe('NestJS Extractor', () => {
 
       expect(signature).toBeDefined();
       expect(signature?.parameters).toBeDefined();
-      expect(signature?.parameters?.['id']).toBe('string');
-      expect(signature?.parameters?.['req']).toBe('Request');
+      expect(signature?.parameters?.id).toBe('string');
+      expect(signature?.parameters?.req).toBe('Request');
     });
 
     it('should extract return type from controller method', () => {
@@ -473,7 +473,7 @@ describe('NestJS Extractor', () => {
         'users.controller.ts',
       );
 
-      const signature = extractNestJSApiSignature(
+      const _signature = extractNestJSApiSignature(
         sourceFile,
         'UsersController',
         'findAll',

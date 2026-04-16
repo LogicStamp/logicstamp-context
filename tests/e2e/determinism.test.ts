@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readFile, rm, mkdir } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 // Helper to read per-folder context from output directory
@@ -38,7 +38,7 @@ describe.sequential('Determinism and Ordering Tests', () => {
     if (outputPath) {
       try {
         await rm(outputPath, { recursive: true, force: true });
-      } catch (error) {
+      } catch (_error) {
         // Ignore cleanup errors
       }
     }

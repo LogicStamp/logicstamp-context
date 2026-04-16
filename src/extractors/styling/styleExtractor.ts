@@ -164,7 +164,7 @@ function buildStyleSummary(
  */
 function transformToLean(
   fullSources: StyleSources,
-  summary: StyleSummary,
+  _summary: StyleSummary,
 ): StyleSources {
   const lean: StyleSources = {};
 

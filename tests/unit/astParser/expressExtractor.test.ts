@@ -341,8 +341,8 @@ describe('Express Extractor', () => {
 
       expect(signature).toBeDefined();
       expect(signature?.parameters).toBeDefined();
-      expect(signature?.parameters?.['req']).toBe('express.Request');
-      expect(signature?.parameters?.['res']).toBe('express.Response');
+      expect(signature?.parameters?.req).toBe('express.Request');
+      expect(signature?.parameters?.res).toBe('express.Response');
     });
 
     it('should extract parameters from arrow function', () => {
@@ -358,8 +358,8 @@ describe('Express Extractor', () => {
 
       expect(signature).toBeDefined();
       expect(signature?.parameters).toBeDefined();
-      expect(signature?.parameters?.['req']).toBe('express.Request');
-      expect(signature?.parameters?.['res']).toBe('express.Response');
+      expect(signature?.parameters?.req).toBe('express.Request');
+      expect(signature?.parameters?.res).toBe('express.Response');
     });
 
     it('should extract return type when available', () => {
@@ -386,7 +386,7 @@ describe('Express Extractor', () => {
 
       const sourceFile = createTestSourceFile(sourceCode, 'handlers.ts');
 
-      const signature = extractExpressApiSignature(sourceFile, 'getUsers');
+      const _signature = extractExpressApiSignature(sourceFile, 'getUsers');
 
       // When no parameters, signature might be undefined (since parameters object would be empty)
       // This is expected behavior - the function should not throw

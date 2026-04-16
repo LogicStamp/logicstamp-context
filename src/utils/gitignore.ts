@@ -4,7 +4,7 @@
 
 import { readFile, writeFile, access } from 'node:fs/promises';
 import { join } from 'node:path';
-import { readConfig, updateConfig } from './config.js';
+import { readConfig } from './config.js';
 import { debugError } from './debug.js';
 import { toForwardSlashes } from './fsx.js';
 
@@ -67,11 +67,6 @@ export function hasLogicStampBlock(content: string): boolean {
  * This is a legacy function for backward compatibility - checks for key patterns
  */
 export function hasLogicStampPatterns(content: string): boolean {
-  // Check for the key patterns (ignore the comment line)
-  const patterns = LOGICSTAMP_GITIGNORE_PATTERNS.filter(
-    (p) => !p.startsWith('#'),
-  );
-
   // Check if at least the main patterns exist
   // We consider it "has patterns" if context.json and context_*.json are present
   return (
@@ -189,7 +184,7 @@ export function addLogicStampPatterns(content: string): string {
     // Normalize line endings and ensure we end with at least one newline
     const normalized = newContent.replace(/\r\n/g, '\n');
     if (!normalized.endsWith('\n')) {
-      newContent = normalized + '\n';
+      newContent = `${normalized}\n`;
     } else {
       newContent = normalized;
     }
@@ -201,7 +196,7 @@ export function addLogicStampPatterns(content: string): string {
   }
 
   // Add all LogicStamp patterns as a group
-  newContent += LOGICSTAMP_GITIGNORE_PATTERNS.join('\n') + '\n';
+  newContent += `${LOGICSTAMP_GITIGNORE_PATTERNS.join('\n')}\n`;
 
   return newContent;
 }
@@ -307,7 +302,7 @@ export async function ensurePatternInGitignore(
   }
 
   // Add pattern
-  newContent += normalizedPattern + '\n';
+  newContent += `${normalizedPattern}\n`;
 
   await writeGitignore(targetDir, newContent);
 

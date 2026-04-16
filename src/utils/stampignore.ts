@@ -4,7 +4,7 @@
  */
 
 import { readFile, writeFile, access, unlink } from 'node:fs/promises';
-import { join, resolve, isAbsolute } from 'node:path';
+import { join, isAbsolute } from 'node:path';
 import { debugError } from './debug.js';
 import { normalizeEntryId, getRelativePath } from './fsx.js';
 
