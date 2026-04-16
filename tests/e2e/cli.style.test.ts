@@ -23,7 +23,7 @@ describe('CLI Style Command Tests', () => {
     if (outputPath) {
       try {
         await rm(outputPath, { recursive: true, force: true });
-      } catch (error) {
+      } catch (_error) {
         // Ignore cleanup errors
       }
     }
@@ -170,7 +170,7 @@ describe('CLI Style Command Tests', () => {
 
         for (const bundle of bundles) {
           for (const node of bundle.graph.nodes) {
-            if (node.contract && node.contract.style) {
+            if (node.contract?.style) {
               foundStyleMetadata = true;
               exampleStyleNode = node;
               break;
@@ -504,10 +504,7 @@ describe('CLI Style Command Tests', () => {
 
         for (const bundle of bundles) {
           for (const node of bundle.graph.nodes) {
-            if (
-              node.contract?.entryId &&
-              node.contract.entryId.includes('Button.tsx')
-            ) {
+            if (node.contract?.entryId?.includes('Button.tsx')) {
               foundButton = true;
               break;
             }

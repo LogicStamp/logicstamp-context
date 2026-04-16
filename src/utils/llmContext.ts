@@ -5,7 +5,7 @@
 import { readFile, writeFile, access } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readConfig, updateConfig } from './config.js';
+import { readConfig } from './config.js';
 
 /**
  * Read LLM_CONTEXT.md from the package

@@ -4,7 +4,6 @@ import {
   isInNextAppDir,
   extractNextJsMetadata,
   detectKind,
-  detectBackendFramework,
 } from '../../../src/core/astParser/detectors.js';
 import { createTestSourceFile } from '../test-helpers.js';
 
