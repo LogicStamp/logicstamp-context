@@ -2,27 +2,26 @@
  * Security scan command - Scans for secrets and compiles report
  */
 
-import { resolve, dirname, join, relative } from 'node:path';
-import { readFile, writeFile, mkdir, unlink, stat } from 'node:fs/promises';
-import { createInterface } from 'node:readline';
+import { mkdir, stat, unlink, writeFile } from 'node:fs/promises';
+import { dirname, join, relative, resolve } from 'node:path';
 import { stdin, stdout } from 'node:process';
+import { createInterface } from 'node:readline';
+import { debugError } from '../../utils/debug.js';
 import {
   globFiles,
   readFileWithText,
-  getRelativePath,
   toForwardSlashes,
 } from '../../utils/fsx.js';
-import {
-  scanFileForSecrets,
-  filterFalsePositives,
-  type SecretMatch,
-} from '../../utils/secretDetector.js';
-import { STAMPIGNORE_FILENAME } from '../../utils/stampignore.js';
 import {
   ensureGitignorePatterns,
   ensurePatternInGitignore,
 } from '../../utils/gitignore.js';
-import { debugError } from '../../utils/debug.js';
+import {
+  filterFalsePositives,
+  type SecretMatch,
+  scanFileForSecrets,
+} from '../../utils/secretDetector.js';
+import { STAMPIGNORE_FILENAME } from '../../utils/stampignore.js';
 import { displayPath } from './context/index.js';
 
 export interface SecurityScanOptions {
@@ -82,7 +81,10 @@ export async function securityHardResetCommand(
   const outputFile = outputPath.endsWith('.json')
     ? outputPath
     : join(outputPath, 'stamp_security_report.json');
-  const reportPath = outputFile;
+  const reportPath =
+    outputFile.startsWith('/') || outputFile.match(/^[A-Z]:/)
+      ? outputFile
+      : join(projectRoot, outputFile);
 
   let shouldReset = options.force;
 
@@ -130,12 +132,9 @@ export interface SecurityScanResult {
 
 export async function securityScanCommand(
   options: SecurityScanOptions,
-): Promise<void | SecurityScanResult> {
+): Promise<undefined | SecurityScanResult> {
   const projectRoot = resolve(options.entry || '.');
   const outputPath = options.out || 'stamp_security_report.json';
-  const outputDir = outputPath.endsWith('.json')
-    ? dirname(outputPath)
-    : outputPath;
   const outputFile = outputPath.endsWith('.json')
     ? outputPath
     : join(outputPath, 'stamp_security_report.json');
@@ -365,10 +364,13 @@ export async function securityScanCommand(
       // Group by file
       const matchesByFile = new Map<string, SecretMatch[]>();
       for (const match of allMatches) {
-        if (!matchesByFile.has(match.file)) {
-          matchesByFile.set(match.file, []);
+        const fileMatches = matchesByFile.get(match.file);
+        if (fileMatches) {
+          fileMatches.push(match);
+          continue;
         }
-        matchesByFile.get(match.file)!.push(match);
+
+        matchesByFile.set(match.file, [match]);
       }
 
       for (const [file, matches] of matchesByFile.entries()) {
