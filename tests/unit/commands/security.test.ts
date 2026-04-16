@@ -1,14 +1,13 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import {
-  securityScanCommand,
-  securityHardResetCommand,
-  type SecurityScanOptions,
-  type SecurityHardResetOptions,
-} from '../../../src/cli/commands/security.js';
 import * as fs from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  securityHardResetCommand,
+  securityScanCommand,
+} from '../../../src/cli/commands/security.js';
 import * as fsx from '../../../src/utils/fsx.js';
-import * as secretDetector from '../../../src/utils/secretDetector.js';
 import * as gitignore from '../../../src/utils/gitignore.js';
+import * as secretDetector from '../../../src/utils/secretDetector.js';
 
 // Mock dependencies
 vi.mock('node:fs/promises');
@@ -47,8 +46,8 @@ describe('securityScanCommand', () => {
     // Default mock implementations
     vi.mocked(fsx.globFiles).mockResolvedValue(['src/app.ts', 'src/config.ts']);
     vi.mocked(fsx.readFileWithText).mockResolvedValue({
+      path: 'src/app.ts',
       text: 'const x = 1;',
-      bom: false,
     });
     vi.mocked(secretDetector.scanFileForSecrets).mockReturnValue([]);
     vi.mocked(secretDetector.filterFalsePositives).mockImplementation(
@@ -93,6 +92,7 @@ describe('securityScanCommand', () => {
           {
             file: 'src/config.ts',
             line: 5,
+            column: 1,
             type: 'API Key',
             severity: 'high',
             snippet: 'const apiKey = "sk-1234..."',
@@ -114,6 +114,7 @@ describe('securityScanCommand', () => {
       {
         file: 'src/config.ts',
         line: 5,
+        column: 1,
         type: 'API Key',
         severity: 'high',
         snippet: 'const apiKey = "sk-1234..."',
@@ -241,7 +242,14 @@ describe('securityScanCommand', () => {
 
   it('should filter false positives from matches', async () => {
     vi.mocked(secretDetector.scanFileForSecrets).mockReturnValue([
-      { file: 'test.ts', line: 1, type: 'test', severity: 'low', snippet: 'x' },
+      {
+        file: 'test.ts',
+        line: 1,
+        column: 1,
+        type: 'test',
+        severity: 'low',
+        snippet: 'x',
+      },
     ]);
     vi.mocked(secretDetector.filterFalsePositives).mockReturnValue([]);
 
@@ -325,7 +333,7 @@ describe('securityHardResetCommand', () => {
     expect(console.log).not.toHaveBeenCalled();
   });
 
-  it('should use custom output path', async () => {
+  it('should resolve custom output path from the project root', async () => {
     vi.mocked(fs.unlink).mockResolvedValue(undefined);
 
     await securityHardResetCommand({
@@ -333,6 +341,6 @@ describe('securityHardResetCommand', () => {
       out: 'custom/report.json',
     });
 
-    expect(fs.unlink).toHaveBeenCalledWith('custom/report.json');
+    expect(fs.unlink).toHaveBeenCalledWith(resolve('custom/report.json'));
   });
 });

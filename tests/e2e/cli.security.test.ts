@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readFile, rm, access, mkdir, writeFile, cp } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 const execAsync = promisify(exec);
@@ -29,7 +29,7 @@ describe('CLI Security Command Tests', () => {
     if (testDir) {
       try {
         await rm(testDir, { recursive: true, force: true });
-      } catch (error) {
+      } catch (_error) {
         // Ignore cleanup errors
       }
     }
@@ -337,10 +337,11 @@ const password = 'mySecretPassword123';
       const gitignoreContent = await readFile(gitignorePath, 'utf-8');
 
       // Should contain the custom report path (relative to project root)
-      const relativeReportPath = customReportPath
-        .replace(fixturesPath + '/', '')
-        .replace(/\\/g, '/');
-      expect(gitignoreContent).toContain('reports/security-report.json');
+      const relativeReportPath = relative(
+        fixturesPath,
+        customReportPath,
+      ).replace(/\\/g, '/');
+      expect(gitignoreContent).toContain(relativeReportPath);
     }, 30000);
 
     it('should not fail if .gitignore update fails (non-fatal)', async () => {
@@ -452,7 +453,7 @@ context_*.json
           `node dist/cli/stamp.js security --hard-reset ${fixturesPath} --out ${reportPath}`,
           { timeout: 2000 },
         );
-      } catch (error: any) {
+      } catch (_error: any) {
         // Timeout is expected since we're not providing stdin input
         // The command structure is valid (verified by no syntax errors)
         // File should still exist since we didn't confirm
