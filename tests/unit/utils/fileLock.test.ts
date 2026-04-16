@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { acquireLock, withLock } from '../../../src/utils/fileLock.js';
-import { writeFile, mkdir, unlink, readFile, access } from 'fs/promises';
-import { join } from 'path';
-import { mkdtemp, rm } from 'fs/promises';
-import { tmpdir } from 'os';
+import { writeFile, readFile, access } from 'node:fs/promises';
+import { join } from 'node:path';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 
 describe('fileLock utils', () => {
   let testDir: string;
@@ -40,7 +40,7 @@ describe('fileLock utils', () => {
       expect(lockContent.pid).toBe(process.pid);
       expect(lockContent.timestamp).toBeDefined();
 
-      await lock!.release();
+      await lock?.release();
     });
 
     it('should remove lock file on release', async () => {
@@ -48,7 +48,7 @@ describe('fileLock utils', () => {
       await writeFile(filePath, '{}');
 
       const lock = await acquireLock(filePath);
-      await lock!.release();
+      await lock?.release();
 
       const lockPath = `${filePath}.lock`;
       const lockExists = await access(lockPath)
@@ -62,8 +62,8 @@ describe('fileLock utils', () => {
       await writeFile(filePath, '{}');
 
       const lock = await acquireLock(filePath);
-      await lock!.release();
-      await lock!.release(); // Should not throw
+      await lock?.release();
+      await lock?.release(); // Should not throw
     });
 
     it('should detect stale lock from dead process', async () => {
@@ -90,7 +90,7 @@ describe('fileLock utils', () => {
       });
       expect(lock).not.toBeNull();
 
-      await lock!.release();
+      await lock?.release();
     });
 
     it('should detect stale lock by age', async () => {
@@ -118,7 +118,7 @@ describe('fileLock utils', () => {
       });
       expect(lock).not.toBeNull();
 
-      await lock!.release();
+      await lock?.release();
     });
 
     it('should wait for active lock to be released', async () => {
@@ -145,7 +145,7 @@ describe('fileLock utils', () => {
       // Use a Promise to properly handle the async release and filesystem delay
       const releasePromise = (async () => {
         await new Promise((resolve) => setTimeout(resolve, 80)); // Wait until ~100ms total
-        await lock1!.release();
+        await lock1?.release();
         // Additional delay to let filesystem catch up (especially important on Windows)
         // Windows file deletion can be asynchronous, so we need to ensure
         // the deletion is fully visible before lock2's next check
@@ -164,7 +164,7 @@ describe('fileLock utils', () => {
       expect(elapsed).toBeGreaterThanOrEqual(90); // Should have waited
       expect(elapsed).toBeLessThan(5000); // Should not have timed out (increased for parallel test runs)
 
-      await lock2!.release();
+      await lock2?.release();
     });
 
     it('should return null on timeout', async () => {
@@ -179,7 +179,7 @@ describe('fileLock utils', () => {
       const lock2 = await acquireLock(filePath, { timeout: 100 });
       expect(lock2).toBeNull();
 
-      await lock1!.release();
+      await lock1?.release();
     });
   });
 
@@ -250,7 +250,7 @@ describe('fileLock utils', () => {
         withLock(filePath, async () => {}, { timeout: 100 }),
       ).rejects.toThrow('Could not acquire lock');
 
-      await lock1!.release();
+      await lock1?.release();
     });
 
     it('should serialize concurrent access', async () => {

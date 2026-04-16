@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { init, type InitOptions } from '../../../src/cli/commands/init.js';
+import { init } from '../../../src/cli/commands/init.js';
 import * as gitignore from '../../../src/utils/gitignore.js';
 import * as config from '../../../src/utils/config.js';
 import * as llmContext from '../../../src/utils/llmContext.js';

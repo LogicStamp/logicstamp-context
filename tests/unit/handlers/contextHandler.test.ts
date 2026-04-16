@@ -104,7 +104,7 @@ describe('handleGenerate', () => {
   it('should handle errors and exit with code 1', async () => {
     const error = new Error('Test error');
     vi.spyOn(contextCommand, 'contextCommand').mockRejectedValue(error);
-    const parseSpy = vi.spyOn(parser, 'parseContextArgs').mockReturnValue({
+    const _parseSpy = vi.spyOn(parser, 'parseContextArgs').mockReturnValue({
       depth: 2,
       includeCode: 'header',
       format: 'json',

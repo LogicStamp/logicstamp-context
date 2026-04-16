@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { join } from 'node:path';
 import {
   parseGitBaseline,
@@ -35,7 +35,7 @@ vi.mock('node:child_process', () => ({
     // Create a mock ChildProcess-like object
     const mockChild = {
       stdout: {
-        on: vi.fn((event: string, handler: Function) => {
+        on: vi.fn((event: string, handler: (...args: unknown[]) => void) => {
           if (event === 'data' && result.stdout) {
             // Simulate stdout data asynchronously
             setImmediate(() => handler(Buffer.from(result.stdout)));
@@ -43,14 +43,14 @@ vi.mock('node:child_process', () => ({
         }),
       },
       stderr: {
-        on: vi.fn((event: string, handler: Function) => {
+        on: vi.fn((event: string, handler: (...args: unknown[]) => void) => {
           if (event === 'data' && result.stderr) {
             // Simulate stderr data asynchronously
             setImmediate(() => handler(Buffer.from(result.stderr)));
           }
         }),
       },
-      on: vi.fn((event: string, handler: Function) => {
+      on: vi.fn((event: string, handler: (...args: unknown[]) => void) => {
         if (event === 'error' && result.error) {
           // Simulate error asynchronously
           setImmediate(() => handler(result.error));

@@ -4,10 +4,7 @@ import {
   resolveDependency,
   findComponentByName,
 } from '../../../src/core/pack/resolver.js';
-import type {
-  ProjectManifest,
-  ComponentNode,
-} from '../../../src/core/manifest.js';
+import type { ProjectManifest } from '../../../src/core/manifest.js';
 
 describe('Pack Resolver', () => {
   const createMockManifest = (): ProjectManifest => {

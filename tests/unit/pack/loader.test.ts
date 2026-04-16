@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { join, resolve } from 'node:path';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { join } from 'node:path';
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import {
   clearSecurityReportCache,
@@ -10,7 +10,6 @@ import {
   readSourceCode,
   loadContract,
   type SanitizeInfo,
-  type SanitizeStats,
 } from '../../../src/core/pack/loader.js';
 
 describe('Loader Module', () => {

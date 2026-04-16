@@ -11,8 +11,6 @@ import {
   unregisterCleanup,
   gracefulShutdown,
   isShutdownInProgress,
-  registerSyncCleanupPath,
-  unregisterSyncCleanupPath,
   getCleanupHandlerCount,
   clearAllCleanupHandlers,
 } from '../../../src/utils/cleanup.js';
@@ -91,7 +89,7 @@ describe('cleanup utilities', () => {
 
       try {
         await gracefulShutdown(0);
-      } catch (e) {
+      } catch (_e) {
         // Expected - we throw to prevent actual exit
       }
 
@@ -178,7 +176,7 @@ describe('cleanup utilities', () => {
 
       try {
         await gracefulShutdown(0);
-      } catch (e) {
+      } catch (_e) {
         // Expected
       }
 
@@ -226,7 +224,7 @@ describe('cleanup utilities', () => {
 
       try {
         await gracefulShutdown(1);
-      } catch (e) {
+      } catch (_e) {
         // Expected
       }
 
@@ -253,7 +251,7 @@ describe('cleanup utilities', () => {
 
       try {
         await gracefulShutdown(42);
-      } catch (e) {
+      } catch (_e) {
         // Expected
       }
 
@@ -271,7 +269,7 @@ describe('cleanup utilities', () => {
 
       try {
         await gracefulShutdown(1, 'Shutting down...');
-      } catch (e) {
+      } catch (_e) {
         // Expected
       }
 
@@ -308,7 +306,7 @@ describe('cleanup utilities', () => {
 
       try {
         await gracefulShutdown(0);
-      } catch (e) {
+      } catch (_e) {
         // Expected
       }
 

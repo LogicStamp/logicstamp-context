@@ -460,7 +460,7 @@ describe('hookParameterExtractor', () => {
 
         // The local function name doesn't match hook pattern,
         // but it's exported as a hook name
-        const params = extractHookParameters(source);
+        const _params = extractHookParameters(source);
         // Note: extractHookParameters looks at local function names
         // This might not extract params for aliased exports that don't match locally
         // This tests the current behavior
@@ -642,7 +642,7 @@ describe('hookParameterExtractor', () => {
         });
 
         // Mock isExported to return true for useValid
-        const params = extractHookParameters(mockSource as any);
+        const _params = extractHookParameters(mockSource as any);
         // Should still work for valid variable declarations
       });
 

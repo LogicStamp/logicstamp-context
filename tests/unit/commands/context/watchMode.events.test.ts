@@ -13,7 +13,7 @@ vi.mock('node:path', async () => {
     resolve: vi.fn((p: string) => p),
     dirname: vi.fn((p: string) => p.replace(/\/[^/]+$/, '') || '.'),
     join: vi.fn((...parts: string[]) => parts.join('/')),
-    relative: vi.fn((from: string, to: string) => to.replace(from + '/', '')),
+    relative: vi.fn((from: string, to: string) => to.replace(`${from}/`, '')),
   };
 });
 
@@ -138,7 +138,7 @@ describe('file extension filtering', () => {
       quiet: false,
     };
 
-    const watchPromise = startWatchMode(options, '/project', null);
+    const _watchPromise = startWatchMode(options, '/project', null);
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     if (changeHandler) {
@@ -170,7 +170,7 @@ describe('file extension filtering', () => {
       quiet: false,
     };
 
-    const watchPromise = startWatchMode(options, '/project', null);
+    const _watchPromise = startWatchMode(options, '/project', null);
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     if (changeHandler) {
@@ -202,7 +202,7 @@ describe('file extension filtering', () => {
       quiet: false,
     };
 
-    const watchPromise = startWatchMode(options, '/project', null);
+    const _watchPromise = startWatchMode(options, '/project', null);
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     if (changeHandler) {
@@ -236,7 +236,7 @@ describe('file extension filtering', () => {
       includeStyle: true,
     };
 
-    const watchPromise = startWatchMode(options, '/project', null);
+    const _watchPromise = startWatchMode(options, '/project', null);
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     if (changeHandler) {
@@ -297,7 +297,7 @@ describe('add and unlink events', () => {
       quiet: false,
     };
 
-    const watchPromise = startWatchMode(options, '/project', null);
+    const _watchPromise = startWatchMode(options, '/project', null);
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     if (addHandler) {
@@ -330,7 +330,7 @@ describe('add and unlink events', () => {
       quiet: false,
     };
 
-    const watchPromise = startWatchMode(options, '/project', null);
+    const _watchPromise = startWatchMode(options, '/project', null);
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     if (unlinkHandler) {
@@ -381,7 +381,7 @@ describe('ready event', () => {
       quiet: false,
     };
 
-    const watchPromise = startWatchMode(options, '/project', null);
+    const _watchPromise = startWatchMode(options, '/project', null);
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     if (readyHandler) {
@@ -429,7 +429,7 @@ describe('ready event', () => {
       quiet: false,
     };
 
-    const watchPromise = startWatchMode(options, '/project', null);
+    const _watchPromise = startWatchMode(options, '/project', null);
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     // Trigger ready multiple times

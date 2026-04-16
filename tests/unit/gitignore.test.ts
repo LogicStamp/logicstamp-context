@@ -130,7 +130,7 @@ describe('gitignore utilities', () => {
     });
 
     it('should return empty array when all patterns exist', () => {
-      const content = LOGICSTAMP_GITIGNORE_PATTERNS.join('\n') + '\n';
+      const content = `${LOGICSTAMP_GITIGNORE_PATTERNS.join('\n')}\n`;
       const missing = getMissingPatterns(content);
       expect(missing).toEqual([]);
     });
@@ -161,7 +161,7 @@ describe('gitignore utilities', () => {
   describe('addLogicStampPatterns', () => {
     it('should add all patterns to empty content', () => {
       const result = addLogicStampPatterns('');
-      const expected = LOGICSTAMP_GITIGNORE_PATTERNS.join('\n') + '\n';
+      const expected = `${LOGICSTAMP_GITIGNORE_PATTERNS.join('\n')}\n`;
       expect(result).toBe(expected);
     });
 
@@ -174,7 +174,7 @@ describe('gitignore utilities', () => {
     });
 
     it('should not duplicate patterns if they already exist', () => {
-      const content = LOGICSTAMP_GITIGNORE_PATTERNS.join('\n') + '\n';
+      const content = `${LOGICSTAMP_GITIGNORE_PATTERNS.join('\n')}\n`;
       const result = addLogicStampPatterns(content);
       expect(result).toBe(content);
     });
@@ -197,7 +197,7 @@ describe('gitignore utilities', () => {
         '.logicstamp/',
         // Missing: stamp_security_report.json, context.toon, context_*.toon
       ];
-      const content = oldPatterns.join('\n') + '\n';
+      const content = `${oldPatterns.join('\n')}\n`;
 
       const result = addLogicStampPatterns(content);
 
@@ -228,7 +228,7 @@ describe('gitignore utilities', () => {
         'context_*.json',
         // Missing: *.uif.json, logicstamp.manifest.json, .logicstamp/, stamp_security_report.json
       ];
-      const content = oldPatterns.join('\n') + '\n';
+      const content = `${oldPatterns.join('\n')}\n`;
 
       const result = addLogicStampPatterns(content);
 
@@ -323,7 +323,7 @@ describe('gitignore utilities', () => {
     });
 
     it('should not modify .gitignore if patterns already exist', async () => {
-      const initialContent = LOGICSTAMP_GITIGNORE_PATTERNS.join('\n') + '\n';
+      const initialContent = `${LOGICSTAMP_GITIGNORE_PATTERNS.join('\n')}\n`;
       await writeFile(join(testDir, '.gitignore'), initialContent);
 
       const result = await ensureGitignorePatterns(testDir);
@@ -350,18 +350,17 @@ describe('gitignore utilities', () => {
 
     it('should update old block with missing patterns (edge case fix)', async () => {
       // Simulate old .gitignore without stamp_security_report.json
-      const oldContent =
-        [
-          'node_modules',
-          '',
-          '# LogicStamp context & security files',
-          'context.json',
-          'context_*.json',
-          '*.uif.json',
-          'logicstamp.manifest.json',
-          '.logicstamp/',
-          // Missing: stamp_security_report.json
-        ].join('\n') + '\n';
+      const oldContent = `${[
+        'node_modules',
+        '',
+        '# LogicStamp context & security files',
+        'context.json',
+        'context_*.json',
+        '*.uif.json',
+        'logicstamp.manifest.json',
+        '.logicstamp/',
+        // Missing: stamp_security_report.json
+      ].join('\n')}\n`;
 
       await writeFile(join(testDir, '.gitignore'), oldContent);
 
@@ -398,7 +397,7 @@ describe('gitignore utilities', () => {
     it('should not modify .gitignore if all patterns already exist (even with old hasLogicStampPatterns check)', async () => {
       // This tests that ensureGitignorePatterns works correctly even when
       // hasLogicStampPatterns would return true (old check)
-      const fullContent = LOGICSTAMP_GITIGNORE_PATTERNS.join('\n') + '\n';
+      const fullContent = `${LOGICSTAMP_GITIGNORE_PATTERNS.join('\n')}\n`;
       await writeFile(join(testDir, '.gitignore'), fullContent);
 
       const result = await ensureGitignorePatterns(testDir);

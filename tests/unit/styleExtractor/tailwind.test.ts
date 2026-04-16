@@ -75,7 +75,7 @@ describe('Tailwind Extractor', () => {
       expect(classes).toContain('bg-gray-500');
     });
 
-    it('should extract classes from NoSubstitutionTemplateLiteral (backticks with no ${})', () => {
+    it('should extract classes from NoSubstitutionTemplateLiteral (plain backticks)', () => {
       const sourceFile = createTestSourceFile(
         `
         export function Component() {
@@ -1197,7 +1197,7 @@ describe('Tailwind Extractor', () => {
         expect(classes).toContain('bg-gray-500');
       });
 
-      it("should handle className={`p-4 ${base} text-sm`} with const base = 'px-2'", () => {
+      it("should handle interpolated className with const base = 'px-2'", () => {
         const sourceFile = createTestSourceFile(
           `
           export function Component() {

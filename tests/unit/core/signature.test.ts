@@ -9,7 +9,6 @@ import {
   inferDescription,
 } from '../../../src/core/signature.js';
 import type { AstExtract } from '../../../src/core/astParser.js';
-import type { ContractPreset } from '../../../src/types/UIFContract.js';
 
 /**
  * Helper to create a mock AstExtract for testing
