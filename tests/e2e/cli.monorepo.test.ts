@@ -17,6 +17,7 @@ interface FolderInfo {
 interface BundleNode {
   contract?: {
     kind?: string;
+    entryId?: string;
   };
 }
 
@@ -77,7 +78,12 @@ describe('CLI Monorepo Fixture Tests', () => {
 
     for (const folderPath of expectedFolders) {
       expect(foldersByPath.has(folderPath)).toBe(true);
-      await access(join(outDir, foldersByPath.get(folderPath)!.contextFile));
+      const folderInfo = foldersByPath.get(folderPath);
+      expect(folderInfo).toBeDefined();
+      if (!folderInfo) {
+        throw new Error(`Missing folder info for ${folderPath}`);
+      }
+      await access(join(outDir, folderInfo.contextFile));
     }
 
     expect(foldersByPath.get('apps/api/src')).toMatchObject({
@@ -90,10 +96,12 @@ describe('CLI Monorepo Fixture Tests', () => {
     });
 
     const readBundles = async (folderPath: string): Promise<Bundle[]> => {
-      const contextPath = join(
-        outDir,
-        foldersByPath.get(folderPath)!.contextFile,
-      );
+      const folderInfo = foldersByPath.get(folderPath);
+      expect(folderInfo).toBeDefined();
+      if (!folderInfo) {
+        throw new Error(`Missing folder info for ${folderPath}`);
+      }
+      const contextPath = join(outDir, folderInfo.contextFile);
       return JSON.parse(await readFile(contextPath, 'utf-8')) as Bundle[];
     };
 

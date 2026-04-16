@@ -204,15 +204,15 @@ describe('initializeWatchCache', () => {
       'src/components/Button.tsx',
     );
     expect(buttonBundles).toBeDefined();
-    expect(buttonBundles!.size).toBe(2);
-    expect(buttonBundles!.has('src/App.tsx')).toBe(true);
-    expect(buttonBundles!.has('src/components/Card.tsx')).toBe(true);
+    expect(buttonBundles?.size).toBe(2);
+    expect(buttonBundles?.has('src/App.tsx')).toBe(true);
+    expect(buttonBundles?.has('src/components/Card.tsx')).toBe(true);
 
     // App should be in App bundle only
     const appBundles = cache.componentToBundles.get('src/App.tsx');
     expect(appBundles).toBeDefined();
-    expect(appBundles!.size).toBe(1);
-    expect(appBundles!.has('src/App.tsx')).toBe(true);
+    expect(appBundles?.size).toBe(1);
+    expect(appBundles?.has('src/App.tsx')).toBe(true);
   });
 
   it('should store manifest and bundles', async () => {
@@ -285,6 +285,12 @@ describe('incrementalRebuild', () => {
   });
 
   let mockCache: WatchCache;
+  const requireManifest = (): ProjectManifest => {
+    if (!mockCache.manifest) {
+      throw new Error('Expected manifest in mock cache');
+    }
+    return mockCache.manifest;
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -330,7 +336,7 @@ describe('incrementalRebuild', () => {
     });
     vi.mocked(fileHash).mockReturnValue('hash-100');
 
-    vi.mocked(buildDependencyGraph).mockReturnValue(mockCache.manifest!);
+    vi.mocked(buildDependencyGraph).mockReturnValue(requireManifest());
 
     const result = await incrementalRebuild(
       ['src/App.tsx'],
@@ -384,7 +390,7 @@ describe('incrementalRebuild', () => {
 
     // Mock manifest building
     vi.mocked(buildDependencyGraph).mockReturnValue({
-      ...mockCache.manifest!,
+      ...requireManifest(),
       graph: { roots: ['src/App.tsx'], leaves: [] },
     });
 
@@ -409,7 +415,7 @@ describe('incrementalRebuild', () => {
     // Mock file read to throw error
     vi.mocked(readFileWithText).mockRejectedValue(new Error('File not found'));
 
-    vi.mocked(buildDependencyGraph).mockReturnValue(mockCache.manifest!);
+    vi.mocked(buildDependencyGraph).mockReturnValue(requireManifest());
 
     const result = await incrementalRebuild(
       ['src/nonexistent.tsx'],
@@ -482,7 +488,7 @@ describe('incrementalRebuild', () => {
 
     // Mock manifest building
     vi.mocked(buildDependencyGraph).mockReturnValue({
-      ...mockCache.manifest!,
+      ...requireManifest(),
       graph: { roots: ['src/App.tsx'], leaves: [] },
     });
 
@@ -512,7 +518,7 @@ describe('incrementalRebuild', () => {
     // Reverse index should still have the old bundle mapping
     const appBundles = mockCache.componentToBundles.get('src/App.tsx');
     expect(appBundles).toBeDefined();
-    expect(appBundles!.has('src/App.tsx')).toBe(true);
+    expect(appBundles?.has('src/App.tsx')).toBe(true);
   });
 
   it('should maintain consistency when some packs succeed and others fail', async () => {
@@ -610,7 +616,7 @@ describe('incrementalRebuild', () => {
     });
 
     vi.mocked(buildDependencyGraph).mockReturnValue({
-      ...mockCache.manifest!,
+      ...requireManifest(),
       graph: { roots: ['src/App.tsx', 'src/Card.tsx'], leaves: [] },
     });
 
@@ -693,7 +699,7 @@ describe('incrementalRebuild', () => {
     });
 
     vi.mocked(buildDependencyGraph).mockReturnValue({
-      ...mockCache.manifest!,
+      ...requireManifest(),
       graph: { roots: ['src/App.tsx'], leaves: [] },
     });
 
@@ -733,7 +739,7 @@ describe('incrementalRebuild', () => {
       'src/components/Button.tsx',
     );
     expect(buttonBundles).toBeDefined();
-    expect(buttonBundles!.has('src/App.tsx')).toBe(true);
+    expect(buttonBundles?.has('src/App.tsx')).toBe(true);
   });
 
   it('should detect new root components and create bundles for them', async () => {
@@ -864,7 +870,7 @@ describe('incrementalRebuild', () => {
     mockCache.contracts.set('aaa-old-hash', contract1);
     mockCache.contracts.set('zzz-new-hash', contract2);
 
-    vi.mocked(buildDependencyGraph).mockReturnValue(mockCache.manifest!);
+    vi.mocked(buildDependencyGraph).mockReturnValue(requireManifest());
 
     await incrementalRebuild(
       [], // No changes
@@ -923,7 +929,7 @@ describe('incrementalRebuild', () => {
         violations: [],
       });
 
-      vi.mocked(buildDependencyGraph).mockReturnValue(mockCache.manifest!);
+      vi.mocked(buildDependencyGraph).mockReturnValue(requireManifest());
 
       await incrementalRebuild(
         ['src/App.tsx'],
@@ -984,7 +990,7 @@ describe('incrementalRebuild', () => {
         violations: [],
       });
 
-      vi.mocked(buildDependencyGraph).mockReturnValue(mockCache.manifest!);
+      vi.mocked(buildDependencyGraph).mockReturnValue(requireManifest());
 
       const newBundle = createMockBundle('src/App.tsx', 'new-bundleHash');
       vi.mocked(pack).mockResolvedValue(newBundle);
@@ -1036,7 +1042,7 @@ describe('incrementalRebuild', () => {
         violations: [],
       });
 
-      vi.mocked(buildDependencyGraph).mockReturnValue(mockCache.manifest!);
+      vi.mocked(buildDependencyGraph).mockReturnValue(requireManifest());
 
       const newBundle = createMockBundle('src/App.tsx', 'new-bundleHash');
       vi.mocked(pack).mockResolvedValue(newBundle);
@@ -1109,7 +1115,7 @@ describe('incrementalRebuild', () => {
         violations: [],
       });
 
-      vi.mocked(buildDependencyGraph).mockReturnValue(mockCache.manifest!);
+      vi.mocked(buildDependencyGraph).mockReturnValue(requireManifest());
 
       // Create bundle with the new contract (matching the new hash)
       // The cache is synced from bundle contents, so the bundle must have the correct contract
@@ -1184,7 +1190,7 @@ describe('incrementalRebuild', () => {
 
       const contract = createMockContract('src/App.tsx', 'hash-100');
       vi.mocked(buildContract).mockReturnValue({ contract, violations: [] });
-      vi.mocked(buildDependencyGraph).mockReturnValue(mockCache.manifest!);
+      vi.mocked(buildDependencyGraph).mockReturnValue(requireManifest());
 
       // First rebuild - should attempt extraction and cache failure
       await incrementalRebuild(
@@ -1220,7 +1226,7 @@ describe('incrementalRebuild', () => {
         jsxRoutes: [],
       });
       vi.mocked(buildContract).mockReturnValue({ contract, violations: [] });
-      vi.mocked(buildDependencyGraph).mockReturnValue(mockCache.manifest!);
+      vi.mocked(buildDependencyGraph).mockReturnValue(requireManifest());
 
       await incrementalRebuild(
         ['src/App.tsx'],
@@ -1301,7 +1307,7 @@ describe('incrementalRebuild', () => {
       });
 
       vi.mocked(buildDependencyGraph).mockReturnValue({
-        ...mockCache.manifest!,
+        ...requireManifest(),
         graph: { roots: ['src/App.tsx'], leaves: [] },
       });
 
@@ -1320,7 +1326,7 @@ describe('incrementalRebuild', () => {
       const appBundles = mockCache.componentToBundles.get('src/App.tsx');
       expect(appBundles).toBeDefined();
       expect(appBundles).toBeInstanceOf(Set);
-      expect(appBundles!.has('src/App.tsx')).toBe(true);
+      expect(appBundles?.has('src/App.tsx')).toBe(true);
     });
 
     it('should add to existing Set when entryId already exists in componentToBundles', async () => {
@@ -1383,7 +1389,7 @@ describe('incrementalRebuild', () => {
       });
 
       vi.mocked(buildDependencyGraph).mockReturnValue({
-        ...mockCache.manifest!,
+        ...requireManifest(),
         graph: { roots: ['src/App.tsx'], leaves: [] },
       });
 
@@ -1400,8 +1406,8 @@ describe('incrementalRebuild', () => {
       // Should use existing Set, not create a new one
       const appBundles = mockCache.componentToBundles.get('src/App.tsx');
       expect(appBundles).toBe(existingSet); // Same Set instance
-      expect(appBundles!.has('src/App.tsx')).toBe(true);
-      expect(appBundles!.has('src/OtherBundle.tsx')).toBe(true);
+      expect(appBundles?.has('src/App.tsx')).toBe(true);
+      expect(appBundles?.has('src/OtherBundle.tsx')).toBe(true);
     });
   });
 });

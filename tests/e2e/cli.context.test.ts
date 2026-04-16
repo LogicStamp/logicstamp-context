@@ -23,7 +23,7 @@ describe('CLI Context Generation Tests', () => {
     if (outputPath) {
       try {
         await rm(outputPath, { recursive: true, force: true });
-      } catch (error) {
+      } catch (_error) {
         // Ignore cleanup errors
       }
     }
@@ -34,7 +34,7 @@ describe('CLI Context Generation Tests', () => {
       const outFile = join(outputPath, 'context.json');
 
       // Run the CLI
-      const { stdout, stderr } = await execAsync(
+      const { stdout } = await execAsync(
         `node dist/cli/index.js ${fixturesPath} --out ${outFile}`,
       );
 
@@ -130,7 +130,7 @@ describe('CLI Context Generation Tests', () => {
         for (const bundle of bundles) {
           expect(!isAbsolute(bundle.entryId)).toBe(true);
           // Check all node entryIds are relative
-          if (bundle.graph && bundle.graph.nodes) {
+          if (bundle.graph?.nodes) {
             for (const node of bundle.graph.nodes) {
               expect(!isAbsolute(node.entryId)).toBe(true);
             }
@@ -534,11 +534,11 @@ describe('CLI Context Generation Tests', () => {
 
       // Verify .gitignore was NOT created in the fixture directory
       const gitignorePath = join(fixturesPath, '.gitignore');
-      let gitignoreExists = true;
+      let _gitignoreExists = true;
       try {
         await access(gitignorePath);
       } catch {
-        gitignoreExists = false;
+        _gitignoreExists = false;
       }
       // We can't definitively check this since the fixture might already have .gitignore
       // But we can verify the command completed without errors
@@ -623,7 +623,7 @@ describe('CLI Context Generation Tests', () => {
       await writeFile(gitignorePath, 'node_modules\n');
 
       // Run context command on root - it will recursively find files in src
-      const { stdout } = await execAsync(
+      await execAsync(
         `node dist/cli/stamp.js context ${testFixturesPath} --out ${outDir}`,
       );
 
@@ -722,10 +722,7 @@ describe('CLI Context Generation Tests', () => {
 
         for (const bundle of bundles) {
           for (const node of bundle.graph.nodes) {
-            if (
-              node.contract?.entryId &&
-              node.contract.entryId.includes('Button.tsx')
-            ) {
+            if (node.contract?.entryId?.includes('Button.tsx')) {
               foundButton = true;
               break;
             }
@@ -958,16 +955,16 @@ describe('CLI Context Generation Tests', () => {
       expect(bundles.length).toBeGreaterThan(0);
 
       // Find the bundle with config.ts
-      const configBundle = bundles.find(
-        (b: any) => b.entryId && b.entryId.includes('config.ts'),
+      const configBundle = bundles.find((b: any) =>
+        b.entryId?.includes('config.ts'),
       );
 
       expect(configBundle).toBeDefined();
 
       // Check that the code contains PRIVATE_DATA instead of actual secrets
       if (configBundle.graph?.nodes) {
-        const configNode = configBundle.graph.nodes.find(
-          (n: any) => n.entryId && n.entryId.includes('config.ts'),
+        const configNode = configBundle.graph.nodes.find((n: any) =>
+          n.entryId?.includes('config.ts'),
         );
 
         if (configNode?.code) {
@@ -1033,13 +1030,13 @@ describe('CLI Context Generation Tests', () => {
       expect(bundles.length).toBeGreaterThan(0);
 
       // Find the bundle with config.ts
-      const configBundle = bundles.find(
-        (b: any) => b.entryId && b.entryId.includes('config.ts'),
+      const configBundle = bundles.find((b: any) =>
+        b.entryId?.includes('config.ts'),
       );
 
       if (configBundle?.graph?.nodes) {
-        const configNode = configBundle.graph.nodes.find(
-          (n: any) => n.entryId && n.entryId.includes('config.ts'),
+        const configNode = configBundle.graph.nodes.find((n: any) =>
+          n.entryId?.includes('config.ts'),
         );
 
         // Without security report, code should NOT be sanitized

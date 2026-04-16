@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
-import { readFile, rm, writeFile, mkdir, access } from 'node:fs/promises';
+import { readFile, rm, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
@@ -27,7 +27,7 @@ describe('CLI Advanced Features Tests', () => {
     if (outputPath) {
       try {
         await rm(outputPath, { recursive: true, force: true });
-      } catch (error) {
+      } catch (_error) {
         // Ignore cleanup errors
       }
     }
@@ -141,7 +141,7 @@ describe('CLI Advanced Features Tests', () => {
       );
 
       // Verify savings calculation (allow for rounding)
-      const actualSavings = parseInt(stats.savingsGPT4);
+      const actualSavings = parseInt(stats.savingsGPT4, 10);
       expect(Math.abs(actualSavings - expectedSavingsGPT4)).toBeLessThanOrEqual(
         1,
       );
@@ -471,7 +471,7 @@ export function ComponentA() {
             0,
           );
         }
-      } catch (e) {
+      } catch (_e) {
         // If output file doesn't exist and exit code is 1, that's fine - command failed as expected
         if (exitCode === 1) {
           // Command failed, likely because of missing deps - verify the output message
@@ -657,18 +657,12 @@ export function ComponentA() {
       // If Card not found, find any bundle with dependencies (edges)
       if (
         !cardBundle ||
-        (cardBundle.graph &&
-          cardBundle.graph.edges &&
-          cardBundle.graph.edges.length === 0)
+        (cardBundle.graph?.edges && cardBundle.graph.edges.length === 0)
       ) {
         cardBundle = bundles.find(
-          (b: any) => b.graph && b.graph.edges && b.graph.edges.length > 0,
+          (b: any) => b.graph?.edges && b.graph.edges.length > 0,
         );
-        if (
-          cardBundle &&
-          cardBundle.graph.nodes &&
-          cardBundle.graph.nodes.length > 1
-        ) {
+        if (cardBundle?.graph.nodes && cardBundle.graph.nodes.length > 1) {
           // Use the entry node and a dependency node
           cardNode = cardBundle.graph.nodes[0];
           buttonDep =
@@ -692,12 +686,10 @@ export function ComponentA() {
       // (This is a fallback - the test will check if edges exist)
       if (
         !cardBundle ||
-        (cardBundle.graph &&
-          cardBundle.graph.edges &&
-          cardBundle.graph.edges.length === 0)
+        (cardBundle.graph?.edges && cardBundle.graph.edges.length === 0)
       ) {
         cardBundle = bundles.find(
-          (b: any) => b.graph && b.graph.nodes && b.graph.nodes.length > 1,
+          (b: any) => b.graph?.nodes && b.graph.nodes.length > 1,
         );
         if (cardBundle) {
           cardNode = cardBundle.graph.nodes[0];
@@ -708,32 +700,25 @@ export function ComponentA() {
       expect(cardBundle).toBeDefined();
       // Only check for edges if we found a bundle that should have them
       // If we're using the fallback (multiple nodes but no edges), skip the edges check
-      if (
-        cardBundle &&
-        cardBundle.graph &&
-        cardBundle.graph.edges &&
-        cardBundle.graph.edges.length > 0
-      ) {
+      if (cardBundle?.graph?.edges && cardBundle.graph.edges.length > 0) {
         expect(cardBundle.graph.edges.length).toBeGreaterThan(0);
       } else if (
-        cardBundle &&
-        cardBundle.graph &&
-        cardBundle.graph.nodes &&
+        cardBundle?.graph?.nodes &&
         cardBundle.graph.nodes.length > 1
       ) {
         // Fallback: at least verify we have multiple nodes (dependencies might be missing, which is okay for this test)
         expect(cardBundle.graph.nodes.length).toBeGreaterThan(1);
       }
-      expect(cardNode || cardBundle!.graph.nodes[0]).toBeDefined();
-      expect(buttonDep || cardBundle!.graph.nodes[1]).toBeDefined();
+      expect(cardNode || cardBundle?.graph.nodes[0]).toBeDefined();
+      expect(buttonDep || cardBundle?.graph.nodes[1]).toBeDefined();
 
       // Verify dependency resolution - nodes should be in the same bundle
-      const finalCardNode = cardNode || cardBundle!.graph.nodes[0];
-      const finalButtonDep = buttonDep || cardBundle!.graph.nodes[1];
+      const finalCardNode = cardNode || cardBundle?.graph.nodes[0];
+      const finalButtonDep = buttonDep || cardBundle?.graph.nodes[1];
 
       // Check that both nodes exist in the same bundle
-      expect(cardBundle!.graph.nodes).toContain(finalCardNode);
-      expect(cardBundle!.graph.nodes).toContain(finalButtonDep);
+      expect(cardBundle?.graph.nodes).toContain(finalCardNode);
+      expect(cardBundle?.graph.nodes).toContain(finalButtonDep);
     }, 30000);
   });
 

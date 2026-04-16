@@ -148,7 +148,10 @@ export function extractTailwindClasses(source: SourceFile | string): string[] {
 
         // Extract classes based on the expression type
         // Pass sourceFile for variable resolution (Phase 1)
-        const extracted = extractClassesFromExpression(expressionNode!, source);
+        if (!expressionNode) {
+          continue;
+        }
+        const extracted = extractClassesFromExpression(expressionNode, source);
         extracted.forEach((cls) => classNames.add(cls));
       }
     }
@@ -223,7 +226,7 @@ function extractClassesFromExpression(
         // Both TemplateMiddle and TemplateTail have this method
         const litText = literal.getLiteralText();
 
-        if (litText && litText.trim()) {
+        if (litText?.trim()) {
           // Split and filter out template syntax artifacts and empty strings
           const cleanText = litText
             .trim()
@@ -521,7 +524,7 @@ function resolveVariableDeclaration(
 
     // Filter declarations that are in scope and come before the identifier
     const inScopeDeclarations = matchingDeclarations.filter(
-      ({ decl, scope, pos }) => {
+      ({ scope, pos }) => {
         // Declaration must come before identifier
         if (pos >= identifierPos) {
           return false;
@@ -553,8 +556,11 @@ function resolveVariableDeclaration(
 
       // Sort by scope priority (closer scopes first), then by position (most recent first)
       inScopeDeclarations.sort((a, b) => {
-        const aPriority = scopePriorities.get(a.scope!) ?? Infinity;
-        const bPriority = scopePriorities.get(b.scope!) ?? Infinity;
+        if (!a.scope || !b.scope) {
+          return b.pos - a.pos;
+        }
+        const aPriority = scopePriorities.get(a.scope) ?? Infinity;
+        const bPriority = scopePriorities.get(b.scope) ?? Infinity;
         if (aPriority !== bPriority) {
           return aPriority - bPriority;
         }
@@ -666,10 +672,10 @@ export function categorizeTailwindClasses(
 
       // Catch-all for uncategorized utilities
       if (!matchedCategory) {
-        if (!categorized['other']) {
-          categorized['other'] = new Set();
+        if (!categorized.other) {
+          categorized.other = new Set();
         }
-        categorized['other'].add(className);
+        categorized.other.add(className);
       }
     }
 

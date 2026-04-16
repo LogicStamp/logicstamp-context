@@ -23,7 +23,7 @@ describe('CLI Compare Command Tests', () => {
     if (outputPath) {
       try {
         await rm(outputPath, { recursive: true, force: true });
-      } catch (error) {
+      } catch (_error) {
         // Ignore cleanup errors
       }
     }
@@ -317,7 +317,7 @@ describe('CLI Compare Command Tests', () => {
         );
         // May or may not fail depending on if imports actually changed
       } catch (error: any) {
-        if (error.stdout && error.stdout.includes('Δ imports')) {
+        if (error.stdout?.includes('Δ imports')) {
           // Verify detailed diff format
           expect(error.stdout).toMatch(/[+-]\s+\.\//); // Should show + or - with import paths
         }
@@ -364,7 +364,7 @@ describe('CLI Compare Command Tests', () => {
         expect.fail('Should have detected drift');
       } catch (error: any) {
         expect(error.code).toBe(1);
-        if (error.stdout && error.stdout.includes('Δ exports')) {
+        if (error.stdout?.includes('Δ exports')) {
           // Verify arrow format (old → new)
           expect(error.stdout).toMatch(/\w+\s*→\s*\w+/);
         }
@@ -411,7 +411,7 @@ describe('CLI Compare Command Tests', () => {
         );
         // May or may not fail depending on if hooks actually changed
       } catch (error: any) {
-        if (error.stdout && error.stdout.includes('Δ hooks')) {
+        if (error.stdout?.includes('Δ hooks')) {
           // Verify + or - indicators
           expect(error.stdout).toMatch(/[+-]\s+use\w+/);
         }
@@ -463,7 +463,7 @@ describe('CLI Compare Command Tests', () => {
         );
         // May or may not fail depending on if functions actually changed
       } catch (error: any) {
-        if (error.stdout && error.stdout.includes('Δ functions')) {
+        if (error.stdout?.includes('Δ functions')) {
           // Verify + or - indicators
           expect(error.stdout).toMatch(/[+-]\s+\w+/);
         }
@@ -509,7 +509,7 @@ describe('CLI Compare Command Tests', () => {
           `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`,
         );
       } catch (error: any) {
-        if (error.stdout && error.stdout.includes('Δ components')) {
+        if (error.stdout?.includes('Δ components')) {
           // Verify + or - indicators
           expect(error.stdout).toMatch(/[+-]\s+\w+/);
         }
@@ -554,7 +554,7 @@ describe('CLI Compare Command Tests', () => {
           `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`,
         );
       } catch (error: any) {
-        if (error.stdout && error.stdout.includes('Δ props')) {
+        if (error.stdout?.includes('Δ props')) {
           // Verify + or - indicators showing prop names
           expect(error.stdout).toMatch(/[+-]\s+\w+/);
         }
@@ -599,7 +599,7 @@ describe('CLI Compare Command Tests', () => {
           `node dist/cli/stamp.js context compare ${contextFile1} ${contextFile2}`,
         );
       } catch (error: any) {
-        if (error.stdout && error.stdout.includes('Δ emits')) {
+        if (error.stdout?.includes('Δ emits')) {
           // Verify + or - indicators showing event names
           expect(error.stdout).toMatch(/[+-]\s+on\w+/);
         }
@@ -715,7 +715,7 @@ describe('CLI Compare Command Tests', () => {
       );
 
       // Remove the last folder from index
-      const removedFolder = index2.folders.pop();
+      const _removedFolder = index2.folders.pop();
 
       await writeFile(
         join(outDir2, 'context_main.json'),
@@ -765,7 +765,7 @@ describe('CLI Compare Command Tests', () => {
 
       // Compare - should show mixed results
       try {
-        const result = await execAsync(
+        const _result = await execAsync(
           `node dist/cli/stamp.js context compare ${join(outDir1, 'context_main.json')} ${join(outDir2, 'context_main.json')}`,
         );
         // If it succeeds, fail the test
@@ -829,7 +829,7 @@ describe('CLI Compare Command Tests', () => {
       );
 
       // Update context_main.json to not include the orphaned folder
-      const index = JSON.parse(
+      const _index = JSON.parse(
         await readFile(join(testDir, 'context_main.json'), 'utf-8'),
       );
       // Index doesn't include orphaned folder by default, but file exists
@@ -1168,7 +1168,7 @@ describe('CLI Compare Command Tests', () => {
             // Ignore errors
           }
           await rm(gitRepoPath, { recursive: true, force: true });
-        } catch (error) {
+        } catch (_error) {
           // Ignore cleanup errors
         }
       }
@@ -1204,7 +1204,7 @@ describe('CLI Compare Command Tests', () => {
       const content = await readFile(appFile, 'utf-8');
       await writeFile(
         appFile,
-        content + '\nexport function newFunction() { return null; }\n',
+        `${content}\nexport function newFunction() { return null; }\n`,
       );
 
       // Compare against baseline - should detect drift
@@ -1233,7 +1233,7 @@ describe('CLI Compare Command Tests', () => {
       // Make a change before committing
       const appFile = join(gitRepoPath, 'src', 'App.tsx');
       const content = await readFile(appFile, 'utf-8');
-      await writeFile(appFile, content + '\n// Feature change\n');
+      await writeFile(appFile, `${content}\n// Feature change\n`);
       await createCommit(gitRepoPath, 'Feature commit');
 
       // Compare current (feature-branch) against main
@@ -1248,7 +1248,7 @@ describe('CLI Compare Command Tests', () => {
 
     it('should compare against a tag', async () => {
       // Create initial commit
-      const commitHash = await createCommit(gitRepoPath, 'Initial commit');
+      const _commitHash = await createCommit(gitRepoPath, 'Initial commit');
 
       // Create a tag
       await createTag(gitRepoPath, 'v1.0.0');
@@ -1256,7 +1256,7 @@ describe('CLI Compare Command Tests', () => {
       // Make changes
       const appFile = join(gitRepoPath, 'src', 'App.tsx');
       const content = await readFile(appFile, 'utf-8');
-      await writeFile(appFile, content + '\n// New change\n');
+      await writeFile(appFile, `${content}\n// New change\n`);
       await createCommit(gitRepoPath, 'Post-tag commit');
 
       // Compare against tag
@@ -1276,7 +1276,7 @@ describe('CLI Compare Command Tests', () => {
       // Make changes and create another commit
       const appFile = join(gitRepoPath, 'src', 'App.tsx');
       const content = await readFile(appFile, 'utf-8');
-      await writeFile(appFile, content + '\n// Change\n');
+      await writeFile(appFile, `${content}\n// Change\n`);
       await createCommit(gitRepoPath, 'Second commit');
 
       // Compare against initial commit hash (short form)
@@ -1409,7 +1409,7 @@ describe('CLI Compare Command Tests', () => {
       const content = await readFile(appFile, 'utf-8');
       await writeFile(
         appFile,
-        content + '\nexport const newConstant = "test";\n',
+        `${content}\nexport const newConstant = "test";\n`,
       );
 
       // Compare with --stats flag
@@ -1477,7 +1477,7 @@ describe('CLI Compare Command Tests', () => {
       const appContent = await readFile(appFile, 'utf-8');
       await writeFile(
         appFile,
-        appContent + '\nexport const change1 = "test1";\n',
+        `${appContent}\nexport const change1 = "test1";\n`,
       );
 
       // Find another file to modify
@@ -1492,7 +1492,7 @@ describe('CLI Compare Command Tests', () => {
         const otherContent = await readFile(otherFilePath, 'utf-8');
         await writeFile(
           otherFilePath,
-          otherContent + '\nexport const change2 = "test2";\n',
+          `${otherContent}\nexport const change2 = "test2";\n`,
         );
       }
 
@@ -1519,7 +1519,7 @@ describe('CLI Compare Command Tests', () => {
       // Make changes and create second commit
       const appFile = join(gitRepoPath, 'src', 'App.tsx');
       const content = await readFile(appFile, 'utf-8');
-      await writeFile(appFile, content + '\n// Second commit\n');
+      await writeFile(appFile, `${content}\n// Second commit\n`);
       await createCommit(gitRepoPath, 'Second commit');
 
       // Compare against HEAD~1
