@@ -20,7 +20,7 @@ See [docs/reference/limitations.md](docs/reference/limitations.md).
 
 ---
 
-## [0.8.8] - 2026-04-15
+## [0.8.8] - 2026-04-17
 
 ### Changed
 
