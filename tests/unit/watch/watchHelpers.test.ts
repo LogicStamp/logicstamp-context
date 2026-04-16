@@ -3,13 +3,13 @@
  * Tests the comparison logic used in watch mode to detect changes
  */
 
-import { describe, it, expect } from 'vitest';
-import type { UIFContract } from '../../../src/types/UIFContract.js';
-import type { LogicStampBundle } from '../../../src/core/pack.js';
+import { describe, expect, it } from 'vitest';
 import {
   compareContracts,
   getChanges,
 } from '../../../src/cli/commands/context/watchMode/watchDiff.js';
+import type { LogicStampBundle } from '../../../src/core/pack.js';
+import type { UIFContract } from '../../../src/types/UIFContract.js';
 
 // Helper to create mock contracts and bundles
 const createMockContract = (
@@ -404,8 +404,8 @@ describe('getChanges', () => {
       const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
-      expect(changes!.changed).toHaveLength(1);
-      expect(changes!.changed[0].semanticHash).toEqual({
+      expect(changes?.changed).toHaveLength(1);
+      expect(changes?.changed[0].semanticHash).toEqual({
         old: 'hash-1',
         new: 'hash-2',
       });
@@ -427,12 +427,12 @@ describe('getChanges', () => {
       const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
-      expect(changes!.changed).toHaveLength(1);
-      expect(changes!.changed[0].fileHash).toEqual({
+      expect(changes?.changed).toHaveLength(1);
+      expect(changes?.changed[0].fileHash).toEqual({
         old: 'file-1',
         new: 'file-2',
       });
-      expect(changes!.changed[0].semanticHash).toBeUndefined(); // Semantic didn't change
+      expect(changes?.changed[0].semanticHash).toBeUndefined(); // Semantic didn't change
     });
 
     it('should detect both semantic and file hash changes', () => {
@@ -451,8 +451,8 @@ describe('getChanges', () => {
       const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
-      expect(changes!.changed[0].semanticHash).toBeDefined();
-      expect(changes!.changed[0].fileHash).toBeDefined();
+      expect(changes?.changed[0].semanticHash).toBeDefined();
+      expect(changes?.changed[0].fileHash).toBeDefined();
     });
   });
 
@@ -470,7 +470,7 @@ describe('getChanges', () => {
       const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
-      expect(changes!.added).toContain('src/components/Button.tsx');
+      expect(changes?.added).toContain('src/components/Button.tsx');
     });
 
     it('should detect removed contracts', () => {
@@ -486,7 +486,7 @@ describe('getChanges', () => {
       const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
-      expect(changes!.removed).toContain('src/components/Button.tsx');
+      expect(changes?.removed).toContain('src/components/Button.tsx');
     });
   });
 
@@ -504,8 +504,8 @@ describe('getChanges', () => {
       const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
-      expect(changes!.bundleChanged).toHaveLength(1);
-      expect(changes!.bundleChanged[0]).toEqual({
+      expect(changes?.bundleChanged).toHaveLength(1);
+      expect(changes?.bundleChanged[0]).toEqual({
         entryId: 'src/App.tsx',
         oldHash: 'bundle-hash-1',
         newHash: 'bundle-hash-2',
@@ -528,7 +528,7 @@ describe('getChanges', () => {
       const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
-      expect(changes!.bundleChanged).toHaveLength(2);
+      expect(changes?.bundleChanged).toHaveLength(2);
     });
   });
 
@@ -548,9 +548,9 @@ describe('getChanges', () => {
 
       // Should detect as changed, not added/removed
       expect(changes).not.toBeNull();
-      expect(changes!.changed).toHaveLength(1);
-      expect(changes!.added).toHaveLength(0);
-      expect(changes!.removed).toHaveLength(0);
+      expect(changes?.changed).toHaveLength(1);
+      expect(changes?.added).toHaveLength(0);
+      expect(changes?.removed).toHaveLength(0);
     });
   });
 
@@ -574,8 +574,8 @@ describe('getChanges', () => {
       const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
-      expect(changes!.changed[0].contractDiff).toBeDefined();
-      expect(changes!.changed[0].contractDiff!.props.added).toContain(
+      expect(changes?.changed[0].contractDiff).toBeDefined();
+      expect(changes?.changed[0].contractDiff?.props.added).toContain(
         'disabled',
       );
     });
@@ -596,7 +596,7 @@ describe('getChanges', () => {
       const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
-      expect(changes!.changed[0].contractDiff).toBeUndefined();
+      expect(changes?.changed[0].contractDiff).toBeUndefined();
     });
   });
 
@@ -631,8 +631,8 @@ describe('getChanges', () => {
       const changes = getChanges(oldBundles, newBundles);
 
       expect(changes).not.toBeNull();
-      expect(changes!.changed).toHaveLength(1);
-      expect(changes!.changed[0].entryId).toBe('src/components/Button.tsx');
+      expect(changes?.changed).toHaveLength(1);
+      expect(changes?.changed[0].entryId).toBe('src/components/Button.tsx');
     });
   });
 });
