@@ -26,6 +26,7 @@ stamp context [path] [options]
 | `--format <fmt>` | `-f` | `json` | Output format: `json`, `pretty`, `ndjson`, `toon`. |
 | `--out <file>` | `-o` | `context.json` | Output directory or file path. If a `.json` file is specified, its directory is used as the output directory. Otherwise, the path is used as the output directory. All context files will be written within this directory structure. |
 | `--max-nodes <n>` | `-m` | `100` | Maximum graph nodes per bundle. |
+| `--max-roots <n>` | `-r` | all roots | Maximum root bundles to compile in a run. |
 | `--profile <name>` | | `llm-chat` | Preset configuration (`llm-chat`, `llm-safe`, `ci-strict`, `watch-fast`). |
 | `--strict` | `-s` | `false` | Fail when dependencies are missing. |
 | `--strict-missing` | | `false` | Exit with error if any missing dependencies found. |
@@ -121,6 +122,9 @@ stamp context ./src --format pretty
 
 # Include full source for deep AI reviews (limit nodes for safety)
 stamp context --include-code full --max-nodes 20
+
+# Cap root bundles for faster monorepo runs
+stamp context --max-roots 25
 
 # Gather metrics without writing files (e.g., CI dashboards)
 stamp context --stats >> .ci/context-stats.jsonl
@@ -348,6 +352,7 @@ stamp context --watch
 **Watched file types:**
 - `.ts`, `.tsx` (always)
 - `.css`, `.scss`, `.module.css`, `.module.scss` (with `--include-style`)
+- `tsconfig*.json`, `package.json` (resolver config changes trigger rebuild)
 
 **Debug mode** shows detailed hash information:
 ```bash
@@ -361,6 +366,7 @@ For comprehensive watch mode documentation, see [watch.md](watch.md).
 - Combine `--profile` presets with manual flags for tailored runs (e.g.,
   `--profile llm-safe --format pretty`).
 - Use `--max-nodes` to keep bundle size manageable before sharing with LLMs.
+- Use `--max-roots` to cap total root bundles in large monorepos.
 - Run `stamp context validate` after generation to catch schema drift early.
 - Use `stamp context clean` to remove all context artifacts when resetting or switching branches.
 - Use `stamp context style` or `--include-style` to extract visual and layout metadata for design-aware context bundles. Use `--style-mode lean` (default) for compact output or `--style-mode full` for detailed arrays. See [style.md](style.md) for detailed documentation.

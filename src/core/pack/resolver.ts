@@ -4,6 +4,10 @@
 
 import { normalizeEntryId, getFolderPath } from '../../utils/fsx.js';
 import type { ProjectManifest, ComponentNode } from '../manifest.js';
+import {
+  resolveTsconfigCandidates,
+  type TsconfigResolverContext,
+} from './tsconfigResolver.js';
 
 /**
  * Resolve input (path or name) to a manifest key
@@ -78,6 +82,7 @@ export function resolveDependency(
   manifest: ProjectManifest,
   depName: string,
   parentId: string,
+  resolverContext?: TsconfigResolverContext | null,
 ): string | null {
   // parentId is a manifest key (canonical identifier)
 
@@ -102,6 +107,18 @@ export function resolveDependency(
 
   // Only fall back to global name search if relative paths didn't work
   // This prevents cross-directory conflicts (e.g., tests/fixtures vs examples)
+  const tsconfigCandidates = resolveTsconfigCandidates(
+    depName,
+    parentId,
+    resolverContext,
+  );
+  for (const candidate of tsconfigCandidates) {
+    const candidateKey = resolveKey(manifest, candidate);
+    if (candidateKey) {
+      return candidateKey;
+    }
+  }
+
   const key = resolveKey(manifest, depName);
   if (key) {
     return key; // Return manifest key (canonical identifier)

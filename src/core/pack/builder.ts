@@ -9,6 +9,7 @@ import { isPathWithinRoot, normalizeEntryId } from '../../utils/fsx.js';
 import { bundleHash as computeBundleHashStable } from '../../utils/hash.js';
 import type { ProjectManifest } from '../manifest.js';
 import { resolveDependency } from './resolver.js';
+import type { TsconfigResolverContext } from './tsconfigResolver.js';
 
 /**
  * A node in the bundle graph
@@ -26,6 +27,7 @@ export interface BundleNode {
 export function buildEdges(
   nodes: BundleNode[],
   manifest: ProjectManifest,
+  resolverContext?: TsconfigResolverContext | null,
 ): [string, string][] {
   const edges: [string, string][] = [];
   // Node entryIds are normalized relative paths
@@ -50,9 +52,21 @@ export function buildEdges(
 
     if (!componentNode) continue;
 
-    for (const dep of componentNode.dependencies) {
+    const resolutionSpecs = [
+      ...new Set([
+        ...componentNode.dependencies,
+        ...(componentNode.imports || []),
+      ]),
+    ];
+
+    for (const dep of resolutionSpecs) {
       // Use original manifest key format for resolveDependency
-      const resolvedId = resolveDependency(manifest, dep, manifestKeyForNode);
+      const resolvedId = resolveDependency(
+        manifest,
+        dep,
+        manifestKeyForNode,
+        resolverContext,
+      );
 
       // Normalize resolvedId before comparing with nodeIds (which are normalized)
       if (resolvedId) {

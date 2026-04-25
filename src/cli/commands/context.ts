@@ -16,6 +16,7 @@ import {
   pack,
   type PackOptions,
   type LogicStampBundle,
+  buildTsconfigResolverContext,
 } from '../../core/pack.js';
 import {
   estimateGPT4Tokens,
@@ -54,6 +55,7 @@ export interface ContextOptions {
   strict: boolean;
   allowMissing: boolean;
   maxNodes: number;
+  maxRoots?: number; // Optional cap on number of root bundles to compile
   profile: 'llm-safe' | 'llm-chat' | 'ci-strict' | 'watch-fast';
   predictBehavior: boolean;
   dryRun: boolean;
@@ -71,6 +73,38 @@ export interface ContextOptions {
   logFile?: boolean; // Write watch mode logs to file (default: false)
   strictWatch?: boolean; // Enable strict watch mode - track violations and report them
   stampignorePath?: string; // Override where .stampignore is read from (for git baseline comparisons)
+}
+
+function selectRootsForCompilation(
+  manifest: ReturnType<typeof buildDependencyGraph>,
+  maxRoots?: number,
+): string[] {
+  const allRoots = [...manifest.graph.roots];
+  if (maxRoots === undefined || maxRoots <= 0 || allRoots.length <= maxRoots) {
+    return allRoots;
+  }
+
+  // Prioritize roots with the largest fan-out so capped runs keep broad coverage.
+  const rankedRoots = allRoots
+    .map((rootId) => {
+      const node = manifest.components[rootId];
+      return {
+        rootId,
+        dependencyCount: node?.dependencies.length ?? 0,
+        importCount: node?.imports.length ?? 0,
+      };
+    })
+    .sort((a, b) => {
+      if (b.dependencyCount !== a.dependencyCount) {
+        return b.dependencyCount - a.dependencyCount;
+      }
+      if (b.importCount !== a.importCount) {
+        return b.importCount - a.importCount;
+      }
+      return a.rootId.localeCompare(b.rootId);
+    });
+
+  return rankedRoots.slice(0, maxRoots).map((ranked) => ranked.rootId);
 }
 
 export async function contextCommand(options: ContextOptions): Promise<void> {
@@ -148,7 +182,8 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   if (!options.quiet) {
     console.log(`📊 Building dependency graph...`);
   }
-  const manifest = buildDependencyGraph(contracts);
+  const resolverContext = await buildTsconfigResolverContext(projectRoot);
+  const manifest = buildDependencyGraph(contracts, { resolverContext });
 
   // Step 3.5: Create contracts map for pack function
   const contractsMap = new Map<string, UIFContract>();
@@ -165,17 +200,22 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
   const userSetDepth = process.argv.some(
     (arg, i) => (arg === '--depth' || arg === '-d') && process.argv[i + 1],
   );
+  const userSetMaxNodes = process.argv.some(
+    (arg, i) => (arg === '--max-nodes' || arg === '-m') && process.argv[i + 1],
+  );
 
   let depth = options.depth;
   let includeCode = options.includeCode;
   let hashLock = options.hashLock;
   let strict = options.strict;
+  let maxNodes = options.maxNodes;
+  const maxRoots = options.maxRoots;
 
   if (options.profile === 'llm-safe') {
     depth = userSetDepth ? options.depth : 2;
     includeCode = userSetIncludeCode ? options.includeCode : 'header';
     hashLock = false;
-    options.maxNodes = 30;
+    maxNodes = userSetMaxNodes ? options.maxNodes : 30;
     options.allowMissing = true;
     if (!options.quiet) {
       const codeMode =
@@ -185,13 +225,14 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
             ? 'no code'
             : 'header only';
       console.log(
-        `📋 Using profile: llm-safe (depth=${depth}, ${codeMode}, max 30 nodes)`,
+        `📋 Using profile: llm-safe (depth=${depth}, ${codeMode}, max ${maxNodes} nodes)`,
       );
     }
   } else if (options.profile === 'llm-chat') {
     depth = userSetDepth ? options.depth : 2;
     includeCode = userSetIncludeCode ? options.includeCode : 'header';
     hashLock = false;
+    maxNodes = options.maxNodes;
     if (!options.quiet) {
       const codeMode =
         includeCode === 'full'
@@ -200,7 +241,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
             ? 'no code'
             : 'header only';
       console.log(
-        `📋 Using profile: llm-chat (depth=${depth}, ${codeMode}, max 100 nodes)`,
+        `📋 Using profile: llm-chat (depth=${depth}, ${codeMode}, max ${maxNodes} nodes)`,
       );
     }
   } else if (options.profile === 'ci-strict') {
@@ -222,6 +263,7 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     depth = userSetDepth ? options.depth : 2;
     includeCode = userSetIncludeCode ? options.includeCode : 'header';
     hashLock = false;
+    maxNodes = options.maxNodes;
     // For watch-fast, use lighter style extraction (will be handled in style extractor)
     if (!options.quiet) {
       const codeMode =
@@ -236,6 +278,9 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     }
   }
 
+  const rootsToPack = selectRootsForCompilation(manifest, maxRoots);
+  const rootsWereCapped = rootsToPack.length < manifest.graph.roots.length;
+
   // Step 4: Pack context bundles
   const packOptions: PackOptions = {
     depth,
@@ -244,19 +289,23 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
     hashLock,
     strict,
     allowMissing: options.allowMissing,
-    maxNodes: options.maxNodes,
+    maxNodes,
     contractsMap, // Pass in-memory contracts
+    resolverContext,
   };
 
   // Compile context for all root components
   if (!options.quiet) {
+    const capSuffix = rootsWereCapped
+      ? ` (capped from ${manifest.graph.roots.length} via maxRoots=${maxRoots})`
+      : '';
     console.log(
-      `📦 Compiling context for ${manifest.graph.roots.length} root components (depth=${depth})...`,
+      `📦 Compiling context for ${rootsToPack.length} root components (depth=${depth})${capSuffix}...`,
     );
   }
 
   const bundles: LogicStampBundle[] = [];
-  for (const rootId of manifest.graph.roots) {
+  for (const rootId of rootsToPack) {
     try {
       const bundle = await pack(rootId, manifest, packOptions, projectRoot);
       bundles.push(bundle);
@@ -309,14 +358,17 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
       {
         includeCode: options.includeCode,
         includeStyle: options.includeStyle,
-        depth: options.depth,
-        maxNodes: options.maxNodes,
-        format: options.format,
-        hashLock: options.hashLock,
-        strict: options.strict,
+        depth,
+        maxNodes,
+        maxRoots,
+        format: packOptions.format,
+        hashLock,
+        strict,
         allowMissing: options.allowMissing,
         predictBehavior: options.predictBehavior,
         quiet: options.quiet,
+        rootIds: rootsToPack,
+        resolverContext,
       },
     );
 
@@ -508,7 +560,8 @@ export async function contextCommand(options: ContextOptions): Promise<void> {
       totalSourceSize,
       packOptions: {
         depth,
-        maxNodes: options.maxNodes,
+        maxNodes,
+        maxRoots,
         format: options.format,
         hashLock,
         strict,

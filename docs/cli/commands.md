@@ -10,7 +10,7 @@ LogicStamp Context provides a single CLI entry point, `stamp`, with
 | `stamp ignore <path> [path2] ...` | Add files or folders to `.stampignore` to exclude them from context compilation. Creates `.stampignore` if it doesn't exist. | Exclude files with secrets, large generated files, or other files that shouldn't be in context bundles. | `--quiet` |
 | `stamp security scan [path]` | Scan your project for secrets (API keys, passwords, tokens). Runs 100% locally — nothing is uploaded or sent anywhere. | Prevent accidental exposure of sensitive credentials, CI/CD security checks, project initialization. | `--out`, `--quiet` |
 | `stamp security --hard-reset` | Delete security report file. | Reset security configuration, start fresh after remediation. | `--force`, `--out`, `--quiet` |
-| `stamp context [path] [options]` | Generates context files organized by folder (one `context.json` per folder plus `context_main.json` index). CI-friendly: never prompts, respects preferences from `stamp init`. | Produce fresh context for AI workflows, documentation, or review. | `--depth`, `--include-code`, `--format`, `--profile`, `--max-nodes`, `--dry-run`, `--stats`, `--predict-behavior`, `--compare-modes`, `--include-style`, `--strict-missing`, `--skip-gitignore`, `--out`, `--quiet`, `--watch`, `--strict-watch`, `--debug`, `--log-file` |
+| `stamp context [path] [options]` | Generates context files organized by folder (one `context.json` per folder plus `context_main.json` index). CI-friendly: never prompts, respects preferences from `stamp init`. | Produce fresh context for AI workflows, documentation, or review. | `--depth`, `--include-code`, `--format`, `--profile`, `--max-nodes`, `--max-roots`, `--dry-run`, `--stats`, `--predict-behavior`, `--compare-modes`, `--include-style`, `--strict-missing`, `--skip-gitignore`, `--out`, `--quiet`, `--watch`, `--strict-watch`, `--debug`, `--log-file` |
 | `stamp context style [path] [options]` | Generates context with style metadata included. Extracts visual and layout information (Tailwind, SCSS, Material UI, animations, layout patterns). Equivalent to `stamp context --include-style`. Uses `lean` mode by default (counts + flags); use `--style-mode full` for detailed arrays. | Design system analysis, AI-assisted design suggestions, layout understanding, animation detection. | All `stamp context` options supported except `--compare-modes` (use `stamp context --compare-modes` instead). Includes `--style-mode` flag (`lean`|`full`, default: `lean`). |
 | `stamp context validate [file]` | Validates context files. With no arguments, auto-detects and validates all context files using `context_main.json` (multi-file mode). With a file argument, validates that specific file (single-file mode). Falls back to `context.json` if `context_main.json` doesn't exist. | Gate CI pipelines, pre-commit checks, or manual QA before sharing context files. Ensures all folder context files are valid. | `[file]` (positional), `--quiet` |
 | `stamp context compare [options]` | Compares all context files (multi-file mode) or two specific files to detect drift, ADDED/ORPHANED folders, and token cost changes. Auto-detects `context_main.json` for comprehensive project-wide comparison. | CI drift detection, Jest-style approval workflows, manual inspections, or detecting folder reorganizations. | `--approve`, `--clean-orphaned`, `--stats`, `--skip-gitignore`, `--quiet` |
@@ -60,6 +60,9 @@ stamp context --include-style
 
 # Scan a subdirectory and use the llm-safe profile
 stamp context ./src --profile llm-safe
+
+# Cap root bundles in large repos
+stamp context --max-roots 25
 
 # Validate all context files (multi-file mode)
 stamp context validate       # uses context_main.json to validate all folders

@@ -131,6 +131,7 @@ OPTIONS:
   --format, -f <format>                Output format: json|pretty|ndjson|toon (default: json)
   --out, -o <file>                    Output file (default: context.json)
   --max-nodes, -m <n>                 Max nodes per bundle (default: 100)
+  --max-roots, -r <n>                 Max root bundles to compile (default: all roots)
   --profile <profile>                 Preset profile: llm-safe|llm-chat|ci-strict|watch-fast
                                       watch-fast: Fast watch mode (lighter style extraction)
   --strict, -s                        Fail on missing dependencies
@@ -210,6 +211,7 @@ OPTIONS:
   --format, -f <format>               Output format: json|pretty|ndjson|toon (default: json)
   --out, -o <file>                    Output file (default: context.json)
   --max-nodes, -m <n>                 Max nodes per bundle (default: 100)
+  --max-roots, -r <n>                 Max root bundles to compile (default: all roots)
   --profile <profile>                 Preset profile: llm-safe|llm-chat|ci-strict|watch-fast
                                       watch-fast: Fast watch mode (lighter style extraction)
   --strict, -s                        Fail on missing dependencies

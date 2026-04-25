@@ -11,7 +11,7 @@ LogicStamp Context is built with TypeScript in mind and provides comprehensive s
 LogicStamp automatically works with TypeScript projects:
 
 - **File extensions**: `.ts` and `.tsx` files
-- **Parsing**: Each file is loaded with `ts-morph` using fixed compiler options (ESNext target, JSX enabled for `.tsx`). Your repo’s **`tsconfig.json` is not loaded** for this per-file project, so workspace settings like `paths`, `baseUrl`, `strict`, or custom `jsx` mode are not applied automatically during extraction.
+- **Parsing**: Each file is loaded with `ts-morph` using fixed compiler options (ESNext target, JSX enabled for `.tsx`). Your repo’s full `tsconfig` is not loaded into the extraction project, so options like `strict` or custom `jsx` mode are not fully mirrored during extraction.
 - **Type system**: Uses TypeScript’s AST (and the type checker within that isolated project) for extraction
 - **Type definitions**: Extracts interfaces, types, and type aliases from the parsed source
 
@@ -219,9 +219,9 @@ stamp context --include-code full
 
 ## TypeScript configuration
 
-LogicStamp does **not** currently merge your project’s `tsconfig.json` into the parser `Project`. That means:
+LogicStamp does **not** currently merge your project’s full `tsconfig.json` into the parser `Project`. That means:
 
-- **`compilerOptions.paths` / `baseUrl`**: Path aliases may not resolve the same way they do under `tsc`; prefer relative imports in files you care about if resolution matters for extracted types.
+- **`compilerOptions.paths` / `baseUrl`**: Used for internal dependency edge resolution in manifests/bundles (including monorepos), but extraction/typechecking still does not fully mirror `tsc` project behavior.
 - **Strictness and JSX**: Extraction uses a built-in option set, not your repo’s `strict` or `jsx` compiler choice.
 
 Your `tsconfig.json` remains important for building and editing the app; it just is not the source of truth for how LogicStamp configures `ts-morph` today.
@@ -240,7 +240,7 @@ Your `tsconfig.json` remains important for building and editing the app; it just
 - Type-level computations are not executed
 - Some advanced TypeScript features may have limited extraction
 - Circular type references may not be fully resolved
-- Project `tsconfig` options (including path aliases) are not applied to the extraction `Project` unless behavior changes in a future release
+- Project `tsconfig` options are not fully applied to the extraction `Project` (even though `paths` / `baseUrl` are used for dependency edge resolution)
 
 ## Related Documentation
 

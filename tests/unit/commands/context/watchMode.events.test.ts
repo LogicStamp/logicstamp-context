@@ -150,7 +150,7 @@ describe('file extension filtering', () => {
     expect(calls).not.toContain('App.js');
   });
 
-  it('should ignore .json files', async () => {
+  it('should trigger on package.json changes for resolver updates', async () => {
     const options: ContextOptions = {
       out: '.logicstamp',
       depth: 2,
@@ -179,7 +179,8 @@ describe('file extension filtering', () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     const calls = consoleSpy.mock.calls.flat().join('\n');
-    expect(calls).not.toContain('package.json');
+    expect(calls).toContain('Changed');
+    expect(calls).toContain('package.json');
   });
 
   it('should handle .tsx files', async () => {

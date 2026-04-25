@@ -52,6 +52,7 @@ async function main() {
     strict: false,
     allowMissing: true,
     maxNodes: 100,
+    maxRoots: undefined,
     profile: 'llm-chat',
     predictBehavior: false,
     dryRun: false,
@@ -102,6 +103,11 @@ async function main() {
         case 'max-nodes':
         case 'm':
           options.maxNodes = parseInt(value, 10);
+          i++;
+          break;
+        case 'max-roots':
+        case 'r':
+          options.maxRoots = parseInt(value, 10);
           i++;
           break;
         case 'profile':
@@ -181,6 +187,7 @@ OPTIONS:
   -f, --format <format>     Format: json|pretty|ndjson (default: json)
   -o, --out <file>          Output file (default: context.json)
   -m, --max-nodes <n>       Max nodes per bundle (default: 100)
+  -r, --max-roots <n>       Max root bundles to compile (default: all roots)
   --profile <profile>       Profile: llm-safe|llm-chat|ci-strict
   -s, --strict              Fail on missing dependencies
   --predict-behavior        Enable behavioral predictions

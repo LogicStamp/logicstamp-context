@@ -36,6 +36,7 @@ export function parseContextArgs(args: string[]): ContextOptions {
     strict: false,
     allowMissing: true,
     maxNodes: 100,
+    maxRoots: undefined,
     profile: 'llm-chat',
     predictBehavior: false,
     dryRun: false,
@@ -99,6 +100,19 @@ export function parseContextArgs(args: string[]): ContextOptions {
             process.exit(1);
           }
           options.maxNodes = parsed;
+          i++;
+          break;
+        }
+        case 'max-roots':
+        case 'r': {
+          const parsed = parseInt(value, 10);
+          if (Number.isNaN(parsed) || parsed < 1) {
+            console.error(
+              `❌ Invalid max-roots value: ${value}. Must be a positive integer.`,
+            );
+            process.exit(1);
+          }
+          options.maxRoots = parsed;
           i++;
           break;
         }

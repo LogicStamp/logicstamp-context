@@ -31,6 +31,7 @@ import type {
   WatchLogEntry,
   StrictWatchStatus,
 } from '../../../../utils/config.js';
+import { buildTsconfigResolverContext } from '../../../../core/pack.js';
 import {
   detectViolations,
   displayViolations,
@@ -246,7 +247,8 @@ export async function startWatchMode(
           quiet: true,
         },
       );
-      const manifest = buildDependencyGraph(contracts);
+      const resolverContext = await buildTsconfigResolverContext(projectRoot);
+      const manifest = buildDependencyGraph(contracts, { resolverContext });
       const cache = await initializeWatchCache(
         filteredFiles,
         contracts,
@@ -397,7 +399,11 @@ export async function startWatchMode(
                   quiet: true,
                 },
               );
-              const manifest = buildDependencyGraph(contracts);
+              const resolverContext =
+                await buildTsconfigResolverContext(projectRoot);
+              const manifest = buildDependencyGraph(contracts, {
+                resolverContext,
+              });
               watchCache = await initializeWatchCache(
                 filteredFiles,
                 contracts,
@@ -750,6 +756,14 @@ export async function startWatchMode(
       if (
         normalizedPath.endsWith('.stampignore') ||
         normalizedPath.includes('/.stampignore')
+      ) {
+        return true;
+      }
+
+      // Keep resolver context in sync with tsconfig/package changes.
+      if (
+        /(^|\/)tsconfig(?:\..+)?\.json$/i.test(normalizedPath) ||
+        normalizedPath.endsWith('/package.json')
       ) {
         return true;
       }

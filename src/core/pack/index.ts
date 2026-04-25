@@ -8,3 +8,4 @@ export * from './collector.js';
 export * from './loader.js';
 export * from './packageInfo.js';
 export * from './resolver.js';
+export * from './tsconfigResolver.js';
