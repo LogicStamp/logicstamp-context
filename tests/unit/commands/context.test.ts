@@ -15,7 +15,10 @@ import * as validate from '../../../src/cli/commands/validate.js';
 vi.mock('../../../src/utils/fsx.js');
 vi.mock('../../../src/utils/stampignore.js');
 vi.mock('../../../src/core/manifest.js');
-vi.mock('../../../src/core/pack.js');
+vi.mock('../../../src/core/pack.js', () => ({
+  pack: vi.fn(),
+  buildTsconfigResolverContext: vi.fn(),
+}));
 vi.mock('../../../src/utils/tokens.js');
 vi.mock('../../../src/cli/commands/context/index.js');
 vi.mock('../../../src/cli/commands/validate.js');
@@ -97,6 +100,7 @@ describe('contextCommand', () => {
       },
       meta: { missing: [], source: 'test' },
     });
+    vi.mocked(pack.buildTsconfigResolverContext).mockResolvedValue(null);
     vi.mocked(tokens.estimateGPT4Tokens).mockResolvedValue(500);
     vi.mocked(tokens.estimateClaudeTokens).mockResolvedValue(450);
     vi.mocked(contextHelpers.formatBundles).mockReturnValue('[]');

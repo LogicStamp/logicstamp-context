@@ -13,6 +13,18 @@ LogicStamp analyzes **each file independently**:
 
 **Key point:** Files don't interfere with each other. A backend file in one folder doesn't affect frontend extraction in another folder.
 
+## Dependency Edge Resolution in Monorepos
+
+LogicStamp resolves internal dependency edges using:
+
+- Relative imports (`./`, `../`)
+- `tsconfig*.json` `compilerOptions.paths` aliases
+- `compilerOptions.baseUrl` fallback for package-like internal specifiers
+
+This improves graph edges in monorepos (including Turborepo-style setups) where apps import workspace packages via aliases such as `@repo/ui` or `@repo/shared/*`.
+
+> Note: This resolution is for internal project files. External package internals still remain external/missing unless they resolve to files inside the scanned project root.
+
 ## Framework Detection Per File
 
 Each file is analyzed independently with framework detection:
@@ -115,6 +127,9 @@ stamp context
 
 # Or specify a path
 stamp context ./packages
+
+# Cap root bundles in very large monorepos
+stamp context --max-roots 25
 ```
 
 ### Scan Specific Packages

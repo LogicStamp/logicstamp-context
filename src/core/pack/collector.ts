@@ -5,6 +5,7 @@
 import { normalizeEntryId } from '../../utils/fsx.js';
 import type { ProjectManifest } from '../manifest.js';
 import { resolveDependency } from './resolver.js';
+import type { TsconfigResolverContext } from './tsconfigResolver.js';
 import {
   isThirdPartyPackage,
   extractPackageName,
@@ -31,6 +32,7 @@ export async function collectDependencies(
   depth: number,
   maxNodes: number,
   projectRoot?: string,
+  resolverContext?: TsconfigResolverContext | null,
 ): Promise<{ visited: Set<string>; missing: MissingDependency[] }> {
   const visited = new Set<string>();
   const missing: MissingDependency[] = [];
@@ -100,15 +102,31 @@ export async function collectDependencies(
 
     // Only traverse deeper if we haven't reached depth limit
     if (current.level < depth) {
+      const resolutionSpecs = [
+        ...new Set([...node.dependencies, ...(node.imports || [])]),
+      ];
+
       // Add dependencies to queue
-      for (const dep of node.dependencies) {
-        const resolvedId = resolveDependency(manifest, dep, componentKey);
+      for (const dep of resolutionSpecs) {
+        const resolvedId = resolveDependency(
+          manifest,
+          dep,
+          componentKey,
+          resolverContext,
+        );
 
         if (resolvedId) {
           if (!visited.has(resolvedId)) {
             queue.push({ id: resolvedId, level: current.level + 1 });
           }
         } else {
+          // Import specifiers can include third-party packages and runtime modules.
+          // We only track unresolved "component dependencies" in missing[] to keep
+          // the previous missing dependency signal stable.
+          if (!node.dependencies.includes(dep)) {
+            continue;
+          }
+
           // Track missing dependency (O(1) lookup using Set)
           if (!missingNames.has(dep)) {
             missingNames.add(dep);

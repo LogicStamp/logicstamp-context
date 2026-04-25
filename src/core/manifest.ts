@@ -32,6 +32,8 @@ import { join } from 'node:path';
 import type { UIFContract } from '../types/UIFContract.js';
 import { structureHash, signatureHash } from '../utils/hash.js';
 import { debugError, debugLog } from '../utils/debug.js';
+import { resolveDependency } from './pack/resolver.js';
+import type { TsconfigResolverContext } from './pack/tsconfigResolver.js';
 
 export interface ComponentNode {
   entryId: string;
@@ -118,7 +120,10 @@ function filterInternalComponents(contract: UIFContract): string[] {
  */
 export function buildDependencyGraph(
   contracts: UIFContract[],
-  options?: { includeHashIndices?: boolean },
+  options?: {
+    includeHashIndices?: boolean;
+    resolverContext?: TsconfigResolverContext | null;
+  },
 ): ProjectManifest {
   const components: Record<string, ComponentNode> = {};
 
@@ -147,16 +152,37 @@ export function buildDependencyGraph(
   }
 
   // Second pass: build reverse relationships (usedBy)
+  const resolutionManifest: ProjectManifest = {
+    version: '0.3',
+    generatedAt: '',
+    totalComponents: contracts.length,
+    components,
+    graph: { roots: [], leaves: [] },
+  };
+
   for (const contract of contracts) {
     const componentId = contract.entryId;
 
-    // Use filtered dependencies (excluding internal components) for consistency
-    const externalDependencies = filterInternalComponents(contract);
+    // Use filtered dependencies (excluding internal components) for consistency.
+    // Also include import specifiers so dependency edges can be derived from
+    // tsconfig path aliases / baseUrl resolution in monorepos.
+    const resolutionSpecs = [
+      ...new Set([
+        ...filterInternalComponents(contract),
+        ...(contract.composition.imports || []),
+      ]),
+    ];
 
     // For each external component this one uses
-    for (const dependency of externalDependencies) {
+    for (const dependency of resolutionSpecs) {
       // Find the matching component in our graph
-      const depNode = findComponentByName(components, dependency);
+      const resolvedEntryId = resolveDependency(
+        resolutionManifest,
+        dependency,
+        componentId,
+        options?.resolverContext,
+      );
+      const depNode = resolvedEntryId ? components[resolvedEntryId] : null;
 
       if (depNode) {
         // Add this component to the dependency's usedBy list
@@ -243,37 +269,6 @@ function buildHashIndices(components: Record<string, ComponentNode>): {
     structureHash: structureIndex,
     signatureHash: signatureIndex,
   };
-}
-
-/**
- * Find component by name (handles partial matches)
- */
-function findComponentByName(
-  components: Record<string, ComponentNode>,
-  name: string,
-): ComponentNode | null {
-  // First try exact match
-  const exactMatch = Object.values(components).find((c) =>
-    c.entryId.endsWith(`/${name}.tsx`),
-  );
-  if (exactMatch) return exactMatch;
-
-  // Try with .ts extension
-  const tsMatch = Object.values(components).find((c) =>
-    c.entryId.endsWith(`/${name}.ts`),
-  );
-  if (tsMatch) return tsMatch;
-
-  // Try partial match on component name
-  const partialMatch = Object.values(components).find((c) => {
-    const componentName = c.entryId
-      .split('/')
-      .pop()
-      ?.replace(/\.(tsx?|jsx?)$/, '');
-    return componentName === name;
-  });
-
-  return partialMatch || null;
 }
 
 /**

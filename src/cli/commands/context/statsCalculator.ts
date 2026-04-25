@@ -111,6 +111,7 @@ export async function generateSummary(
     packOptions: {
       depth: number;
       maxNodes: number;
+      maxRoots?: number;
       format: 'json' | 'pretty' | 'ndjson' | 'toon';
       hashLock: boolean;
       strict: boolean;

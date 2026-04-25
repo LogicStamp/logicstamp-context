@@ -35,6 +35,7 @@ vi.mock('../../../src/core/manifest.js', () => ({
 
 vi.mock('../../../src/core/pack.js', () => ({
   pack: vi.fn(),
+  buildTsconfigResolverContext: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock('ts-morph', () => ({

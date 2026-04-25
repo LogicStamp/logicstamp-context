@@ -69,12 +69,7 @@ describe('CLI Monorepo Fixture Tests', () => {
       index.folders.map((folder) => [folder.path, folder]),
     );
 
-    const expectedFolders = [
-      'apps/api/src',
-      'apps/web/src',
-      'packages/shared/src',
-      'packages/ui/src',
-    ];
+    const expectedFolders = ['apps/api/src', 'apps/web/src'];
 
     for (const folderPath of expectedFolders) {
       expect(foldersByPath.has(folderPath)).toBe(true);
@@ -118,12 +113,19 @@ describe('CLI Monorepo Fixture Tests', () => {
 
     expect(await readKinds('apps/api/src')).toContain('node:api');
     expect(await readKinds('apps/web/src')).toContain('react:component');
-    expect(await readKinds('packages/ui/src')).toContain('ts:module');
-    expect(await readKinds('packages/shared/src')).toContain('ts:module');
     expect(
       webBundles.some((bundle) =>
         bundle.graph.nodes.some(
           (node) => node.contract?.kind === 'react:component',
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      webBundles.some((bundle) =>
+        bundle.graph.nodes.some(
+          (node) =>
+            node.contract?.kind === 'ts:module' &&
+            node.contract?.entryId === 'packages/ui/src/index.ts',
         ),
       ),
     ).toBe(true);
@@ -136,5 +138,31 @@ describe('CLI Monorepo Fixture Tests', () => {
         ),
       ),
     ).toBe(true);
+    expect(
+      webBundles.some((bundle) =>
+        bundle.graph.nodes.some(
+          (node) =>
+            node.contract?.kind === 'ts:module' &&
+            node.contract?.entryId === 'packages/shared/src/date.ts',
+        ),
+      ),
+    ).toBe(true);
+  }, 30000);
+
+  it('should cap compiled root bundles with --max-roots', async () => {
+    const outDir = join(outputPath, 'generated-max-roots');
+    const { stdout } = await execAsync(
+      `node dist/cli/stamp.js context ${fixturesPath} --max-roots 1 --out ${outDir}`,
+    );
+
+    expect(stdout).toContain('Compiling context for 1 root components');
+
+    const mainIndexPath = join(outDir, 'context_main.json');
+    await access(mainIndexPath);
+
+    const index = JSON.parse(await readFile(mainIndexPath, 'utf-8')) as {
+      folders: FolderInfo[];
+    };
+    expect(index.folders.length).toBe(1);
   }, 30000);
 });

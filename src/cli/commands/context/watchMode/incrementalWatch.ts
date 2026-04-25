@@ -8,7 +8,12 @@ import type { UIFContract } from '../../../../types/UIFContract.js';
 import type { LogicStampBundle } from '../../../../core/pack.js';
 import type { ProjectManifest } from '../../../../core/manifest.js';
 import { buildDependencyGraph } from '../../../../core/manifest.js';
-import { pack, type PackOptions } from '../../../../core/pack.js';
+import {
+  pack,
+  type PackOptions,
+  buildTsconfigResolverContext,
+  type TsconfigResolverContext,
+} from '../../../../core/pack.js';
 import { extractFromFile } from '../../../../core/astParser.js';
 import { buildContract } from '../../../../core/contractBuilder.js';
 import { extractStyleMetadata } from '../../../../extractors/styling/index.js';
@@ -36,6 +41,8 @@ export interface WatchCache {
   manifest: ProjectManifest | null;
   // All bundles cache
   allBundles: LogicStampBundle[];
+  // Shared tsconfig resolver context for alias/baseUrl edge resolution
+  resolverContext?: TsconfigResolverContext | null;
 }
 
 /**
@@ -46,8 +53,9 @@ export async function initializeWatchCache(
   contracts: UIFContract[],
   manifest: ProjectManifest,
   bundles: LogicStampBundle[],
-  _projectRoot: string,
+  projectRoot: string,
 ): Promise<WatchCache> {
+  const resolverContext = await buildTsconfigResolverContext(projectRoot);
   const cache: WatchCache = {
     contracts: new Map(),
     astCache: new Map(),
@@ -56,6 +64,7 @@ export async function initializeWatchCache(
     componentToBundles: new Map(),
     manifest,
     allBundles: bundles,
+    resolverContext,
   };
 
   // Build reverse index: component -> bundles that include it
@@ -160,9 +169,23 @@ export async function incrementalRebuild(
   projectRoot: string,
 ): Promise<{ bundles: LogicStampBundle[]; updatedBundles: Set<string> }> {
   const updatedBundles = new Set<string>();
+  let resolverConfigChanged = false;
+
+  const isResolverConfigFile = (filePath: string): boolean => {
+    const normalized = normalizeEntryId(filePath);
+    return (
+      /(^|\/)tsconfig(?:\..+)?\.json$/i.test(normalized) ||
+      normalized.endsWith('package.json')
+    );
+  };
 
   // Step 1: Rebuild contracts for changed files
   for (const file of changedFiles) {
+    if (isResolverConfigFile(file)) {
+      resolverConfigChanged = true;
+      continue;
+    }
+
     const absoluteFilePath = isAbsolute(file) ? file : join(projectRoot, file);
 
     try {
@@ -298,7 +321,17 @@ export async function incrementalRebuild(
     cache.contracts.set(contract.fileHash, contract);
   }
 
-  const updatedManifest = buildDependencyGraph(allContracts);
+  if (resolverConfigChanged) {
+    cache.resolverContext = await buildTsconfigResolverContext(projectRoot);
+    // Resolution config changed; rebuild all current bundles so edges stay consistent.
+    for (const existingBundle of cache.allBundles) {
+      updatedBundles.add(existingBundle.entryId);
+    }
+  }
+
+  const updatedManifest = buildDependencyGraph(allContracts, {
+    resolverContext: cache.resolverContext,
+  });
 
   // Check for new root components that need bundles
   const oldRoots = cache.manifest
@@ -327,6 +360,7 @@ export async function incrementalRebuild(
     allowMissing: options.allowMissing,
     maxNodes: options.maxNodes,
     contractsMap: new Map(allContracts.map((c) => [c.entryId, c])),
+    resolverContext: cache.resolverContext,
   };
 
   const rebuiltBundles: LogicStampBundle[] = [];
@@ -413,6 +447,9 @@ export async function incrementalRebuild(
   // Rebuild manifest from final contracts to ensure consistency
   const consistentManifest = buildDependencyGraph(
     Array.from(finalContracts.values()),
+    {
+      resolverContext: cache.resolverContext,
+    },
   );
 
   // Update cache

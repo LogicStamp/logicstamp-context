@@ -10,7 +10,7 @@ import {
 } from '../../../utils/tokens.js';
 import type { UIFContract } from '../../../types/UIFContract.js';
 import type { ProjectManifest } from '../../../core/manifest.js';
-import { pack } from '../../../core/pack.js';
+import { pack, type TsconfigResolverContext } from '../../../core/pack.js';
 import { buildContract } from '../../../core/contractBuilder.js';
 import { extractFromFile } from '../../../core/astParser.js';
 import { extractStyleMetadata } from '../../../extractors/styling/index.js';
@@ -162,14 +162,19 @@ export async function generateModeComparison(
     includeStyle?: boolean;
     depth: number;
     maxNodes: number;
+    maxRoots?: number;
     format: 'json' | 'pretty' | 'ndjson' | 'toon';
     hashLock: boolean;
     strict: boolean;
     allowMissing: boolean;
     predictBehavior: boolean;
     quiet?: boolean;
+    rootIds?: string[];
+    resolverContext?: TsconfigResolverContext | null;
   },
 ): Promise<ModeComparisonResult> {
+  const rootsToPack = options.rootIds ?? manifest.graph.roots;
+
   const hasStyle = options.includeStyle === true;
   const isHeaderMode = options.includeCode === 'header';
 
@@ -258,7 +263,7 @@ export async function generateModeComparison(
       noStyleContracts.map((c) => [c.entryId, c]),
     );
     const noStyleBundleResults = await Promise.allSettled(
-      manifest.graph.roots.map((rootId) =>
+      rootsToPack.map((rootId) =>
         pack(
           rootId,
           manifest,
@@ -271,6 +276,7 @@ export async function generateModeComparison(
             hashLock: options.hashLock || false,
             strict: options.strict || false,
             allowMissing: options.allowMissing !== false,
+            resolverContext: options.resolverContext,
           },
           projectRoot,
         ),
@@ -363,7 +369,7 @@ export async function generateModeComparison(
       styleContracts.map((c) => [c.entryId, c]),
     );
     const styleBundleResults = await Promise.allSettled(
-      manifest.graph.roots.map((rootId) =>
+      rootsToPack.map((rootId) =>
         pack(
           rootId,
           manifest,
@@ -376,6 +382,7 @@ export async function generateModeComparison(
             hashLock: options.hashLock || false,
             strict: options.strict || false,
             allowMissing: options.allowMissing !== false,
+            resolverContext: options.resolverContext,
           },
           projectRoot,
         ),

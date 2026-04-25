@@ -47,6 +47,7 @@ Watch mode maintains a cache of contracts, AST data, and style metadata. When a 
 
 - The contract for the changed file
 - Bundles that include the changed component in their dependency graph
+- Resolver context and affected bundles when `tsconfig*.json` or `package.json` changes
 
 This makes rebuilds significantly faster than full regeneration.
 
@@ -112,6 +113,8 @@ Watch mode responds to three file events:
 By default, watch mode monitors:
 - `.ts` files
 - `.tsx` files
+- `tsconfig*.json` files (resolver configuration)
+- `package.json` files (resolver/package mapping changes)
 
 When using `--include-style`, it also watches:
 - `.css` files

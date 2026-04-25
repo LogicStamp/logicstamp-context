@@ -200,6 +200,7 @@ All options from `stamp context` are supported except `--compare-modes`. The sty
 | `--format <fmt>` | `-f` | `json` | Output format: `json`, `pretty`, `ndjson`, `toon`. |
 | `--out <file>` | `-o` | `context.json` | Output directory or file path. If a `.json` file is specified, its directory is used as the output directory. Otherwise, the path is used as the output directory. All context files will be written within this directory structure. |
 | `--max-nodes <n>` | `-m` | `100` | Maximum graph nodes per bundle. |
+| `--max-roots <n>` | `-r` | all roots | Maximum root bundles to compile in a run. |
 | `--profile <name>` | | `llm-chat` | Preset configuration (`llm-chat`, `llm-safe`, `ci-strict`, `watch-fast`). |
 | `--strict` | `-s` | `false` | Fail when dependencies are missing. |
 | `--predict-behavior` | | `false` | Include experimental behavioral predictions. |
@@ -238,6 +239,9 @@ stamp context style --style-mode lean
 
 # Custom output directory
 stamp context style --out ./output
+
+# Cap root bundles for faster monorepo runs
+stamp context style --max-roots 25
 
 # Watch mode - auto-regenerate on file changes
 stamp context style --watch
@@ -573,6 +577,7 @@ stamp context style ./src/components --watch
 **Watched file types:**
 - `.ts`, `.tsx` (always)
 - `.css`, `.scss`, `.module.css`, `.module.scss` (with style extraction)
+- `tsconfig*.json`, `package.json` (resolver config changes trigger rebuild)
 
 When you edit a style file that's imported by a component, watch mode will:
 1. Detect the change

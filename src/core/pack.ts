@@ -33,6 +33,7 @@ import { isAbsolute, resolve } from 'node:path';
 import type { UIFContract } from '../types/UIFContract.js';
 import { getRelativePath, normalizeEntryId } from '../utils/fsx.js';
 import type { ProjectManifest } from './manifest.js';
+import type { TsconfigResolverContext } from './pack/tsconfigResolver.js';
 
 // Import from extracted modules
 import {
@@ -151,6 +152,7 @@ export interface PackOptions {
   allowMissing: boolean;
   maxNodes: number;
   contractsMap?: Map<string, UIFContract>; // Optional in-memory contracts (for standalone mode)
+  resolverContext?: TsconfigResolverContext | null;
 }
 
 /**
@@ -268,6 +270,7 @@ export { normalizeEntryId } from '../utils/fsx.js';
  */
 export {
   buildEdges,
+  buildTsconfigResolverContext,
   collectDependencies,
   computeBundleHash,
   extractCodeHeader,
@@ -278,6 +281,7 @@ export {
   resolveDependency,
   resolveKey,
   stableSort,
+  type TsconfigResolverContext,
   validateHashLock,
 } from './pack/index.js';
 
@@ -317,6 +321,7 @@ export async function pack(
     options.depth,
     options.maxNodes,
     projectRoot,
+    options.resolverContext,
   );
 
   // Load contracts for all visited nodes
@@ -444,7 +449,7 @@ export async function pack(
   );
 
   // Build edges
-  const edges = buildEdges(nodes, manifest);
+  const edges = buildEdges(nodes, manifest, options.resolverContext);
 
   // Sort nodes for deterministic output
   const sortedNodes = stableSort(nodes);

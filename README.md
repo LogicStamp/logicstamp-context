@@ -176,6 +176,7 @@ On disk, each folder’s `context.json` is a **LogicStampBundle**: contracts liv
 - React/Next.js/Vue component extraction (props, hooks, state, deps)
 - Backend API extraction (Express.js, NestJS routes and controllers)
 - Dependency graphs (handles circular dependencies)
+- Monorepo-aware dependency edges via `tsconfig` `paths` / `baseUrl`
 - Style metadata extraction (Tailwind, SCSS, MUI, shadcn)
 - Next.js App Router detection (client/server, layouts, pages)
 
@@ -310,6 +311,7 @@ stamp --help                       # Show help
 stamp init [path]                  # Initialize project (security scan by default)
 stamp ignore <path>                # Add to .stampignore
 stamp context [path]               # Generate context bundles
+stamp context --max-roots 25       # Cap root bundles in large repos
 stamp context style [path]         # Generate with style metadata (lean mode by default)
 stamp context style --style-mode full  # Generate with full style details (verbose)
 stamp context --watch              # Watch mode
@@ -328,6 +330,7 @@ stamp context clean [path]         # Remove generated files
 | `--include-style` | Extract style metadata (Tailwind, SCSS, animations) |
 | `--format <fmt>` | Output format: `json\|pretty\|ndjson\|toon` (default: json) |
 | `--max-nodes <n>` | Maximum nodes per bundle (default: 100) |
+| `--max-roots <n>` | Maximum root bundles to compile (default: all roots) |
 | `--profile <p>` | Preset: `llm-chat`, `llm-safe`, `ci-strict`, `watch-fast` |
 | `--compare-modes` | Show token cost comparison across all modes |
 | `--stats` | Emit JSON stats with token estimates |

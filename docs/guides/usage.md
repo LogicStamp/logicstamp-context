@@ -188,6 +188,7 @@ If a security report (`stamp_security_report.json`) exists, `stamp context` auto
 | `--format <fmt>` | `-f` | `json` | Output format: `json`, `pretty`, `ndjson`, or `toon` |
 | `--out <file>` | `-o` | `context.json` | Output directory or file path. If a `.json` file is specified, its directory is used as the output directory. Otherwise, the path is used as the output directory. Context files will be written maintaining folder structure within this directory. |
 | `--max-nodes <n>` | `-m` | `100` | Maximum nodes to include (prevents huge bundles) |
+| `--max-roots <n>` | `-r` | all roots | Maximum root bundles to compile in a run |
 | `--profile <name>` | | `llm-chat` | Apply preset profile (see below) |
 | `--strict` | `-s` | `false` | Fail if any dependency is missing |
 | `--predict-behavior` | | `false` | Include experimental behavioral predictions |
@@ -415,6 +416,7 @@ stamp context --strict-watch
 **Watched file types:**
 - `.ts`, `.tsx` (always)
 - `.css`, `.scss`, `.module.css`, `.module.scss` (with `--include-style`)
+- `tsconfig*.json`, `package.json` (resolver config changes trigger rebuild)
 
 **Example output:**
 ```
@@ -849,6 +851,9 @@ stamp context --profile llm-safe --out safe-context.json
 
 # Include full source for deep analysis
 stamp context --include-code full --max-nodes 10
+
+# Cap root bundles for faster monorepo runs
+stamp context --max-roots 25
 ```
 
 ### Deep Dependency Analysis
@@ -1221,6 +1226,7 @@ Typical performance metrics:
 
 **Tips for large projects:**
 - Use `--max-nodes` to limit bundle size
+- Use `--max-roots` to cap how many root bundles are compiled
 - Focus on specific directories
 - Use `--include-code none` for minimal size
 - Use `--profile llm-safe` for token efficiency
@@ -1240,6 +1246,8 @@ Typical performance metrics:
 
 ### Missing dependencies
 Missing dependencies appear in `meta.missing` and usually fall into two categories:
+
+If your project uses path aliases (for example in Next.js or Turborepo workspaces), ensure `tsconfig*.json` files are present and up to date. LogicStamp uses `compilerOptions.paths` and `baseUrl` to derive internal dependency edges.
 
 **Expected (safe to ignore):**
 - External packages: `@mui/material`, `react`, `lodash`

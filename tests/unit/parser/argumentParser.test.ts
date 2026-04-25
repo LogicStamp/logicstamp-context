@@ -118,6 +118,16 @@ describe('parseContextArgs', () => {
     expect(options.maxNodes).toBe(50);
   });
 
+  it('should parse max-roots flag', () => {
+    const options = parseContextArgs(['--max-roots', '25']);
+    expect(options.maxRoots).toBe(25);
+  });
+
+  it('should parse max-roots short flag', () => {
+    const options = parseContextArgs(['-r', '10']);
+    expect(options.maxRoots).toBe(10);
+  });
+
   it('should exit on invalid max-nodes value (non-numeric)', () => {
     parseContextArgs(['--max-nodes', 'xyz']);
     expect(process.exit).toHaveBeenCalledWith(1);
@@ -155,6 +165,22 @@ describe('parseContextArgs', () => {
     expect(process.exit).toHaveBeenCalledWith(1);
     expect(console.error).toHaveBeenCalledWith(
       expect.stringContaining('Invalid max-nodes value'),
+    );
+  });
+
+  it('should exit on invalid max-roots value (non-numeric)', () => {
+    parseContextArgs(['--max-roots', 'xyz']);
+    expect(process.exit).toHaveBeenCalledWith(1);
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('Invalid max-roots value'),
+    );
+  });
+
+  it('should exit on zero max-roots value', () => {
+    parseContextArgs(['--max-roots', '0']);
+    expect(process.exit).toHaveBeenCalledWith(1);
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('Invalid max-roots value'),
     );
   });
 

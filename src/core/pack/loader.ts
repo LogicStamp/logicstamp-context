@@ -352,9 +352,6 @@ export async function extractCodeHeader(
           secretCount: sanitizeResult.matchCount,
           entryId,
         };
-        console.log(
-          `   🔒 Sanitized ${sanitizeResult.matchCount} secret(s) in ${entryId}`,
-        );
       }
     }
 
@@ -418,9 +415,6 @@ export async function readSourceCode(
           secretCount: sanitizeResult.matchCount,
           entryId,
         };
-        console.log(
-          `   🔒 Sanitized ${sanitizeResult.matchCount} secret(s) in ${entryId}`,
-        );
       }
     }
 

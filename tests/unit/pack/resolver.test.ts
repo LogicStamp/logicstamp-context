@@ -1,12 +1,17 @@
 import { describe, it, expect } from 'vitest';
+import { resolve } from 'node:path';
 import {
   resolveKey,
   resolveDependency,
   findComponentByName,
 } from '../../../src/core/pack/resolver.js';
 import type { ProjectManifest } from '../../../src/core/manifest.js';
+import type { TsconfigResolverContext } from '../../../src/core/pack/tsconfigResolver.js';
+import { normalizeEntryId } from '../../../src/utils/fsx.js';
 
 describe('Pack Resolver', () => {
+  const repoRoot = normalizeEntryId(resolve('/repo'));
+
   const createMockManifest = (): ProjectManifest => {
     return {
       version: '0.3',
@@ -219,6 +224,255 @@ describe('Pack Resolver', () => {
       );
 
       expect(result).toBe('src/components/Button.tsx');
+    });
+
+    it('should resolve exact tsconfig path aliases', () => {
+      const manifest: ProjectManifest = {
+        version: '0.3',
+        generatedAt: new Date().toISOString(),
+        totalComponents: 2,
+        components: {
+          'apps/web/src/App.tsx': {
+            entryId: 'apps/web/src/App.tsx',
+            description: 'App',
+            dependencies: [],
+            usedBy: [],
+            imports: [],
+            routes: [],
+            semanticHash: 'hash-app',
+          },
+          'packages/ui/src/index.ts': {
+            entryId: 'packages/ui/src/index.ts',
+            description: 'UI package entry',
+            dependencies: [],
+            usedBy: [],
+            imports: [],
+            routes: [],
+            semanticHash: 'hash-ui',
+          },
+        },
+        graph: { roots: [], leaves: [] },
+      };
+
+      const resolverContext: TsconfigResolverContext = {
+        projectRoot: repoRoot,
+        configs: [
+          {
+            tsconfigPath: 'tsconfig.base.json',
+            configDirAbs: repoRoot,
+            baseUrlAbs: repoRoot,
+            pathMappings: [
+              {
+                pattern: '@repo/ui',
+                hasWildcard: false,
+                prefix: '@repo/ui',
+                suffix: '',
+                targets: ['packages/ui/src/index.ts'],
+                baseUrlAbs: repoRoot,
+                sourceTsconfig: `${repoRoot}/tsconfig.base.json`,
+              },
+            ],
+          },
+        ],
+        pathMappings: [
+          {
+            pattern: '@repo/ui',
+            hasWildcard: false,
+            prefix: '@repo/ui',
+            suffix: '',
+            targets: ['packages/ui/src/index.ts'],
+            baseUrlAbs: repoRoot,
+            sourceTsconfig: `${repoRoot}/tsconfig.base.json`,
+          },
+        ],
+        baseUrlsAbs: [repoRoot],
+        tsconfigFiles: ['tsconfig.base.json'],
+      };
+
+      const result = resolveDependency(
+        manifest,
+        '@repo/ui',
+        'apps/web/src/App.tsx',
+        resolverContext,
+      );
+      expect(result).toBe('packages/ui/src/index.ts');
+    });
+
+    it('should resolve wildcard tsconfig path aliases', () => {
+      const manifest: ProjectManifest = {
+        version: '0.3',
+        generatedAt: new Date().toISOString(),
+        totalComponents: 2,
+        components: {
+          'apps/web/src/App.tsx': {
+            entryId: 'apps/web/src/App.tsx',
+            description: 'App',
+            dependencies: [],
+            usedBy: [],
+            imports: [],
+            routes: [],
+            semanticHash: 'hash-app',
+          },
+          'packages/shared/src/date.ts': {
+            entryId: 'packages/shared/src/date.ts',
+            description: 'Shared date utility',
+            dependencies: [],
+            usedBy: [],
+            imports: [],
+            routes: [],
+            semanticHash: 'hash-date',
+          },
+        },
+        graph: { roots: [], leaves: [] },
+      };
+
+      const resolverContext: TsconfigResolverContext = {
+        projectRoot: repoRoot,
+        configs: [
+          {
+            tsconfigPath: 'tsconfig.base.json',
+            configDirAbs: repoRoot,
+            baseUrlAbs: repoRoot,
+            pathMappings: [
+              {
+                pattern: '@repo/shared/*',
+                hasWildcard: true,
+                prefix: '@repo/shared/',
+                suffix: '',
+                targets: ['packages/shared/src/*'],
+                baseUrlAbs: repoRoot,
+                sourceTsconfig: `${repoRoot}/tsconfig.base.json`,
+              },
+            ],
+          },
+        ],
+        pathMappings: [
+          {
+            pattern: '@repo/shared/*',
+            hasWildcard: true,
+            prefix: '@repo/shared/',
+            suffix: '',
+            targets: ['packages/shared/src/*'],
+            baseUrlAbs: repoRoot,
+            sourceTsconfig: `${repoRoot}/tsconfig.base.json`,
+          },
+        ],
+        baseUrlsAbs: [repoRoot],
+        tsconfigFiles: ['tsconfig.base.json'],
+      };
+
+      const result = resolveDependency(
+        manifest,
+        '@repo/shared/date',
+        'apps/web/src/App.tsx',
+        resolverContext,
+      );
+      expect(result).toBe('packages/shared/src/date.ts');
+    });
+
+    it('should scope tsconfig aliases to the importing file', () => {
+      const manifest: ProjectManifest = {
+        version: '0.3',
+        generatedAt: new Date().toISOString(),
+        totalComponents: 4,
+        components: {
+          'apps/web/src/App.tsx': {
+            entryId: 'apps/web/src/App.tsx',
+            description: 'Web app',
+            dependencies: [],
+            usedBy: [],
+            imports: [],
+            routes: [],
+            semanticHash: 'hash-web-app',
+          },
+          'apps/admin/src/App.tsx': {
+            entryId: 'apps/admin/src/App.tsx',
+            description: 'Admin app',
+            dependencies: [],
+            usedBy: [],
+            imports: [],
+            routes: [],
+            semanticHash: 'hash-admin-app',
+          },
+          'packages/web-shared/src/button.ts': {
+            entryId: 'packages/web-shared/src/button.ts',
+            description: 'Web shared button',
+            dependencies: [],
+            usedBy: [],
+            imports: [],
+            routes: [],
+            semanticHash: 'hash-web-button',
+          },
+          'packages/admin-shared/src/button.ts': {
+            entryId: 'packages/admin-shared/src/button.ts',
+            description: 'Admin shared button',
+            dependencies: [],
+            usedBy: [],
+            imports: [],
+            routes: [],
+            semanticHash: 'hash-admin-button',
+          },
+        },
+        graph: { roots: [], leaves: [] },
+      };
+
+      const webMapping = {
+        pattern: '@shared/*',
+        hasWildcard: true,
+        prefix: '@shared/',
+        suffix: '',
+        targets: ['packages/web-shared/src/*'],
+        baseUrlAbs: repoRoot,
+        sourceTsconfig: `${repoRoot}/apps/web/tsconfig.json`,
+      };
+      const adminMapping = {
+        pattern: '@shared/*',
+        hasWildcard: true,
+        prefix: '@shared/',
+        suffix: '',
+        targets: ['packages/admin-shared/src/*'],
+        baseUrlAbs: repoRoot,
+        sourceTsconfig: `${repoRoot}/apps/admin/tsconfig.json`,
+      };
+
+      const resolverContext: TsconfigResolverContext = {
+        projectRoot: repoRoot,
+        configs: [
+          {
+            tsconfigPath: 'apps/web/tsconfig.json',
+            configDirAbs: `${repoRoot}/apps/web`,
+            baseUrlAbs: repoRoot,
+            pathMappings: [webMapping],
+          },
+          {
+            tsconfigPath: 'apps/admin/tsconfig.json',
+            configDirAbs: `${repoRoot}/apps/admin`,
+            baseUrlAbs: repoRoot,
+            pathMappings: [adminMapping],
+          },
+        ],
+        pathMappings: [webMapping, adminMapping],
+        baseUrlsAbs: [repoRoot],
+        tsconfigFiles: ['apps/admin/tsconfig.json', 'apps/web/tsconfig.json'],
+      };
+
+      expect(
+        resolveDependency(
+          manifest,
+          '@shared/button',
+          'apps/web/src/App.tsx',
+          resolverContext,
+        ),
+      ).toBe('packages/web-shared/src/button.ts');
+
+      expect(
+        resolveDependency(
+          manifest,
+          '@shared/button',
+          'apps/admin/src/App.tsx',
+          resolverContext,
+        ),
+      ).toBe('packages/admin-shared/src/button.ts');
     });
   });
 });
